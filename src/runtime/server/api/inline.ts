@@ -3,6 +3,7 @@ import {useCachedScript} from "../util";
 import { createConsola } from 'consola'
 
 export default defineEventHandler(async (e) => {
+    // eslint-disable-next-line prefer-const
     let { src, ttl, purge, integrity } = getQuery(e)
 
     if (typeof src !== 'string')
@@ -10,15 +11,14 @@ export default defineEventHandler(async (e) => {
 
     src = decodeURIComponent(src)
     integrity = decodeURIComponent(integrity as string)
-
-    const { script, cacheResult, cacheExpires } = await useCachedScript(src,
+    const cachedScript= await useCachedScript(src,
         {
             ttl: Number(ttl),
             purge: Boolean(purge)
         }
     )
 
-    if (!script) {
+    if (!cachedScript || !cachedScript.script) {
         // error
         const error = createError({
             status: 400,
@@ -26,6 +26,7 @@ export default defineEventHandler(async (e) => {
         })
         return sendError(e, error)
     }
+    const { script, cacheResult, cacheExpires } = cachedScript
 
     const logger = createConsola()
 
