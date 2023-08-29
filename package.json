@@ -1,10 +1,7 @@
 {
-  "name": "@nuxt/scripts",
-  "version": "1.0.0",
-  "description": "Next-gen Scripts for Nuxt",
-  "repository": "your-org/@nuxt/scripts",
+  "private": true,
   "license": "MIT",
-  "type": "module",
+  "repository": "your-org/@nuxt/scripts",
   "exports": {
     ".": {
       "types": "./dist/types.d.ts",
@@ -18,7 +15,6 @@
     "dist"
   ],
   "scripts": {
-    "prepack": "nuxt-module-build",
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
     "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
@@ -27,11 +23,8 @@
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
-  "dependencies": {
-    "@nuxt/kit": "^3.6.5",
-    "third-party-capital": "link:./third-party-capital"
-  },
   "devDependencies": {
+    "@antfu/eslint-config": "^0.41.0",
     "@nuxt/devtools": "^0.7.1",
     "@nuxt/eslint-config": "^0.1.1",
     "@nuxt/module-builder": "^0.4.0",

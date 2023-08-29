@@ -1,4 +1,5 @@
 {
-  "root": true,
-  "extends": ["@nuxt/eslint-config"]
+  "extends": [
+    "@antfu"
+  ]
 }

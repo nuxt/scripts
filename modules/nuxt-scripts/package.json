@@ -1,0 +1,26 @@
+{
+  "name": "@nuxt/scripts",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Next-gen Scripts for Nuxt",
+  "license": "MIT",
+  "repository": "your-org/@nuxt/scripts",
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/module.mjs",
+      "require": "./dist/module.cjs"
+    }
+  },
+  "main": "./dist/module.cjs",
+  "types": "./dist/types.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepack": "nuxt-module-build"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^3.7.0"
+  }
+}
