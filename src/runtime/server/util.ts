@@ -1,12 +1,18 @@
-import {prefixStorage} from "unstorage";
-import {useRuntimeConfig, useStorage} from "#imports";
+import {prefixStorage} from "unstorage"
+import { useRuntimeConfig } from "#imports"
 import {sha256base64} from 'ohash'
 import { Script } from '@unhead/schema'
 import type { Storage } from 'unstorage'
 
+interface CachedScript {
+    value: Script,
+    expiresAt: number
+}
+
 export async function useCachedScript(src: string, options?: { ttl?: number; purge?: boolean }) {
     const key = src as string
-    const ttl = options?.ttl || useRuntimeConfig()['nuxt-script'].proxyTtl || 0
+
+    const ttl = options?.ttl || useRuntimeConfig()['nuxt-script']?.proxyTtl || 0
 
     const useCache = true
     const cache = prefixStorage(useStorage(), `/cache/nuxt-script/proxy`) as Storage<{ value: Script; expiresAt: number }>
@@ -15,7 +21,7 @@ export async function useCachedScript(src: string, options?: { ttl?: number; pur
     // cache will invalidate if the options change
     let script: Script | false = false
     if (useCache && await cache.hasItem(key)) {
-        const { value, expiresAt } = await cache.getItem(key)
+        const { value, expiresAt } = (await cache.getItem<CachedScript>(key))!
         if (expiresAt > Date.now()) {
             if (options?.purge) {
                 cacheResult = 'PURGE'
@@ -43,7 +49,7 @@ export async function useCachedScript(src: string, options?: { ttl?: number; pur
         }
         script = {
             innerHTML: result._data,
-            integrity: `sha256-${sha256base64(result._data)}`
+            integrity: `sha256-${sha256base64(result._data as string)}`
         }
         if (useCache) {
             await cache.setItem(key, { value: script, expiresAt: Date.now() + ttl })

@@ -54,7 +54,7 @@ export default defineNuxtModule<ModuleOptions>({
       proxyTtl: 60 * 60 * 24
     }
 
-    const customScriptNames = Object.keys(options.global || {}).map(m => `'${m.name}'`).join(' | ')
+    const customScriptNames = Object.values(options.globals || {}).map(m => `'${m.name}'`).join(' | ')
     if (customScriptNames) {
       // extend types with global names
       addTypeTemplate({

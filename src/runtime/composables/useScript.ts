@@ -1,4 +1,4 @@
-import {UseScriptInput, UseScriptReturn, UseScriptStatus} from "../types";
+import { UseScriptInput, UseScriptReturn, UseScriptStatus } from "../types";
 import { ref, toValue, computed } from 'vue'
 import {useRequestEvent, injectHead, useNuxtApp } from '#imports'
 import type {Head, RuntimeMode} from '@unhead/schema'
@@ -18,12 +18,12 @@ import { hash } from 'ohash'
  * - innerHTML
  */
 
-export function useScript(input: UseScriptInput): Promise<UseScriptReturn> {
-  const error = ref('')
+export function useScript(input: UseScriptInput): Promise<UseScriptReturn>|UseScriptReturn {
+  const error = ref<Error | null>(null)
 
   const resolvedInput = toValue(input)
 
-  const presets = input.presets || []
+  const presets = resolvedInput.presets || []
   delete input.presets
 
   const status = ref<UseScriptStatus>('awaitingLoad')
@@ -41,7 +41,9 @@ export function useScript(input: UseScriptInput): Promise<UseScriptReturn> {
   }
 
   const mode: RuntimeMode = input.mode || 'all'
-  delete input.mode
+  if(input.mode) {
+    delete input.mode
+  }
 
   const requestEvent = process.server ? useRequestEvent() : null
 
@@ -56,7 +58,10 @@ export function useScript(input: UseScriptInput): Promise<UseScriptReturn> {
   for (const preset of presets) {
     preset.setup?.(scriptLoadCtx)
   }
+
   async function transform(input: Head) {
+    if(!input.script) return { script: [] }
+    
     const script = input.script[0] as ScriptBase
     for (const preset of presets) {
       if (await preset.transform?.(script, scriptLoadCtx) === false) {
@@ -86,6 +91,7 @@ export function useScript(input: UseScriptInput): Promise<UseScriptReturn> {
       status.value = 'loaded'
     }
   })
+
   scriptLoadCtx.loadPromise
     .then(() => {
       status.value = 'loading'
@@ -93,8 +99,9 @@ export function useScript(input: UseScriptInput): Promise<UseScriptReturn> {
         return
       if (process.client && mode === 'server')
         return
-      head.push({script: [input]}, {mode, transform})
+      head.push({ script: [input] }, { mode, transform: transform as (input: unknown) => unknown })
     })
+    .catch(e => error.value = e)
 
   return { status, error, loaded: computed(() => status.value === 'loaded' )}
 }
