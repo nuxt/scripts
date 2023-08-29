@@ -44,7 +44,7 @@ export async function useCachedAsset(src: string, options?: { ttl?: number; purg
       //   accept: 'application/javascript',
       // },
     })
-    if (!result._data || !result.status.toString().startsWith('2')/* || !result.headers.get('content-type')?.endsWith('/javascript')*/)
+    if (!result._data || !result.status.toString().startsWith('2')/* || !result.headers.get('content-type')?.endsWith('/javascript') */)
       return null
 
     asset = {

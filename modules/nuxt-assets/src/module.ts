@@ -36,10 +36,10 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     nuxt.options.runtimeConfig['nuxt-assets'] = {
-      proxyTtl: 60 * 60 * 24 // 1d
+      proxyTtl: 60 * 60 * 24, // 1d
     }
     nuxt.options.runtimeConfig.public['nuxt-assets'] = {
-      routePrefix: options.routePrefix
+      routePrefix: options.routePrefix,
     }
   },
 })
