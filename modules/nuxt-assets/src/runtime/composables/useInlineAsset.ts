@@ -5,10 +5,10 @@ export function useInlineAsset(url: string, options?: { encoding: string; integr
   const fetchParams = {
     query: {
       src: encodeURIComponent(url),
-      integrity: options.integrity ? encodeURIComponent(options.integrity) : undefined,
+      integrity: options?.integrity ? encodeURIComponent(options.integrity) : undefined,
     },
   }
-  if (options.encoding)
-    fetchParams.query.accept = options.encoding
+  if (options?.encoding)
+    fetchParams.headers = { accept: options.encoding }
   return $fetch(`${routePrefix}/inline`, fetchParams)
 }

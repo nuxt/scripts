@@ -40,11 +40,11 @@ export async function useCachedAsset(src: string, options?: { ttl?: number; purg
   if (!asset) {
     const result = await globalThis.$fetch.raw(src as string, {
       // make sure we're only getting scripts
-      headers: {
-        accept: 'application/javascript',
-      },
+      // headers: {
+      //   accept: 'application/javascript',
+      // },
     })
-    if (!result._data || !result.status.toString().startsWith('2') || !result.headers.get('content-type')?.endsWith('/javascript'))
+    if (!result._data || !result.status.toString().startsWith('2')/* || !result.headers.get('content-type')?.endsWith('/javascript')*/)
       return null
 
     asset = {

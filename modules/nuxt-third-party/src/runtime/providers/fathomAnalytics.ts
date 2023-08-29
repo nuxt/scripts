@@ -15,20 +15,22 @@ export interface FathomApi {
   trackGoal: (eventName: string, eventValue: number) => void
 }
 
-export const FathomAnalytics = defineThirdParty<FathomOptions>((options, ctx) => {
-  const src = options.src || 'https://cdn.usefathom.com/tracker.js'
-  return useScript({
-    src,
-    'data-site': options.site,
-    'defer': true,
-    'mode': ctx.global ? 'server' : 'all',
-    // TODO other data-* fields
-  })
+export const FathomAnalytics = defineThirdParty<FathomOptions>({
+  setup(options, ctx) {
+    const src = options.src || 'https://cdn.usefathom.com/tracker.js'
+    return useScript({
+      src,
+      'data-site': options.site,
+      'defer': true,
+      'mode': ctx.global ? 'server' : 'all',
+      // TODO other data-* fields
+    })
+  },
 })
 
 export async function useFathomAnalytics(options: FathomOptions) {
   // setup
-  await FathomAnalytics(options, { global: false, webworker: false }).waitForLoad()
-  // use global
+  await FathomAnalytics.setup(options, { global: false, webworker: false }).waitForLoad()
+  // TODO augment window
   return window.fathom as FathomApi
 }

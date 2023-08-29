@@ -11,10 +11,7 @@ export const YoutubeEmbed = defineComponent<YoutubeEmbedOptions>({
   setup(props) {
     useHead({
       style: [
-        {
-          // inlining will improve performance
-          innerHTML: useInlineAsset('https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.css'),
-        },
+        useInlineAsset('https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.css'),
       ],
     })
     // lazily initialise
@@ -24,6 +21,7 @@ export const YoutubeEmbed = defineComponent<YoutubeEmbedOptions>({
       src: useProxyAsset('https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.js'),
       loadStrategy: 'idle',
     })
+    // WARNING this does not actually work because we can't seem to use the web component lite-youtube in vue
     return h('lite-youtube', {
       ...props,
     })

@@ -1,4 +1,4 @@
-import {addComponent, addImports, addPluginTemplate, createResolver, defineNuxtModule} from '@nuxt/kit'
+import { addComponent, addImports, addPluginTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import type { FathomOptions } from './runtime/providers/fathomAnalytics'
 import type { GoogleAnalyticsOptions } from './runtime/providers/googleAnalytics'
 
@@ -48,7 +48,7 @@ export default defineNuxtModule<ModuleOptions>({
             // title case
             const exportName = k.substring(0, 1).toUpperCase() + k.substring(1)
             imports.unshift(`import { ${exportName} } from "${importPath}";`)
-            inits.push(`${exportName}(${JSON.stringify(config)}, { global: true });`)
+            inits.push(`${exportName}.setup(${JSON.stringify(config)}, { global: true });`)
           }
           return [
             imports.join('\n'),
@@ -68,6 +68,7 @@ export default defineNuxtModule<ModuleOptions>({
       addComponent({
         filePath: resolve(`./runtime/providers/${c}`),
         name: exportName,
+        export: exportName,
       })
     })
     autoImports.forEach((i) => {
