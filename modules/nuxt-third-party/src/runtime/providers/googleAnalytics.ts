@@ -1,29 +1,48 @@
-import { defineThirdParty } from '../util'
-import { useScript } from '#imports'
+import { defineThirdPartyScript } from '../util'
+import { useHead, useScript } from '#imports'
 
 export interface GoogleAnalyticsOptions {
   id: string
 }
 
-type gtagApi = ((fn: 'js', opt: Date) => void) | ((fn: 'config', opt: string) => void)
+export interface GoogleAnalyticsApi {
+  gtag: ((fn: 'js', opt: Date) => void) |
+  ((fn: 'config', opt: string) => void) |
+  ((fn: 'event', opt: string, opt2: { [key: string]: string }) => void) |
+  ((fn: 'set', opt: { [key: string]: string }) => void) |
+  ((fn: 'get', opt: string) => void) |
+  ((fn: 'consent', opt: 'default', opt2: { [key: string]: string }) => void) |
+  ((fn: 'consent', opt: 'update', opt2: { [key: string]: string }) => void) |
+  ((fn: 'consent', opt: 'reset') => void)
+}
 
-export const GoogleAnalytics = defineThirdParty<GoogleAnalyticsOptions>({
-  setup(options, ctx) {
-    useScript({
-      mode: ctx.global ? 'server' : undefined,
-      innerHTML: `window.dataLayer=window.dataLayer||[];window.gtag=function gtag() {window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config', ${JSON.stringify(options.id)})`,
+declare global {
+  interface Window {
+    gtag: GoogleAnalyticsApi
+  }
+}
+
+export const GoogleAnalytics = defineThirdPartyScript<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
+  setup(options) {
+    useHead({
+      script: [
+        {
+          key: 'gtag-setup',
+          innerHTML: `window.dataLayer=window.dataLayer||[];window.gtag=function gtag() {window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config', ${JSON.stringify(options.id)})`,
+        },
+      ],
     })
     // TODO handle worker
-    return useScript({
-      mode: ctx.global ? 'server' : undefined,
-      src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
+    return useScript<GoogleAnalyticsApi>({
+      key: 'gtag',
+      use: () => typeof window !== 'undefined' ? { gtag: window.gtag } as unknown as GoogleAnalyticsApi : null,
+      script: {
+        src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
+      },
     })
   },
 })
 
-export async function useGoogleAnalytics(options: GoogleAnalyticsOptions) {
-  // setup
-  await GoogleAnalytics.setup(options, { global: false, webworker: false }).waitForLoad()
-  // use global
-  return window.gtag as gtagApi
+export function useGoogleAnalytics(options?: GoogleAnalyticsOptions) {
+  return GoogleAnalytics.resolve(options)
 }

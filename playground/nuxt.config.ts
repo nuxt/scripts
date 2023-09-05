@@ -1,12 +1,12 @@
 import NuxtScripts from '../modules/nuxt-scripts/src/module'
-import NuxtAssets from '../modules/nuxt-assets/src/module'
 import NuxtThirdParty from '../modules/nuxt-third-party/src/module'
+import NuxtAssets from '../modules/nuxt-assets/src/module'
 
 export default defineNuxtConfig({
   modules: [
     NuxtScripts,
-    NuxtAssets,
     NuxtThirdParty,
+    NuxtAssets,
   ],
   devtools: { enabled: true },
   thirdParty: {
@@ -14,9 +14,9 @@ export default defineNuxtConfig({
       fathomAnalytics: {
         site: 'FA12323',
       },
-      googleAnalytics: {
-        id: 'GA23423434',
-      },
+      // googleAnalytics: {
+      //   id: 'GA23423434',
+      // },
     },
   },
 })

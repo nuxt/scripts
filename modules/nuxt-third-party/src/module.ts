@@ -32,7 +32,7 @@ export default defineNuxtModule<ModuleOptions>({
     // await installModule('@nuxt/scripts')
     // await installModule('@nuxt/assets')
 
-    const hasGlobals = Object.keys(options.globals).length > 1
+    const hasGlobals = Object.keys(options.globals).length > 0
     if (hasGlobals) {
       addPluginTemplate({
         filename: 'third-party.mjs',
@@ -50,6 +50,15 @@ export default defineNuxtModule<ModuleOptions>({
             imports.unshift(`import { ${exportName} } from "${importPath}";`)
             inits.push(`${exportName}.setup(${JSON.stringify(config)}, { global: true });`)
           }
+          console.log([
+            imports.join('\n'),
+            '',
+            'export default defineNuxtPlugin({',
+            '  setup() {',
+            inits.map(i => `    ${i}`).join('\n'),
+            '  }',
+            '})',
+          ].join('\n'))
           return [
             imports.join('\n'),
             '',

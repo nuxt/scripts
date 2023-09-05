@@ -1,36 +1,45 @@
-import { defineThirdParty } from '../util'
+import { defineThirdPartyScript } from '../util'
 import { useScript } from '#imports'
 
 export interface FathomOptions {
-  site: string
+  site?: string
   src?: string
   spa?: 'auto' | 'history' | 'hash'
   auto?: boolean
   canonical?: boolean
   excludedDomains?: string[]
+  honorDnt?: boolean
+  // TODO full config
 }
 
 export interface FathomApi {
-  trackPageview: (ctx?: { url: string; referrer: string }) => void
+  trackPageview: (ctx?: { url: string; referrer?: string }) => void
   trackGoal: (eventName: string, eventValue: number) => void
+  // TODO full API
 }
 
-export const FathomAnalytics = defineThirdParty<FathomOptions>({
-  setup(options, ctx) {
-    const src = options.src || 'https://cdn.usefathom.com/tracker.js'
-    return useScript({
-      src,
-      'data-site': options.site,
-      'defer': true,
-      'mode': ctx.global ? 'server' : 'all',
-      // TODO other data-* fields
+declare global {
+  interface Window {
+    fathom: FathomApi
+  }
+}
+
+export const FathomAnalytics = defineThirdPartyScript<FathomOptions, FathomApi>({
+  setup(options) {
+    const src = options.src || 'https://cdn.usefathom.com/script.js'
+    return useScript<FathomApi>({
+      key: 'fathom',
+      use: () => typeof window !== 'undefined' ? window.fathom : undefined,
+      script: {
+        src,
+        'defer': true,
+        'data-site': options.site!,
+      },
+      // TODO implement full options API
     })
   },
 })
 
-export async function useFathomAnalytics(options: FathomOptions) {
-  // setup
-  await FathomAnalytics.setup(options, { global: false, webworker: false }).waitForLoad()
-  // TODO augment window
-  return window.fathom as FathomApi
+export function useFathomAnalytics(options?: FathomOptions) {
+  return FathomAnalytics.resolve(options)
 }
