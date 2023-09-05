@@ -17,7 +17,7 @@ export interface ThirdPartyDefinition<Options, Api> extends ThirdPartyInput<Opti
 export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): ThirdPartyDefinition<Options, Api> {
   // augment a use function
   const tp = thirdParty as ThirdPartyDefinition<Options, Api>
-  tp.resolve = (options?: Options) => {
+  return (options?: Options) => {
     options = options || {} as Options
     tp.script = tp.script || tp.setup(options)
     return new Proxy({}, {
@@ -46,5 +46,4 @@ export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput
       },
     }) as Api & { $script: UniversalScript<Api> }
   }
-  return tp
 }

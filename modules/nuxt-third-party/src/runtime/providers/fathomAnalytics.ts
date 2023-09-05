@@ -24,22 +24,20 @@ declare global {
   }
 }
 
-export const FathomAnalytics = defineThirdPartyScript<FathomOptions, FathomApi>({
-  setup(options) {
-    const src = options.src || 'https://cdn.usefathom.com/script.js'
-    return useScript<FathomApi>({
-      key: 'fathom',
-      use: () => typeof window !== 'undefined' ? window.fathom : undefined,
-      script: {
-        src,
-        'defer': true,
-        'data-site': options.site!,
-      },
-      // TODO implement full options API
-    })
-  },
-})
-
 export function useFathomAnalytics(options?: FathomOptions) {
-  return FathomAnalytics.resolve(options)
+  return defineThirdPartyScript<FathomOptions, FathomApi>({
+    setup(options) {
+      const src = options.src || 'https://cdn.usefathom.com/script.js'
+      return useScript<FathomApi>({
+        key: 'fathom-analytics',
+        use: () => typeof window !== 'undefined' ? window.fathom : undefined,
+        script: {
+          src,
+          'defer': true,
+          'data-site': options.site!,
+        },
+        // TODO implement full options API
+      })
+    },
+  })
 }

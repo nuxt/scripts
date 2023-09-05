@@ -5,18 +5,6 @@ import { hashCode } from '@unhead/shared'
 import type { UniversalScript, UseScriptOptions, UseScriptStatus } from '../types'
 import { onNuxtReady, useInlineAsset, useNuxtApp, useProxyAsset } from '#imports'
 
-/**
- * Requirements
- *
- * - This script will load and execute when any route in your application is accessed.
- * Next.js will ensure the script will only load once, even if a user navigates between multiple pages.
- *
- * onLoad: Execute code after the script has finished loading.
- * onReady: Execute code after the script has finished loading and every time the component is mounted.
- * onError: Execute code if the script fails to load.
- *
- * - innerHTML
- */
 export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
   const nuxtApp = useNuxtApp()
   const resolvedScriptInput = toValue(input.script) || {} as Script
@@ -164,4 +152,10 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
   }
   nuxtApp.$nuxtScripts[key] = script
   return script
+}
+
+declare module '#app' {
+  interface NuxtApp {
+    $nuxtScripts: Record<string, UniversalScript<any>>
+  }
 }

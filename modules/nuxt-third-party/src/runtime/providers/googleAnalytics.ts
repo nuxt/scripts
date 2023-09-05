@@ -22,27 +22,25 @@ declare global {
   }
 }
 
-export const GoogleAnalytics = defineThirdPartyScript<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
-  setup(options) {
-    useHead({
-      script: [
-        {
-          key: 'gtag-setup',
-          innerHTML: `window.dataLayer=window.dataLayer||[];window.gtag=function gtag() {window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config', ${JSON.stringify(options.id)})`,
-        },
-      ],
-    })
-    // TODO handle worker
-    return useScript<GoogleAnalyticsApi>({
-      key: 'gtag',
-      use: () => typeof window !== 'undefined' ? { gtag: window.gtag } as unknown as GoogleAnalyticsApi : null,
-      script: {
-        src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
-      },
-    })
-  },
-})
-
 export function useGoogleAnalytics(options?: GoogleAnalyticsOptions) {
-  return GoogleAnalytics.resolve(options)
+  return defineThirdPartyScript<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
+    setup(options) {
+      useHead({
+        script: [
+          {
+            key: 'gtag-setup',
+            innerHTML: `window.dataLayer=window.dataLayer||[];window.gtag=function gtag() {window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config', ${JSON.stringify(options.id)})`,
+          },
+        ],
+      })
+      // TODO handle worker
+      return useScript<GoogleAnalyticsApi>({
+        key: 'gtag',
+        use: () => typeof window !== 'undefined' ? { gtag: window.gtag } as unknown as GoogleAnalyticsApi : null,
+        script: {
+          src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
+        },
+      })
+    },
+  })
 }
