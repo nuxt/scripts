@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@nuxt/assets": "workspace:*",
-    "@nuxt/kit": "^3.7.0",
+    "@nuxt/kit": "^3.7.1",
     "@nuxt/scripts": "workspace:*",
     "third-party-capital": "^1.0.20"
   }

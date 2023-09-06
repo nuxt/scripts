@@ -21,6 +21,6 @@
     "prepack": "nuxt-module-build"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.7.0"
+    "@nuxt/kit": "^3.7.1"
   }
 }
