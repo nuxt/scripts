@@ -7,35 +7,32 @@ export interface ThirdPartyCompatibility {
 
 export interface ThirdPartyInput<Options, Api> extends ThirdPartyCompatibility {
   setup: (options: Options) => UniversalScript<Api>
+  mock?: Record<string | symbol, any>
 }
 
-export interface ThirdPartyDefinition<Options, Api> extends ThirdPartyInput<Options, Api> {
-  resolve: (options?: Options) => Api & { $script: UniversalScript<Api> }
-  script: UniversalScript<Api>
-}
-
-export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): ThirdPartyDefinition<Options, Api> {
+export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): (options?: Options) => Api & { $script: UniversalScript<Api> } {
   // augment a use function
-  const tp = thirdParty as ThirdPartyDefinition<Options, Api>
   return (options?: Options) => {
     options = options || {} as Options
-    tp.script = tp.script || tp.setup(options)
+    const script = thirdParty.setup(options)
     return new Proxy({}, {
       get(_, fn) {
         if (fn === '$script')
-          return tp.script
+          return script
+        if (thirdParty.mock?.[fn])
+          return thirdParty.mock[fn]
         return (...args: any[]) => {
           // third party scripts only run on client-side, mock the function
           if (process.server)
             return
           // TODO mock invalid environments
-          if (tp.script.loaded.value) {
-            const api = tp.script.use()
+          if (script.loaded.value) {
+            const api = script.use()
             // @ts-expect-error untyped
             api[fn](...args)
           }
           else {
-            tp.script.waitForLoad().then(
+            script.waitForLoad().then(
               (api) => {
                 // @ts-expect-error untyped
                 api[fn](...args)
@@ -44,6 +41,6 @@ export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput
           }
         }
       },
-    }) as Api & { $script: UniversalScript<Api> }
+    }) as any as Api & { $script: UniversalScript<Api> }
   }
 }

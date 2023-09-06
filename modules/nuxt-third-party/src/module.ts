@@ -1,12 +1,14 @@
 import { addComponent, addImports, addPluginTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
-import type { FathomOptions } from './runtime/providers/fathomAnalytics'
-import type { GoogleAnalyticsOptions } from './runtime/providers/googleAnalytics'
+import {FathomOptions} from "./runtime/scripts/fathomAnalytics";
+import {GoogleAnalyticsOptions} from "./runtime/scripts/googleAnalytics";
+import {GoogleTagManagerOptions} from "./runtime/scripts/googleTagManager";
 
 export interface ModuleOptions {
   globals?: {
     // global third parties
     fathomAnalytics?: FathomOptions
     googleAnalytics?: GoogleAnalyticsOptions
+    googleTagManager?: GoogleTagManagerOptions
   }
 }
 
@@ -16,8 +18,12 @@ const components = [
 ]
 
 const autoImports = [
+  // captcha
+  { from: 'cloudflareTurnstile', name: 'useCloudflareTurnstile' },
+  // analytics
   { from: 'googleAnalytics', name: 'useGoogleAnalytics' },
   { from: 'fathomAnalytics', name: 'useFathomAnalytics' },
+  { from: 'googleTagManager', name: 'useGoogleTagManager' },
 ]
 
 export default defineNuxtModule<ModuleOptions>({
@@ -25,7 +31,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: 'nuxt-third-party',
     configKey: 'thirdParty',
   },
-  async setup(options, nuxt) {
+  async setup(options) {
     const { resolve } = createResolver(import.meta.url)
 
     // once published
@@ -43,26 +49,18 @@ export default defineNuxtModule<ModuleOptions>({
           // for global scripts, we can initialise them script away
           for (const [k, config] of Object.entries(options.globals)) {
             // lazy module resolution
-            // const importPath = relative(nuxt.options.srcDir, resolve(`./runtime/providers/${k}`))
-            const importPath = resolve(`./runtime/providers/${k}`)
+            const importPath = resolve(`./runtime/scripts/${k}`)
             // title case
             const exportName = k.substring(0, 1).toUpperCase() + k.substring(1)
             imports.unshift(`import { ${exportName} } from "${importPath}";`)
-            inits.push(`${exportName}.setup(${JSON.stringify(config)}, { global: true });`)
+            inits.push(`${exportName}(${JSON.stringify(config)});`)
           }
-          console.log([
-            imports.join('\n'),
-            '',
-            'export default defineNuxtPlugin({',
-            '  setup() {',
-            inits.map(i => `    ${i}`).join('\n'),
-            '  }',
-            '})',
-          ].join('\n'))
           return [
             imports.join('\n'),
             '',
             'export default defineNuxtPlugin({',
+            '  name: "nuxt-third-party",' +
+            '  mode: "server",', // TODO support SPA
             '  setup() {',
             inits.map(i => `    ${i}`).join('\n'),
             '  }',
@@ -75,14 +73,14 @@ export default defineNuxtModule<ModuleOptions>({
     components.forEach((c) => {
       const exportName = c.substring(0, 1).toUpperCase() + c.substring(1)
       addComponent({
-        filePath: resolve(`./runtime/providers/${c}`),
+        filePath: resolve(`./runtime/components/${c}`),
         name: exportName,
         export: exportName,
       })
     })
     autoImports.forEach((i) => {
       addImports({
-        from: resolve(`./runtime/providers/${i.from}`),
+        from: resolve(`./runtime/scripts/${i.from}`),
         name: i.name,
       })
     })

@@ -18,7 +18,6 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
   // assign a key based on src
 
   // TODO handle modes
-
   async function transform(entry: Head) {
     let script = entry.script![0] as ScriptBase
     if (script.src) {

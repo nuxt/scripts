@@ -55,19 +55,22 @@ declare global {
   }
 }
 
+export const CloudflareTurnstile = defineThirdPartyScript<CloudflareTurnstileOptions, CloudflareTurnstileApi>({
+  setup(options) {
+    return useScript<CloudflareTurnstileApi>({
+      key: 'cloudflare-turnstile',
+      use: () => window.turnstile,
+      script: {
+        src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+        defer: true,
+        async: true,
+      },
+      // TODO implement full options API
+    })
+  },
+})
+
 export function useCloudflareTurnstile(options?: CloudflareTurnstileOptions) {
-  return defineThirdPartyScript<CloudflareTurnstileOptions, CloudflareTurnstileApi>({
-    setup(options) {
-      return useScript<CloudflareTurnstileApi>({
-        key: 'cloudflare-turnstile',
-        use: () => window.turnstile,
-        script: {
-          src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-          defer: true,
-          async: true,
-        },
-        // TODO implement full options API
-      })
-    },
-  })
+  // TODO reactivity
+  return CloudflareTurnstile(options)
 }
