@@ -31,10 +31,67 @@ Adds a globally unique script to the <head>.
 
 ## Scripts
 
-Support a number of third-party common scripts loaded in the best performance way while exposing 
-a flexible and powerful wrapper on the underlying API.
+A thin wrapper around third-party scripts providing optimised loading, SSR support and a proxied API.
 
-- Build from `useScript`.
+Requires `@nuxt/scripts`.
+
+### Global Scripts
+
+Load scripts in globally from nuxt.config, tree-shakes them appropriately depending on build
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    globals: {
+      googleAnalytics: {
+        id: 'UA-XXXXXX-X'
+      }
+    }
+  }
+})
+```
+
+Use the API within your app without needing to provide the id or triggering a reload.
+
+```vue
+<script lang="ts" setup>
+function someEvent() {
+  const { gtag } = useGoogleAnalytics()
+  gtag('event', 'some_event')
+}
+</script>
+```
+
+### On Demand Scripts
+
+Load scripts on demand from within your app.
+
+```vue
+<script lang="ts" setup>
+const { $script, gtag } = useGoogleAnalytics({
+  id: 'UA-XXXXXX-X',
+  // can use any of the load strategies
+  loadingStrategy: 'idle'
+})
+// we can start using gtag before the script has loaded, it will be queued and sent once the script has loaded
+gtag('pageview', '/some/page')
+$script.waitForLoad().then(() => {
+  console.log('Google Analytics loaded', window.gtag)
+})
+</script>
+```
+
+They can be used from separate components and will be deduped.
+
+```vue
+<script lang="ts" setup>
+// doesn't need an id as it's already been registered
+const { gtag } = useGoogleAnalytics()
+function someEvent() {
+  gtag('event', 'some_event')
+}
+</script>
+```
 
 ### Proxied API
 
