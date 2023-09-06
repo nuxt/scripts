@@ -41,12 +41,12 @@ To use external API functions before the script has loaded, there are three requ
 <script lang="ts" setup>
 import { useScript } from '#imports'
 
-const script = useScript({
+const { gtag } = useScript({
   key: 'google-analytics',
   script: {
     src: 'https://www.google-analytics.com/analytics.js',
   },
-  use: () => window.gtag
+  use: () => { gtag: window.gtag }
 })
 </script>
 ```
@@ -95,36 +95,42 @@ The asset strategy for the script. Can be one of the following:
 
 ### Script Instance API
 
-#### `waitForLoad`
+The `useScript` composable returns a proxy object. 
+
+Any function calls to the proxy object will be queued until the script has loaded.
+
+For server-side rendering or if the script fails, the function calls will never do anything.
+
+#### `$script.waitForLoad`
 
 - Type: `() => Promise<void>`
 
 Returns a promise that resolves when the script has loaded.
 
 ```ts
-const { waitForLoad, use } = useScript({
+const { $script } = useScript({
   // ...
 })
 // Note: for server-side, this will never resolved 
-waitForLoad().then(() => {
+$script.waitForLoad().then(() => {
   use().myFunction() // api is available
 })
 ```
 
-#### `use`
+#### `$script.use`
 
 - Type: `() => any`
 
 Returns the API of the script. This is only available after the script has loaded.
 
 ```ts
-const { use } = useScript({
+const { $script } = useScript({
   // ...
 })
-use() // most likely undefined
+$script.use() // most likely undefined
 ```
 
-#### status
+#### `$script.status`
 
 - Type: `Ref<ScriptStatus>`
 

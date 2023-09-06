@@ -7,6 +7,7 @@ export interface UseScriptOptions<T> {
   use: () => T | undefined | null
   assetStrategy?: 'proxy' | 'inline'
   loadStrategy?: 'idle' | Promise<void>
+  mock?: Record<string | symbol, any>
   transform?: (script: ScriptBase) => ScriptBase
   mode?: RuntimeMode
   script: Omit<Script, 'key'>

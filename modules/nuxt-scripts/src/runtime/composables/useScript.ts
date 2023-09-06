@@ -5,7 +5,7 @@ import { hashCode } from '@unhead/shared'
 import type { ScriptInstance, UseScriptOptions, UseScriptStatus } from '../types'
 import { onNuxtReady, useInlineAsset, useNuxtApp, useProxyAsset } from '#imports'
 
-export function useScript<T>(input: UseScriptOptions<T>): ScriptInstance<T> {
+export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptInstance<T> } {
   const nuxtApp = useNuxtApp()
   const resolvedScriptInput = toValue(input.script) || {} as Script
   const key = `nuxt-script-${hashCode(input.key)}`
@@ -155,7 +155,34 @@ export function useScript<T>(input: UseScriptOptions<T>): ScriptInstance<T> {
     loaded: computed(() => status.value === 'loaded'),
   }
   nuxtApp.$nuxtScripts[key] = script
-  return script
+
+  return new Proxy({}, {
+    get(_, fn) {
+      if (fn === '$script')
+        return script
+      if (input.mock?.[fn])
+        return input.mock[fn]
+      return (...args: any[]) => {
+        // third party scripts only run on client-side, mock the function
+        if (process.server)
+          return
+        // TODO mock invalid environments
+        if (script.loaded.value) {
+          const api = script.use()
+          // @ts-expect-error untyped
+          api[fn](...args)
+        }
+        else {
+          script.waitForLoad().then(
+            (api) => {
+              // @ts-expect-error untyped
+              api[fn](...args)
+            },
+          )
+        }
+      }
+    },
+  }) as any as T & { $script: ScriptInstance<T> }
 }
 
 declare module '#app' {
