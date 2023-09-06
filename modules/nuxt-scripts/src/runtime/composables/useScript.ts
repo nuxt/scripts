@@ -2,14 +2,13 @@ import { computed, ref, toValue, watch } from 'vue'
 import type { Head, Script } from '@unhead/schema'
 import type { ScriptBase } from 'zhead'
 import { hashCode } from '@unhead/shared'
-import type { UniversalScript, UseScriptOptions, UseScriptStatus } from '../types'
+import type { ScriptInstance, UseScriptOptions, UseScriptStatus } from '../types'
 import { onNuxtReady, useInlineAsset, useNuxtApp, useProxyAsset } from '#imports'
 
-export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
+export function useScript<T>(input: UseScriptOptions<T>): ScriptInstance<T> {
   const nuxtApp = useNuxtApp()
   const resolvedScriptInput = toValue(input.script) || {} as Script
   const key = `nuxt-script-${hashCode(input.key)}`
-  input.script.key = key
   if (nuxtApp.$nuxtScripts?.[key])
     return nuxtApp.$nuxtScripts[key]
 
@@ -38,7 +37,7 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
     // load strategies require a client-side load
     if (!input.loadStrategy)
       // handle server side script, we don't need events or promises
-      head.push({ script: [input.script] }, { ...input.scriptOptions, head, transform: transform as (input: unknown) => unknown })
+      head.push({ script: [{...input.script, key }] }, { ...input.scriptOptions, head, transform: transform as (input: unknown) => unknown })
     // TODO better handle mock scripts apis for server?
     return {
       use,
@@ -91,7 +90,7 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
     }).then(() => {
       status.value = 'loaded'
     })
-    const script: UniversalScript<T> = {
+    const script: ScriptInstance<T> = {
       use,
       status,
       error: ref(null),
@@ -148,7 +147,7 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
       }
     })
   })
-  const script: UniversalScript<T> = {
+  const script: ScriptInstance<T> = {
     use,
     status,
     error,
@@ -161,6 +160,6 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
 
 declare module '#app' {
   interface NuxtApp {
-    $nuxtScripts: Record<string, UniversalScript<any>>
+    $nuxtScripts: Record<string, ScriptInstance<any>>
   }
 }

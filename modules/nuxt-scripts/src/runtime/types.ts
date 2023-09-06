@@ -3,19 +3,19 @@ import type { ScriptBase } from 'zhead'
 import type { HeadEntryOptions, RuntimeMode, Script } from '@unhead/schema'
 
 export interface UseScriptOptions<T> {
-  key: string
+  key: Required<Script>['key']
   use: () => T | undefined | null
   assetStrategy?: 'proxy' | 'inline'
   loadStrategy?: 'idle' | Promise<void>
   transform?: (script: ScriptBase) => ScriptBase
   mode?: RuntimeMode
-  script: Script
-  scriptOptions?: HeadEntryOptions
+  script: Omit<Script, 'key'>
+  scriptOptions?: Omit<HeadEntryOptions, 'mode'>
 }
 
 export type UseScriptStatus = 'awaitingLoad' | 'loading' | 'loaded' | 'error'
 
-export interface UniversalScript<T> {
+export interface ScriptInstance<T> {
   loaded: ComputedRef<boolean>
   status: Ref<UseScriptStatus>
   error: Ref<Error | null>

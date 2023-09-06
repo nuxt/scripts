@@ -18,7 +18,7 @@ export const YoutubeEmbed = defineComponent<YoutubeEmbedOptions>({
     useScript({
       mode: 'client',
       // proxy may improve performance
-      // NOTE this does not wor, we need a Vue compatible library
+      // TODO this does not work, we need a Vue compatible library
       src: useProxyAsset('https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.js'),
       loadStrategy: 'idle',
     })

@@ -1,4 +1,4 @@
-import type { UniversalScript, UseScriptOptions } from '@nuxt/scripts/src/runtime/types'
+import type { ScriptInstance, UseScriptOptions } from '@nuxt/scripts/src/runtime/types'
 import { defu } from 'defu'
 import type { ThirdPartyScriptOptions } from './types'
 import { useScript } from '#imports'
@@ -13,7 +13,7 @@ export interface ThirdPartyInput<Options, Api> extends ThirdPartyCompatibility {
   mock?: Record<string | symbol, any>
 }
 
-export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): (thirdPartyOptions?: Options, scriptOptions?: ThirdPartyScriptOptions) => Api & { $script: UniversalScript<Api> } {
+export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): (thirdPartyOptions?: Options, scriptOptions?: ThirdPartyScriptOptions) => Api & { $script: ScriptInstance<Api> } {
   // augment a use function
   return (thirdPartyOptions?: Options, scriptOptions?: ThirdPartyScriptOptions) => {
     const useScriptInput = defu(thirdParty.setup(thirdPartyOptions || {} as Options), scriptOptions)
@@ -44,6 +44,6 @@ export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput
           }
         }
       },
-    }) as any as Api & { $script: UniversalScript<Api> }
+    }) as any as Api & { $script: ScriptInstance<Api> }
   }
 }
