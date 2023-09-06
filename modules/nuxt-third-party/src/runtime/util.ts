@@ -1,4 +1,7 @@
-import type { UniversalScript } from '@nuxt/scripts/src/runtime/types'
+import type { UniversalScript, UseScriptOptions } from '@nuxt/scripts/src/runtime/types'
+import { defu } from 'defu'
+import type { ThirdPartyScriptOptions } from './types'
+import { useScript } from '#imports'
 
 export interface ThirdPartyCompatibility {
   webworker?: boolean
@@ -6,15 +9,15 @@ export interface ThirdPartyCompatibility {
 }
 
 export interface ThirdPartyInput<Options, Api> extends ThirdPartyCompatibility {
-  setup: (options: Options) => UniversalScript<Api>
+  setup: (options: Options) => UseScriptOptions<Api>
   mock?: Record<string | symbol, any>
 }
 
-export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): (options?: Options) => Api & { $script: UniversalScript<Api> } {
+export function defineThirdPartyScript<Options, Api>(thirdParty: ThirdPartyInput<Options, Api>): (thirdPartyOptions?: Options, scriptOptions?: ThirdPartyScriptOptions) => Api & { $script: UniversalScript<Api> } {
   // augment a use function
-  return (options?: Options) => {
-    options = options || {} as Options
-    const script = thirdParty.setup(options)
+  return (thirdPartyOptions?: Options, scriptOptions?: ThirdPartyScriptOptions) => {
+    const useScriptInput = defu(thirdParty.setup(thirdPartyOptions || {} as Options), scriptOptions)
+    const script = useScript<Api>(useScriptInput)
     return new Proxy({}, {
       get(_, fn) {
         if (fn === '$script')

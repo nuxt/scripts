@@ -1,5 +1,5 @@
 import { defineThirdPartyScript } from '../util'
-import { useScript } from '#imports'
+import type { ThirdPartyScriptOptions } from '../types'
 
 export interface FathomOptions {
   site?: string
@@ -12,7 +12,7 @@ export interface FathomOptions {
   // TODO full config
 }
 
-export interface FathomApi {
+export interface FathomAnalyticsApi {
   trackPageview: (ctx?: { url: string; referrer?: string }) => void
   trackGoal: (eventName: string, eventValue: number) => void
   // TODO full API
@@ -20,14 +20,14 @@ export interface FathomApi {
 
 declare global {
   interface Window {
-    fathom: FathomApi
+    fathom: FathomAnalyticsApi
   }
 }
 
-export const FathomAnalytics = defineThirdPartyScript<FathomOptions, FathomApi>({
+export const FathomAnalytics = defineThirdPartyScript<FathomOptions, FathomAnalyticsApi>({
   setup(options) {
     const src = options.src || 'https://cdn.usefathom.com/script.js'
-    return useScript<FathomApi>({
+    return {
       key: 'fathom-analytics',
       use: () => typeof window !== 'undefined' ? window.fathom : undefined,
       script: {
@@ -36,11 +36,11 @@ export const FathomAnalytics = defineThirdPartyScript<FathomOptions, FathomApi>(
         'data-site': options.site!,
       },
       // TODO implement full options API
-    })
+    }
   },
 })
 
-export function useFathomAnalytics(options?: FathomOptions) {
+export function useFathomAnalytics(options?: FathomOptions, scriptOptions?: ThirdPartyScriptOptions) {
   // TODO reactivity
-  return FathomAnalytics(options)
+  return FathomAnalytics(options, scriptOptions)
 }

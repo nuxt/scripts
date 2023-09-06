@@ -35,8 +35,10 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
 
   const head = nuxtApp.vueApp._context.provides.usehead
   if (process.server) {
-    // handle server side script, we don't need events or promises
-    head.push({ script: [input.script] }, { ...input.scriptOptions, head, transform: transform as (input: unknown) => unknown })
+    // load strategies require a client-side load
+    if (!input.loadStrategy)
+      // handle server side script, we don't need events or promises
+      head.push({ script: [input.script] }, { ...input.scriptOptions, head, transform: transform as (input: unknown) => unknown })
     // TODO better handle mock scripts apis for server?
     return {
       use,
@@ -68,7 +70,7 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
         // if dom is already loaded and script use failed, we have an error
         if (document.readyState === 'complete')
           return reject(new Error('Script was not found'))
-          // setup promise after DOMContentLoaded
+        // setup promise after DOMContentLoaded
         document.addEventListener('DOMContentLoaded', doResolveTest, { once: true })
       }
       // with async we need to wait for idle callbacks (onNuxtReady)
@@ -76,7 +78,7 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
         // check if window is already loaded
         if (document.readyState === 'complete')
           return reject(new Error('Script was not found'))
-          // on window load
+        // on window load
         window.addEventListener('load', doResolveTest, { once: true })
       }
       else {
@@ -103,8 +105,12 @@ export function useScript<T>(input: UseScriptOptions<T>): UniversalScript<T> {
   // check if it already exists
   const error = ref<Error | null>(null)
   let startScriptLoadPromise = Promise.resolve()
+  // change mode to client
   if (input.loadStrategy === 'idle')
     startScriptLoadPromise = new Promise(resolve => onNuxtReady(resolve))
+  // check if input is a promise
+  else if (input.loadStrategy instanceof Promise)
+    startScriptLoadPromise = input.loadStrategy
 
   const status = ref<UseScriptStatus>('awaitingLoad')
 

@@ -1,5 +1,6 @@
 import { defineThirdPartyScript } from '../util'
-import { useScript, useServerHead } from '#imports'
+import type { ThirdPartyScriptOptions } from '../types'
+import { useServerHead } from '#imports'
 
 export interface GoogleAnalyticsOptions {
   id: string
@@ -34,17 +35,17 @@ export const GoogleAnalytics = defineThirdPartyScript<GoogleAnalyticsOptions, Go
       ],
     })
     // TODO handle worker
-    return useScript<GoogleAnalyticsApi>({
+    return {
       key: 'gtag',
       use: () => typeof window !== 'undefined' ? { gtag: window.gtag } as unknown as GoogleAnalyticsApi : null,
       script: {
         src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
       },
-    })
+    }
   },
 })
 
-export function useGoogleAnalytics(options?: GoogleAnalyticsOptions) {
+export function useGoogleAnalytics(options?: GoogleAnalyticsOptions, scriptOptions?: ThirdPartyScriptOptions) {
   // TODO reactivity
-  return GoogleAnalytics(options)
+  return GoogleAnalytics(options, scriptOptions)
 }

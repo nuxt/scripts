@@ -9,7 +9,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'scripts',
   },
   defaults: {},
-  async setup(options, nuxt) {
+  async setup() {
     const { resolve } = createResolver(import.meta.url)
 
     // worker dependency

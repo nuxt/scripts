@@ -1,5 +1,5 @@
 import { defineThirdPartyScript } from '../util'
-import { useScript } from '#imports'
+import type { ThirdPartyScriptOptions } from '../types'
 
 export interface CloudflareTurnstileOptions {
   // credits https://github.com/nuxt-modules/turnstile
@@ -56,8 +56,8 @@ declare global {
 }
 
 export const CloudflareTurnstile = defineThirdPartyScript<CloudflareTurnstileOptions, CloudflareTurnstileApi>({
-  setup(options) {
-    return useScript<CloudflareTurnstileApi>({
+  setup() {
+    return {
       key: 'cloudflare-turnstile',
       use: () => window.turnstile,
       script: {
@@ -66,11 +66,11 @@ export const CloudflareTurnstile = defineThirdPartyScript<CloudflareTurnstileOpt
         async: true,
       },
       // TODO implement full options API
-    })
+    }
   },
 })
 
-export function useCloudflareTurnstile(options?: CloudflareTurnstileOptions) {
+export function useCloudflareTurnstile(options?: CloudflareTurnstileOptions, scriptOptions?: ThirdPartyScriptOptions) {
   // TODO reactivity
-  return CloudflareTurnstile(options)
+  return CloudflareTurnstile(options, scriptOptions)
 }

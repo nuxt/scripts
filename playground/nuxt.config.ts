@@ -11,9 +11,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   thirdParty: {
     globals: {
-      fathomAnalytics: {
-        site: 'FA12323',
-      },
+      // fathomAnalytics: {
+      //   site: 'FA12323',
+      // },
       // googleAnalytics: {
       //   id: 'GA23423434',
       // },

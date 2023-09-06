@@ -1,12 +1,13 @@
-import { useScript, useServerHead} from '#imports'
-import { defineThirdPartyScript } from '../util'
 import { withQuery } from 'ufo'
+import { defineThirdPartyScript } from '../util'
+import type { ThirdPartyScriptOptions } from '../types'
+import { useServerHead } from '#imports'
 
 export interface GoogleTagManagerOptions {
   id: string
 }
 
-export interface GoogleTagManager {
+export interface GoogleTagManagerApi {
   dataLayer: Record<string, any>[]
 }
 
@@ -17,16 +18,16 @@ declare global {
   }
 }
 
-export const GoogleTagManager = defineThirdPartyScript<GoogleTagManagerOptions, GoogleTagManager>({
+export const GoogleTagManager = defineThirdPartyScript<GoogleTagManagerOptions, GoogleTagManagerApi>({
   mock: {
-    dataLayer: []
+    dataLayer: [],
   },
   setup(options) {
     useServerHead({
       script: [
         {
-          innerHTML: 'window.dataLayer=window.dataLayer||[];window.dataLayer.push({\'gtm.start\':new Date().getTime(),event:\'gtm.js\'});'
-        }
+          innerHTML: 'window.dataLayer=window.dataLayer||[];window.dataLayer.push({\'gtm.start\':new Date().getTime(),event:\'gtm.js\'});',
+        },
       ],
       noscript: [
         {
@@ -35,17 +36,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe>`,
         },
       ],
     })
-    return useScript<GoogleTagManager>({
+    return {
       key: 'google-tag-manager',
       use: () => ({ dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }),
       script: {
         src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options.id }),
       },
-    })
+    }
   },
 })
 
-export function useGoogleTagManager(options?: GoogleTagManagerOptions) {
+export function useGoogleTagManager(options?: GoogleTagManagerOptions, scriptOptions?: ThirdPartyScriptOptions) {
   // TODO reactivity
-  return GoogleTagManager(options)
+  return GoogleTagManager(options, scriptOptions)
 }

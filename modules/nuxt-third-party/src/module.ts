@@ -1,7 +1,7 @@
 import { addComponent, addImports, addPluginTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
-import {FathomOptions} from "./runtime/scripts/fathomAnalytics";
-import {GoogleAnalyticsOptions} from "./runtime/scripts/googleAnalytics";
-import {GoogleTagManagerOptions} from "./runtime/scripts/googleTagManager";
+import type { FathomOptions } from './runtime/scripts/fathomAnalytics'
+import type { GoogleAnalyticsOptions } from './runtime/scripts/googleAnalytics'
+import type { GoogleTagManagerOptions } from './runtime/scripts/googleTagManager'
 
 export interface ModuleOptions {
   globals?: {
@@ -59,8 +59,8 @@ export default defineNuxtModule<ModuleOptions>({
             imports.join('\n'),
             '',
             'export default defineNuxtPlugin({',
-            '  name: "nuxt-third-party",' +
-            '  mode: "server",', // TODO support SPA
+            '  name: "nuxt-third-party",'
+            + '  mode: "server",', // TODO support SPA
             '  setup() {',
             inits.map(i => `    ${i}`).join('\n'),
             '  }',
