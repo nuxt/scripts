@@ -24,12 +24,13 @@ Nuxt Scripts, for now is a simple composable - `useScript`.
 
 ## useScript
 
-`useScript` provides an API similar to `useHead`, it's specifically built for
-loading non-bundled IIFE scripts that have an API that you want to use in your app.
+The `useScript` composable is designed for
+using non-bundled IIFE scripts that have an API that you want to use in your app. It guarantees SSR support for loading and 
+error events, and provides a simple API for using the script.
 
 For example, Google Analytics, Stripe, etc.
 
-### Usage
+### Simple Usage
 
 To use external API functions before the script has loaded, there are three required options:
 - `key` - A unique key for the script
@@ -52,26 +53,82 @@ const script = useScript({
 
 ### Options
 
-Extends the Script options for `useHead` with the following extras:
-- `loadingStrategy` - When to load the script
-- `assetStrategy` - How to load the script
-- 
+#### `key`
 
-### Load Strategy
+- Type: `string`
+- Required: `true`
 
+A unique key for the script
+
+#### `script`
+
+- Type: `ScriptOptions`
+- Required: `true`
+- Default: `{}`
+
+The script options, this is the same as the `script` option for `useHead`
+
+#### `use`
+
+- Type: `() => any`
+- Required: `true`
+
+A function that resolves the scripts API. This is only called client-side.
+
+#### `loadingStrategy`
+
+- Type: `idle | Promise`
+- Required: `false`
+
+The loading strategy for the script. Can be one of the following:
 - `idle` - Load the script when the browser is idle
+- `Promise` - Load the script when the promise resolves
 
-### Asset Strategy
+#### `assetStrategy`
 
+- Type: `inline | proxy`
+- Required: `false`
+
+The asset strategy for the script. Can be one of the following:
 - `inline` - Inline the script
-- `proxy` - Proxy the script
+- `proxy` - Proxy the script'
 
-### Universal load / error events
+### Script Instance API
 
-- SSR won't trigger load events
-- Hydration of SSR tags will trigger artificial load / error events
-- CSR will trigger native load / error events
+#### `waitForLoad`
 
+- Type: `() => Promise<void>`
+
+Returns a promise that resolves when the script has loaded.
+
+```ts
+const { waitForLoad, use } = useScript({
+  // ...
+})
+// Note: for server-side, this will never resolved 
+waitForLoad().then(() => {
+  use().myFunction() // api is available
+})
+```
+
+#### `use`
+
+- Type: `() => any`
+
+Returns the API of the script. This is only available after the script has loaded.
+
+```ts
+const { use } = useScript({
+  // ...
+})
+use() // most likely undefined
+```
+
+#### status
+
+- Type: `Ref<ScriptStatus>`
+
+The status of the script. Can be one of the following: `'awaitingLoad' | 'loading' | 'loaded' | 'error'`
 
 # Nuxt Third Parties
 
