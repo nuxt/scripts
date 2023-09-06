@@ -38,7 +38,7 @@ export default defineNuxtModule<ModuleOptions>({
     // await installModule('@nuxt/scripts')
     // await installModule('@nuxt/assets')
 
-    const hasGlobals = Object.keys(options.globals).length > 0
+    const hasGlobals = Object.keys(options.globals || {}).length > 0
     if (hasGlobals) {
       addPluginTemplate({
         filename: 'third-party.mjs',
@@ -47,7 +47,7 @@ export default defineNuxtModule<ModuleOptions>({
           const imports = ['import { defineNuxtPlugin } from "#imports";']
           const inits = []
           // for global scripts, we can initialise them script away
-          for (const [k, config] of Object.entries(options.globals)) {
+          for (const [k, config] of Object.entries(options.globals || {})) {
             // lazy module resolution
             const importPath = resolve(`./runtime/scripts/${k}`)
             // title case
