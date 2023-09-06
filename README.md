@@ -26,3 +26,18 @@ Adds a globally unique script to the <head>.
 - Hydration of SSR tags will trigger artificial load / error events
 - CSR will trigger native load / error events
 
+
+# Nuxt Third Parties
+
+## Scripts
+
+Support a number of third-party common scripts loaded in the best performance way while exposing 
+a flexible and powerful wrapper on the underlying API.
+
+- Build from `useScript`.
+
+### Proxied API
+
+- Function calls in unsupported environments (server side)
+- Queued function calls for when the script has loaded (i.e send analytic events once a consent is agreed)
+- Use functions when browser extensions may have blocked the library 
