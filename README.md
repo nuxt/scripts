@@ -10,7 +10,7 @@ Nuxt Scripts, for now is a simple composable - `useScript`.
 
 ## Features
 
-- 🪄 Queues API calls while scripts are loading, doesn't break your app if it fails
+- 🪄 Safely use third-party scripts before they're loaded or if they fail
 - 🪝 Trigger scripts when _you_ need them (`idle`, `manual`)
 - 💎 Load scripts from SSR or CSR with consistent events (`load`, `error`)
 - 🌐 Serve scripts from your domain using asset strategies (`inline`, `proxy`)
