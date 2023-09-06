@@ -2,7 +2,7 @@
 import { ref, useFathomAnalytics } from '#imports'
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { $script, trackPageview, trackGoal } = useFathomAnalytics({
+const { $script, trackPageview } = useFathomAnalytics({
   site: 'BRDEJWKJ',
 }, {
   // load after 3 seconds

@@ -37,7 +37,7 @@ export const GoogleAnalytics = defineThirdPartyScript<GoogleAnalyticsOptions, Go
     // TODO handle worker
     return {
       key: 'gtag',
-      use: () => typeof window !== 'undefined' ? { gtag: window.gtag } as unknown as GoogleAnalyticsApi : null,
+      use: () => { gtag: window.gtag },
       script: {
         src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
       },

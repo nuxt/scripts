@@ -32,6 +32,7 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
 
   const use = input.use as () => T
 
+  let script: ScriptInstance<T>
   const head = nuxtApp.vueApp._context.provides.usehead
   if (process.server) {
     // load strategies require a client-side load
@@ -39,7 +40,7 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
       // handle server side script, we don't need events or promises
       head.push({ script: [{...input.script, key }] }, { ...input.scriptOptions, head, transform: transform as (input: unknown) => unknown })
     // TODO better handle mock scripts apis for server?
-    return {
+    script = {
       use,
       status: ref('loaded'),
       error: ref(null),
@@ -47,112 +48,113 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
       waitForLoad: () => new Promise(() => {}),
       loaded: computed(() => true),
     }
-  }
-  // we're client-side now
+  } else {
+    // we're client-side now
 
-  // hydrating a ssr script has limited support for events, we need to trigger them a bit differently
-  // TODO handle errors
-  const isHydratingSSRScript = !!document.querySelector(`script[data-hid="${hashCode(key)}"]`)
-  if (isHydratingSSRScript) {
-    const status = ref<UseScriptStatus>('loading')
-    const loadedPromise: Promise<T> = new Promise<T>((resolve, reject) => {
-      // covers sync scripts and when events have already fired
-      function doResolveTest() {
-        const api = use()
-        if (api)
-          return resolve(api)
-        return false
+    // hydrating a ssr script has limited support for events, we need to trigger them a bit differently
+    // TODO handle errors
+    const isHydratingSSRScript = !!document.querySelector(`script[data-hid="${hashCode(key)}"]`)
+    if (isHydratingSSRScript) {
+      const status = ref<UseScriptStatus>('loading')
+      const loadedPromise: Promise<T> = new Promise<T>((resolve, reject) => {
+        // covers sync scripts and when events have already fired
+        function doResolveTest() {
+          const api = use()
+          if (api)
+            return resolve(api)
+          return false
+        }
+
+        doResolveTest()
+        // simple defer is easy
+        if (resolvedScriptInput.defer && !resolvedScriptInput.async) {
+          // if dom is already loaded and script use failed, we have an error
+          if (document.readyState === 'complete')
+            return reject(new Error('Script was not found'))
+          // setup promise after DOMContentLoaded
+          document.addEventListener('DOMContentLoaded', doResolveTest, {once: true})
+        }
+        // with async we need to wait for idle callbacks (onNuxtReady)
+        else if (resolvedScriptInput.async) {
+          // check if window is already loaded
+          if (document.readyState === 'complete')
+            return reject(new Error('Script was not found'))
+          // on window load
+          window.addEventListener('load', doResolveTest, {once: true})
+        } else {
+          onNuxtReady(() => {
+            // idle timeout, must be loaded here
+            if (!doResolveTest())
+              reject(new Error('Script not found'))
+          })
+        }
+      }).then(() => {
+        status.value = 'loaded'
+      })
+      script = {
+        use,
+        status,
+        error: ref(null),
+        waitForLoad: () => loadedPromise,
+        loaded: computed(() => status.value === 'loaded'),
       }
-      doResolveTest()
-      // simple defer is easy
-      if (resolvedScriptInput.defer && !resolvedScriptInput.async) {
-        // if dom is already loaded and script use failed, we have an error
-        if (document.readyState === 'complete')
-          return reject(new Error('Script was not found'))
-        // setup promise after DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', doResolveTest, { once: true })
+    } else {
+
+      // check if it already exists
+      const error = ref<Error | null>(null)
+      let startScriptLoadPromise = Promise.resolve()
+      // change mode to client
+      if (input.loadStrategy === 'idle')
+        startScriptLoadPromise = new Promise(resolve => onNuxtReady(resolve))
+      // check if input is a promise
+      else if (input.loadStrategy instanceof Promise)
+        startScriptLoadPromise = input.loadStrategy
+
+      const status = ref<UseScriptStatus>('awaitingLoad')
+
+      // need to stub out the onload function
+      const onload = input.script.onload || (() => {
+      })
+      // when inserting client sided we can use the event handlers
+      input.script.onload = () => {
+        status.value = 'loaded'
+        nuxtApp.runWithContext(onload)
       }
-      // with async we need to wait for idle callbacks (onNuxtReady)
-      else if (resolvedScriptInput.async) {
-        // check if window is already loaded
-        if (document.readyState === 'complete')
-          return reject(new Error('Script was not found'))
-        // on window load
-        window.addEventListener('load', doResolveTest, { once: true })
-      }
-      else {
-        onNuxtReady(() => {
-          // idle timeout, must be loaded here
-          if (!doResolveTest())
-            reject(new Error('Script not found'))
+
+      // TODO handle sync script
+      head.hooks.hook('dom:renderTag', (ctx) => {
+        if (ctx.tag.key === key && ctx.tag.innerHTML) {
+          // trigger the onload if the script is using innerHTML
+          status.value = 'loaded'
+        }
+      })
+
+      startScriptLoadPromise
+        .then(() => {
+          status.value = 'loading'
+          head.push({script: [input.script]}, {...input.scriptOptions, head, transform: transform as (input: unknown) => unknown})
         })
+        .catch(e => error.value = e)
+
+      const waitForLoad = () => new Promise<T>((resolve) => {
+        if (status.value === 'loaded')
+          return resolve(use())
+        // watch for status change
+        const unregister = watch(status, () => {
+          if (status.value === 'loaded') {
+            unregister()
+            resolve(use())
+          }
+        })
+      })
+      script = {
+        use,
+        status,
+        error,
+        waitForLoad,
+        loaded: computed(() => status.value === 'loaded'),
       }
-    }).then(() => {
-      status.value = 'loaded'
-    })
-    const script: ScriptInstance<T> = {
-      use,
-      status,
-      error: ref(null),
-      waitForLoad: () => loadedPromise,
-      loaded: computed(() => status.value === 'loaded'),
     }
-    nuxtApp.$nuxtScripts[key] = script
-    return script
-  }
-
-  // check if it already exists
-  const error = ref<Error | null>(null)
-  let startScriptLoadPromise = Promise.resolve()
-  // change mode to client
-  if (input.loadStrategy === 'idle')
-    startScriptLoadPromise = new Promise(resolve => onNuxtReady(resolve))
-  // check if input is a promise
-  else if (input.loadStrategy instanceof Promise)
-    startScriptLoadPromise = input.loadStrategy
-
-  const status = ref<UseScriptStatus>('awaitingLoad')
-
-  // need to stub out the onload function
-  const onload = input.script.onload || (() => {})
-  // when inserting client sided we can use the event handlers
-  input.script.onload = () => {
-    status.value = 'loaded'
-    nuxtApp.runWithContext(onload)
-  }
-
-  // TODO handle sync script
-  head.hooks.hook('dom:renderTag', (ctx) => {
-    if (ctx.tag.key === key && ctx.tag.innerHTML) {
-      // trigger the onload if the script is using innerHTML
-      status.value = 'loaded'
-    }
-  })
-
-  startScriptLoadPromise
-    .then(() => {
-      status.value = 'loading'
-      head.push({ script: [input.script] }, { ...input.scriptOptions, head, transform: transform as (input: unknown) => unknown })
-    })
-    .catch(e => error.value = e)
-
-  const waitForLoad = () => new Promise<T>((resolve) => {
-    if (status.value === 'loaded')
-      return resolve(use())
-    // watch for status change
-    const unregister = watch(status, () => {
-      if (status.value === 'loaded') {
-        unregister()
-        resolve(use())
-      }
-    })
-  })
-  const script: ScriptInstance<T> = {
-    use,
-    status,
-    error,
-    waitForLoad,
-    loaded: computed(() => status.value === 'loaded'),
   }
   nuxtApp.$nuxtScripts[key] = script
 

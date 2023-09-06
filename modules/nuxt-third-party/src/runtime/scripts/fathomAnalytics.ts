@@ -29,7 +29,7 @@ export const FathomAnalytics = defineThirdPartyScript<FathomOptions, FathomAnaly
     const src = options.src || 'https://cdn.usefathom.com/script.js'
     return {
       key: 'fathom-analytics',
-      use: () => typeof window !== 'undefined' ? window.fathom : undefined,
+      use: () =>  window.fathom,
       script: {
         src,
         'defer': true,
