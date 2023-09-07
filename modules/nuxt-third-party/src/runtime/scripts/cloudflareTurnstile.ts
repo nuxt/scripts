@@ -1,5 +1,6 @@
 import { defineThirdPartyScript } from '../util'
 import type { ThirdPartyScriptOptions } from '../types'
+import { defu } from "defu"
 
 export interface CloudflareTurnstileOptions {
   // credits https://github.com/nuxt-modules/turnstile
@@ -40,13 +41,16 @@ export interface CloudflareTurnstileOptions {
   'error-callback'?: () => void
 }
 
+type WidgetContainer = string | HTMLElement
+
 export interface CloudflareTurnstileApi {
   // TODO full API
-  render: (selector: string | HTMLElement, options: { siteKey: string; callback: () => void }) => string | undefined
-  getResponse: (widgetId?: string) => string | undefined
-  reset: (widgetId?: string) => void
-  isExpired: (widgetId?: string) => boolean
-  remove: (widgetId?: string) => void
+  render: (selector: WidgetContainer, options: Partial<{ sitekey: string; callback: (token: string) => void }>) => string | undefined
+  getResponse: (widgetId?: WidgetContainer) => string | undefined
+  reset: (widgetId?: WidgetContainer) => void
+  isExpired: (widgetId?: WidgetContainer) => boolean
+  remove: (widgetId?: WidgetContainer) => void
+  execute: (container?: WidgetContainer, options?: CloudflareTurnstileOptions) => void;
 }
 
 declare global {
@@ -55,11 +59,29 @@ declare global {
   }
 }
 
+function useTurnstile(options: CloudflareTurnstileOptions): CloudflareTurnstileApi | undefined {
+   if(window.turnstile) {
+    if(!options) {
+      return window.turnstile
+    } 
+
+    return new Proxy(window.turnstile, {
+      get(_, fn: keyof CloudflareTurnstileApi) {
+        if(fn === 'render' || fn === 'execute') {
+             return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn ](container, defu(options, renderOptions))
+        }
+
+        return window.turnstile[fn]
+      }
+    })
+   }
+}
+
 export const CloudflareTurnstile = defineThirdPartyScript<CloudflareTurnstileOptions, CloudflareTurnstileApi>({
-  setup() {
+  setup(options) {
     return {
       key: 'cloudflare-turnstile',
-      use: () => window.turnstile,
+      use: () => useTurnstile(options),
       script: {
         src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
         defer: true,
