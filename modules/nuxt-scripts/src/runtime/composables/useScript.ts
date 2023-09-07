@@ -88,8 +88,9 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
               reject(new Error('Script not found'))
           })
         }
-      }).then(() => {
+      }).then((api) => {
         status.value = 'loaded'
+        return api
       })
       script = {
         use,
@@ -137,8 +138,9 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
         .catch(e => error.value = e)
 
       const waitForLoad = () => new Promise<T>((resolve) => {
-        if (status.value === 'loaded')
+        if (status.value === 'loaded') {
           return resolve(use())
+        }
         // watch for status change
         const unregister = watch(status, () => {
           if (status.value === 'loaded') {
