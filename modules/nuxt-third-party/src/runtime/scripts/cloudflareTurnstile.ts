@@ -45,7 +45,7 @@ type WidgetContainer = string | HTMLElement
 
 export interface CloudflareTurnstileApi {
   // TODO full API
-  render: (selector: WidgetContainer, options: Partial<{ sitekey: string; callback: (token: string) => void }>) => string | undefined
+  render: (selector: WidgetContainer, options?: Partial<CloudflareTurnstileOptions>) => string | undefined
   getResponse: (widgetId?: WidgetContainer) => string | undefined
   reset: (widgetId?: WidgetContainer) => void
   isExpired: (widgetId?: WidgetContainer) => boolean
@@ -68,7 +68,7 @@ function useTurnstile(options: CloudflareTurnstileOptions): CloudflareTurnstileA
     return new Proxy(window.turnstile, {
       get(_, fn: keyof CloudflareTurnstileApi) {
         if(fn === 'render' || fn === 'execute') {
-             return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn ](container, defu(options, renderOptions))
+             return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn](container, defu(options, renderOptions))
         }
 
         return window.turnstile[fn]
