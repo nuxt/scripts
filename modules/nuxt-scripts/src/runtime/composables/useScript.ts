@@ -9,6 +9,7 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
   const nuxtApp = useNuxtApp()
   const resolvedScriptInput = toValue(input.script) || {} as Script
   const key = `nuxt-script-${hashCode(input.key)}`
+
   if (nuxtApp.$nuxtScripts?.[key])
     return nuxtApp.$nuxtScripts[key]
 
@@ -158,9 +159,8 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
       }
     }
   }
-  nuxtApp.$nuxtScripts[key] = script
 
-  return new Proxy({}, {
+  const proxy = new Proxy({}, {
     get(_, fn) {
       if (fn === '$script')
         return script
@@ -187,6 +187,10 @@ export function useScript<T>(input: UseScriptOptions<T>): T & { $script: ScriptI
       }
     },
   }) as any as T & { $script: ScriptInstance<T> }
+
+    nuxtApp.$nuxtScripts[key] = proxy
+
+    return proxy
 }
 
 declare module '#app' {
