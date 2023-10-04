@@ -28,7 +28,7 @@ export default defineEventHandler(async (e) => {
   const logger = createConsola()
 
   // TODO handle integrity checks properly
-  if (typeof integrity === 'string') {
+  if (integrity && typeof integrity === 'string') {
     if (asset.integrity !== integrity)
       logger.warn(`The expected integrity was ${integrity}, received ${asset?.integrity}.\`.`)
     // TODO maybe throw error

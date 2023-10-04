@@ -40,9 +40,9 @@
     "vitest": "^0.34.6"
   },
   "resolutions": {
-    "@unhead/schema": "1.8.0-beta.6",
-    "@unhead/shared": "1.8.0-beta.6",
-    "@unhead/vue": "1.8.0-beta.6",
-    "unhead": "1.8.0-beta.6"
+    "@unhead/schema": "1.8.0-beta.8",
+    "@unhead/shared": "1.8.0-beta.8",
+    "@unhead/vue": "1.8.0-beta.8",
+    "unhead": "1.8.0-beta.8"
   }
 }

@@ -38,7 +38,7 @@ export async function useCachedAsset(src: string, options?: { ttl?: number; purg
     }
   }
   if (!asset) {
-    const result = await globalThis.$fetch.raw(src as string, {
+    const result = await $fetch.raw<string>(src as string, {
       // make sure we're only getting scripts
       // headers: {
       //   accept: 'application/javascript',
@@ -47,8 +47,10 @@ export async function useCachedAsset(src: string, options?: { ttl?: number; purg
     if (!result._data || !result.status.toString().startsWith('2')/* || !result.headers.get('content-type')?.endsWith('/javascript') */)
       return null
 
+    const blob = result._data as unknown as Blob
+    // convert blob to string
     asset = {
-      innerHTML: result._data,
+      innerHTML: await blob.text(),
       integrity: `sha256-${sha256base64(result._data as string)}`,
     }
     if (useCache)
