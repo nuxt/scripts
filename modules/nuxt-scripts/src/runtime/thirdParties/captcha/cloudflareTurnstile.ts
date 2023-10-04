@@ -1,6 +1,5 @@
-import { defineThirdPartyScript } from '../util'
-import type { ThirdPartyScriptOptions } from '../types'
-import { defu } from "defu"
+import { defu } from 'defu'
+import { useScript } from '#imports'
 
 export interface CloudflareTurnstileOptions {
   // credits https://github.com/nuxt-modules/turnstile
@@ -50,7 +49,7 @@ export interface CloudflareTurnstileApi {
   reset: (widgetId?: WidgetContainer) => void
   isExpired: (widgetId?: WidgetContainer) => boolean
   remove: (widgetId?: WidgetContainer) => void
-  execute: (container?: WidgetContainer, options?: CloudflareTurnstileOptions) => void;
+  execute: (container?: WidgetContainer, options?: CloudflareTurnstileOptions) => void
 }
 
 declare global {
@@ -59,40 +58,27 @@ declare global {
   }
 }
 
-function useTurnstile(options: CloudflareTurnstileOptions): CloudflareTurnstileApi | undefined {
-   if(window.turnstile) {
-    if(!options) {
-      return window.turnstile
-    } 
+function useTurnstile(options: CloudflareTurnstileOptions): CloudflareTurnstileApi {
+  if (!options)
+    return window.turnstile
 
-    return new Proxy(window.turnstile, {
-      get(_, fn: keyof CloudflareTurnstileApi) {
-        if(fn === 'render' || fn === 'execute') {
-             return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn](container, defu(options, renderOptions))
-        }
+  return new Proxy(window.turnstile, {
+    get(_, fn: keyof CloudflareTurnstileApi) {
+      if (fn === 'render' || fn === 'execute')
+        return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn](container, defu(options, renderOptions))
 
-        return window.turnstile[fn]
-      }
-    })
-   }
+      return window.turnstile[fn]
+    },
+  })
 }
 
-export const CloudflareTurnstile = defineThirdPartyScript<CloudflareTurnstileOptions, CloudflareTurnstileApi>({
-  setup(options) {
-    return {
-      key: 'cloudflare-turnstile',
-      use: () => useTurnstile(options),
-      script: {
-        src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-        defer: true,
-        async: true,
-      },
-      // TODO implement full options API
-    }
-  },
-})
-
-export function useCloudflareTurnstile(options?: CloudflareTurnstileOptions, scriptOptions?: ThirdPartyScriptOptions) {
-  // TODO reactivity
-  return CloudflareTurnstile(options, scriptOptions)
+export function useCloudflareTurnstile(options: CloudflareTurnstileOptions) {
+  return useScript<CloudflareTurnstileApi>({
+    key: 'cloudflare',
+    src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+    defer: true,
+    async: true,
+  }, {
+    use: () => useTurnstile(options),
+  })
 }

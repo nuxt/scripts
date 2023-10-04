@@ -9,12 +9,10 @@ export default defineEventHandler(async (e) => {
 
   src = decodeURIComponent(src)
 
-  const cachedAsset = await useCachedAsset(src,
-    {
-      ttl: Number(ttl),
-      purge: Boolean(purge),
-    },
-  )
+  const cachedAsset = await useCachedAsset(src, {
+    ttl: Number(ttl),
+    purge: Boolean(purge),
+  })
 
   if (!cachedAsset || !cachedAsset.asset)
     return proxyRequest(e, src)

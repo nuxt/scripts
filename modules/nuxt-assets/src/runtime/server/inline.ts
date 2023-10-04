@@ -10,12 +10,10 @@ export default defineEventHandler(async (e) => {
 
   src = decodeURIComponent(src)
   integrity = decodeURIComponent(integrity as string)
-  const cachedAsset = await useCachedAsset(src,
-    {
-      ttl: Number(ttl),
-      purge: Boolean(purge),
-    },
-  )
+  const cachedAsset = await useCachedAsset(src, {
+    ttl: Number(ttl),
+    purge: Boolean(purge),
+  })
 
   if (!cachedAsset || !cachedAsset.asset) {
     // error

@@ -1,15 +1,15 @@
 import NuxtScripts from '../modules/nuxt-scripts/src/module'
-import NuxtThirdParty from '../modules/nuxt-third-party/src/module'
 import NuxtAssets from '../modules/nuxt-assets/src/module'
 
 export default defineNuxtConfig({
   modules: [
     NuxtScripts,
-    NuxtThirdParty,
     NuxtAssets,
+    '@nuxt/ui',
+    'nuxt-icon',
   ],
   devtools: { enabled: true },
-  thirdParty: {
+  scripts: {
     globals: {
       // fathomAnalytics: {
       //   site: 'FA12323',

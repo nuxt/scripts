@@ -22,6 +22,6 @@
     "dev:prepare": "nuxt-module-build --stub"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.7.1"
+    "@nuxt/kit": "^3.7.4"
   }
 }

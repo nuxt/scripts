@@ -1,8 +1,8 @@
-# Nuxt Scripts, Assets and Third Parties
+# Nuxt Scripts and Assets
 
 Work in progress for the development of the following modules
 - Nuxt Assets - Improved loading options for assets (proxy, inline, etc)
-- Nuxt Third Parties - Simple optimised wrappers for third parties
+- Nuxt Scripts - Simple optimized wrappers for third parties
 
 # Nuxt Scripts
 
@@ -34,8 +34,8 @@ For example, Google Analytics, Stripe, etc.
 
 To use external API functions before the script has loaded, there are three required options:
 - `key` - A unique key for the script
-- `script` - The script options, this is the same as the `script` option for `useHead`
-- `use` - A function that resolves the scripts API
+  - `script` - The script options, this is the same as the `script` option for `useHead`
+  - `use` - A function that resolves the scripts API
 
 ```vue
 <script lang="ts" setup>
@@ -111,7 +111,7 @@ Returns a promise that resolves when the script has loaded.
 const { $script } = useScript({
   // ...
 })
-// Note: for server-side, this will never resolved 
+// Note: for server-side, this will never resolved
 $script.waitForLoad().then(() => {
   use().myFunction() // api is available
 })
