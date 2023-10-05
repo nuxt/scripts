@@ -16,9 +16,7 @@ export interface GoogleAnalyticsApi {
 }
 
 declare global {
-  interface Window {
-    gtag: GoogleAnalyticsApi
-  }
+  interface Window extends GoogleAnalyticsApi {}
 }
 
 export function useGoogleAnalytics(options: GoogleAnalyticsOptions) {
