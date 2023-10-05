@@ -14,7 +14,7 @@ const { $script, trackPageview, trackGoal } = useFathomAnalytics({
 // this will be triggered once the script is ready async
 trackPageview({ url: '/fathom' })
 // we can manually wait for the script to be ready (TODO error handling)
-$script.waitForUse().then(() => {
+$script.waitForLoad().then(() => {
   // eslint-disable-next-line no-console
   console.log('fathom is ready')
 })

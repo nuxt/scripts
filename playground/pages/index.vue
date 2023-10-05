@@ -1,46 +1,31 @@
 <script lang="ts" setup>
-import type { VueScriptInstance } from '@unhead/vue'
-import { injectHead, ref, useScript } from '#imports'
+import type { NuxtUseScriptOptions } from '../../modules/nuxt-scripts/src/runtime/composables/useScript'
+import { ref, useConfetti } from '#imports'
 
-const state = ref({
-  key: 'confetti',
-  src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
-  trigger: undefined,
-  assetStrategy: undefined,
+const state = ref<{ trigger: 'default' | 'manual' | 'idle'; assetStrategy: 'default' | 'inline' | 'proxy' }>({
+  trigger: 'default',
+  assetStrategy: 'default',
 })
 
-const script = ref<VueScriptInstance<any> | null>(null)
+const script = ref<NuxtUseScriptOptions<JSConfetti> | null>(null)
 
-let doConfetti = () => {}
+let doConfetti: JSConfetti['addConfetti'] = () => {}
 
 async function submit() {
-  const { $script, addConfetti } = useScript<{ addConfetti: () => void }>({
-    key: state.value.key,
-    src: state.value.src,
-    // onload() {
-    //   console.log('onload test')
-    // }
-  }, {
+  const { $script, addConfetti } = useConfetti({
     trigger: state.value.trigger === 'default' ? undefined : state.value.trigger,
     assetStrategy: state.value.assetStrategy === 'default' ? undefined : state.value.assetStrategy,
-    use: () => {
-      return new window.JSConfetti()
-    },
   })
   doConfetti = addConfetti
-  $script.waitForUse().then(() => {
-    console.log('ready!')
-  })
   addConfetti()
   script.value = $script
 }
 function load() {
-  script.value.load()
+  script.value?.load()
 }
 function reset() {
+  script.value?.remove()
   script.value = null
-  const head = injectHead()
-  delete head._scripts[script.value.key]
 }
 </script>
 
@@ -48,7 +33,9 @@ function reset() {
   <div>
     <div class="grid grid-cols-3 gap-10">
       <div>
-        <h2>Load Confetti</h2>
+        <h2 class="font-bold mb-5 text-xl flex items-center">
+          Confetti
+        </h2>
         <UForm
           v-if="!script"
           class="mt-5"

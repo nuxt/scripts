@@ -9,7 +9,8 @@ export default defineEventHandler(async (e) => {
     return
 
   src = decodeURIComponent(src)
-  integrity = decodeURIComponent(integrity as string)
+  if (integrity)
+    integrity = decodeURIComponent(integrity as string)
   const cachedAsset = await useCachedAsset(src, {
     ttl: Number(ttl),
     purge: Boolean(purge),

@@ -27,6 +27,8 @@ const thirdParties = [
   { from: 'analytics/googleAnalytics', name: 'useGoogleAnalytics' },
   { from: 'analytics/fathomAnalytics', name: 'useFathomAnalytics' },
   { from: 'analytics/cloudflareAnalytics', name: 'useCloudflareAnalytics' },
+  // fun
+  { from: 'fun/confetti', name: 'useConfetti' },
   // other
   { from: 'googleTagManager', name: 'useGoogleTagManager' },
 ]

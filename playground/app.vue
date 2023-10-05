@@ -36,7 +36,9 @@ head.hooks.hook('dom:rendered', () => {
             <NuxtPage />
           </div>
           <div class="col-span-1">
-            <div>Scripts</div>
+            <h2 class="text-xl font-bold">
+              Unhead Scripts
+            </h2>
             <div>
               <ul>
                 <li v-for="(script, key) of scripts" :key="key">
