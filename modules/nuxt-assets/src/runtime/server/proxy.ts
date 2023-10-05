@@ -2,20 +2,20 @@ import { defineEventHandler, getQuery, proxyRequest, setHeader } from 'h3'
 import { useCachedAsset } from './util'
 
 export default defineEventHandler(async (e) => {
-  let { src, ttl, purge } = getQuery(e)
+  let { url, ttl, purge } = getQuery(e)
 
-  if (typeof src !== 'string')
+  if (typeof url !== 'string')
     return
 
-  src = decodeURIComponent(src)
+  url = decodeURIComponent(url)
 
-  const cachedAsset = await useCachedAsset(src, {
+  const cachedAsset = await useCachedAsset(url, {
     ttl: Number(ttl),
     purge: Boolean(purge),
   })
 
   if (!cachedAsset || !cachedAsset.asset)
-    return proxyRequest(e, src)
+    return proxyRequest(e, url)
 
   const { asset, cacheResult, cacheExpires, ttl: _ttl } = cachedAsset
 
@@ -23,5 +23,5 @@ export default defineEventHandler(async (e) => {
   setHeader(e, 'x-nuxt-script-proxy-cache-ttl', cacheExpires.toString())
   setHeader(e, 'content-type', 'text/javascript; charset=utf-8')
   setHeader(e, 'cache-control', `public, max-age=${_ttl}, must-revalidate`)
-  return asset
+  return asset.innerHTML
 })

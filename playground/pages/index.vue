@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import type { NuxtUseScriptOptions } from '../../modules/nuxt-scripts/src/runtime/composables/useScript'
+import type { VueScriptInstance } from '@unhead/vue'
+import type { JSConfetti } from '../../modules/nuxt-scripts/src/runtime/thirdParties/fun/confetti'
 import { ref, useConfetti } from '#imports'
 
 const state = ref<{ trigger: 'default' | 'manual' | 'idle'; assetStrategy: 'default' | 'inline' | 'proxy' }>({
@@ -7,7 +8,7 @@ const state = ref<{ trigger: 'default' | 'manual' | 'idle'; assetStrategy: 'defa
   assetStrategy: 'default',
 })
 
-const script = ref<NuxtUseScriptOptions<JSConfetti> | null>(null)
+const script = ref<VueScriptInstance<JSConfetti> | null>(null)
 
 let doConfetti: JSConfetti['addConfetti'] = () => {}
 

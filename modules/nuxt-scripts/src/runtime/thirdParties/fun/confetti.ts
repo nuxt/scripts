@@ -1,8 +1,8 @@
 import type { NuxtUseScriptOptions } from '../../composables/useScript'
 import { useScript } from '../../composables/useScript'
 
-interface JSConfetti {
-  addConfetti: (options?: { emoji: string[] }) => void
+export interface JSConfetti {
+  addConfetti: (options?: { emojis: string[] }) => void
 }
 
 declare global {
