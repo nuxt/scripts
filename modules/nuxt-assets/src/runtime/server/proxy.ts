@@ -2,6 +2,7 @@ import { defineEventHandler, getQuery, proxyRequest, setHeader } from 'h3'
 import { useCachedAsset } from './util'
 
 export default defineEventHandler(async (e) => {
+  // eslint-disable-next-line prefer-const
   let { url, ttl, purge } = getQuery(e)
 
   if (typeof url !== 'string')
