@@ -1,8 +1,9 @@
 import { useRuntimeConfig } from '#imports'
+import type { NitroFetchOptions } from 'nitropack'
 
 export function useInlineAsset(url: string, options?: { encoding: string; integrity: string }) {
   const { routePrefix } = useRuntimeConfig().public['nuxt-assets']
-  const fetchParams = {
+  const fetchParams: NitroFetchOptions<string> = {
     query: {
       src: encodeURIComponent(url),
       integrity: options?.integrity ? encodeURIComponent(options.integrity) : undefined,
