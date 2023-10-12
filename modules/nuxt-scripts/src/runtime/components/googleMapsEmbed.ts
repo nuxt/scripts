@@ -1,6 +1,8 @@
 import { defineComponent, h } from 'vue'
 import { withQuery } from 'ufo'
 
+// TODO maybe delete
+
 interface GoogleMapsOptions {
   apiKey: string
   /**

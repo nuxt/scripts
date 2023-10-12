@@ -1,14 +1,25 @@
 import { addComponent, addImports, addPluginTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
-import type { FathomOptions } from './runtime/thirdParties/fathomAnalytics'
-import type { GoogleAnalyticsOptions } from './runtime/thirdParties/googleAnalytics'
+import type { GoogleAnalyticsOptions } from './runtime/thirdParties/analytics/googleAnalytics'
 import type { GoogleTagManagerOptions } from './runtime/thirdParties/googleTagManager'
+import type { FathomAnalyticsOptions } from './runtime/thirdParties/analytics/fathomAnalytics'
+import type { GoogleAdsenseOptions } from './runtime/thirdParties/ads/googleAdsense'
+import type { CloudflareTurnstileOptions } from './runtime/thirdParties/captcha/cloudflareTurnstile'
+import type { GoogleRecaptchaOptions } from './runtime/thirdParties/captcha/googleRecaptcha'
+import type { JSConfettiOptions } from './runtime/thirdParties/fun/confetti'
 
 export interface ModuleOptions {
   globals?: {
-    // global third parties
-    fathomAnalytics?: FathomOptions
+    // ads
+    googleAdsense?: GoogleAdsenseOptions
+    // analytics
+    fathomAnalytics?: FathomAnalyticsOptions
     googleAnalytics?: GoogleAnalyticsOptions
     googleTagManager?: GoogleTagManagerOptions
+    // captcha TODO need to think about how we handle server API keys / calls
+    cloudflareTurnstile?: CloudflareTurnstileOptions
+    googleRecaptcha?: GoogleRecaptchaOptions
+    // fun
+    confetti?: JSConfettiOptions
   }
 }
 
@@ -18,11 +29,13 @@ const components = [
   'youtubeEmbed',
 ]
 
+// TODO simplify this
 const thirdParties = [
   // advertisement
   { from: 'ads/googleAdsense', name: 'useGoogleAdsense' },
   // captcha
   { from: 'captcha/cloudflareTurnstile', name: 'useCloudflareTurnstile' },
+  { from: 'captcha/googleRecaptcha', name: 'useGoogleRecaptcha' },
   // analytics
   { from: 'analytics/googleAnalytics', name: 'useGoogleAnalytics' },
   { from: 'analytics/fathomAnalytics', name: 'useFathomAnalytics' },
@@ -39,10 +52,10 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'scripts',
   },
   defaults: {},
-  async setup(nuxt, options) {
+  async setup(options) {
     const { resolve } = createResolver(import.meta.url)
 
-    // worker dependency
+    // TODO figure out worker support
     // await installModule('@nuxtjs/partytown')
     // adds third party specific globals and composables
 
@@ -82,7 +95,7 @@ export default defineNuxtModule<ModuleOptions>({
             '',
             'export default defineNuxtPlugin({',
             '  name: "nuxt-third-party",'
-            + '  mode: "server",', // TODO support SPA
+            + '  mode: "server",', // TODO support SPA?
             '  setup() {',
             inits.map(i => `    ${i}`).join('\n'),
             '  }',

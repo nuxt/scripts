@@ -3,7 +3,6 @@ import { createConsola } from 'consola'
 import { useCachedAsset } from './util'
 
 export default defineEventHandler(async (e) => {
-  // eslint-disable-next-line prefer-const
   let { src, ttl, purge, integrity } = getQuery(e)
 
   if (typeof src !== 'string')

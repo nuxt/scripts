@@ -1,7 +1,8 @@
+import type { ThirdPartyScriptOptions } from '../../types'
 import { useScript } from '#imports'
 
 export interface GoogleRecaptchaOptions {
-  siteKey?: string
+  siteKey: string
   // TODO full config
 }
 
@@ -17,13 +18,14 @@ declare global {
   }
 }
 
-export function useGoogleRecaptcha(options?: GoogleRecaptchaOptions) {
+export function useGoogleRecaptcha(options: ThirdPartyScriptOptions<GoogleRecaptchaOptions, GoogleRecaptchaApi> = {}) {
   return useScript<GoogleRecaptchaApi>({
     key: 'recaptcha',
     src: 'https://www.google.com/recaptcha/api.js',
     defer: true,
     async: true,
   }, {
+    ...options,
     use: () => window.grecaptcha,
   })
 }

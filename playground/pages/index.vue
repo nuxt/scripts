@@ -102,7 +102,7 @@ function reset() {
             </ULink>
           </li>
           <li>
-            <ULink to="/captcha/google-analytics" class="underline">
+            <ULink to="/captcha/google-recaptcha" class="underline">
               Google Recaptcha
             </ULink>
           </li>

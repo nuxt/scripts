@@ -1,8 +1,9 @@
-import type { UseScriptOptions } from '@unhead/schema'
-import { useScript } from '#imports'
+import type { ThirdPartyScriptOptions } from '../../types'
+import { validateRequiredOptions } from '../../util'
+import { computed, toValue, useScript } from '#imports'
 
-export interface FathomOptions {
-  site?: string
+export interface FathomAnalyticsOptions {
+  site: string // site is required
   src?: string
   spa?: 'auto' | 'history' | 'hash'
   auto?: boolean
@@ -24,15 +25,16 @@ declare global {
   }
 }
 
-export function useFathomAnalytics(options: FathomOptions, scriptOptions: Omit<UseScriptOptions<FathomOptions>, 'use'>) {
-  const src = options.src || 'https://cdn.usefathom.com/script.js'
+export function useFathomAnalytics(options: ThirdPartyScriptOptions<FathomAnalyticsOptions, FathomAnalyticsApi>) {
+  const key = 'fathom'
+  validateRequiredOptions(key, options, ['site'])
   return useScript<FathomAnalyticsApi>({
-    'key': 'fathom',
-    src,
+    key, // dedupe based on site, allow multiple instances (maybe needed)
+    'src': computed<string>(() => (toValue(options.src) || 'https://cdn.usefathom.com/script.js') as string),
     'defer': true,
     'data-site': options.site!,
   }, {
+    ...options,
     use: () => window.fathom,
-    ...scriptOptions,
   })
 }

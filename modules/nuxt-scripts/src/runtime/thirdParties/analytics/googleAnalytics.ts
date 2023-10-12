@@ -1,4 +1,6 @@
-import { useScript, useServerHead } from '#imports'
+import { withQuery } from 'ufo'
+import type { ThirdPartyScriptOptions } from '../../types'
+import { useHead, useScript } from '#imports'
 
 export interface GoogleAnalyticsOptions {
   id: string
@@ -19,9 +21,8 @@ declare global {
   interface Window extends GoogleAnalyticsApi {}
 }
 
-export function useGoogleAnalytics(options: GoogleAnalyticsOptions) {
-  // TODO reactivity
-  useServerHead({
+export function useGoogleAnalytics(options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi> = {}) {
+  useHead({
     script: [
       {
         key: 'gtag-setup',
@@ -29,11 +30,11 @@ export function useGoogleAnalytics(options: GoogleAnalyticsOptions) {
       },
     ],
   })
-  // TODO handle worker
   return useScript<GoogleAnalyticsApi>({
     key: 'gtag',
-    src: `https://www.googletagmanager.com/gtag/js?id=${options.id}`,
+    src: withQuery(`https://www.googletagmanager.com/gtag/js`, { id: options?.id }),
   }, {
+    ...options,
     use: () => ({ gtag: window.gtag }),
   })
 }

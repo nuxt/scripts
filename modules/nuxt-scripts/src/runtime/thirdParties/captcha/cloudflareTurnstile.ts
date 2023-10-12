@@ -1,4 +1,5 @@
 import { defu } from 'defu'
+import type { MaybeComputedRefEntries, ThirdPartyScriptOptions } from '../../types'
 import { useScript } from '#imports'
 
 export interface CloudflareTurnstileOptions {
@@ -6,7 +7,7 @@ export interface CloudflareTurnstileOptions {
   /**
    * Every widget has a sitekey. This sitekey is associated with the corresponding widget configuration and is created upon the widget creation.
    */
-  sitekey?: string
+  sitekey: string
   /**
    * The widget theme. This can be forced to light or dark by setting the theme accordingly.
    *
@@ -58,7 +59,8 @@ declare global {
   }
 }
 
-function useTurnstile(options: CloudflareTurnstileOptions): CloudflareTurnstileApi {
+// TODO simplify this
+function useTurnstile(options: MaybeComputedRefEntries<CloudflareTurnstileOptions>): CloudflareTurnstileApi {
   if (!options)
     return window.turnstile
 
@@ -72,13 +74,14 @@ function useTurnstile(options: CloudflareTurnstileOptions): CloudflareTurnstileA
   })
 }
 
-export function useCloudflareTurnstile(options: CloudflareTurnstileOptions) {
+export function useCloudflareTurnstile(options: ThirdPartyScriptOptions<CloudflareTurnstileOptions, CloudflareTurnstileApi> = {}) {
   return useScript<CloudflareTurnstileApi>({
     key: 'cloudflare',
     src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
     defer: true,
     async: true,
   }, {
+    ...options,
     use: () => useTurnstile(options),
   })
 }

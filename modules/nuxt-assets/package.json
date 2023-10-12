@@ -18,8 +18,8 @@
     "dist"
   ],
   "scripts": {
-    "prepack": "nuxt-module-build",
-    "dev:prepare": "nuxt-module-build --stub"
+    "prepack": "nuxt-module-build build",
+    "dev:prepare": "nuxt-module-build build --stub"
   },
   "dependencies": {
     "@nuxt/kit": "^3.7.4"

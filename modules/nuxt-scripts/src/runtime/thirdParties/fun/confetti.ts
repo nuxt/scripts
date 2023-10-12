@@ -1,22 +1,23 @@
-import type { NuxtUseScriptOptions } from '../../composables/useScript'
 import { useScript } from '../../composables/useScript'
+import type { ThirdPartyScriptOptions } from '../../types'
 
-export interface JSConfetti {
+export interface JSConfettiOptions {}
+export interface JSConfettiApi {
   addConfetti: (options?: { emojis: string[] }) => void
 }
 
 declare global {
   interface Window {
-    JSConfetti: { new (): JSConfetti }
+    JSConfetti: { new (): JSConfettiApi }
   }
 }
 
-export function useConfetti(scriptOptions: NuxtUseScriptOptions<JSConfetti> = {}) {
-  return useScript<JSConfetti>({
+export function useConfetti(options: ThirdPartyScriptOptions<JSConfettiOptions, JSConfettiApi> = {}) {
+  return useScript<JSConfettiApi>({
     key: 'confetti',
     src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
   }, {
-    ...scriptOptions,
+    ...options,
     use() {
       return new window.JSConfetti()
     },

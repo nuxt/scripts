@@ -1,6 +1,7 @@
 import { defineComponent, h } from 'vue'
 import { useHead, useInlineAsset, useProxyAsset, useScript } from '#imports'
 
+// TODO maybe delete
 interface YoutubeEmbedOptions {
   videoid: string
   playlabel: string

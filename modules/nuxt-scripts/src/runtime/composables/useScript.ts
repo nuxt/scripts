@@ -14,10 +14,11 @@ export function useScript<T>(input: MaybeComputedRefEntries<UseScriptInput>, opt
   return _useScript<T>(input, {
     async transform(script: Script) {
       if (typeof script.src === 'string' && script.src) {
-        if (assetStrategy === 'proxy') { script.src = await nuxtApp.runWithContext(() => useProxyAsset(script.src as string)) }
+        if (assetStrategy === 'proxy') {
+          script.src = await nuxtApp.runWithContext(() => useProxyAsset(script.src as string)) }
         else if (assetStrategy === 'inline') {
           // TODO handle errors and checksums
-          script.innerHTML = await nuxtApp.runWithContext(() => useInlineAsset(script.src as string).then(a => a.innerHTML)) 
+          script.innerHTML = await nuxtApp.runWithContext(() => useInlineAsset(script.src as string).then(a => a.innerHTML))
           delete script.src
         }
       }
