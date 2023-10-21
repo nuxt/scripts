@@ -6,10 +6,14 @@ const { $script } = useGoogleAnalytics({
   id: 'GA-123456789-1',
 })
 // we can manually wait for the script to be ready (TODO error handling)
-$script.waitForLoad().then((gtag) => {
-  // eslint-disable-next-line no-console
+$script.waitForLoad().then(({ gtag, dataLayer}) => {
   console.log('gtag is ready', gtag)
+  console.log('gtag is ready', window.gtag)
+  window.gtag('event', 'newsletter_signup_window', {'time': new Date()});
+  gtag('event', 'newsletter_signup_gtag', {'time': new Date()});
+  console.log('dataLayer', dataLayer);
 })
+
 </script>
 
 <template>

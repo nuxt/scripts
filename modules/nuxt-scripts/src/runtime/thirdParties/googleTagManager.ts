@@ -8,15 +8,35 @@ export interface GoogleTagManagerOptions {
   id: string
 }
 
+interface GTMDataLayerApi {
+  name: 'dataLayer';
+  set: (opt: { [key: string]: string }) => void;
+  get: (key: string) => void;
+  reset: () => void;
+}
+
+type GTMDataLayerStatus = { 
+  dataLayer: {
+    gtmDom: boolean;
+    gtmLoad: boolean;
+    subscribers: number;
+  } 
+};
+
+export type GTM  = GTMDataLayerStatus & {
+  [key: string]: {
+    callback: () => void;
+    dataLayer: GTMDataLayerApi;
+  };
+}
+
 export interface GoogleTagManagerApi {
   dataLayer: Record<string, any>[]
+  google_tag_manager: GTM;
 }
 
 declare global {
-  interface Window {
-    dataLayer: Record<string, any>[]
-    google_tag_manager: Record<string, any>
-  }
+  interface Window extends GoogleTagManagerApi{}
 }
 
 export function useGoogleTagManager(options: ThirdPartyScriptOptions<GoogleTagManagerOptions, GoogleTagManagerApi> = {}) {
