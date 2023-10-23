@@ -1,6 +1,5 @@
 import { addComponent, addImports, addPluginTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
-import type { GoogleAnalyticsOptions } from './runtime/thirdParties/analytics/googleAnalytics'
-import type { GoogleTagManagerOptions } from './runtime/thirdParties/googleTagManager'
+import type { GoogleAnalyticsOptions, GoogleTagManagerOptions } from 'third-party-capital'
 import type { FathomAnalyticsOptions } from './runtime/thirdParties/analytics/fathomAnalytics'
 import type { GoogleAdsenseOptions } from './runtime/thirdParties/ads/googleAdsense'
 import type { CloudflareTurnstileOptions } from './runtime/thirdParties/captcha/cloudflareTurnstile'
