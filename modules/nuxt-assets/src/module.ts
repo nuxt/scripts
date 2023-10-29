@@ -1,7 +1,21 @@
-import { addImports, addServerHandler, createResolver, defineNuxtModule } from '@nuxt/kit'
+import { addImports, addServerHandler, createResolver, defineNuxtModule , addTypeTemplate} from '@nuxt/kit'
 
 export interface ModuleOptions {
   routePrefix: string
+}
+
+declare module '@nuxt/schema' {
+  interface RuntimeConfig {
+    'nuxt-assets': {
+      proxyTtl: number
+    }
+  }
+
+  interface PublicRuntimeConfig {
+    'nuxt-assets': {
+      routePrefix: string
+    }
+  }
 }
 
 export default defineNuxtModule<ModuleOptions>({
