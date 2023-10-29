@@ -1,4 +1,4 @@
-import { addImports, addServerHandler, createResolver, defineNuxtModule , addTypeTemplate} from '@nuxt/kit'
+import { addImports, addServerHandler, createResolver, defineNuxtModule } from '@nuxt/kit'
 
 export interface ModuleOptions {
   routePrefix: string
