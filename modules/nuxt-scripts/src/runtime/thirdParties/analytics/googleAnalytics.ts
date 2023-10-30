@@ -8,6 +8,9 @@ declare global {
 }
 
 export function useGoogleAnalytics(options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi> = {}): ThirdPartyScriptApi<GoogleAnalyticsApi> {
+  if (!options.id)
+    throw new Error('No Google Analytics id found!')
+
   return convertThirdPartyCapital<GoogleAnalyticsApi>({
     data: GoogleAnalytics({ id: options.id }),
     mainScriptKey: 'gtag',

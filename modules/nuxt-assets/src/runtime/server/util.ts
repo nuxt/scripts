@@ -2,6 +2,7 @@ import { prefixStorage } from 'unstorage'
 import { sha256base64 } from 'ohash'
 import type { Script } from '@unhead/schema'
 import type { Storage } from 'unstorage'
+
 // @ts-expect-error server side import
 import { useRuntimeConfig, useStorage } from '#imports'
 
