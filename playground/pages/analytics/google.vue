@@ -6,6 +6,7 @@ import { useGoogleAnalytics } from '#imports'
 const { $script } = useGoogleAnalytics({
   id: 'GA-123456789-1',
 })
+
 // we can manually wait for the script to be ready (TODO error handling)
 $script.waitForLoad().then(({ gtag, dataLayer }) => {
   console.log('gtag is ready', gtag)
