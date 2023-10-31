@@ -1,10 +1,10 @@
 import { createError, defineEventHandler, getQuery, sendError, setHeader } from 'h3'
 import { createConsola } from 'consola'
+import type { Script } from '@unhead/schema'
+import type { EventHandlerRequest } from 'h3'
 import { useCachedAsset } from './util'
-import type { Script } from "@unhead/schema"
-import type { EventHandlerRequest } from "h3"
 
-export default defineEventHandler(async (e) => {
+export default defineEventHandler<EventHandlerRequest, Promise<Script | void>>(async (e) => {
   let { src, ttl, purge, integrity } = getQuery(e)
 
   if (typeof src !== 'string')
