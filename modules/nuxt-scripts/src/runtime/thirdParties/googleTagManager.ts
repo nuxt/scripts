@@ -1,17 +1,19 @@
 import { withQuery } from 'ufo'
+import { useServerHead } from '@unhead/vue'
 import type { GoogleTagManagerApi, GoogleTagManagerOptions } from 'third-party-capital'
 import { useScript } from '../composables/useScript'
-import type { ThirdPartyScriptOptions } from '../types'
 import { validateRequiredOptions } from '../util'
-import { useServerHead } from '#imports'
+
+import type { ThirdPartyScriptOptions } from '../types'
 
 declare global {
-  interface Window extends GoogleTagManagerApi {}
+  interface Window extends GoogleTagManagerApi { }
 }
 
 export function useGoogleTagManager(options: ThirdPartyScriptOptions<GoogleTagManagerOptions, GoogleTagManagerApi> = {}) {
   const key = 'google-tag-manager'
   validateRequiredOptions(key, options, ['id'])
+
   useServerHead({
     script: [
       {
@@ -32,7 +34,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe>`,
   // TODO reactivity
   return useScript<GoogleTagManagerApi>({
     key,
-    src: () => withQuery('https://www.googletagmanager.com/gtm.js', { id: options.id }),
+    src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options.id }),
   }, {
     ...options,
     use: () => ({ dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }),

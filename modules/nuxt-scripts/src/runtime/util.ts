@@ -1,5 +1,5 @@
 import type { ScriptInstance } from '@unhead/schema'
-import { injectHead } from '#imports'
+import { injectHead } from '@unhead/vue'
 
 export function injectScript<T>(key: string): undefined | ScriptInstance<T> {
   const head = injectHead()

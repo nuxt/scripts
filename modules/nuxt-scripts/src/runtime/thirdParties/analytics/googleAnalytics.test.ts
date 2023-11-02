@@ -16,5 +16,5 @@ it('should throw an error if "id" is not passed in', () => {
   const head = createHead()
   setHeadInjectionHandler(() => head)
 
-  expect(() => useGoogleAnalytics({})).toThrowError('No Google Analytics id found!')
+  expect(() => useGoogleAnalytics({})).toThrowError('[Nuxt Scripts] google-analytics is missing required options: id')
 })
