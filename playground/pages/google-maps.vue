@@ -1,0 +1,10 @@
+<template>
+  <div>
+    <GoogleMapsEmbed
+      api-key="API_KEY"
+      width="600"
+      height="400"
+      q="Space+Needle,Seattle+WA"
+    />
+  </div>
+</template>

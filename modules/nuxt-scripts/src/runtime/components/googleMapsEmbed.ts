@@ -1,69 +1,70 @@
+/* eslint-disable vue/require-default-prop */
+/* eslint-disable no-console */
 import { defineComponent, h } from 'vue'
-import { withQuery } from 'ufo'
+import { GoogleMapsEmbed as TPCGoogleMapEmbed } from 'third-party-capital'
+import type { PropType } from 'vue'
+import { validateRequiredOptions } from '../util'
 
-// TODO maybe delete
+export type MapMode = 'place' | 'view' | 'directions' | 'streetview' | 'search'
+export type MapType = 'roadmap' | 'satellite'
 
-interface GoogleMapsOptions {
-  apiKey: string
-  /**
-   * How the map should be displayed.
-   */
-  mapMode: 'place' | 'view' | 'directions' | 'streetview' | 'search'
-  /**
-   * Defines map marker location.
-   *
-   * @example City Hall, New York, NY
-   */
-  q?: string
-  /**
-   * Defines center of the map view.
-   *
-   * @example 37.4218,-122.0840
-   */
-  center?: string
-  /**
-   * Sets initial zoom level of the map.
-   *
-   * @example 10
-   */
-  zoom?: number
-  /**
-   * Defines type of map tiles to load.
-   */
-  maptype?: 'roadmap' | 'satellite'
-  /**
-   * Defines the language to use for UI elements and for the display of labels on map tiles.
-   * By default, visitors will se a map in their own language. This parameter is only supported for some country tiles;
-   * if the specific language requested is not supported for the tile set,
-   * then the default language for that tileset will be used.
-   */
-  language?: string
-  /**
-   * Defines the appropriate borders and labels to display, based on geopolitical sensitivities.
-   */
-  region?: string
-}
-
-export const GoogleMapsEmbed = defineComponent<GoogleMapsOptions>({
+export const GoogleMapsEmbed = defineComponent({
   name: 'GoogleMapsEmbed',
+  props: {
+    apiKey: { type: String, required: true },
+    /**
+     * How the map should be displayed.
+     */
+    mapMode: { type: String as PropType<MapMode>, required: false, default: 'place' },
+    /**
+     * Defines map marker location.
+     *
+     * @example City Hall, New York, NY
+     */
+    q: { type: String, required: true },
+    /**
+     * Defines center of the map view.
+     *
+     * @example 37.4218,-122.0840
+     */
+    center: { type: String, required: false },
+    /**
+     * Sets initial zoom level of the map.
+     *
+     * @example 10
+     */
+    zoom: { type: Number, required: false },
+    /**
+     * Defines type of map tiles to load.
+     */
+    mapType: { type: String as PropType<MapType>, required: false },
+    /**
+     * Defines the language to use for UI elements and for the display of labels on map tiles.
+     * By default, visitors will se a map in their own language. This parameter is only supported for some country tiles;
+     * if the specific language requested is not supported for the tile set,
+     * then the default language for that tileset will be used.
+     */
+    language: { type: String, required: false },
+    /**
+     * Defines the appropriate borders and labels to display, based on geopolitical sensitivities.
+     */
+    region: { type: String, required: false },
+    /**
+     * Defines the width of the map.
+     */
+    width: { type: String, required: false },
+    /**
+     * Defines the height of the map
+     */
+    height: { type: String, required: false },
+  },
   setup(props) {
-    const src = withQuery(`https://www.google.com/maps/embed/v1/${props.mapMode}`, {
-      key: props.apiKey,
-      q: props.q,
-      center: props.center,
-      zoom: props.zoom,
-      maptype: props.maptype,
-      language: props.language,
-      region: props.region,
-    })
-    return h('iframe', {
-      src,
-      referrerpolicy: 'no-referrer-when-downgrade',
-      frameborder: '0',
-      style: 'border:0',
-      allowfullscreen: true,
-      width: null,
-      height: null,
-    })
+    const { apiKey, mapMode, ...restProps } = props
+    const formattedProps = { ...restProps, key: apiKey }
+    const { html: innerHTML, id } = TPCGoogleMapEmbed(formattedProps)
+    validateRequiredOptions(id, formattedProps, ['key'])
+
+    console.log('mapMode not currently supported by tpc: ', mapMode)
+    return () => h('div', { class: 'google-maps-container', innerHTML })
   },
 })
