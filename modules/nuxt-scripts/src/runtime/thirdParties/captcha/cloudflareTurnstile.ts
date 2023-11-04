@@ -1,3 +1,4 @@
+import { resolveUnrefHeadInput } from '@unhead/vue'
 import { defu } from 'defu'
 import type { MaybeComputedRefEntries, ThirdPartyScriptOptions } from '../../types'
 import { useScript } from '#imports'
@@ -67,7 +68,7 @@ function useTurnstile(options: MaybeComputedRefEntries<CloudflareTurnstileOption
   return new Proxy(window.turnstile, {
     get(_, fn: keyof CloudflareTurnstileApi) {
       if (fn === 'render' || fn === 'execute')
-        return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn](container, defu(options, renderOptions))
+        return (container: WidgetContainer, renderOptions: CloudflareTurnstileOptions) => window.turnstile[fn](container, defu(resolveUnrefHeadInput(options), renderOptions))
 
       return window.turnstile[fn]
     },

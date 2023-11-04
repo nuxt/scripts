@@ -1,8 +1,8 @@
-import type { ComputedRef, Ref } from 'vue'
+import type { ComputedRef, MaybeRefOrGetter } from 'vue'
 import type { VueScriptInstance } from '@unhead/vue'
 import type { NuxtUseScriptOptions } from './composables/useScript'
 
-export type MaybeComputedRef<T> = T | (() => T) | ComputedRef<T> | Ref<T>
+export type MaybeComputedRef<T> = T | ComputedRef<T> | MaybeRefOrGetter<T>
 
 export type MaybeComputedRefEntries<T> = {
   [key in keyof T]?: MaybeComputedRef<T[key]>
