@@ -1,5 +1,5 @@
-import type { ThirdPartyScriptOptions } from '../../types'
-import { validateRequiredOptions } from '../../util'
+import type { ThirdPartyScriptOptions } from '../types'
+import { validateRequiredOptions } from '../util'
 import { computed, toValue, useScript } from '#imports'
 
 export interface FathomAnalyticsOptions {

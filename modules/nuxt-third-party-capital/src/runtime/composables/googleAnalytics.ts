@@ -1,9 +1,7 @@
 import { GoogleAnalytics } from 'third-party-capital'
 import type { GoogleAnalyticsApi, GoogleAnalyticsOptions } from 'third-party-capital'
-import { convertThirdPartyCapital } from '../util'
-import { validateRequiredOptions } from '../../util'
-
-import type { ThirdPartyScriptApi, ThirdPartyScriptOptions } from '../../types'
+import { convertThirdPartyCapital, validateRequiredOptions } from '../util'
+import type { ThirdPartyScriptApi, ThirdPartyScriptOptions } from '../types'
 
 declare global {
   interface Window extends GoogleAnalyticsApi { }

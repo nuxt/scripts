@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { VueScriptInstance } from '@unhead/vue'
-import type { JSConfetti } from '../../modules/nuxt-scripts/src/runtime/thirdParties/fun/confetti'
+import type { JSConfetti } from '../../modules/nuxt-script/src/runtime/thirdParties/fun/confetti'
 import { ref, useConfetti } from '#imports'
 
 const state = ref<{ trigger: 'default' | 'manual' | 'idle'; assetStrategy: 'default' | 'inline' | 'proxy' }>({

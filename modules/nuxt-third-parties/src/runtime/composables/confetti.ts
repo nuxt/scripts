@@ -1,5 +1,5 @@
-import { useScript } from '../../composables/useScript'
 import type { ThirdPartyScriptOptions } from '../../types'
+import { useScript } from '#imports'
 
 export interface JSConfettiOptions {}
 export interface JSConfettiApi {

@@ -1,10 +1,10 @@
 import { withQuery } from 'ufo'
 import { useServerHead } from '@unhead/vue'
 import type { GoogleTagManagerApi, GoogleTagManagerOptions } from 'third-party-capital'
-import { useScript } from '../composables/useScript'
 import { validateRequiredOptions } from '../util'
 
 import type { ThirdPartyScriptOptions } from '../types'
+import { useScript } from '#imports'
 
 declare global {
   interface Window extends GoogleTagManagerApi { }

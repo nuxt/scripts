@@ -5,6 +5,8 @@ import { useGoogleAnalytics } from '#imports'
 // composables return the underlying api as a proxy object and a $script with the script state
 const { $script } = useGoogleAnalytics({
   id: 'GA-123456789-1',
+}, {
+  trigger: 'idle',
 })
 
 // we can manually wait for the script to be ready (TODO error handling)

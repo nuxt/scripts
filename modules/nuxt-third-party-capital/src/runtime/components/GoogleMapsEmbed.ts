@@ -1,4 +1,3 @@
-/* eslint-disable vue/require-default-prop */
 /* eslint-disable no-console */
 import { defineComponent, h } from 'vue'
 import { GoogleMapsEmbed as TPCGoogleMapEmbed } from 'third-party-capital'

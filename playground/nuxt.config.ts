@@ -1,10 +1,14 @@
-import NuxtScripts from '../modules/nuxt-scripts/src/module'
+import NuxtScript from '../modules/nuxt-script/src/module'
 import NuxtAssets from '../modules/nuxt-assets/src/module'
+import NuxtScripts3p from '../modules/nuxt-third-parties/src/module'
+import NuxtTPC from '../modules/nuxt-third-party-capital/src/module'
 
 export default defineNuxtConfig({
   modules: [
-    NuxtScripts,
+    NuxtScript,
+    NuxtScripts3p,
     NuxtAssets,
+    NuxtTPC,
     '@nuxt/ui',
     'nuxt-icon',
   ],
