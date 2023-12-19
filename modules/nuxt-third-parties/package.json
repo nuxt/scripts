@@ -22,6 +22,7 @@
     "dev:prepare": "nuxt-module-build build --stub"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.8.0"
+    "@nuxt/kit": "^3.8.0",
+    "@nuxt/scripts": "workspace:*"
   }
 }
