@@ -2,8 +2,7 @@ import type { ScriptInstance, UseScriptOptions } from '@unhead/schema'
 import { injectHead, useHead, useScript } from '@unhead/vue'
 import type { Output } from 'third-party-capital'
 import { isExternalScript } from 'third-party-capital'
-import type { ThirdPartyScriptApi } from '../types'
-
+import type { ThirdPartyScriptApi } from './types'
 export interface ConvertThirdPartyCapitalInput<T> {
   data: Output
   mainScriptKey: string

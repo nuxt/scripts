@@ -1,4 +1,4 @@
-import type { ThirdPartyScriptOptions } from '../../types'
+import type { ThirdPartyScriptOptions } from '../types'
 import { useScript } from '#imports'
 
 export interface JSConfettiOptions {}

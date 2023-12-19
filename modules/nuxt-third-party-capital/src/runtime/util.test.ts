@@ -3,7 +3,7 @@ import { GoogleAnalytics } from 'third-party-capital'
 import { createHead, setHeadInjectionHandler } from '@unhead/vue'
 
 import type { GoogleAnalyticsApi, GoogleAnalyticsOptions } from 'third-party-capital'
-import type { ThirdPartyScriptOptions } from '../types'
+import type { ThirdPartyScriptOptions } from './types'
 import { convertThirdPartyCapital } from './util'
 
 it('should format Third Party Captial output from Google Analytics', () => {

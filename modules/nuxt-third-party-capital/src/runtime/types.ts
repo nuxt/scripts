@@ -1,6 +1,6 @@
 import type { ComputedRef, MaybeRefOrGetter } from 'vue'
 import type { VueScriptInstance } from '@unhead/vue'
-import type { NuxtUseScriptOptions } from './composables/useScript'
+import type { NuxtUseScriptOptions } from '../../../nuxt-script/src/runtime/composables/useScript'
 
 export type MaybeComputedRef<T> = T | ComputedRef<T> | MaybeRefOrGetter<T>
 

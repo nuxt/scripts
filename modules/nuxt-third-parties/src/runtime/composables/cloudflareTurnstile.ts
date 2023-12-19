@@ -1,6 +1,6 @@
 import { resolveUnrefHeadInput } from '@unhead/vue'
 import { defu } from 'defu'
-import type { MaybeComputedRefEntries, ThirdPartyScriptOptions } from '../../types'
+import type { MaybeComputedRefEntries, ThirdPartyScriptOptions } from '../types'
 import { useScript } from '#imports'
 
 export interface CloudflareTurnstileOptions {

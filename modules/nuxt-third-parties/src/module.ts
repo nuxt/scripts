@@ -1,10 +1,9 @@
 import { addImportsDir, addPluginTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import type { FathomAnalyticsOptions } from './runtime/composables/fathomAnalytics'
 import type { GoogleAdsenseOptions } from './runtime/composables/googleAdsense'
-import type { CloudflareTurnstileOptions } from './runtime/composables/captcha/cloudflareTurnstile'
-import type { GoogleRecaptchaOptions } from './runtime/composables/captcha/googleRecaptcha'
-import type { JSConfettiOptions } from './runtime/composables/fun/confetti'
-
+import type { CloudflareTurnstileOptions } from './runtime/composables/cloudflareTurnstile'
+import type { GoogleRecaptchaOptions } from './runtime/composables/googleRecaptcha'
+import type { JSConfettiOptions } from './runtime/composables/confetti'
 export interface ModuleOptions {
   globals?: {
     // ads
