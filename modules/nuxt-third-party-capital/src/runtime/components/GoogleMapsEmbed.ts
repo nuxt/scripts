@@ -1,3 +1,4 @@
+/* eslint-disable vue/require-default-prop */
 /* eslint-disable no-console */
 import { defineComponent, h } from 'vue'
 import { GoogleMapsEmbed as TPCGoogleMapEmbed } from 'third-party-capital'
@@ -67,3 +68,5 @@ export const GoogleMapsEmbed = defineComponent({
     return () => h('div', { class: 'google-maps-container', innerHTML })
   },
 })
+
+export default GoogleMapsEmbed;
