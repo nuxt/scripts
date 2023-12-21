@@ -12,7 +12,16 @@ export interface ConvertThirdPartyCapitalInput<T> {
 
 export function convertThirdPartyCapital<T>({ data, mainScriptKey, options, use }: ConvertThirdPartyCapitalInput<T>): ThirdPartyScriptApi<T> {
   const scripts = data.scripts ?? []
+  const stylesheets = data.stylesheets ?? []
   let response = null
+
+  for (const stylesheet of stylesheets) {
+    const id = stylesheet.substring(stylesheet.lastIndexOf("/") + 1);
+    $fetch.raw<string>(stylesheet, {}).then (response => {
+      const innerHTML = response._data || "";
+      useHead({ style: [{ innerHTML, id }] })
+    })
+  }
 
   for (const script of scripts) {
     if (isExternalScript(script)) {
@@ -48,4 +57,8 @@ export function validateRequiredOptions<T extends Record<string, any>>(key: stri
   const missingKeys = required.filter(key => !options[key])
   if (missingKeys.length)
     throw new Error(`[Nuxt Scripts] ${key} is missing required options: ${missingKeys.join(', ')}`)
+}
+
+export function formatDimensionValue(value: any) {
+  return value.slice(-1) === "%" ? value : `${value}px`;
 }

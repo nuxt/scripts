@@ -1,30 +1,32 @@
 import { defineComponent, h } from 'vue'
-import { useHead, useInlineAsset, useProxyAsset, useScript } from '#imports'
+import { YouTubeEmbed as TPCYoutubeEmbed } from 'third-party-capital'
+import { validateRequiredOptions, convertThirdPartyCapital, formatDimensionValue } from '../util'
 
-interface YoutubeEmbedOptions {
-  videoid: string
-  playlabel: string
-}
-
-export const YoutubeEmbed = defineComponent<YoutubeEmbedOptions>({
+export const YoutubeEmbed = defineComponent({
   name: 'YoutubeEmbed',
-  setup(props) {
-    useHead({
-      style: [
-        useInlineAsset('https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.css'),
-      ],
-    })
-    // lazily initialise
-    useScript({
-      mode: 'client',
-      // proxy may improve performance
-      // TODO this does not work, we need a Vue compatible library
-      src: useProxyAsset('https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.js'),
-      loadStrategy: 'idle',
-    })
-    // WARNING this does not actually work because we can't seem to use the web component lite-youtube in vue
-    return h('lite-youtube', {
-      ...props,
-    })
+  props: {
+    videoid: { type: String, required: true },
+    playlabel: { type: String, required: true },
+    width: { type: String, required: false, default: "100%" },
+    height: { type: String, required: false, default: "100%" },
+    params: { type: String, required: false, default: undefined }
+  },
+  async setup(props) {
+    const { videoid, playlabel } = props
+    const yt = TPCYoutubeEmbed({ videoid, playlabel });
+    validateRequiredOptions(yt.id, props, ['videoid', 'playlabel']);
+
+    if (import.meta.client) {
+      convertThirdPartyCapital({
+        data: yt,
+        mainScriptKey: 'lite-yt-embed',
+        options: {},
+        use: () => { },
+      })
+    }
+
+    return () => h('div', { class: 'lite-youtube-container', innerHTML: yt.html, style: { width: formatDimensionValue(props.width), height: formatDimensionValue(props.height) } })
   },
 })
+
+export default YoutubeEmbed;
