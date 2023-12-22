@@ -49,10 +49,10 @@ export async function useCachedAsset(src: string, options?: { ttl?: number; purg
     if (!result._data || !result.status.toString().startsWith('2')/* || !result.headers.get('content-type')?.endsWith('/javascript') */)
       return null
 
-    const blob = result._data as unknown as Blob
-    // convert blob to string
+    const content = result._data
+
     asset = {
-      innerHTML: await blob.text(),
+      innerHTML: content,
       integrity: `sha256-${sha256base64(result._data as string)}`,
     }
     if (useCache)
