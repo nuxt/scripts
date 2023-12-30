@@ -12,10 +12,10 @@ export function useGoogleAnalytics(options: ThirdPartyScriptOptions<GoogleAnalyt
   validateRequiredOptions(ga.id, options, ['id'])
 
   // Setting here to ensure it overwrites whatever user might set.
-  options.trigger = "idle";
-  options.skipEarlyConnections = true;
+  options.trigger = 'idle'
+  options.skipEarlyConnections = true
 
-  return convertThirdPartyCapital<GoogleAnalyticsApi>({
+  return convertThirdPartyCapital<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
     data: ga,
     mainScriptKey: 'gtag',
     options,

@@ -1,24 +1,25 @@
-import type { ScriptInstance, UseScriptOptions } from '@unhead/schema'
+import type { ScriptInstance } from '@unhead/schema'
 import { injectHead, useHead, useScript } from '@unhead/vue'
 import type { Output } from 'third-party-capital'
 import { isExternalScript } from 'third-party-capital'
-import type { ThirdPartyScriptApi } from './types'
-export interface ConvertThirdPartyCapitalInput<T> {
+import type { ThirdPartyScriptApi, ThirdPartyScriptOptions } from './types'
+
+export interface ConvertThirdPartyCapitalInput<S, T> {
   data: Output
   mainScriptKey: string
-  options: UseScriptOptions<T>
+  options: ThirdPartyScriptOptions<S, T>
   use: () => T | undefined | null
 }
 
-export function convertThirdPartyCapital<T>({ data, mainScriptKey, options, use }: ConvertThirdPartyCapitalInput<T>): ThirdPartyScriptApi<T> {
+export function convertThirdPartyCapital<S, T>({ data, mainScriptKey, options, use }: ConvertThirdPartyCapitalInput<S, T>): ThirdPartyScriptApi<T> {
   const scripts = data.scripts ?? []
   const stylesheets = data.stylesheets ?? []
   let response = null
 
   for (const stylesheet of stylesheets) {
-    const id = stylesheet.substring(stylesheet.lastIndexOf("/") + 1);
-    $fetch.raw<string>(stylesheet, {}).then (response => {
-      const innerHTML = response._data || "";
+    const id = stylesheet.substring(stylesheet.lastIndexOf('/') + 1)
+    $fetch.raw<string>(stylesheet, {}).then ((response) => {
+      const innerHTML = response._data || ''
       useHead({ style: [{ innerHTML, id }] })
     })
   }
@@ -60,5 +61,5 @@ export function validateRequiredOptions<T extends Record<string, any>>(key: stri
 }
 
 export function formatDimensionValue(value: any) {
-  return value.slice(-1) === "%" ? value : `${value}px`;
+  return value.slice(-1) === '%' ? value : `${value}px`
 }
