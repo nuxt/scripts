@@ -9,8 +9,8 @@ const { $script } = useGoogleAnalytics({
 
 // we can manually wait for the script to be ready (TODO error handling)
 $script.waitForLoad().then(({ gtag, dataLayer }) => {
-  console.log('gtag', gtag);
-  console.log('dataLayer', dataLayer);
+  console.log('gtag', gtag)
+  console.log('dataLayer', dataLayer)
   // example to fire an event:
   // gtag('event', 'newsletter_signup_gtag', { time: new Date() })
 })

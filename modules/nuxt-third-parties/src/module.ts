@@ -4,6 +4,7 @@ import type { GoogleAdsenseOptions } from './runtime/composables/googleAdsense'
 import type { CloudflareTurnstileOptions } from './runtime/composables/cloudflareTurnstile'
 import type { GoogleRecaptchaOptions } from './runtime/composables/googleRecaptcha'
 import type { JSConfettiOptions } from './runtime/composables/confetti'
+
 export interface ModuleOptions {
   globals?: {
     // ads

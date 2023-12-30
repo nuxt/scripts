@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@nuxt/kit": "^3.8.0",
-    "@nuxtjs/partytown": "^1.4.0",
-    "@nuxt/scripts": "workspace:*"
+    "@nuxt/scripts": "workspace:*",
+    "@nuxtjs/partytown": "^1.4.0"
   }
 }
