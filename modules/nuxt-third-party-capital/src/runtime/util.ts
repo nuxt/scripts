@@ -3,6 +3,7 @@ import { injectHead, useHead, useScript } from '@unhead/vue'
 import type { Output } from 'third-party-capital'
 import { isExternalScript } from 'third-party-capital'
 import type { ThirdPartyScriptApi, ThirdPartyScriptOptions } from './types'
+import { useStyles } from '#imports'
 
 export interface ConvertThirdPartyCapitalInput<S, T> {
   data: Output
@@ -16,13 +17,7 @@ export function convertThirdPartyCapital<S, T>({ data, mainScriptKey, options, u
   const stylesheets = data.stylesheets ?? []
   let response = null
 
-  for (const stylesheet of stylesheets) {
-    const id = stylesheet.substring(stylesheet.lastIndexOf('/') + 1)
-    $fetch.raw<string>(stylesheet, {}).then ((response) => {
-      const innerHTML = response._data || ''
-      useHead({ style: [{ innerHTML, id }] })
-    })
-  }
+  useStyles(stylesheets, { assetStrategy: 'inline' })
 
   for (const script of scripts) {
     if (isExternalScript(script)) {
