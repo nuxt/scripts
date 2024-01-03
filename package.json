@@ -37,7 +37,7 @@
     "eslint": "^8.52.0",
     "nuxt": "^3.8.0",
     "nuxt-icon": "^0.6.1",
-    "third-party-capital": "^1.0.25",
+    "third-party-capital": "^1.0.26",
     "vitest": "^0.34.6"
   },
   "resolutions": {
