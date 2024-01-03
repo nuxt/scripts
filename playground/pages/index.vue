@@ -132,7 +132,7 @@ function reset() {
         <ul class="space-y-5">
           <li>
             <ULink to="/maps/google-maps" class="underline">
-              Google Maps
+              Google Maps JavScript API
             </ULink>
           </li>
         </ul>

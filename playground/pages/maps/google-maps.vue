@@ -1,6 +1,6 @@
 <template>
   <div>
-    <GoogleMapsEmbed
+    <GoogleMapsJavaScriptApi
       api-key="API_KEY"
       width="600"
       height="400"

@@ -55,6 +55,17 @@ export function validateRequiredOptions<T extends Record<string, any>>(key: stri
     throw new Error(`[Nuxt Scripts] ${key} is missing required options: ${missingKeys.join(', ')}`)
 }
 
+export function validateEitherOrOptions<T extends Record<string, any>>(key: string, options: T, a: string, b: string): void {
+  // if an instance already exists we can skip
+  if (injectScript<T>(key))
+    return
+
+  if (options[a] && options[b])
+    throw new Error(`[Nuxt Scripts] ${key} only requires one of these options: ${a} or ${b} }`)
+  if (!options[a] && !options[b])
+    throw new Error(`[Nuxt Scripts] ${key} requires one of these options: ${a} or ${b} }`)
+}
+
 export function formatDimensionValue(value: any) {
   return value.slice(-1) === '%' ? value : `${value}px`
 }
