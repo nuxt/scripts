@@ -1,4 +1,4 @@
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref, watch } from 'vue'
 import { YouTubeEmbed as TPCYoutubeEmbed } from 'third-party-capital'
 import { convertThirdPartyCapital, formatDimensionValue, validateRequiredOptions } from '../util'
 
@@ -12,18 +12,21 @@ export const YoutubeEmbed = defineComponent({
     params: { type: String, required: false, default: undefined },
   },
   async setup(props) {
-    const { videoid, playlabel } = props
-    const yt = TPCYoutubeEmbed({ videoid, playlabel })
-    validateRequiredOptions(yt.id, props, ['videoid', 'playlabel'])
+    const ytRef = ref(TPCYoutubeEmbed({ videoid: props.videoid, playlabel: props.playlabel }))
+
+    if (import.meta.client)
+      watch(props, () => ytRef.value = TPCYoutubeEmbed({ videoid: props.videoid, playlabel: props.playlabel }))
+
+    validateRequiredOptions(ytRef.value.id, props, ['videoid', 'playlabel'])
 
     convertThirdPartyCapital({
-      data: yt,
+      data: ytRef.value,
       mainScriptKey: 'lite-yt-embed',
       options: {},
       use: () => { },
     })
 
-    return () => h('div', { class: 'lite-youtube-container', innerHTML: yt.html, style: { width: formatDimensionValue(props.width), height: formatDimensionValue(props.height) } })
+    return () => h('div', { class: 'lite-youtube-container', innerHTML: ytRef.value.html, style: { width: formatDimensionValue(props.width), height: formatDimensionValue(props.height) } })
   },
 })
 
