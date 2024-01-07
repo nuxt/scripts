@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { GoogleAnalytics } from 'third-party-capital'
 import { createHead, setHeadInjectionHandler } from '@unhead/vue'
 
 import type { GoogleAnalyticsApi, GoogleAnalyticsOptions } from 'third-party-capital'
 import type { ThirdPartyScriptOptions } from './types'
 import { convertThirdPartyCapital, formatDimensionValue } from './util'
+
+vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../nuxt-script/src/runtime/composables/useStyles') }));
 
 describe('convertThirdPartyCapital', () => {
   it('should format Third Party Captial output from Google Analytics', () => {
@@ -13,7 +15,7 @@ describe('convertThirdPartyCapital', () => {
 
     const options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi> = { id: '1234' }
 
-    const { $script } = convertThirdPartyCapital<GoogleAnalyticsApi>({
+    const { $script } = convertThirdPartyCapital<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
       data: GoogleAnalytics({ id: options.id }),
       mainScriptKey: 'gtag',
       options,
@@ -31,7 +33,7 @@ describe('convertThirdPartyCapital', () => {
 
     const options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi> = { id: '1234' }
 
-    expect(() => convertThirdPartyCapital<GoogleAnalyticsApi>({
+    expect(() => convertThirdPartyCapital<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
       data: GoogleAnalytics({ id: options.id }),
       mainScriptKey: 'test',
       options,

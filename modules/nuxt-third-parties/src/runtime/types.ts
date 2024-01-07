@@ -1,5 +1,5 @@
 import type { ComputedRef, MaybeRefOrGetter } from 'vue'
-import type { NuxtUseScriptOptions } from '@nuxt/scripts/dist/runtime/composables/useScript'
+import type { NuxtUseScriptOptions } from '#imports'
 
 export type MaybeComputedRef<T> = T | ComputedRef<T> | MaybeRefOrGetter<T>
 
