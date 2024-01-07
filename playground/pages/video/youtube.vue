@@ -1,15 +1,15 @@
 <script setup>
-import { ref } from 'vue';
+import { ref } from 'vue'
 
-const label = ref("Play!");
-const videoid = ref("d_IFKP1Ofq0");
+const label = ref('Play!')
+const videoid = ref('d_IFKP1Ofq0')
 
 function changeVideo() {
-  videoid.value = "N8siuNjyV7A";
+  videoid.value = 'N8siuNjyV7A'
 }
 
 function changeLabel() {
-  label.value = "Spiele!"
+  label.value = 'Spiele!'
 }
 </script>
 

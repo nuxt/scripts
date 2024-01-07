@@ -32,7 +32,7 @@ type CreateMapWithQueryInput = BaseCreateInput & {
   q: string
 }
 
-type UpdateMapInput = {
+interface UpdateMapInput {
   map: google.maps.Map
   center: LatLng | undefined
   q: string
@@ -52,7 +52,8 @@ function createMap({ options, mapRef }: MapInput) {
 }
 
 function createMarker({ position, map }: MarkerInput) {
-  if (!position) return;
+  if (!position)
+    return
 
   const marker = new google.maps.Marker({
     map,
@@ -68,28 +69,30 @@ function queryMaps(map: google.maps.Map, q: string) {
     fields: ['name', 'geometry'],
   }
 
-  const markers: google.maps.Marker[] = [];
+  const markers: google.maps.Marker[] = []
   const service = new google.maps.places.PlacesService(map)
   service.findPlaceFromQuery(request, (results, status) => {
     if (status === google.maps.places.PlacesServiceStatus.OK && results) {
       for (let i = 0; i < results.length; i++) {
-        const location = results[i].geometry?.location as unknown as LatLng;
-        const marker = createMarker({ position: location, map });
-        if (marker) markers.push(marker);
+        const location = results[i].geometry?.location as unknown as LatLng
+        const marker = createMarker({ position: location, map })
+        if (marker)
+          markers.push(marker)
       }
 
-      if (results[0].geometry?.location) map.setCenter(results[0].geometry.location)
+      if (results[0].geometry?.location)
+        map.setCenter(results[0].geometry.location)
     }
   })
 }
 
-function updateMap({ map, center, q}: UpdateMapInput) {
+function updateMap({ map, center, q }: UpdateMapInput) {
   if (center) {
-    map.setCenter(center);
-    return;
+    map.setCenter(center)
+    return
   }
 
-  queryMaps(map, q);
+  queryMaps(map, q)
 }
 
 function createMapWithQuery({ zoom, q, mapRef }: CreateMapWithQueryInput) {
@@ -100,9 +103,9 @@ function createMapWithQuery({ zoom, q, mapRef }: CreateMapWithQueryInput) {
     mapRef,
   })
 
-  queryMaps(map, q);
+  queryMaps(map, q)
 
-  return ({ map });
+  return ({ map })
 }
 
 function createMapWithCenter({ zoom, center, mapRef }: CreateMapWithCenterInput) {
@@ -114,7 +117,7 @@ function createMapWithCenter({ zoom, center, mapRef }: CreateMapWithCenterInput)
     mapRef,
   })
 
-  return ({ map });
+  return ({ map })
 }
 
 export const GoogleMapsJavaScriptApi = defineComponent({
@@ -160,24 +163,23 @@ export const GoogleMapsJavaScriptApi = defineComponent({
       skipEarlyConnections: true,
     })
 
-    let map:google.maps.Map;
+    let map: google.maps.Map
 
     $script.waitForLoad().then(() => {
-      if (props.q){
-        const result = createMapWithQuery({ zoom: props.zoom, mapRef, q: props.q });
-        map = result.map;
-        return;
+      if (props.q) {
+        const result = createMapWithQuery({ zoom: props.zoom, mapRef, q: props.q })
+        map = result.map
+        return
       }
 
       if (props.center) {
-        const result = createMapWithCenter({ zoom: props.zoom, mapRef, center: props.center });
-        map = result.map;
-        return;
+        const result = createMapWithCenter({ zoom: props.zoom, mapRef, center: props.center })
+        map = result.map
       }
     })
 
     if (import.meta.client)
-      watch(props, () => updateMap({map, center: props.center, q: props.q}));
+      watch(props, () => updateMap({ map, center: props.center, q: props.q }))
 
     return () => h('div', { class: 'google-maps-container', ref: mapRef, style: { width: formatDimensionValue(props.width), height: formatDimensionValue(props.height) } })
   },

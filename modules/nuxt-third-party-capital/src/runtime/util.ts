@@ -14,11 +14,15 @@ export interface ConvertThirdPartyCapitalInput<S, T> {
 
 /**
  * convertThirdPartyCapital
- * 
- * Assigns input from Third-Party-Capital to the proper composable from Nuxt-Script. 
+ *
+ * Assigns input from Third-Party-Capital to the proper composable from Nuxt-Script.
  * Stylesheets get loaded with 'useStyles' and scripts get injected with 'useHead' or loaded with 'useScript'.
- * 
- * @param props ConvertThirdPartyCapitalInput
+ *
+ * @param props
+ * @param props.data Output
+ * @param props.mainScriptKey string
+ * @param props.options ThirdPartyScriptOptions
+ * @param props.use () => T | undefined | null
  * @returns ThirdPartyScriptApi
  */
 export function convertThirdPartyCapital<S, T>({ data, mainScriptKey, options, use }: ConvertThirdPartyCapitalInput<S, T>): ThirdPartyScriptApi<T> {
@@ -52,9 +56,9 @@ export function convertThirdPartyCapital<S, T>({ data, mainScriptKey, options, u
 
 /**
  * injectScript
- * 
+ *
  * Checks if a script with the 'key' value exists in head.
- * 
+ *
  * @param key string - represents the key of the script that's injected in the head.
  * @returns ScriptInstance
  */
@@ -65,14 +69,13 @@ export function injectScript<T>(key: string): undefined | ScriptInstance<T> {
 
 /**
  * validateRequiredOptions
- * 
- * Checks the options object if all keys from the required array are present. 
+ *
+ * Checks the options object if all keys from the required array are present.
  * It returns early, if a script with the same key was already injected.
- * 
+ *
  * @param key string - represents the key of the script that's injected in the head.
  * @param options object - data to check for required keys to be present.
  * @param required array - each string in the array represents a key in the options object that should exist.
- * @returns void
  */
 export function validateRequiredOptions<T extends Record<string, any>>(key: string, options: T, required: string[]): void {
   // if an instance already exists we can skip
@@ -84,16 +87,15 @@ export function validateRequiredOptions<T extends Record<string, any>>(key: stri
 }
 
 /**
-* validateEitherOrOptions
- * 
- * Checks the options object if either 'a' or 'b' param are present. 
+ * validateEitherOrOptions
+ *
+ * Checks the options object if either 'a' or 'b' param are present.
  * It returns early, if a script with the same key was already injected.
- * 
+ *
  * @param key string - represents the key of the script that's injected in the head.
  * @param options object - data to check for keys 'a' or 'b' to be present.
  * @param a string - first option to check for.
  * @param b string - second option to check for.
- * @returns void
  */
 export function validateEitherOrOptions<T extends Record<string, any>>(key: string, options: T, a: string, b: string): void {
   // if an instance already exists we can skip
@@ -108,9 +110,9 @@ export function validateEitherOrOptions<T extends Record<string, any>>(key: stri
 
 /**
  * formatDimensionValue
- * 
+ *
  * Converts string representation of a number if needed.
- * 
+ *
  * @example
  * // returns 400px
  * formatDimensionValue('400')
@@ -120,12 +122,14 @@ export function validateEitherOrOptions<T extends Record<string, any>>(key: stri
  * @example
  * // returns 400%
  * formatDimensionValue('400%')
- * 
+ *
  * @param value string - input to check.
  * @returns string
  */
 export function formatDimensionValue(value: any) {
-  if (value.slice(-2) === 'px') return value;
-  if (value.slice(-1) === '%') return value;
+  if (value.slice(-2) === 'px')
+    return value
+  if (value.slice(-1) === '%')
+    return value
   return `${value}px`
 }

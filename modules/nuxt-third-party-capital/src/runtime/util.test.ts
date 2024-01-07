@@ -6,7 +6,7 @@ import type { GoogleAnalyticsApi, GoogleAnalyticsOptions } from 'third-party-cap
 import type { ThirdPartyScriptOptions } from './types'
 import { convertThirdPartyCapital, formatDimensionValue } from './util'
 
-vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../nuxt-script/src/runtime/composables/useStyles') }));
+vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../nuxt-script/src/runtime/composables/useStyles') }))
 
 describe('convertThirdPartyCapital', () => {
   it('should format Third Party Captial output from Google Analytics', () => {
@@ -52,6 +52,6 @@ describe('formatDimensionValue', () => {
   })
 
   it('should return initial value if "px" is used', () => {
-    expect(formatDimensionValue('400px')).toEqual('400px');
+    expect(formatDimensionValue('400px')).toEqual('400px')
   })
 })

@@ -1,6 +1,6 @@
 /// <reference types="google.maps" />
-import { useScript } from '#imports'
 import type { ThirdPartyScriptOptions } from '../types'
+import { useScript } from '#imports'
 
 export interface GoogleMapsLoaderOptions {
   apiKey: string
