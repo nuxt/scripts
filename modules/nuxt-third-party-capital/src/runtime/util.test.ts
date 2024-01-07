@@ -48,4 +48,8 @@ describe('formatDimensionValue', () => {
   it('should not add px to the end', () => {
     expect(formatDimensionValue('400%')).toEqual('400%')
   })
+
+  it('should return initial value if "px" is used', () => {
+    expect(formatDimensionValue('400px')).toEqual('400px');
+  })
 })
