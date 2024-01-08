@@ -2,6 +2,11 @@ import { defineComponent, h, ref, watch } from 'vue'
 import { YouTubeEmbed as TPCYoutubeEmbed } from 'third-party-capital'
 import { convertThirdPartyCapital, formatDimensionValue, validateRequiredOptions } from '../util'
 
+/**
+ * YoutubeEmbed
+ *
+ * A 3P wrapper component that takes the props to feed into third-party-capital({@link https://github.com/GoogleChromeLabs/third-party-capital}), which returns data to define and build the component.
+ */
 export const YoutubeEmbed = defineComponent({
   name: 'YoutubeEmbed',
   props: {

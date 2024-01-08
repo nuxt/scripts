@@ -17,6 +17,14 @@ declare global {
   interface Window extends GoogleMapsLoaderApi { }
 }
 
+/**
+ * useGoogleMaps
+ *
+ * A 3P wrapper to load the Google Maps JavaScript api.
+ *
+ * @param options ThirdPartyScriptOptions
+ * @returns ThirdPartyScriptApi
+ */
 export function useGoogleMaps(options: ThirdPartyScriptOptions<GoogleMapsLoaderOptions, GoogleMapsLoaderApi>) {
   return useScript<GoogleMapsLoaderApi>({
     key: 'google-maps-loader',

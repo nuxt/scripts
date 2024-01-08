@@ -120,6 +120,11 @@ function createMapWithCenter({ zoom, center, mapRef }: CreateMapWithCenterInput)
   return ({ map })
 }
 
+/**
+ * GoogleMapsJavaScriptApi
+ *
+ * A 3P wrapper component that takes the props to define and build the component.
+ */
 export const GoogleMapsJavaScriptApi = defineComponent({
   name: 'GoogleMapsJavaScriptApi',
   props: {

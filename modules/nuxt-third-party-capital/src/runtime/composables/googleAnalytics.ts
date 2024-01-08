@@ -7,11 +7,19 @@ declare global {
   interface Window extends GoogleAnalyticsApi { }
 }
 
+/**
+ * useGoogleAnalytics
+ *
+ * A 3P wrapper for Google Analytics that takes an options input to feed into third-party-capital({@link https://github.com/GoogleChromeLabs/third-party-capital}), which returns instructions for nuxt-scripts.
+ *
+ * @param options ThirdPartyScriptOptions
+ * @returns ThirdPartyScriptApi
+ */
 export function useGoogleAnalytics(options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi> = {}): ThirdPartyScriptApi<GoogleAnalyticsApi> {
   const ga = GoogleAnalytics({ id: options.id })
   validateRequiredOptions(ga.id, options, ['id'])
 
-  // Setting here to ensure it overwrites whatever user might set.
+  // Hard-coding strategy until fallback is added to third-party-capital
   options.trigger = 'idle'
   options.skipEarlyConnections = true
 
