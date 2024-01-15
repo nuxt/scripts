@@ -1,3 +1,4 @@
+import type { ActiveHeadEntry, MergeHead, UseHeadInput } from '@unhead/vue'
 import type { MaybeRefOrGetter } from '#imports'
 import { computed, toValue, useHead, useInlineAsset, useNuxtApp, useProxyAsset } from '#imports'
 
@@ -5,7 +6,7 @@ interface NuxtUseStyleSheetOptions {
   assetStrategy?: 'proxy' | 'inline'
 }
 
-export function useStyles(sources: MaybeRefOrGetter<string[]>, options: NuxtUseStyleSheetOptions = {}) {
+export function useStyles(sources: MaybeRefOrGetter<string[]>, options: NuxtUseStyleSheetOptions = {}): void | ActiveHeadEntry<UseHeadInput<MergeHead>> {
   if (import.meta.client) {
     return useHead(computed(() => ({
       link: toValue(sources).map(link => ({ rel: 'stylesheet', href: link, key: link })),
