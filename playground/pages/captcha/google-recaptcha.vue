@@ -10,7 +10,10 @@ execute('6Lc6LcUaAAAAAExy', { action: 'submit' })
   <div>
     Google Recaptcha
     <form>
-      <input type="text" placeholder="Input">
+      <input
+        type="text"
+        placeholder="Input"
+      >
       <button type="submit">
         Submit
       </button>

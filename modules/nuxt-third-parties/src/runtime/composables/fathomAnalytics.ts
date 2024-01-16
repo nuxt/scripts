@@ -1,6 +1,6 @@
 import type { ThirdPartyScriptOptions } from '../types'
 import { validateRequiredOptions } from '../util'
-import { computed, toValue, useScript } from '#imports'
+import { toValue, useScript } from '#imports'
 
 export interface FathomAnalyticsOptions {
   site: string // site is required
@@ -30,7 +30,7 @@ export function useFathomAnalytics(options: ThirdPartyScriptOptions<FathomAnalyt
   validateRequiredOptions(key, options, ['site'])
   return useScript<FathomAnalyticsApi>({
     key, // dedupe based on site, allow multiple instances (maybe needed)
-    'src': computed<string>(() => (toValue(options.src) || 'https://cdn.usefathom.com/script.js') as string),
+    'src': (toValue(options.src) || 'https://cdn.usefathom.com/script.js') as string,
     'defer': true,
     'data-site': options.site!,
   }, {
