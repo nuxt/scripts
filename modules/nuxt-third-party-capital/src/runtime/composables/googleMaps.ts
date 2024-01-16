@@ -1,6 +1,8 @@
 /// <reference types="google.maps" />
+import { useScript } from '@unhead/vue'
 import type { ThirdPartyScriptOptions } from '../types'
-import { useScript } from '#imports'
+
+// import { useScript } from '#imports'
 
 export interface GoogleMapsLoaderOptions {
   apiKey: string

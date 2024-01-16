@@ -25,17 +25,23 @@
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
+  "dependencies": {
+    "@vue/test-utils": "^2.4.3"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "1.0.0-beta.29",
+    "@nuxt/assets": "workspace:*",
     "@nuxt/devtools": "1.0.0",
     "@nuxt/eslint-config": "^0.2.0",
     "@nuxt/module-builder": "^0.5.5",
     "@nuxt/schema": "^3.9.1",
+    "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "^3.9.0",
     "@nuxt/ui": "^2.9.0",
     "@types/google.maps": "^3.54.10",
     "changelogen": "^0.5.5",
     "eslint": "^8.52.0",
+    "happy-dom": "^12.10.3",
     "nuxt": "^3.9.1",
     "nuxt-icon": "^0.6.1",
     "third-party-capital": "^1.0.26",
