@@ -34,7 +34,7 @@
     "@nuxt/devtools": "1.0.0",
     "@nuxt/eslint-config": "^0.2.0",
     "@nuxt/module-builder": "^0.5.5",
-    "@nuxt/schema": "^3.9.1",
+    "@nuxt/schema": "^3.9.3",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "^3.9.0",
     "@nuxt/ui": "^2.9.0",
@@ -51,6 +51,7 @@
     "@unhead/schema": "1.8.1",
     "@unhead/shared": "1.8.1",
     "@unhead/vue": "1.8.1",
-    "unhead": "1.8.1"
+    "unhead": "1.8.1",
+    "@nuxt/schema": "3.9.3"
   }
 }
