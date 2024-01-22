@@ -7,8 +7,8 @@ vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../../nuxt-
 it('should mount the component', async () => {
   const component = await mountSuspended(YoutubeEmbed, {
     props: {
-      videoid: 'd_IFKP1Ofq0',
-      playlabel: 'play',
+      videoId: 'd_IFKP1Ofq0',
+      playLabel: 'play',
     },
   })
 

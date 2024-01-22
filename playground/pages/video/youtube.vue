@@ -17,8 +17,8 @@ function changeLabel() {
   <div>
     <div>
       <YoutubeEmbed
-        :videoid="videoid"
-        :playlabel="label"
+        :video-id="videoid"
+        :play-label="label"
       />
     </div>
     <div class="button-container">

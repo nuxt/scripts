@@ -10,19 +10,19 @@ import { convertThirdPartyCapital, formatDimensionValue, validateRequiredOptions
 const YoutubeEmbed = defineComponent({
   name: 'YoutubeEmbed',
   props: {
-    videoid: { type: String, required: true },
-    playlabel: { type: String, required: true },
+    videoId: { type: String, required: true },
+    playLabel: { type: String, required: true },
     width: { type: String, required: false, default: '100%' },
     height: { type: String, required: false, default: '100%' },
     params: { type: String, required: false, default: undefined },
   },
   async setup(props) {
-    const ytRef = ref(TPCYoutubeEmbed({ videoid: props.videoid, playlabel: props.playlabel }))
+    const ytRef = ref(TPCYoutubeEmbed({ videoid: props.videoId, playlabel: props.playLabel }))
 
     if (import.meta.client)
-      watch(props, () => ytRef.value = TPCYoutubeEmbed({ videoid: props.videoid, playlabel: props.playlabel }))
+      watch(props, () => ytRef.value = TPCYoutubeEmbed({ videoid: props.videoId, playlabel: props.playLabel }))
 
-    validateRequiredOptions(ytRef.value.id, props, ['videoid', 'playlabel'])
+    validateRequiredOptions(ytRef.value.id, props, ['videoId', 'playLabel'])
 
     convertThirdPartyCapital({
       data: ytRef.value,
