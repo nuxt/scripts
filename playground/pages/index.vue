@@ -193,7 +193,7 @@ function reset() {
               to="/maps/google-maps"
               class="underline"
             >
-              Google Maps JavScript API
+              Google Maps
             </ULink>
           </li>
         </ul>

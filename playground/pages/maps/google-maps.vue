@@ -11,7 +11,7 @@ function changeQuery() {
 <template>
   <div>
     <div>
-      <GoogleMapsJavaScriptApi
+      <GoogleMaps
         api-key="API_KEY"
         width="600"
         height="400"

@@ -7,7 +7,7 @@ import { convertThirdPartyCapital, formatDimensionValue, validateRequiredOptions
  *
  * A 3P wrapper component that takes the props to feed into third-party-capital({@link https://github.com/GoogleChromeLabs/third-party-capital}), which returns data to define and build the component.
  */
-export const YoutubeEmbed = defineComponent({
+const YoutubeEmbed = defineComponent({
   name: 'YoutubeEmbed',
   props: {
     videoid: { type: String, required: true },
