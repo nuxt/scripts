@@ -24,5 +24,11 @@
   "dependencies": {
     "@nuxt/kit": "^3.8.0",
     "@nuxt/scripts": "workspace:*"
+  },
+  "build": {
+    "externals": [
+      "@unhead/vue",
+      "#imports"
+    ]
   }
 }
