@@ -2,6 +2,7 @@ import { GoogleAnalytics } from 'third-party-capital'
 import type { GoogleAnalyticsApi, GoogleAnalyticsOptions } from 'third-party-capital'
 import { convertThirdPartyCapital, validateRequiredOptions } from '../util'
 import type { ThirdPartyScriptApi, ThirdPartyScriptOptions } from '../types'
+import { useFeatureDetection } from './featureDetection'
 
 declare global {
   interface Window extends GoogleAnalyticsApi { }
@@ -22,6 +23,8 @@ export function useGoogleAnalytics(options: ThirdPartyScriptOptions<GoogleAnalyt
   // Hard-coding strategy until fallback is added to third-party-capital
   options.trigger = 'idle'
   options.skipEarlyConnections = true
+
+  useFeatureDetection('ga')
 
   return convertThirdPartyCapital<GoogleAnalyticsOptions, GoogleAnalyticsApi>({
     data: ga,

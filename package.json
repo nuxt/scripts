@@ -48,10 +48,10 @@
     "vitest": "^0.34.6"
   },
   "resolutions": {
+    "@nuxt/schema": "3.9.3",
     "@unhead/schema": "1.8.1",
     "@unhead/shared": "1.8.1",
     "@unhead/vue": "1.8.1",
-    "unhead": "1.8.1",
-    "@nuxt/schema": "3.9.3"
+    "unhead": "1.8.1"
   }
 }

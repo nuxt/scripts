@@ -1,6 +1,7 @@
 import { defineComponent, h, ref, watch } from 'vue'
 import { YouTubeEmbed as TPCYoutubeEmbed } from 'third-party-capital'
 import { convertThirdPartyCapital, formatDimensionValue, validateRequiredOptions } from '../util'
+import { useFeatureDetection } from '../composables/featureDetection'
 
 /**
  * YoutubeEmbed
@@ -30,6 +31,8 @@ const YoutubeEmbed = defineComponent({
       options: {},
       use: () => { },
     })
+
+    useFeatureDetection('YoutubeEmbed')
 
     return () => h('div', { class: 'lite-youtube-container', innerHTML: ytRef.value.html, style: { width: formatDimensionValue(props.width), height: formatDimensionValue(props.height) } })
   },

@@ -3,6 +3,7 @@ import { defineComponent, h, ref, watch } from 'vue'
 import type { PropType, Ref } from 'vue'
 import { formatDimensionValue, validateEitherOrOptions, validateRequiredOptions } from '../util'
 import { useGoogleMaps } from '../composables/googleMaps'
+import { useFeatureDetection } from '../composables/featureDetection'
 
 interface LatLng {
   lat: number
@@ -182,6 +183,8 @@ const GoogleMaps = defineComponent({
         map = result.map
       }
     })
+
+    useFeatureDetection('GoogleMaps')
 
     if (import.meta.client)
       watch(props, () => updateMap({ map, center: props.center, q: props.q }))

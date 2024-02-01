@@ -2,6 +2,7 @@ import { GoogleTagManager } from 'third-party-capital'
 import type { GoogleTagManagerApi, GoogleTagManagerOptions } from 'third-party-capital'
 import { convertThirdPartyCapital, validateRequiredOptions } from '../util'
 import type { ThirdPartyScriptApi, ThirdPartyScriptOptions } from '../types'
+import { useFeatureDetection } from './featureDetection'
 
 declare global {
   interface Window extends GoogleTagManagerApi { }
@@ -18,6 +19,8 @@ declare global {
 export function useGoogleTagManager(options: ThirdPartyScriptOptions<GoogleTagManagerOptions, GoogleTagManagerApi> = {}): ThirdPartyScriptApi<GoogleTagManagerApi> {
   const gtm = GoogleTagManager({ id: options.id })
   validateRequiredOptions(gtm.id, options, ['id'])
+
+  useFeatureDetection('gtm')
 
   return convertThirdPartyCapital<GoogleTagManagerOptions, GoogleTagManagerApi>({
     data: gtm,
