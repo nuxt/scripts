@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import GoogleMaps from './GoogleMaps'
+import GoogleMaps from './../../src/runtime/components/GoogleMaps'
 
 vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../../nuxt-script/src/runtime/composables/useStyles') }))
 

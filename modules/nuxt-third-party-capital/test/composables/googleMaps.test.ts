@@ -1,9 +1,9 @@
 import { expect, it, vi } from 'vitest'
 import { createHead, setHeadInjectionHandler } from '@unhead/vue'
 
-import type { ThirdPartyScriptOptions } from '../types'
-import type { GoogleMapsLoaderApi, GoogleMapsLoaderOptions } from './googleMaps'
-import { useGoogleMaps } from './googleMaps'
+import type { ThirdPartyScriptOptions } from '../../src/runtime/types'
+import type { GoogleMapsLoaderApi, GoogleMapsLoaderOptions } from './../../src/runtime/composables/googleMaps'
+import { useGoogleMaps } from './../../src/runtime/composables/googleMaps'
 
 vi.mock('#imports', () => ({ useScript: () => vi.importActual('../../../../nuxt-script/src/runtime/composables/useScript') }))
 

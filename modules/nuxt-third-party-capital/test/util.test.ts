@@ -3,8 +3,8 @@ import { GoogleAnalytics } from 'third-party-capital'
 import { createHead, setHeadInjectionHandler } from '@unhead/vue'
 
 import type { GoogleAnalyticsApi, GoogleAnalyticsOptions } from 'third-party-capital'
-import type { ThirdPartyScriptOptions } from './types'
-import { convertThirdPartyCapital, formatDimensionValue } from './util'
+import type { ThirdPartyScriptOptions } from './../src/runtime/types'
+import { convertThirdPartyCapital, formatDimensionValue } from './../src/runtime/util'
 
 vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../nuxt-script/src/runtime/composables/useStyles') }))
 

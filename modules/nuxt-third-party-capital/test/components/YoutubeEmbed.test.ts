@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import YoutubeEmbed from './YoutubeEmbed'
+import YoutubeEmbed from './../../src/runtime/components/YoutubeEmbed'
 
 vi.mock('#imports', () => ({ useStyles: () => vi.importActual('../../../../nuxt-script/src/runtime/composables/useStyles') }))
 
