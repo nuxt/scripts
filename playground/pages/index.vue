@@ -3,7 +3,7 @@ import type { VueScriptInstance } from '@unhead/vue'
 import type { JSConfettiApi } from '#imports'
 import { ref, useConfetti } from '#imports'
 
-const state = ref<{ trigger: 'default' | 'manual' | 'idle'; assetStrategy: 'default' | 'inline' | 'proxy' }>({
+const state = ref<{ trigger: 'default' | 'manual' | 'idle', assetStrategy: 'default' | 'inline' | 'proxy' }>({
   trigger: 'default',
   assetStrategy: 'default',
 })

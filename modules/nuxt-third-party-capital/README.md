@@ -1,7 +1,7 @@
 # Nuxt Third Party Capital
 
 A collection of third-party wrappers (components and composables) built by Nuxt and [Chrome Aurora](https://developer.chrome.com/aurora), which simplify how to integrate a third-party into your Nuxt application.
-Out of the box, these wrappers load third-parties in the most performant way, with best practices provided by [third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital). 
+Out of the box, these wrappers load third-parties in the most performant way, with best practices provided by [third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital).
 
 ## Supported Third Parties
 
@@ -118,7 +118,7 @@ $script.waitForLoad().then(({ dataLayer }) => {
 
 ## GoogleMaps
 
-The GoogleMaps component feels like a Google Maps Embed, but uses the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript) to load and initialize the map. 
+The GoogleMaps component feels like a Google Maps Embed, but uses the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript) to load and initialize the map.
 
 Note: You need an api key to use Google Maps.
 
@@ -184,7 +184,6 @@ An object containing the following options:
 | width | string | Width of the player. (optional)|
 | height | string | Height of the player. (optional)|
 | params | object | [Parameters](https://developers.google.com/youtube/player_parameters#Parameters) for the player. (optional)|
-
 
 **Note** Camel-case prop names are assigned kebab-cased in DOM templates (see [Prop name casing](https://vuejs.org/style-guide/rules-strongly-recommended.html#prop-name-casing)).
 

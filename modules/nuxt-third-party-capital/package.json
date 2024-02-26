@@ -22,7 +22,7 @@
     "dev:prepare": "nuxt-module-build build --stub"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.8.0",
+    "@nuxt/kit": "^3.10.3",
     "@nuxt/scripts": "workspace:*",
     "@nuxtjs/partytown": "^1.4.0"
   }

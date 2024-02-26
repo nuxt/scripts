@@ -14,7 +14,7 @@ export interface FathomAnalyticsOptions {
 }
 
 export interface FathomAnalyticsApi {
-  trackPageview: (ctx?: { url: string; referrer?: string }) => void
+  trackPageview: (ctx?: { url: string, referrer?: string }) => void
   trackGoal: (eventName: string, eventValue: number) => void
   // TODO full API
 }

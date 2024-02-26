@@ -11,13 +11,13 @@ interface CachedScript {
   expiresAt: number
 }
 
-export async function useCachedAsset(src: string, options?: { ttl?: number; purge?: boolean }) {
+export async function useCachedAsset(src: string, options?: { ttl?: number, purge?: boolean }) {
   const key = src as string
 
   const ttl = options?.ttl || useRuntimeConfig()['nuxt-assets']?.proxyTtl || 0
 
   const useCache = true
-  const cache = prefixStorage(useStorage(), '/cache/nuxt-assets') as Storage<{ value: Script; expiresAt: number }>
+  const cache = prefixStorage(useStorage(), '/cache/nuxt-assets') as Storage<{ value: Script, expiresAt: number }>
   let cacheResult = 'MISS'
   let cacheExpires = 0
   // cache will invalidate if the options change

@@ -27,7 +27,7 @@ See [useScript](https://unhead.unjs.io/usage/composables/use-script)
 
 ## Nuxt Third Parties
 
-Third Party wrappers with Nuxt support. 
+Third Party wrappers with Nuxt support.
 In development:
 - Cloudflare Analytics
 - Cloudflare Turnstile
