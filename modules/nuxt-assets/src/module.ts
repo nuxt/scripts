@@ -20,7 +20,7 @@ declare module '@nuxt/schema' {
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-assets',
+    name: '@nuxt/assets',
     configKey: 'assets',
   },
   defaults: {

@@ -20,7 +20,7 @@ export interface ModuleOptions {
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-third-parties',
+    name: '@nuxt/third-parties',
     configKey: 'thirdParties',
   },
   defaults: {},

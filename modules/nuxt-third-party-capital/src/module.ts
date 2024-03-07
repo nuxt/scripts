@@ -12,7 +12,7 @@ export interface ModuleOptions {
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-third-party-capital',
+    name: '@nuxt/third-party-capital',
     configKey: 'thirdPartyCapital',
   },
   defaults: {},
