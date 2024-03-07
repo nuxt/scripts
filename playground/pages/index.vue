@@ -18,7 +18,8 @@ async function submit() {
     assetStrategy: state.value.assetStrategy === 'default' ? undefined : state.value.assetStrategy,
   })
   doConfetti = addConfetti
-  script.value = $script
+  // TODO: handle unwrapping of refs
+  script.value = ref($script).value
 }
 function load() {
   script.value?.load()

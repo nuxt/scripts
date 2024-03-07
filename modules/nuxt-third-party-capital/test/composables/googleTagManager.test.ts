@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest'
+import { toValue } from 'vue'
 import { createHead, setHeadInjectionHandler } from '@unhead/vue'
 import { useGoogleTagManager } from './../../src/runtime/composables/googleTagManager'
 
@@ -12,8 +13,7 @@ it('should add a Google Tag Manager entry in the head', () => {
   useGoogleTagManager({ id })
 
   // since we're skipping early connection and using 'idle' trigger, the only thing appended to the head is the 'setup' script.
-  // [Todo]: TS error to fix: Property 'script' does not exist on type 'MaybeComputedRef<ReactiveHead<MergeHead>>'.
-  expect(head.headEntries()[head.headEntries().length - 1].input.script[0]).toEqual(expect.objectContaining({ key: 'setup' }))
+  expect(toValue(toValue(head.headEntries()[head.headEntries().length - 1].input).script)![0]).toEqual(expect.objectContaining({ key: 'setup' }))
   expect(head.headEntries().length).toEqual(3)
 })
 
