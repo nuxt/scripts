@@ -4,8 +4,8 @@ export interface ModuleOptions {}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-script',
-    configKey: 'script',
+    name: '@nuxt/scripts',
+    configKey: 'scripts',
   },
   defaults: {},
   async setup() {
