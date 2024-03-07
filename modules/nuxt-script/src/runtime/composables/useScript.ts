@@ -12,7 +12,7 @@ export function useScript<T> (input: MaybeComputedRefEntriesOnly<Omit<UseScriptI
   const assetStrategy = options.assetStrategy
   const nuxtApp = useNuxtApp()
   return _useScript<T>(input, {
-    async transform(script) {
+    async transform (script) {
       if (typeof script.src === 'string' && script.src) {
         if (assetStrategy === 'proxy') {
           script.src = await nuxtApp.runWithContext(() => useProxyAsset(script.src as string))
