@@ -52,6 +52,10 @@
     "@unhead/schema": "1.8.11",
     "@unhead/shared": "1.8.11",
     "@unhead/vue": "1.8.11",
+    "@nuxt/scripts": "workspace:*",
+    "@nuxt/assets": "workspace:*",
+    "@nuxt/third-parties": "workspace:*",
+    "@nuxt/third-party-capital": "workspace:*",
     "unhead": "1.8.11"
   }
 }

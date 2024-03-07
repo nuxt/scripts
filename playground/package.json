@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "playground",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate"
+  },
+  "dependencies": {
+    "@nuxt/assets": "latest",
+    "@nuxt/scripts": "latest",
+    "@nuxt/third-parties": "latest",
+    "@nuxt/third-party-capital": "latest",
+    "nuxt": "latest",
+    "vue": "latest",
+    "vue-router": "latest"
+  }
+}
