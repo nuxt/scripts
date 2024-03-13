@@ -41,7 +41,7 @@
     "@vue/test-utils": "^2.4.4",
     "changelogen": "^0.5.5",
     "eslint": "^8.57.0",
-    "happy-dom": "^13.6.2",
+    "happy-dom": "^13.8.2",
     "nuxt": "^3.10.3",
     "nuxt-icon": "^0.6.9",
     "playwright-core": "^1.42.1",
@@ -51,14 +51,14 @@
     "vue-tsc": "^2.0.6"
   },
   "resolutions": {
+    "@nuxt/assets": "workspace:*",
     "@nuxt/schema": "3.10.3",
+    "@nuxt/scripts": "workspace:*",
+    "@nuxt/third-parties": "workspace:*",
+    "@nuxt/third-party-capital": "workspace:*",
     "@unhead/schema": "1.8.11",
     "@unhead/shared": "1.8.11",
     "@unhead/vue": "1.8.11",
-    "@nuxt/scripts": "workspace:*",
-    "@nuxt/assets": "workspace:*",
-    "@nuxt/third-parties": "workspace:*",
-    "@nuxt/third-party-capital": "workspace:*",
     "unhead": "1.8.11"
   }
 }
