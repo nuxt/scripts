@@ -7,7 +7,7 @@ export default defineVitestConfig({
     environmentOptions: {
       nuxt: {
         overrides: {
-          modules: ['@nuxt/scripts', '@nuxt/assets'],
+          modules: ['@nuxt/scripts'],
         },
       },
     },

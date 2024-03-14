@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { VueScriptInstance } from '@unhead/vue'
-import type { JSConfettiApi } from '#imports'
-import { ref, useConfetti } from '#imports'
+import { type JSConfettiApi, useConfetti } from '../../third-parties/src/runtime/composables/confetti'
+import { ref } from '#imports'
 
 const state = ref<{ trigger: 'default' | 'manual' | 'idle', assetStrategy: 'default' | 'inline' | 'proxy' }>({
   trigger: 'default',
@@ -19,7 +19,7 @@ async function submit() {
   })
   doConfetti = addConfetti
   // TODO: handle unwrapping of refs
-  script.value = ref($script).value
+  script.value = $script
 }
 function load() {
   script.value?.load()

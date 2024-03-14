@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ref, useCloudflareAnalytics } from '#imports'
+import { useCloudflareAnalytics } from '../../../third-parties/src/runtime/composables/cloudflareAnalytics'
+import { ref } from '#imports'
 
 // composables return the underlying api as a proxy object and a $script with the script state
 const { $script } = useCloudflareAnalytics({

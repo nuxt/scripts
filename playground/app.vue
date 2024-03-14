@@ -1,19 +1,3 @@
-<script lang="ts" setup>
-import { injectHead, ref } from '#imports'
-
-const head = injectHead()
-const scripts = ref<Array<Record<string, any>>>()
-head.hooks.hook('dom:rendered', () => {
-  scripts.value = Object.entries(head._scripts || {})
-    .map(([key, value]) => {
-      return {
-        key,
-        status: value.$script.status,
-      }
-    })
-})
-</script>
-
 <template>
   <div class="flex flex-col min-h-screen">
     <header class="sticky top-0 z-50 w-full backdrop-blur flex-none border-b border-gray-900/10 dark:border-gray-50/[0.06] bg-white/75 dark:bg-gray-900/75">
@@ -40,21 +24,6 @@ head.hooks.hook('dom:rendered', () => {
         <div class="grid grid-cols-4">
           <div class="col-span-3">
             <NuxtPage />
-          </div>
-          <div class="col-span-1">
-            <h2 class="text-xl font-bold">
-              Unhead Scripts
-            </h2>
-            <div>
-              <ul>
-                <li
-                  v-for="(script, key) of scripts"
-                  :key="key"
-                >
-                  {{ script.key }}:{{ script.status }}
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
       </UContainer>

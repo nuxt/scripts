@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useGoogleRecaptcha } from '#imports'
+import { useGoogleRecaptcha } from '../../../third-parties/src/runtime/composables/googleRecaptcha'
 
 const { $script, execute } = useGoogleRecaptcha()
 

@@ -1,58 +1,103 @@
-# Nuxt Scripts and Assets
+<h1 align='center'>@nuxt/scripts</h1>
 
-Work in progress for the development of the following modules
-- Nuxt Assets - Improved loading options for assets (proxy, inline, etc)
-- Nuxt Scripts - useScripts, useStyles composables
-- Nuxt Third Parties - Simple optimized wrappers for third parties
-- Nuxt Third Party Capital - Wrappers supported by [Third Party Capital](https://github.com/GoogleChromeLabs/third-party-capital)
+[![npm version][npm-version-src]][npm-version-href]
+[![npm downloads][npm-downloads-src]][npm-downloads-href]
+[![License][license-src]][license-href]
+[![Nuxt][nuxt-src]][nuxt-href]
 
-## Nuxt Assets
-
-Provides `useInlineAsset` and `useProxyAsset` composables to load various resources.
-
-`useInlineAsset` loads the resource serverside and inlines the response as HTML rather than linking it. This saves any network overhead in fetching the script for the first time but it means it can't be cached by the browser for reloads (good for tiny scripts). It will add a tiny bit of latency to the initial SSR until the script is cached.
-
-`useProxyAsset` loads the resource serverside as well but just acts as a proxy, this can be useful to remove the DNS lookup time of using an alternative domain. This has a caching layer so can potentially provide a faster, closer to the edge download for the end user depending on the sites infrastructure.
-
-Default behavior: if there's an asset strategy then the request will be routed by the Nuxt server (or prerendered for SSG).
-
-## Nuxt Scripts
-
-Provides `useScript` and `useStyles` composables to load scripts and stylesheets.
-
-`useScript` loads scripts with various options. It uses a trigger and asset strategy options to control how and when the script gets requested.
-`useStyles` allows for optimized stylesheet loading out of the box.
-
-See [useScript](https://unhead.unjs.io/usage/composables/use-script)
-
-## Nuxt Third Parties
-
-Third Party wrappers with Nuxt support.
-In development:
-- Cloudflare Analytics
-- Cloudflare Turnstile
-- Fathom Analytics
-- Google Adsense
-- Google Recaptcha
-
-## Nuxt Third Party Capital
-
-Third Party wrappers supported by Nuxt & Third Party Capital. Third Party Capital is a resource that consolidates best practices for loading popular third-parties in a single place.
-
-Supported wrappers:
-- Google Analytics
-- Google Tag Manager
-- Youtube Embed
-- Google Maps JavaScript Api
-
-See [Third Party Capital](https://github.com/GoogleChromeLabs/third-party-capital)
+<p align="center">
+Powerful DX improvements for loading third-party scripts in Nuxt.
+</p>
 
 ## Features
 
-- 🌐 Serve scripts from your domain using triggers (`idle`, `manual`, `Promise`) and asset strategies (`inline`, `proxy`)
+All the features from Unhead [useScript](https://unhead.unjs.io/usage/composables/use-script):
 
-## Future Features (ideas welcome)
+- 🦥 Lazy, but fast: `defer`, `fetchpriority: 'low'`, early connections (`preconnect`, `dns-prefetch`)
+- ☕ Loading strategies: `idle`, `manual`, `Promise`
+- 🪨 Single script instance for your app
+- 🎃 Events for SSR scripts: `onload`, `onerror`, etc
+- 🪝 Proxy API: call the script functions before it's loaded, noop for SSR, stubbable, etc
+- 🇹 Fully typed APIs
 
-- 🔒 Lock down your site with Content Security Policy integration
-- Load scripts from nuxt.config with `scripts.globals`
-- ?? (ideas welcome)
+Plus Nuxt goodies:
+
+- 🕵️ `useTrackingScript` - Load a tracking script while respecting privacy and consent
+- 🪵 DevTools integration - see all your loaded scripts with function logs
+
+
+## Installation
+
+1. Install `@nuxt/scripts` dependency to your project:
+
+```bash
+pnpm add -D @nuxt/scripts
+#
+yarn add -D @nuxt/scripts
+#
+npm install -D @nuxt/scripts
+```
+
+2. Add it to your `modules` section in your `nuxt.config`:
+
+```ts
+export default defineNuxtConfig({
+  modules: ['@nuxt/scripts']
+})
+```
+
+## Background
+
+Loading third-party IIFE scripts using `useHead` composable is easy. However,
+things start getting more complicated quickly around SSR, lazy loading, and type safety.
+
+Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts a breeze to use.
+
+## Usage
+
+### `useScript`
+
+Please see the [useScript](https://unhead.unjs.io/usage/composables/use-script) documentation.
+
+### `useTrackingScript`
+
+This composables is a wrapper around `useScript` that respects privacy and cookie consent.
+
+For the script to load you must provide a `consent` option. This can be promise, ref, or boolean.
+
+```ts
+const agreedToCookies = ref(false)
+useTrackingScript('https://www.google-analytics.com/analytics.js', {
+  // will be loaded in when the ref is true
+  consent: agreedToCookies
+})
+```
+
+If the user has enabled `DoNotTrack` within their browser, the script will not be loaded, unless
+explicitly ignoring.
+
+```ts
+const agreedToCookies = ref(false)
+useTrackingScript('https://www.google-analytics.com/analytics.js', {
+  ignoreDoNotTrack: true
+})
+```
+
+
+## License
+
+Licensed under the [MIT license](https://github.com/nuxt/scripts/blob/main/LICENSE.md).
+
+
+<!-- Badges -->
+[npm-version-src]: https://img.shields.io/npm/v/@nuxt/scripts/latest.svg?style=flat&colorA=18181B&colorB=28CF8D
+[npm-version-href]: https://npmjs.com/package/@nuxt/scripts
+
+[npm-downloads-src]: https://img.shields.io/npm/dm/@nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
+[npm-downloads-href]: https://npmjs.com/package/@nuxt/scripts
+
+[license-src]: https://img.shields.io/github/license/nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
+[license-href]: https://github.com/nuxt/scripts/blob/main/LICENSE
+
+[nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt.js
+[nuxt-href]: https://nuxt.com
