@@ -1,80 +1,74 @@
-import { defineNuxtModule, addPlugin, createResolver, addTemplate, addAutoImport, addAutoImportDir } from '@nuxt/kit'
-import { genArrayFromRaw, genImport, genString } from 'knitwork'
+import { addImportsDir, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
+import { readPackageJSON } from 'pkg-types'
+import type { ScriptBase } from '@unhead/schema'
+import type { NuxtUseScriptOptions } from './runtime/types'
+import { setupDevToolsUI } from './devtools'
 
-const builtInProviders = ['debug']
-type BuiltInProvider = 'debug' | 'gtm'
-type ProviderOptions = Record<string, any>
-
-export interface ProviderConfig {
-  disabled?: boolean
-  provider: string
-  options?: ProviderOptions
+export interface ModuleOptions {
+  /**
+   * Set default script tag attributes and script options.
+   */
+  defaults?: {
+    /**
+     * Default script tag attributes.
+     */
+    script?: ScriptBase
+    /**
+     * Default script options.
+     */
+    options?: NuxtUseScriptOptions
+  }
+  /**
+   * Whether the module is enabled.
+   *
+   * @default true
+   */
+  enabled: boolean
+  /**
+   * Enables debug mode.
+   *
+   * @false false
+   */
+  debug: boolean
 }
 
-export interface ModuleOptions extends Partial<Record<BuiltInProvider, ProviderOptions>> {
-  providers?: {
-    [name: string]: ProviderOptions
-  } & Record<BuiltInProvider, never>
+export interface ModuleHooks {
+  /**
+   * Transform a script before it's registered.
+   */
+  'scripts:transform': (ctx: { script: string, options: any }) => Promise<void>
 }
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: '@nuxt/scripts',
-    configKey: 'scripts'
+    configKey: 'scripts',
+    compatibility: {
+      nuxt: '^3.9.0',
+      bridge: false,
+    },
   },
   defaults: {
-    // debug: nuxt.options.dev
+    enabled: true,
+    debug: false,
   },
-  setup (options, nuxt) {
-    const resolver = createResolver(import.meta.url)
-
-    // Resolve providers
-    const providers = []
-    for (const name of builtInProviders) {
-      if (options[name]) {
-        providers.push({
-          name,
-          src: resolver.resolve('runtime/providers/' + name),
-          options: options[name]
-        })
-      }
+  async setup(config, nuxt) {
+    const { resolve } = createResolver(import.meta.url)
+    const { name, version } = await readPackageJSON(resolve('../package.json'))
+    const logger = useLogger(name)
+    if (config.enabled === false) {
+      // TODO fallback to useHead
+      logger.debug('The module is disabled, skipping setup.')
+      return
     }
-    for (const name in options.providers) {
-      const providerOpts = options.providers[name]
-      if (providerOpts.disabled) {
-        continue
-      }
-      if (builtInProviders.includes(name)) {
-        throw new Error(`[nuxt scripts] Built-in provider \`${name}\` should be configured at the top level via scripts.${name}`)
-      }
-      if (!providerOpts.provider) {
-        throw new Error(`[nuxt scripts] Configured provider ${name} is missing \`provider\` key.`)
-      }
-      providers.push({
-        name,
-        src: resolver.resolve(providerOpts.provider),
-        options: providerOpts.provider
-      })
-    }
+    // allow augmenting the options
+    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
+    // @ts-expect-error runtime
+    nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
+    nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaults: config.defaults }
+    addImportsDir(resolve('./runtime/composables'))
 
-    // Generate code for configured providers
-    addTemplate({
-      filename: 'script-providers.mjs',
-      getContents () {
-        return [
-          `${providers.map(p => genImport(p.src, '_' + p.name)).join('\n')}`,
-          `export default ${genArrayFromRaw(
-            providers.map(p => ({ name: genString(p.name), provider: '_' + p.name, options: p.options }))
-          )}`
-        ].join('\n')
-      }
-    })
-
-    // Add plugin
-    nuxt.options.build.transpile.push(resolver.resolve('runtime'))
-    addPlugin(resolver.resolve('runtime/plugin'))
-
-    // Add composables
-    addAutoImport({ name: 'addScriptsProvider', as: 'addScriptsProvider', from: resolver.resolve('runtime/composables') })
-  }
+    if (nuxt.options.dev)
+      setupDevToolsUI(config, resolve)
+  },
 })
