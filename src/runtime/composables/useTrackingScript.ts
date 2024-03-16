@@ -4,15 +4,15 @@ import type { NuxtUseTrackingScriptOptions } from '#nuxt-scripts'
 import { isDoNotTrackEnabled, isRef, onNuxtReady, ref, toValue, watch } from '#imports'
 
 export function useTrackingScript<T>(input: UseScriptInput, options?: NuxtUseTrackingScriptOptions<T>) {
-  // check if DNT is enabled
-  if (!options.ignoreDoNotTrack && isDoNotTrackEnabled())
-    return
   const instance = useScript(input, {
     ...options,
     trigger: 'manual',
   })
   onNuxtReady(() => {
     const consented = ref(false)
+    // check if DNT is enabled, never consent
+    if (!options?.ignoreDoNotTrack && isDoNotTrackEnabled())
+      return
     if (options?.consent) {
       // check for boolean primitive
       if (typeof options?.consent === 'boolean') {
