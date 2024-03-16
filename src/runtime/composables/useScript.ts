@@ -6,7 +6,7 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
   input = typeof input === 'string' ? { src: input } : input
   options = options || {}
   const nuxtApp = useNuxtApp()
-  const script = _useScript<T>(input, {
+  const instance = _useScript<T>(input, {
     async transform(script) {
       // allow nuxt assets to modify the output
       await nuxtApp.hooks.callHook('scripts:transform', { script, options })
@@ -26,14 +26,14 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
     nuxtApp._scripts = nuxtApp._scripts! || {}
 
     function syncScripts() {
-      nuxtApp._scripts[script.$script.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', {scripts: nuxtApp._scripts})
+      nuxtApp._scripts[instance.$script.id] = payload
+      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts })
     }
 
-    if (!nuxtApp._scripts[script.$script.id]) {
+    if (!nuxtApp._scripts[instance.$script.id]) {
       const head = injectHead()
       head.hooks.hook('script:updated', (ctx) => {
-        if (ctx.script.id !== script.$script.id)
+        if (ctx.script.id !== instance.$script.id)
           return
         // convert the status to a timestamp
         payload.events.push({
@@ -41,11 +41,11 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
           status: ctx.script.status,
           at: Date.now(),
         })
-        payload.$script = script.$script
+        payload.$script = instance.$script
         syncScripts()
       })
       head.hooks.hook('script:instance-fn', (ctx) => {
-        if (ctx.script.id !== script.$script.id)
+        if (ctx.script.id !== instance.$script.id)
           return
         // log all events
         payload.events.push({
@@ -56,7 +56,7 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
         })
         syncScripts()
       })
-      payload.$script = script.$script
+      payload.$script = instance.$script
       payload.events.push({
         type: 'status',
         status: 'awaitingLoad',
@@ -65,5 +65,5 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
       syncScripts()
     }
   }
-  return script
+  return instance
 }
