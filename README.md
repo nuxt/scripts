@@ -25,7 +25,6 @@ Plus Nuxt goodies:
 - 🕵️ `useTrackingScript` - Load a tracking script while respecting privacy and consent
 - 🪵 DevTools integration - see all your loaded scripts with function logs
 
-
 ## Installation
 
 1. Install `@nuxt/scripts` dependency to your project:
@@ -83,11 +82,9 @@ useTrackingScript('https://www.google-analytics.com/analytics.js', {
 })
 ```
 
-
 ## License
 
 Licensed under the [MIT license](https://github.com/nuxt/scripts/blob/main/LICENSE.md).
-
 
 <!-- Badges -->
 [npm-version-src]: https://img.shields.io/npm/v/@nuxt/scripts/latest.svg?style=flat&colorA=18181B&colorB=28CF8D

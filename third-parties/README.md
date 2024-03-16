@@ -12,4 +12,4 @@ Third Party wrappers with Nuxt support.
 - Google Adsense
 - Google Recaptcha
 
-Note: Nuxt Third Party Capital will handle core google scripts 
+Note: Nuxt Third Party Capital will handle core google scripts
