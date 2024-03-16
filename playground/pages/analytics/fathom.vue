@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { useFathomAnalytics } from '../../../third-parties/src/runtime/composables/fathomAnalytics'
-import { ref } from '#imports'
+import { ref, useHead } from '#imports'
+
+useHead({
+  title: 'Fathom',
+})
 
 // composables return the underlying api as a proxy object and a $script with the script state
 const { $script, trackPageview, trackGoal } = useFathomAnalytics({

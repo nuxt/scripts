@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import type { VueScriptInstance } from '@unhead/vue'
 import { type JSConfettiApi, useConfetti } from '../../third-parties/src/runtime/composables/confetti'
-import { ref } from '#imports'
+import { ref, useHead } from '#imports'
 
 const state = ref<{ trigger: 'default' | 'manual' | 'idle', assetStrategy: 'default' | 'inline' | 'proxy' }>({
   trigger: 'default',
   assetStrategy: 'default',
+})
+
+useHead({
+  title: 'Home',
 })
 
 const script = ref<VueScriptInstance<JSConfettiApi> | null>(null)
@@ -113,22 +117,6 @@ function reset() {
           </li>
           <li>
             <ULink
-              to="/analytics/google-analytics"
-              class="underline"
-            >
-              Google Analytics
-            </ULink>
-          </li>
-          <li>
-            <ULink
-              to="/analytics/google-tag-manager"
-              class="underline"
-            >
-              Google Tag Manager
-            </ULink>
-          </li>
-          <li>
-            <ULink
               to="/analytics/cloudflare"
               class="underline"
             >
@@ -159,42 +147,6 @@ function reset() {
               class="underline"
             >
               Google Recaptcha
-            </ULink>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <h2 class="font-bold mb-5 text-xl flex items-center">
-          <Icon
-            name="carbon:video-player"
-            class="opacity-70 mr-2"
-          />Video
-        </h2>
-        <ul class="space-y-5">
-          <li>
-            <ULink
-              to="/video/youtube"
-              class="underline"
-            >
-              Youtube
-            </ULink>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <h2 class="font-bold mb-5 text-xl flex items-center">
-          <Icon
-            name="carbon:map"
-            class="opacity-70 mr-2"
-          />Map
-        </h2>
-        <ul class="space-y-5">
-          <li>
-            <ULink
-              to="/maps/google-maps"
-              class="underline"
-            >
-              Google Maps
             </ULink>
           </li>
         </ul>

@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import { useCloudflareAnalytics } from '../../../third-parties/src/runtime/composables/cloudflareAnalytics'
-import { ref } from '#imports'
+import { ref, useHead } from '#imports'
+
+useHead({
+  title: 'Cloudflare',
+})
 
 // composables return the underlying api as a proxy object and a $script with the script state
 const { $script } = useCloudflareAnalytics({

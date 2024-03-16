@@ -82,6 +82,36 @@ useTrackingScript('https://www.google-analytics.com/analytics.js', {
 })
 ```
 
+### `useTrackedPage`
+
+It's common when using tracking scripts to send an event when the page changes. Due to Nuxt's head implementation being
+async, it's not possible to send the page title on route change.
+
+`useTrackedPage` solves this by providing you with the page title and path when they change.
+
+You can either provide a function to call on page change or use the ref that's returned.
+
+```ts
+useTrackedPage(({ title, path }) => {
+  gtag('event', 'page_view', {
+    page_title: title,
+    page_location: 'https://example.com',
+    page_path: path
+  })
+})
+```
+
+```ts
+const trackedPage = useTrackedPage()
+watch(trackedPage, ({ title, path }) => {
+  gtag('event', 'page_view', {
+    page_title: title,
+    page_location: 'https://example.com',
+    page_path: path
+  })
+})
+```
+
 ## License
 
 Licensed under the [MIT license](https://github.com/nuxt/scripts/blob/main/LICENSE.md).
