@@ -12,6 +12,7 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
       await nuxtApp.hooks.callHook('scripts:transform', { script, options })
       return script
     },
+    mode: 'client', // default mode is client-only, loaded as we hydrate
     ...options,
   })
   // used for devtools integration
