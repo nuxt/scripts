@@ -11,7 +11,7 @@ export interface TrackedPage {
   path: string
 }
 
-export type NuxtUseTrackingScriptOptions<T = any> = Omit<NuxtUseScriptOptions<T>, 'trigger'> & {
+export interface ConsentPromiseOptions {
   consent: Promise<boolean | void> | Ref<boolean> | boolean
-  ignoreDoNotTrack?: boolean
+  honourDoNotTrack?: boolean
 }

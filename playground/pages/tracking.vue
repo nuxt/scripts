@@ -1,10 +1,12 @@
 <script lang="ts" setup>
-import { ref, useTrackingScript } from '#imports'
+import { createConsentPromise, ref, useScript } from '#imports'
 
 const cookiesEnabled = ref(false)
-useTrackingScript('https://www.googletagmanager.com/gtag/js?id=GTM-5ZQZJZ', {
-  consent: cookiesEnabled,
-  ignoreDoNotTrack: true,
+useScript('https://www.googletagmanager.com/gtag/js?id=GTM-5ZQZJZ', {
+  trigger: createConsentPromise({
+    consent: cookiesEnabled,
+  }),
+  assetStrategy: 'bundle',
 })
 </script>
 

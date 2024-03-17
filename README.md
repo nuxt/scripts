@@ -22,7 +22,7 @@ All the features from Unhead [useScript](https://unhead.unjs.io/usage/composable
 
 Plus Nuxt goodies:
 
-- 🕵️ `useTrackingScript` - Load a tracking script while respecting privacy and consent
+- 🕵️ `createConsentTrigger` - Create a script trigger that you can resolve with a ref or a promise.
 - 🪵 DevTools integration - see all your loaded scripts with function logs
 
 ## Installation
@@ -58,27 +58,33 @@ Nuxt Scripts was created to solve these issues and more with the goal of making 
 
 Please see the [useScript](https://unhead.unjs.io/usage/composables/use-script) documentation.
 
-### `useTrackingScript`
+### `createConsentTrigger`
 
-This composables is a wrapper around `useScript` that respects privacy and cookie consent.
+This composable is a wrapper around `useScript` that respects privacy and cookie consent.
 
 For the script to load you must provide a `consent` option. This can be promise, ref, or boolean.
 
 ```ts
 const agreedToCookies = ref(false)
-useTrackingScript('https://www.google-analytics.com/analytics.js', {
+useScript('https://www.google-analytics.com/analytics.js', {
   // will be loaded in when the ref is true
-  consent: agreedToCookies
+  trigger: createConsentTrigger({
+    consent: agreedToCookies
+  })
 })
 ```
 
-If the user has enabled `DoNotTrack` within their browser, the script will not be loaded, unless
-explicitly ignoring.
+You can respect the end-users browser Do Not Track option by providing the opt-in `honourDoNotTrack: true` config.
+
+This is not enabled by default as most Analytics ignore this by default.
 
 ```ts
 const agreedToCookies = ref(false)
-useTrackingScript('https://www.google-analytics.com/analytics.js', {
-  ignoreDoNotTrack: true
+useScript('https://www.google-analytics.com/analytics.js', {
+  trigger: createConsentTrigger({
+    honourDoNotTrack: true,
+    consent: agreedToCookies
+  })
 })
 ```
 

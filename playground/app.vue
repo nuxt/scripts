@@ -1,10 +1,14 @@
 <script lang="ts" setup>
-import { useTrackedPage } from '../src/runtime/composables/useTrackedPage'
-import { useTrackingScript } from '../src/runtime/composables/useTrackingScript'
+import { createConsentPromise, useScript, useTrackedPage } from '#imports'
 
-const { track } = useTrackingScript<{ track: (title: string, path: string) => void }>('https://example.com/script.js', {
-  ignoreDoNotTrack: true,
-  consent: true,
+interface GenericTrackingScript {
+  track: (title: string, path: string) => void
+}
+
+const { track } = useScript<GenericTrackingScript>('https://example.com/script.js?nuxt-scripts=inline', {
+  trigger: createConsentPromise({
+    consent: true,
+  }),
 })!
 useTrackedPage((payload) => {
   track(payload)
