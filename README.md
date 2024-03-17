@@ -24,6 +24,7 @@ Plus Nuxt goodies:
 
 - 🕵️ `createConsentTrigger` - Create a script trigger that you can resolve with a ref or a promise.
 - 🪵 DevTools integration - see all your loaded scripts with function logs
+- ⏬ Serve third-party scripts from your own server
 
 ## Installation
 
@@ -53,6 +54,66 @@ things start getting more complicated quickly around SSR, lazy loading, and type
 Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts a breeze to use.
 
 ## Usage
+
+### Getting Started
+
+To start using Nuxt Scripts, you can use the `useScript` composable to load your third-party scripts.
+
+```ts
+useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js')
+```
+
+See the Unhead [useScript](https://unhead.unjs.io/usage/composables/use-script) guide for next steps.
+
+### Bundling Scripts
+
+Bundling scripts can allow you to serve them from your own server, improving privacy and performance. It
+can also help to get around ad blockers and other privacy tools when you need a script to load.
+
+You can opt-in to have your scripts bundled by using the `assetStrategy` option. As this is
+analyzed at build time, you must define it statically.
+
+```ts
+useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
+  assetStrategy: 'bundle'
+})
+// js-confetti.browser.js will be downloaded and bundled with your app as a static asset
+```
+
+### Sending Page Events
+
+When using tracking scripts, it's common to send an event when the page changes. Due to Nuxt's head implementation being
+async, the page title is not always available on route change immediately.
+
+`useAnalyticsPageEvent` solves this by providing you with the page title and path when they change.
+
+```ts
+useAnalyticsPageEvent(({ title, path }) => {
+  // triggered on route change
+  gtag('event', 'page_view', {
+    page_title: title,
+    page_location: 'https://example.com',
+    page_path: path
+  })
+})
+```
+
+### Privacy and Cookie Consent
+
+Nuxt Scripts provides a `createConsentTrigger` composable that allows you to load scripts based on the user's consent.
+
+```ts
+const agreedToCookies = ref(false)
+useScript('https://www.google-analytics.com/analytics.js', {
+  // will be loaded in when the ref is true
+  trigger: createConsentTrigger({
+    honourDoNotTrack: true, // optional, disabled by default
+    consent: agreedToCookies
+  })
+})
+```
+
+## API
 
 ### `useScript`
 
@@ -88,17 +149,17 @@ useScript('https://www.google-analytics.com/analytics.js', {
 })
 ```
 
-### `useTrackedPage`
+### `useAnalyticsPageEvent`
 
 It's common when using tracking scripts to send an event when the page changes. Due to Nuxt's head implementation being
 async, it's not possible to send the page title on route change.
 
-`useTrackedPage` solves this by providing you with the page title and path when they change.
+`useAnalyticsPageEvent` solves this by providing you with the page title and path when they change.
 
 You can either provide a function to call on page change or use the ref that's returned.
 
 ```ts
-useTrackedPage(({ title, path }) => {
+useAnalyticsPageEvent(({ title, path }) => {
   gtag('event', 'page_view', {
     page_title: title,
     page_location: 'https://example.com',
@@ -108,7 +169,7 @@ useTrackedPage(({ title, path }) => {
 ```
 
 ```ts
-const trackedPage = useTrackedPage()
+const trackedPage = useAnalyticsPageEvent()
 watch(trackedPage, ({ title, path }) => {
   gtag('event', 'page_view', {
     page_title: title,

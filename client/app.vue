@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
+import { isRelative } from 'ufo'
 import { appFetch, devtools } from '~/composables/rpc'
 import { reactive, ref } from '#imports'
 import { loadShiki } from '~/composables/shiki'
@@ -41,20 +42,27 @@ function bytesToSize(bytes: number) {
   return `${Number.parseFloat((bytes / 1024 ** i).toFixed(2))} ${sizes[i]}`
 }
 
+function syncScripts(_scripts: any[]) {
+  scripts.value = { ..._scripts }
+  // check if the script size has been set, if not set it
+  for (const key in _scripts) {
+    if (!scriptSizes[key]) {
+      getScriptSize(_scripts[key].src).then((size) => {
+        scriptSizes[key] = bytesToSize(size)
+      }).catch(() => {
+        scriptSizes[key] = 0
+      })
+    }
+  }
+}
+
 onDevtoolsClientConnected(async (client) => {
   appFetch.value = client.host.app.$fetch
   devtools.value = client.devtools
   client.host.nuxt.hooks.hook('scripts:updated', (ctx) => {
-    scripts.value = { ...ctx.scripts }
-    // check if the script size has been set, if not set it
-    for (const key in ctx.scripts) {
-      if (!scriptSizes[key]) {
-        getScriptSize(ctx.scripts[key].src).then((size) => {
-          scriptSizes[key] = bytesToSize(size)
-        })
-      }
-    }
+    syncScripts(ctx.scripts)
   })
+  syncScripts(client.host.nuxt._scripts)
 })
 function humanFriendlyTimestamp(timestamp: number) {
   // use Intl.DateTimeFormat to format the timestamp, we only need the time aspect
@@ -67,7 +75,9 @@ function humanFriendlyTimestamp(timestamp: number) {
 }
 
 function urlToOrigin(url: string) {
-  return new URL(url).origin
+  if (isRelative(url, { acceptRelative: true }))
+    return new URL(url).origin
+  return url
 }
 </script>
 

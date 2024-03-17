@@ -2,7 +2,9 @@ import type { UseScriptOptions } from '@unhead/schema'
 import type { UseScriptInput } from '@unhead/vue'
 import type { Ref } from 'vue'
 
-export type NuxtUseScriptOptions<T = any> = UseScriptOptions<T>
+export type NuxtUseScriptOptions<T = any> = UseScriptOptions<T> & {
+  assetStrategy?: 'bundle'
+}
 
 export type NuxtUseScriptInput = UseScriptInput
 

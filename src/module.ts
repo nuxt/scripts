@@ -1,8 +1,10 @@
-import { addImportsDir, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
+import { addBuildPlugin, addImportsDir, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import type { ScriptBase } from '@unhead/schema'
 import type { NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
+import { NuxtScriptTransformer } from './plugins/transform'
+import { setupPublicAssetStrategy } from './assets'
 
 export interface ModuleOptions {
   /**
@@ -17,6 +19,16 @@ export interface ModuleOptions {
      * Default script options.
      */
     options?: NuxtUseScriptOptions
+  }
+  /** Configure the way scripts assets are exposed */
+  assets?: {
+    /**
+     * The baseURL where scripts files are served.
+     * @default '/_scripts/'
+     */
+    prefix?: string
+    /** Currently scripts assets are exposed as public assets as part of the build. This will be configurable in future */
+    strategy?: 'public'
   }
   /**
    * Whether the module is enabled.
@@ -67,6 +79,23 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaults: config.defaults }
     addImportsDir(resolve('./runtime/composables'))
+
+    const scriptMap = new Map<string, string>()
+    const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
+
+    addBuildPlugin(NuxtScriptTransformer({
+      resolveScript(src) {
+        if (scriptMap.has(src))
+          return scriptMap.get(src) as string
+        const url = normalizeScriptData(src)
+        scriptMap.set(src, url)
+        return url
+      },
+    }))
+
+    nuxt.hook('build:manifest', () => {
+      // TODO ?
+    })
 
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolve)
