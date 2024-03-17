@@ -1,9 +1,5 @@
-import type { ThirdPartyScriptOptions } from '../types'
 import { useScript } from '#imports'
-
-export interface CloudflareAnalyticsOptions {
-  token: string
-}
+import type { NuxtUseTrackingScriptOptions } from '#nuxt-scripts'
 
 export interface CloudflareAnalyticsApi {
   __cfBeacon: {
@@ -18,14 +14,16 @@ declare global {
   interface Window extends CloudflareAnalyticsApi {}
 }
 
-export function useCloudflareAnalytics(options: ThirdPartyScriptOptions<CloudflareAnalyticsOptions, CloudflareAnalyticsApi>) {
+export function useCloudflareAnalytics<T extends CloudflareAnalyticsApi>(token?: string, options?: NuxtUseTrackingScriptOptions<T>) {
   return useScript<CloudflareAnalyticsApi>({
-    'key': 'cloudflare-analytics',
-    'defer': true,
     'src': 'https://static.cloudflareinsights.com/beacon.min.js',
-    'data-cf-beacon': JSON.stringify({ token: options.token, spa: true }),
+    'data-cf-beacon': JSON.stringify({ token, spa: true }),
+    'trigger': 'idle',
   }, {
     ...options,
-    use: () => ({ __cfBeacon: window.__cfBeacon, __cfRl: window.__cfRl }),
+    assetStrategy: 'bundle',
+    use() {
+      return { __cfBeacon: window.__cfBeacon, __cfRl: window.__cfRl }
+    },
   })
 }

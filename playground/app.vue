@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { createConsentTrigger, useScript, useTrackedPage } from '#imports'
+import { createConsentTrigger, useAnalyticsPageEvent, useScript } from '#imports'
 
 interface GenericTrackingScript {
   track: (title: string, path: string) => void
@@ -10,7 +10,7 @@ const { track } = useScript<GenericTrackingScript>('https://example.com/script.j
     consent: true,
   }),
 })!
-useTrackedPage((payload) => {
+useAnalyticsPageEvent((payload) => {
   track(payload)
 })
 </script>
