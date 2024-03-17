@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { createConsentPromise, ref, useScript } from '#imports'
+import { createConsentTrigger, ref, useScript } from '#imports'
 
 const cookiesEnabled = ref(false)
 useScript('https://www.googletagmanager.com/gtag/js?id=GTM-5ZQZJZ', {
-  trigger: createConsentPromise({
+  trigger: createConsentTrigger({
     consent: cookiesEnabled,
   }),
   assetStrategy: 'bundle',
