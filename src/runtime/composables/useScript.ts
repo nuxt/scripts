@@ -16,7 +16,7 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
     ...options,
   })
   // used for devtools integration
-  if (import.meta.dev) {
+  if (import.meta.dev && import.meta.client) {
     // sync scripts to nuxtApp with debug details
     const payload = {
       key: input.key || input.src,
