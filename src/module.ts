@@ -3,7 +3,7 @@ import { readPackageJSON } from 'pkg-types'
 import type { ScriptBase } from '@unhead/schema'
 import type { NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
-import { NuxtScriptTransformer } from './plugins/transform'
+import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 
 export interface ModuleOptions {
@@ -83,7 +83,7 @@ export default defineNuxtModule<ModuleOptions>({
     const scriptMap = new Map<string, string>()
     const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
 
-    addBuildPlugin(NuxtScriptTransformer({
+    addBuildPlugin(NuxtScriptAssetBundlerTransformer({
       resolveScript(src) {
         if (scriptMap.has(src))
           return scriptMap.get(src) as string

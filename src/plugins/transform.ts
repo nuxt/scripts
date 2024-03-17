@@ -7,21 +7,14 @@ import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
 import type { SimpleCallExpression } from 'estree'
 
-export interface ScriptInjectOptions {
+export interface AssetBundlerTransformerOptions {
   resolveScript: (src: string) => string
 }
 
-/**
- * useScript('https://example.com/script.js', {
- *   assetStrategy: 'bundle',
- * })
- * ->
- * useScript('<inlined-script>')
- */
-export function NuxtScriptTransformer(options: ScriptInjectOptions) {
+export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransformerOptions) {
   return createUnplugin(() => {
     return {
-      name: 'nuxt:scripts:inline-script-transformer',
+      name: 'nuxt:scripts:asset-bundler-transformer',
       enforce: 'post',
 
       transformInclude(id) {

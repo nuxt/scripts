@@ -22,9 +22,9 @@ All the features from Unhead [useScript](https://unhead.unjs.io/usage/composable
 
 Plus Nuxt goodies:
 
-- 🕵️ `createConsentTrigger` - Create a script trigger that you can resolve with a ref or a promise.
-- 🪵 DevTools integration - see all your loaded scripts with function logs
 - ⏬ Serve third-party scripts from your own server
+- 🕵️ Privacy Features - Trigger scripts loading on cookie consent, honour DoNotTrack.
+- 🪵 DevTools integration - see all your loaded scripts with function logs
 
 ## Installation
 
@@ -100,13 +100,13 @@ useAnalyticsPageEvent(({ title, path }) => {
 
 ### Privacy and Cookie Consent
 
-Nuxt Scripts provides a `createConsentTrigger` composable that allows you to load scripts based on the user's consent.
+Nuxt Scripts provides a `createScriptConsentTrigger` composable that allows you to load scripts based on the user's consent.
 
 ```ts
 const agreedToCookies = ref(false)
 useScript('https://www.google-analytics.com/analytics.js', {
   // will be loaded in when the ref is true
-  trigger: createConsentTrigger({
+  trigger: createScriptConsentTrigger({
     honourDoNotTrack: true, // optional, disabled by default
     consent: agreedToCookies
   })
@@ -119,7 +119,7 @@ useScript('https://www.google-analytics.com/analytics.js', {
 
 Please see the [useScript](https://unhead.unjs.io/usage/composables/use-script) documentation.
 
-### `createConsentTrigger`
+### `createScriptConsentTrigger`
 
 This composable is a wrapper around `useScript` that respects privacy and cookie consent.
 
@@ -129,7 +129,7 @@ For the script to load you must provide a `consent` option. This can be promise,
 const agreedToCookies = ref(false)
 useScript('https://www.google-analytics.com/analytics.js', {
   // will be loaded in when the ref is true
-  trigger: createConsentTrigger({
+  trigger: createScriptConsentTrigger({
     consent: agreedToCookies
   })
 })
@@ -142,7 +142,7 @@ This is not enabled by default as most Analytics ignore this by default.
 ```ts
 const agreedToCookies = ref(false)
 useScript('https://www.google-analytics.com/analytics.js', {
-  trigger: createConsentTrigger({
+  trigger: createScriptConsentTrigger({
     honourDoNotTrack: true,
     consent: agreedToCookies
   })

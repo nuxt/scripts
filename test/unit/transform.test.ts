@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from 'acorn-loose'
 import { parseURL } from 'ufo'
-import type { ScriptInjectOptions } from '../../src/plugins/transform'
-import { NuxtScriptTransformer } from '../../src/plugins/transform'
+import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform'
+import { NuxtScriptAssetBundlerTransformer } from '../../src/plugins/transform'
 
-async function transform(code: string | string[], options: ScriptInjectOptions) {
-  const plugin = NuxtScriptTransformer.vite(options) as any
+async function transform(code: string | string[], options: AssetBundlerTransformerOptions) {
+  const plugin = NuxtScriptAssetBundlerTransformer.vite(options) as any
   const res = await plugin.transform.call(
     { parse: (code: string) => parse(code, { ecmaVersion: 2022, sourceType: 'module', allowImportExportEverywhere: true, allowAwaitOutsideFunction: true }) },
     Array.isArray(code) ? code.join('\n') : code,

@@ -1,7 +1,7 @@
 import type { ConsentPromiseOptions } from '../types'
 import { isDoNotTrackEnabled, isRef, onNuxtReady, ref, toValue, watch } from '#imports'
 
-export function createConsentTrigger(options: ConsentPromiseOptions) {
+export function createScriptConsentTrigger(options: ConsentPromiseOptions) {
   return new Promise<void>((resolve) => {
     onNuxtReady(() => {
       const consented = ref<boolean>(false)
