@@ -52,7 +52,7 @@
   "dependencies": {
     "@nuxt/devtools-kit": "^1.0.8",
     "@nuxt/devtools-ui-kit": "^1.0.8",
-    "@nuxt/kit": "^3.11.0",
+    "@nuxt/kit": "^3.11.1",
     "consola": "^3.2.3",
     "defu": "^6.1.4",
     "estree-walker": "^3.0.3",
@@ -76,7 +76,7 @@
     "@nuxt/ui": "2.14.2",
     "bumpp": "^9.4.0",
     "eslint": "8.57.0",
-    "nuxt": "^3.11.0",
+    "nuxt": "^3.11.1",
     "nuxt-icon": "^0.6.9",
     "playwright": "^1.42.1",
     "typescript": "^5.4.2",
