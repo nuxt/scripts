@@ -50,7 +50,7 @@ To start using Nuxt Scripts, you can use the [useScript](https://unhead.unjs.io/
 If you want to get a feel for how the module works, you can load the `js-confetti` library:
 
 ```ts
-type JSConfettiApi = { addConfetti: (options?: { emojis: string[] }) => void }
+interface JSConfettiApi { addConfetti: (options?: { emojis: string[] }) => void }
 const { addConfetti } = useScript<JSConfettiApi>('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
   trigger: 'idle', // load on onNuxtReady
   assetStrategy: 'bundle', // script will be served from your server instead of cdn.jsdelivr.net
@@ -92,7 +92,7 @@ export default defineNuxtConfig({
   scripts: {
     overrides: {
       // the key is either a specified key or the script src
-      'confetti': {
+      confetti: {
         assetStrategy: 'bundle'
       }
     }
