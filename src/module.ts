@@ -4,6 +4,7 @@ import type { NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
+import { logger } from './logger'
 
 export interface ModuleOptions {
   /**
@@ -66,9 +67,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
     // allow augmenting the options
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
-    // @ts-expect-error runtime
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
-    nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaults: config.defaults }
     addImportsDir(resolve('./runtime/composables'))
 
     const scriptMap = new Map<string, string>()
