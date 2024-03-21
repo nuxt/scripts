@@ -49,7 +49,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '^3.9.0',
+      nuxt: '^3.11.1',
       bridge: false,
     },
   },
@@ -83,10 +83,6 @@ export default defineNuxtModule<ModuleOptions>({
         return url
       },
     }))
-
-    nuxt.hook('build:manifest', () => {
-      // TODO ?
-    })
 
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolve)

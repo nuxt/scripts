@@ -27,6 +27,14 @@ Plus Nuxt goodies:
 - 🕵️ Privacy Features - Trigger scripts loading on cookie consent, honour DoNotTrack.
 - 🪵 DevTools integration - see all your loaded scripts with function logs
 
+## Background
+
+Loading third-party IIFE scripts using `useHead` composable is easy. However,
+things start getting more complicated quickly around SSR, lazy loading, and type safety.
+
+Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts more performant,
+have better privacy and be better DX overall.
+
 ## Quick Start
 
 To get started, simply run:
@@ -43,25 +51,16 @@ If you want to get a feel for how the module works, you can load the `js-confett
 
 ```ts
 type JSConfettiApi = { addConfetti: (options?: { emojis: string[] }) => void }
-
 const { addConfetti } = useScript<JSConfettiApi>('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
   trigger: 'idle', // load on onNuxtReady
-  assetStrategy: 'bundle', //
+  assetStrategy: 'bundle', // script will be served from your server instead of cdn.jsdelivr.net
   use() {
     return new window.JSConfetti()
   },
 })
-// will run once the script loads
+// useScript is non-blocking, this will run once the script loads
 addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 ```
-
-## Background
-
-Loading third-party IIFE scripts using `useHead` composable is easy. However,
-things start getting more complicated quickly around SSR, lazy loading, and type safety.
-
-Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts more performant,
-have better privacy and be better DX overall.
 
 ## Guides
 
