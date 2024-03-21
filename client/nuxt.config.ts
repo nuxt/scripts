@@ -1,9 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from '../src/devtools'
+import { DEVTOOLS_UI_ROUTE } from '../src/devtools'
 
 const resolver = createResolver(import.meta.url)
-
-process.env.PORT = 3300
 
 export default defineNuxtConfig({
   ssr: false,
@@ -18,15 +16,5 @@ export default defineNuxtConfig({
   },
   app: {
     baseURL: DEVTOOLS_UI_ROUTE,
-  },
-  devServer: {
-    port: DEVTOOLS_UI_LOCAL_PORT,
-  },
-  vite: {
-    server: {
-      hmr: {
-        port: DEVTOOLS_UI_LOCAL_PORT,
-      },
-    },
   },
 })

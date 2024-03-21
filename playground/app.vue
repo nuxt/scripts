@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { createScriptConsentTrigger, ref, useAnalyticsPageEvent, useScript } from '#imports'
+import { ref, useAnalyticsPageEvent, useScript } from '#imports'
 import { scriptConsent } from '~/composables/consent'
 
 interface GenericTrackingScript {
