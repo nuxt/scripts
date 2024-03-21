@@ -77,7 +77,7 @@ function useTurnstile(options: MaybeComputedRefEntries<CloudflareTurnstileOption
 
 export function useCloudflareTurnstile(options: ThirdPartyScriptOptions<CloudflareTurnstileOptions, CloudflareTurnstileApi> = {}) {
   return useScript<CloudflareTurnstileApi>({
-    key: 'cloudflare',
+    key: 'cloudflare-turnstile',
     src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
     defer: true,
     async: true,

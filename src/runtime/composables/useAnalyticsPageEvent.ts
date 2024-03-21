@@ -7,13 +7,13 @@ export function useAnalyticsPageEvent(onChange?: (payload: TrackedPage) => void)
   const head = injectHead()
   const payload = ref<TrackedPage>({
     path: route.fullPath,
-    title: typeof document !== 'undefined' ? document.title : '',
+    title: import.meta.client ? document.title : '',
   })
-  let lastPayload: TrackedPage = { path: '', title: '' }
-  if (import.meta.server) {
-    // we need to compute the title ahead of time
+  // no know to know the title on the server until the page is rendered
+  if (import.meta.server)
     return payload
-  }
+
+  let lastPayload: TrackedPage = { path: '', title: '' }
   let stopDomWatcher: () => void
   // TODO make sure useAsyncData isn't running
   nuxt.hooks.hook('page:finish', () => {

@@ -1,4 +1,4 @@
-import { useScript as _useScript } from '@unhead/vue'
+import { type VueScriptInstance, useScript as _useScript } from '@unhead/vue'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions } from '#nuxt-scripts'
 import { injectHead, useNuxtApp } from '#imports'
 
@@ -21,7 +21,7 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
     const payload = {
       key: input.key || input.src,
       src: input.src,
-      $script: null as any,
+      $script: null as VueScriptInstance<any>,
       events: [] as any[],
     }
     nuxtApp._scripts = nuxtApp._scripts! || {}
@@ -61,6 +61,7 @@ export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptO
       payload.events.push({
         type: 'status',
         status: 'awaitingLoad',
+        trigger: options?.trigger,
         at: Date.now(),
       })
       syncScripts()

@@ -1,6 +1,5 @@
-import { addBuildPlugin, addImportsDir, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
+import { addBuildPlugin, addImportsDir, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import type { ScriptBase } from '@unhead/schema'
 import type { NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
@@ -59,8 +58,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
-    const { name, version } = await readPackageJSON(resolve('../package.json'))
-    const logger = useLogger(name)
+    const { version } = await readPackageJSON(resolve('../package.json'))
     if (config.enabled === false) {
       // TODO fallback to useHead
       logger.debug('The module is disabled, skipping setup.')
