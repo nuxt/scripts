@@ -1,13 +1,14 @@
-<h1 align='center'>@nuxt/scripts</h1>
-
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
+[![Volta][volta-src]][volta-href]
 
-<p align="center">
-Powerful DX improvements for loading third-party scripts in Nuxt.
-</p>
+# Nuxt Scripts
+
+Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
+
+- [👾 &nbsp;Playground - TODO](https://stackblitz.com/github/nuxt/scripts/tree/main/playground)
 
 ## Features
 
@@ -80,6 +81,35 @@ useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.brow
 // js-confetti.browser.js will be downloaded and bundled with your app as a static asset
 ```
 
+### Privacy and Cookie Consent
+
+Nuxt Scripts provides a `createScriptConsentTrigger` composable that allows you to load scripts based on user's consent.
+
+You can either use it by providing a resolvable consent (ref, promise) option or by using `accept()`.
+
+```ts
+export const agreedToCookiesScriptConsent = createScriptConsentTrigger({
+  honourDoNotTrack: true,
+})
+// ...
+useScript('https://www.google-analytics.com/analytics.js', {
+  trigger: agreedToCookiesScriptConsent
+})
+// ...
+agreedToCookiesScriptConsent.accept()
+```
+
+```ts
+const agreedToCookies = ref(false)
+useScript('https://www.google-analytics.com/analytics.js', {
+  // will be loaded in when the ref is true
+  trigger: createScriptConsentTrigger({
+    honourDoNotTrack: true, // optional, disabled by default
+    consent: agreedToCookies
+  })
+})
+```
+
 ### Sending Page Events
 
 When using tracking scripts, it's common to send an event when the page changes. Due to Nuxt's head implementation being
@@ -98,21 +128,6 @@ useAnalyticsPageEvent(({ title, path }) => {
 })
 ```
 
-### Privacy and Cookie Consent
-
-Nuxt Scripts provides a `createScriptConsentTrigger` composable that allows you to load scripts based on the user's consent.
-
-```ts
-const agreedToCookies = ref(false)
-useScript('https://www.google-analytics.com/analytics.js', {
-  // will be loaded in when the ref is true
-  trigger: createScriptConsentTrigger({
-    honourDoNotTrack: true, // optional, disabled by default
-    consent: agreedToCookies
-  })
-})
-```
-
 ## API
 
 ### `useScript`
@@ -121,77 +136,80 @@ Please see the [useScript](https://unhead.unjs.io/usage/composables/use-script) 
 
 ### `createScriptConsentTrigger`
 
-This composable is a wrapper around `useScript` that respects privacy and cookie consent.
+**(options: ScriptConsentTriggerOptions) => { accept: () => void } & Promise<void>**
 
-For the script to load you must provide a `consent` option. This can be promise, ref, or boolean.
+Creates a consent trigger for a script.
 
-```ts
-const agreedToCookies = ref(false)
-useScript('https://www.google-analytics.com/analytics.js', {
-  // will be loaded in when the ref is true
-  trigger: createScriptConsentTrigger({
-    consent: agreedToCookies
-  })
-})
-```
+#### Arguments
 
-You can respect the end-users browser Do Not Track option by providing the opt-in `honourDoNotTrack: true` config.
+- `consent` (optional) - A ref, promise, or boolean that resolves to the user's consent. Defaults to `undefined`.
+- `honourDoNotTrack` (optional) - Respect the end-users browser Do Not Track option. Defaults to `false`.
+- `idle` (optional) - If consent is provided before the browser idle, wait for the browser to be idle before loading the script. Defaults to `false`.
 
-This is not enabled by default as most Analytics ignore this by default.
+#### Returns
+
+- `accept` - A function that can be called to accept the consent and load the script.
 
 ```ts
-const agreedToCookies = ref(false)
-useScript('https://www.google-analytics.com/analytics.js', {
-  trigger: createScriptConsentTrigger({
-    honourDoNotTrack: true,
-    consent: agreedToCookies
-  })
-})
+const trigger = createScriptConsentTrigger()
+// accept the consent and load the script
+trigger.accept()
 ```
 
 ### `useAnalyticsPageEvent`
 
-It's common when using tracking scripts to send an event when the page changes. Due to Nuxt's head implementation being
-async, it's not possible to send the page title on route change.
+**(callback?: (page: { title: string, path: string }) => void) => Ref<{ title: string, path: string }>**
 
-`useAnalyticsPageEvent` solves this by providing you with the page title and path when they change.
+Access the current page title and path and trigger an event when they change.
 
-You can either provide a function to call on page change or use the ref that's returned.
+#### Arguments
+
+- `callback` (optional) - A function that will be called when the page title or path changes.
+
+#### Returns
+
+- A ref containing the current page title and path.
 
 ```ts
-useAnalyticsPageEvent(({ title, path }) => {
-  gtag('event', 'page_view', {
-    page_title: title,
-    page_location: 'https://example.com',
-    page_path: path
-  })
-})
+const pageCtx = useAnalyticsPageEvent()
+// will always be the current page title
+pageCtx.value.title
 ```
 
+### `isDoNotTrackEnabled`
+
+**() => boolean**
+
+Check if the user's browser has Do Not Track enabled. On the server it will read the `DNT` header, and on the client it will read the `navigator.doNotTrack` property.
+
+#### Returns
+
+- `true` if Do Not Track is enabled, `false` otherwise.
+
 ```ts
-const trackedPage = useAnalyticsPageEvent()
-watch(trackedPage, ({ title, path }) => {
-  gtag('event', 'page_view', {
-    page_title: title,
-    page_location: 'https://example.com',
-    page_path: path
-  })
-})
+const dnt = isDoNotTrackEnabled()
 ```
 
 ## License
 
 Licensed under the [MIT license](https://github.com/nuxt/scripts/blob/main/LICENSE.md).
 
+## 📑 License
+
+Published under the [MIT License](./LICENSE)
+
 <!-- Badges -->
 [npm-version-src]: https://img.shields.io/npm/v/@nuxt/scripts/latest.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-version-href]: https://npmjs.com/package/@nuxt/scripts
+[npm-version-href]: https://npmjs.com/package/@nuxt/scripts/v/rc
 
 [npm-downloads-src]: https://img.shields.io/npm/dm/@nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-downloads-href]: https://npmjs.com/package/@nuxt/scripts
+[npm-downloads-href]: https://npmjs.com/package/@nuxt/scripts/v/rc
 
-[license-src]: https://img.shields.io/github/license/nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
-[license-href]: https://github.com/nuxt/scripts/blob/main/LICENSE
+[license-src]: https://img.shields.io/npm/l/@nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
+[license-href]: https://npmjs.com/package/@nuxt/scripts/v/rc
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt.js
 [nuxt-href]: https://nuxt.com
+
+[volta-src]: https://user-images.githubusercontent.com/904724/209143798-32345f6c-3cf8-4e06-9659-f4ace4a6acde.svg
+[volta-href]: https://volta.net/nuxt/scripts?utm_source=nuxt_scripts_readme
