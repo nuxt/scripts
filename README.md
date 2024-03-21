@@ -8,7 +8,7 @@
 
 Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
-- [👾 &nbsp;Playground - TODO](https://stackblitz.com/github/nuxt/scripts/tree/main/playground)
+- [👾 &nbsp;Playground](https://stackblitz.com/github/nuxt/scripts/tree/main/playground)
 
 ## Features
 
