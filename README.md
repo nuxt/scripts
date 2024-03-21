@@ -25,7 +25,7 @@ Plus Nuxt goodies:
 
 - ⏬ Serve third-party scripts from your own server
 - 🕵️ Privacy Features - Trigger scripts loading on cookie consent, honour DoNotTrack.
-- 🪵 DevTools integration - see all your loaded scripts with function logs
+- 🪵 DevTools integration - View your script with their status and see function logs
 
 ## Background
 

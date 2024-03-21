@@ -8,10 +8,6 @@ interface GenericTrackingScript {
 
 const { track } = useScript<GenericTrackingScript>('https://example.com/script.js?nuxt-scripts=inline', {
   trigger: scriptConsent,
-  // trigger: createScriptConsentTrigger({
-  //   consent: true,
-  //   idle: true,
-  // }),
 })
 useAnalyticsPageEvent((payload) => {
   track(payload)
