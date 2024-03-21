@@ -1,0 +1,17 @@
+{
+  "name": "nuxt-scripts-playground",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate"
+  },
+  "dependencies": {
+    "@nuxt/scripts": "latest",
+    "@nuxt/ui": "2.14.2",
+    "nuxt": "latest",
+    "vue": "latest",
+    "vue-router": "latest"
+  }
+}

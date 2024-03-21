@@ -1,46 +1,12 @@
 <script lang="ts" setup>
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
-import { isRelative } from 'ufo'
-import { appFetch, devtools } from '~/composables/rpc'
-import { reactive, ref } from '#imports'
+import { devtools, getScriptSize, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
 import { loadShiki } from '~/composables/shiki'
-
-const scripts = ref({})
 
 await loadShiki()
 
+const scripts = ref({})
 const scriptSizes = reactive({})
-async function getScriptSize(url: string) {
-  const compressedResponse = await fetch(url, { headers: { 'Accept-Encoding': 'gzip' } })
-  return getResponseSize(compressedResponse)
-}
-
-async function getResponseSize(response) {
-  const reader = response.body.getReader()
-  const contentLength = +response.headers.get('Content-Length')
-
-  if (contentLength) {
-    return contentLength
-  }
-  else {
-    let total = 0
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done)
-        return total
-      total += value.length
-    }
-  }
-}
-
-function bytesToSize(bytes: number) {
-  // be precise to 2 decimal places
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  if (bytes === 0)
-    return '0 Byte'
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${Number.parseFloat((bytes / 1024 ** i).toFixed(2))} ${sizes[i]}`
-}
 
 function syncScripts(_scripts: any[]) {
   scripts.value = { ..._scripts }
@@ -48,7 +14,7 @@ function syncScripts(_scripts: any[]) {
   for (const key in _scripts) {
     if (!scriptSizes[key]) {
       getScriptSize(_scripts[key].src).then((size) => {
-        scriptSizes[key] = bytesToSize(size)
+        scriptSizes[key] = size
       }).catch(() => {
         scriptSizes[key] = 0
       })
@@ -57,28 +23,12 @@ function syncScripts(_scripts: any[]) {
 }
 
 onDevtoolsClientConnected(async (client) => {
-  appFetch.value = client.host.app.$fetch
   devtools.value = client.devtools
   client.host.nuxt.hooks.hook('scripts:updated', (ctx) => {
     syncScripts(ctx.scripts)
   })
   syncScripts(client.host.nuxt._scripts)
 })
-function humanFriendlyTimestamp(timestamp: number) {
-  // use Intl.DateTimeFormat to format the timestamp, we only need the time aspect
-  return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: true,
-  }).format(timestamp)
-}
-
-function urlToOrigin(url: string) {
-  if (isRelative(url, { acceptRelative: true }))
-    return new URL(url).origin
-  return url
-}
 </script>
 
 <template>

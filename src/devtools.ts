@@ -8,8 +8,8 @@ export interface ServerFunctions {}
 
 export interface ClientFunctions {}
 
-const DEVTOOLS_UI_ROUTE = '/__nuxt-scripts'
-const DEVTOOLS_UI_LOCAL_PORT = 3030
+export const DEVTOOLS_UI_ROUTE = '/__nuxt-scripts'
+export const DEVTOOLS_UI_LOCAL_PORT = 3030
 
 export function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolve'], nuxt: Nuxt = useNuxt()) {
   const clientPath = resolve('./client')

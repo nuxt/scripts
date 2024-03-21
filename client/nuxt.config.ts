@@ -1,24 +1,32 @@
-import { resolve } from 'pathe'
-import DevtoolsUIKit from '@nuxt/devtools-ui-kit'
+import { createResolver } from '@nuxt/kit'
+import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from '../src/devtools'
+
+const resolver = createResolver(import.meta.url)
+
+process.env.PORT = 3300
 
 export default defineNuxtConfig({
   ssr: false,
+  devtools: { enabled: false },
   modules: [
-    DevtoolsUIKit,
-    'nuxt-icon',
+    '@nuxt/devtools-ui-kit',
   ],
-  devtools: {
-    enabled: false,
-  },
   nitro: {
     output: {
-      publicDir: resolve(__dirname, '../dist/client'),
+      publicDir: resolver.resolve('../dist/client'),
     },
   },
   app: {
-    baseURL: '/__nuxt-scripts',
+    baseURL: DEVTOOLS_UI_ROUTE,
   },
-  experimental: {
-    componentIslands: true,
+  devServer: {
+    port: DEVTOOLS_UI_LOCAL_PORT,
+  },
+  vite: {
+    server: {
+      hmr: {
+        port: DEVTOOLS_UI_LOCAL_PORT,
+      },
+    },
   },
 })
