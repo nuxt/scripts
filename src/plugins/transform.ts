@@ -9,7 +9,7 @@ import type { SimpleCallExpression } from 'estree'
 import type { ModuleOptions } from '../module'
 
 export interface AssetBundlerTransformerOptions {
-  overrides: ModuleOptions['overrides']
+  overrides?: ModuleOptions['overrides']
   resolveScript: (src: string) => string
 }
 
@@ -50,8 +50,6 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               && _node.callee.type === 'Identifier'
               && _node.callee?.name === 'useScript') {
               const node = _node as SimpleCallExpression
-              if (node.arguments[1].type !== 'ObjectExpression')
-                return
               let scriptKey: string | undefined
               let scriptNode: any | undefined
               // do easy case first where first argument is a literal
@@ -73,19 +71,21 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               if (scriptNode) {
                 const src = scriptNode.value
                 if (src) {
-                  // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
-                  const assetStrategyProperty = node.arguments[1].properties.find(
-                    (p: any) => p.key?.name === 'assetStrategy' || p.key?.value === 'assetStrategy',
-                  )
                   let hasAssetStrategy = false
-                  if (assetStrategyProperty) {
-                    if (assetStrategyProperty?.value?.value !== 'bundle')
-                      return
-                    // remove the property
-                    s.remove(assetStrategyProperty.start, assetStrategyProperty.end + 1) // need to strip the comma
-                    hasAssetStrategy = true
+                  if (node.arguments[1]?.type === 'ObjectExpression') {
+                    // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
+                    const assetStrategyProperty = node.arguments[1]?.properties.find(
+                      (p: any) => p.key?.name === 'assetStrategy' || p.key?.value === 'assetStrategy',
+                    )
+                    if (assetStrategyProperty) {
+                      if (assetStrategyProperty?.value?.value !== 'bundle')
+                        return
+                      // remove the property
+                      s.remove(assetStrategyProperty.start, assetStrategyProperty.end + 1) // need to strip the comma
+                      hasAssetStrategy = true
+                    }
                   }
-                  hasAssetStrategy = options.overrides?.[scriptKey]?.assetStrategy === 'bundle'
+                  hasAssetStrategy = hasAssetStrategy || options.overrides?.[scriptKey]?.assetStrategy === 'bundle'
                   if (hasAssetStrategy) {
                     const newSrc = options.resolveScript(src)
                     s.overwrite(scriptNode.start, scriptNode.end, `'${newSrc}'`)

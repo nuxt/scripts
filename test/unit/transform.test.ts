@@ -5,7 +5,7 @@ import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform
 import { NuxtScriptAssetBundlerTransformer } from '../../src/plugins/transform'
 
 async function transform(code: string | string[], options: AssetBundlerTransformerOptions) {
-  const plugin = NuxtScriptAssetBundlerTransformer.vite(options) as any
+  const plugin = NuxtScriptAssetBundlerTransformer(options).vite() as any
   const res = await plugin.transform.call(
     { parse: (code: string) => parse(code, { ecmaVersion: 2022, sourceType: 'module', allowImportExportEverywhere: true, allowAwaitOutsideFunction: true }) },
     Array.isArray(code) ? code.join('\n') : code,
@@ -28,7 +28,7 @@ describe('nuxtScriptTransformer', () => {
     )
     expect(code).toMatchInlineSnapshot(`
       "const instance = useScript('/_scripts/beacon.min.js', {
-            assetStrategy: 'bundle',
+            
           })"
     `)
   })
@@ -46,8 +46,24 @@ describe('nuxtScriptTransformer', () => {
     )
     expect(code).toMatchInlineSnapshot(`
       "const instance = useScript({ defer: true, src: '/_scripts/beacon.min.js' }, {
-            assetStrategy: 'bundle',
+            
           })"
     `)
+  })
+  it('overrides', async () => {
+    const code = await transform(
+      `const instance = useScript({ key: 'cloudflareAnalytics', src: 'https://static.cloudflareinsights.com/beacon.min.js' })`,
+      {
+        overrides: {
+          cloudflareAnalytics: {
+            assetStrategy: 'bundle',
+          },
+        },
+        resolveScript(src) {
+          return `/_scripts${parseURL(src).pathname}`
+        },
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript({ key: 'cloudflareAnalytics', src: '/_scripts/beacon.min.js' })"`)
   })
 })
