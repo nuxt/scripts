@@ -8,17 +8,10 @@ import { setupPublicAssetStrategy } from './assets'
 
 export interface ModuleOptions {
   /**
-   * Set default script tag attributes and script options.
+   * Override the static script options for specific scripts based on their provided `key` or `src`.
    */
-  defaults?: {
-    /**
-     * Default script tag attributes.
-     */
-    script?: ScriptBase
-    /**
-     * Default script options.
-     */
-    options?: NuxtUseScriptOptions
+  overrides?: {
+    [key: string]: Pick<NuxtUseScriptOptions, 'assetStrategy' | 'skipEarlyConnections'>
   }
   /** Configure the way scripts assets are exposed */
   assets?: {
@@ -84,6 +77,7 @@ export default defineNuxtModule<ModuleOptions>({
     const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
 
     addBuildPlugin(NuxtScriptAssetBundlerTransformer({
+      overrides: config.overrides,
       resolveScript(src) {
         if (scriptMap.has(src))
           return scriptMap.get(src) as string
