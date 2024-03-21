@@ -27,24 +27,32 @@ Plus Nuxt goodies:
 - 🕵️ Privacy Features - Trigger scripts loading on cookie consent, honour DoNotTrack.
 - 🪵 DevTools integration - see all your loaded scripts with function logs
 
-## Installation
+## Quick Start
 
-1. Install `@nuxt/scripts` dependency to your project:
+To get started, simply run:
 
 ```bash
-pnpm add -D @nuxt/scripts
-#
-yarn add -D @nuxt/scripts
-#
-npm install -D @nuxt/scripts
+npx nuxi@latest module add @nuxt/scripts
 ```
 
-2. Add it to your `modules` section in your `nuxt.config`:
+To start using Nuxt Scripts, you can use the [useScript](https://unhead.unjs.io/usage/composables/use-script) composable to load your third-party scripts.
+
+### Confetti Example
+
+If you want to get a feel for how the module works, you can load the `js-confetti` library:
 
 ```ts
-export default defineNuxtConfig({
-  modules: ['@nuxt/scripts']
+type JSConfettiApi = { addConfetti: (options?: { emojis: string[] }) => void }
+
+const { addConfetti } = useScript<JSConfettiApi>('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
+  trigger: 'idle', // load on onNuxtReady
+  assetStrategy: 'bundle', //
+  use() {
+    return new window.JSConfetti()
+  },
 })
+// will run once the script loads
+addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 ```
 
 ## Background
@@ -52,19 +60,10 @@ export default defineNuxtConfig({
 Loading third-party IIFE scripts using `useHead` composable is easy. However,
 things start getting more complicated quickly around SSR, lazy loading, and type safety.
 
-Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts a breeze to use.
+Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts more performant,
+have better privacy and be better DX overall.
 
-## Usage
-
-### Getting Started
-
-To start using Nuxt Scripts, you can use the `useScript` composable to load your third-party scripts.
-
-```ts
-useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js')
-```
-
-See the Unhead [useScript](https://unhead.unjs.io/usage/composables/use-script) guide for next steps.
+## Guides
 
 ### Bundling Scripts
 
@@ -79,6 +78,27 @@ useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.brow
   assetStrategy: 'bundle'
 })
 // js-confetti.browser.js will be downloaded and bundled with your app as a static asset
+```
+
+### Overriding Scripts
+
+When working with modules that use Nuxt Script, you may want to modify the
+behavior of the script. This is especially useful for
+changing the asset strategy of a script as it needs to be defined statically.
+
+To do so you can use the `overrides` module option.
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    overrides: {
+      // the key is either a specified key or the script src
+      'confetti': {
+        assetStrategy: 'bundle'
+      }
+    }
+  }
+})
 ```
 
 ### Privacy and Cookie Consent
