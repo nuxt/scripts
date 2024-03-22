@@ -25,11 +25,6 @@ export interface ConsentPromiseOptions {
    */
   consent?: Promise<boolean | void> | Ref<boolean> | ComputedRef<boolean> | boolean
   /**
-   * The DoNotTrack property indicates that the user does not want to be tracked by the script. Most third-party scripts
-   * do not honour this property, however, you can opt in for improved privacy.
-   */
-  honourDoNotTrack?: boolean
-  /**
    * Should the script be loaded on the `requestIdleCallback` callback. This is useful for non-essential scripts that
    * have already been consented to be loaded.
    */

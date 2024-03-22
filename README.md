@@ -24,7 +24,7 @@ All the features from Unhead [useScript](https://unhead.unjs.io/usage/composable
 Plus Nuxt goodies:
 
 - ⏬ Serve third-party scripts from your own server
-- 🕵️ Privacy Features - Trigger scripts loading on cookie consent, honour DoNotTrack.
+- 🕵️ Privacy Features - Trigger scripts loading on consent.
 - 🪵 DevTools integration - View your script with their status and see function logs
 
 ## Background
@@ -162,7 +162,6 @@ Creates a consent trigger for a script.
 #### Arguments
 
 - `consent` (optional) - A ref, promise, or boolean that resolves to the user's consent. Defaults to `undefined`.
-- `honourDoNotTrack` (optional) - Respect the end-users browser Do Not Track option. Defaults to `false`.
 - `idle` (optional) - If consent is provided before the browser idle, wait for the browser to be idle before loading the script. Defaults to `false`.
 
 #### Returns
@@ -193,20 +192,6 @@ Access the current page title and path and trigger an event when they change.
 const pageCtx = useAnalyticsPageEvent()
 // will always be the current page title
 pageCtx.value.title
-```
-
-### `isDoNotTrackEnabled`
-
-**() => boolean**
-
-Check if the user's browser has Do Not Track enabled. On the server it will read the `DNT` header, and on the client it will read the `navigator.doNotTrack` property.
-
-#### Returns
-
-- `true` if Do Not Track is enabled, `false` otherwise.
-
-```ts
-const dnt = isDoNotTrackEnabled()
 ```
 
 ## License

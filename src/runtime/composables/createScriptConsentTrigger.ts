@@ -1,9 +1,11 @@
 import type { ConsentPromiseOptions } from '../types'
-import { isDoNotTrackEnabled, isRef, onNuxtReady, ref, requestIdleCallback, toValue, tryUseNuxtApp, watch } from '#imports'
+import { isRef, onNuxtReady, ref, requestIdleCallback, toValue, tryUseNuxtApp, watch } from '#imports'
 
-export function createScriptConsentTrigger(options?: ConsentPromiseOptions): { accept: () => void } & Promise<void> {
+type CreateScriptConsentTriggerApi = { accept: () => void } & Promise<void>
+
+export function createScriptConsentTrigger(options?: ConsentPromiseOptions): CreateScriptConsentTriggerApi {
   if (import.meta.server)
-    return new Promise(() => {})
+    return new Promise(() => {}) as CreateScriptConsentTriggerApi
 
   const consented = ref<boolean>(false)
   // user may want ot still load the script on idle
@@ -16,9 +18,6 @@ export function createScriptConsentTrigger(options?: ConsentPromiseOptions): { a
         runner(() => idleTimeout(resolve))
       }
     })
-    // check if DNT is enabled, never consent
-    if (options?.honourDoNotTrack && isDoNotTrackEnabled())
-      return
     if (options?.consent) {
       // check for boolean primitive
       if (typeof options?.consent === 'boolean') {
@@ -43,5 +42,5 @@ export function createScriptConsentTrigger(options?: ConsentPromiseOptions): { a
   promise.accept = () => {
     consented.value = true
   }
-  return promise
+  return promise as CreateScriptConsentTriggerApi
 }
