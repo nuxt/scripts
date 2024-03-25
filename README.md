@@ -53,7 +53,7 @@ If you want to get a feel for how the module works, you can load the `js-confett
 ```ts
 interface JSConfettiApi { addConfetti: (options?: { emojis: string[] }) => void }
 const { addConfetti } = useScript<JSConfettiApi>('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
-  trigger: 'idle', // load on onNuxtReady
+  trigger: 'onNuxtReady', // load on onNuxtReady
   assetStrategy: 'bundle', // script will be served from your server instead of cdn.jsdelivr.net
   use() {
     return new window.JSConfetti()
