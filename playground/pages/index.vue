@@ -1,29 +1,31 @@
 <script lang="ts" setup>
 import type { VueScriptInstance } from '@unhead/vue'
-import { type JSConfettiApi, useConfetti } from '../../third-parties/src/runtime/composables/confetti'
-import { ref, useHead } from '#imports'
+import { ref, useHead, useScript } from '#imports'
 
-const state = ref<{ trigger: 'default' | 'manual' | 'idle', assetStrategy: 'default' | 'inline' | 'proxy' }>({
+const state = ref<{ trigger: 'default' | 'manual' | 'idle', src: string }>({
   trigger: 'default',
-  assetStrategy: 'default',
+  src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
 })
 
 useHead({
   title: 'Home',
 })
 
-const script = ref<VueScriptInstance<JSConfettiApi> | null>(null)
-
-let doConfetti: JSConfettiApi['addConfetti'] = () => {}
+const script = ref<VueScriptInstance<any> | null>(null)
+const scriptFns = ref<Function[]>([])
 
 async function submit() {
-  const { $script, addConfetti } = useConfetti({
+  const instance = useScript(state.value.src, {
     trigger: state.value.trigger === 'default' ? undefined : state.value.trigger,
-    assetStrategy: state.value.assetStrategy === 'default' ? undefined : state.value.assetStrategy,
+    use() {
+      return new window.JSConfetti()
+    },
   })
-  doConfetti = addConfetti
-  // TODO: handle unwrapping of refs
-  script.value = $script
+  script.value = instance.$script
+  instance.$script.then((script) => {
+    console.log('got script', script)
+    scriptFns.value = Object.keys(script)
+  })
 }
 function load() {
   script.value?.load()
@@ -39,7 +41,7 @@ function reset() {
     <div class="grid grid-cols-3 gap-10">
       <div>
         <h2 class="font-bold mb-5 text-xl flex items-center">
-          Confetti
+          Custom Script
         </h2>
         <UForm
           v-if="!script"
@@ -48,6 +50,15 @@ function reset() {
           @submit="submit"
         >
           <UFormGroup
+            label="Script Source"
+            name="src"
+            class="mb-5"
+          >
+            <UInput
+              v-model="state.src"
+            />
+          </UFormGroup>
+          <UFormGroup
             label="Trigger"
             name="trigger"
             class="mb-5"
@@ -55,16 +66,6 @@ function reset() {
             <USelectMenu
               v-model="state.trigger"
               :options="['default', 'idle', 'manual']"
-            />
-          </UFormGroup>
-          <UFormGroup
-            label="Asset Strategy"
-            name="assetStrategy"
-            class="mb-5"
-          >
-            <USelectMenu
-              v-model="state.assetStrategy"
-              :options="['default', 'proxy', 'inline']"
             />
           </UFormGroup>
 
@@ -83,20 +84,21 @@ function reset() {
           >
             Load {{ script.id }}
           </UButton>
-          <UButton
-            v-if="script.status === 'loaded'"
-            class="block my-5"
-            @click="() => doConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })"
-          >
-            addConfetti
-          </UButton>
-          <UButton
-            v-if="script.status === 'loaded'"
-            class="block my-5"
-            @click="reset"
-          >
-            Reset
-          </UButton>
+          <div v-if="script.status === 'loaded'">
+            {{ scriptFns }}
+            <UButton
+              class="block my-5"
+              @click="() => doConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })"
+            >
+              addConfetti
+            </UButton>
+            <UButton
+              class="block my-5"
+              @click="reset"
+            >
+              Reset
+            </UButton>
+          </div>
         </div>
       </div>
       <div class="mb-10">
