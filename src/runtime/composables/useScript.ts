@@ -1,27 +1,36 @@
 import { type VueScriptInstance, useScript as _useScript } from '@unhead/vue'
+import type { UseScriptOptions } from '@unhead/schema'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions } from '#nuxt-scripts'
-import { injectHead, useNuxtApp } from '#imports'
+import { injectHead, onNuxtReady, useNuxtApp } from '#imports'
+
+// TODO maybe re-implement early connections at build transform time
+// export function createEarlyConnection(rel: 'preconnect' | 'dns-prefetch') {
+//   return (input: UseScriptResolvedInput, head: Unhead) => {
+//     // must be server-side
+//     if (!input.src.includes('//') || !head!.ssr)
+//       return
+//     head!.push({
+//       link: [{ key: `${input.key}.early-connection`, rel, href: new URL(input.src).origin }],
+//     }, { mode: 'server' })
+//   }
+// }
+//
+// type UseScriptReturn<T> = T & { $script: ScriptInstance<T> }
 
 export function useScript<T>(input: NuxtUseScriptInput, options?: NuxtUseScriptOptions<T>) {
   input = typeof input === 'string' ? { src: input } : input
   options = options || {}
+  if (options.trigger === 'onNuxtReady')
+    options.trigger = new Promise(resolve => onNuxtReady(resolve))
   const nuxtApp = useNuxtApp()
-  const instance = _useScript<T>(input, {
-    async transform(script) {
-      // allow nuxt assets to modify the output
-      await nuxtApp.hooks.callHook('scripts:transform', { script, options })
-      return script
-    },
-    mode: 'client', // default mode is client-only, loaded as we hydrate
-    ...options,
-  })
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     // sync scripts to nuxtApp with debug details
     const payload = {
       key: input.key || input.src,
       src: input.src,
-      $script: null as VueScriptInstance<any>,
+      $script: null as any as VueScriptInstance<T>,
       events: [] as any[],
     }
     nuxtApp._scripts = nuxtApp._scripts! || {}

@@ -2,7 +2,14 @@ import type { UseScriptOptions } from '@unhead/schema'
 import type { UseScriptInput } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 
-export type NuxtUseScriptOptions<T = any> = UseScriptOptions<T> & {
+export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
+  /**
+   * The trigger to load the script:
+   * - `onNuxtReady` - Load the script when Nuxt is ready.
+   * - `manual` - Load the script manually by calling `$script.load()` or `$script.waitForLoad()`.
+   * - `Promise` - Load the script when the promise resolves.
+   */
+  trigger?: UseScriptOptions<T>['trigger'] | 'onNuxtReady'
   /**
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also

@@ -14,8 +14,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 All the features from Unhead [useScript](https://unhead.unjs.io/usage/composables/use-script):
 
-- 🦥 Lazy, but fast: `defer`, `fetchpriority: 'low'`, early connections (`preconnect`, `dns-prefetch`)
-- ☕ Loading strategies: `idle`, `manual`, `Promise`
+- ☕ Loading strategies: `manual`, `Promise`
 - 🪨 Single script instance for your app
 - 🎃 Events for SSR scripts: `onload`, `onerror`, etc
 - 🪝 Proxy API: call the script functions before it's loaded, noop for SSR, stubbable, etc
@@ -23,9 +22,11 @@ All the features from Unhead [useScript](https://unhead.unjs.io/usage/composable
 
 Plus Nuxt goodies:
 
+- 🦥 `onNuxtReady` Loading strategy
 - ⏬ Serve third-party scripts from your own server
 - 🕵️ Privacy Features - Trigger scripts loading on consent.
 - 🪵 DevTools integration - View your script with their status and see function logs
+- (TODO) Automatic Early connections (`preconnect`, `dns-prefetch`)
 
 ## Background
 
@@ -107,9 +108,7 @@ Nuxt Scripts provides a `createScriptConsentTrigger` composable that allows you 
 You can either use it by providing a resolvable consent (ref, promise) option or by using `accept()`.
 
 ```ts
-export const agreedToCookiesScriptConsent = createScriptConsentTrigger({
-  honourDoNotTrack: true,
-})
+export const agreedToCookiesScriptConsent = createScriptConsentTrigger()
 // ...
 useScript('https://www.google-analytics.com/analytics.js', {
   trigger: agreedToCookiesScriptConsent
@@ -123,7 +122,6 @@ const agreedToCookies = ref(false)
 useScript('https://www.google-analytics.com/analytics.js', {
   // will be loaded in when the ref is true
   trigger: createScriptConsentTrigger({
-    honourDoNotTrack: true, // optional, disabled by default
     consent: agreedToCookies
   })
 })
