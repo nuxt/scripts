@@ -12,21 +12,13 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 ## Features
 
-All the features from Unhead [useScript](https://unhead.unjs.io/usage/composables/use-script):
-
-- ☕ Loading strategies: `manual`, `Promise`
-- 🪨 Single script instance for your app
-- 🎃 Events for SSR scripts: `onload`, `onerror`, etc
-- 🪝 Proxy API: call the script functions before it's loaded, noop for SSR, stubbable, etc
-- 🇹 Fully typed APIs
-
-Plus Nuxt goodies:
-
-- 🦥 `onNuxtReady` Loading strategy
-- ⏬ Serve third-party scripts from your own server
+- 🪨 [useScript](https://unhead.unjs.io/usage/composables/use-script): Proxy API, fully typed, single instance & more!
+  - 🦥 Improve your site performance with better script loading strategies
+  - 🎃 Powerful proxy API for SSR handling, lazy loading, and error handling
+- (TODO) Registry for third-party scripts in Nuxt
+- ⏬ Serve scripts from your own server
 - 🕵️ Privacy Features - Trigger scripts loading on consent.
 - 🪵 DevTools integration - View your script with their status and see function logs
-- (TODO) Automatic Early connections (`preconnect`, `dns-prefetch`)
 
 ## Background
 
@@ -64,6 +56,35 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 ```
 
 ## Guides
+
+### Using The Registry (TODO)
+
+The registry is a collection of compatible Nuxt Modules that integrate with Nuxt Scripts and one-off composables provided 
+by the module.
+
+To use a script from the registry, simply use the composable or register them globally using the key. Consult the
+below table for the available scripts.
+
+| Key | Description | Composable | Source |
+| --- | --- | --- |
+| `google-analytics` | Google Analytics | `useGoogleAnalytics` | Nuxt Third Party Capital |
+| `google-tag-manager` | Google Tag Manager | `useGoogleTagManager` | Nuxt Third Party Capital |
+| `hotjar` | Hotjar | `useHotjar` | Nuxt Third Party Capital |
+| `cloudflare-turnstile` | CloudFlare Turnstile | `useCloudflareTurnstile` | Nuxt Cloudflare Turnstile |
+| `intercom` | Intercom | `useIntercom` | Nuxt Scripts |
+| `facebook-pixel` | Facebook Pixel | `useFacebookPixel` |
+| `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |
+| `linkedin-insight-tag` | LinkedIn Insight Tag | `useLinkedInInsightTag` |
+| `pinterest-tag` | Pinterest Tag | `usePinterestTag` |
+| `google-ads-conversion-tracking` | Google Ads Conversion Tracking | `useGoogleAdsConversionTracking` |
+| `google-ads-remarketing` | Google Ads Remarketing | `useGoogleAdsRemarketing` |
+| `segment` | Segment | `useSegment` |
+| `fathom-analytics` | Fathom Analytics | `useFathomAnalytics` |
+| `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |
+| `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |
+| `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |
+| `cloudflare-web-analytics` | Cloudflare Web Analytics | `useCloudflareWebAnalytics` |
+| `matomo` | Matomo | `useMatomo` |
 
 ### Loading Scripts Globally
 
