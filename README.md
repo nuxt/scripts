@@ -59,7 +59,7 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ### Using The Registry (TODO)
 
-The registry is a collection of compatible Nuxt Modules that integrate with Nuxt Scripts and one-off composables provided 
+The registry is a collection of compatible Nuxt Modules that integrate with Nuxt Scripts and one-off composables provided
 by the module.
 
 To use a script from the registry, simply use the composable or register them globally using the key. Consult the

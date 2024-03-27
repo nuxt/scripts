@@ -23,7 +23,6 @@ async function submit() {
   })
   script.value = instance.$script
   instance.$script.then((script) => {
-    console.log('got script', script)
     scriptFns.value = Object.keys(script)
   })
 }

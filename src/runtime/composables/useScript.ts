@@ -8,6 +8,7 @@ export function useScript<T>(input: UseScriptInput, options?: Omit<UseScriptOpti
   input = typeof input === 'string' ? { src: input } : input
   options = options || {}
   if (options.trigger === 'onNuxtReady')
+    // @ts-expect-error untyped
     options.trigger = onNuxtReady
   const nuxtApp = useNuxtApp()
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
