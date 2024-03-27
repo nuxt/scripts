@@ -64,7 +64,7 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
     const { version } = await readPackageJSON(resolve('../package.json'))
-    if (config.enabled === false) {
+    if (!config.enabled) {
       // TODO fallback to useHead
       logger.debug('The module is disabled, skipping setup.')
       return
@@ -82,9 +82,11 @@ export default defineNuxtModule<ModuleOptions>({
           return `import { defineNuxtPlugin, useScript } from '#imports'
 export default defineNuxtPlugin({
   setup() {
-          ${config.globals?.map(g => typeof g === 'string'
-            ? ` useScript("${g}")`
-            : ` useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`).join('\n')}
+          ${config.globals?.map(g => !Array.isArray(g)
+            ? ` useScript("${g.toString()}")`
+            : g.length === 2
+              ? ` useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
+              : ` useScript(${JSON.stringify(g[0])})`).join('\n')
   }
 })`
         },
