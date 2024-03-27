@@ -12,7 +12,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 ## Features
 
-- 🪨 [useScript](https://unhead.unjs.io/usage/composables/use-script): Proxy API, fully typed, single instance & more!
+- 🪨 [useScript](https://unhead.unjs.io/usage/composables/use-script)
   - 🦥 Improve your site performance with better script loading strategies
   - 🎃 Powerful proxy API for SSR handling, lazy loading, and error handling
 - (TODO) Registry for third-party scripts in Nuxt
