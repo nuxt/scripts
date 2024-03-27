@@ -82,11 +82,11 @@ export default defineNuxtModule<ModuleOptions>({
           return `import { defineNuxtPlugin, useScript } from '#imports'
 export default defineNuxtPlugin({
   setup() {
-          ${config.globals?.map(g => !Array.isArray(g)
-            ? ` useScript("${g.toString()}")`
+${config.globals?.map(g => !Array.isArray(g)
+            ? `    useScript("${g.toString()}")`
             : g.length === 2
-              ? ` useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
-              : ` useScript(${JSON.stringify(g[0])})`).join('\n')
+              ? `    useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
+              : `    useScript(${JSON.stringify(g[0])})`).join('\n')}
   }
 })`
         },
