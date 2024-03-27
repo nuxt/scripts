@@ -1,10 +1,9 @@
 import { type UseScriptInput, type VueScriptInstance, useScript as _useScript, injectHead } from '@unhead/vue'
 import type { UseScriptOptions } from '@unhead/schema'
 import { onNuxtReady, useNuxtApp } from '#imports'
+import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
-export function useScript<T>(input: UseScriptInput, options?: Omit<UseScriptOptions<T>, 'trigger'> & {
-  trigger?: UseScriptOptions<T>['trigger'] | 'onNuxtReady'
-}) {
+export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptions) {
   input = typeof input === 'string' ? { src: input } : input
   options = options || {}
   if (options.trigger === 'onNuxtReady')
