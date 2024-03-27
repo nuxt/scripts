@@ -66,7 +66,7 @@ To use a script from the registry, simply use the composable or register them gl
 below table for the available scripts.
 
 | Key | Description | Composable | Source |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `google-analytics` | Google Analytics | `useGoogleAnalytics` | Nuxt Third Party Capital |
 | `google-tag-manager` | Google Tag Manager | `useGoogleTagManager` | Nuxt Third Party Capital |
 | `hotjar` | Hotjar | `useHotjar` | Nuxt Third Party Capital |
