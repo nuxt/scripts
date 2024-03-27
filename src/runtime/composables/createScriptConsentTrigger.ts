@@ -14,7 +14,7 @@ export function createScriptConsentTrigger(options?: ConsentPromiseOptions): Cre
     watch(consented, (ready) => {
       if (ready) {
         const runner = nuxtApp?.runWithContext || ((cb: () => void) => cb())
-        const idleTimeout = options?.idle ? (nuxtApp ? onNuxtReady : requestIdleCallback) : (cb: () => void) => cb()
+        const idleTimeout = options?.loadOnNuxtReady ? (nuxtApp ? onNuxtReady : requestIdleCallback) : (cb: () => void) => cb()
         runner(() => idleTimeout(resolve))
       }
     })

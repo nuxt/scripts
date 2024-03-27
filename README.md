@@ -160,7 +160,7 @@ Creates a consent trigger for a script.
 #### Arguments
 
 - `consent` (optional) - A ref, promise, or boolean that resolves to the user's consent. Defaults to `undefined`.
-- `idle` (optional) - If consent is provided before the browser idle, wait for the browser to be idle before loading the script. Defaults to `false`.
+- `loadOnNuxtReady` (optional) - If consent is provided before the browser idle, wait for the browser to be idle before loading the script. Defaults to `false`.
 
 #### Returns
 
