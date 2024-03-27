@@ -1,6 +1,6 @@
-import { addBuildPlugin, addImportsDir, createResolver, defineNuxtModule } from '@nuxt/kit'
+import { addBuildPlugin, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import type { NuxtUseScriptOptions } from './runtime/types'
+import type { NuxtUseScriptInput, NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -8,10 +8,14 @@ import { logger } from './logger'
 
 export interface ModuleOptions {
   /**
+   * Register scripts that should be loaded globally on all pages.
+   */
+  globals?: (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptions])[]
+  /**
    * Override the static script options for specific scripts based on their provided `key` or `src`.
    */
   overrides?: {
-    [key: string]: Pick<NuxtUseScriptOptions, 'assetStrategy' | 'skipEarlyConnections'>
+    [key: string]: Pick<NuxtUseScriptOptions, 'assetStrategy'>
   }
   /** Configure the way scripts assets are exposed */
   assets?: {
@@ -69,6 +73,27 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     addImportsDir(resolve('./runtime/composables'))
+
+    if (config.globals?.length) {
+      // create a virtual plugin
+      const template = addTemplate({
+        filename: 'modules/nuxt-scripts/plugin.client.mjs',
+        getContents() {
+          return `import { defineNuxtPlugin, useScript } from '#imports'
+export default defineNuxtPlugin({
+  setup() {
+          ${config.globals?.map(g => typeof g === 'string'
+            ? ` useScript("${g}")`
+            : ` useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`).join('\n')}
+  }
+})`
+        },
+      })
+      addPlugin({
+        src: template.dst,
+        mode: 'client',
+      })
+    }
 
     const scriptMap = new Map<string, string>()
     const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)

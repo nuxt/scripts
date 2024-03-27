@@ -65,6 +65,23 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ## Guides
 
+### Loading Scripts Globally
+
+If you prefer a config based approach, you can load scripts globally by defining them in your `nuxt.config.ts`.
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    globals: [
+      'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
+      {
+        assetStrategy: 'bundle'
+      }
+    ]
+  }
+})
+```
+
 ### Bundling Scripts
 
 Bundling scripts can allow you to serve them from your own server, improving privacy and performance. It
