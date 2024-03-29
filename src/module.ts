@@ -1,5 +1,6 @@
-import { addBuildPlugin, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
+import { addBuildPlugin, addImports, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
+import type { Import } from 'unimport'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
@@ -65,7 +66,7 @@ export default defineNuxtModule<ModuleOptions>({
     const { resolve } = createResolver(import.meta.url)
     const { version } = await readPackageJSON(resolve('../package.json'))
     if (!config.enabled) {
-      // TODO fallback to useHead
+      // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')
       return
     }
@@ -74,8 +75,54 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     addImportsDir([
       resolve('./runtime/composables'),
-      resolve('./runtime/registry'),
     ])
+
+    const registry: Import[] = [
+      {
+        name: 'useScriptCloudflareTurnstile',
+        from: resolve('./runtime/registry/cloudflare-turnstile'),
+      },
+      {
+        name: 'useScriptCloudflareWebAnalytics',
+        from: resolve('./runtime/registry/cloudflare-web-analytics'),
+      },
+      {
+        name: 'useScriptConfetti',
+        from: resolve('./runtime/registry/confetti'),
+      },
+      {
+        name: 'useScriptFacebookPixel',
+        from: resolve('./runtime/registry/facebook-pixel'),
+      },
+      {
+        name: 'useScriptFathomAnalytics',
+        from: resolve('./runtime/registry/fathom-analytics'),
+      },
+      {
+        name: 'useScriptGoogleAnalytics',
+        from: resolve('./runtime/registry/google-analytics'),
+      },
+      {
+        name: 'useScriptGoogleTagManager',
+        from: resolve('./runtime/registry/google-tag-manager'),
+      },
+      {
+        name: 'useScriptHotjar',
+        from: resolve('./runtime/registry/hotjar'),
+      },
+      {
+        name: 'useScriptIntercom',
+        from: resolve('./runtime/registry/intercom'),
+      },
+      {
+        name: 'useScriptSegment',
+        from: resolve('./runtime/registry/segment'),
+      },
+    ].map((i: Import) => {
+      i.priority = -1
+      return i
+    })
+    addImports(registry)
 
     if (config.globals?.length) {
       // create a virtual plugin

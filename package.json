@@ -83,6 +83,7 @@
     "nuxt-scripts-devtools": "latest",
     "playwright-core": "^1.42.1",
     "typescript": "^5.4.3",
+    "unimport": "^3.7.1",
     "vitest": "^1.4.0"
   },
   "resolutions": {

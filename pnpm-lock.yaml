@@ -99,6 +99,9 @@ importers:
       typescript:
         specifier: ^5.4.3
         version: 5.4.3
+      unimport:
+        specifier: ^3.7.1
+        version: 3.7.1(rollup@3.29.4)
       vitest:
         specifier: ^1.4.0
         version: 1.4.0
