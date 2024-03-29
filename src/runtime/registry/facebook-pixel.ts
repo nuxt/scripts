@@ -51,7 +51,7 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Inp
     if (import.meta.client) {
       const fbq: FacebookPixelApi['fbq'] = window.fbq = function (...params: any[]) {
         // @ts-expect-error untyped
-        fbq.callMethod ? fbq.callMethod.apply(fbq, params) : fbq.queue.push(params)
+        fbq.callMethod ? fbq.callMethod(...params) : fbq.queue.push(params)
       } as any as FacebookPixelApi['fbq']
       if (!window._fbq)
         window._fbq = fbq

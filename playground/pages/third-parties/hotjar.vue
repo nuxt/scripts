@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useHead, useScriptHotjar, watch } from '#imports'
+import { useHead, useScriptHotjar } from '#imports'
 
 useHead({
   title: 'Hotjar',
@@ -9,12 +9,6 @@ useHead({
 const { $script, hj } = useScriptHotjar({ id: 3925006, sv: 6 })
 // this will be triggered once the script is ready async
 hj('identify', '123456', { test: 'foo' })
-
-console.log(typeof $script.status)
-
-watch($script.status, (status) => {
-  console.log('hj', status)
-})
 </script>
 
 <template>

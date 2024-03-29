@@ -32,8 +32,8 @@ export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof Se
       window.analytics = window.analytics || []
       window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
       window.analytics.factory = function (method) {
-        return function () {
-          const args = Array.prototype.slice.call(arguments)
+        return function (...params: any[]) {
+          const args = Array.prototype.slice.call(params)
           args.unshift(method)
           window.analytics.push(args)
           return window.analytics

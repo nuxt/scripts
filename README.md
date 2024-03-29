@@ -73,8 +73,9 @@ below table for the available scripts.
 | `hotjar` | Hotjar | `useScriptHotjar` | Core |
 | `intercom` | Intercom | `useScriptIntercom` | Core |
 | `segment` | Segment | `useScriptSegment` | Core |
-| `google-analytics` | Google Analytics | `useGoogleAnalytics` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `google-tag-manager` | Google Tag Manager | `useGoogleTagManager` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `google-analytics` | Google Analytics | `useScriptGoogleAnalytics` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `google-tag-manager` | Google Tag Manager | `useScriptGoogleTagManager` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `google-maps` | Google Maps | `useScriptGoogleMaps` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
 | `cloudflare-turnstile` | CloudFlare Turnstile | `useCloudflareTurnstile` | [Nuxt Cloudflare Turnstile](https://github.com/nuxt-modules/turnstile) |
 
 TODO | `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |
