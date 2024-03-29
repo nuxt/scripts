@@ -1,4 +1,4 @@
-import { addBuildPlugin, addImports, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
+import { addBuildPlugin, addImports, addImportsDir, addPlugin, addPluginTemplate, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import type { Import } from 'unimport'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions } from './runtime/types'
@@ -6,8 +6,16 @@ import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
+import type { CloudflareWebAnalyticsOptions } from './runtime/registry/cloudflare-web-analytics'
 
 export interface ModuleOptions {
+  /**
+   * Register scripts globally.
+   */
+  register?: {
+    cloudflareWebAnalytics?: CloudflareWebAnalyticsOptions
+    // TODO start the rest
+  }
   /**
    * Register scripts that should be loaded globally on all pages.
    */
@@ -123,6 +131,37 @@ export default defineNuxtModule<ModuleOptions>({
       return i
     })
     addImports(registry)
+
+    const hasRegister = Object.keys(config.register || {}).length > 0
+    if (hasRegister) {
+      addPluginTemplate({
+        filename: 'third-party.mjs',
+        write: true,
+        getContents() {
+          const imports = ['import { defineNuxtPlugin } from "#imports";']
+          const inits = []
+          // for global scripts, we can initialise them script away
+          for (const [k, c] of Object.entries(config.register || {})) {
+            // lazy module resolution
+            const importPath = resolve(`./runtime/composables/${k}`)
+            // title case
+            const exportName = k.substring(0, 1).toUpperCase() + k.substring(1)
+            imports.unshift(`import { ${exportName} } from "${importPath}";`)
+            inits.push(`${exportName}(${JSON.stringify(c)});`)
+          }
+          return [
+            imports.join('\n'),
+            '',
+            'export default defineNuxtPlugin({',
+            '  name: "nuxt-third-party",',
+            '  setup() {',
+            inits.map(i => `    ${i}`).join('\n'),
+            '  }',
+            '})',
+          ].join('\n')
+        },
+      })
+    }
 
     if (config.globals?.length) {
       // create a virtual plugin

@@ -33,7 +33,9 @@ const CloudflareWebAnalyticsOptions = object({
   spa: optional(boolean()),
 })
 
-export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: Input<typeof CloudflareWebAnalyticsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export type CloudflareWebAnalyticsOptions = Input<typeof CloudflareWebAnalyticsOptions>
+
+export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: CloudflareWebAnalyticsOptions, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   if (import.meta.dev) {
     scriptOptions.beforeInit = () => {
