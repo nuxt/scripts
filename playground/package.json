@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nuxi dev",
+    "dev": "nuxi dev --https",
     "build": "nuxi build",
     "generate": "nuxi generate"
   },

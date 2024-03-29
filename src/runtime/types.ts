@@ -16,6 +16,10 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * improves privacy by not sharing the user's IP address with third-party servers.
    */
   assetStrategy?: 'bundle'
+  /**
+   * A hook to run when a script does not exist and will be initialized for the first time.
+   */
+  beforeInit?: () => void
 }
 
 export type NuxtUseScriptInput = UseScriptInput

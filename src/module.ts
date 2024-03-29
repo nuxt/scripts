@@ -72,7 +72,10 @@ export default defineNuxtModule<ModuleOptions>({
     // allow augmenting the options
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
-    addImportsDir(resolve('./runtime/composables'))
+    addImportsDir([
+      resolve('./runtime/composables'),
+      resolve('./runtime/registry'),
+    ])
 
     if (config.globals?.length) {
       // create a virtual plugin

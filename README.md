@@ -59,32 +59,33 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ### Using The Registry (TODO)
 
-The registry is a collection of compatible Nuxt Modules that integrate with Nuxt Scripts and one-off composables provided
-by the module.
+The registry is a collection of composables and Nuxt Modules that directly integrate with Nuxt Scripts.
 
-To use a script from the registry, simply use the composable or register them globally using the key. Consult the
+To use a script from the registry, simply use the composable. Consult the
 below table for the available scripts.
 
-| Key | Description | Composable | Source |
-| --- | --- | --- | --- |
-| `google-analytics` | Google Analytics | `useGoogleAnalytics` | Nuxt Third Party Capital |
-| `google-tag-manager` | Google Tag Manager | `useGoogleTagManager` | Nuxt Third Party Capital |
-| `hotjar` | Hotjar | `useHotjar` | Nuxt Third Party Capital |
-| `cloudflare-turnstile` | CloudFlare Turnstile | `useCloudflareTurnstile` | Nuxt Cloudflare Turnstile |
-| `intercom` | Intercom | `useIntercom` | Nuxt Scripts |
-| `facebook-pixel` | Facebook Pixel | `useFacebookPixel` |
-| `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |
-| `linkedin-insight-tag` | LinkedIn Insight Tag | `useLinkedInInsightTag` |
-| `pinterest-tag` | Pinterest Tag | `usePinterestTag` |
-| `google-ads-conversion-tracking` | Google Ads Conversion Tracking | `useGoogleAdsConversionTracking` |
-| `google-ads-remarketing` | Google Ads Remarketing | `useGoogleAdsRemarketing` |
-| `segment` | Segment | `useSegment` |
-| `fathom-analytics` | Fathom Analytics | `useFathomAnalytics` |
-| `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |
-| `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |
-| `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |
-| `cloudflare-web-analytics` | Cloudflare Web Analytics | `useCloudflareWebAnalytics` |
-| `matomo` | Matomo | `useMatomo` |
+| Key      | Description | Composable | Source |
+|----------|  | --- | --- |
+| `cloudflare-web-analytics` | Cloudflare Web Analytics | `useScriptCloudflareWebAnalytics` | Core |
+| `confetti` | [JS Confetti](https://github.com/loonywizard/js-confetti) | `useScriptCloudflareAnalytics` | Core |
+| `facebook-pixel` | Facebook Pixel | `useScriptFacebookPixel` | Core |
+| `fathom-analytics` | Fathom Analytics | `useScriptFathomAnalytics` | Core |
+| `hotjar` | Hotjar | `useScriptHotjar` | Core |
+| `intercom` | Intercom | `useScriptIntercom` | Core |
+| `segment` | Segment | `useScriptSegment` | Core |
+| `google-analytics` | Google Analytics | `useGoogleAnalytics` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `google-tag-manager` | Google Tag Manager | `useGoogleTagManager` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `cloudflare-turnstile` | CloudFlare Turnstile | `useCloudflareTurnstile` | [Nuxt Cloudflare Turnstile](https://github.com/nuxt-modules/turnstile) |
+
+TODO | `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |
+TODO | `pinterest-tag` | Pinterest Tag | `usePinterestTag` |
+TODO | `google-ads-conversion-tracking` | Google Ads Conversion Tracking | `useGoogleAdsConversionTracking` |
+TODO | `google-ads-remarketing` | Google Ads Remarketing | `useGoogleAdsRemarketing` |
+TODO | `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |
+TODO | `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |
+TODO | `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |
+TODO | `cloudflare-web-analytics` | Cloudflare Web Analytics | `useCloudflareWebAnalytics` |
+TODO | `matomo` | Matomo | `useMatomo` |
 
 ### Loading Scripts Globally
 

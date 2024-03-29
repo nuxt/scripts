@@ -1,34 +1,32 @@
 <script lang="ts" setup>
-import { useCloudflareAnalytics } from '../../../third-parties/src/runtime/composables/cloudflareAnalytics'
-import { ref, useHead } from '#imports'
+import { ref, useHead, useScriptFathomAnalytics } from '#imports'
 
 useHead({
-  title: 'Cloudflare',
+  title: 'Fathom',
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { $script } = useCloudflareAnalytics({
-  token: 'BRDEJWKJ',
+const { $script, trackPageview, trackGoal } = useScriptFathomAnalytics({
+  site: 'BRDEJWKJ',
   // load after 3 seconds
   trigger: new Promise<void>((resolve) => {
     setTimeout(() => {
       resolve()
-    }, 100)
+    }, 2000)
   }),
 })
-$script.load()
 // this will be triggered once the script is ready async
-// trackPageview({ url: '/fathom' })
+trackPageview({ url: '/fathom' })
 // we can manually wait for the script to be ready (TODO error handling)
-$scrip.then(() => {
+$script.then(() => {
   // eslint-disable-next-line no-console
-  console.log('cloudflare analytics is ready')
+  console.log('fathom is ready')
 })
 //
 const clicks = ref(0)
 async function trackEvent() {
   clicks.value++
-  // trackGoal('button', clicks.value)
+  trackGoal('button', clicks.value)
 }
 </script>
 

@@ -1,5 +1,6 @@
 import { type UseScriptInput, type VueScriptInstance, useScript as _useScript, injectHead } from '@unhead/vue'
 import type { UseScriptOptions } from '@unhead/schema'
+import { hashCode } from '@unhead/shared'
 import { onNuxtReady, useNuxtApp } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
@@ -7,9 +8,12 @@ export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptio
   input = typeof input === 'string' ? { src: input } : input
   options = options || {}
   if (options.trigger === 'onNuxtReady')
-    // @ts-expect-error untyped
-    options.trigger = onNuxtReady
+    options.trigger = new Promise(resolve => onNuxtReady(resolve))
   const nuxtApp = useNuxtApp()
+  const id = input.key || hashCode(input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : ''))
+  // only validate if we're initializing the script
+  if (import.meta.dev && !nuxtApp.scripts?.[id])
+    options.beforeInit?.()
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
