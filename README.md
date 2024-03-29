@@ -64,29 +64,31 @@ The registry is a collection of composables and Nuxt Modules that directly integ
 To use a script from the registry, simply use the composable. Consult the
 below table for the available scripts.
 
-| Key      | Description | Composable | Source |
-|----------|  | --- | --- |
-| `cloudflare-web-analytics` | Cloudflare Web Analytics | `useScriptCloudflareWebAnalytics` | Core |
-| `confetti` | [JS Confetti](https://github.com/loonywizard/js-confetti) | `useScriptCloudflareAnalytics` | Core |
-| `facebook-pixel` | Facebook Pixel | `useScriptFacebookPixel` | Core |
-| `fathom-analytics` | Fathom Analytics | `useScriptFathomAnalytics` | Core |
-| `hotjar` | Hotjar | `useScriptHotjar` | Core |
-| `intercom` | Intercom | `useScriptIntercom` | Core |
-| `segment` | Segment | `useScriptSegment` | Core |
-| `google-analytics` | Google Analytics | `useScriptGoogleAnalytics` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `google-tag-manager` | Google Tag Manager | `useScriptGoogleTagManager` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `google-maps` | Google Maps | `useScriptGoogleMaps` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `cloudflare-turnstile` | CloudFlare Turnstile | `useCloudflareTurnstile` | [Nuxt Cloudflare Turnstile](https://github.com/nuxt-modules/turnstile) |
+| Key      | Description                                                | Composable | Source |
+|----------|------------------------------------------------------------| --- | --- |
+| `cloudflare-web-analytics` | Cloudflare Web Analytics                                   | `useScriptCloudflareWebAnalytics` | Core |
+| `confetti` | [JS Confetti](https://github.com/loonywizard/js-confetti)  | `useScriptCloudflareAnalytics` | Core |
+| `facebook-pixel` | Facebook Pixel                                             | `useScriptFacebookPixel` | Core |
+| `fathom-analytics` | Fathom Analytics                                           | `useScriptFathomAnalytics` | Core |
+| `hotjar` | Hotjar                                                     | `useScriptHotjar` | Core |
+| `intercom` | Intercom                                                   | `useScriptIntercom` | Core |
+| `segment` | Segment                                                    | `useScriptSegment` | Core |
+| `google-analytics` | Google Analytics                                           | `useScriptGoogleAnalytics` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `google-tag-manager` | Google Tag Manager                                         | `useScriptGoogleTagManager` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `google-maps` | Google Maps                                                | `useScriptGoogleMaps` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
+| `cloudflare-turnstile` | CloudFlare Turnstile                                       | `useCloudflareTurnstile` | [Nuxt Cloudflare Turnstile](https://github.com/nuxt-modules/turnstile) |
 
-TODO | `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |
-TODO | `pinterest-tag` | Pinterest Tag | `usePinterestTag` |
-TODO | `google-ads-conversion-tracking` | Google Ads Conversion Tracking | `useGoogleAdsConversionTracking` |
-TODO | `google-ads-remarketing` | Google Ads Remarketing | `useGoogleAdsRemarketing` |
-TODO | `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |
-TODO | `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |
-TODO | `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |
-TODO | `cloudflare-web-analytics` | Cloudflare Web Analytics | `useCloudflareWebAnalytics` |
-TODO | `matomo` | Matomo | `useMatomo` |
+More coming soon!
+
+[//]: # (TODO | `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |)
+[//]: # (TODO | `pinterest-tag` | Pinterest Tag | `usePinterestTag` |)
+[//]: # (TODO | `google-ads-conversion-tracking` | Google Ads Conversion Tracking | `useGoogleAdsConversionTracking` |)
+[//]: # (TODO | `google-ads-remarketing` | Google Ads Remarketing | `useGoogleAdsRemarketing` |)
+[//]: # (TODO | `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |)
+[//]: # (TODO | `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |)
+[//]: # (TODO | `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |)
+[//]: # (TODO | `cloudflare-web-analytics` | Cloudflare Web Analytics | `useCloudflareWebAnalytics` |)
+[//]: # (TODO | `matomo` | Matomo | `useMatomo` |)
 
 ### Loading Scripts Globally
 
