@@ -14,6 +14,14 @@ export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptio
   // only validate if we're initializing the script
   if (import.meta.dev && !nuxtApp.scripts?.[id])
     options.beforeInit?.()
+    if (import.meta.client) {
+      performance?.mark?.('mark_feature_usage', {
+        detail: {
+          feature: `nuxt-scripts:${id}`,
+        },
+      })
+    }
+  }
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
