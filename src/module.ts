@@ -1,19 +1,21 @@
 import { addBuildPlugin, addImports, addImportsDir, addPlugin, addPluginTemplate, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import type { Import } from 'unimport'
+import type { Input } from 'valibot'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
 import type { CloudflareWebAnalyticsOptions } from './runtime/registry/cloudflare-web-analytics'
+import { extendTypes } from './kit'
 
 export interface ModuleOptions {
   /**
    * Register scripts globally.
    */
   register?: {
-    cloudflareWebAnalytics?: CloudflareWebAnalyticsOptions
+    cloudflareWebAnalytics?: Input<typeof CloudflareWebAnalyticsOptions>
     // TODO start the rest
   }
   /**
@@ -72,7 +74,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
-    const { version } = await readPackageJSON(resolve('../package.json'))
+    const { version, name } = await readPackageJSON(resolve('../package.json'))
     if (!config.enabled) {
       // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')
@@ -185,6 +187,16 @@ ${config.globals?.map(g => !Array.isArray(g)
         mode: 'client',
       })
     }
+
+    extendTypes(name!, async () => {
+      return `
+declare module '#app' {
+    interface NuxtApp {
+      ${nuxt.options.dev ? `_scripts: (import('#nuxt-scripts').NuxtAppScript)[]` : ''}
+    }
+}
+`
+    })
 
     const scriptMap = new Map<string, string>()
     const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)

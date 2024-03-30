@@ -2,7 +2,7 @@ import { type UseScriptInput, type VueScriptInstance, useScript as _useScript, i
 import type { UseScriptOptions } from '@unhead/schema'
 import { hashCode } from '@unhead/shared'
 import { onNuxtReady, useNuxtApp } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptions) {
   input = typeof input === 'string' ? { src: input } : input
@@ -10,9 +10,9 @@ export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptio
   if (options.trigger === 'onNuxtReady')
     options.trigger = new Promise(resolve => onNuxtReady(resolve))
   const nuxtApp = useNuxtApp()
-  const id = input.key || hashCode(input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : ''))
+  const id = input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))
   // only validate if we're initializing the script
-  if (import.meta.dev && !nuxtApp.scripts?.[id])
+  if (!nuxtApp.scripts?.[id]) {
     options.beforeInit?.()
     if (import.meta.client) {
       performance?.mark?.('mark_feature_usage', {
@@ -26,11 +26,11 @@ export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptio
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     // sync scripts to nuxtApp with debug details
-    const payload = {
-      key: input.key || input.src,
+    const payload: NuxtAppScript = {
+      key: (input.key || input.src) as string,
       src: input.src,
       $script: null as any as VueScriptInstance<T>,
-      events: [] as any[],
+      events: [],
     }
     nuxtApp._scripts = nuxtApp._scripts! || {}
 

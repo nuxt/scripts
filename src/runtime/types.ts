@@ -1,5 +1,5 @@
 import type { UseScriptOptions } from '@unhead/schema'
-import type { UseScriptInput } from '@unhead/vue'
+import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
@@ -40,4 +40,17 @@ export interface ConsentPromiseOptions {
    * have already been consented to be loaded.
    */
   loadOnNuxtReady?: boolean
+}
+
+export interface NuxtAppScript {
+  key: string
+  src: string
+  $script: VueScriptInstance<any>
+  events: {
+    type: string
+    fn?: string
+    args?: any
+    trigger?: string
+    at: number
+  }[]
 }
