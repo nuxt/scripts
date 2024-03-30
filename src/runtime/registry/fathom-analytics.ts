@@ -1,5 +1,5 @@
-import { type Input, boolean, literal, object, optional, parse, string, union } from 'valibot'
-import { useScript } from '#imports'
+import { type Input, boolean, literal, object, optional, string, union } from 'valibot'
+import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 const FathomAnalyticsOptions = object({
@@ -26,8 +26,7 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?:
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   if (import.meta.dev) {
     scriptOptions.beforeInit = () => {
-      // validate the schema
-      parse(FathomAnalyticsOptions, options)
+      validateScriptInputSchema(FathomAnalyticsOptions, options)
     }
   }
   return useScript<FathomAnalyticsApi>({
@@ -36,7 +35,6 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?:
     ...options,
   }, {
     ...scriptOptions,
-    assetStrategy: 'bundle',
     use: () => window.fathom,
   })
 }

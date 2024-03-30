@@ -1,5 +1,5 @@
-import { type Input, literal, number, object, optional, parse, string, union } from 'valibot'
-import { useScript } from '#imports'
+import { type Input, literal, number, object, optional, string, union } from 'valibot'
+import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 const IntercomOptions = object({
@@ -48,10 +48,7 @@ declare global {
 export function useScriptIntercom<T extends IntercomApi>(options?: Input<typeof IntercomOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    // validate the schema
-    if (import.meta.dev)
-      parse(IntercomOptions, options)
-
+    validateScriptInputSchema(IntercomOptions, options)
     // we need to insert the hj function
     if (import.meta.client)
       window.intercomSettings = options

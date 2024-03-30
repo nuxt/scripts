@@ -1,5 +1,5 @@
-import { type Input, object, optional, parse, string } from 'valibot'
-import { useScript } from '#imports'
+import { type Input, object, optional, string } from 'valibot'
+import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 const SegmentOptions = object({
@@ -25,9 +25,7 @@ declare global {
 export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof SegmentOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    // validate the schema
-    if (import.meta.dev)
-      parse(SegmentOptions, options)
+    validateScriptInputSchema(SegmentOptions, options)
     if (import.meta.client) {
       window.analytics = window.analytics || []
       window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']

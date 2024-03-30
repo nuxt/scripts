@@ -1,6 +1,6 @@
-import { type Input, boolean, minLength, object, optional, parse, string } from 'valibot'
+import { type Input, boolean, minLength, object, optional, string } from 'valibot'
 import { defu } from 'defu'
-import { useScript } from '#imports'
+import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export interface CloudflareWebAnalyticsApi {
@@ -17,7 +17,7 @@ declare global {
 }
 
 // Create login schema with email and password
-const CloudflareWebAnalyticsOptions = object({
+export const CloudflareWebAnalyticsOptions = object({
   /**
    * The Cloudflare Web Analytics token.
    *
@@ -33,14 +33,11 @@ const CloudflareWebAnalyticsOptions = object({
   spa: optional(boolean()),
 })
 
-export type CloudflareWebAnalyticsOptions = Input<typeof CloudflareWebAnalyticsOptions>
-
-export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: CloudflareWebAnalyticsOptions, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: Input<typeof CloudflareWebAnalyticsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   if (import.meta.dev) {
     scriptOptions.beforeInit = () => {
-      // validate the schema
-      parse(CloudflareWebAnalyticsOptions, options)
+      validateScriptInputSchema(CloudflareWebAnalyticsOptions, options)
     }
   }
   return useScript<CloudflareWebAnalyticsApi>({

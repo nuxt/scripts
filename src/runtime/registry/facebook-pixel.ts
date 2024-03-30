@@ -1,5 +1,5 @@
-import { type Input, number, object, parse, string, union } from 'valibot'
-import { useScript } from '#imports'
+import { type Input, number, object, string, union } from 'valibot'
+import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
@@ -43,9 +43,7 @@ const FacebookPixelOptions = object({
 export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Input<typeof FacebookPixelOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    // validate the schema
-    if (import.meta.dev)
-      parse(FacebookPixelOptions, options)
+    validateScriptInputSchema(FacebookPixelOptions, options)
 
     // we need to insert the hj function
     if (import.meta.client) {

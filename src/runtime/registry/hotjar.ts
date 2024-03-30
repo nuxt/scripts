@@ -1,5 +1,5 @@
-import { type Input, number, object, optional, parse } from 'valibot'
-import { useScript } from '#imports'
+import { type Input, number, object, optional } from 'valibot'
+import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export interface HotjarApi {
@@ -22,11 +22,7 @@ const HotjarOptions = object({
 export function useScriptHotjar<T extends HotjarApi>(options?: Input<typeof HotjarOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    if (import.meta.dev) {
-      // validate the schema
-      // TODO Nicer error handling
-      parse(HotjarOptions, options)
-    }
+    validateScriptInputSchema(HotjarOptions, options)
     // we need to insert the hj function
     if (import.meta.client) {
       window._hjSettings = window._hjSettings || { hjid: options?.id, hjsv: options?.sv }
