@@ -47,7 +47,7 @@ onDevtoolsClientConnected(async (client) => {
                   <div>{{ script.key }}</div>
                 </a>
                 <div class="opacity-70">
-                  {{ script.$script.status }}
+                  {{ script.$script.status.value }}
                 </div>
                 <div v-if="scriptSizes[script.key]">
                   {{ scriptSizes[script.key] }}

@@ -13,7 +13,7 @@ const { $script } = useScriptSegment({ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ $script.status.value }}
       </div>
     </ClientOnly>
   </div>

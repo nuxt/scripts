@@ -87,7 +87,6 @@ More coming soon!
 [//]: # (TODO | `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |)
 [//]: # (TODO | `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |)
 [//]: # (TODO | `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |)
-[//]: # (TODO | `cloudflare-web-analytics` | Cloudflare Web Analytics | `useCloudflareWebAnalytics` |)
 [//]: # (TODO | `matomo` | Matomo | `useMatomo` |)
 
 ### Loading Scripts Globally

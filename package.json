@@ -47,13 +47,16 @@
   "build": {
     "externals": [
       "@unhead/vue",
-      "@unhead/schema"
+      "@unhead/schema",
+      "@unhead/vue",
+      "#nuxt-scripts"
     ]
   },
   "dependencies": {
     "@nuxt/devtools-kit": "^1.1.5",
     "@nuxt/devtools-ui-kit": "^1.1.5",
     "@nuxt/kit": "^3.11.1",
+    "@unhead/vue": "^1.9.3",
     "consola": "^3.2.3",
     "defu": "^6.1.4",
     "estree-walker": "^3.0.3",
