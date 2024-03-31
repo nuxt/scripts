@@ -16,7 +16,6 @@ export function useScriptConfetti<T extends JSConfettiApi>(options: NuxtUseScrip
     src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
   }, {
     ...options,
-    assetStrategy: 'bundle',
     use() {
       return new window.JSConfetti()
     },

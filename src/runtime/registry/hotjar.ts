@@ -33,12 +33,11 @@ export function useScriptHotjar<T extends HotjarApi>(options?: Input<typeof Hotj
   }
   return useScript<T>({
     key: 'hotjar',
+    // requires extra steps to bundle
     src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
     defer: true,
   }, {
-    trigger: 'onNuxtReady',
     ...scriptOptions,
-    assetStrategy: 'bundle',
     use() {
       return { hj: window.hj }
     },

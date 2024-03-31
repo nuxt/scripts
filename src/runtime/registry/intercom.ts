@@ -58,9 +58,7 @@ export function useScriptIntercom<T extends IntercomApi>(options?: Input<typeof 
     src: `https://widget.intercom.io/widget/${options?.app_id}`,
     defer: true,
   }, {
-    trigger: 'onNuxtReady',
     ...scriptOptions,
-    assetStrategy: 'bundle',
     use() {
       return { Intercom: window.Intercom }
     },

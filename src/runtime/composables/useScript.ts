@@ -1,12 +1,14 @@
 import { type UseScriptInput, type VueScriptInstance, useScript as _useScript, injectHead } from '@unhead/vue'
 import type { UseScriptOptions } from '@unhead/schema'
 import { hashCode } from '@unhead/shared'
-import { onNuxtReady, useNuxtApp } from '#imports'
+import { defu } from 'defu'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig } from '#imports'
 import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptions) {
   input = typeof input === 'string' ? { src: input } : input
-  options = options || {}
+  options = defu(options, useRuntimeConfig().public['nuxt-scripts']?.defaultScriptOptions)
+
   if (options.trigger === 'onNuxtReady')
     options.trigger = new Promise(resolve => onNuxtReady(resolve))
   const nuxtApp = useNuxtApp()

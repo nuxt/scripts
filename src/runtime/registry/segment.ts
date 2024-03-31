@@ -51,9 +51,7 @@ export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof Se
     'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
     'defer': true,
   }, {
-    trigger: 'onNuxtReady',
     ...scriptOptions,
-    assetStrategy: 'bundle',
     use() {
       // @ts-expect-error untyped
       return { analytics: window[analyticsKey] }

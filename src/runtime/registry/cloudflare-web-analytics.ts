@@ -44,9 +44,7 @@ export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalytics
     'src': 'https://static.cloudflareinsights.com/beacon.min.js',
     'data-cf-beacon': JSON.stringify(defu(options, { spa: true })),
   }, {
-    trigger: 'onNuxtReady',
     ...scriptOptions,
-    assetStrategy: 'bundle',
     use() {
       return { __cfBeacon: window.__cfBeacon, __cfRl: window.__cfRl }
     },

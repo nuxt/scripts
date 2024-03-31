@@ -14,10 +14,11 @@ export interface ModuleOptions {
   /**
    * Register scripts globally.
    */
-  register?: {
-    cloudflareWebAnalytics?: Input<typeof CloudflareWebAnalyticsOptions>
-    // TODO start the rest
-  }
+  register?: ScriptRegistry
+  /**
+   * Default options for scripts.
+   */
+  defaultScriptOptions?: NuxtUseScriptOptions
   /**
    * Register scripts that should be loaded globally on all pages.
    */
@@ -69,6 +70,10 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
+    defaultScriptOptions: {
+      assetStrategy: 'bundle', // Not supported on all scripts, only if the src is static, runtime fallback?
+      trigger: 'onNuxtReady',
+    },
     enabled: true,
     debug: false,
   },
@@ -83,6 +88,7 @@ export default defineNuxtModule<ModuleOptions>({
     // allow augmenting the options
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
+    nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaultScriptOptions: config.defaultScriptOptions }
     addImportsDir([
       resolve('./runtime/composables'),
     ])

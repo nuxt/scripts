@@ -66,9 +66,7 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Inp
     src: 'https://connect.facebook.net/en_US/fbevents.js',
     defer: true,
   }, {
-    trigger: 'onNuxtReady',
     ...scriptOptions,
-    assetStrategy: 'bundle',
     use() {
       return { fbq: window.fbq }
     },
