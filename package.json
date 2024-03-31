@@ -71,7 +71,8 @@
     "ufo": "^1.5.3",
     "unplugin": "^1.10.0",
     "unstorage": "^1.10.2",
-    "valibot": "^0.30.0"
+    "valibot": "^0.30.0",
+    "unimport": "^3.7.1"
   },
   "devDependencies": {
     "@antfu/eslint-config": "2.8.3",
@@ -86,7 +87,6 @@
     "nuxt-scripts-devtools": "latest",
     "playwright-core": "^1.42.1",
     "typescript": "^5.4.3",
-    "unimport": "^3.7.1",
     "vitest": "^1.4.0"
   },
   "resolutions": {

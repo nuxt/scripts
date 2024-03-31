@@ -147,6 +147,7 @@ export default defineNuxtModule<ModuleOptions>({
       })
       addImports(registry)
 
+      // @ts-expect-error runtime
       await nuxt.hooks.callHook('scripts:registry', registry)
 
       if (config.globals?.length || Object.keys(config.register || {}).length) {

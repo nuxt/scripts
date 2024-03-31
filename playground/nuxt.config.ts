@@ -6,6 +6,11 @@ export default defineNuxtConfig({
   ],
   devtools: { enabled: true },
   scripts: {
+    register: {
+      confetti: {
+        version: 'latest',
+      },
+    },
     // TODO globals / register / overrides
   },
 })
