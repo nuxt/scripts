@@ -28,7 +28,7 @@ describe('nuxtScriptTransformer', () => {
     )
     expect(code).toMatchInlineSnapshot(`
       "const instance = useScript('/_scripts/beacon.min.js', {
-            
+
           })"
     `)
   })
@@ -46,7 +46,7 @@ describe('nuxtScriptTransformer', () => {
     )
     expect(code).toMatchInlineSnapshot(`
       "const instance = useScript({ defer: true, src: '/_scripts/beacon.min.js' }, {
-            
+
           })"
     `)
   })
@@ -65,5 +65,22 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScript({ key: 'cloudflareAnalytics', src: '/_scripts/beacon.min.js' })"`)
+  })
+
+  it('dynamic src is not transformed', async () => {
+    const code = await transform(
+      `const instance = useScript({ key: 'cloudflareAnalytics', src: \`https://static.cloudflareinsights.com/$\{123\}beacon.min.js\` })`,
+      {
+        overrides: {
+          cloudflareAnalytics: {
+            assetStrategy: 'bundle',
+          },
+        },
+        resolveScript(src) {
+          return `/_scripts${parseURL(src).pathname}`
+        },
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`undefined`)
   })
 })
