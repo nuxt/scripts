@@ -132,6 +132,10 @@ export default defineNuxtModule<ModuleOptions>({
         name: 'useScriptSegment',
         from: resolve('./runtime/registry/segment'),
       },
+      {
+        name: 'useScriptNpm',
+        from: resolve('./runtime/registry/npm'),
+      },
     ].map((i: Import) => {
       i.priority = -1
       return i
