@@ -59,7 +59,7 @@ export interface ModuleHooks {
   /**
    * Transform a script before it's registered.
    */
-  'scripts:transform': (ctx: { script: string, options: any }) => Promise<void>
+  'scripts:registry': (registry: Import[]) => Promise<void>
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -95,92 +95,96 @@ export default defineNuxtModule<ModuleOptions>({
       resolve('./runtime/composables'),
     ])
 
-    const registry: Import[] = [
-      {
-        name: 'useScriptCloudflareTurnstile',
-        from: resolve('./runtime/registry/cloudflare-turnstile'),
-      },
-      {
-        name: 'useScriptCloudflareWebAnalytics',
-        from: resolve('./runtime/registry/cloudflare-web-analytics'),
-      },
-      {
-        name: 'useScriptConfetti',
-        from: resolve('./runtime/registry/confetti'),
-      },
-      {
-        name: 'useScriptFacebookPixel',
-        from: resolve('./runtime/registry/facebook-pixel'),
-      },
-      {
-        name: 'useScriptFathomAnalytics',
-        from: resolve('./runtime/registry/fathom-analytics'),
-      },
-      {
-        name: 'useScriptGoogleAnalytics',
-        from: resolve('./runtime/registry/google-analytics'),
-      },
-      {
-        name: 'useScriptGoogleTagManager',
-        from: resolve('./runtime/registry/google-tag-manager'),
-      },
-      {
-        name: 'useScriptHotjar',
-        from: resolve('./runtime/registry/hotjar'),
-      },
-      {
-        name: 'useScriptIntercom',
-        from: resolve('./runtime/registry/intercom'),
-      },
-      {
-        name: 'useScriptSegment',
-        from: resolve('./runtime/registry/segment'),
-      },
-      {
-        name: 'useScriptNpm',
-        from: resolve('./runtime/registry/npm'),
-      },
-    ].map((i: Import) => {
-      i.priority = -1
-      return i
-    })
-    addImports(registry)
+    nuxt.hooks.hook('modules:done', async () => {
+      const registry: Import[] = [
+        {
+          name: 'useScriptCloudflareTurnstile',
+          from: resolve('./runtime/registry/cloudflare-turnstile'),
+        },
+        {
+          name: 'useScriptCloudflareWebAnalytics',
+          from: resolve('./runtime/registry/cloudflare-web-analytics'),
+        },
+        {
+          name: 'useScriptConfetti',
+          from: resolve('./runtime/registry/confetti'),
+        },
+        {
+          name: 'useScriptFacebookPixel',
+          from: resolve('./runtime/registry/facebook-pixel'),
+        },
+        {
+          name: 'useScriptFathomAnalytics',
+          from: resolve('./runtime/registry/fathom-analytics'),
+        },
+        {
+          name: 'useScriptGoogleAnalytics',
+          from: resolve('./runtime/registry/google-analytics'),
+        },
+        {
+          name: 'useScriptGoogleTagManager',
+          from: resolve('./runtime/registry/google-tag-manager'),
+        },
+        {
+          name: 'useScriptHotjar',
+          from: resolve('./runtime/registry/hotjar'),
+        },
+        {
+          name: 'useScriptIntercom',
+          from: resolve('./runtime/registry/intercom'),
+        },
+        {
+          name: 'useScriptSegment',
+          from: resolve('./runtime/registry/segment'),
+        },
+        {
+          name: 'useScriptNpm',
+          from: resolve('./runtime/registry/npm'),
+        },
+      ].map((i: Import) => {
+        i.priority = -1
+        return i
+      })
+      addImports(registry)
 
-    if (config.globals?.length || Object.keys(config.register || {}).length) {
-      // create a virtual plugin
-      const template = addTemplate({
-        filename: `modules/${name}.mjs`,
-        write: true,
-        getContents() {
-          const imports = ['useScript', 'defineNuxtPlugin']
-          const inits = []
-          // for global scripts, we can initialise them script away
-          for (const [k, c] of Object.entries(config.register || {})) {
-            const importDefinition = registry.find(i => i.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
-            if (importDefinition) {
-              // title case
-              imports.unshift(importDefinition.name)
-              inits.push(`${importDefinition.name}(${JSON.stringify(c)});`)
+      await nuxt.hooks.callHook('scripts:registry', registry)
+
+      if (config.globals?.length || Object.keys(config.register || {}).length) {
+        // create a virtual plugin
+        const template = addTemplate({
+          filename: `modules/${name}.mjs`,
+          write: true,
+          getContents() {
+            const imports = ['useScript', 'defineNuxtPlugin']
+            const inits = []
+            // for global scripts, we can initialise them script away
+            for (const [k, c] of Object.entries(config.register || {})) {
+              const importDefinition = registry.find(i => i.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+              if (importDefinition) {
+                // title case
+                imports.unshift(importDefinition.name)
+                inits.push(`${importDefinition.name}(${JSON.stringify(c)});`)
+              }
             }
-          }
-          return `import { ${imports.join(', ')} } from '#imports'
+            return `import { ${imports.join(', ')} } from '#imports'
 export default defineNuxtPlugin({
   name: "${name}:init",
   setup() {
 ${(config.globals || []).map(g => !Array.isArray(g)
-            ? `    useScript("${g.toString()}")`
-            : g.length === 2
-              ? `    useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
-              : `    useScript(${JSON.stringify(g[0])})`).join('\n')}
+              ? `    useScript("${g.toString()}")`
+              : g.length === 2
+                ? `    useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
+                : `    useScript(${JSON.stringify(g[0])})`).join('\n')}
     ${inits.join('\n    ')}
   }
 })`
-        },
-      })
-      addPlugin({
-        src: template.dst,
-      })
-    }
+          },
+        })
+        addPlugin({
+          src: template.dst,
+        })
+      }
+    })
 
     extendTypes(name!, async () => {
       return `
