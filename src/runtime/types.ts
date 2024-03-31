@@ -1,6 +1,13 @@
 import type { UseScriptOptions } from '@unhead/schema'
 import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
+import type { Input, ObjectSchema } from 'valibot'
+import type { CloudflareWebAnalyticsOptions } from '~/src/runtime/registry/cloudflare-web-analytics'
+import type { FacebookPixelOptions } from '~/src/runtime/registry/facebook-pixel'
+import type { FathomAnalyticsOptions } from '~/src/runtime/registry/fathom-analytics'
+import type { HotjarOptions } from '~/src/runtime/registry/hotjar'
+import type { SegmentOptions } from '~/src/runtime/registry/segment'
+import type { IntercomOptions } from '~/src/runtime/registry/intercom'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -53,4 +60,17 @@ export interface NuxtAppScript {
     trigger?: string
     at: number
   }[]
+}
+
+export type ScriptRegistryEntry<T extends ObjectSchema<any>> = Input<T> | [Input<T>, NuxtUseScriptOptions<T>]
+
+export interface ScriptRegistry {
+  cloudflareWebAnalytics?: ScriptRegistryEntry<typeof CloudflareWebAnalyticsOptions>
+  confetti?: ScriptRegistryEntry<typeof CloudflareWebAnalyticsOptions>
+  facebookPixel?: ScriptRegistryEntry<typeof FacebookPixelOptions>
+  fathomAnalytics?: ScriptRegistryEntry<typeof FathomAnalyticsOptions>
+  hotjar?: ScriptRegistryEntry<typeof HotjarOptions>
+  segment?: ScriptRegistryEntry<typeof SegmentOptions>
+  intercom?: ScriptRegistryEntry<typeof IntercomOptions>
+  // TODO augment upstream (ga, gtm, etc)
 }

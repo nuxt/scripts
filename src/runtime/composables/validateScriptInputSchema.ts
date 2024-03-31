@@ -1,4 +1,4 @@
-import { type Input, type ObjectSchema, parse } from 'valibot'
+import { type BaseSchema, type Input, parse } from 'valibot'
 import { createError } from '#imports'
 
 /**
@@ -6,7 +6,7 @@ import { createError } from '#imports'
  *
  * Checks if a script with the 'key' value exists in head.
  */
-export function validateScriptInputSchema<T extends ObjectSchema<any>>(schema: T, options?: Input<T>) {
+export function validateScriptInputSchema<T extends BaseSchema<any>>(schema: T, options?: Input<T>) {
   try {
     parse(schema, options)
   }

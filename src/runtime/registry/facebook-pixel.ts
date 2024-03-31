@@ -36,7 +36,7 @@ declare global {
   }
 }
 
-const FacebookPixelOptions = object({
+export const FacebookPixelOptions = object({
   id: union([string(), number()]),
 })
 

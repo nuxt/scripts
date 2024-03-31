@@ -2,7 +2,7 @@ import { type Input, literal, number, object, optional, string, union } from 'va
 import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
-const IntercomOptions = object({
+export const IntercomOptions = object({
   app_id: string(),
   api_base: optional(union([literal('https://api-iam.intercom.io'), literal('https://api-iam.eu.intercom.io'), literal('https://api-iam.au.intercom.io')])),
   name: optional(string()),

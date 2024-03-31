@@ -14,12 +14,12 @@ declare global {
   }
 }
 
-const HotjarOptions = object({
+export const HotjarOptions = object({
   id: number(),
   sv: optional(number()),
 })
 
-export function useScriptHotjar<T extends HotjarApi>(options?: Input<typeof HotjarOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptHotjar<T extends HotjarApi>(options?: Input<typeof HotjarOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'assetStrategy' | 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     validateScriptInputSchema(HotjarOptions, options)

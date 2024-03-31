@@ -1,4 +1,5 @@
-import { useScript } from '#imports'
+import { type Input, pick } from 'valibot'
+import { NpmOptions, useScriptNpm } from './npm'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export interface JSConfettiApi {
@@ -11,9 +12,13 @@ declare global {
   }
 }
 
-export function useScriptConfetti<T extends JSConfettiApi>(options: NuxtUseScriptOptions<T> = {}) {
-  return useScript<T>({
-    src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
+export const JSConfettiOptions = pick(NpmOptions, ['version'])
+
+export function useScriptConfetti<T extends JSConfettiApi>(options: Input<typeof JSConfettiOptions>, _scriptOptions: NuxtUseScriptOptions<T> = {}) {
+  return useScriptNpm<T>({
+    packageName: 'js-confetti',
+    version: options.version,
+    file: 'dist/js-confetti.browser.js',
   }, {
     ...options,
     use() {

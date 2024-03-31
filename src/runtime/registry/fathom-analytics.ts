@@ -2,7 +2,7 @@ import { type Input, boolean, literal, object, optional, string, union } from 'v
 import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
-const FathomAnalyticsOptions = object({
+export const FathomAnalyticsOptions = object({
   'site': string(), // site is required
   'src': optional(string()),
   'data-spa': optional(union([literal('auto'), literal('history'), literal('hash')])),

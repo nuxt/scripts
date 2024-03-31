@@ -1,14 +1,12 @@
-import { addBuildPlugin, addImports, addImportsDir, addPlugin, addPluginTemplate, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
+import { addBuildPlugin, addImports, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import type { Import } from 'unimport'
-import type { Input } from 'valibot'
-import type { NuxtUseScriptInput, NuxtUseScriptOptions } from './runtime/types'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
-import type { CloudflareWebAnalyticsOptions } from './runtime/registry/cloudflare-web-analytics'
 import { extendTypes } from './kit'
+import type { NuxtUseScriptInput, NuxtUseScriptOptions, ScriptRegistry } from '#nuxt-scripts'
 
 export interface ModuleOptions {
   /**
@@ -140,57 +138,39 @@ export default defineNuxtModule<ModuleOptions>({
     })
     addImports(registry)
 
-    const hasRegister = Object.keys(config.register || {}).length > 0
-    if (hasRegister) {
-      addPluginTemplate({
-        filename: 'third-party.mjs',
+    if (config.globals?.length || Object.keys(config.register || {}).length) {
+      // create a virtual plugin
+      const template = addTemplate({
+        filename: `modules/${name}.mjs`,
         write: true,
         getContents() {
-          const imports = ['import { defineNuxtPlugin } from "#imports";']
+          const imports = ['useScript', 'defineNuxtPlugin']
           const inits = []
           // for global scripts, we can initialise them script away
           for (const [k, c] of Object.entries(config.register || {})) {
-            // lazy module resolution
-            const importPath = resolve(`./runtime/composables/${k}`)
-            // title case
-            const exportName = k.substring(0, 1).toUpperCase() + k.substring(1)
-            imports.unshift(`import { ${exportName} } from "${importPath}";`)
-            inits.push(`${exportName}(${JSON.stringify(c)});`)
+            const importDefinition = registry.find(i => i.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+            if (importDefinition) {
+              // title case
+              imports.unshift(importDefinition.name)
+              inits.push(`${importDefinition.name}(${JSON.stringify(c)});`)
+            }
           }
-          return [
-            imports.join('\n'),
-            '',
-            'export default defineNuxtPlugin({',
-            '  name: "nuxt-third-party",',
-            '  setup() {',
-            inits.map(i => `    ${i}`).join('\n'),
-            '  }',
-            '})',
-          ].join('\n')
-        },
-      })
-    }
-
-    if (config.globals?.length) {
-      // create a virtual plugin
-      const template = addTemplate({
-        filename: 'modules/nuxt-scripts/plugin.client.mjs',
-        getContents() {
-          return `import { defineNuxtPlugin, useScript } from '#imports'
+          return `import { ${imports.join(', ')} } from '#imports'
 export default defineNuxtPlugin({
+  name: "${name}:init",
   setup() {
 ${config.globals?.map(g => !Array.isArray(g)
             ? `    useScript("${g.toString()}")`
             : g.length === 2
               ? `    useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
               : `    useScript(${JSON.stringify(g[0])})`).join('\n')}
+    ${inits.join('\n    ')}
   }
 })`
         },
       })
       addPlugin({
         src: template.dst,
-        mode: 'client',
       })
     }
 

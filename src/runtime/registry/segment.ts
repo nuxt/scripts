@@ -2,7 +2,7 @@ import { type Input, object, optional, string } from 'valibot'
 import { useScript, validateScriptInputSchema } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
-const SegmentOptions = object({
+export const SegmentOptions = object({
   writeKey: string(),
   analyticsKey: optional(string()),
 })
