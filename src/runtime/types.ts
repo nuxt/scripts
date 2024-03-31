@@ -55,9 +55,10 @@ export interface NuxtAppScript {
   $script: VueScriptInstance<any>
   events: {
     type: string
-    fn?: string
+    fn?: string | symbol
     args?: any
-    trigger?: string
+    status?: string
+    trigger?: NuxtUseScriptOptions['trigger']
     at: number
   }[]
 }

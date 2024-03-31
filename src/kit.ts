@@ -6,7 +6,7 @@ export function extendTypes(module: string, template: (options: { typesPath: str
   const { resolve } = createResolver(import.meta.url)
   // paths.d.ts
   addTemplate({
-    filename: `module/${module}.d.ts`,
+    filename: `modules/${module}.d.ts`,
     getContents: async () => {
       const typesPath = relative(resolve(nuxt!.options.rootDir, nuxt!.options.buildDir, 'module'), resolve('runtime/types'))
       const s = await template({ typesPath })

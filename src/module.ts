@@ -34,7 +34,11 @@ export interface ModuleOptions {
      * @default '/_scripts/'
      */
     prefix?: string
-    /** Currently scripts assets are exposed as public assets as part of the build. This will be configurable in future */
+    /**
+     * Scripts assets are exposed as public assets as part of the build.
+     *
+     * TODO Make configurable in future.
+     */
     strategy?: 'public'
   }
   /**
@@ -163,7 +167,7 @@ export default defineNuxtModule<ModuleOptions>({
 export default defineNuxtPlugin({
   name: "${name}:init",
   setup() {
-${config.globals?.map(g => !Array.isArray(g)
+${(config.globals || []).map(g => !Array.isArray(g)
             ? `    useScript("${g.toString()}")`
             : g.length === 2
               ? `    useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
