@@ -21,11 +21,13 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
   return createUnplugin(() => {
     return {
       name: 'nuxt:scripts:asset-bundler-transformer',
-      enforce: 'post',
 
       transformInclude(id) {
         const { pathname, search } = parseURL(decodeURIComponent(pathToFileURL(id).href))
         const { type } = parseQuery(search)
+
+        if (pathname.includes('node_modules/@unhead') || pathname.includes('node_modules/vueuse'))
+          return false
 
         // vue files
         if (pathname.endsWith('.vue') && (type === 'script' || !search))
@@ -34,9 +36,6 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
         // js files
         if (pathname.match(/\.((c|m)?j|t)sx?$/g))
           return true
-
-        if (pathname.includes('node_modules/@unhead') || pathname.includes('node_modules/vueuse'))
-          return false
 
         return false
       },
@@ -81,7 +80,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                 // find the registry node
                 const registryNode = options.registry?.find(i => i.name === fnName)
                 if (!registryNode) {
-                  console.error(`[Nuxt Scripts] Integration ${fnName} not found in registry`)
+                  console.warn(`[Nuxt Scripts] Integration ${fnName} not found in registry. Used in ${id}.`)
                   return
                 }
                 // this is only needed when we have a dynamic src that we need to compute
@@ -96,6 +95,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                   // extract literal values from the object to reconstruct the options
                   for (const prop of optionsNode.properties) {
                     if (prop.value.type === 'Literal')
+                      // @ts-expect-error untyped
                       fnArg0[prop.key.name] = prop.value.value
                   }
                   const srcProperty = node.arguments[0].properties.find(
@@ -131,6 +131,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                       canBundle = true
                     }
                   }
+                  // @ts-expect-error untyped
                   canBundle = canBundle || options.overrides?.[scriptKey]?.assetStrategy === 'bundle'
                   if (canBundle) {
                     const newSrc = options.resolveScript(src)
