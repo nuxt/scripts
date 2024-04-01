@@ -56,7 +56,6 @@ export function useScriptIntercom<T extends IntercomApi>(options?: Input<typeof 
   return useScript<T>({
     key: 'intercom',
     src: `https://widget.intercom.io/widget/${options?.app_id}`,
-    defer: true,
   }, {
     ...scriptOptions,
     use() {

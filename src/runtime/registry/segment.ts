@@ -49,7 +49,6 @@ export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof Se
     'key': 'segment',
     'data-global-segment-analytics-key': analyticsKey,
     'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
-    'defer': true,
   }, {
     ...scriptOptions,
     use() {

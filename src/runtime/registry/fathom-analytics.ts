@@ -29,7 +29,6 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?:
   }
   return useScript<FathomAnalyticsApi>({
     src: 'https://cdn.usefathom.com/script.js',
-    defer: true,
     ...options,
   }, {
     ...scriptOptions,

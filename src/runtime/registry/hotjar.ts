@@ -35,7 +35,6 @@ export function useScriptHotjar<T extends HotjarApi>(options?: Input<typeof Hotj
     key: 'hotjar',
     // requires extra steps to bundle
     src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
-    defer: true,
   }, {
     ...scriptOptions,
     use() {
