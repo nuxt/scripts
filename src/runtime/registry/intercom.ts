@@ -1,6 +1,7 @@
 import { type Input, literal, number, object, optional, string, union } from 'valibot'
+import { joinURL } from 'ufo'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
   app_id: string(),
@@ -13,6 +14,8 @@ export const IntercomOptions = object({
   horizontal_padding: optional(number()),
   vertical_padding: optional(number()),
 })
+
+export type IntercomInput = ScriptDynamicSrcInput<typeof IntercomOptions>
 
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: Input<typeof IntercomOptions>) => void)
@@ -41,11 +44,11 @@ export interface IntercomApi {
 
 declare global {
   interface Window extends IntercomApi {
-    intercomSettings?: Input<typeof IntercomOptions>
+    intercomSettings?: IntercomInput
   }
 }
 
-export function useScriptIntercom<T extends IntercomApi>(options?: Input<typeof IntercomOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(IntercomOptions, options)
@@ -55,7 +58,7 @@ export function useScriptIntercom<T extends IntercomApi>(options?: Input<typeof 
   }
   return useScript<T>({
     key: 'intercom',
-    src: `https://widget.intercom.io/widget/${options?.app_id}`,
+    src: options?.src || joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
   }, {
     ...scriptOptions,
     use() {

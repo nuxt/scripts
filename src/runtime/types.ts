@@ -21,8 +21,10 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
    * improves privacy by not sharing the user's IP address with third-party servers.
+   * - `bundle` - Bundle the script as an asset.
+   * - `null` - Do not bundle the script.
    */
-  assetStrategy?: 'bundle'
+  assetStrategy?: null | 'bundle'
   /**
    * A hook to run when a script does not exist and will be initialized for the first time.
    */
@@ -75,3 +77,5 @@ export interface ScriptRegistry {
   intercom?: ScriptRegistryEntry<typeof IntercomOptions>
   // TODO augment upstream (ga, gtm, etc)
 }
+
+export type ScriptDynamicSrcInput<T extends ObjectSchema<any>> = Input<T> & { src?: string }

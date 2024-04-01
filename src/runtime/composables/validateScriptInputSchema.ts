@@ -5,7 +5,8 @@ export function validateScriptInputSchema<T extends BaseSchema<any>>(schema: T, 
   if (import.meta.dev) {
     try {
       parse(schema, options)
-    } catch (e) {
+    }
+    catch (e) {
       // TODO nicer error handling
       createError({
         cause: e,

@@ -1,12 +1,17 @@
 import { addBuildPlugin, addImports, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import type { Import } from 'unimport'
+import { joinURL, withBase, withQuery } from 'ufo'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
 import { extendTypes } from './kit'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions, ScriptRegistry } from '#nuxt-scripts'
+import type { IntercomInput } from '~/src/runtime/registry/intercom'
+import type { SegmentInput } from '~/src/runtime/registry/segment'
+import type { HotjarInput } from '~/src/runtime/registry/hotjar'
+import type { NpmInput } from '~/src/runtime/registry/npm'
 
 export interface ModuleOptions {
   /**
@@ -24,9 +29,7 @@ export interface ModuleOptions {
   /**
    * Override the static script options for specific scripts based on their provided `key` or `src`.
    */
-  overrides?: {
-    [key: string]: Pick<NuxtUseScriptOptions, 'assetStrategy'>
-  }
+  overrides?: Record<keyof ScriptRegistry, Pick<NuxtUseScriptOptions, 'assetStrategy'>>
   /** Configure the way scripts assets are exposed */
   assets?: {
     /**
@@ -96,50 +99,79 @@ export default defineNuxtModule<ModuleOptions>({
     ])
 
     nuxt.hooks.hook('modules:done', async () => {
-      const registry: Import[] = [
+      const registry: (Import & { transformSrc?: string })[] = [
         {
           name: 'useScriptCloudflareTurnstile',
+          key: 'cloudflareTurnstile',
           from: resolve('./runtime/registry/cloudflare-turnstile'),
         },
         {
           name: 'useScriptCloudflareWebAnalytics',
+          key: 'cloudflareWebAnalytics',
           from: resolve('./runtime/registry/cloudflare-web-analytics'),
+          src: 'https://static.cloudflareinsights.com/beacon.min.js',
         },
         {
           name: 'useScriptConfetti',
+          key: 'confetti',
           from: resolve('./runtime/registry/confetti'),
+          src: 'https://unpkg.com/js-confetti@latest/dist/js-confetti.browser.js',
         },
         {
           name: 'useScriptFacebookPixel',
+          key: 'facebookPixel',
           from: resolve('./runtime/registry/facebook-pixel'),
+          src: 'https://connect.facebook.net/en_US/fbevents.js',
         },
         {
           name: 'useScriptFathomAnalytics',
+          key: 'fathomAnalytics',
           from: resolve('./runtime/registry/fathom-analytics'),
+          src: 'https://cdn.usefathom.com/script.js',
         },
         {
           name: 'useScriptGoogleAnalytics',
+          key: 'googleAnalytics',
           from: resolve('./runtime/registry/google-analytics'),
         },
         {
           name: 'useScriptGoogleTagManager',
+          key: 'googleTagmanager',
           from: resolve('./runtime/registry/google-tag-manager'),
         },
         {
           name: 'useScriptHotjar',
           from: resolve('./runtime/registry/hotjar'),
+          key: 'hotjar',
+          transform(options?: HotjarInput) {
+            return withQuery(`https://static.hotjar.com/c/hotjar-${options?.id || ''}.js`, {
+              sv: options?.sv || '6',
+            })
+          },
         },
         {
           name: 'useScriptIntercom',
           from: resolve('./runtime/registry/intercom'),
+          key: 'intercom',
+          transform(options?: IntercomInput) {
+            return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+          },
         },
         {
           name: 'useScriptSegment',
           from: resolve('./runtime/registry/segment'),
+          key: 'segment',
+          transform(options?: SegmentInput) {
+            return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
+          },
         },
         {
           name: 'useScriptNpm',
+          // key is based on package name
           from: resolve('./runtime/registry/npm'),
+          transform(options?: NpmInput) {
+            return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
+          },
         },
       ].map((i: Import) => {
         i.priority = -1
@@ -185,6 +217,20 @@ ${(config.globals || []).map(g => !Array.isArray(g)
           src: template.dst,
         })
       }
+      const scriptMap = new Map<string, string>()
+      const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
+
+      addBuildPlugin(NuxtScriptAssetBundlerTransformer({
+        registry,
+        defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
+        resolveScript(src) {
+          if (scriptMap.has(src))
+            return scriptMap.get(src) as string
+          const url = normalizeScriptData(src)
+          scriptMap.set(src, url)
+          return url
+        },
+      }))
     })
 
     extendTypes(name!, async () => {
@@ -196,20 +242,6 @@ declare module '#app' {
 }
 `
     })
-
-    const scriptMap = new Map<string, string>()
-    const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
-
-    addBuildPlugin(NuxtScriptAssetBundlerTransformer({
-      overrides: config.overrides,
-      resolveScript(src) {
-        if (scriptMap.has(src))
-          return scriptMap.get(src) as string
-        const url = normalizeScriptData(src)
-        scriptMap.set(src, url)
-        return url
-      },
-    }))
 
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolve)

@@ -1,11 +1,13 @@
-import { type Input, object, optional, string } from 'valibot'
+import { object, optional, string } from 'valibot'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
   writeKey: string(),
   analyticsKey: optional(string()),
 })
+
+export type SegmentInput = ScriptDynamicSrcInput<typeof SegmentOptions>
 
 export interface SegmentApi {
   analytics: {
@@ -22,7 +24,7 @@ declare global {
   interface Window extends SegmentApi {}
 }
 
-export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof SegmentOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(SegmentOptions, options)
@@ -48,7 +50,7 @@ export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof Se
   return useScript<T>({
     'key': 'segment',
     'data-global-segment-analytics-key': analyticsKey,
-    'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
+    'src': options?.src || `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
   }, {
     ...scriptOptions,
     use() {

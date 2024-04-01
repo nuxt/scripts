@@ -62,7 +62,7 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Inp
     }
   }
   return useScript<T>({
-    key: 'facebook-pixel',
+    key: 'facebookPixel',
     src: 'https://connect.facebook.net/en_US/fbevents.js',
   }, {
     ...scriptOptions,
