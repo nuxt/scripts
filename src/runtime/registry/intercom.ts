@@ -48,7 +48,7 @@ declare global {
 export function useScriptIntercom<T extends IntercomApi>(options?: Input<typeof IntercomOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    validateScriptInputSchema(IntercomOptions, options)
+    import.meta.dev && validateScriptInputSchema(IntercomOptions, options)
     // we need to insert the hj function
     if (import.meta.client)
       window.intercomSettings = options

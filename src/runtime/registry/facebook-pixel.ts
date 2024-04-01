@@ -43,7 +43,7 @@ export const FacebookPixelOptions = object({
 export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Input<typeof FacebookPixelOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    validateScriptInputSchema(FacebookPixelOptions, options)
+    import.meta.dev && validateScriptInputSchema(FacebookPixelOptions, options)
 
     // we need to insert the hj function
     if (import.meta.client) {

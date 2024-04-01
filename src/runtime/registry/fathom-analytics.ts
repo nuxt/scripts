@@ -24,10 +24,8 @@ declare global {
 
 export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: Input<typeof FathomAnalyticsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  if (import.meta.dev) {
-    scriptOptions.beforeInit = () => {
-      validateScriptInputSchema(FathomAnalyticsOptions, options)
-    }
+  scriptOptions.beforeInit = () => {
+    import.meta.dev && validateScriptInputSchema(FathomAnalyticsOptions, options)
   }
   return useScript<FathomAnalyticsApi>({
     src: 'https://cdn.usefathom.com/script.js',

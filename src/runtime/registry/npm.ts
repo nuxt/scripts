@@ -12,7 +12,7 @@ export const NpmOptions = object({
 export function useScriptNpm<T>(options: Input<typeof NpmOptions>, _scriptOptions?: NuxtUseScriptOptions<T>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    validateScriptInputSchema(NpmOptions, options)
+    import.meta.dev && validateScriptInputSchema(NpmOptions, options)
   }
   // TODO support multiple providers? (e.g. jsdelivr, cdnjs, etc.) Only unpkg for now
   return useScript<T>({

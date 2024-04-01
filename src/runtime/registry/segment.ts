@@ -25,7 +25,7 @@ declare global {
 export function useScriptSegment<T extends SegmentApi>(options?: Input<typeof SegmentOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    validateScriptInputSchema(SegmentOptions, options)
+    import.meta.dev && validateScriptInputSchema(SegmentOptions, options)
     if (import.meta.client) {
       window.analytics = window.analytics || []
       window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']

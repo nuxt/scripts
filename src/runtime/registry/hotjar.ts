@@ -22,7 +22,7 @@ export const HotjarOptions = object({
 export function useScriptHotjar<T extends HotjarApi>(options?: Input<typeof HotjarOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'assetStrategy' | 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
-    validateScriptInputSchema(HotjarOptions, options)
+    import.meta.dev && validateScriptInputSchema(HotjarOptions, options)
     // we need to insert the hj function
     if (import.meta.client) {
       window._hjSettings = window._hjSettings || { hjid: options?.id, hjsv: options?.sv }

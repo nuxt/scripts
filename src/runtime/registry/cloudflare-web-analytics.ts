@@ -35,10 +35,8 @@ export const CloudflareWebAnalyticsOptions = object({
 
 export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: Input<typeof CloudflareWebAnalyticsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  if (import.meta.dev) {
-    scriptOptions.beforeInit = () => {
-      validateScriptInputSchema(CloudflareWebAnalyticsOptions, options)
-    }
+  scriptOptions.beforeInit = () => {
+    import.meta.dev && validateScriptInputSchema(CloudflareWebAnalyticsOptions, options)
   }
   return useScript<CloudflareWebAnalyticsApi>({
     'src': 'https://static.cloudflareinsights.com/beacon.min.js',
