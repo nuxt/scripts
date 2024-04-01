@@ -7,7 +7,7 @@ import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
 import { extendTypes } from './kit'
-import type { NuxtUseScriptInput, NuxtUseScriptOptions, ScriptRegistry } from '#nuxt-scripts'
+import type { NuxtUseScriptInput, NuxtUseScriptOptions, RegistryScripts, ScriptRegistry } from '#nuxt-scripts'
 import type { IntercomInput } from '~/src/runtime/registry/intercom'
 import type { SegmentInput } from '~/src/runtime/registry/segment'
 import type { HotjarInput } from '~/src/runtime/registry/hotjar'
@@ -62,7 +62,7 @@ export interface ModuleHooks {
   /**
    * Transform a script before it's registered.
    */
-  'scripts:registry': (registry: Import[]) => Promise<void>
+  'scripts:registry': (registry: RegistryScripts) => Promise<void>
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -99,7 +99,7 @@ export default defineNuxtModule<ModuleOptions>({
     ])
 
     nuxt.hooks.hook('modules:done', async () => {
-      const registry: (Import & { transformSrc?: string })[] = [
+      const registry: RegistryScripts = [
         {
           name: 'useScriptCloudflareTurnstile',
           key: 'cloudflareTurnstile',

@@ -6,15 +6,15 @@ import type { SourceMapInput } from 'rollup'
 import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
 import type { SimpleCallExpression } from 'estree'
-import type { Import } from 'unimport'
 import type { Input } from 'valibot'
 import type { ModuleOptions } from '../module'
+import type { RegistryScripts } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
   overrides?: ModuleOptions['overrides']
   resolveScript: (src: string) => string
   defaultBundle?: boolean
-  registry?: (Import & { src?: string, key?: string, transform?: (options: any) => string })[]
+  registry?: RegistryScripts
 }
 
 export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransformerOptions) {

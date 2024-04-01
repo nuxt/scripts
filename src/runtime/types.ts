@@ -2,6 +2,7 @@ import type { UseScriptOptions } from '@unhead/schema'
 import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { Input, ObjectSchema } from 'valibot'
+import type { Import } from 'unimport'
 import type { CloudflareWebAnalyticsOptions } from '~/src/runtime/registry/cloudflare-web-analytics'
 import type { FacebookPixelOptions } from '~/src/runtime/registry/facebook-pixel'
 import type { FathomAnalyticsOptions } from '~/src/runtime/registry/fathom-analytics'
@@ -79,3 +80,5 @@ export interface ScriptRegistry {
 }
 
 export type ScriptDynamicSrcInput<T extends ObjectSchema<any>> = Input<T> & { src?: string }
+
+export type RegistryScripts = (Import & { src?: string, key?: string, transform?: (options: any) => string })[]
