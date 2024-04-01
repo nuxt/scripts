@@ -3,12 +3,12 @@ import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { Input, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
-import type { CloudflareWebAnalyticsOptions } from '~/src/runtime/registry/cloudflare-web-analytics'
-import type { FacebookPixelOptions } from '~/src/runtime/registry/facebook-pixel'
-import type { FathomAnalyticsOptions } from '~/src/runtime/registry/fathom-analytics'
-import type { HotjarOptions } from '~/src/runtime/registry/hotjar'
-import type { SegmentOptions } from '~/src/runtime/registry/segment'
-import type { IntercomOptions } from '~/src/runtime/registry/intercom'
+import type { SegmentOptions } from './registry/segment'
+import type { CloudflareWebAnalyticsOptions } from './registry/cloudflare-web-analytics'
+import type { FacebookPixelOptions } from './registry/facebook-pixel'
+import type { FathomAnalyticsOptions } from './registry/fathom-analytics'
+import type { HotjarOptions } from './registry/hotjar'
+import type { IntercomOptions } from './registry/intercom'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
