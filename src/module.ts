@@ -62,7 +62,7 @@ export interface ModuleHooks {
   /**
    * Transform a script before it's registered.
    */
-  'scripts:registry': (registry: RegistryScripts) => Promise<void>
+  'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
 }
 
 export default defineNuxtModule<ModuleOptions>({
