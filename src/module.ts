@@ -6,6 +6,7 @@ import {
   addTemplate,
   createResolver,
   defineNuxtModule,
+  hasNuxtModule,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import { joinURL, withBase, withQuery } from 'ufo'
@@ -106,7 +107,7 @@ export default defineNuxtModule<ModuleOptions>({
     ])
 
     nuxt.hooks.hook('modules:done', async () => {
-      const registry: RegistryScripts = [
+      let registry: RegistryScripts = [
         {
           name: 'useScriptCloudflareWebAnalytics',
           key: 'cloudflareWebAnalytics',
@@ -191,7 +192,8 @@ export default defineNuxtModule<ModuleOptions>({
           from: resolve('./runtime/registry/google-tag-manager'),
           module: '@nuxt/third-party-capital',
         },
-      ].map((i: RegistryScripts[0]) => {
+      ]
+      registry = registry.map((i) => {
         i.priority = -1
         i.module = i.module || '@nuxt/scripts'
         return i
@@ -264,7 +266,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
         registry,
         defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
         moduleDetected(module) {
-          if (module !== '@nuxt/scripts' && !moduleInstallPromises.has(module))
+          if (module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
         resolveScript(src) {

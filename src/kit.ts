@@ -72,7 +72,7 @@ export function installNuxtModule(name: string, options?: EnsurePackageInstalled
   installPrompts.add(name)
   const nuxt = useNuxt()
   return promptToInstall(name, async () => {
-    const { runCommand } = await import('nuxi')
+    const { runCommand } = await import(String('nuxi'))
     await runCommand('module', ['add', name, '--cwd', nuxt.options.rootDir])
   }, { rootDir: nuxt.options.rootDir, searchPaths: nuxt.options.modulesDir, ...options })
 }
