@@ -13,6 +13,7 @@ import type { RegistryScripts } from '#nuxt-scripts'
 export interface AssetBundlerTransformerOptions {
   overrides?: ModuleOptions['overrides']
   resolveScript: (src: string) => string
+  moduleDetected: (module: string) => void
   defaultBundle?: boolean
   registry?: RegistryScripts
 }
@@ -83,6 +84,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                   console.warn(`[Nuxt Scripts] Integration ${fnName} not found in registry. Used in ${id}.`)
                   return
                 }
+                options.moduleDetected(registryNode.module)
                 // this is only needed when we have a dynamic src that we need to compute
                 if (!registryNode.transform && !registryNode.src)
                   return

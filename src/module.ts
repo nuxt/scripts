@@ -1,17 +1,24 @@
-import { addBuildPlugin, addImports, addImportsDir, addPlugin, addTemplate, createResolver, defineNuxtModule } from '@nuxt/kit'
+import {
+  addBuildPlugin,
+  addImports,
+  addImportsDir,
+  addPlugin,
+  addTemplate,
+  createResolver,
+  defineNuxtModule,
+} from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import type { Import } from 'unimport'
 import { joinURL, withBase, withQuery } from 'ufo'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
-import { extendTypes } from './kit'
+import { extendTypes, installNuxtModule } from './kit'
+import type { IntercomInput } from './runtime/registry/intercom'
+import type { SegmentInput } from './runtime/registry/segment'
+import type { HotjarInput } from './runtime/registry/hotjar'
+import type { NpmInput } from './runtime/registry/npm'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions, RegistryScripts, ScriptRegistry } from '#nuxt-scripts'
-import type { IntercomInput } from '~/src/runtime/registry/intercom'
-import type { SegmentInput } from '~/src/runtime/registry/segment'
-import type { HotjarInput } from '~/src/runtime/registry/hotjar'
-import type { NpmInput } from '~/src/runtime/registry/npm'
 
 export interface ModuleOptions {
   /**
@@ -101,11 +108,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registry: RegistryScripts = [
         {
-          name: 'useScriptCloudflareTurnstile',
-          key: 'cloudflareTurnstile',
-          from: resolve('./runtime/registry/cloudflare-turnstile'),
-        },
-        {
           name: 'useScriptCloudflareWebAnalytics',
           key: 'cloudflareWebAnalytics',
           from: resolve('./runtime/registry/cloudflare-web-analytics'),
@@ -127,17 +129,7 @@ export default defineNuxtModule<ModuleOptions>({
           name: 'useScriptFathomAnalytics',
           key: 'fathomAnalytics',
           from: resolve('./runtime/registry/fathom-analytics'),
-          src: 'https://cdn.usefathom.com/script.js',
-        },
-        {
-          name: 'useScriptGoogleAnalytics',
-          key: 'googleAnalytics',
-          from: resolve('./runtime/registry/google-analytics'),
-        },
-        {
-          name: 'useScriptGoogleTagManager',
-          key: 'googleTagmanager',
-          from: resolve('./runtime/registry/google-tag-manager'),
+          src: false, // can not be bundled, breaks script
         },
         {
           name: 'useScriptHotjar',
@@ -173,8 +165,35 @@ export default defineNuxtModule<ModuleOptions>({
             return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
           },
         },
-      ].map((i: Import) => {
+        // cloudflare turnstile
+        {
+          name: 'useScriptCloudflareTurnstile',
+          key: 'cloudflareTurnstile',
+          from: resolve('./runtime/registry/cloudflare-turnstile'),
+          module: 'nuxt-turnstile',
+        },
+        // third-party-capital
+        {
+          name: 'useScriptGoogleAnalytics',
+          key: 'googleAnalytics',
+          from: resolve('./runtime/registry/google-analytics'),
+          module: '@nuxt/third-party-capital',
+        },
+        {
+          name: 'useScriptGoogleTagManager',
+          key: 'googleTagManager',
+          from: resolve('./runtime/registry/google-tag-manager'),
+          module: '@nuxt/third-party-capital',
+        },
+        {
+          name: 'useScriptGoogleMaps',
+          key: 'googleMaps',
+          from: resolve('./runtime/registry/google-tag-manager'),
+          module: '@nuxt/third-party-capital',
+        },
+      ].map((i: RegistryScripts[0]) => {
         i.priority = -1
+        i.module = i.module || '@nuxt/scripts'
         return i
       })
       addImports(registry)
@@ -220,9 +239,14 @@ ${(config.globals || []).map(g => !Array.isArray(g)
       const scriptMap = new Map<string, string>()
       const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
 
+      const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
       addBuildPlugin(NuxtScriptAssetBundlerTransformer({
         registry,
         defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
+        moduleDetected(module) {
+          if (module !== '@nuxt/scripts' && !moduleInstallPromises.has(module))
+            moduleInstallPromises.set(module, () => installNuxtModule(module))
+        },
         resolveScript(src) {
           if (scriptMap.has(src))
             return scriptMap.get(src) as string
@@ -231,16 +255,11 @@ ${(config.globals || []).map(g => !Array.isArray(g)
           return url
         },
       }))
-    })
-
-    extendTypes(name!, async () => {
-      return `
-declare module '#app' {
-    interface NuxtApp {
-      ${nuxt.options.dev ? `_scripts: (import('#nuxt-scripts').NuxtAppScript)[]` : ''}
-    }
-}
-`
+      nuxt.hooks.hook('build:done', async () => {
+        const initPromise = Array.from(moduleInstallPromises.values())
+        for (const p of initPromise)
+          await p?.()
+      })
     })
 
     if (nuxt.options.dev)

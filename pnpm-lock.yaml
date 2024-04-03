@@ -56,6 +56,9 @@ importers:
       sirv:
         specifier: ^2.0.4
         version: 2.0.4
+      std-env:
+        specifier: ^3.7.0
+        version: 3.7.0
       ufo:
         specifier: ^1.5.3
         version: 1.5.3
