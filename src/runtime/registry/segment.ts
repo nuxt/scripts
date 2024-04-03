@@ -1,6 +1,6 @@
 import { object, optional, string } from 'valibot'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
   writeKey: string(),
@@ -24,7 +24,7 @@ declare global {
   interface Window extends SegmentApi {}
 }
 
-export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(SegmentOptions, options)
@@ -45,6 +45,7 @@ export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, _
       }
       window.analytics.page()
     }
+    scriptOptions.beforeInit?.()
   }
   const analyticsKey = options?.analyticsKey || 'analytics'
   return useScript<T>({

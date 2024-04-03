@@ -3,12 +3,13 @@ import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { Input, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
-import type { SegmentOptions } from './registry/segment'
-import type { CloudflareWebAnalyticsOptions } from './registry/cloudflare-web-analytics'
-import type { FacebookPixelOptions } from './registry/facebook-pixel'
-import type { FathomAnalyticsOptions } from './registry/fathom-analytics'
-import type { HotjarOptions } from './registry/hotjar'
-import type { IntercomOptions } from './registry/intercom'
+import type { SegmentInput } from './registry/segment'
+import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
+import type { FacebookPixelInput } from './registry/facebook-pixel'
+import type { FathomAnalyticsInput } from './registry/fathom-analytics'
+import type { HotjarInput } from './registry/hotjar'
+import type { IntercomInput } from './registry/intercom'
+import type { ConfettiInput } from './registry/confetti'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -31,6 +32,8 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    */
   beforeInit?: () => void
 }
+
+export type NuxtUseScriptIntegrationOptions = Omit<NuxtUseScriptOptions, 'use'>
 
 export type NuxtUseScriptInput = UseScriptInput
 
@@ -66,19 +69,18 @@ export interface NuxtAppScript {
   }[]
 }
 
-export type ScriptRegistryEntry<T extends ObjectSchema<any>> = Input<T> | [Input<T>, NuxtUseScriptOptions<T>]
+export type ScriptRegistryEntry<T> = T | [T, NuxtUseScriptOptions<T>]
 
 export interface ScriptRegistry {
-  cloudflareWebAnalytics?: ScriptRegistryEntry<typeof CloudflareWebAnalyticsOptions>
-  confetti?: ScriptRegistryEntry<typeof CloudflareWebAnalyticsOptions>
-  facebookPixel?: ScriptRegistryEntry<typeof FacebookPixelOptions>
-  fathomAnalytics?: ScriptRegistryEntry<typeof FathomAnalyticsOptions>
-  hotjar?: ScriptRegistryEntry<typeof HotjarOptions>
-  segment?: ScriptRegistryEntry<typeof SegmentOptions>
-  intercom?: ScriptRegistryEntry<typeof IntercomOptions>
-  // TODO augment upstream (ga, gtm, etc)
+  cloudflareWebAnalytics?: ScriptRegistryEntry<CloudflareWebAnalyticsInput>
+  confetti?: ScriptRegistryEntry<ConfettiInput>
+  facebookPixel?: ScriptRegistryEntry<FacebookPixelInput>
+  fathomAnalytics?: ScriptRegistryEntry<FathomAnalyticsInput>
+  hotjar?: ScriptRegistryEntry<HotjarInput>
+  intercom?: ScriptRegistryEntry<IntercomInput>
+  segment?: ScriptRegistryEntry<SegmentInput>
 }
 
 export type ScriptDynamicSrcInput<T extends ObjectSchema<any>> = Input<T> & { src?: string }
 
-export type RegistryScripts = (Import & { src?: string, key?: string, transform?: (options: any) => string })[]
+export type RegistryScripts = (Import & { src?: string | false, module?: '@nuxt/scripts' | string, key?: string, transform?: (options: any) => string })[]

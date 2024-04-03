@@ -1,7 +1,7 @@
 import { type Input, boolean, minLength, object, optional, string } from 'valibot'
 import { defu } from 'defu'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export interface CloudflareWebAnalyticsApi {
   __cfBeacon: {
@@ -33,10 +33,13 @@ export const CloudflareWebAnalyticsOptions = object({
   spa: optional(boolean()),
 })
 
-export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: Input<typeof CloudflareWebAnalyticsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export type CloudflareWebAnalyticsInput = Input<typeof CloudflareWebAnalyticsOptions>
+
+export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: CloudflareWebAnalyticsInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(CloudflareWebAnalyticsOptions, options)
+    scriptOptions.beforeInit?.()
   }
   return useScript<CloudflareWebAnalyticsApi>({
     'src': 'https://static.cloudflareinsights.com/beacon.min.js',

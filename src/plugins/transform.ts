@@ -59,7 +59,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               const node = _node as SimpleCallExpression
               let scriptKey: string | undefined
               let scriptSrcNode: any | undefined
-              let src: string | undefined
+              let src: false | string | undefined
               if (fnName === 'useScript') {
                 // do easy case first where first argument is a literal
                 if (node.arguments[0].type === 'Literal') {
@@ -103,10 +103,15 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                   const srcProperty = node.arguments[0].properties.find(
                     (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
                   )
-                  if (srcProperty?.value?.value)
+                  if (srcProperty?.value?.value) {
                     scriptSrcNode = srcProperty.value
-                  else
+                  }
+                  else {
                     src = registryNode.src || registryNode.transform?.(fnArg0 as any as Input<any>)
+                    // not supported
+                    if (src === false)
+                      return
+                  }
                   scriptKey = registryNode.key
                 }
               }

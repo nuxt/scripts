@@ -1,6 +1,6 @@
 import { type Input, number, object, string, union } from 'valibot'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
@@ -39,8 +39,9 @@ declare global {
 export const FacebookPixelOptions = object({
   id: union([string(), number()]),
 })
+export type FacebookPixelInput = Input<typeof FacebookPixelOptions>
 
-export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Input<typeof FacebookPixelOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: FacebookPixelInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(FacebookPixelOptions, options)
@@ -60,6 +61,7 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Inp
       fbq('init', options?.id)
       fbq('track', 'PageView')
     }
+    scriptOptions.beforeInit?.()
   }
   return useScript<T>({
     key: 'facebookPixel',

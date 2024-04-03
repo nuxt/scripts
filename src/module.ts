@@ -201,10 +201,30 @@ export default defineNuxtModule<ModuleOptions>({
       // @ts-expect-error runtime
       await nuxt.hooks.callHook('scripts:registry', registry)
 
+      // augment types to support the integrations registry
+      extendTypes(name!, async ({ typesPath }) => {
+        return `
+declare module '#app' {
+  interface NuxtApp {
+    ${nuxt.options.dev ? `_scripts: (import('#nuxt-scripts').NuxtAppScript)[]` : ''}
+  }
+}
+declare module '#nuxt-scripts' {
+    type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
+    interface ScriptRegistry {
+${registry.filter(i => i.key && i.module !== '@nuxt/scripts').map((i) => {
+          const ucFirstKey = i.key!.substring(0, 1).toUpperCase() + i.key!.substring(1)
+          return `        ${i.key}?: import('${i.from}').${ucFirstKey}Input | [import('${i.from}').${ucFirstKey}Input, NuxtUseScriptOptions]`
+        }).join('\n')}
+    }
+}
+`
+      })
+
       if (config.globals?.length || Object.keys(config.register || {}).length) {
         // create a virtual plugin
         const template = addTemplate({
-          filename: `modules/${name}.mjs`,
+          filename: `modules/${name!.replace('/', '-')}.mjs`,
           write: true,
           getContents() {
             const imports = ['useScript', 'defineNuxtPlugin']

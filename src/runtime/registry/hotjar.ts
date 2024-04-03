@@ -1,6 +1,6 @@
 import { number, object, optional } from 'valibot'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export interface HotjarApi {
   hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void) & ((event: 'stateChange', path: string) => void) & ((event: 'event', eventName: string) => void) & ((event: string, arg?: string) => void) & ((...params: any[]) => void) & {
@@ -21,7 +21,7 @@ export const HotjarOptions = object({
 
 export type HotjarInput = ScriptDynamicSrcInput<typeof HotjarOptions>
 
-export function useScriptHotjar<T extends HotjarApi>(options?: HotjarInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'assetStrategy' | 'beforeInit' | 'use'>) {
+export function useScriptHotjar<T extends HotjarApi>(options?: HotjarInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(HotjarOptions, options)
@@ -32,6 +32,7 @@ export function useScriptHotjar<T extends HotjarApi>(options?: HotjarInput, _scr
         (window.hj.q = window.hj.q || []).push(params)
       }
     }
+    scriptOptions.beforeInit?.()
   }
   return useScript<T>({
     key: 'hotjar',

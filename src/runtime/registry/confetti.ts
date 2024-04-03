@@ -1,21 +1,22 @@
 import { type Input, pick } from 'valibot'
 import { NpmOptions, useScriptNpm } from './npm'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
 
-export interface JSConfettiApi {
+export interface ConfettiApi {
   addConfetti: (options?: { emojis: string[] }) => void
 }
 
 declare global {
   interface Window {
-    JSConfetti: { new (): JSConfettiApi }
+    JSConfetti: { new (): ConfettiApi }
   }
 }
 
-export const JSConfettiOptions = pick(NpmOptions, ['version'])
+export const ConfettiOptions = pick(NpmOptions, ['version'])
+export type ConfettiInput = Input<typeof ConfettiOptions>
 
-export function useScriptConfetti<T extends JSConfettiApi>(options: Input<typeof JSConfettiOptions>, _scriptOptions: NuxtUseScriptOptions<T> = {}) {
-  return useScriptNpm<T>({
+export function useScriptConfetti(options: ConfettiInput, _scriptOptions: NuxtUseScriptIntegrationOptions = {}) {
+  return useScriptNpm<ConfettiApi>({
     packageName: 'js-confetti',
     version: options.version,
     file: 'dist/js-confetti.browser.js',

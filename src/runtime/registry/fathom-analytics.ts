@@ -1,6 +1,6 @@
 import { type Input, boolean, literal, object, optional, string, union } from 'valibot'
 import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 export const FathomAnalyticsOptions = object({
   'site': string(), // site is required
@@ -10,6 +10,8 @@ export const FathomAnalyticsOptions = object({
   'data-canonical': optional(boolean()),
   'data-honor-dnt': optional(boolean()),
 })
+
+export type FathomAnalyticsInput = Input<typeof FathomAnalyticsOptions>
 
 export interface FathomAnalyticsApi {
   trackPageview: (ctx?: { url: string, referrer?: string }) => void
@@ -22,10 +24,11 @@ declare global {
   }
 }
 
-export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: Input<typeof FathomAnalyticsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput, _scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(FathomAnalyticsOptions, options)
+    scriptOptions.beforeInit?.()
   }
   return useScript<FathomAnalyticsApi>({
     src: 'https://cdn.usefathom.com/script.js',
