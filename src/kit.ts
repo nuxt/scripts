@@ -1,4 +1,4 @@
-import { addTemplate, createResolver, logger, useNuxt } from '@nuxt/kit'
+import {addTemplate, createResolver, logger, tryUseNuxt, useNuxt} from '@nuxt/kit'
 import { relative } from 'pathe'
 import { resolvePackageJSON } from 'pkg-types'
 import { isCI, provider } from 'std-env'
@@ -70,7 +70,9 @@ export function installNuxtModule(name: string, options?: EnsurePackageInstalled
   if (installPrompts.has(name))
     return
   installPrompts.add(name)
-  const nuxt = useNuxt()
+  const nuxt = tryUseNuxt()
+  if (!nuxt)
+    return
   return promptToInstall(name, async () => {
     const { runCommand } = await import(String('nuxi'))
     await runCommand('module', ['add', name, '--cwd', nuxt.options.rootDir])

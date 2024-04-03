@@ -266,7 +266,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
         registry,
         defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
         moduleDetected(module) {
-          if (module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
+          if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
         resolveScript(src) {
