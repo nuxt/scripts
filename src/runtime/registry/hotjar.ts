@@ -32,7 +32,7 @@ export function useScriptHotjar<T extends HotjarApi>(options?: HotjarInput, _scr
         (window.hj.q = window.hj.q || []).push(params)
       }
     }
-    scriptOptions.beforeInit?.()
+    _scriptOptions?.beforeInit?.()
   }
   return useScript<T>({
     key: 'hotjar',

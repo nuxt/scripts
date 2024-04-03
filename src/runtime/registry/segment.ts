@@ -45,7 +45,7 @@ export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, _
       }
       window.analytics.page()
     }
-    scriptOptions.beforeInit?.()
+    _scriptOptions?.beforeInit?.()
   }
   const analyticsKey = options?.analyticsKey || 'analytics'
   return useScript<T>({

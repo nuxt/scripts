@@ -61,7 +61,7 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: Fac
       fbq('init', options?.id)
       fbq('track', 'PageView')
     }
-    scriptOptions.beforeInit?.()
+    _scriptOptions?.beforeInit?.()
   }
   return useScript<T>({
     key: 'facebookPixel',
