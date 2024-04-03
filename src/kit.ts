@@ -1,4 +1,4 @@
-import {addTemplate, createResolver, logger, tryUseNuxt, useNuxt} from '@nuxt/kit'
+import { addTemplate, createResolver, logger, tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { relative } from 'pathe'
 import { resolvePackageJSON } from 'pkg-types'
 import { isCI, provider } from 'std-env'
