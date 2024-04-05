@@ -83,7 +83,7 @@
     "@unhead/schema": "^1.9.4",
     "acorn-loose": "^8.4.0",
     "bumpp": "^9.4.0",
-    "eslint": "8.57.0",
+    "eslint": "9.0.0",
     "nuxt": "^3.11.1",
     "nuxt-scripts-devtools": "latest",
     "playwright-core": "^1.42.1",
