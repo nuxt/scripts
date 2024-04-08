@@ -1,30 +1,17 @@
 <template>
-  <div :id="id" class="vimeo" :class="{ isPlaying, isLoading, isLoaded }">
-    <button class="vimeo__Play" @click="play" v-if="customPlay && isLoaded">
-      <slot name="play"> Play </slot>
-    </button>
+  <div ref="root" :id="id">
+    <slot />
   </div>
 </template>
 
 <script lang="ts" setup>
-import {
-  useHead,
-  useId,
-  ref,
-  computed,
-  onMounted,
-  onBeforeUnmount,
-  useScriptVimeo,
-} from "#imports";
-
-useHead({
-  title: "Vimeo",
-});
+import { useElementVisibility } from "@vueuse/core";
+import { ref, watch, onBeforeUnmount, useId, useScriptVimeo } from "#imports";
 
 const props = withDefaults(
   defineProps<{
     id: string;
-    customPlay?: boolean;
+    lazy?: boolean;
     width?: string | number;
     height?: string | number;
     options?: Object;
@@ -33,7 +20,7 @@ const props = withDefaults(
     controls?: boolean;
   }>(),
   {
-    customPlay: true,
+    lazy: true,
     width: "640",
     height: "360",
     options: () => ({}),
@@ -97,22 +84,34 @@ const emit = defineEmits([
   "resize",
 ]);
 
-defineExpose({
-  play,
-  pause,
-  mute,
-  unmute,
-});
-
-const id = useId();
+const _id = useId();
+const id = _id.replace('-', '').replace('_', '');
 const status: Ref<string> = ref(null);
 
-const { Player } = useScriptVimeo();
-const isLoaded = ref(false);
+const root = ref(null);
+
+const { Player, $script } = useScriptVimeo({
+  trigger: props.lazy ? "manual" : undefined,
+});
+
 let player;
 
-onMounted(() => {
-  const p = Player(id, {
+if (!props.lazy) $script.then(init);
+else {
+  let watchForVisibility = true;
+  const isRootVisible = useElementVisibility(root);
+  watch(isRootVisible, () => {
+    if (watchForVisibility && !$script.loaded) {
+      watchForVisibility = false;
+      $script.load().then(init);
+    }
+  });
+}
+
+onBeforeUnmount(() => player?.unload());
+
+function init() {
+  player = Player(id, {
     id: props.id,
     width: props.width,
     height: props.height,
@@ -122,33 +121,14 @@ onMounted(() => {
     ...props.options,
   });
 
-  if (p.then) {
-    p.then((r: any) => {
-      player = r;
-      setListeners();
-    });
-  } else {
-    player = p;
-    setListeners();
-  }
-});
-
-onBeforeUnmount(() => player?.unload());
-
-const isPlaying = computed(() =>
-  ["play", "playing", "timeupdate", "progress", "bufferend"].includes(
-    status.value
-  )
-);
-const isLoading = computed(() => status.value === "bufferstart");
+  setListeners();
+}
 
 function setListeners() {
   for (const event of events) {
-    player?.on(event, () => {
-      emit(event, event, player);
+    player?.on(event, (e) => {
+      emit(event, e, player);
       status.value = event;
-
-      if (event === "loaded") isLoaded.value = true;
     });
   }
 }
@@ -168,24 +148,12 @@ function mute() {
 function unmute(volume: number = 1) {
   player?.setVolume(volume);
 }
+
+defineExpose({
+  play,
+  pause,
+  mute,
+  unmute,
+  status,
+});
 </script>
-
-<style>
-.vimeo {
-  position: relative;
-  display: inline-block;
-}
-
-.vimeo.isPlaying .vimeo__Play {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.vimeo__Play {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transition: opacity 300ms, visibility 300ms;
-}
-</style>

@@ -8,7 +8,7 @@ export interface VimeoScriptApi {
 
 export const VimeoScriptOptions = object({})
 
-export type VimeoPlayer = (...params: any[]) => void | undefined
+export type VimeoPlayer = ((...params: any[]) => void) | undefined
 
 export type VimeoScriptInput = Input<typeof VimeoScriptOptions>
 
@@ -20,22 +20,21 @@ declare global {
 
 export function useScriptVimeo<T>(options?: VimeoScriptInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  let Player: VimeoPlayer
 
-  scriptOptions.beforeInit = () => {
-    if (import.meta.client) {
-      Player = function (...params: any[]) {
-        return new window.Vimeo.Player(...params)
-      }
-    }
-  }
-  
   return useScript<VimeoScriptApi>({
-    key: 'myCustomScript',
+    key: 'vimeo',
     src: 'https://player.vimeo.com/api/player.js',
     ...options,
   }, {
     ...scriptOptions,
-    use: () => ({ Player }),
+    use: () => {
+      let Player: VimeoPlayer
+      if (import.meta.client) {
+        Player = function (...params: any[]) {
+          return new window.Vimeo.Player(...params)
+        }
+      }
+      return { Player }
+    },
   })
 }
