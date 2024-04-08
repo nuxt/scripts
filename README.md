@@ -38,58 +38,50 @@ npx nuxi@latest module add @nuxt/scripts
 
 To start using Nuxt Scripts, you can use the [useScript](https://unhead.unjs.io/usage/composables/use-script) composable to load your third-party scripts.
 
-### Confetti Example
+### Confetti Preview
 
-If you want to get a feel for how the module works, you can load the `js-confetti` library:
+If you want to get a preview for how the module works, you can use the registry script for [JS Confetti](https://github.com/loonywizard/js-confetti).
 
 ```ts
-interface JSConfettiApi { addConfetti: (options?: { emojis: string[] }) => void }
-const { addConfetti } = useScript<JSConfettiApi>('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
-  trigger: 'onNuxtReady', // load on onNuxtReady
-  assetStrategy: 'bundle', // script will be served from your server instead of cdn.jsdelivr.net
-  use() {
-    return new window.JSConfetti()
-  },
+// place anywhere, just works in SSR
+const { addConfetti } = useScriptConfetti({ version: 'latest' }, {
+  trigger: 'onNuxtReady' // loads when the browser is idle
 })
-// useScript is non-blocking, this will run once the script loads
+// will be executated on the client when the script is loaded
 addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 ```
 
+## Registry
+
+### Core Scripts
+
+- [useScriptCloudflareWebAnalytics](#cloudflare-web-analytics)
+- [useScriptConfetti](#confetti)
+- [useScriptFacebookPixel](#facebook-pixel)
+- [useScriptXPixel](#x-pixel)
+- [useScriptFathomAnalytics](#fathom-analytics)
+- [useScriptMatomoAnalytics](#matomo-analytics)
+- [useScriptHotjar](#hotjar)
+- [useScriptIntercom](#intercom)
+- [useScriptSegment](#segment)
+
+[//]: # (TODO - [usePinterestTag](#pinterest-tag))
+[//]: # (TODO - [useGoogleAdsConversionTracking](#google-ads-conversion-tracking))
+[//]: # (TODO - [useGoogleAdsRemarketing](#google-ads-remarketing))
+[//]: # (TODO - [usePlausibleAnalytics](#plausible-analytics))
+[//]: # (TODO - [useSimpleAnalytics](#simple-analytics))
+[//]: # (TODO - [useUmamiAnalytics](#umami-analytics))
+
+### Module Scripts
+
+- [useScriptGoogleAnalytics](#google-analytics) - Nuxt Third Party Capital
+- [useScriptGoogleTagManager](#google-tag-manager) - Nuxt Third Party Capital
+- [useScriptGoogleMaps](#google-maps) - Nuxt Third Party Capital
+- [useCloudflareTurnstile](#cloudflare-turnstile) - Nuxt Turnstile
+
 ## Guides
 
-### Using The Registry (TODO)
-
-The registry is a collection of composables and Nuxt Modules that directly integrate with Nuxt Scripts.
-
-To use a script from the registry, simply use the composable. Consult the
-below table for the available scripts.
-
-| Key      | Description                                                | Composable | Source |
-|----------|------------------------------------------------------------| --- | --- |
-| `cloudflare-web-analytics` | Cloudflare Web Analytics                                   | `useScriptCloudflareWebAnalytics` | Core |
-| `confetti` | [JS Confetti](https://github.com/loonywizard/js-confetti)  | `useScriptCloudflareAnalytics` | Core |
-| `facebook-pixel` | Facebook Pixel                                             | `useScriptFacebookPixel` | Core |
-| `fathom-analytics` | Fathom Analytics                                           | `useScriptFathomAnalytics` | Core |
-| `hotjar` | Hotjar                                                     | `useScriptHotjar` | Core |
-| `intercom` | Intercom                                                   | `useScriptIntercom` | Core |
-| `segment` | Segment                                                    | `useScriptSegment` | Core |
-| `google-analytics` | Google Analytics                                           | `useScriptGoogleAnalytics` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `google-tag-manager` | Google Tag Manager                                         | `useScriptGoogleTagManager` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `google-maps` | Google Maps                                                | `useScriptGoogleMaps` | [Nuxt Third Party Capital](https://github.com/nuxt/third-party-capital) |
-| `cloudflare-turnstile` | CloudFlare Turnstile                                       | `useCloudflareTurnstile` | [Nuxt Cloudflare Turnstile](https://github.com/nuxt-modules/turnstile) |
-
-More coming soon!
-
-[//]: # (TODO | `twitter-pixel` | Twitter Pixel | `useTwitterPixel` |)
-[//]: # (TODO | `pinterest-tag` | Pinterest Tag | `usePinterestTag` |)
-[//]: # (TODO | `google-ads-conversion-tracking` | Google Ads Conversion Tracking | `useGoogleAdsConversionTracking` |)
-[//]: # (TODO | `google-ads-remarketing` | Google Ads Remarketing | `useGoogleAdsRemarketing` |)
-[//]: # (TODO | `plausible-analytics` | Plausible Analytics | `usePlausibleAnalytics` |)
-[//]: # (TODO | `simple-analytics` | Simple Analytics | `useSimpleAnalytics` |)
-[//]: # (TODO | `umami-analytics` | Umami Analytics | `useUmamiAnalytics` |)
-[//]: # (TODO | `matomo` | Matomo | `useMatomo` |)
-
-### Loading Scripts Globally
+### Loading Custom Scripts Globally
 
 If you prefer a config based approach, you can load scripts globally by defining them in your `nuxt.config.ts`.
 
