@@ -39,7 +39,7 @@ export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalytics
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(CloudflareWebAnalyticsOptions, options)
-    scriptOptions.beforeInit?.()
+    _scriptOptions?.beforeInit?.()
   }
   return useScript<CloudflareWebAnalyticsApi>({
     'src': 'https://static.cloudflareinsights.com/beacon.min.js',

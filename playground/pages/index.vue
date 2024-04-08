@@ -15,6 +15,10 @@ const thirdParties = [
     path: '/third-parties/facebook-pixel',
   },
   {
+    name: 'X Pixel',
+    path: '/third-parties/x-pixel',
+  },
+  {
     name: 'Fathom Analytics',
     path: '/third-parties/fathom-analytics',
   },

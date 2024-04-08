@@ -132,6 +132,12 @@ export default defineNuxtModule<ModuleOptions>({
           src: 'https://connect.facebook.net/en_US/fbevents.js',
         },
         {
+          name: 'useScriptXPixel',
+          key: 'xPixel',
+          from: resolve('./runtime/registry/x-pixel'),
+          src: 'https://static.ads-twitter.com/uwt.js',
+        },
+        {
           name: 'useScriptFathomAnalytics',
           key: 'fathomAnalytics',
           from: resolve('./runtime/registry/fathom-analytics'),

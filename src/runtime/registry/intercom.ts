@@ -55,7 +55,7 @@ export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput
     // we need to insert the hj function
     if (import.meta.client)
       window.intercomSettings = options
-    scriptOptions.beforeInit?.()
+    _scriptOptions?.beforeInit?.()
   }
   return useScript<T>({
     key: 'intercom',

@@ -28,7 +28,7 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?:
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(FathomAnalyticsOptions, options)
-    scriptOptions.beforeInit?.()
+    _scriptOptions?.beforeInit?.()
   }
   return useScript<FathomAnalyticsApi>({
     src: 'https://cdn.usefathom.com/script.js',
