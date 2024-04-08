@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useElementVisibility } from "@vueuse/core";
+import { useIntersectionObserver } from "@vueuse/core";
 import { ref, watch, onBeforeUnmount, useId, useScriptVimeo } from "#imports";
 
 const props = withDefaults(
@@ -98,14 +98,17 @@ let player;
 
 if (!props.lazy) $script.then(init);
 else {
-  let watchForVisibility = true;
-  const isRootVisible = useElementVisibility(root);
-  watch(isRootVisible, () => {
-    if (watchForVisibility && !$script.loaded) {
-      watchForVisibility = false;
-      $script.load().then(init);
-    }
-  });
+  const { stop: stopIntersectionObserver } = useIntersectionObserver(
+    root,
+    ([{ isIntersecting }]) => {
+      if(isIntersecting && !$script.loaded) {
+        $script.load().then(() => {
+          init()
+          stopIntersectionObserver()
+        });
+      }
+    },
+  )
 }
 
 onBeforeUnmount(() => player?.unload());
