@@ -33,7 +33,7 @@
     "build": "pnpm prepack",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",
-    "prepack": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt-module-build build && npm run client:build",
+    "prepack": "nuxt-module-build build && npm run client:build",
     "dev": "nuxi dev playground",
     "dev:ssl": "nuxi dev playground --https",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
