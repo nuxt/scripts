@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useHead } from '#imports'
-import { Vimeo } from '#components'
+import { VimeoEmbed } from '#components'
 
 useHead({
   title: 'Vimeo component',
@@ -12,5 +12,5 @@ function handlePlay() {
 </script>
 
 <template>
-  <Vimeo id="76979871" width="640" height="400" :loop="true" @play="handlePlay" />
+  <VimeoEmbed video-id="76979871" width="640" height="400" :loop="true" @play="handlePlay" />
 </template>

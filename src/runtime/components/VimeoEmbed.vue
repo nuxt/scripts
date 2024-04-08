@@ -10,7 +10,7 @@ import { ref, watch, onBeforeUnmount, useId, useScriptVimeo } from "#imports";
 
 const props = withDefaults(
   defineProps<{
-    id: string;
+    videoId: string;
     lazy?: boolean;
     width?: string | number;
     height?: string | number;
@@ -112,7 +112,7 @@ onBeforeUnmount(() => player?.unload());
 
 function init() {
   player = Player(id, {
-    id: props.id,
+    id: props.videoId,
     width: props.width,
     height: props.height,
     loop: props.loop,
