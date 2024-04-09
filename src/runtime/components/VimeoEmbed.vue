@@ -6,12 +6,13 @@
 
 <script lang="ts" setup>
 import { useIntersectionObserver } from "@vueuse/core";
-import { ref, watch, onBeforeUnmount, useId, useScriptVimeo } from "#imports";
+import { ref, onBeforeUnmount, useId, useScriptVimeo } from "#imports";
 
 const props = withDefaults(
   defineProps<{
     videoId: string;
     lazy?: boolean;
+    rootMargin?: string;
     width?: string | number;
     height?: string | number;
     options?: Object;
@@ -21,6 +22,7 @@ const props = withDefaults(
   }>(),
   {
     lazy: true,
+    rootMargin: "50px 50px 50px 50px",
     width: "640",
     height: "360",
     options: () => ({}),
@@ -32,7 +34,7 @@ const props = withDefaults(
 
 // TODO: put events in <script> - after build it doesn't work for some reason
 // error: "both scripts must have same language type" even if they're both written in ts
-const events: Array<string> = [
+const events: string[] = [
   "play",
   "playing",
   "pause",
@@ -85,8 +87,9 @@ const emit = defineEmits([
 ]);
 
 const _id = useId();
-const id = _id.replace('-', '').replace('_', '');
-const status: Ref<string> = ref(null);
+const id = _id.replace("-", "").replace("_", "");
+
+const status: Ref<string | null> = ref(null);
 
 const root = ref(null);
 
@@ -94,21 +97,22 @@ const { Player, $script } = useScriptVimeo({
   trigger: props.lazy ? "manual" : undefined,
 });
 
-let player;
+let player: any;
 
 if (!props.lazy) $script.then(init);
 else {
   const { stop: stopIntersectionObserver } = useIntersectionObserver(
     root,
     ([{ isIntersecting }]) => {
-      if(isIntersecting && !$script.loaded) {
+      if (isIntersecting && !$script.loaded) {
         $script.load().then(() => {
-          init()
-          stopIntersectionObserver()
+          init();
+          stopIntersectionObserver();
         });
       }
     },
-  )
+    { rootMargin: props.rootMargin }
+  );
 }
 
 onBeforeUnmount(() => player?.unload());
@@ -124,13 +128,9 @@ function init() {
     ...props.options,
   });
 
-  setListeners();
-}
-
-function setListeners() {
   for (const event of events) {
-    player?.on(event, (e) => {
-      emit(event, e, player);
+    player?.on(event, (e: any) => {
+      emit(event as keyof typeof emit, e, player);
       status.value = event;
     });
   }
