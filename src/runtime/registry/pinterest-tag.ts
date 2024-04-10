@@ -1,4 +1,4 @@
-import { type Input, object, string } from "valibot";
+import { type Input, object, string, optional } from "valibot";
 import { useScript, validateScriptInputSchema } from "#imports";
 import type { NuxtUseScriptOptions } from "#nuxt-scripts";
 
@@ -39,7 +39,7 @@ declare global {
 
 export const PinterestTagOptions = object({
   id: string(),
-  email: string(),
+  email: optional(string()),
 });
 
 export type PinterestTagOptions = Input<typeof PinterestTagOptions>;
@@ -59,11 +59,7 @@ export function usePinterestTag<T extends PinterestTagApi>(
       const pintrk = window.pintrk;
       pintrk.queue = [];
       pintrk.version = "3.0";
-      pintrk(
-        "load",
-        options?.id || "",
-        options?.email ? { em: options.email } : {}
-      );
+      pintrk("load", options?.id, options?.email ? { em: options.email } : {});
     }
   };
   return useScript<PinterestTagApi>(
