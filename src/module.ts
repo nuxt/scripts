@@ -139,6 +139,12 @@ export default defineNuxtModule<ModuleOptions>({
           src: false, // can not be bundled, breaks script
         },
         {
+          name: 'usePinterestTag',
+          key: 'pinterestTag',
+          from: resolve('./runtime/registry/pinterest-tag'),
+          src: 'https://s.pinimg.com/ct/core.js',
+        },
+        {
           name: 'useScriptHotjar',
           from: resolve('./runtime/registry/hotjar'),
           key: 'hotjar',
