@@ -1,5 +1,5 @@
 import { type Input, object, string } from "valibot";
-import { useScript } from "#imports";
+import { useScript, validateScriptInputSchema } from "#imports";
 import type { NuxtUseScriptOptions } from "#nuxt-scripts";
 
 export type PinterestEventType =
@@ -21,6 +21,22 @@ export interface PinterestTagApi {
   ) => void;
 }
 
+declare global {
+  interface Window {
+    pintrk: ((
+      type: "track",
+      eventType: PinterestEventType | string,
+      eventData: object | undefined
+    ) => void) &
+      ((type: "load", id: string, email?: { em?: string }) => void) & {
+        queue: any[];
+        version: string;
+      } & (() => void) &
+      ((type: "page") => void) &
+      ((...params: any[]) => void);
+  }
+}
+
 export const PinterestTagOptions = object({
   id: string(),
   email: string(),
@@ -34,15 +50,20 @@ export function usePinterestTag<T extends PinterestTagApi>(
 ) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {};
   scriptOptions.beforeInit = () => {
+    import.meta.dev && validateScriptInputSchema(PinterestTagOptions, options);
     if (import.meta.client && !window?.pintrk) {
       window.pintrk = function () {
         window.pintrk.queue.push(Array.prototype.slice.call(arguments));
-      };
+      } as Window["pintrk"];
 
       const pintrk = window.pintrk;
       pintrk.queue = [];
       pintrk.version = "3.0";
-      pintrk("load", options?.id, options?.email ? { em: options.email } : {});
+      pintrk(
+        "load",
+        options?.id || "",
+        options?.email ? { em: options.email } : {}
+      );
     }
   };
   return useScript<PinterestTagApi>(
@@ -57,7 +78,7 @@ export function usePinterestTag<T extends PinterestTagApi>(
         trackPageview: () => window.pintrk("page"),
         trackEvent: (
           eventType: PinterestEventType | string,
-          eventData?: object
+          eventData?: object | undefined
         ) => window.pintrk("track", eventType, eventData),
       }),
     }

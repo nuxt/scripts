@@ -1,17 +1,16 @@
 <script lang="ts" setup>
-import { useHead, usePinterestTag } from '#imports'
+import { useHead, usePinterestTag } from "#imports";
 
 useHead({
-  title: 'Pinterset tag',
-})
+  title: "Pinterset tag",
+});
 
-const { $script, trackPageview, trackEvent } = usePinterestTag({
-  id: 'YOUR_TAG_ID',
-  email: 'test@mail.com'
-})
+const { trackPageview, trackEvent } = usePinterestTag({
+  id: "YOUR_TAG_ID",
+  email: "test@mail.com",
+});
 
-trackPageview()
-
+trackPageview();
 </script>
 
 <template>
