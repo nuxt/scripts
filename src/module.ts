@@ -1,5 +1,6 @@
 import {
   addBuildPlugin,
+  addComponentsDir,
   addImports,
   addImportsDir,
   addPlugin,
@@ -106,6 +107,10 @@ export default defineNuxtModule<ModuleOptions>({
       resolve('./runtime/composables'),
     ])
 
+    addComponentsDir({
+      path: resolve('./runtime/components')
+    })
+
     nuxt.hooks.hook('modules:done', async () => {
       let registry: RegistryScripts = [
         {
@@ -147,6 +152,11 @@ export default defineNuxtModule<ModuleOptions>({
               sv: options?.sv || '6',
             })
           },
+        },
+        {
+          name: 'useScriptVimeo',
+          from: resolve('./runtime/registry/vimeo'),
+          key: 'vimeo',
         },
         {
           name: 'useScriptIntercom',

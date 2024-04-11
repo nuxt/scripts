@@ -34,6 +34,14 @@ const thirdParties = [
     name: 'Segment',
     path: '/third-parties/segment',
   },
+  {
+    name: 'Vimeo',
+    path: '/third-parties/vimeo',
+  },
+  {
+    name: 'Vimeo component',
+    path: '/third-parties/vimeo-component',
+  },
 ]
 
 const features = [
