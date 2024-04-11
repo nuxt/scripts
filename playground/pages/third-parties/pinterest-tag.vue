@@ -5,16 +5,25 @@ useHead({
   title: "Pinterset tag",
 });
 
-const { trackPageview, trackEvent } = usePinterestTag({
+const { $script, pintrk } = usePinterestTag({
   id: "YOUR_TAG_ID",
   email: "test@mail.com",
 });
 
-trackPageview();
+pintrk("page");
+
+function triggerEvent(){
+  pintrk('track', 'addtocart', {
+    product_id: '1'
+  });
+}
 </script>
 
 <template>
   <div>
-    <button @click="trackEvent('addtocart', { id: 1 })">Add to cart</button>
+    status: {{ $script.status }}
   </div>
+  <button @click="triggerEvent">
+    Trigger Event
+  </button>
 </template>

@@ -13,27 +13,19 @@ export type PinterestEventType =
   | "viewcategory"
   | "custom";
 
+export type PinterestFns = 
+  ((type: "track", eventType: PinterestEventType | string, eventData: object | undefined) => void) &
+  ((type: "load", id: string, email?: { em?: string }) => void) &
+  ((type: "page") => void) &
+  ((...params: any[]) => void) &
+  (() => void)
+
 export interface PinterestTagApi {
-  trackPageview: () => void;
-  trackEvent: (
-    eventType: PinterestEventType | string,
-    eventData?: object
-  ) => void;
+  pintrk: PinterestFns & { version: string, queue: any[] };
 }
 
 declare global {
-  interface Window {
-    pintrk: ((
-      type: "track",
-      eventType: PinterestEventType | string,
-      eventData: object | undefined
-    ) => void) &
-      ((type: "load", id: string, email?: { em?: string }) => void) & {
-        queue: any[];
-        version: string;
-      } & (() => void) &
-      ((type: "page") => void) &
-      ((...params: any[]) => void);
+  interface Window extends PinterestTagApi {
   }
 }
 
@@ -52,11 +44,10 @@ export function usePinterestTag<T extends PinterestTagApi>(
   scriptOptions.beforeInit = () => {
     import.meta.dev && validateScriptInputSchema(PinterestTagOptions, options);
     if (import.meta.client && !window?.pintrk) {
-      window.pintrk = function () {
-        window.pintrk.queue.push(Array.prototype.slice.call(arguments));
-      } as Window["pintrk"];
+      const pintrk: PinterestTagApi["pintrk"] = window.pintrk = function (...args: any[]) {
+        window.pintrk.queue.push(Array.prototype.slice.call(args));
+      } as PinterestTagApi["pintrk"];
 
-      const pintrk = window.pintrk;
       pintrk.queue = [];
       pintrk.version = "3.0";
       pintrk("load", options?.id, options?.email ? { em: options.email } : {});
@@ -70,13 +61,9 @@ export function usePinterestTag<T extends PinterestTagApi>(
     },
     {
       ...scriptOptions,
-      use: () => ({
-        trackPageview: () => window.pintrk("page"),
-        trackEvent: (
-          eventType: PinterestEventType | string,
-          eventData?: object | undefined
-        ) => window.pintrk("track", eventType, eventData),
-      }),
+      use() {
+        return { pintrk: window.pintrk }
+      },
     }
   );
 }

@@ -34,6 +34,10 @@ const thirdParties = [
     name: 'Segment',
     path: '/third-parties/segment',
   },
+  {
+    name: 'Pinterest tag',
+    path: '/third-parties/pinterest-tag',
+  },
 ]
 
 const features = [
