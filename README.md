@@ -55,7 +55,7 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts.
 
-Some registry scripts are stubs for external modules. When using these it will prompt to install the module for you. 
+Some registry scripts are stubs for external modules. When using these it will prompt to install the module for you.
 
 - [Cloudflare Turnstile](#cloudflare-turnstile) - Nuxt Turnstile
 - [Cloudflare Web Analytics](#cloudflare-web-analytics)

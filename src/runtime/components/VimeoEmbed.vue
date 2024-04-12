@@ -9,7 +9,7 @@ const props = withDefaults(
     rootMargin?: string
     width?: string | number
     height?: string | number
-    options?: Object
+    options?: Record<string, any>
     loop?: boolean
     autoplay?: boolean
     controls?: boolean
@@ -93,7 +93,9 @@ const { Player, $script } = useScriptVimeo({
 
 let player: any
 
-if (!props.lazy) { $script.then(init) }
+if (!props.lazy) {
+  $script.then(init)
+}
 else {
   const { stop: stopIntersectionObserver } = useIntersectionObserver(
     root,
