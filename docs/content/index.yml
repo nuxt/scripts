@@ -1,17 +1,10 @@
 title: 'Load third-party scripts with better performance, privacy and DX in Nuxt Apps.'
-description: 'Nuxt Scripts is a deployment and administration platform for Nuxt, powered by Cloudflare. Deploy your Nuxt applications with a database, key-value and blob storage with zero configuration, on your Cloudflare account. Nuxt Scripts lets you affordably run your Nuxt apps everywhere and with high performance.'
+description: 'description'
 navigation: false
 hero:
-  title: 'Delightful DX for Scripts for <br /> <span class="text-primary">Nuxt apps</span>'
-  description: 'Nuxt Scripts is a deployment and administration platform for Nuxt, powered by Cloudflare.<br />Deploy your Nuxt applications with a database, key-value and blob storage with zero configuration, on your Cloudflare account.<br />Nuxt Scripts lets you affordably run your Nuxt apps everywhere and with high performance.'
+  title: 'Nuxt DX meets <br /> <span class="text-primary">Third-Party Scripts</span>'
+  description: 'Nuxt Scripts is a new way to load third-party scripts in your Nuxt application. It provides a better performance, privacy and developer experience.'
   orientation: horizontal
-  img:
-    width: '535'
-    height: '643'
-    light: '/images/hero-light.svg'
-    dark: '/images/hero-dark.svg'
-  headline:
-    label: Currently in alpha
   links:
     - label: Get started
       trailing-icon: i-heroicons-arrow-right-20-solid

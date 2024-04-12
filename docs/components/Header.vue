@@ -6,26 +6,17 @@ const { metaSymbol } = useShortcuts()
 const { header } = useAppConfig()
 const links = [
   {
-    label: 'Get Started',
-    to: '/docs/getting-started'
+    label: 'Guides',
+    to: '/docs/getting-started',
   },
   {
-    label: 'Database',
-    to: '/docs/storage/database'
+    label: 'Script Registry',
+    to: '/scripts',
   },
   {
-    label: 'KV',
-    to: '/docs/storage/kv'
+    label: 'API',
+    to: '/docs/api',
   },
-  {
-    label: 'Blob',
-    to: '/docs/storage/blob'
-  },
-  {
-    label: 'Admin',
-    to: 'https://admin.hub.nuxt.com/?utm_source=nuxt scripts-docs&utm_medium=header',
-    target: '_blank'
-  }
 ]
 </script>
 
@@ -47,19 +38,10 @@ const links = [
           v-bind="{ color: 'gray', variant: 'ghost', ...link }"
         />
       </template>
-      <UButton to="https://admin.hub.nuxt.com/?utm_source=nuxt scripts-docs&utm_medium=header" external icon="i-simple-icons-nuxtdotjs" color="black" class="hidden sm:inline-flex">
-        Nuxt Scripts Admin
-      </UButton>
     </template>
 
     <template #panel>
       <UNavigationTree :links="mapContentNavigation(navigation)" />
-
-      <div class="flex py-2 mt-2">
-        <UButton to="https://admin.hub.nuxt.com/?utm_source=nuxt scripts-docs&utm_medium=header" external icon="i-simple-icons-nuxtdotjs" color="black" block class="sm:hidden">
-          Nuxt Scripts Admin
-        </UButton>
-      </div>
     </template>
   </UHeader>
 </template>
