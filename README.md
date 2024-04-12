@@ -81,7 +81,7 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ## Guides
 
-### Loading Custom Scripts Globally
+### Global Custom Scripts
 
 If you prefer a config based approach, you can load scripts globally by defining them in your `nuxt.config.ts`.
 
@@ -89,48 +89,54 @@ If you prefer a config based approach, you can load scripts globally by defining
 export default defineNuxtConfig({
   scripts: {
     globals: [
-      'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
-      {
-        assetStrategy: 'bundle'
-      }
+      'https://example.com/script.js',
     ]
   }
 })
 ```
 
-### Bundling Scripts
-
-Bundling scripts can allow you to serve them from your own server, improving privacy and performance. It
-can also help to get around ad blockers and other privacy tools when you need a script to load.
-
-You can opt-in to have your scripts bundled by using the `assetStrategy` option. As this is
-analyzed at build time, you must define it statically.
-
-```ts
-useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
-  assetStrategy: 'bundle'
-})
-// js-confetti.browser.js will be downloaded and bundled with your app as a static asset
-```
-
-### Overriding Scripts
-
-When working with modules that use Nuxt Script, you may want to modify the
-behavior of the script. This is especially useful for
-changing the asset strategy of a script as it needs to be defined statically.
-
-To do so you can use the `overrides` module option.
+You can optionally provide the script as an array which allows you to provide script options.
 
 ```ts
 export default defineNuxtConfig({
   scripts: {
-    overrides: {
-      // the key is either a specified key or the script src
-      confetti: {
-        assetStrategy: 'bundle'
-      }
+    globals: [
+      // script.js
+      [
+        { src: 'https://example.com/script.js' }, 
+        { trigger: 'onNuxtReady'}
+      ]
+    ]
+  }
+})
+```
+
+### Script Bundling
+
+Bundling scripts allows you to serve third-party scripts from your own servers. This has several benefits:
+- Improved security, privacy and performance for end-users.
+- Bypass ad blockers and privacy extensions.
+
+For supported scripts, it's enabled by default. When building your site it will
+download any detected scripts and bundle them with your app.
+
+You can opt out of bundling by using the `assetStrategy` option.
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    defaultScriptOptions: {
+      assetStrategy: null
     }
   }
+})
+```
+
+If you opt-out of bundling, you can still bundle scripts individually.
+
+```ts
+useScript('https://example.com/script.js', {
+  assetStrategy: 'bundle'
 })
 ```
 
@@ -175,6 +181,28 @@ useAnalyticsPageEvent(({ title, path }) => {
     page_location: 'https://example.com',
     page_path: path
   })
+})
+```
+
+
+### Overriding Scripts
+
+When working with modules that use Nuxt Script, you may want to modify the
+behavior of the script. This is especially useful for
+changing the asset strategy of a script as it needs to be defined statically.
+
+To do so you can use the `overrides` module option.
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    overrides: {
+      // the key is either a specified key or the script src
+      confetti: {
+        assetStrategy: 'bundle'
+      }
+    }
+  }
 })
 ```
 
