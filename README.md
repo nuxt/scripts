@@ -53,29 +53,32 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ## Registry
 
-### Core Scripts
+The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts.
 
+- [Cloudflare Turnstile](#cloudflare-turnstile) - Nuxt Turnstile
 - [Cloudflare Web Analytics](#cloudflare-web-analytics)
 - [Confetti](#confetti)
 - [Facebook Pixel](#facebook-pixel)
-- [X Pixel](#x-pixel)
 - [Fathom Analytics](#fathom-analytics)
-- [Matomo Analytics](#matomo-analytics)
+- [Google Analytics](#google-analytics) - Nuxt Third Party Capital
+- [Google Maps](#google-maps) - Nuxt Third Party Capital
+  - [GoogleMapsEmbed](#google-maps-embed)
+- [Google Tag Manager](#google-tag-manager) - Nuxt Third Party Capital
 - [Hotjar](#hotjar)
 - [Intercom](#intercom)
+- [Matomo Analytics](#matomo-analytics)
 - [Segment](#segment)
 - [Stripe](#stripe)
+  - [StripePricingTableEmbed](#stripe-pricing-table-mbed)
+- [Vimeo](#vimeo-embed)
+  - [VimeoEmbed](#vimeo-embed)
+- [X Pixel](#x-pixel)
+- [YouTube](#youtube) - Nuxt Third Party Capital
+  - [YouTubeEmbed](#youtube-embed)
 
-### Components
+### Module Components
 
-- [StripePricingTableEmbed](#google-maps)
-
-### Module Scripts
-
-- [Google Analytics](#google-analytics) - Nuxt Third Party Capital
-- [Google Tag Manager](#google-tag-manager) - Nuxt Third Party Capital
-- [Google Maps](#google-maps) - Nuxt Third Party Capital
-- [Cloudflare Turnstile](#cloudflare-turnstile) - Nuxt Turnstile
+- [VimeoEmbed](#vimeo-embed)
 
 ## Guides
 
