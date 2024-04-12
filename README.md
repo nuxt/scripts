@@ -88,7 +88,7 @@ If you prefer a config based approach, you can load scripts globally by defining
 export default defineNuxtConfig({
   scripts: {
     globals: [
-      'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
+      'https://example.com/script.js',
       {
         assetStrategy: 'bundle'
       }
@@ -106,10 +106,10 @@ You can opt-in to have your scripts bundled by using the `assetStrategy` option.
 analyzed at build time, you must define it statically.
 
 ```ts
-useScript('https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js', {
+useScript('https://example.com/script.js', {
   assetStrategy: 'bundle'
 })
-// js-confetti.browser.js will be downloaded and bundled with your app as a static asset
+// script.js will be downloaded and bundled with your app as a static asset
 ```
 
 ### Overriding Scripts
