@@ -31,6 +31,10 @@ const thirdParties = [
     path: '/third-parties/intercom',
   },
   {
+    name: 'Stripe',
+    path: '/third-parties/stripe',
+  },
+  {
     name: 'Segment',
     path: '/third-parties/segment',
   },
@@ -38,8 +42,11 @@ const thirdParties = [
     name: 'Vimeo',
     path: '/third-parties/vimeo',
   },
+]
+
+const thirdPartyComponents = [
   {
-    name: 'Vimeo component',
+    name: 'Vimeo',
     path: '/third-parties/vimeo-component',
   },
 ]
@@ -64,10 +71,28 @@ const features = [
           <Icon
             name="carbon:script"
             class="opacity-70 mr-2"
-          />Third Parties
+          />Third Party Scripts
         </h2>
         <div class="grid grid-cols-3 gap-5">
           <div v-for="(s, key) in thirdParties" :key>
+            <ULink
+              :to="s.path"
+              class="underline"
+            >
+              {{ s.name }}
+            </ULink>
+          </div>
+        </div>
+      </div>
+      <div class="mb-10">
+        <h2 class="font-bold mb-5 text-xl flex items-center">
+          <Icon
+            name="carbon:script"
+            class="opacity-70 mr-2"
+          />Third Party Components
+        </h2>
+        <div class="grid grid-cols-3 gap-5">
+          <div v-for="(s, key) in thirdPartyComponents" :key>
             <ULink
               :to="s.path"
               class="underline"

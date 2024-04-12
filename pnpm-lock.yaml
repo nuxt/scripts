@@ -84,6 +84,9 @@ importers:
       '@nuxt/test-utils':
         specifier: 3.12.0
         version: 3.12.0(h3@1.11.1)(playwright-core@1.43.0)(rollup@3.29.4)(vite@5.2.8)(vitest@1.5.0)(vue-router@4.3.0)(vue@3.4.21)
+      '@types/stripe-v3':
+        specifier: ^3.1.33
+        version: 3.1.33
       '@unhead/schema':
         specifier: ^1.9.5
         version: 1.9.5
@@ -3354,6 +3357,10 @@ packages:
 
   /@types/semver@7.5.8:
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
+    dev: true
+
+  /@types/stripe-v3@3.1.33:
+    resolution: {integrity: sha512-fIE7F7alypCrnIMsk4naprHf8kXEvPM2Q9FGdL/3TDeGM0xlHohdVWkwuaEZ2tKzXB9QQKoS8k+ocLkPjZajwQ==}
     dev: true
 
   /@types/unist@2.0.10:

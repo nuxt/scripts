@@ -64,13 +64,11 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 - [useScriptHotjar](#hotjar)
 - [useScriptIntercom](#intercom)
 - [useScriptSegment](#segment)
+- [useScriptStripe](#stripe)
 
-[//]: # (TODO - [usePinterestTag](#pinterest-tag))
-[//]: # (TODO - [useGoogleAdsConversionTracking](#google-ads-conversion-tracking))
-[//]: # (TODO - [useGoogleAdsRemarketing](#google-ads-remarketing))
-[//]: # (TODO - [usePlausibleAnalytics](#plausible-analytics))
-[//]: # (TODO - [useSimpleAnalytics](#simple-analytics))
-[//]: # (TODO - [useUmamiAnalytics](#umami-analytics))
+### Components
+
+- [<StripePricingTableEmbed>](#google-maps)
 
 ### Module Scripts
 
