@@ -8,8 +8,6 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxthq/studio',
     'nuxt-og-image',
-    'nuxt-cloudflare-analytics',
-    '@nuxtjs/plausible',
     '@nuxt/image',
   ],
   hooks: {
