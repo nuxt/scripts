@@ -15,7 +15,7 @@ hero:
       size: lg
       color: gray
       variant: ghost
-      to: https://github.com/nuxt-hub/core
+      to: https://github.com/nuxt/scripts
       target: _blank
 features:
   - name: Automatic scaling
