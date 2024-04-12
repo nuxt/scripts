@@ -78,10 +78,6 @@ Some registry scripts are stubs for external modules. When using these it will p
 - [YouTube](#youtube) - Nuxt Third Party Capital
   - [YouTubeEmbed](#youtube-embed)
 
-### Module Components
-
-- [VimeoEmbed](#vimeo-embed)
-
 ## Guides
 
 ### Loading Custom Scripts Globally
