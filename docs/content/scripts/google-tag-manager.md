@@ -37,7 +37,7 @@ $script.waitForLoad().then(({ dataLayer }) => {
 ## Type
 
 ```ts
-useGoogleTagManager(options: ThirdPartyScriptOptions<GoogleTagManagerOptions, GoogleTagManagerApi>): ThirdPartyScriptApi<GoogleTagManagerApi>
+type useGoogleTagManager = (options: ThirdPartyScriptOptions<GoogleTagManagerOptions, GoogleTagManagerApi>) => ThirdPartyScriptApi<GoogleTagManagerApi>
 ```
 
 ## Params

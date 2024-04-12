@@ -17,7 +17,7 @@ If Google Tag Manager is already included in your application, you can configure
 ## Type
 
 ```ts
-useGoogleAnalytics(options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi>): ThirdPartyScriptApi<GoogleAnalyticsApi>
+type useGoogleAnalytics = (options: ThirdPartyScriptOptions<GoogleAnalyticsOptions, GoogleAnalyticsApi>) => ThirdPartyScriptApi<GoogleAnalyticsApi>
 ```
 
 ## Params
