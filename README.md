@@ -17,7 +17,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
   - 🎃 Powerful proxy API for SSR handling, lazy loading, and error handling
 - (TODO) Registry for third-party scripts in Nuxt
 - ⏬ Serve scripts from your own server
-- 🕵️ Privacy Features - Trigger scripts loading on consent.
+- 🕵️ Privacy Features - Protect end users identity, provide consent to scripts.
 - 🪵 DevTools integration - View your script with their status and see function logs
 
 ## Background
