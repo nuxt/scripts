@@ -76,8 +76,8 @@ importers:
         version: 0.30.0
     devDependencies:
       '@antfu/eslint-config':
-        specifier: 2.12.2
-        version: 2.12.2(@vue/compiler-sfc@3.4.21)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0)
+        specifier: 2.13.3
+        version: 2.13.3(@vue/compiler-sfc@3.4.21)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0)
       '@nuxt/module-builder':
         specifier: ^0.5.5
         version: 0.5.5(@nuxt/kit@3.11.2)(nuxi@3.11.1)(typescript@5.4.5)
@@ -193,8 +193,8 @@ importers:
         specifier: workspace:*
         version: link:..
       '@nuxt/ui':
-        specifier: 2.14.2
-        version: 2.14.2(nuxt@3.11.2)(rollup@3.29.4)(vite@5.2.8)(vue@3.4.21)
+        specifier: 2.15.1
+        version: 2.15.1(nuxt@3.11.2)(rollup@3.29.4)(vite@5.2.8)(vue@3.4.21)
       nuxt:
         specifier: latest
         version: 3.11.2(@unocss/reset@0.59.2)(eslint@9.0.0)(floating-vue@5.2.2)(rollup@3.29.4)(typescript@5.4.5)(unocss@0.59.2)(vite@5.2.8)
@@ -223,8 +223,8 @@ packages:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  /@antfu/eslint-config@2.12.2(@vue/compiler-sfc@3.4.21)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0):
-    resolution: {integrity: sha512-PfxkKKyFaXGyn9Z4OmuEUgrwM0oOAOjoP50SLNJ7EEE044O4WrblLre2HGROoc/y+Ljdu0E1ZEnBmR9d2UmhYA==}
+  /@antfu/eslint-config@2.13.3(@vue/compiler-sfc@3.4.21)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0):
+    resolution: {integrity: sha512-DCyrnFgWtIc0mUTn8HeVB15Z/t9oEQZk8ce6S14Kq6z42LbMfZxPu6hs4SmPFYWLJoEzYq87dxsRv3glOX+aGw==}
     hasBin: true
     peerDependencies:
       '@unocss/eslint-plugin': '>=0.50.0'
@@ -235,6 +235,7 @@ packages:
       eslint-plugin-react: ^7.33.2
       eslint-plugin-react-hooks: ^4.6.0
       eslint-plugin-react-refresh: ^0.4.4
+      eslint-plugin-solid: ^0.13.2
       eslint-plugin-svelte: '>=2.35.1'
       prettier-plugin-astro: ^0.13.0
       prettier-plugin-slidev: ^1.0.5
@@ -253,6 +254,8 @@ packages:
       eslint-plugin-react-hooks:
         optional: true
       eslint-plugin-react-refresh:
+        optional: true
+      eslint-plugin-solid:
         optional: true
       eslint-plugin-svelte:
         optional: true
@@ -278,13 +281,13 @@ packages:
       eslint-plugin-jsdoc: 48.2.3(eslint@9.0.0)
       eslint-plugin-jsonc: 2.15.1(eslint@9.0.0)
       eslint-plugin-markdown: 4.0.1(eslint@9.0.0)
-      eslint-plugin-n: 16.6.2(eslint@9.0.0)
+      eslint-plugin-n: 17.2.0(eslint@9.0.0)
       eslint-plugin-no-only-tests: 3.1.0
       eslint-plugin-perfectionist: 2.8.0(eslint@9.0.0)(typescript@5.4.5)(vue-eslint-parser@9.4.2)
       eslint-plugin-toml: 0.11.0(eslint@9.0.0)
       eslint-plugin-unicorn: 52.0.0(eslint@9.0.0)
       eslint-plugin-unused-imports: 3.1.0(@typescript-eslint/eslint-plugin@7.6.0)(eslint@9.0.0)
-      eslint-plugin-vitest: 0.4.1(@typescript-eslint/eslint-plugin@7.6.0)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0)
+      eslint-plugin-vitest: 0.5.1(@typescript-eslint/eslint-plugin@7.6.0)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0)
       eslint-plugin-vue: 9.24.1(eslint@9.0.0)
       eslint-plugin-yml: 1.14.0(eslint@9.0.0)
       eslint-processor-vue-blocks: 0.1.1(@vue/compiler-sfc@3.4.21)(eslint@9.0.0)
@@ -2043,55 +2046,6 @@ packages:
 
   /@nuxt/ui-templates@1.3.3:
     resolution: {integrity: sha512-3BG5doAREcD50dbKyXgmjD4b1GzY8CUy3T41jMhHZXNDdaNwOd31IBq+D6dV00OSrDVhzrTVj0IxsUsnMyHvIQ==}
-
-  /@nuxt/ui@2.14.2(nuxt@3.11.2)(rollup@3.29.4)(vite@5.2.8)(vue@3.4.21):
-    resolution: {integrity: sha512-xEtgnofE2A/Ou+Afv70m/hLtcfvLs41cs/qZHVcqErv6OO8uKyDETS5bKhiZGlDcI0wccTJq/ULaDUGuwnRN2g==}
-    engines: {node: '>=v16.20.2'}
-    dependencies:
-      '@egoist/tailwindcss-icons': 1.7.4(tailwindcss@3.4.3)
-      '@headlessui/tailwindcss': 0.2.0(tailwindcss@3.4.3)
-      '@headlessui/vue': 1.7.19(vue@3.4.21)
-      '@iconify-json/heroicons': 1.1.20
-      '@nuxt/kit': 3.11.2(rollup@3.29.4)
-      '@nuxtjs/color-mode': 3.4.0(rollup@3.29.4)
-      '@nuxtjs/tailwindcss': 6.11.4(rollup@3.29.4)
-      '@popperjs/core': 2.11.8
-      '@tailwindcss/aspect-ratio': 0.4.2(tailwindcss@3.4.3)
-      '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.3)
-      '@tailwindcss/forms': 0.5.7(tailwindcss@3.4.3)
-      '@tailwindcss/typography': 0.5.12(tailwindcss@3.4.3)
-      '@vueuse/core': 10.9.0(vue@3.4.21)
-      '@vueuse/integrations': 10.9.0(fuse.js@6.6.2)(vue@3.4.21)
-      '@vueuse/math': 10.9.0(vue@3.4.21)
-      defu: 6.1.4
-      fuse.js: 6.6.2
-      nuxt-icon: 0.6.10(nuxt@3.11.2)(rollup@3.29.4)(vite@5.2.8)(vue@3.4.21)
-      ohash: 1.1.3
-      pathe: 1.1.2
-      scule: 1.3.0
-      tailwind-merge: 2.2.2
-      tailwindcss: 3.4.3
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - async-validator
-      - axios
-      - change-case
-      - drauu
-      - focus-trap
-      - idb-keyval
-      - jwt-decode
-      - nprogress
-      - nuxt
-      - qrcode
-      - rollup
-      - sortablejs
-      - supports-color
-      - ts-node
-      - uWebSockets.js
-      - universal-cookie
-      - vite
-      - vue
-    dev: false
 
   /@nuxt/ui@2.15.1(nuxt@3.11.2)(rollup@3.29.4)(vite@5.2.8)(vue@3.4.21):
     resolution: {integrity: sha512-wQXq7yYH5uAH9KE5wxA3KU/LniP5FhJ51tcgz6u+d+CDOXaKcDYQdzU9efSpTLNBuipbLQXDGiqq6aSeRIT6rw==}
@@ -5704,11 +5658,13 @@ packages:
   /domhandler@5.0.3:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
+    requiresBuild: true
     dependencies:
       domelementtype: 2.3.0
 
   /domutils@3.1.0:
     resolution: {integrity: sha512-H78uMmQtI2AhgDJjWeQmHwJJ2bLPD3GMmO7Zja/ZZh84wkm+4ut+IUnUdRa8uCGX88DiVx1j6FRe1XfxEgjEZA==}
+    requiresBuild: true
     dependencies:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
@@ -6043,23 +5999,20 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-plugin-n@16.6.2(eslint@9.0.0):
-    resolution: {integrity: sha512-6TyDmZ1HXoFQXnhCTUjVFULReoBPOAjpuiKELMkeP40yffI/1ZRO+d9ug/VC6fqISo2WkuIBk3cvuRPALaWlOQ==}
-    engines: {node: '>=16.0.0'}
+  /eslint-plugin-n@17.2.0(eslint@9.0.0):
+    resolution: {integrity: sha512-XBkFQxjTFKy9oc925ezHcDoZ8VLdGfxRkdZf0poR4TjC+zvm28pG2Tc7ZZpD1/UxSAzbw6Zz0WpnpUX3KruAAA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      eslint: '>=7.0.0'
+      eslint: '>=8.23.0'
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@9.0.0)
-      builtins: 5.1.0
+      enhanced-resolve: 5.16.0
       eslint: 9.0.0
       eslint-plugin-es-x: 7.6.0(eslint@9.0.0)
       get-tsconfig: 4.7.3
-      globals: 13.24.0
+      globals: 14.0.0
       ignore: 5.3.1
-      is-builtin-module: 3.2.1
-      is-core-module: 2.13.1
-      minimatch: 3.1.2
-      resolve: 1.22.8
+      minimatch: 9.0.4
       semver: 7.6.0
     dev: true
 
@@ -6153,12 +6106,12 @@ packages:
       eslint-rule-composer: 0.3.0
     dev: true
 
-  /eslint-plugin-vitest@0.4.1(@typescript-eslint/eslint-plugin@7.6.0)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0):
-    resolution: {integrity: sha512-+PnZ2u/BS+f5FiuHXz4zKsHPcMKHie+K+1Uvu/x91ovkCMEOJqEI8E9Tw1Wzx2QRz4MHOBHYf1ypO8N1K0aNAA==}
+  /eslint-plugin-vitest@0.5.1(@typescript-eslint/eslint-plugin@7.6.0)(eslint@9.0.0)(typescript@5.4.5)(vitest@1.5.0):
+    resolution: {integrity: sha512-g137wC+LCq2N+tfqK39Nl6Rs2N9u+zu6lWxaVgpN3wX+Kq6zSyxjPSI/ZBXUjP+qandT3z1DM5wK5IjD4XrAIw==}
     engines: {node: ^18.0.0 || >= 20.0.0}
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '*'
-      eslint: '>=8.0.0'
+      eslint: ^8.57.0 || ^9.0.0
       vitest: '*'
     peerDependenciesMeta:
       '@typescript-eslint/eslint-plugin':
