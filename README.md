@@ -55,27 +55,27 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ### Core Scripts
 
-- [useScriptCloudflareWebAnalytics](#cloudflare-web-analytics)
-- [useScriptConfetti](#confetti)
-- [useScriptFacebookPixel](#facebook-pixel)
-- [useScriptXPixel](#x-pixel)
-- [useScriptFathomAnalytics](#fathom-analytics)
-- [useScriptMatomoAnalytics](#matomo-analytics)
-- [useScriptHotjar](#hotjar)
-- [useScriptIntercom](#intercom)
-- [useScriptSegment](#segment)
-- [useScriptStripe](#stripe)
+- [Cloudflare Web Analytics](#cloudflare-web-analytics)
+- [Confetti](#confetti)
+- [Facebook Pixel](#facebook-pixel)
+- [X Pixel](#x-pixel)
+- [Fathom Analytics](#fathom-analytics)
+- [Matomo Analytics](#matomo-analytics)
+- [Hotjar](#hotjar)
+- [Intercom](#intercom)
+- [Segment](#segment)
+- [Stripe](#stripe)
 
 ### Components
 
-- [<StripePricingTableEmbed>](#google-maps)
+- [StripePricingTableEmbed](#google-maps)
 
 ### Module Scripts
 
-- [useScriptGoogleAnalytics](#google-analytics) - Nuxt Third Party Capital
-- [useScriptGoogleTagManager](#google-tag-manager) - Nuxt Third Party Capital
-- [useScriptGoogleMaps](#google-maps) - Nuxt Third Party Capital
-- [useCloudflareTurnstile](#cloudflare-turnstile) - Nuxt Turnstile
+- [Google Analytics](#google-analytics) - Nuxt Third Party Capital
+- [Google Tag Manager](#google-tag-manager) - Nuxt Third Party Capital
+- [Google Maps](#google-maps) - Nuxt Third Party Capital
+- [Cloudflare Turnstile](#cloudflare-turnstile) - Nuxt Turnstile
 
 ## Guides
 
