@@ -36,9 +36,9 @@ npx nuxi@latest module add @nuxt/scripts
 
 Done! You can now start using Nuxt Scripts in your Nuxt app.
 
-Check out the [📖 &nbsp; docs](https://nuxt-scripts.vercel.app/) or these resources to get started:
-- [👉 &nbsp; Script Registry](https://nuxt-scripts.vercel.app/scripts)
-- [👉 &nbsp; useScript](https://unhead.unjs.io/usage/composables/use-script)
+Check out the [📖 &nbsp;docs](https://nuxt-scripts.vercel.app/) or these resources to get started:
+- [👉 &nbsp;Script Registry](https://nuxt-scripts.vercel.app/scripts)
+- [👉 &nbsp;useScript](https://unhead.unjs.io/usage/composables/use-script)
 
 ## License
 
