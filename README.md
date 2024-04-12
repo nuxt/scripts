@@ -12,10 +12,10 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 ## Features
 
-- 🪨 [useScript](https://unhead.unjs.io/usage/composables/use-script)
+- 🪨 [useScript by Unhead](https://unhead.unjs.io/usage/composables/use-script)
   - 🦥 Improve your site performance with better script loading strategies
   - 🎃 Powerful proxy API for SSR handling, lazy loading, and error handling
-- (TODO) Registry for third-party scripts in Nuxt
+- 🎁 20+ third-party scripts composables and components
 - ⏬ Serve scripts from your own server
 - 🕵️ Privacy Features - Protect end users identity, provide consent to scripts.
 - 🪵 DevTools integration - View your script with their status and see function logs
@@ -54,6 +54,8 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 ## Registry
 
 The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts.
+
+Some registry scripts are stubs for external modules. When using these it will prompt to install the module for you. 
 
 - [Cloudflare Turnstile](#cloudflare-turnstile) - Nuxt Turnstile
 - [Cloudflare Web Analytics](#cloudflare-web-analytics)
