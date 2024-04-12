@@ -12,12 +12,12 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 ## Features
 
-- 🪨 [useScript](https://unhead.unjs.io/usage/composables/use-script)
+- 🪨 [useScript by Unhead](https://unhead.unjs.io/usage/composables/use-script)
   - 🦥 Improve your site performance with better script loading strategies
   - 🎃 Powerful proxy API for SSR handling, lazy loading, and error handling
-- (TODO) Registry for third-party scripts in Nuxt
+- 🎁 20+ third-party scripts composables and components
 - ⏬ Serve scripts from your own server
-- 🕵️ Privacy Features - Trigger scripts loading on consent.
+- 🕵️ Privacy Features - Protect end users identity, provide consent to scripts.
 - 🪵 DevTools integration - View your script with their status and see function logs
 
 ## Background
@@ -53,31 +53,31 @@ addConfetti({ emojis: ['🌈', '⚡️', '💥', '✨', '💫', '🌸'] })
 
 ## Registry
 
-### Core Scripts
 
-- [useScriptCloudflareWebAnalytics](#cloudflare-web-analytics)
-- [useScriptConfetti](#confetti)
-- [useScriptFacebookPixel](#facebook-pixel)
-- [useScriptXPixel](#x-pixel)
-- [useScriptFathomAnalytics](#fathom-analytics)
-- [useScriptMatomoAnalytics](#matomo-analytics)
-- [useScriptHotjar](#hotjar)
-- [useScriptIntercom](#intercom)
-- [useScriptSegment](#segment)
+The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts.
 
-[//]: # (TODO - [usePinterestTag](#pinterest-tag))
-[//]: # (TODO - [useGoogleAdsConversionTracking](#google-ads-conversion-tracking))
-[//]: # (TODO - [useGoogleAdsRemarketing](#google-ads-remarketing))
-[//]: # (TODO - [usePlausibleAnalytics](#plausible-analytics))
-[//]: # (TODO - [useSimpleAnalytics](#simple-analytics))
-[//]: # (TODO - [useUmamiAnalytics](#umami-analytics))
+Some registry scripts are stubs for external modules. When using these it will prompt to install the module for you.
 
-### Module Scripts
-
-- [useScriptGoogleAnalytics](#google-analytics) - Nuxt Third Party Capital
-- [useScriptGoogleTagManager](#google-tag-manager) - Nuxt Third Party Capital
-- [useScriptGoogleMaps](#google-maps) - Nuxt Third Party Capital
-- [useCloudflareTurnstile](#cloudflare-turnstile) - Nuxt Turnstile
+- [Cloudflare Turnstile](#cloudflare-turnstile) - Nuxt Turnstile
+- [Cloudflare Web Analytics](#cloudflare-web-analytics)
+- [Confetti](#confetti)
+- [Facebook Pixel](#facebook-pixel)
+- [Fathom Analytics](#fathom-analytics)
+- [Google Analytics](#google-analytics) - Nuxt Third Party Capital
+- [Google Maps](#google-maps) - Nuxt Third Party Capital
+  - [GoogleMapsEmbed](#google-maps-embed)
+- [Google Tag Manager](#google-tag-manager) - Nuxt Third Party Capital
+- [Hotjar](#hotjar)
+- [Intercom](#intercom)
+- [Matomo Analytics](#matomo-analytics)
+- [Segment](#segment)
+- [Stripe](#stripe)
+  - [StripePricingTableEmbed](#stripe-pricing-table-mbed)
+- [Vimeo](#vimeo-embed)
+  - [VimeoEmbed](#vimeo-embed)
+- [X Pixel](#x-pixel)
+- [YouTube](#youtube) - Nuxt Third Party Capital
+  - [YouTubeEmbed](#youtube-embed)
 
 ## Guides
 
@@ -103,7 +103,7 @@ export default defineNuxtConfig({
     globals: [
       // script.js
       [
-        { src: 'https://example.com/script.js' }, 
+        { src: 'https://example.com/script.js' },
         { trigger: 'onNuxtReady'}
       ]
     ]
@@ -137,6 +137,27 @@ If you opt-out of bundling, you can still bundle scripts individually.
 ```ts
 useScript('https://example.com/script.js', {
   assetStrategy: 'bundle'
+})
+```
+
+### Overriding Scripts
+
+When working with modules that use Nuxt Script, you may want to modify the
+behavior of the script. This is especially useful for
+changing the asset strategy of a script as it needs to be defined statically.
+
+To do so you can use the `overrides` module option.
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    overrides: {
+      // the key is either a specified key or the script src
+      confetti: {
+        assetStrategy: 'bundle'
+      }
+    }
+  }
 })
 ```
 
@@ -181,28 +202,6 @@ useAnalyticsPageEvent(({ title, path }) => {
     page_location: 'https://example.com',
     page_path: path
   })
-})
-```
-
-
-### Overriding Scripts
-
-When working with modules that use Nuxt Script, you may want to modify the
-behavior of the script. This is especially useful for
-changing the asset strategy of a script as it needs to be defined statically.
-
-To do so you can use the `overrides` module option.
-
-```ts
-export default defineNuxtConfig({
-  scripts: {
-    overrides: {
-      // the key is either a specified key or the script src
-      confetti: {
-        assetStrategy: 'bundle'
-      }
-    }
-  }
 })
 ```
 

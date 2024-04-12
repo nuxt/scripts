@@ -10,11 +10,11 @@ onMounted(() => {
   Player('player', {
     id: 76979871,
     width: 400,
-    height: 400
+    height: 400,
   })
 })
 </script>
 
 <template>
-  <div id="player"></div>
+  <div id="player" />
 </template>

@@ -108,7 +108,7 @@ export default defineNuxtModule<ModuleOptions>({
     ])
 
     addComponentsDir({
-      path: resolve('./runtime/components')
+      path: resolve('./runtime/components'),
     })
 
     nuxt.hooks.hook('modules:done', async () => {
@@ -141,6 +141,12 @@ export default defineNuxtModule<ModuleOptions>({
           name: 'useScriptFathomAnalytics',
           key: 'fathomAnalytics',
           from: resolve('./runtime/registry/fathom-analytics'),
+          src: false, // can not be bundled, breaks script
+        },
+        {
+          name: 'useScriptStripe',
+          key: 'stripe',
+          from: resolve('./runtime/registry/stripe'),
           src: false, // can not be bundled, breaks script
         },
         {
