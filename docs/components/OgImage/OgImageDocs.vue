@@ -1,21 +1,21 @@
 <script lang="ts" setup>
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 })
 
 defineProps({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   headline: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 })
 </script>
 

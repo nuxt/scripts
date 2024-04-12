@@ -6,8 +6,8 @@ defineProps({
   },
   size: {
     type: String,
-    default: 'lg'
-  }
+    default: 'lg',
+  },
 })
 const { copy, copied } = useClipboard()
 </script>

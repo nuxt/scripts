@@ -10,18 +10,18 @@ export default defineNuxtConfig({
     'nuxt-og-image',
     'nuxt-cloudflare-analytics',
     '@nuxtjs/plausible',
-    '@nuxt/image'
+    '@nuxt/image',
   ],
   hooks: {
     // Define `@nuxt/ui` components as global to use them in `.md` (feel free to add those you need)
     'components:extend': (components) => {
-      const globals = components.filter((c) => ['UButton', 'UIcon'].includes(c.pascalName))
+      const globals = components.filter(c => ['UButton', 'UIcon'].includes(c.pascalName))
 
-      globals.forEach((c) => c.global = true)
-    }
+      globals.forEach(c => c.global = true)
+    },
   },
   ui: {
-    icons: ['heroicons', 'ph', 'simple-icons']
+    icons: ['heroicons', 'ph', 'simple-icons'],
   },
   routeRules: {
     '/api/search.json': { prerender: true },
@@ -29,17 +29,17 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       // For CF trailing slash issue
-      autoSubfolderIndex: false
-    }
+      autoSubfolderIndex: false,
+    },
   },
   cloudflareAnalytics: {
     token: '469b1f7049f14941acef0d0262a07ab3',
-    scriptPath: false
+    scriptPath: false,
   },
   devtools: {
-    enabled: true
+    enabled: true,
   },
   typescript: {
-    strict: false
-  }
+    strict: false,
+  },
 })
