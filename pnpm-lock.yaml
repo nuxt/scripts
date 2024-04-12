@@ -165,24 +165,15 @@ importers:
       '@nuxthq/studio':
         specifier: ^1.0.13
         version: 1.0.13(rollup@3.29.4)
-      '@nuxtjs/plausible':
-        specifier: ^1.0.0
-        version: 1.0.0(rollup@3.29.4)
       '@vueuse/core':
         specifier: ^10.9.0
         version: 10.9.0(vue@3.4.21)
       '@vueuse/nuxt':
         specifier: ^10.9.0
         version: 10.9.0(nuxt@3.11.2)(rollup@3.29.4)(vue@3.4.21)
-      medium-zoom:
-        specifier: ^1.1.0
-        version: 1.1.0
       nuxt:
         specifier: ^3.11.2
         version: 3.11.2(@unocss/reset@0.59.2)(eslint@9.0.0)(floating-vue@5.2.2)(rollup@3.29.4)(typescript@5.4.5)(unocss@0.59.2)(vite@5.2.8)
-      nuxt-cloudflare-analytics:
-        specifier: ^1.0.8
-        version: 1.0.8(rollup@3.29.4)
       nuxt-og-image:
         specifier: ^2.2.4
         version: 2.2.4(@nuxt/devtools@1.1.5)(@vue/compiler-core@3.4.21)(nuxt@3.11.2)(postcss@8.4.38)(rollup@3.29.4)(vite@5.2.8)(vue@3.4.21)(webpack@5.91.0)
@@ -654,10 +645,6 @@ packages:
       '@babel/helper-string-parser': 7.24.1
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
-
-  /@barbapapazes/plausible-tracker@0.4.0:
-    resolution: {integrity: sha512-4hhXK62ORb4feJfjnIILXRnb6xfejHM6yvGCid6MwNdKiQyj6YLW0M779zXLH5IBS4mQObmrNul2HUleeavSKw==}
-    dev: false
 
   /@capsizecss/metrics@2.2.0:
     resolution: {integrity: sha512-DkFIser1KbGxWyG2hhQQeCit72TnOQDx5pr9bkA7+XlIy7qv+4lYtslH3bidVxm2qkY2guAgypSIPYuQQuk70A==}
@@ -2271,17 +2258,6 @@ packages:
       unist-builder: 4.0.0
       unist-util-visit: 5.0.0
       unwasm: 0.3.9
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-    dev: false
-
-  /@nuxtjs/plausible@1.0.0(rollup@3.29.4):
-    resolution: {integrity: sha512-2K0/AbPJAEr3yMA8oDD0I6WB+SXs/YlF297azjR5eSZVQjuimDAwLf4bEXk9ilbrzoMFmm0Tpzn4CC6f0rISBA==}
-    dependencies:
-      '@barbapapazes/plausible-tracker': 0.4.0
-      '@nuxt/kit': 3.11.2(rollup@3.29.4)
-      defu: 6.1.4
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -8020,10 +7996,6 @@ packages:
     engines: {node: '>= 0.6'}
     dev: false
 
-  /medium-zoom@1.1.0:
-    resolution: {integrity: sha512-ewyDsp7k4InCUp3jRmwHBRFGyjBimKps/AJLjRSox+2q/2H4p/PNpQf+pwONWlJiOudkBXtbdmVbFjqyybfTmQ==}
-    dev: false
-
   /merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
 
@@ -8856,16 +8828,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.3
-
-  /nuxt-cloudflare-analytics@1.0.8(rollup@3.29.4):
-    resolution: {integrity: sha512-gUBcxHfvR06tBNDszTj/cMx8EGwtNFqICk7IBM66JIebe/VG0HgDF6AFJfqqOFG5ACk6ApdAxREHhvnmgUSudA==}
-    engines: {npm: '>= 4.0.0'}
-    dependencies:
-      '@nuxt/kit': 3.11.2(rollup@3.29.4)
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-    dev: false
 
   /nuxt-component-meta@0.6.3(rollup@3.29.4):
     resolution: {integrity: sha512-GdqnSMC1vqabry7WSj3GWA2LZ1gBiWeS2lj943c9TjkL9SN/rABEFXVZA6RO4sOTKF1qV947UGi27PdRd7u+tA==}

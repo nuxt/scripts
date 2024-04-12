@@ -20,7 +20,7 @@ export default defineAppConfig({
   header: {
     links: [{
       'icon': 'i-simple-icons-github',
-      'to': 'https://github.com/nuxt-hub/core',
+      'to': 'https://github.com/nuxt/scripts',
       'target': '_blank',
       'aria-label': 'Nuxt Scripts',
     }],
@@ -29,11 +29,11 @@ export default defineAppConfig({
     title: 'Table of Contents',
     bottom: {
       title: 'Community',
-      edit: 'https://github.com/nuxt-hub/core/edit/main/docs/content',
+      edit: 'https://github.com/nnuxt/scripts/edit/main/docs/content',
       links: [{
         icon: 'i-heroicons-star',
         label: 'Star on GitHub',
-        to: 'https://github.com/nuxt-hub/core',
+        to: 'https://github.com/nuxt/scripts',
         target: '_blank',
       }, {
         icon: 'i-simple-icons-nuxtdotjs',
