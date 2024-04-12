@@ -1,0 +1,32 @@
+title: 'Load third-party scripts with better performance, privacy and DX in Nuxt Apps.'
+description: description
+navigation: false
+hero:
+  title: 'Nuxt DX meets <br /> <span class="text-primary">Third-Party Scripts</span>'
+  description: 'Nuxt Scripts is a new way to load third-party scripts in your Nuxt application. It provides a better performance, privacy and developer experience.'
+  orientation: horizontal
+  links:
+    - label: Get started
+      trailing-icon: i-heroicons-arrow-right-20-solid
+      to: /docs/getting-started
+      size: lg
+    - label: Star on GitHub
+      icon: i-simple-icons-github
+      size: lg
+      color: gray
+      variant: ghost
+      to: https://github.com/nuxt-hub/core
+      target: _blank
+features:
+  - name: Automatic scaling
+    description: Traffic is routed and load balanced across thousands of servers. Sleep well as your Nuxt app scales.
+    icon: i-ph-selection-all-duotone
+  - name: Exceptionally affordable
+    description: First 100,000 requests each day are free. Cloudflare paid plan starts at $5 for 10 million monthly requests.
+    icon: i-ph-coins-duotone
+  - name: Performant global network
+    description: Your Nuxt app is deployed on the entire edge network and runs within milliseconds of your users worldwide
+    icon: i-ph-globe-duotone
+  - name: No servers to maintain
+    description: Spend more time building, less time configuring. No VMs, no servers, and no containers to spin up or manage.
+    icon: i-ph-rocket-launch-duotone
