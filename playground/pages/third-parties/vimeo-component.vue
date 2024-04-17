@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { useHead } from '#imports'
-import { VimeoEmbed } from '#components'
 
 useHead({
   title: 'Vimeo component',
