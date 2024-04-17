@@ -11,6 +11,9 @@ import {
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import { joinURL, withBase, withQuery } from 'ufo'
+import { lt } from 'semver'
+import { resolvePath } from 'mlly'
+import { join } from 'pathe'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -79,7 +82,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '^3.11.1',
+      nuxt: '>=3',
       bridge: false,
     },
   },
@@ -94,6 +97,12 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
+    const { version: unheadVersion } = await readPackageJSON(join(await resolvePath('@unhead/vue'), 'package.json'))
+
+    if (!unheadVersion || lt(unheadVersion, '1.8.0')) {
+      logger.warn('@nuxt/scripts requires @unhead/vue >= 1.8.0, please upgrade to use the module.')
+      return
+    }
     if (!config.enabled) {
       // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')
@@ -108,7 +117,7 @@ export default defineNuxtModule<ModuleOptions>({
     ])
 
     addComponentsDir({
-      path: resolve('./runtime/components')
+      path: resolve('./runtime/components'),
     })
 
     nuxt.hooks.hook('modules:done', async () => {
@@ -141,6 +150,12 @@ export default defineNuxtModule<ModuleOptions>({
           name: 'useScriptFathomAnalytics',
           key: 'fathomAnalytics',
           from: resolve('./runtime/registry/fathom-analytics'),
+          src: false, // can not be bundled, breaks script
+        },
+        {
+          name: 'useScriptStripe',
+          key: 'stripe',
+          from: resolve('./runtime/registry/stripe'),
           src: false, // can not be bundled, breaks script
         },
         {

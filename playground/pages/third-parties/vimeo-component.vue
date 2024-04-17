@@ -7,6 +7,7 @@ useHead({
 })
 
 function handlePlay() {
+  // eslint-disable-next-line no-console
   console.log('Playing')
 }
 </script>

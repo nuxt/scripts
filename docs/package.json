@@ -1,7 +1,7 @@
 {
   "name": "nuxt-scripts-docs",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "nuxi dev",
     "generate": "nuxi generate",
@@ -17,12 +17,9 @@
     "@nuxt/image": "^1.5.0",
     "@nuxt/ui-pro": "^1.1.0",
     "@nuxthq/studio": "^1.0.13",
-    "@nuxtjs/plausible": "^1.0.0",
     "@vueuse/core": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
-    "medium-zoom": "^1.1.0",
     "nuxt": "^3.11.2",
-    "nuxt-cloudflare-analytics": "^1.0.8",
-    "nuxt-og-image": "^2.2.4"
+    "nuxt-og-image": "3.0.0-rc.52"
   }
 }
