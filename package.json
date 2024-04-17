@@ -2,8 +2,8 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.1.12",
-  "packageManager": "pnpm@8.15.6",
-  "description": "Next-gen Scripts for Nuxt",
+  "packageManager": "pnpm@9.0.1",
+  "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "website": "https://harlanzw.com",
     "name": "Harlan Wilton",
@@ -56,7 +56,7 @@
     "@nuxt/devtools-kit": "^1.1.5",
     "@nuxt/devtools-ui-kit": "^1.1.5",
     "@nuxt/kit": "^3.11.2",
-    "@unhead/vue": "^1.9.4",
+    "@unhead/vue": "^1.9.5",
     "consola": "^3.2.3",
     "defu": "^6.1.4",
     "estree-walker": "^3.0.3",
@@ -76,19 +76,19 @@
     "valibot": "^0.30.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "2.12.2",
+    "@antfu/eslint-config": "2.14.0",
     "@nuxt/devtools-ui-kit": "^1.1.5",
     "@nuxt/module-builder": "^0.5.5",
-    "@nuxt/test-utils": "3.12.0",
-    "@unhead/schema": "^1.9.4",
+    "@nuxt/test-utils": "3.12.1",
+    "@unhead/schema": "^1.9.5",
     "acorn-loose": "^8.4.0",
     "bumpp": "^9.4.0",
     "eslint": "9.0.0",
     "nuxt": "^3.11.2",
-    "nuxt-scripts-devtools": "latest",
-    "playwright-core": "^1.43.0",
+    "nuxt-scripts-devtools": "workspace:*",
+    "playwright-core": "^1.43.1",
     "typescript": "^5.4.5",
-    "vitest": "^1.4.0"
+    "vitest": "^1.5.0"
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*"
