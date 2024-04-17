@@ -2,7 +2,7 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.1.12",
-  "packageManager": "pnpm@8.15.6",
+  "packageManager": "pnpm@9.0.1",
   "description": "Next-gen Scripts for Nuxt",
   "author": {
     "website": "https://harlanzw.com",
