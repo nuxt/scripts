@@ -1,6 +1,7 @@
 import { type Input, number, object, string, union } from 'valibot'
-import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions } from '#nuxt-scripts'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
+import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
@@ -41,33 +42,32 @@ export const FacebookPixelOptions = object({
 })
 export type FacebookPixelInput = Input<typeof FacebookPixelOptions>
 
-export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: FacebookPixelInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(FacebookPixelOptions, options)
-
-    // we need to insert the hj function
-    if (import.meta.client) {
-      const fbq: FacebookPixelApi['fbq'] = window.fbq = function (...params: any[]) {
-        // @ts-expect-error untyped
-        fbq.callMethod ? fbq.callMethod(...params) : fbq.queue.push(params)
-      } as any as FacebookPixelApi['fbq']
-      if (!window._fbq)
-        window._fbq = fbq
-      fbq.push = fbq
-      fbq.loaded = true
-      fbq.version = '2.0'
-      fbq.queue = []
-      fbq('init', options?.id)
-      fbq('track', 'PageView')
-    }
-    _scriptOptions?.beforeInit?.()
-  }
+export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: FacebookPixelInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
   return useScript<T>({
     key: 'facebookPixel',
     src: 'https://connect.facebook.net/en_US/fbevents.js',
   }, {
-    ...scriptOptions,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: FacebookPixelOptions,
+      options,
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            const fbq: FacebookPixelApi['fbq'] = window.fbq = function (...params: any[]) {
+            // @ts-expect-error untyped
+              fbq.callMethod ? fbq.callMethod(...params) : fbq.queue.push(params)
+            } as any as FacebookPixelApi['fbq']
+            if (!window._fbq)
+              window._fbq = fbq
+            fbq.push = fbq
+            fbq.loaded = true
+            fbq.version = '2.0'
+            fbq.queue = []
+            fbq('init', options?.id)
+            fbq('track', 'PageView')
+          },
+    }),
     use() {
       return { fbq: window.fbq }
     },

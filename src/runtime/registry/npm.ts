@@ -1,6 +1,7 @@
 import { object, optional, string } from 'valibot'
 import { withBase } from 'ufo'
-import { useScript, validateScriptInputSchema } from '#imports'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
 import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const NpmOptions = object({
@@ -12,15 +13,15 @@ export const NpmOptions = object({
 
 export type NpmInput = ScriptDynamicSrcInput<typeof NpmOptions>
 
-export function useScriptNpm<T>(options: NpmInput, _scriptOptions?: NuxtUseScriptOptions<T>) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(NpmOptions, options)
-  }
+export function useScriptNpm<T>(options: NpmInput, scriptOptions?: NuxtUseScriptOptions<T>) {
   // TODO support multiple providers? (e.g. jsdelivr, cdnjs, etc.) Only unpkg for now
   return useScript<T>({
     type: options.type,
     key: options.packageName,
     src: options.src || withBase(options.file || '', `https://unpkg.com/${options?.packageName}@${options.version || 'latest'}`),
-  }, scriptOptions)
+  }, registryScriptOptions({
+    scriptOptions,
+    schema: NpmOptions,
+    options,
+  }))
 }

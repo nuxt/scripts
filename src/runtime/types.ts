@@ -27,10 +27,6 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * - `null` - Do not bundle the script.
    */
   assetStrategy?: null | 'bundle'
-  /**
-   * A hook to run when a script does not exist and will be initialized for the first time.
-   */
-  beforeInit?: () => void
 }
 
 export type NuxtUseScriptIntegrationOptions = Omit<NuxtUseScriptOptions, 'use'>

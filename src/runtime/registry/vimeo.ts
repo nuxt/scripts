@@ -1,6 +1,7 @@
 import { type Input, object } from 'valibot'
+import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
 
 export interface VimeoScriptApi {
   Player: any
@@ -18,16 +19,18 @@ declare global {
   }
 }
 
-export function useScriptVimeo<T>(options?: VimeoScriptInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-
-  return useScript<VimeoScriptApi>({
+export function useScriptVimeo<T extends VimeoScriptApi>(options?: VimeoScriptInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
+  return useScript<T>({
     key: 'vimeo',
     src: 'https://player.vimeo.com/api/player.js',
     ...options,
   }, {
-    ...scriptOptions,
-    use: () => {
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: VimeoScriptOptions,
+      options,
+    }),
+    use() {
       let Player: VimeoPlayer
       if (import.meta.client) {
         Player = function (...params: any[]) {
