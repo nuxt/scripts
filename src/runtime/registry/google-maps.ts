@@ -3,7 +3,8 @@ import { array, object, optional, string } from 'valibot'
 import type google from 'google.maps'
 import { withQuery } from 'ufo'
 import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
-import { useScript, validateScriptInputSchema } from '#imports'
+import { useScript } from '#imports'
+import { registryScriptOptions } from '~/src/runtime/utils'
 
 export const GoogleMapsOptions = object({
   apiKey: string(),
@@ -25,11 +26,7 @@ declare global {
  *
  * A 3P wrapper to load the Google Maps JavaScript api.
  */
-export function useScriptGoogleMaps<T extends GoogleMapsApi>(options?: Input<typeof GoogleMapsOptions>, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(GoogleMapsOptions, options)
-  }
+export function useScriptGoogleMaps<T extends GoogleMapsApi>(options?: Input<typeof GoogleMapsOptions>, scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const libraries = options?.libraries || ['places']
   return useScript<GoogleMapsApi>({
     key: 'googleMaps',
@@ -38,7 +35,11 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(options?: Input<typ
       key: options?.apiKey,
     }),
   }, {
-    ...scriptOptions,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: GoogleMapsOptions,
+      options,
+    }),
     use: () => ({ maps: window.google.maps }),
   })
 }

@@ -2,7 +2,7 @@ import type { PropType, Ref } from 'vue'
 import { defineComponent, h, ref, watch } from 'vue'
 import type google from 'google.maps'
 import { formatDimensionValue } from '../util'
-import { useScriptGoogleMaps } from '../composables/googleMaps'
+import { useScriptGoogleMaps } from '#imports'
 
 interface LatLng {
   lat: number
