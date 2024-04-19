@@ -36,7 +36,7 @@ importers:
         specifier: ^1.11.1
         version: 1.11.1
       magic-string:
-        specifier: ^0.30.9
+        specifier: ^0.30.10
         version: 0.30.10
       mlly:
         specifier: ^1.6.1
@@ -51,8 +51,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       pkg-types:
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^1.1.0
+        version: 1.1.0
       semver:
         specifier: ^7.6.0
         version: 7.6.0
@@ -2719,6 +2719,9 @@ packages:
   confbox@0.1.6:
     resolution: {integrity: sha512-ONc4FUXne/1UBN1EuxvQ5rAjjAbo+N4IxrxWI8bzGHbd1PyrFlI/E3G23/yoJZDFBaFFxPGfI0EOq0fa4dgX7A==}
 
+  confbox@0.1.7:
+    resolution: {integrity: sha512-uJcB/FKZtBMCJpK8MQji6bJHgu1tixKPxRLeGkNzBoOZzpnZUJm0jm2/sBDWcuBx1dYgxV4JU+g5hmNxCyAmdA==}
+
   consola@3.2.3:
     resolution: {integrity: sha512-I5qxpzLv+sJhTVEoLYNcTW+bThDCPsit0vLNKShZx6rLtpilNpmmeTPaeqJb9ZE9dV3DGaeby6Vuhrw38WjeyQ==}
     engines: {node: ^14.18.0 || >=16.10.0}
@@ -4956,6 +4959,9 @@ packages:
 
   pkg-types@1.0.3:
     resolution: {integrity: sha512-nN7pYi0AQqJnoLPC9eHFQ8AcyaixBUOwvqc5TDnIKCMEE6I0y8P7OKA7fPexsXGCGxQDl/cmrLAp26LhcwxZ4A==}
+
+  pkg-types@1.1.0:
+    resolution: {integrity: sha512-/RpmvKdxKf8uILTtoOhAgf30wYbP2Qw+L9p3Rvshx1JZVX+XQNZQFjlbmGHEGIm4CkVPlSn+NXmIM8+9oWQaSA==}
 
   playwright-core@1.43.1:
     resolution: {integrity: sha512-EI36Mto2Vrx6VF7rm708qSnesVQKbxEWvPrfA1IPY6HgczBplDx7ENtx+K2n4kJ41sLLkuGfmb0ZLSSXlDhqPg==}
@@ -7598,7 +7604,7 @@ snapshots:
       global-directory: 4.0.1
       magicast: 0.3.4
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       prompts: 2.4.2
       rc9: 2.1.2
       semver: 7.6.0
@@ -7633,7 +7639,7 @@ snapshots:
       pacote: 17.0.7
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       rc9: 2.1.2
       scule: 1.3.0
       semver: 7.6.0
@@ -7787,7 +7793,7 @@ snapshots:
       defu: 6.1.4
       hookable: 5.5.3
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       scule: 1.3.0
       std-env: 3.7.0
       ufo: 1.5.3
@@ -7865,7 +7871,7 @@ snapshots:
       ofetch: 1.3.4
       parse-git-config: 3.0.0
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       tailwind-merge: 2.2.2
       vue3-smooth-dnd: 0.0.6(vue@3.4.23(typescript@5.4.5))
     transitivePeerDependencies:
@@ -7961,7 +7967,7 @@ snapshots:
       ohash: 1.1.3
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       postcss: 8.4.38
       rollup-plugin-visualizer: 5.12.0(rollup@4.14.3)
       std-env: 3.7.0
@@ -8001,7 +8007,7 @@ snapshots:
       git-url-parse: 14.0.0
       nuxt-component-meta: 0.6.3(rollup@4.14.3)
       parse-git-config: 3.0.0
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       socket.io-client: 4.7.5
       ufo: 1.5.3
       untyped: 1.4.2
@@ -8015,7 +8021,7 @@ snapshots:
     dependencies:
       '@nuxt/kit': 3.11.2(rollup@4.14.3)
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       semver: 7.6.0
     transitivePeerDependencies:
       - rollup
@@ -9663,7 +9669,7 @@ snapshots:
       ohash: 1.1.3
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       rc9: 2.1.2
 
   cac@6.7.14: {}
@@ -9890,6 +9896,8 @@ snapshots:
   concat-map@0.0.1: {}
 
   confbox@0.1.6: {}
+
+  confbox@0.1.7: {}
 
   consola@3.2.3: {}
 
@@ -11509,7 +11517,7 @@ snapshots:
   local-pkg@0.5.0:
     dependencies:
       mlly: 1.6.1
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
 
   locate-character@3.0.0: {}
 
@@ -12074,7 +12082,7 @@ snapshots:
     dependencies:
       acorn: 8.11.3
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       ufo: 1.5.3
 
   mri@1.2.0: {}
@@ -12162,7 +12170,7 @@ snapshots:
       openapi-typescript: 6.7.5
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       pretty-bytes: 6.1.1
       radix3: 1.1.2
       rollup: 4.14.3
@@ -12384,7 +12392,7 @@ snapshots:
       ofetch: 1.3.4
       ohash: 1.1.3
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       playwright-core: 1.43.1
       radix3: 1.1.2
       satori: 0.10.13
@@ -12427,7 +12435,7 @@ snapshots:
     dependencies:
       '@nuxt/kit': 3.11.2(rollup@4.14.3)
       '@nuxt/schema': 3.11.2(rollup@4.14.3)
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       site-config-stack: 2.2.12(vue@3.4.23(typescript@5.4.5))
       std-env: 3.7.0
       ufo: 1.5.3
@@ -12445,7 +12453,7 @@ snapshots:
       floating-vue: 5.2.2(@nuxt/kit@3.11.2(rollup@4.14.3))(vue@3.4.23(typescript@5.4.5))
       nuxt-site-config-kit: 2.2.12(rollup@4.14.3)(vue@3.4.23(typescript@5.4.5))
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       shiki: 1.3.0
       sirv: 2.0.4
       site-config-stack: 2.2.12(vue@3.4.23(typescript@5.4.5))
@@ -12839,6 +12847,12 @@ snapshots:
   pkg-types@1.0.3:
     dependencies:
       jsonc-parser: 3.2.1
+      mlly: 1.6.1
+      pathe: 1.1.2
+
+  pkg-types@1.1.0:
+    dependencies:
+      confbox: 0.1.7
       mlly: 1.6.1
       pathe: 1.1.2
 
@@ -14045,7 +14059,7 @@ snapshots:
       mkdist: 1.4.0(sass@1.75.0)(typescript@5.4.5)
       mlly: 1.6.1
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       pretty-bytes: 6.1.1
       rollup: 3.29.4
       rollup-plugin-dts: 6.1.0(rollup@3.29.4)(typescript@5.4.5)
@@ -14128,7 +14142,7 @@ snapshots:
       magic-string: 0.30.10
       mlly: 1.6.1
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       scule: 1.3.0
       strip-literal: 1.3.0
       unplugin: 1.10.1
@@ -14275,7 +14289,7 @@ snapshots:
       magic-string: 0.30.10
       mlly: 1.6.1
       pathe: 1.1.2
-      pkg-types: 1.0.3
+      pkg-types: 1.1.0
       unplugin: 1.10.1
 
   update-browserslist-db@1.0.13(browserslist@4.23.0):
