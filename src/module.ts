@@ -153,6 +153,12 @@ export default defineNuxtModule<ModuleOptions>({
           src: false, // can not be bundled, breaks script
         },
         {
+          name: 'useScriptMatomoAnalytics',
+          key: 'matomoAnalytics',
+          from: resolve('./runtime/registry/matomo-analytics'),
+          src: false, // can not be bundled, breaks script
+        },
+        {
           name: 'useScriptStripe',
           key: 'stripe',
           from: resolve('./runtime/registry/stripe'),

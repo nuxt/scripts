@@ -1,7 +1,8 @@
 import { type Input, literal, number, object, optional, string, union } from 'valibot'
 import { joinURL } from 'ufo'
-import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
+import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
   app_id: string(),
@@ -48,20 +49,21 @@ declare global {
   }
 }
 
-export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(IntercomOptions, options)
-    // we need to insert the hj function
-    if (import.meta.client)
-      window.intercomSettings = options
-    _scriptOptions?.beforeInit?.()
-  }
+export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
   return useScript<T>({
     key: 'intercom',
     src: options?.src || joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
   }, {
-    ...scriptOptions,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: IntercomOptions,
+      options,
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            window.intercomSettings = options
+          },
+    }),
     use() {
       return { Intercom: window.Intercom }
     },

@@ -1,6 +1,7 @@
 import { object, optional, string } from 'valibot'
-import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
+import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
   writeKey: string(),
@@ -24,36 +25,39 @@ declare global {
   interface Window extends SegmentApi {}
 }
 
-export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(SegmentOptions, options)
-    if (import.meta.client) {
-      window.analytics = window.analytics || []
-      window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
-      window.analytics.factory = function (method) {
-        return function (...params: any[]) {
-          const args = Array.prototype.slice.call(params)
-          args.unshift(method)
-          window.analytics.push(args)
-          return window.analytics
-        }
-      }
-      for (let i = 0; i < window.analytics.methods.length; i++) {
-        const key = window.analytics.methods[i]
-        window.analytics[key] = window.analytics.factory(key)
-      }
-      window.analytics.page()
-    }
-    _scriptOptions?.beforeInit?.()
-  }
+export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
   const analyticsKey = options?.analyticsKey || 'analytics'
   return useScript<T>({
     'key': 'segment',
     'data-global-segment-analytics-key': analyticsKey,
     'src': options?.src || `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
   }, {
-    ...scriptOptions,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: SegmentOptions,
+      options,
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            window.analytics = window.analytics || []
+            window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
+            // @ts-expect-error untyped
+            window.analytics.factory = function (method) {
+              return function (...params: any[]) {
+                const args = Array.prototype.slice.call(params)
+                args.unshift(method)
+                window.analytics.push(args)
+                return window.analytics
+              }
+            }
+            for (let i = 0; i < window.analytics.methods.length; i++) {
+              const key = window.analytics.methods[i]
+              // @ts-expect-error untyped
+              window.analytics[key] = window.analytics.factory(key)
+            }
+            window.analytics.page()
+          },
+    }),
     use() {
       // @ts-expect-error untyped
       return { analytics: window[analyticsKey] }

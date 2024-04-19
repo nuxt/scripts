@@ -1,9 +1,10 @@
 import { type Input, boolean, literal, object, optional, string, union } from 'valibot'
-import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions } from '#nuxt-scripts'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
+import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
 
 export const FathomAnalyticsOptions = object({
-  'site': string(), // site is required
+  'data-site': string(), // site is required
   'src': optional(string()),
   'data-spa': optional(union([literal('auto'), literal('history'), literal('hash')])),
   'data-auto': optional(boolean()),
@@ -14,7 +15,15 @@ export const FathomAnalyticsOptions = object({
 export type FathomAnalyticsInput = Input<typeof FathomAnalyticsOptions>
 
 export interface FathomAnalyticsApi {
+  beacon: (ctx: { url: string, referrer?: string }) => void
+  blockTrackingForMe: () => void
+  enableTrackingForMe: () => void
+  isTrackingEnabled: () => boolean
+  send: (type: string, data: unknown) => void
+  setSite: (siteId: string) => void
+  sideId: string
   trackPageview: (ctx?: { url: string, referrer?: string }) => void
+  trackGoal: (goalId: string, cents: number) => void
   trackEvent: (eventName: string, value: { _value: number }) => void
 }
 
@@ -24,17 +33,18 @@ declare global {
   }
 }
 
-export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput, _scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(FathomAnalyticsOptions, options)
-    _scriptOptions?.beforeInit?.()
-  }
-  return useScript<FathomAnalyticsApi>({
-    src: 'https://cdn.usefathom.com/script.js',
+export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput, scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
+  return useScript<T>({
+    src: String('https://cdn.usefathom.com/script.js'), // can't be bundled
     ...options,
   }, {
-    ...scriptOptions,
-    use: () => window.fathom,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: FathomAnalyticsOptions,
+      options,
+    }),
+    use() {
+      return window.fathom
+    },
   })
 }

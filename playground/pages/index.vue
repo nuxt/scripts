@@ -23,6 +23,10 @@ const thirdParties = [
     path: '/third-parties/fathom-analytics',
   },
   {
+    name: 'Matomo Analytics',
+    path: '/third-parties/matomo-analytics',
+  },
+  {
     name: 'Hotjar',
     path: '/third-parties/hotjar',
   },

@@ -1,8 +1,9 @@
 import { boolean, object, optional } from 'valibot'
 import type { Stripe } from '@types/stripe-v3'
 import { withQuery } from 'ufo'
-import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
+import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 
 export const StripeOptions = object({
   advancedFraudSignals: optional(boolean()),
@@ -18,13 +19,7 @@ declare global {
   interface Window extends StripeApi {}
 }
 
-export function useScriptStripe<T extends StripeApi>(options?: StripeInput, _scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(StripeOptions, options)
-    if (import.meta.client)
-      _scriptOptions?.beforeInit?.()
-  }
+export function useScriptStripe<T extends StripeApi>(options?: StripeInput, scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
   return useScript<T>({
     src: withQuery(
       `https://js.stripe.com/v3/`,
@@ -36,7 +31,11 @@ export function useScriptStripe<T extends StripeApi>(options?: StripeInput, _scr
     // @ts-expect-error TODO add types
     referrerpolicy: null,
   }, {
-    ...scriptOptions,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: StripeOptions,
+      options,
+    }),
     use() {
       return { Stripe: window.Stripe }
     },

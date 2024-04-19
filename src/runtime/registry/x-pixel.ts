@@ -1,6 +1,7 @@
 import { type Input, object, optional, string } from 'valibot'
-import { useScript, validateScriptInputSchema } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, NuxtUseScriptOptions } from '#nuxt-scripts'
+import { registryScriptOptions } from '../utils'
+import { useScript } from '#imports'
+import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
 
 interface ContentProperties {
   content_type?: string | null
@@ -45,27 +46,31 @@ export const XPixelOptions = object({
 })
 export type XPixelInput = Input<typeof XPixelOptions>
 
-export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput, _scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  scriptOptions.beforeInit = () => {
-    import.meta.dev && validateScriptInputSchema(XPixelOptions, options)
-
-    if (import.meta.client) {
-      const s = window.twq = function (...params: any[]) {
-        s.exe ? s.exe(s, ...params) : s.queue.push(params)
-      }
-      s.version = options.version || '1.1'
-      s.queue = [
-        ['config', options.id],
-      ]
-    }
-    _scriptOptions?.beforeInit?.()
-  }
+export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
   return useScript<T>({
     key: 'xPixel',
     src: 'https://static.ads-twitter.com/uwt.js',
   }, {
-    ...scriptOptions,
+    ...registryScriptOptions({
+      scriptOptions,
+      schema: XPixelOptions,
+      options,
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            // @ts-expect-error untyped
+            const s = window.twq = function (...params: any[]) {
+              // @ts-expect-error untyped
+              s.exe ? s.exe(s, ...params) : s.queue.push(params)
+            }
+            // @ts-expect-error untyped
+            s.version = options?.version || '1.1'
+            // @ts-expect-error untyped
+            s.queue = [
+              ['config', options?.id],
+            ]
+          },
+    }),
     use() {
       return { twq: window.twq }
     },

@@ -15,7 +15,6 @@ export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptio
   const id = input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))
   // only validate if we're initializing the script
   if (!nuxtApp.scripts?.[id]) {
-    options.beforeInit?.()
     if (import.meta.client) {
       performance?.mark?.('mark_feature_usage', {
         detail: {
