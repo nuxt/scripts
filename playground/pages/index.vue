@@ -61,6 +61,14 @@ const thirdPartyComponents = [
     name: 'Vimeo',
     path: '/third-parties/vimeo-component',
   },
+  {
+    name: 'YouTube',
+    path: '/third-parties/youtube',
+  },
+  {
+    name: 'Google Maps',
+    path: '/third-parties/google-maps',
+  },
 ]
 
 const features = [

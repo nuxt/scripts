@@ -7,13 +7,25 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { datalayer } = useScriptGoogleTagManager({ id: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' })
-// TODO This should just work
+const { datalayer, $script } = useScriptGoogleTagManager({ id: 'GTM-MNJD4B' })
 datalayer.push({
   event: 'page_view',
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',
   page_path: '/third-parties/google-analytics',
+})
+$script.then(({ google_tag_manager, dataLayer }) => {
+  console.log('google_tag_manager is ready', google_tag_manager)
+  console.log('google_tag_manager is ready', window.google_tag_manager)
+
+  console.log('dataLayer', dataLayer)
+  console.log(google_tag_manager['GTM-MNJD4B'].dataLayer.reset)
+  console.log(google_tag_manager.dataLayer.gtmDom)
+
+  dataLayer.push({
+    event: 'pageview',
+    page_path: '/google-tag-manager',
+  })
 })
 </script>
 

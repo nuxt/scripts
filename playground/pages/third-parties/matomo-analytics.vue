@@ -12,8 +12,6 @@ const { $script, _paq } = useScriptMatomoAnalytics({
   siteId: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C',
 })
 
-console.log({ _paq })
-
 _paq.push(['trackPageView'])
 </script>
 

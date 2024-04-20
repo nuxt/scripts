@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { useHead, useScriptGoogleAnalytics } from '#imports'
+import { useScriptGoogleAnalytics } from '../../../src/runtime/registry/google-analytics'
+import { useHead } from '#imports'
 
 useHead({
   title: 'Google Analytics',
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { gtag } = useScriptGoogleAnalytics({ id: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' })
+const { gtag } = useScriptGoogleAnalytics({ id: 'GA-123456789-1' })
 gtag('event', 'page_view', {
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',
