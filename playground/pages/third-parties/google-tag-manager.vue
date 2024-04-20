@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { useHead, useScriptGoogleAnalytics } from '#imports'
-import {useScriptGoogleTagManager} from "../../../src/runtime/registry/google-tag-manager";
+import { useScriptGoogleTagManager } from '../../../src/runtime/registry/google-tag-manager'
+import { useHead } from '#imports'
 
 useHead({
   title: 'Google Analytics',
