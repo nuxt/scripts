@@ -15,9 +15,7 @@ const scripts: ScriptRegistry = {
   confetti: {
     version: 'latest',
   },
-  googleAnalytics: {
-    id: 'GA-123456789-1',
-  },
+  googleAnalytics: true,
 }
 
 export default defineNuxtConfig({
@@ -34,8 +32,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       scripts: {
-        googleTagManager: {
-          id: 'GTM-MNJD4B',
+        googleAnalytics: {
+          id: '',
         },
       },
     },

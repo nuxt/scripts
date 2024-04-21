@@ -7,7 +7,7 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { gtag } = useScriptGoogleAnalytics() // id set via nuxt scripts module config
+const { gtag, $script } = useScriptGoogleAnalytics() // id set via nuxt scripts module config
 gtag('event', 'page_view', {
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',

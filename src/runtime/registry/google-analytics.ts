@@ -1,5 +1,6 @@
 import type { GoogleAnalyticsApi } from 'third-party-capital'
 import { object, string } from 'valibot'
+import { withQuery } from 'ufo'
 import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -22,7 +23,9 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
   // Note: inputs.useScriptInput is not usable, needs to be normalized
   return registryScript<T, typeof GoogleAnalyticsOptions>('googleAnalytics', options => ({
     scriptInput: {
-      src: 'https://www.googletagmanager.com/gtag/js',
+      src: withQuery('https://www.googletagmanager.com/gtag/js', {
+        id: options?.id,
+      }),
     },
     schema: GoogleAnalyticsOptions,
     scriptOptions: {
