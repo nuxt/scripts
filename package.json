@@ -58,6 +58,7 @@
     "@nuxt/kit": "^3.11.2",
     "@types/google.maps": "^3.55.7",
     "@types/stripe-v3": "^3.1.33",
+    "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.0.50",
     "@unhead/vue": "^1.9.7",
     "consola": "^3.2.3",

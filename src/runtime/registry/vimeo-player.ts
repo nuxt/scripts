@@ -1,29 +1,29 @@
 import { object } from 'valibot'
+import type VimeoPlayer from 'vimeo__player'
 import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
+import { useHead } from '#imports'
 
-export interface VimeoApi {
+export interface VimeoPlayerApi {
   Player: VimeoPlayer
 }
 
-export const VimeoOptions = object({})
+export const VimeoPlayerOptions = object({})
 
-export type VimeoPlayer = ((...params: any[]) => void) | undefined
-
-export type VimeoInput = RegistryScriptInput<typeof VimeoOptions>
+export type VimeoPlayerInput = RegistryScriptInput<typeof VimeoPlayerOptions>
 
 declare global {
   interface Window {
-    Vimeo: VimeoApi
+    Vimeo: VimeoPlayerApi
   }
 }
 
-export function useScriptVimeo<T extends VimeoApi>(_options?: VimeoInput) {
-  return registryScript<T, typeof VimeoOptions>('vimeo', () => ({
+export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
+  return registryScript<T, typeof VimeoPlayerOptions>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },
-    schema: VimeoOptions,
+    schema: VimeoPlayerOptions,
     scriptOptions: {
       use() {
         let Player: VimeoPlayer
