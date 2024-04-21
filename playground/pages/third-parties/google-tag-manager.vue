@@ -15,11 +15,16 @@ datalayer.push({
   page_path: '/third-parties/google-analytics',
 })
 $script.then(({ google_tag_manager, dataLayer }) => {
+  // eslint-disable-next-line no-console
   console.log('google_tag_manager is ready', google_tag_manager)
+  // eslint-disable-next-line no-console
   console.log('google_tag_manager is ready', window.google_tag_manager)
 
+  // eslint-disable-next-line no-console
   console.log('dataLayer', dataLayer)
+  // eslint-disable-next-line no-console
   console.log(google_tag_manager['GTM-MNJD4B'].dataLayer.reset)
+  // eslint-disable-next-line no-console
   console.log(google_tag_manager.dataLayer.gtmDom)
 
   dataLayer.push({
