@@ -215,19 +215,16 @@ export default defineNuxtModule<ModuleOptions>({
           name: 'useScriptGoogleAnalytics',
           key: 'googleAnalytics',
           from: resolve('./runtime/registry/google-analytics'),
-          module: '@nuxt/third-party-capital',
         },
         {
           name: 'useScriptGoogleTagManager',
           key: 'googleTagManager',
           from: resolve('./runtime/registry/google-tag-manager'),
-          module: '@nuxt/third-party-capital',
         },
         {
           name: 'useScriptGoogleMaps',
           key: 'googleMaps',
           from: resolve('./runtime/registry/google-tag-manager'),
-          module: '@nuxt/third-party-capital',
         },
       ]
       registry = registry.map((i) => {

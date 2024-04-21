@@ -11,6 +11,14 @@ const thirdParties = [
     path: '/third-parties/cloudflare-web-analytics',
   },
   {
+    name: 'Google Analytics',
+    path: '/third-parties/google-analytics',
+  },
+  {
+    name: 'Google Tag Manager',
+    path: '/third-parties/google-tag-manager',
+  },
+  {
     name: 'Facebook Pixel',
     path: '/third-parties/facebook-pixel',
   },
@@ -52,6 +60,14 @@ const thirdPartyComponents = [
   {
     name: 'Vimeo',
     path: '/third-parties/vimeo-component',
+  },
+  {
+    name: 'YouTube',
+    path: '/third-parties/youtube',
+  },
+  {
+    name: 'Google Maps',
+    path: '/third-parties/google-maps',
   },
 ]
 
