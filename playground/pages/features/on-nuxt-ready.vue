@@ -1,16 +1,19 @@
 <script lang="ts" setup>
-import { useScript } from '#imports'
+import { useScriptGoogleTagManager } from '../../../src/runtime/registry/google-tag-manager'
 
-const { $script } = useScript('https://www.googletagmanager.com/gtag/js?id=GTM-5ZQZJZ', {
-  trigger: 'onNuxtReady',
-  assetStrategy: 'bundle',
+const { $script } = useScriptGoogleTagManager({
+  id: 'GTM-5ZQZJZ',
+  scriptOptions: {
+    trigger: 'onNuxtReady', // this is the default behavior
+    assetStrategy: 'bundle',
+  },
 })
 </script>
 
 <template>
   <div>
     <div>
-      {{ $script.status }}
+      {{ $script.status.value }}
     </div>
   </div>
 </template>

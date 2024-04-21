@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { useScript } from '@unhead/vue'
 import { ref, watch } from 'vue'
-import { useHead } from '#imports'
+import { useHead, useScriptNpm } from '#imports'
 
 defineProps({
   videoid: { type: String, required: true },
@@ -11,14 +10,18 @@ defineProps({
   params: { type: String, required: false, default: undefined },
 })
 
-useScript({
-  src: 'https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.js',
-}, {
-  beforeInit: () => useHead({
-    link: [
-      { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.css' },
-    ],
-  }),
+useScriptNpm('lite-yt-embed', {
+  packageName: 'lite-yt-emebed',
+  scriptOptions: {
+    beforeInit: () => useHead({
+      link: [
+        {
+          rel: 'stylesheet',
+          href: 'https://cdn.jsdelivr.net/gh/paulirish/lite-youtube-embed@master/src/lite-yt-embed.css',
+        },
+      ],
+    }),
+  },
 })
 
 // expose function to access the video API

@@ -1,5 +1,6 @@
 import { defu } from 'defu'
-import type { type BaseSchema, type Input, ObjectSchema, parse } from 'valibot'
+import type { BaseSchema, Input, ObjectSchema } from 'valibot'
+import { parse } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { createError, useRuntimeConfig, useScript } from '#imports'
 import type { NuxtUseScriptOptions, RegistryScriptInput } from '#nuxt-scripts'
@@ -34,12 +35,13 @@ type OptionsFn<O extends ObjectSchema<any>> = (options: Input<O>) => ({
 
 export function registryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
   const runtimeConfig = useRuntimeConfig().public.scripts || {}
+  // @ts-expect-error untyped
   const runtimeOptions = runtimeConfig[key]
-  const userOptions = defu(_userOptions, runtimeOptions, {})
+  const userOptions = Object.assign(_userOptions || {}, runtimeOptions || {})
   const options = optionsFn(userOptions)
 
   const scriptInput = defu({ key }, options.scriptInput) as UseScriptInput
-  const scriptOptions = options.scriptOptions || {}
+  const scriptOptions = Object.assign(_userOptions?.scriptOptions || {}, options.scriptOptions || {})
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
     // validate input in dev

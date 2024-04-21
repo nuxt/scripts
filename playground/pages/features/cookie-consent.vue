@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { createScriptConsentTrigger, useScript } from '#imports'
+import { useScriptGoogleTagManager } from '../../../src/runtime/registry/google-tag-manager'
+import { createScriptConsentTrigger } from '#imports'
 
 const showCookieBanner = ref(true)
 const scriptConsent = createScriptConsentTrigger()
@@ -8,9 +9,12 @@ function acceptCookies() {
   scriptConsent.accept()
   showCookieBanner.value = false
 }
-useScript('https://www.googletagmanager.com/gtag/js?id=GTM-5ZQZJZ', {
-  trigger: scriptConsent,
-  assetStrategy: 'bundle',
+useScriptGoogleTagManager({
+  id: 'GTM-5ZQZJZ',
+  scriptOptions: {
+    trigger: scriptConsent,
+    assetStrategy: 'bundle',
+  },
 })
 </script>
 
