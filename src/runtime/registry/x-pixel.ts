@@ -1,7 +1,6 @@
-import { type Input, object, optional, string } from 'valibot'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import { object, optional, string } from 'valibot'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 interface ContentProperties {
   content_type?: string | null
@@ -44,23 +43,24 @@ export const XPixelOptions = object({
   id: string(),
   version: optional(string()),
 })
-export type XPixelInput = Input<typeof XPixelOptions>
+export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 
-export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  return useScript<T>({
-    key: 'xPixel',
-    src: 'https://static.ads-twitter.com/uwt.js',
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
-      schema: XPixelOptions,
-      options,
+export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
+  return registryScript<T, typeof XPixelOptions>('xPixel', options => ({
+    scriptInput: {
+      src: 'https://static.ads-twitter.com/uwt.js',
+    },
+    schema: XPixelOptions,
+    scriptOptions: {
+      use() {
+        return { twq: window.twq }
+      },
       clientInit: import.meta.server
         ? undefined
         : () => {
-            // @ts-expect-error untyped
+          // @ts-expect-error untyped
             const s = window.twq = function (...params: any[]) {
-              // @ts-expect-error untyped
+            // @ts-expect-error untyped
               s.exe ? s.exe(s, ...params) : s.queue.push(params)
             }
             // @ts-expect-error untyped
@@ -70,9 +70,6 @@ export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput, scri
               ['config', options?.id],
             ]
           },
-    }),
-    use() {
-      return { twq: window.twq }
     },
-  })
+  }), _options)
 }

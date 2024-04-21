@@ -1,14 +1,14 @@
 import type { GoogleTagManagerApi } from 'third-party-capital'
 import { object, string } from 'valibot'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
-import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import { withQuery } from 'ufo'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 const GoogleTagManagerOptions = object({
   id: string(),
 })
 
-export type GoogleTagManagerInput = ScriptDynamicSrcInput<typeof GoogleTagManagerOptions>
+export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
 declare global {
   interface Window extends GoogleTagManagerApi { }
@@ -19,29 +19,31 @@ declare global {
  *
  * A 3P wrapper for Google Tag Manager that takes an options input to feed into third-party-capital({@link https://github.com/GoogleChromeLabs/third-party-capital}), which returns instructions for nuxt-scripts.
  */
-export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(options?: GoogleTagManagerInput, scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  return useScript<GoogleTagManagerApi>({
-    // need static sources so they can be transformed
-    key: 'googleTagManager',
-    src: 'https://www.googletagmanager.com/gtm.js',
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
-      schema: GoogleTagManagerOptions,
-      options,
-      clientInit: import.meta.server
+export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(options?: GoogleTagManagerInput) {
+  return registryScript<T, typeof GoogleTagManagerOptions>('googleTagManager', options => ({
+    scriptInput: {
+      async: true,
+      src: withQuery('https://www.googletagmanager.com/gtm.js', {
+        id: options?.id,
+      }),
+    },
+    schema: GoogleTagManagerOptions,
+    scriptOptions: {
+      use() {
+        return { dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }
+      },
+      // allow dataLayer to be accessed on the server
+      stub: import.meta.client
         ? undefined
-        : () => {
-            window.dataLayer = window.dataLayer || []
-            window.dataLayer.push({ 'gtm.start': new Date().getTime(), 'event': 'gtm.js' })
+        : ({ fn }) => {
+            return fn === 'dataLayer' ? [] : undefined
           },
-    }),
-    // allow dataLayer to be accessed on the server
-    stub: import.meta.client
+    },
+    clientInit: import.meta.server
       ? undefined
-      : ({ fn }) => {
-          return fn === 'dataLayer' ? [] : undefined
+      : () => {
+          window.dataLayer = window.dataLayer || []
+          window.dataLayer.push({ 'gtm.start': new Date().getTime(), 'event': 'gtm.js' })
         },
-    use: () => ({ dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }),
-  })
+  }), options)
 }

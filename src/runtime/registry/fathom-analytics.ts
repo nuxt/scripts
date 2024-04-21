@@ -1,18 +1,16 @@
-import { type Input, boolean, literal, object, optional, string, union } from 'valibot'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import { boolean, literal, object, optional, string, union } from 'valibot'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const FathomAnalyticsOptions = object({
-  'data-site': string(), // site is required
-  'src': optional(string()),
-  'data-spa': optional(union([literal('auto'), literal('history'), literal('hash')])),
-  'data-auto': optional(boolean()),
-  'data-canonical': optional(boolean()),
-  'data-honor-dnt': optional(boolean()),
+  site: string(), // site is required
+  spa: optional(union([literal('auto'), literal('history'), literal('hash')])),
+  auto: optional(boolean()),
+  canonical: optional(boolean()),
+  honorDnt: optional(boolean()),
 })
 
-export type FathomAnalyticsInput = Input<typeof FathomAnalyticsOptions>
+export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false>
 
 export interface FathomAnalyticsApi {
   beacon: (ctx: { url: string, referrer?: string }) => void
@@ -33,18 +31,26 @@ declare global {
   }
 }
 
-export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput, scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
-  return useScript<T>({
-    src: String('https://cdn.usefathom.com/script.js'), // can't be bundled
-    ...options,
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
-      schema: FathomAnalyticsOptions,
-      options,
-    }),
-    use() {
-      return window.fathom
+export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?: FathomAnalyticsInput) {
+  return registryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
+    scriptInput: {
+      src: 'https://cdn.usefathom.com/script.js', // can't be bundled
+      // append the data attr's
+      ...Object.entries(options)
+        .filter(([key]) => ['site', 'spa', 'auto', 'canonical', 'honorDnt'].includes(key))
+        .reduce((acc, [_key, value]) => {
+          // need to convert camel case to kebab case
+          const key = _key === 'honourDnt' ? 'honor-dnt' : _key
+          // @ts-expect-error untyped
+          acc[`data-${key}`] = value
+          return acc
+        }, {}),
     },
-  })
+    schema: FathomAnalyticsOptions,
+    scriptOptions: {
+      use() {
+        return window.fathom
+      },
+    },
+  }), _options)
 }

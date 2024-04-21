@@ -1,8 +1,7 @@
 import { type Input, literal, number, object, optional, string, union } from 'valibot'
 import { joinURL } from 'ufo'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
   app_id: string(),
@@ -16,7 +15,7 @@ export const IntercomOptions = object({
   vertical_padding: optional(number()),
 })
 
-export type IntercomInput = ScriptDynamicSrcInput<typeof IntercomOptions>
+export type IntercomInput = RegistryScriptInput<typeof IntercomOptions>
 
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: Input<typeof IntercomOptions>) => void)
@@ -49,23 +48,29 @@ declare global {
   }
 }
 
-export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  return useScript<T>({
-    key: 'intercom',
-    src: options?.src || joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
-      schema: IntercomOptions,
-      options,
-      clientInit: import.meta.server
-        ? undefined
-        : () => {
-            window.intercomSettings = options
-          },
-    }),
-    use() {
-      return { Intercom: window.Intercom }
+export function useScriptIntercom<T extends IntercomApi>(_options?: IntercomInput) {
+  return registryScript<T, typeof IntercomOptions>('intercom', options => ({
+    scriptInput: {
+      src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
+      // append the data attr's
+      ...Object.entries(options)
+        .filter(([key]) => key.startsWith('data-'))
+        .reduce((acc, [key, value]) => {
+          // @ts-expect-error untyped
+          acc[key] = value
+          return acc
+        }),
     },
-  })
+    schema: IntercomOptions,
+    scriptOptions: {
+      use() {
+        return { Intercom: window.Intercom }
+      },
+    },
+    clientInit: import.meta.server
+      ? undefined
+      : () => {
+          window.intercomSettings = options
+        },
+  }), _options)
 }

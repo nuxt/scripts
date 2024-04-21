@@ -2,7 +2,7 @@ import { array, literal, object, optional, string, union } from 'valibot'
 import type google from 'google.maps'
 import { withQuery } from 'ufo'
 import { registryScriptOptions } from '../utils'
-import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { NuxtUseScriptOptions, RegistryScriptInput } from '#nuxt-scripts'
 import { useScript } from '#imports'
 
 export const GoogleMapsOptions = object({
@@ -11,7 +11,7 @@ export const GoogleMapsOptions = object({
   v: optional(union([literal('weekly'), literal('beta'), literal('alpha')])),
 })
 
-export type GoogleMapsInput = ScriptDynamicSrcInput<typeof GoogleMapsOptions>
+export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
 export interface GoogleMapsApi {
   maps: google.maps

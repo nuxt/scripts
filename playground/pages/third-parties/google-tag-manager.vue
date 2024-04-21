@@ -7,8 +7,8 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { datalayer, $script } = useScriptGoogleTagManager({ id: 'GTM-MNJD4B' })
-datalayer.push({
+const { dataLayer, $script } = useScriptGoogleTagManager() // id is set via runtime config
+dataLayer.push({
   event: 'page_view',
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',

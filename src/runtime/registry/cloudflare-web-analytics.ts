@@ -1,8 +1,7 @@
-import { type Input, boolean, minLength, object, optional, string } from 'valibot'
+import { boolean, minLength, object, optional, string } from 'valibot'
 import { defu } from 'defu'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export interface CloudflareWebAnalyticsApi {
   __cfBeacon: {
@@ -34,20 +33,19 @@ export const CloudflareWebAnalyticsOptions = object({
   spa: optional(boolean()),
 })
 
-export type CloudflareWebAnalyticsInput = Input<typeof CloudflareWebAnalyticsOptions>
+export type CloudflareWebAnalyticsInput = RegistryScriptInput<typeof CloudflareWebAnalyticsOptions>
 
-export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(options?: CloudflareWebAnalyticsInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
-  return useScript<T>({
-    'src': 'https://static.cloudflareinsights.com/beacon.min.js',
-    'data-cf-beacon': JSON.stringify(defu(options, { spa: true })),
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
-      schema: CloudflareWebAnalyticsOptions,
-      options,
-    }),
-    use() {
-      return { __cfBeacon: window.__cfBeacon, __cfRl: window.__cfRl }
+export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(_options?: CloudflareWebAnalyticsInput) {
+  return registryScript<T, typeof CloudflareWebAnalyticsOptions>('cloudflareWebAnalytics', options => ({
+    scriptInput: {
+      'src': 'https://static.cloudflareinsights.com/beacon.min.js',
+      'data-cf-beacon': JSON.stringify(defu(options, { spa: true })),
     },
-  })
+    schema: CloudflareWebAnalyticsOptions,
+    scriptOptions: {
+      use() {
+        return { __cfBeacon: window.__cfBeacon, __cfRl: window.__cfRl }
+      },
+    },
+  }), _options)
 }

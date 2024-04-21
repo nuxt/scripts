@@ -81,8 +81,11 @@ onDevtoolsClientConnected(async (client) => {
                     {{ event.status }}
                   </div>
                 </template>
-                <template v-else-if="event.type === 'fn-call'">
-                  <OCodeBlock :code="`${event.fn}(${event.args.map(a => JSON.stringify(a, null, 2)).join(', ')})`" lang="javascript" />
+                <template v-else-if="event.type === 'fn-call' && event.args">
+                  <OCodeBlock :code="`${event.fn}(${event.args?.map(a => JSON.stringify(a, null, 2)).join(', ') || ''})`" lang="javascript" />
+                </template>
+                <template v-else-if="event.type === 'fn-call' && !event.args">
+                  <OCodeBlock :code="`GET ${event.fn}`" lang="javascript" />
                 </template>
               </div>
             </div>
