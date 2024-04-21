@@ -35,5 +35,27 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
         return { Player }
       },
     },
+    beforeInit() {
+      useHead({
+        link: [
+          {
+            rel: 'preconnect',
+            href: 'https://player.vimeo.com',
+          },
+          {
+            rel: 'preconnect',
+            href: 'https://i.vimeocdn.com',
+          },
+          {
+            rel: 'preconnect',
+            href: 'https://f.vimeocdn.com',
+          },
+          {
+            rel: 'preconnect',
+            href: 'https://fresnel.vimeocdn.com',
+          },
+        ],
+      })
+    },
   }), _options)
 }
