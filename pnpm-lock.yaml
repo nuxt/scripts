@@ -23,6 +23,12 @@ importers:
       '@types/google.maps':
         specifier: ^3.55.7
         version: 3.55.7
+      '@types/stripe-v3':
+        specifier: ^3.1.33
+        version: 3.1.33
+      '@types/youtube':
+        specifier: ^0.0.50
+        version: 0.0.50
       '@unhead/vue':
         specifier: ^1.9.7
         version: 1.9.7(vue@3.4.23(typescript@5.4.5))
@@ -96,9 +102,6 @@ importers:
       '@nuxt/test-utils':
         specifier: 3.12.1
         version: 3.12.1(h3@1.11.1)(playwright-core@1.43.1)(rollup@4.14.3)(vite@5.2.9(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.3))(vitest@1.5.0(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.3))(vue-router@4.3.1(vue@3.4.23(typescript@5.4.5)))(vue@3.4.23(typescript@5.4.5))
-      '@types/stripe-v3':
-        specifier: ^3.1.33
-        version: 3.1.33
       '@unhead/schema':
         specifier: ^1.9.7
         version: 1.9.7
@@ -1764,6 +1767,9 @@ packages:
 
   '@types/web-bluetooth@0.0.20':
     resolution: {integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==}
+
+  '@types/youtube@0.0.50':
+    resolution: {integrity: sha512-d4GpH4uPYp9W07kc487tiq6V/EUHl18vZWFMbQoe4Sk9LXEWzFi/BMf9x7TI4m7/j7gU3KeX8H6M8aPBgykeLw==}
 
   '@typescript-eslint/eslint-plugin@7.7.0':
     resolution: {integrity: sha512-GJWR0YnfrKnsRoluVO3PRb9r5aMZriiMMM/RHj5nnTrBy1/wIgk76XCtCKcnXGjpZQJQRFtGV9/0JJ6n30uwpQ==}
@@ -8975,6 +8981,8 @@ snapshots:
   '@types/unist@3.0.2': {}
 
   '@types/web-bluetooth@0.0.20': {}
+
+  '@types/youtube@0.0.50': {}
 
   '@typescript-eslint/eslint-plugin@7.7.0(@typescript-eslint/parser@7.7.0(eslint@9.0.0)(typescript@5.4.5))(eslint@9.0.0)(typescript@5.4.5)':
     dependencies:

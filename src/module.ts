@@ -226,6 +226,11 @@ export default defineNuxtModule<ModuleOptions>({
           key: 'googleMaps',
           from: resolve('./runtime/registry/google-maps'),
         },
+        {
+          name: 'useScriptYouTubeIframe',
+          key: 'youtubeIframe',
+          from: resolve('./runtime/registry/youtube-iframe'),
+        },
       ]
       registry = registry.map((i) => {
         i.priority = -1
