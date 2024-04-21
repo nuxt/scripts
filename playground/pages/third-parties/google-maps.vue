@@ -12,10 +12,10 @@ function changeQuery() {
   <div>
     <div>
       <GoogleMaps
-        api-key="API_KEY"
-        width="600"
-        height="400"
-        :q="query"
+        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
+        :width="600"
+        :height="400"
+        :query="query"
       />
     </div>
     <div class="button-container">

@@ -1,45 +1,59 @@
-import type { Input } from 'valibot'
-import { array, object, optional, string } from 'valibot'
+import { array, literal, object, optional, string, union } from 'valibot'
 import type google from 'google.maps'
 import { withQuery } from 'ufo'
-import { registryScriptOptions } from '../utils'
-import type { NuxtUseScriptOptions, RegistryScriptInput } from '#nuxt-scripts'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const GoogleMapsOptions = object({
   apiKey: string(),
   libraries: optional(array(string())),
+  v: optional(union([literal('weekly'), literal('beta'), literal('alpha')])),
 })
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
 export interface GoogleMapsApi {
-  maps: google.maps.Map
+  maps: google.maps
 }
 
 declare global {
-  interface Window extends GoogleMapsApi { }
+  interface Window {
+    google: typeof google
+  }
 }
 
-/**
- * useScriptGoogleMaps
- *
- * A 3P wrapper to load the Google Maps JavaScript api.
- */
-export function useScriptGoogleMaps<T extends GoogleMapsApi>(options?: Input<typeof GoogleMapsOptions>, scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  const libraries = options?.libraries || ['places']
-  return useScript<GoogleMapsApi>({
-    key: 'googleMaps',
-    src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
-      libraries: libraries.join(','),
-      key: options?.apiKey,
-    }),
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
+export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {
+  let readyPromise: Promise<void> = Promise.resolve()
+  return registryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
+    const libraries = options?.libraries || ['places']
+    return {
+      scriptInput: {
+        src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
+          libraries: libraries.join(','),
+          key: options?.apiKey,
+          loading: 'async',
+          callback: 'google.maps.__ib__',
+        }),
+      },
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            window.google = window.google || {}
+            window.google.maps = window.google.maps || {}
+            readyPromise = new Promise((resolve) => {
+              window.google.maps.__ib__ = resolve
+            })
+          },
       schema: GoogleMapsOptions,
-      options,
-    }),
-    use: () => ({ maps: window.google.maps }),
-  })
+      scriptOptions: {
+        use() {
+          return {
+            maps: readyPromise.then(() => {
+              return window.google.maps
+            }),
+          }
+        },
+      },
+    }
+  }, _options)
 }
