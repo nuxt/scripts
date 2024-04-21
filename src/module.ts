@@ -203,14 +203,6 @@ export default defineNuxtModule<ModuleOptions>({
             return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
           },
         },
-        // cloudflare turnstile
-        {
-          name: 'useScriptCloudflareTurnstile',
-          key: 'cloudflareTurnstile',
-          from: resolve('./runtime/registry/cloudflare-turnstile'),
-          module: 'nuxt-turnstile',
-        },
-        // third-party-capital
         {
           name: 'useScriptGoogleAnalytics',
           key: 'googleAnalytics',
