@@ -26,6 +26,9 @@ importers:
       '@types/stripe-v3':
         specifier: ^3.1.33
         version: 3.1.33
+      '@types/vimeo__player':
+        specifier: ^2.18.3
+        version: 2.18.3
       '@types/youtube':
         specifier: ^0.0.50
         version: 0.0.50
@@ -1764,6 +1767,9 @@ packages:
 
   '@types/unist@3.0.2':
     resolution: {integrity: sha512-dqId9J8K/vGi5Zr7oo212BGii5m3q5Hxlkwy3WpYuKPklmBEvsbMYYyLxAQpSffdLl/gdW0XUpKWFvYmyoWCoQ==}
+
+  '@types/vimeo__player@2.18.3':
+    resolution: {integrity: sha512-IzSzb6doT4I4uAnBHa+mBCiNtK7iAllEJjtpkX0sKY6/s1Vi+aX1134IAiPgiyFlMvFab/oZQpSeccK4r0/T2A==}
 
   '@types/web-bluetooth@0.0.20':
     resolution: {integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==}
@@ -8979,6 +8985,8 @@ snapshots:
   '@types/unist@2.0.10': {}
 
   '@types/unist@3.0.2': {}
+
+  '@types/vimeo__player@2.18.3': {}
 
   '@types/web-bluetooth@0.0.20': {}
 
