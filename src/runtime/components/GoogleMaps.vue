@@ -3,9 +3,11 @@ import { type PropType, computed, ref, watch } from 'vue'
 import { withQuery } from 'ufo'
 import type google from 'google.maps'
 import { defu } from 'defu'
+import { type ElementScriptTrigger, useElementScriptTrigger } from '../composables/useComponentStateTrigger'
 import { useRuntimeConfig, useScriptGoogleMaps } from '#imports'
 
 const props = defineProps({
+  trigger: { type: String as PropType<ElementScriptTrigger>, required: false, default: 'mouseover' },
   /**
    * Defines the Google Maps API key. Must have access to the Static Maps API as well.
    *
@@ -41,19 +43,14 @@ if (!apiKey)
 if (!props.query && !props.options?.center)
   throw new Error('GoogleMaps requires either a query or center option')
 
-const wasHovered = ref(false)
-const hoverPromise = new Promise<void>((resolve) => {
-  watch(wasHovered, val => val && resolve())
-})
+const elMap = ref<HTMLElement>()
 
 const { $script } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
-    trigger: hoverPromise,
+    trigger: useElementScriptTrigger(props.trigger, elMap),
   },
 })
-
-const elMap = ref<HTMLElement>()
 
 const options = computed(() => {
   return defu(props.options, {
@@ -125,7 +122,7 @@ const poster = computed(() => {
 </script>
 
 <template>
-  <div ref="elMap" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }" @mouseover="wasHovered = true">
+  <div ref="elMap" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
     <slot>
       <img v-if="!ready" :src="poster" title="" :width="width" :height="height">
     </slot>

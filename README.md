@@ -13,7 +13,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 ## Features
 
 - 🪨 [useScript by Unhead](https://unhead.unjs.io/usage/composables/use-script)
-- 🎁 20+ third-party scripts composables and components
+- 🎁 20+ third-party scripts integrations with fine-grained performance optimizations
 - ⏬ Serve scripts from your own server
 - 🕵️ Privacy Features - Protect end users identity, provide consent to scripts.
 - 🪵 DevTools integration - View your script with their status and see function logs

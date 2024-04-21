@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { type ElementScriptTrigger, useElementScriptTrigger } from '../composables/useComponentStateTrigger'
 import { useScript } from '#imports'
 
-defineProps<{
+const props = defineProps<{
+  trigger?: ElementScriptTrigger
   publishableKey: string
   pricingTableId: string
   clientReferenceId?: string
@@ -9,12 +12,16 @@ defineProps<{
   customerSessionClientSecret?: string
 }>()
 
-useScript(`https://js.stripe.com/v3/pricing-table.js`)
+const table = ref()
+useScript(`https://js.stripe.com/v3/pricing-table.js`, {
+  trigger: useElementScriptTrigger(props.trigger, table),
+})
 </script>
 
 <template>
   <ClientOnly>
     <stripe-pricing-table
+      ref="table"
       v-bind="$attrs"
       :publishable-key="publishableKey"
       :pricing-table-id="pricingTableId"
