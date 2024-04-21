@@ -1,6 +1,5 @@
 import { object, optional, string } from 'valibot'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
@@ -25,42 +24,39 @@ declare global {
   interface Window extends SegmentApi {}
 }
 
-export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput) {
-  const analyticsKey = options?.analyticsKey || 'analytics'
-  return useScript<T>({
-    'key': 'segment',
-    'data-global-segment-analytics-key': analyticsKey,
-    'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
-    ...options?.scriptInput,
-  }, {
-    ...registryScriptOptions({
+export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) {
+  return registryScript<T, typeof SegmentOptions>('segment', (options) => {
+    const analyticsKey = options?.analyticsKey || 'analytics'
+    return {
+      scriptInput: {
+        'data-global-segment-analytics-key': analyticsKey,
+        'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
+      },
       schema: SegmentOptions,
-      options,
-      clientInit: import.meta.server
-        ? undefined
-        : () => {
-            window.analytics = window.analytics || []
-            window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
-            // @ts-expect-error untyped
-            window.analytics.factory = function (method) {
-              return function (...params: any[]) {
-                const args = Array.prototype.slice.call(params)
-                args.unshift(method)
-                window.analytics.push(args)
-                return window.analytics
+      scriptOptions: {
+        use() {
+          return { analytics: window[analyticsKey] }
+        },
+        clientInit: import.meta.server
+          ? undefined
+          : () => {
+              window.analytics = window.analytics || []
+              window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
+              window.analytics.factory = function (method) {
+                return function (...params) {
+                  const args = Array.prototype.slice.call(params)
+                  args.unshift(method)
+                  window.analytics.push(args)
+                  return window.analytics
+                }
               }
-            }
-            for (let i = 0; i < window.analytics.methods.length; i++) {
-              const key = window.analytics.methods[i]
-              // @ts-expect-error untyped
-              window.analytics[key] = window.analytics.factory(key)
-            }
-            window.analytics.page()
-          },
-    }),
-    use() {
-      // @ts-expect-error untyped
-      return { analytics: window[analyticsKey] }
-    },
-  })
+              for (let i = 0; i < window.analytics.methods.length; i++) {
+                const key = window.analytics.methods[i]
+                window.analytics[key] = window.analytics.factory(key)
+              }
+              window.analytics.page()
+            },
+      },
+    }
+  }, _options)
 }

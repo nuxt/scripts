@@ -1,6 +1,5 @@
 import { boolean, object, optional, string } from 'valibot'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const MatomoAnalyticsOptions = object({
@@ -20,20 +19,16 @@ declare global {
   interface Window extends MatomoAnalyticsApi {}
 }
 
-export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(options?: MatomoAnalyticsInput) {
-  return useScript<T>({
-    src: `https://${options?.matomoUrl}/matomo.js`,
-    ...options?.scriptInput,
-  }, {
-    // avoids SSR breaking
-    stub: import.meta.client
-      ? undefined
-      : () => {
-          return []
-        },
-    ...registryScriptOptions({
-      schema: MatomoAnalyticsOptions,
-      options,
+export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
+  return registryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
+    scriptInput: {
+      src: `https://${options?.matomoUrl}/matomo.js`,
+    },
+    schema: MatomoAnalyticsOptions,
+    scriptOptions: {
+      use() {
+        return { _paq: window._paq }
+      },
       clientInit: import.meta.server
         ? undefined
         : () => {
@@ -43,9 +38,6 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(options?:
             _paq.push(['setTrackerUrl', `//${options?.matomoUrl}/matomo.php`])
             _paq.push(['setSiteId', options?.siteId])
           },
-    }),
-    use() {
-      return { _paq: window._paq }
     },
-  })
+  }), _options)
 }

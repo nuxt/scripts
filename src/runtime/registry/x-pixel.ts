@@ -1,6 +1,5 @@
 import { object, optional, string } from 'valibot'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 interface ContentProperties {
@@ -46,20 +45,22 @@ export const XPixelOptions = object({
 })
 export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 
-export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput) {
-  return useScript<T>({
-    key: 'xPixel',
-    src: 'https://static.ads-twitter.com/uwt.js',
-  }, {
-    ...registryScriptOptions({
-      schema: XPixelOptions,
-      options,
+export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
+  return registryScript<T, typeof XPixelOptions>('xPixel', options => ({
+    scriptInput: {
+      src: 'https://static.ads-twitter.com/uwt.js',
+    },
+    schema: XPixelOptions,
+    scriptOptions: {
+      use() {
+        return { twq: window.twq }
+      },
       clientInit: import.meta.server
         ? undefined
         : () => {
-            // @ts-expect-error untyped
+          // @ts-expect-error untyped
             const s = window.twq = function (...params: any[]) {
-              // @ts-expect-error untyped
+            // @ts-expect-error untyped
               s.exe ? s.exe(s, ...params) : s.queue.push(params)
             }
             // @ts-expect-error untyped
@@ -69,9 +70,6 @@ export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput) {
               ['config', options?.id],
             ]
           },
-    }),
-    use() {
-      return { twq: window.twq }
     },
-  })
+  }), _options)
 }

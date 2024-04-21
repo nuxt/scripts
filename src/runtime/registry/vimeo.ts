@@ -1,30 +1,29 @@
 import { object } from 'valibot'
-import {registryScript, registryScriptOptions} from '../utils'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-export interface VimeoScriptApi {
-  Player: any
+export interface VimeoApi {
+  Player: VimeoPlayer
 }
 
-export const VimeoScriptOptions = object({})
+export const VimeoOptions = object({})
 
 export type VimeoPlayer = ((...params: any[]) => void) | undefined
 
-export type VimeoScriptInput = RegistryScriptInput<typeof VimeoScriptOptions>
+export type VimeoInput = RegistryScriptInput<typeof VimeoOptions>
 
 declare global {
   interface Window {
-    Vimeo: VimeoScriptApi
+    Vimeo: VimeoApi
   }
 }
 
-export function useScriptVimeo<T extends VimeoScriptApi>(options?: VimeoScriptInput) {
-  return registryScript<T>('vimeo', {
+export function useScriptVimeo<T extends VimeoApi>(_options?: VimeoInput) {
+  return registryScript<T, typeof VimeoOptions>('vimeo', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },
-    schema: VimeoScriptOptions,
+    schema: VimeoOptions,
     scriptOptions: {
       use() {
         let Player: VimeoPlayer
@@ -33,8 +32,8 @@ export function useScriptVimeo<T extends VimeoScriptApi>(options?: VimeoScriptIn
             return new window.Vimeo.Player(...params)
           }
         }
-        return {Player}
+        return { Player }
       },
-    }
-  }, options)
+    },
+  }), _options)
 }

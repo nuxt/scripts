@@ -1,6 +1,6 @@
 import { boolean, minLength, object, optional, string } from 'valibot'
 import { defu } from 'defu'
-import {registryScript} from '../utils'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export interface CloudflareWebAnalyticsApi {
@@ -35,8 +35,8 @@ export const CloudflareWebAnalyticsOptions = object({
 
 export type CloudflareWebAnalyticsInput = RegistryScriptInput<typeof CloudflareWebAnalyticsOptions>
 
-export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi, O extends CloudflareWebAnalyticsInput>(_options?: O) {
-  return registryScript<T, O>('cloudflareWebAnalytics', (options) => ({
+export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(_options?: CloudflareWebAnalyticsInput) {
+  return registryScript<T, typeof CloudflareWebAnalyticsOptions>('cloudflareWebAnalytics', options => ({
     scriptInput: {
       'src': 'https://static.cloudflareinsights.com/beacon.min.js',
       'data-cf-beacon': JSON.stringify(defu(options, { spa: true })),

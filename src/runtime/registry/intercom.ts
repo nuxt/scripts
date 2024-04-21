@@ -1,7 +1,6 @@
 import { type Input, literal, number, object, optional, string, union } from 'valibot'
 import { joinURL } from 'ufo'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
@@ -49,23 +48,29 @@ declare global {
   }
 }
 
-export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput) {
-  return useScript<T>({
-    key: 'intercom',
-    src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
-    ...options?.scriptInput,
-  }, {
-    ...registryScriptOptions({
-      schema: IntercomOptions,
-      options,
-      clientInit: import.meta.server
-        ? undefined
-        : () => {
-            window.intercomSettings = options
-          },
-    }),
-    use() {
-      return { Intercom: window.Intercom }
+export function useScriptIntercom<T extends IntercomApi>(_options?: IntercomInput) {
+  return registryScript<T, typeof IntercomOptions>('intercom', options => ({
+    scriptInput: {
+      src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
+      // append the data attr's
+      ...Object.entries(options)
+        .filter(([key]) => key.startsWith('data-'))
+        .reduce((acc, [key, value]) => {
+          // @ts-expect-error untyped
+          acc[key] = value
+          return acc
+        }),
     },
-  })
+    schema: IntercomOptions,
+    scriptOptions: {
+      use() {
+        return { Intercom: window.Intercom }
+      },
+    },
+    clientInit: import.meta.server
+      ? undefined
+      : () => {
+          window.intercomSettings = options
+        },
+  }), _options)
 }
