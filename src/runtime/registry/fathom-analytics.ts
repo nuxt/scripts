@@ -1,5 +1,5 @@
 import { boolean, literal, object, optional, string, union } from 'valibot'
-import { registryScriptOptions } from '../utils'
+import {registryScript, registryScriptOptions} from '../utils'
 import { useScript } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -33,10 +33,12 @@ declare global {
   }
 }
 
-export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput) {
-  return useScript<T>({
-    src: String('https://cdn.usefathom.com/script.js'), // can't be bundled
-    ...options?.scriptInput,
+export function useScriptFathomAnalytics<T extends FathomAnalyticsApi, O extends FathomAnalyticsInput>(_options?: O) {
+  return registryScript<T, O>('fathomAnalytics', options => ({
+    scriptInput: {
+      src: String('https://cdn.usefathom.com/script.js'), // can't be bundled
+      ...options?.scriptInput,
+    }
   }, {
     ...registryScriptOptions({
       schema: FathomAnalyticsOptions,
@@ -45,5 +47,5 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?:
     use() {
       return window.fathom
     },
-  })
+  }), _options)
 }
