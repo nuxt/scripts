@@ -1,7 +1,6 @@
 import type { PropType, Ref } from 'vue'
 import { defineComponent, h, ref, watch } from 'vue'
 import type google from 'google.maps'
-import { formatDimensionValue } from '../util'
 import { useScriptGoogleMaps } from '#imports'
 
 interface LatLng {
@@ -199,7 +198,7 @@ const GoogleMaps = defineComponent({
         watch(props, () => updateMap({ map, center: props.center, q: props.q }))
     })
 
-    return () => h('div', { class: 'google-maps-container', ref: mapRef, style: { width: formatDimensionValue(props.width), height: formatDimensionValue(props.height) } })
+    return () => h('div', { class: 'google-maps-container', ref: mapRef })
   },
 })
 

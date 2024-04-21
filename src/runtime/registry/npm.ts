@@ -1,7 +1,6 @@
 import { object, optional, string } from 'valibot'
 import { withBase } from 'ufo'
-import { registryScriptOptions } from '../utils'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const NpmOptions = object({
@@ -13,15 +12,12 @@ export const NpmOptions = object({
 
 export type NpmInput = RegistryScriptInput<typeof NpmOptions>
 
-export function useScriptNpm<T extends Record<string | symbol, any>>(options: NpmInput) {
+export function useScriptNpm<T extends Record<string | symbol, any>>(key: string, _options: NpmInput) {
   // TODO support multiple providers? (e.g. jsdelivr, cdnjs, etc.) Only unpkg for now
-  return useScript<T>({
-    type: options.type,
-    key: options.packageName,
-    src: options.src || withBase(options.file || '', `https://unpkg.com/${options?.packageName}@${options.version || 'latest'}`),
-    ...options.scriptInput,
-  }, registryScriptOptions({
+  return registryScript<T, typeof NpmOptions>(`${key}-npm`, options => ({
+    scriptInput: {
+      src: withBase(options.file || '', `https://unpkg.com/${options?.packageName}@${options.version || 'latest'}`),
+    },
     schema: NpmOptions,
-    options,
-  }))
+  }), _options)
 }

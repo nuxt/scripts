@@ -10,6 +10,13 @@ import type { FathomAnalyticsInput } from './registry/fathom-analytics'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
 import type { ConfettiInput } from './registry/confetti'
+import type { GoogleAnalyticsInput } from '~/src/runtime/registry/google-analytics'
+import type { GoogleMapsInput } from '~/src/runtime/registry/google-maps'
+import type { GoogleTagManagerInput } from '~/src/runtime/registry/google-tag-manager'
+import type { MatomoAnalyticsInput } from '~/src/runtime/registry/matomo-analytics'
+import type { StripeInput } from '~/src/runtime/registry/stripe'
+import type { VimeoInput } from '~/src/runtime/registry/vimeo'
+import type { XPixelInput } from '~/src/runtime/registry/x-pixel'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -65,16 +72,23 @@ export interface NuxtAppScript {
   }[]
 }
 
-export type ScriptRegistryEntry<T> = T | [T, NuxtUseScriptOptions<T>]
+export type ScriptRegistryEntry<T> = true | T | [T, NuxtUseScriptOptions<T>]
 
 export interface ScriptRegistry {
   cloudflareWebAnalytics?: ScriptRegistryEntry<CloudflareWebAnalyticsInput>
   confetti?: ScriptRegistryEntry<ConfettiInput>
   facebookPixel?: ScriptRegistryEntry<FacebookPixelInput>
   fathomAnalytics?: ScriptRegistryEntry<FathomAnalyticsInput>
+  googleAnalytics?: ScriptRegistryEntry<GoogleAnalyticsInput>
+  googleMaps?: ScriptRegistryEntry<GoogleMapsInput>
+  googleTagManager?: ScriptRegistryEntry<GoogleTagManagerInput>
   hotjar?: ScriptRegistryEntry<HotjarInput>
   intercom?: ScriptRegistryEntry<IntercomInput>
+  matomoAnalytics?: ScriptRegistryEntry<MatomoAnalyticsInput>
   segment?: ScriptRegistryEntry<SegmentInput>
+  stripe?: ScriptRegistryEntry<StripeInput>
+  vimeo?: ScriptRegistryEntry<VimeoInput>
+  xPixel?: ScriptRegistryEntry<XPixelInput>
 }
 
 export type RegistryScriptInput<T extends ObjectSchema<any>, Bundelable extends boolean = true> = Input<T> & {

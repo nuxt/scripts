@@ -271,7 +271,7 @@ ${registry.filter(i => i.key && i.module !== '@nuxt/scripts').map((i) => {
               if (importDefinition) {
                 // title case
                 imports.unshift(importDefinition.name)
-                inits.push(`${importDefinition.name}(${JSON.stringify(c)});`)
+                inits.push(`${importDefinition.name}(${JSON.stringify(c === true ? {} : c)});`)
               }
             }
             return `import { ${imports.join(', ')} } from '#imports'
