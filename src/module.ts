@@ -224,7 +224,7 @@ export default defineNuxtModule<ModuleOptions>({
         {
           name: 'useScriptGoogleMaps',
           key: 'googleMaps',
-          from: resolve('./runtime/registry/google-tag-manager'),
+          from: resolve('./runtime/registry/google-maps'),
         },
       ]
       registry = registry.map((i) => {
