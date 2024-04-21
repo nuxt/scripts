@@ -1,9 +1,8 @@
 import { array, literal, object, optional, string, union } from 'valibot'
 import type google from 'google.maps'
 import { withQuery } from 'ufo'
-import { registryScriptOptions } from '../utils'
-import type { NuxtUseScriptOptions, RegistryScriptInput } from '#nuxt-scripts'
-import { useScript } from '#imports'
+import { registryScript } from '../utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const GoogleMapsOptions = object({
   apiKey: string(),
@@ -23,23 +22,19 @@ declare global {
   }
 }
 
-export function useScriptGoogleMaps<T extends GoogleMapsApi>(options?: GoogleMapsInput, scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  const libraries = options?.libraries || ['places']
+export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return useScript<GoogleMapsApi>({
-    key: 'googleMaps',
-    async: true,
-    src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
-      libraries: libraries.join(','),
-      key: options?.apiKey,
-      loading: 'async',
-      callback: 'google.maps.__ib__',
-    }),
-  }, {
-    ...registryScriptOptions({
-      scriptOptions,
-      schema: GoogleMapsOptions,
-      options,
+  return registryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
+    const libraries = options?.libraries || ['places']
+    return {
+      scriptInput: {
+        src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
+          libraries: libraries.join(','),
+          key: options?.apiKey,
+          loading: 'async',
+          callback: 'google.maps.__ib__',
+        }),
+      },
       clientInit: import.meta.server
         ? undefined
         : () => {
@@ -49,13 +44,16 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(options?: GoogleMap
               window.google.maps.__ib__ = resolve
             })
           },
-    }),
-    use() {
-      return {
-        maps: readyPromise.then(() => {
-          return window.google.maps
-        }),
-      }
+      schema: GoogleMapsOptions,
+      scriptOptions: {
+        use() {
+          return {
+            maps: readyPromise.then(() => {
+              return window.google.maps
+            }),
+          }
+        },
+      },
     }
-  })
+  }, _options)
 }

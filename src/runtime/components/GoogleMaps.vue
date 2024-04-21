@@ -34,7 +34,7 @@ const props = defineProps({
   height: { type: Number, required: false, default: 400 },
 })
 
-const apiKey = props.apiKey || useRuntimeConfig().public.scripts?.googleMaps
+const apiKey = props.apiKey || useRuntimeConfig().public.scripts?.googleMaps?.apikey
 
 if (!apiKey)
   throw new Error('GoogleMaps requires an API key')
@@ -48,8 +48,9 @@ const hoverPromise = new Promise<void>((resolve) => {
 
 const { $script } = useScriptGoogleMaps({
   apiKey: props.apiKey,
-}, {
-  trigger: hoverPromise,
+  scriptOptions: {
+    trigger: hoverPromise,
+  },
 })
 
 const elMap = ref<HTMLElement>()
@@ -60,6 +61,7 @@ const options = computed(() => {
     mapId: 'map',
   })
 })
+const ready = ref(false)
 
 function queryMaps(maps: google.maps, marker: google.maps.MarkerLibrary, map: google.maps.Map) {
   const request = {
@@ -87,7 +89,6 @@ function queryMaps(maps: google.maps, marker: google.maps.MarkerLibrary, map: go
   })
 }
 
-const ready = ref(false)
 // create the map
 $script.then(async (instance) => {
   const maps = await instance.maps
@@ -96,7 +97,10 @@ $script.then(async (instance) => {
   const mapDiv = document.createElement('div')
   mapDiv.style.width = '100%'
   mapDiv.style.height = '100%'
-  elMap.value?.appendChild(mapDiv)
+  const _ = watch(ready, (v) => {
+    v && elMap.value?.appendChild(mapDiv)
+    _()
+  })
 
   const map = new maps.Map(mapDiv, options.value)
   watch(options, () => map.setOptions(options.value))
@@ -108,19 +112,6 @@ $script.then(async (instance) => {
   if (!props.query)
     ready.value = true
 })
-
-// if we have a query apply it
-
-// if (props.q) {
-//   const result = createMapWithQuery({ zoom: props.zoom, mapRef, q: props.q })
-//   map = result.map
-//   return
-// }
-//
-// if (props.center) {
-//   const result = createMapWithCenter({ zoom: props.zoom, mapRef, center: props.center })
-//   map = result.map
-// }
 
 const poster = computed(() => {
   return withQuery('https://maps.googleapis.com/maps/api/staticmap', {
@@ -134,7 +125,7 @@ const poster = computed(() => {
 </script>
 
 <template>
-  <div ref="elMap" :style="{ width: `${width}px`, height: `${height}px`, 'position': 'relative' }" @mouseover="wasHovered = true">
+  <div ref="elMap" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }" @mouseover="wasHovered = true">
     <slot>
       <img v-if="!ready" :src="poster" title="" :width="width" :height="height">
     </slot>
