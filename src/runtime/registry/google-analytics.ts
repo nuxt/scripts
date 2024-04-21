@@ -1,8 +1,8 @@
 import type { GoogleAnalyticsApi } from 'third-party-capital'
 import { object, string } from 'valibot'
+import { registryScriptOptions } from '../utils'
 import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 import { useScript } from '#imports'
-import { registryScriptOptions } from '~/src/runtime/utils'
 
 const GoogleAnalyticsOptions = object({
   id: string(),

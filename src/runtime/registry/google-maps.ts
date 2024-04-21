@@ -2,9 +2,9 @@ import type { Input } from 'valibot'
 import { array, object, optional, string } from 'valibot'
 import type google from 'google.maps'
 import { withQuery } from 'ufo'
+import { registryScriptOptions } from '../utils'
 import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
 import { useScript } from '#imports'
-import { registryScriptOptions } from '~/src/runtime/utils'
 
 export const GoogleMapsOptions = object({
   apiKey: string(),
