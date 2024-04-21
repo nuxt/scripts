@@ -1,7 +1,7 @@
 import { number, object, optional } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export interface HotjarApi {
   hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void) & ((event: 'stateChange', path: string) => void) & ((event: 'event', eventName: string) => void) & ((event: string, arg?: string) => void) & ((...params: any[]) => void) & {
@@ -20,16 +20,15 @@ export const HotjarOptions = object({
   sv: optional(number()),
 })
 
-export type HotjarInput = ScriptDynamicSrcInput<typeof HotjarOptions>
+export type HotjarInput = RegistryScriptInput<typeof HotjarOptions>
 
-export function useScriptHotjar<T extends HotjarApi>(options?: HotjarInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
+export function useScriptHotjar<T extends HotjarApi>(options?: HotjarInput) {
   return useScript<T>({
     key: 'hotjar',
-    // requires extra steps to bundle
-    src: options?.src || `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
+    src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
+    ...options?.scriptInput,
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: HotjarOptions,
       options,
       clientInit: import.meta.server

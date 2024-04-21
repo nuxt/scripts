@@ -77,6 +77,9 @@ export interface ScriptRegistry {
   segment?: ScriptRegistryEntry<SegmentInput>
 }
 
-export type ScriptDynamicSrcInput<T extends ObjectSchema<any>> = Input<T> & { src?: string }
+export type RegistryScriptInput<T extends ObjectSchema<any>, Bundelable extends boolean = true> = Input<T> & {
+  scriptInput?: UseScriptInput
+  scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'assetStrategy' | 'use'>
+}
 
 export type RegistryScripts = (Import & { src?: string | false, module?: '@nuxt/scripts' | string, key?: string, transform?: (options: any) => string })[]

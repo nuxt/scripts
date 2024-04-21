@@ -1,14 +1,14 @@
 import { object, optional, string } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
   writeKey: string(),
   analyticsKey: optional(string()),
 })
 
-export type SegmentInput = ScriptDynamicSrcInput<typeof SegmentOptions>
+export type SegmentInput = RegistryScriptInput<typeof SegmentOptions>
 
 export interface SegmentApi {
   analytics: {
@@ -25,15 +25,15 @@ declare global {
   interface Window extends SegmentApi {}
 }
 
-export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
+export function useScriptSegment<T extends SegmentApi>(options?: SegmentInput) {
   const analyticsKey = options?.analyticsKey || 'analytics'
   return useScript<T>({
     'key': 'segment',
     'data-global-segment-analytics-key': analyticsKey,
-    'src': options?.src || `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
+    'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
+    ...options?.scriptInput,
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: SegmentOptions,
       options,
       clientInit: import.meta.server

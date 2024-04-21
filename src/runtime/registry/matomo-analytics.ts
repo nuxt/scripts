@@ -1,7 +1,7 @@
-import { type Input, boolean, object, optional, string } from 'valibot'
+import { boolean, object, optional, string } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: string(), // site is required
@@ -10,7 +10,7 @@ export const MatomoAnalyticsOptions = object({
   enableLinkTracking: optional(boolean()),
 })
 
-export type MatomoAnalyticsInput = Input<typeof MatomoAnalyticsOptions>
+export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false>
 
 interface MatomoAnalyticsApi {
   _paq: unknown[]
@@ -20,10 +20,10 @@ declare global {
   interface Window extends MatomoAnalyticsApi {}
 }
 
-export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(options?: MatomoAnalyticsInput, scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
+export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(options?: MatomoAnalyticsInput) {
   return useScript<T>({
     src: `https://${options?.matomoUrl}/matomo.js`,
-    ...options,
+    ...options?.scriptInput,
   }, {
     // avoids SSR breaking
     stub: import.meta.client
@@ -32,7 +32,6 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(options?:
           return []
         },
     ...registryScriptOptions({
-      scriptOptions,
       schema: MatomoAnalyticsOptions,
       options,
       clientInit: import.meta.server

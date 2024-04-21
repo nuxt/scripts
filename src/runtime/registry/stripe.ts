@@ -3,13 +3,13 @@ import type { Stripe } from '@types/stripe-v3'
 import { withQuery } from 'ufo'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const StripeOptions = object({
   advancedFraudSignals: optional(boolean()),
 })
 
-export type StripeInput = ScriptDynamicSrcInput<typeof StripeOptions>
+export type StripeInput = RegistryScriptInput<typeof StripeOptions, false>
 
 export interface StripeApi {
   Stripe: Stripe
@@ -19,7 +19,7 @@ declare global {
   interface Window extends StripeApi {}
 }
 
-export function useScriptStripe<T extends StripeApi>(options?: StripeInput, scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
+export function useScriptStripe<T extends StripeApi>(options?: StripeInput) {
   return useScript<T>({
     src: withQuery(
       `https://js.stripe.com/v3/`,
@@ -30,9 +30,9 @@ export function useScriptStripe<T extends StripeApi>(options?: StripeInput, scri
     crossorigin: null,
     // @ts-expect-error TODO add types
     referrerpolicy: null,
+    ...options?.scriptInput,
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: StripeOptions,
       options,
     }),

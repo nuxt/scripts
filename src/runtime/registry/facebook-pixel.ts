@@ -1,7 +1,7 @@
-import { type Input, number, object, string, union } from 'valibot'
+import { number, object, string, union } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
@@ -40,15 +40,15 @@ declare global {
 export const FacebookPixelOptions = object({
   id: union([string(), number()]),
 })
-export type FacebookPixelInput = Input<typeof FacebookPixelOptions>
+export type FacebookPixelInput = RegistryScriptInput<typeof FacebookPixelOptions>
 
-export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: FacebookPixelInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
+export function useScriptFacebookPixel<T extends FacebookPixelApi>(options?: FacebookPixelInput) {
   return useScript<T>({
     key: 'facebookPixel',
     src: 'https://connect.facebook.net/en_US/fbevents.js',
+    ...options?.scriptInput,
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: FacebookPixelOptions,
       options,
       clientInit: import.meta.server

@@ -118,7 +118,7 @@ describe('nuxtScriptTransformer', () => {
         },
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ site: '123', src: '/_scripts/script.js.js' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ scriptInput: { src: '/_scripts/script.js.js' },  site: '123' }, )"`)
   })
 
   it('static src integration is transformed - opt-out', async () => {
@@ -162,7 +162,7 @@ describe('nuxtScriptTransformer', () => {
         },
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ app_id: '123', src: '/_scripts/widget/123.js' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' })"`)
   })
 
   it('dynamic src integration can be opted-out explicit', async () => {
@@ -208,7 +208,7 @@ describe('nuxtScriptTransformer', () => {
         },
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ app_id: '123', src: '/_scripts/widget/123.js' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' }, )"`)
   })
 
   it('can re-use opt-in once it\'s loaded', async () => {
@@ -232,7 +232,7 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptIntercom({ app_id: '123', src: '/_scripts/widget/123.js' }, )
+      "const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' }, )
       const instance2 = useScriptIntercom()"
     `)
   })
@@ -256,6 +256,6 @@ describe('nuxtScriptTransformer', () => {
         },
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js', src: '/_scripts/soMXoYlUxl.js' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/soMXoYlUxl.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
   })
 })

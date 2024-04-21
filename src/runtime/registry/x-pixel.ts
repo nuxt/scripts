@@ -1,7 +1,7 @@
-import { type Input, object, optional, string } from 'valibot'
+import { object, optional, string } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 interface ContentProperties {
   content_type?: string | null
@@ -44,15 +44,14 @@ export const XPixelOptions = object({
   id: string(),
   version: optional(string()),
 })
-export type XPixelInput = Input<typeof XPixelOptions>
+export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 
-export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
+export function useScriptXPixel<T extends XPixelApi>(options?: XPixelInput) {
   return useScript<T>({
     key: 'xPixel',
     src: 'https://static.ads-twitter.com/uwt.js',
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: XPixelOptions,
       options,
       clientInit: import.meta.server

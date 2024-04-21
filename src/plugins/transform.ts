@@ -84,7 +84,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                   console.warn(`[Nuxt Scripts] Integration ${fnName} not found in registry. Used in ${id}.`)
                   return
                 }
-                options.moduleDetected(registryNode.module)
+                options.moduleDetected?.(registryNode.module)
                 // this is only needed when we have a dynamic src that we need to compute
                 if (!registryNode.transform && !registryNode.src)
                   return
@@ -146,9 +146,26 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                       s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${newSrc}'`)
                     }
                     else {
-                      // otherwise we need to append a `src: ${src}` after the last property
-                      const lastProperty = node.arguments[0].properties[node.arguments[0].properties.length - 1]
-                      s.appendRight(lastProperty.end, `, src: '${newSrc}'`)
+                      // check if there's a scriptInput property
+                      const scriptInputProperty = node.arguments[0].properties.find(
+                        (p: any) => p.key?.name === 'scriptInput' || p.key?.value === 'scriptInput',
+                      )
+                      // see if there is a script input on it
+                      if (scriptInputProperty) {
+                        const scriptInput = scriptInputProperty.value
+                        if (scriptInput.type === 'ObjectExpression') {
+                          const srcProperty = scriptInput.properties.find(
+                            (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
+                          )
+                          if (srcProperty)
+                            s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${newSrc}'`)
+                          else
+                            s.appendRight(scriptInput.end, `, src: '${newSrc}'`)
+                        }
+                      }
+                      else {
+                        s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${newSrc}' }, `)
+                      }
                     }
                   }
                 }

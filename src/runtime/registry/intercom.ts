@@ -2,7 +2,7 @@ import { type Input, literal, number, object, optional, string, union } from 'va
 import { joinURL } from 'ufo'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
   app_id: string(),
@@ -16,7 +16,7 @@ export const IntercomOptions = object({
   vertical_padding: optional(number()),
 })
 
-export type IntercomInput = ScriptDynamicSrcInput<typeof IntercomOptions>
+export type IntercomInput = RegistryScriptInput<typeof IntercomOptions>
 
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: Input<typeof IntercomOptions>) => void)
@@ -49,13 +49,13 @@ declare global {
   }
 }
 
-export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput, scriptOptions?: NuxtUseScriptIntegrationOptions) {
+export function useScriptIntercom<T extends IntercomApi>(options?: IntercomInput) {
   return useScript<T>({
     key: 'intercom',
-    src: options?.src || joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
+    src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
+    ...options?.scriptInput,
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: IntercomOptions,
       options,
       clientInit: import.meta.server

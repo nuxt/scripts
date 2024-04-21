@@ -2,13 +2,13 @@ import type { GoogleTagManagerApi } from 'third-party-capital'
 import { object, string } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptOptions, ScriptDynamicSrcInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 const GoogleTagManagerOptions = object({
   id: string(),
 })
 
-export type GoogleTagManagerInput = ScriptDynamicSrcInput<typeof GoogleTagManagerOptions>
+export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
 declare global {
   interface Window extends GoogleTagManagerApi { }
@@ -19,8 +19,8 @@ declare global {
  *
  * A 3P wrapper for Google Tag Manager that takes an options input to feed into third-party-capital({@link https://github.com/GoogleChromeLabs/third-party-capital}), which returns instructions for nuxt-scripts.
  */
-export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(options?: GoogleTagManagerInput, scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  return useScript<GoogleTagManagerApi>({
+export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(options?: GoogleTagManagerInput) {
+  return useScript<T>({
     // need static sources so they can be transformed
     key: 'googleTagManager',
     src: 'https://www.googletagmanager.com/gtm.js',

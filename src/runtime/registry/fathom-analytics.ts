@@ -1,7 +1,7 @@
-import { type Input, boolean, literal, object, optional, string, union } from 'valibot'
+import { boolean, literal, object, optional, string, union } from 'valibot'
 import { registryScriptOptions } from '../utils'
 import { useScript } from '#imports'
-import type { NuxtUseScriptIntegrationOptions } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const FathomAnalyticsOptions = object({
   'data-site': string(), // site is required
@@ -12,7 +12,7 @@ export const FathomAnalyticsOptions = object({
   'data-honor-dnt': optional(boolean()),
 })
 
-export type FathomAnalyticsInput = Input<typeof FathomAnalyticsOptions>
+export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false>
 
 export interface FathomAnalyticsApi {
   beacon: (ctx: { url: string, referrer?: string }) => void
@@ -33,13 +33,12 @@ declare global {
   }
 }
 
-export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput, scriptOptions?: Omit<NuxtUseScriptIntegrationOptions, 'assetStrategy'>) {
+export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(options?: FathomAnalyticsInput) {
   return useScript<T>({
     src: String('https://cdn.usefathom.com/script.js'), // can't be bundled
-    ...options,
+    ...options?.scriptInput,
   }, {
     ...registryScriptOptions({
-      scriptOptions,
       schema: FathomAnalyticsOptions,
       options,
     }),
