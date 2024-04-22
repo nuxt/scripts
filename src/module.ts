@@ -176,7 +176,7 @@ export default defineNuxtModule<ModuleOptions>({
         },
         {
           name: 'useScriptVimeoPlayer',
-          from: resolve('./runtime/registry/vimeo'),
+          from: resolve('./runtime/registry/vimeo-player'),
           key: 'vimeoPlayer',
         },
         {
