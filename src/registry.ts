@@ -11,6 +11,16 @@ const { resolve } = createResolver(import.meta.url)
 export const registry: RegistryScripts = [
   // analytics
   {
+    name: 'useScriptGoogleAnalytics',
+    key: 'googleAnalytics',
+    from: resolve('./runtime/registry/google-analytics'),
+  },
+  {
+    name: 'useScriptPlausibleAnalytics',
+    key: 'plausibleAnalytics',
+    from: resolve('./runtime/registry/plausible-analytics'),
+  },
+  {
     name: 'useScriptCloudflareWebAnalytics',
     key: 'cloudflareWebAnalytics',
     from: resolve('./runtime/registry/cloudflare-web-analytics'),
@@ -27,11 +37,6 @@ export const registry: RegistryScripts = [
     key: 'matomoAnalytics',
     from: resolve('./runtime/registry/matomo-analytics'),
     src: false, // can not be bundled, breaks script
-  },
-  {
-    name: 'useScriptGoogleAnalytics',
-    key: 'googleAnalytics',
-    from: resolve('./runtime/registry/google-analytics'),
   },
   // tracking
   {
