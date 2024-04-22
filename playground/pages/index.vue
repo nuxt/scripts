@@ -31,6 +31,10 @@ const thirdParties = [
     path: '/third-parties/fathom-analytics',
   },
   {
+    name: 'Plausible Analytics',
+    path: '/third-parties/plausible-analytics',
+  },
+  {
     name: 'Matomo Analytics',
     path: '/third-parties/matomo-analytics',
   },

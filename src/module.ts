@@ -223,6 +223,11 @@ export default defineNuxtModule<ModuleOptions>({
           key: 'youtubeIframe',
           from: resolve('./runtime/registry/youtube-iframe'),
         },
+        {
+          name: 'useScriptPlausibleAnalytics',
+          key: 'plausibleAnalytics',
+          from: resolve('./runtime/registry/plausible-analytics'),
+        },
       ]
       registry = registry.map((i) => {
         i.priority = -1
