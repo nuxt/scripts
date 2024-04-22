@@ -2,7 +2,7 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.1.12",
-  "packageManager": "pnpm@9.0.4",
+  "packageManager": "pnpm@9.0.5",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "website": "https://harlanzw.com",
@@ -53,8 +53,8 @@
     ]
   },
   "dependencies": {
-    "@nuxt/devtools-kit": "^1.1.5",
-    "@nuxt/devtools-ui-kit": "^1.1.5",
+    "@nuxt/devtools-kit": "^1.2.0",
+    "@nuxt/devtools-ui-kit": "^1.2.0",
     "@nuxt/kit": "^3.11.2",
     "@types/google.maps": "^3.55.7",
     "@types/stripe-v3": "^3.1.33",
@@ -84,7 +84,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "2.15.0",
-    "@nuxt/devtools-ui-kit": "^1.1.5",
+    "@nuxt/devtools-ui-kit": "^1.2.0",
     "@nuxt/module-builder": "^0.5.5",
     "@nuxt/test-utils": "3.12.1",
     "@unhead/schema": "^1.9.7",
