@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type Player from 'vimeo__player'
-import type { EventMap, VimeoVideoQuality } from '@vimeo/player'
-import { useScriptVimeoPlayer } from '../registry/vimeo-player'
-import { type ElementScriptTrigger, useElementScriptTrigger } from '../composables/useComponentStateTrigger'
-import { useAsyncData } from '#imports'
+import type { EventMap, VimeoVideoQuality } from 'vimeo__player'
+import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useAsyncData, useElementScriptTrigger, useScriptVimeoPlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
   // custom

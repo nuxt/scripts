@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type YT from 'youtube'
-import { useScriptYouTubeIframe } from '../registry/youtube-iframe'
-import { type ElementScriptTrigger, useElementScriptTrigger } from '../composables/useComponentStateTrigger'
+import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useElementScriptTrigger, useScriptYouTubeIframe } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger

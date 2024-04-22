@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { type ElementScriptTrigger, useElementScriptTrigger } from '../composables/useComponentStateTrigger'
-import { useScript } from '#imports'
+import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useElementScriptTrigger, useScript } from '#imports'
 
 const props = defineProps<{
   trigger?: ElementScriptTrigger

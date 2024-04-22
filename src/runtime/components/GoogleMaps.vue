@@ -3,8 +3,8 @@ import { type PropType, computed, ref, watch } from 'vue'
 import { withQuery } from 'ufo'
 import type google from 'google.maps'
 import { defu } from 'defu'
-import { type ElementScriptTrigger, useElementScriptTrigger } from '../composables/useComponentStateTrigger'
-import { useRuntimeConfig, useScriptGoogleMaps } from '#imports'
+import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useElementScriptTrigger, useRuntimeConfig, useScriptGoogleMaps } from '#imports'
 
 const props = defineProps({
   trigger: { type: String as PropType<ElementScriptTrigger>, required: false, default: 'mouseover' },
