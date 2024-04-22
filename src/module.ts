@@ -10,7 +10,6 @@ import {
   hasNuxtModule,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import { joinURL, withBase, withQuery } from 'ufo'
 import { lt } from 'semver'
 import { resolvePath } from 'mlly'
 import { join } from 'pathe'
@@ -19,10 +18,7 @@ import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
 import { extendTypes, installNuxtModule } from './kit'
-import type { IntercomInput } from './runtime/registry/intercom'
-import type { SegmentInput } from './runtime/registry/segment'
-import type { HotjarInput } from './runtime/registry/hotjar'
-import type { NpmInput } from './runtime/registry/npm'
+import { registry } from './registry'
 import type { NuxtUseScriptInput, NuxtUseScriptOptions, RegistryScripts, ScriptRegistry } from '#nuxt-scripts'
 
 export interface ModuleOptions {
@@ -96,6 +92,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
+
     const { version, name } = await readPackageJSON(resolve('../package.json'))
     const { version: unheadVersion } = await readPackageJSON(join(await resolvePath('@unhead/vue'), 'package.json'))
 
@@ -121,115 +118,11 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     nuxt.hooks.hook('modules:done', async () => {
-      let registry: RegistryScripts = [
-        {
-          name: 'useScriptCloudflareWebAnalytics',
-          key: 'cloudflareWebAnalytics',
-          from: resolve('./runtime/registry/cloudflare-web-analytics'),
-          src: 'https://static.cloudflareinsights.com/beacon.min.js',
-        },
-        {
-          name: 'useScriptConfetti',
-          key: 'confetti',
-          from: resolve('./runtime/registry/confetti'),
-          src: 'https://unpkg.com/js-confetti@latest/dist/js-confetti.browser.js',
-        },
-        {
-          name: 'useScriptFacebookPixel',
-          key: 'facebookPixel',
-          from: resolve('./runtime/registry/facebook-pixel'),
-          src: 'https://connect.facebook.net/en_US/fbevents.js',
-        },
-        {
-          name: 'useScriptXPixel',
-          key: 'xPixel',
-          from: resolve('./runtime/registry/x-pixel'),
-          src: 'https://static.ads-twitter.com/uwt.js',
-        },
-        {
-          name: 'useScriptFathomAnalytics',
-          key: 'fathomAnalytics',
-          from: resolve('./runtime/registry/fathom-analytics'),
-          src: false, // can not be bundled, breaks script
-        },
-        {
-          name: 'useScriptMatomoAnalytics',
-          key: 'matomoAnalytics',
-          from: resolve('./runtime/registry/matomo-analytics'),
-          src: false, // can not be bundled, breaks script
-        },
-        {
-          name: 'useScriptStripe',
-          key: 'stripe',
-          from: resolve('./runtime/registry/stripe'),
-          src: false, // can not be bundled, breaks script
-        },
-        {
-          name: 'useScriptHotjar',
-          from: resolve('./runtime/registry/hotjar'),
-          key: 'hotjar',
-          transform(options?: HotjarInput) {
-            return withQuery(`https://static.hotjar.com/c/hotjar-${options?.id || ''}.js`, {
-              sv: options?.sv || '6',
-            })
-          },
-        },
-        {
-          name: 'useScriptVimeoPlayer',
-          from: resolve('./runtime/registry/vimeo-player'),
-          key: 'vimeoPlayer',
-        },
-        {
-          name: 'useScriptIntercom',
-          from: resolve('./runtime/registry/intercom'),
-          key: 'intercom',
-          transform(options?: IntercomInput) {
-            return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
-          },
-        },
-        {
-          name: 'useScriptSegment',
-          from: resolve('./runtime/registry/segment'),
-          key: 'segment',
-          transform(options?: SegmentInput) {
-            return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
-          },
-        },
-        {
-          name: 'useScriptNpm',
-          // key is based on package name
-          from: resolve('./runtime/registry/npm'),
-          transform(options?: NpmInput) {
-            return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
-          },
-        },
-        {
-          name: 'useScriptGoogleAnalytics',
-          key: 'googleAnalytics',
-          from: resolve('./runtime/registry/google-analytics'),
-        },
-        {
-          name: 'useScriptGoogleTagManager',
-          key: 'googleTagManager',
-          from: resolve('./runtime/registry/google-tag-manager'),
-        },
-        {
-          name: 'useScriptGoogleMaps',
-          key: 'googleMaps',
-          from: resolve('./runtime/registry/google-maps'),
-        },
-        {
-          name: 'useScriptYouTubeIframe',
-          key: 'youtubeIframe',
-          from: resolve('./runtime/registry/youtube-iframe'),
-        },
-      ]
-      registry = registry.map((i) => {
+      addImports(registry.map((i) => {
         i.priority = -1
         i.module = i.module || '@nuxt/scripts'
         return i
-      })
-      addImports(registry)
+      }))
 
       // @ts-expect-error runtime
       await nuxt.hooks.callHook('scripts:registry', registry)
