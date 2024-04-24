@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useScriptRegistry } from '~/composables/useScriptRegistry'
+import { useScriptsRegistry } from '~/composables/useScriptsRegistry'
 
-const registry = useScriptRegistry()
+const registry = useScriptsRegistry()
 const { data: page } = await useAsyncData('index', () => queryContent('/').findOne())
 
 useSeoMeta({
@@ -78,6 +78,17 @@ useSeoMeta({
 .grid-transform {
   position: relative;
   transform: perspective(600px) rotateX(-1deg) rotateY(-15deg);
+}
+.grid-transform:before {
+  content: '';
+  z-index: -1;
+  left: -10%;
+  top: -10%;
+  position: absolute;
+  width: 150%;
+  height: 120%;
+  background: radial-gradient(circle, #D9FBE8 0%, #D9FBE8 50%, transparent 100%);
+  opacity: 0.5;
 }
 .card {
   box-shadow: 5px 5px 7px rgba(0, 0, 0, 0.05);
