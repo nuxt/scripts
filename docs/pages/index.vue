@@ -87,18 +87,23 @@ useSeoMeta({
   position: absolute;
   width: 150%;
   height: 120%;
-  background: radial-gradient(circle, #D9FBE8 0%, #D9FBE8 50%, transparent 100%);
+  background: radial-gradient(circle, #D9FBE8 0%, white 70%, transparent 100%);
   opacity: 0.5;
+}
+.dark .grid-transform:before {
+  background: radial-gradient(circle, #1F2937 0%, #020420 70%, transparent 100%);
 }
 .card {
   box-shadow: 5px 5px 7px rgba(0, 0, 0, 0.05);
   transition: transform 0.5s, box-shadow 0.5s;
 }
 .card svg {
-  opacity: 0.5;
+  opacity: 0.7;
+  transition: 0.2s;
 }
 .card:hover {
   box-shadow: 10px 10px 14px rgba(0, 0, 0, 0.1);
+  transform: translateX(-7px);
 }
 .card:hover svg {
   opacity: 1;

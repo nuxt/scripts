@@ -26,7 +26,7 @@ export default defineNuxtConfig({
   },
   site: {
     name: 'Nuxt Scripts',
-    url: 'nuxt-scripts.vercel.app',
+    url: 'nuxt.scripts.com',
   },
   nitro: {
     prerender: {
