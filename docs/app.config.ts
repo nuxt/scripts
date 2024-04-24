@@ -29,16 +29,11 @@ export default defineAppConfig({
     title: 'Table of Contents',
     bottom: {
       title: 'Community',
-      edit: 'https://github.com/nnuxt/scripts/edit/main/docs/content',
+      edit: 'https://github.com/nuxt/scripts/edit/main/docs/content',
       links: [{
         icon: 'i-heroicons-star',
         label: 'Star on GitHub',
         to: 'https://github.com/nuxt/scripts',
-        target: '_blank',
-      }, {
-        icon: 'i-simple-icons-nuxtdotjs',
-        label: 'Nuxt Scripts Admin',
-        to: 'https://admin.hub.nuxt.com',
         target: '_blank',
       }],
     },

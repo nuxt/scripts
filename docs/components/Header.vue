@@ -12,10 +12,7 @@ const links = [
   {
     label: 'Script Registry',
     to: '/scripts',
-  },
-  {
-    label: 'API',
-    to: '/docs/api',
+    icon: 'i-ph-floppy-disk-duotone',
   },
 ]
 </script>
@@ -35,6 +32,7 @@ const links = [
         <UButton
           v-for="(link, index) of header.links"
           :key="index"
+          icon="i-ph-floppy-disk-duotone"
           v-bind="{ color: 'gray', variant: 'ghost', ...link }"
         />
       </template>

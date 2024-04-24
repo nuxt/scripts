@@ -1,5 +1,5 @@
 ---
-title: useGoogleAnalytics
+title: Google Analytics
 description: useGoogleAnalytics allows you to load and initialize Google Analytics in your Nuxt app.
 links:
   - label: Source

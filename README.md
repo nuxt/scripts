@@ -17,6 +17,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 - ⏬ Serve scripts from your own server
 - 🕵️ Privacy Features - Protect end users identity, provide consent to scripts.
 - 🪵 DevTools integration - View your script with their status and see function logs
+- 🚀 0 Runtime Dependencies
 
 ## Background
 
