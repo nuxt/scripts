@@ -11,7 +11,6 @@ import type { ModuleOptions } from '../module'
 import type { RegistryScripts } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
-  overrides?: ModuleOptions['overrides']
   resolveScript: (src: string) => string
   moduleDetected: (module: string) => void
   defaultBundle?: boolean
@@ -57,23 +56,17 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               // both cases
               const fnName = _node.callee?.name
               const node = _node as SimpleCallExpression
-              let scriptKey: string | undefined
               let scriptSrcNode: any | undefined
               let src: false | string | undefined
               if (fnName === 'useScript') {
                 // do easy case first where first argument is a literal
                 if (node.arguments[0].type === 'Literal') {
                   scriptSrcNode = node.arguments[0]
-                  scriptKey = scriptSrcNode.value as string
                 }
                 else if (node.arguments[0].type === 'ObjectExpression') {
                   const srcProperty = node.arguments[0].properties.find(
                     (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
                   )
-                  const keyProperty = node.arguments[0].properties.find(
-                    (p: any) => p.key?.name === 'key' || p.key?.value === 'key',
-                  )
-                  scriptKey = keyProperty?.value?.value || srcProperty?.value
                   scriptSrcNode = srcProperty?.value
                 }
               }
@@ -112,7 +105,6 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                     if (src === false)
                       return
                   }
-                  scriptKey = registryNode.key
                 }
               }
 
@@ -138,8 +130,6 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                       canBundle = true
                     }
                   }
-                  // @ts-expect-error untyped
-                  canBundle = canBundle || options.overrides?.[scriptKey]?.assetStrategy === 'bundle'
                   if (canBundle) {
                     const newSrc = options.resolveScript(src)
                     if (scriptSrcNode) {

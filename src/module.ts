@@ -34,10 +34,6 @@ export interface ModuleOptions {
    * Register scripts that should be loaded globally on all pages.
    */
   globals?: (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptions])[]
-  /**
-   * Override the static script options for specific scripts based on their provided `key` or `src`.
-   */
-  overrides?: Record<keyof ScriptRegistry, Pick<NuxtUseScriptOptions, 'assetStrategy'>>
   /** Configure the way scripts assets are exposed */
   assets?: {
     /**
