@@ -1,3 +1,5 @@
+[![nuxt-scripts-social-card](https://github.com/nuxt/scripts/assets/5326365/f674e34b-d4b4-44f9-aaa0-547a7b7ad580)](https://scripts.nuxt.com)
+
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
