@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   scripts: {
     register: scripts,
-    // TODO globals / register / overrides
+    // TODO globals
   },
   runtimeConfig: {
     public: {
@@ -41,9 +41,12 @@ export default defineNuxtConfig({
   hooks: {
     'scripts:registry': function (registry) {
       registry.push({
-        name: 'useScriptCustom',
-        key: 'myCustomScript',
-        from: resolve('./scripts/myCustomScript'),
+        category: 'custom',
+        label: 'My Custom Script',
+        import: {
+          name: 'useScriptMyCustomScript',
+          from: resolve('./scripts/myCustomScript'),
+        },
       })
     },
   },

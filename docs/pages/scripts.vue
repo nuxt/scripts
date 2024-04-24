@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { registry } from '../../src/registry'
+import {useScriptRegistry} from "~/composables/useScriptRegistry";
 
 const categories = {
   analytics: {
@@ -29,7 +29,7 @@ const categories = {
 }
 
 // group by category
-const scriptsCategories = registry.reduce((acc, script) => {
+const scriptsCategories = useScriptRegistry().reduce((acc, script) => {
   if (!acc[script.category])
     acc[script.category] = []
   acc[script.category].push({

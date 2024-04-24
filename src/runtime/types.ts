@@ -101,6 +101,6 @@ export type RegistryScripts = {
   scriptBundling?: false | ((options?: any) => string)
   label?: string
   src?: string | false
-  category: string
+  category?: string
   logo?: string | { light: string, dark: string }
 }[]

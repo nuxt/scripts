@@ -7,14 +7,13 @@ import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
 import type { SimpleCallExpression } from 'estree'
 import type { Input } from 'valibot'
-import type { ModuleOptions } from '../module'
 import type { RegistryScripts } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
   resolveScript: (src: string) => string
-  moduleDetected: (module: string) => void
+  moduleDetected?: (module: string) => void
   defaultBundle?: boolean
-  registry?: RegistryScripts
+  scripts?: RegistryScripts
 }
 
 export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransformerOptions) {
@@ -72,14 +71,14 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               }
               else {
                 // find the registry node
-                const registryNode = options.registry?.find(i => i.name === fnName)
+                const registryNode = options.scripts?.find(i => i.import.name === fnName)
                 if (!registryNode) {
                   console.warn(`[Nuxt Scripts] Integration ${fnName} not found in registry. Used in ${id}.`)
                   return
                 }
                 options.moduleDetected?.(registryNode.module)
                 // this is only needed when we have a dynamic src that we need to compute
-                if (!registryNode.transform && !registryNode.src)
+                if (!registryNode.scriptBundling && !registryNode.src)
                   return
 
                 // integration case
@@ -100,7 +99,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                     scriptSrcNode = srcProperty.value
                   }
                   else {
-                    src = registryNode.src || registryNode.transform?.(fnArg0 as any as Input<any>)
+                    src = registryNode.scriptBundling && registryNode.scriptBundling(fnArg0 as any as Input<any>)
                     // not supported
                     if (src === false)
                       return

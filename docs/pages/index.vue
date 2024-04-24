@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { registry } from '../../src/registry'
+import { useScriptRegistry } from '~/composables/useScriptRegistry'
 
+const registry = useScriptRegistry()
 const { data: page } = await useAsyncData('index', () => queryContent('/').findOne())
 
 useSeoMeta({

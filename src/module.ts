@@ -113,19 +113,20 @@ export default defineNuxtModule<ModuleOptions>({
       path: resolve('./runtime/components'),
     })
 
+    const scripts = registry(resolve)
     nuxt.hooks.hook('modules:done', async () => {
-      addImports(registry.map((i) => {
+      addImports(scripts.map((i) => {
         return {
           priority: -1,
           ...i.import,
         }
       }))
 
-      const registryScripts = [...registry]
+      const registryScripts = [...scripts]
       // @ts-expect-error runtime
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       // compare the registryScripts to the original registry to find new scripts
-      const newScripts = registryScripts.filter(i => !registry.some(r => r.import.name === i.import.name))
+      const newScripts = registryScripts.filter(i => !scripts.some(r => r.import.name === i.import.name))
 
       // augment types to support the integrations registry
       extendTypes(name!, async ({ typesPath }) => {
@@ -158,7 +159,7 @@ ${newScripts.map((i) => {
             const inits = []
             // for global scripts, we can initialise them script away
             for (const [k, c] of Object.entries(config.register || {})) {
-              const importDefinition = registry.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+              const importDefinition = registryScripts.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
               if (importDefinition) {
                 // title case
                 imports.unshift(importDefinition.import.name)
@@ -188,7 +189,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
       addBuildPlugin(NuxtScriptAssetBundlerTransformer({
-        registry,
+        scripts,
         defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
