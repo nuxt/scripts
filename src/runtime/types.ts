@@ -96,4 +96,11 @@ export type RegistryScriptInput<T extends ObjectSchema<any>, Bundelable extends 
   scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'assetStrategy' | 'use'>
 }
 
-export type RegistryScripts = (Import & { src?: string | false, module?: '@nuxt/scripts' | string, key?: string, transform?: (options: any) => string })[]
+export type RegistryScripts = {
+  import: Import
+  scriptBundling?: false | ((options?: any) => string)
+  label?: string
+  src?: string | false
+  category: string
+  logo?: string | { light: string, dark: string }
+}[]

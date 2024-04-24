@@ -1,5 +1,6 @@
 import { object, optional, string } from 'valibot'
 import { registryScript } from '../utils'
+import { SegmentScriptResolver } from '../../registry'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
@@ -30,7 +31,7 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
     return {
       scriptInput: {
         'data-global-segment-analytics-key': analyticsKey,
-        'src': `https://cdn.segment.com/analytics.js/v1/${options?.writeKey}/analytics.min.js`,
+        'src': SegmentScriptResolver(options),
       },
       schema: SegmentOptions,
       scriptOptions: {

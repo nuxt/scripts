@@ -119,13 +119,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.hooks.hook('modules:done', async () => {
       addImports(registry.map((i) => {
-        i.priority = -1
-        i.module = i.module || '@nuxt/scripts'
-        return i
+        return {
+          priority: -1,
+          ...i.import,
+        }
       }))
 
+      const registryScripts = [...registry]
       // @ts-expect-error runtime
-      await nuxt.hooks.callHook('scripts:registry', registry)
+      await nuxt.hooks.callHook('scripts:registry', registryScripts)
+      // compare the registryScripts to the original registry to find new scripts
+      const newScripts = registryScripts.filter(i => !registry.some(r => r.import.name === i.import.name))
 
       // augment types to support the integrations registry
       extendTypes(name!, async ({ typesPath }) => {
@@ -138,9 +142,10 @@ declare module '#app' {
 declare module '#nuxt-scripts' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
-${registry.filter(i => i.key && i.module !== '@nuxt/scripts').map((i) => {
-          const ucFirstKey = i.key!.substring(0, 1).toUpperCase() + i.key!.substring(1)
-          return `        ${i.key}?: import('${i.from}').${ucFirstKey}Input | [import('${i.from}').${ucFirstKey}Input, NuxtUseScriptOptions]`
+${newScripts.map((i) => {
+  const key = i.import.name.replace('useScript', '')
+          const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+          return `        ${keyLcFirst}?: import('${i.import.from}').${key}Input | [import('${i.import.from}').${key}Input, NuxtUseScriptOptions]`
         }).join('\n')}
     }
 }
@@ -157,11 +162,11 @@ ${registry.filter(i => i.key && i.module !== '@nuxt/scripts').map((i) => {
             const inits = []
             // for global scripts, we can initialise them script away
             for (const [k, c] of Object.entries(config.register || {})) {
-              const importDefinition = registry.find(i => i.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+              const importDefinition = registry.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
               if (importDefinition) {
                 // title case
-                imports.unshift(importDefinition.name)
-                inits.push(`${importDefinition.name}(${JSON.stringify(c === true ? {} : c)});`)
+                imports.unshift(importDefinition.import.name)
+                inits.push(`${importDefinition.import.name}(${JSON.stringify(c === true ? {} : c)});`)
               }
             }
             return `import { ${imports.join(', ')} } from '#imports'

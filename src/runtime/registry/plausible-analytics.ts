@@ -1,5 +1,6 @@
 import { array, literal, object, optional, string, union } from 'valibot'
 import { registryScript } from '../utils'
+import { PlausibleAnalyticsScriptResolver } from '../../registry'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 const extensions = [
@@ -37,10 +38,9 @@ declare global {
 
 export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_options?: PlausibleAnalyticsInput) {
   return registryScript<T, typeof PlausibleAnalyticsOptions>('plausibleAnalytics', (options) => {
-    const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
     return {
       scriptInput: {
-        'src': options?.extension ? `https://plausible.io/js/script.${extensions}.js` : 'https://plausible.io/js/script.js',
+        'src': PlausibleAnalyticsScriptResolver(options),
         'data-domain': options?.domain,
       },
       schema: PlausibleAnalyticsOptions,

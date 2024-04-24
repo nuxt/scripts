@@ -1,5 +1,6 @@
 import { number, object, string, union } from 'valibot'
 import { registryScript } from '../utils'
+import { FacebookPixelScriptResolver } from '../../registry'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
@@ -44,7 +45,7 @@ export type FacebookPixelInput = RegistryScriptInput<typeof FacebookPixelOptions
 export function useScriptFacebookPixel<T extends FacebookPixelApi>(_options?: FacebookPixelInput) {
   return registryScript<T, typeof FacebookPixelOptions>('facebookPixel', options => ({
     scriptInput: {
-      src: 'https://connect.facebook.net/en_US/fbevents.js',
+      src: FacebookPixelScriptResolver(),
     },
     schema: FacebookPixelOptions,
     scriptOptions: {
