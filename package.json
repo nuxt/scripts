@@ -90,14 +90,19 @@
     "@unhead/schema": "^1.9.7",
     "acorn-loose": "^8.4.0",
     "bumpp": "^9.4.0",
-    "eslint": "9.0.0",
+    "eslint": "9.1.1",
     "nuxt": "^3.11.2",
     "nuxt-scripts-devtools": "workspace:*",
     "playwright-core": "^1.43.1",
     "typescript": "^5.4.5",
-    "vitest": "^1.5.0"
+    "vitest": "^1.5.0",
+    "vue": "^3.4.24",
+    "vue-router": "^4.3.2"
   },
   "resolutions": {
-    "@nuxt/scripts": "workspace:*"
+    "@nuxt/scripts": "workspace:*",
+    "nuxt": "^3.11.2",
+    "vue": "^3.4.24",
+    "vue-router": "^4.3.2"
   }
 }

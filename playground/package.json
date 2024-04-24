@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@nuxt/scripts": "latest",
-    "@nuxt/ui": "^2.15.1",
+    "@nuxt/ui": "^2.15.2",
     "nuxt": "^3.11.2",
     "vue": "^3.4.24",
     "vue-router": "^4.3.2"
