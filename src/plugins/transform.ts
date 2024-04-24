@@ -47,10 +47,13 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
         const s = new MagicString(code)
         walk(ast as Node, {
           enter(_node) {
+            const calleeName = (_node as SimpleCallExpression).callee?.name
+            // check it starts with useScriptX where X must be a A-Z alphabetical letter
+            const isValidCallee = calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9))
             if (
               _node.type === 'CallExpression'
               && _node.callee.type === 'Identifier'
-              && _node.callee?.name.startsWith('useScript')) {
+              && isValidCallee) {
               // we're either dealing with useScript or an integration such as useScriptHotjar, we need to handle
               // both cases
               const fnName = _node.callee?.name
@@ -73,9 +76,10 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                 // find the registry node
                 const registryNode = options.scripts?.find(i => i.import.name === fnName)
                 if (!registryNode) {
-                  console.warn(`[Nuxt Scripts] Integration ${fnName} not found in registry. Used in ${id}.`)
+                  // silent failure
                   return
                 }
+                // TODO add stubs for any module integrations
                 options.moduleDetected?.(registryNode.module)
                 // this is only needed when we have a dynamic src that we need to compute
                 if (!registryNode.scriptBundling && !registryNode.src)
