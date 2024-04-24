@@ -45,32 +45,11 @@ describe('nuxtScriptTransformer', () => {
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScript({ defer: true, src: '/_scripts/beacon.min.js' }, )"`)
   })
-  it('overrides', async () => {
-    const code = await transform(
-      `const instance = useScript({ key: 'cloudflareAnalytics', src: 'https://static.cloudflareinsights.com/beacon.min.js' })`,
-      {
-        overrides: {
-          cloudflareAnalytics: {
-            assetStrategy: 'bundle',
-          },
-        },
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}`
-        },
-      },
-    )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript({ key: 'cloudflareAnalytics', src: '/_scripts/beacon.min.js' })"`)
-  })
 
   it('dynamic src is not transformed', async () => {
     const code = await transform(
       `const instance = useScript({ key: 'cloudflareAnalytics', src: \`https://static.cloudflareinsights.com/$\{123\}beacon.min.js\` })`,
       {
-        overrides: {
-          cloudflareAnalytics: {
-            assetStrategy: 'bundle',
-          },
-        },
         resolveScript(src) {
           return `/_scripts${parseURL(src).pathname}`
         },
@@ -84,12 +63,15 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptFathomAnalytics({ src: 'https://cdn.fathom/custom.js' }, { assetStrategy: 'bundle' })`,
       {
         defaultBundle: false,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptFathomAnalytics',
-            from: '',
-            key: 'fathomAnalytics',
-            src: 'https://cdn.usefathom.com/script.js',
+            scriptBundling() {
+              return 'https://cdn.usefathom.com/script.js'
+            },
+            import: {
+              name: 'useScriptFathomAnalytics',
+              from: '',
+            },
           },
         ],
         resolveScript(src) {
@@ -105,12 +87,15 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptFathomAnalytics({ site: '123' }, { assetStrategy: 'bundle' })`,
       {
         defaultBundle: false,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptFathomAnalytics',
-            from: '',
-            key: 'fathomAnalytics',
-            src: 'https://cdn.usefathom.com/script.js',
+            scriptBundling() {
+              return 'https://cdn.usefathom.com/script.js'
+            },
+            import: {
+              name: 'useScriptFathomAnalytics',
+              from: '',
+            },
           },
         ],
         resolveScript(src) {
@@ -126,12 +111,15 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptFathomAnalytics({ site: '123' }, { assetStrategy: null })`,
       {
         defaultBundle: true,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptFathomAnalytics',
-            from: '',
-            key: 'fathomAnalytics',
-            src: 'https://cdn.usefathom.com/script.js',
+            scriptBundling() {
+              return 'https://cdn.usefathom.com/script.js'
+            },
+            import: {
+              name: 'useScriptFathomAnalytics',
+              from: '',
+            },
           },
         ],
         resolveScript(src) {
@@ -147,13 +135,14 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptIntercom({ app_id: '123' })`,
       {
         defaultBundle: true,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptIntercom',
-            from: '',
-            key: 'intercom',
-            transform(options?: IntercomInput) {
+            scriptBundling(options?: IntercomInput) {
               return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            },
+            import: {
+              name: 'useScriptIntercom',
+              from: '',
             },
           },
         ],
@@ -170,13 +159,14 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptIntercom({ app_id: '123' }, { assetStrategy: null })`,
       {
         defaultBundle: true,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptIntercom',
-            from: '',
-            key: 'intercom',
-            transform(options?: IntercomInput) {
+            scriptBundling(options?: IntercomInput) {
               return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            },
+            import: {
+              name: 'useScriptIntercom',
+              from: '',
             },
           },
         ],
@@ -193,13 +183,14 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptIntercom({ app_id: '123' }, { assetStrategy: 'bundle' })`,
       {
         defaultBundle: false,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptIntercom',
-            from: '',
-            key: 'intercom',
-            transform(options?: IntercomInput) {
+            scriptBundling(options?: IntercomInput) {
               return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            },
+            import: {
+              name: 'useScriptIntercom',
+              from: '',
             },
           },
         ],
@@ -216,13 +207,14 @@ describe('nuxtScriptTransformer', () => {
       [`const instance = useScriptIntercom({ app_id: '123' }, { assetStrategy: 'bundle' })`, `const instance2 = useScriptIntercom()`].join('\n'),
       {
         defaultBundle: false,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptIntercom',
-            from: '',
-            key: 'intercom',
-            transform(options?: IntercomInput) {
+            scriptBundling(options?: IntercomInput) {
               return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            },
+            import: {
+              name: 'useScriptIntercom',
+              from: '',
             },
           },
         ],
@@ -242,12 +234,14 @@ describe('nuxtScriptTransformer', () => {
       `const instance = useScriptNpm({ packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })`,
       {
         defaultBundle: true,
-        registry: [
+        scripts: [
           {
-            name: 'useScriptNpm',
-            from: '',
-            transform(options?: NpmInput) {
+            scriptBundling(options?: NpmInput) {
               return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
+            },
+            import: {
+              name: 'useScriptNpm',
+              from: '',
             },
           },
         ],
