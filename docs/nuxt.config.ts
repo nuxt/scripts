@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@nuxt/ui',
     '@nuxthq/studio',
-    'nuxt-og-image',
+    '@nuxtjs/seo',
     '@nuxt/image',
   ],
   hooks: {
@@ -23,6 +23,10 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/api/search.json': { prerender: true },
+  },
+  site: {
+    name: 'Nuxt Scripts',
+    url: 'nuxt-scripts.vercel.app',
   },
   nitro: {
     prerender: {

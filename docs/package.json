@@ -20,6 +20,7 @@
     "@nuxtjs/seo": "^2.0.0-rc.10",
     "@vueuse/core": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
-    "nuxt": "^3.11.2"
+    "nuxt": "^3.11.2",
+    "@nuxt/scripts": "workspace:*"
   }
 }
