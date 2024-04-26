@@ -23,9 +23,9 @@ import type { NuxtUseScriptInput, NuxtUseScriptOptions, RegistryScripts, ScriptR
 
 export interface ModuleOptions {
   /**
-   * Register scripts globally.
+   * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
-  register?: ScriptRegistry
+  registry?: ScriptRegistry
   /**
    * Default options for scripts.
    */

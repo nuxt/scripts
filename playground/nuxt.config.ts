@@ -26,7 +26,7 @@ export default defineNuxtConfig({
   ],
   devtools: { enabled: true },
   scripts: {
-    register: scripts,
+    registry: scripts,
     // TODO globals
   },
   runtimeConfig: {
