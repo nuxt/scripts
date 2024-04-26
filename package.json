@@ -38,7 +38,7 @@
     "dev:ssl": "nuxi dev playground --https",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
     "typecheck": "pnpm dlx vue-tsc --noEmit",
-    "release": "pnpm build && bumpp && pnpm -r publish --no-git-checks",
+    "release": "pnpm build && bumpp && pnpm publish --no-git-checks",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "true",
@@ -92,7 +92,6 @@
     "bumpp": "^9.4.0",
     "eslint": "9.1.1",
     "nuxt": "^3.11.2",
-    "nuxt-scripts-devtools": "workspace:*",
     "playwright-core": "^1.43.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.2",
@@ -100,6 +99,7 @@
     "vue-router": "^4.3.2"
   },
   "resolutions": {
+    "nuxt-scripts-devtools": "workspace:*",
     "@nuxt/scripts": "workspace:*",
     "nuxt": "^3.11.2",
     "vue": "^3.4.25",

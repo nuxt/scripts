@@ -10,10 +10,6 @@ links:
 
 [Cloudflare Web Analytics](https://developers.cloudflare.com/analytics/web-analytics/) with Nuxt is a great privacy analytics solution. It offers free, privacy-centric analytics for your website. It doesn't gather personal data from your visitors, yet provides detailed insights into your web pages' performance as experienced by your visitors.
 
-## Defaults
-
-- **Trigger**: Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
-
 ## Nuxt Config
 
 The simplest way to load Cloudflare Web Analytics globally in your Nuxt App is to use your Nuxt config and provide the token
@@ -85,6 +81,10 @@ The `useScriptCloudflareWebAnalytics` composable lets you have fine-grain contro
 ```ts
 useScriptCloudflareWebAnalytics(options)
 ```
+
+## Defaults
+
+- **Trigger**: Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
 
 ## Options
 
