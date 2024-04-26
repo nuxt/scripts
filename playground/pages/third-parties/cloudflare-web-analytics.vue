@@ -7,7 +7,7 @@ useHead({
 
 // composables return the underlying api as a proxy object and a $script with the script state
 const { $script } = useScriptCloudflareWebAnalytics({
-  token: 'BRDEJWKJBRDEJWKJBRDEJWKJBRDEJWKJ3',
+  token: '12ee46bf598b45c2868bbc07a3073f58',
 })
 </script>
 
