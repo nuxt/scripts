@@ -85,7 +85,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "2.15.0",
     "@nuxt/devtools-ui-kit": "^1.2.0",
-    "@nuxt/module-builder": "^0.5.5",
+    "@nuxt/module-builder": "^0.6.0",
     "@nuxt/test-utils": "3.12.1",
     "@unhead/schema": "^1.9.7",
     "acorn-loose": "^8.4.0",
