@@ -99,9 +99,9 @@
     "vue-router": "^4.3.2"
   },
   "resolutions": {
-    "nuxt-scripts-devtools": "workspace:*",
     "@nuxt/scripts": "workspace:*",
     "nuxt": "^3.11.2",
+    "nuxt-scripts-devtools": "workspace:*",
     "vue": "^3.4.25",
     "vue-router": "^4.3.2"
   }
