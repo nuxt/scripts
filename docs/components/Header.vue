@@ -21,6 +21,9 @@ const links = [
   <UHeader :ui="{}" :links="links">
     <template #logo>
       <Logo />
+      <UBadge class="ml-5" size="xs" color="yellow" variant="subtle">
+        Early Access
+      </UBadge>
     </template>
 
     <template #right>
