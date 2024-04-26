@@ -80,7 +80,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     defaultScriptOptions: {
-      assetStrategy: 'bundle', // Not supported on all scripts, only if the src is static, runtime fallback?
       trigger: 'onNuxtReady',
     },
     enabled: true,
@@ -190,7 +189,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
       addBuildPlugin(NuxtScriptAssetBundlerTransformer({
         scripts,
-        defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
+        defaultBundle: !!config.defaultScriptOptions?.bundle,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))

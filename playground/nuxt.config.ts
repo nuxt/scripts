@@ -9,7 +9,7 @@ const scripts: ScriptRegistry = {
       id: '123',
     },
     {
-      assetStrategy: 'bundle',
+      bundle: true,
     },
   ],
   confetti: {

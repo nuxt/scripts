@@ -49,7 +49,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
           enter(_node) {
             const calleeName = (_node as SimpleCallExpression).callee?.name
             // check it starts with useScriptX where X must be a A-Z alphabetical letter
-            const isValidCallee = calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9))
+            const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9)))
             if (
               _node.type === 'CallExpression'
               && _node.callee.type === 'Identifier'
@@ -117,18 +117,18 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                   let canBundle = options.defaultBundle
                   if (node.arguments[1]?.type === 'ObjectExpression') {
                     // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
-                    const assetStrategyProperty = node.arguments[1]?.properties.find(
-                      (p: any) => p.key?.name === 'assetStrategy' || p.key?.value === 'assetStrategy',
+                    const bundleProperty = node.arguments[1]?.properties.find(
+                      (p: any) => p.key?.name === 'bundle' || p.key?.value === 'bundle',
                     )
-                    if (assetStrategyProperty) {
-                      if (assetStrategyProperty?.value?.value !== 'bundle') {
+                    if (bundleProperty) {
+                      if (String(bundleProperty?.value?.value) !== 'true') {
                         canBundle = false
                         return
                       }
                       if (node.arguments[1]?.properties.length === 1)
                         s.remove(node.arguments[1].start, node.arguments[1].end)
                       else
-                        s.remove(assetStrategyProperty.start, assetStrategyProperty.end)
+                        s.remove(bundleProperty.start, bundleProperty.end)
 
                       canBundle = true
                     }
