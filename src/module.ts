@@ -114,16 +114,16 @@ export default defineNuxtModule<ModuleOptions>({
 
     const scripts = registry(resolve)
     nuxt.hooks.hook('modules:done', async () => {
-      addImports(scripts.map((i) => {
+      const registryScripts = [...scripts]
+      // @ts-expect-error runtime
+      await nuxt.hooks.callHook('scripts:registry', registryScripts)
+      addImports(registryScripts.map((i) => {
         return {
           priority: -1,
           ...i.import,
         }
       }))
 
-      const registryScripts = [...scripts]
-      // @ts-expect-error runtime
-      await nuxt.hooks.callHook('scripts:registry', registryScripts)
       // compare the registryScripts to the original registry to find new scripts
       const newScripts = registryScripts.filter(i => !scripts.some(r => r.import.name === i.import.name))
 
