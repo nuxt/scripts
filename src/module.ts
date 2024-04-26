@@ -148,7 +148,7 @@ ${newScripts.map((i) => {
 `
       })
 
-      if (config.globals?.length || Object.keys(config.register || {}).length) {
+      if (config.globals?.length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         const template = addTemplate({
           filename: `modules/${name!.replace('/', '-')}.mjs`,
@@ -157,7 +157,7 @@ ${newScripts.map((i) => {
             const imports = ['useScript', 'defineNuxtPlugin']
             const inits = []
             // for global scripts, we can initialise them script away
-            for (const [k, c] of Object.entries(config.register || {})) {
+            for (const [k, c] of Object.entries(config.registry || {})) {
               const importDefinition = registryScripts.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
               if (importDefinition) {
                 // title case
