@@ -13,7 +13,7 @@ useScriptGoogleTagManager({
   id: 'GTM-5ZQZJZ',
   scriptOptions: {
     trigger: scriptConsent,
-    assetStrategy: 'bundle',
+    bundle: true,
   },
 })
 </script>

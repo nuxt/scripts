@@ -30,10 +30,10 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
    * improves privacy by not sharing the user's IP address with third-party servers.
-   * - `bundle` - Bundle the script as an asset.
-   * - `null` - Do not bundle the script.
+   * - `true` - Bundle the script as an asset.
+   * - `false` - Do not bundle the script. (default)
    */
-  assetStrategy?: null | 'bundle'
+  bundle?: boolean
 }
 
 export type NuxtUseScriptIntegrationOptions = Omit<NuxtUseScriptOptions, 'use'>
@@ -93,7 +93,7 @@ export interface ScriptRegistry {
 
 export type RegistryScriptInput<T extends ObjectSchema<any>, Bundelable extends boolean = true> = Input<T> & {
   scriptInput?: UseScriptInput
-  scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'assetStrategy' | 'use'>
+  scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'bundle' | 'use'>
 }
 
 export type RegistryScripts = {

@@ -18,6 +18,19 @@ export default defineNuxtConfig({
       globals.forEach(c => c.global = true)
     },
   },
+  app: {
+    seoMeta: {
+      themeColor: [
+        { content: '#18181b', media: '(prefers-color-scheme: dark)' },
+        { content: 'white', media: '(prefers-color-scheme: light)' },
+      ],
+    },
+    head: {
+      templateParams: {
+        separator: '·',
+      },
+    },
+  },
   ui: {
     icons: ['heroicons', 'ph', 'simple-icons'],
   },
@@ -27,6 +40,9 @@ export default defineNuxtConfig({
   site: {
     name: 'Nuxt Scripts',
     url: 'nuxt.scripts.com',
+  },
+  sitemap: {
+    strictNuxtContentPaths: true,
   },
   nitro: {
     prerender: {

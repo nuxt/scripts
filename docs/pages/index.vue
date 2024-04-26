@@ -33,7 +33,7 @@ useSeoMeta({
       <div class="relative hidden xl:block">
         <div class="absolute -z-1 -right-[450px] -top-[350px]">
           <div class="w-[500px] grid-transform grid grid-cols-3 gap-7">
-            <UCard v-for="script in registry" class="card">
+            <UCard v-for="(script, key) in registry" :key="key" class="card">
               <template v-if="typeof script.logo !== 'string'">
                 <div class="logo h-10 w-auto block dark:hidden" v-html="script.logo.light" />
                 <div class="logo h-10 w-auto hidden dark:block" v-html="script.logo.dark" />
@@ -94,16 +94,20 @@ useSeoMeta({
   background: radial-gradient(circle, #1F2937 0%, #020420 70%, transparent 100%);
 }
 .card {
-  box-shadow: 5px 5px 7px rgba(0, 0, 0, 0.05);
-  transition: transform 0.5s, box-shadow 0.5s;
+  box-shadow:  2px 2px 5px rgba(217, 251, 232, 0.5),
+  3px 3px 10px rgba(217, 251, 232, 0.5),
+  6px 6px 20px rgba(217, 251, 232, 0.1);
+  transition: transform 0.2s, box-shadow 0.5s;
 }
 .card svg {
   opacity: 0.7;
   transition: 0.2s;
 }
 .card:hover {
-  box-shadow: 10px 10px 14px rgba(0, 0, 0, 0.1);
-  transform: translateX(-7px);
+  box-shadow:  3px 3px 5px rgba(217, 251, 232, 1),
+  5px 5px 10px rgba(217, 251, 232, 1),
+  10px 10px 20px rgba(217, 251, 232, 1);
+  transform: translateX(-7px) translateY(-7px);
 }
 .card:hover svg {
   opacity: 1;

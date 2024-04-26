@@ -17,12 +17,11 @@ declare global {
   }
 }
 
-export function useScriptCustom<T extends MyCustomScriptApi>(options?: MyCustomScriptInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
+export function useScriptMyCustomScript<T extends MyCustomScriptApi>(options?: MyCustomScriptInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
   const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
   return useScript<MyCustomScriptApi>({
     key: 'myCustomScript',
-    src: 'https://example.com/script.js',
-    ...options,
+    src: `https://example.com/script.js?id=${options?.id}`,
   }, {
     ...scriptOptions,
     use: () => window.fathom,

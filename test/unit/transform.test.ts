@@ -21,7 +21,7 @@ describe('nuxtScriptTransformer', () => {
   it('string arg', async () => {
     const code = await transform(
     `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
-      assetStrategy: 'bundle',
+      bundle: true,
     })`,
     {
       resolveScript(src) {
@@ -35,7 +35,7 @@ describe('nuxtScriptTransformer', () => {
   it('options arg', async () => {
     const code = await transform(
       `const instance = useScript({ defer: true, src: 'https://static.cloudflareinsights.com/beacon.min.js' }, {
-      assetStrategy: 'bundle',
+      bundle: true,
     })`,
       {
         resolveScript(src) {
@@ -60,7 +60,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('supplied src integration is transformed - opt-in', async () => {
     const code = await transform(
-      `const instance = useScriptFathomAnalytics({ src: 'https://cdn.fathom/custom.js' }, { assetStrategy: 'bundle' })`,
+      `const instance = useScriptFathomAnalytics({ src: 'https://cdn.fathom/custom.js' }, { bundle: true, })`,
       {
         defaultBundle: false,
         scripts: [
@@ -84,7 +84,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('static src integration is transformed - opt-in', async () => {
     const code = await transform(
-      `const instance = useScriptFathomAnalytics({ site: '123' }, { assetStrategy: 'bundle' })`,
+      `const instance = useScriptFathomAnalytics({ site: '123' }, { bundle: true, })`,
       {
         defaultBundle: false,
         scripts: [
@@ -108,7 +108,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('static src integration is transformed - opt-out', async () => {
     const code = await transform(
-      `const instance = useScriptFathomAnalytics({ site: '123' }, { assetStrategy: null })`,
+      `const instance = useScriptFathomAnalytics({ site: '123' }, { bundle: false })`,
       {
         defaultBundle: true,
         scripts: [
@@ -156,7 +156,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('dynamic src integration can be opted-out explicit', async () => {
     const code = await transform(
-      `const instance = useScriptIntercom({ app_id: '123' }, { assetStrategy: null })`,
+      `const instance = useScriptIntercom({ app_id: '123' }, { bundle: false })`,
       {
         defaultBundle: true,
         scripts: [
@@ -180,7 +180,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('dynamic src integration can be opt-in explicit', async () => {
     const code = await transform(
-      `const instance = useScriptIntercom({ app_id: '123' }, { assetStrategy: 'bundle' })`,
+      `const instance = useScriptIntercom({ app_id: '123' }, { bundle: true })`,
       {
         defaultBundle: false,
         scripts: [
@@ -204,7 +204,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('can re-use opt-in once it\'s loaded', async () => {
     const code = await transform(
-      [`const instance = useScriptIntercom({ app_id: '123' }, { assetStrategy: 'bundle' })`, `const instance2 = useScriptIntercom()`].join('\n'),
+      [`const instance = useScriptIntercom({ app_id: '123' }, { bundle: true })`, `const instance2 = useScriptIntercom()`].join('\n'),
       {
         defaultBundle: false,
         scripts: [

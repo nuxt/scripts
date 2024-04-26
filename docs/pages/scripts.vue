@@ -48,7 +48,7 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
         <UPageHeader title="Script Registry" description="The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts." />
         <UPageBody>
           <div class="space-y-10">
-            <div v-for="(scripts, category) in scriptsCategories">
+            <div v-for="(scripts, category) in scriptsCategories" :key="category">
               <div class="mb-5">
                 <h2 class="text-2xl mb-1 font-bold">
                   {{ categories[category].label }}
@@ -58,7 +58,7 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
                 </p>
               </div>
               <div class="flex flex-wrap gap-4">
-                <NuxtLink v-for="script in scripts" :to="`/scripts/${category}/${script.key}`">
+                <NuxtLink v-for="(script, key) in scripts" :key="key" :to="`/scripts/${category}/${script.key}`">
                   <UCard class="min-w-[120px] text-center hover:bg-gray-100 transition">
                     <div v-if="script.logo" class="mb-2">
                       <template v-if="typeof script.logo !== 'string'">

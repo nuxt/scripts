@@ -5,7 +5,7 @@ const { $script } = useScriptGoogleTagManager({
   id: 'GTM-5ZQZJZ',
   scriptOptions: {
     trigger: 'onNuxtReady', // this is the default behavior
-    assetStrategy: 'bundle',
+    bundle: true,
   },
 })
 </script>

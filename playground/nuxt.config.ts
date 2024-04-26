@@ -9,7 +9,7 @@ const scripts: ScriptRegistry = {
       id: '123',
     },
     {
-      assetStrategy: 'bundle',
+      bundle: true,
     },
   ],
   confetti: {
@@ -26,7 +26,7 @@ export default defineNuxtConfig({
   ],
   devtools: { enabled: true },
   scripts: {
-    register: scripts,
+    registry: scripts,
     // TODO globals
   },
   runtimeConfig: {

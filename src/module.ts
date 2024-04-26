@@ -23,9 +23,9 @@ import type { NuxtUseScriptInput, NuxtUseScriptOptions, RegistryScripts, ScriptR
 
 export interface ModuleOptions {
   /**
-   * Register scripts globally.
+   * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
-  register?: ScriptRegistry
+  registry?: ScriptRegistry
   /**
    * Default options for scripts.
    */
@@ -80,7 +80,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     defaultScriptOptions: {
-      assetStrategy: 'bundle', // Not supported on all scripts, only if the src is static, runtime fallback?
       trigger: 'onNuxtReady',
     },
     enabled: true,
@@ -115,16 +114,16 @@ export default defineNuxtModule<ModuleOptions>({
 
     const scripts = registry(resolve)
     nuxt.hooks.hook('modules:done', async () => {
-      addImports(scripts.map((i) => {
+      const registryScripts = [...scripts]
+      // @ts-expect-error runtime
+      await nuxt.hooks.callHook('scripts:registry', registryScripts)
+      addImports(registryScripts.map((i) => {
         return {
           priority: -1,
           ...i.import,
         }
       }))
 
-      const registryScripts = [...scripts]
-      // @ts-expect-error runtime
-      await nuxt.hooks.callHook('scripts:registry', registryScripts)
       // compare the registryScripts to the original registry to find new scripts
       const newScripts = registryScripts.filter(i => !scripts.some(r => r.import.name === i.import.name))
 
@@ -149,7 +148,7 @@ ${newScripts.map((i) => {
 `
       })
 
-      if (config.globals?.length || Object.keys(config.register || {}).length) {
+      if (config.globals?.length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         const template = addTemplate({
           filename: `modules/${name!.replace('/', '-')}.mjs`,
@@ -158,7 +157,7 @@ ${newScripts.map((i) => {
             const imports = ['useScript', 'defineNuxtPlugin']
             const inits = []
             // for global scripts, we can initialise them script away
-            for (const [k, c] of Object.entries(config.register || {})) {
+            for (const [k, c] of Object.entries(config.registry || {})) {
               const importDefinition = registryScripts.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
               if (importDefinition) {
                 // title case
@@ -190,7 +189,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
       addBuildPlugin(NuxtScriptAssetBundlerTransformer({
         scripts,
-        defaultBundle: config.defaultScriptOptions?.assetStrategy === 'bundle',
+        defaultBundle: !!config.defaultScriptOptions?.bundle,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))

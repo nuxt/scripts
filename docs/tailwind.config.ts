@@ -1,7 +1,4 @@
-import type { Config } from 'tailwindcss'
-import defaultTheme from 'tailwindcss/defaultTheme'
-
-export default <Partial<Config>>{
+export default {
   theme: {
     extend: {
       colors: {
@@ -33,7 +30,7 @@ export default <Partial<Config>>{
         },
       },
       fontFamily: {
-        sans: ['Inter var experimental', 'Inter var', 'Inter', ...defaultTheme.fontFamily.sans],
+        sans: ['Inter var experimental', 'Inter var', 'Inter'],
       },
     },
   },
