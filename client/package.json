@@ -11,12 +11,12 @@
     "generate": "nuxi generate"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.31",
+    "@iconify-json/carbon": "^1.1.32",
     "@nuxt/devtools-kit": "^1.2.0",
     "@nuxt/devtools-ui-kit": "^1.2.0",
     "@nuxt/kit": "^3.11.2",
     "nuxt": "^3.11.2",
-    "vue": "^3.4.25",
+    "vue": "^3.4.26",
     "vue-router": "^4.3.2"
   }
 }

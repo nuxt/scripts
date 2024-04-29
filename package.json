@@ -83,26 +83,26 @@
     "valibot": "^0.30.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "2.15.0",
+    "@antfu/eslint-config": "2.16.0",
     "@nuxt/devtools-ui-kit": "^1.2.0",
     "@nuxt/module-builder": "^0.6.0",
     "@nuxt/test-utils": "3.12.1",
     "@unhead/schema": "^1.9.7",
     "acorn-loose": "^8.4.0",
-    "bumpp": "^9.4.0",
+    "bumpp": "^9.4.1",
     "eslint": "9.1.1",
     "nuxt": "^3.11.2",
     "playwright-core": "^1.43.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.2",
-    "vue": "^3.4.25",
+    "vue": "^3.4.26",
     "vue-router": "^4.3.2"
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*",
     "nuxt": "^3.11.2",
     "nuxt-scripts-devtools": "workspace:*",
-    "vue": "^3.4.25",
+    "vue": "^3.4.26",
     "vue-router": "^4.3.2"
   }
 }
