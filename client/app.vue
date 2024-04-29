@@ -43,7 +43,7 @@ onDevtoolsClientConnected(async (client) => {
             <div class="flex items-center justify-between w-full mb-3">
               <div class="flex items-center gap-4">
                 <a class="text-xl font-bold flex gap-2  items-center font-mono" :title="script.src" target="_blank" :href="script.src">
-                  <img :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`" class="w-4 h-4 rounded-lg">
+                  <img v-if="!script.src.startsWith('/')" :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`" class="w-4 h-4 rounded-lg">
                   <div>{{ script.key }}</div>
                 </a>
                 <div class="opacity-70">
