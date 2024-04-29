@@ -10,7 +10,7 @@ export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptio
   options = defu(options, useRuntimeConfig().public['nuxt-scripts']?.defaultScriptOptions)
 
   if (options.trigger === 'onNuxtReady')
-    options.trigger = new Promise(resolve => onNuxtReady(resolve))
+    options.trigger = onNuxtReady
   const nuxtApp = useNuxtApp()
   const id = input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))
   // only validate if we're initializing the script
