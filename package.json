@@ -96,7 +96,8 @@
     "typescript": "^5.4.5",
     "vitest": "^1.5.3",
     "vue": "^3.4.26",
-    "vue-router": "^4.3.2"
+    "vue-router": "^4.3.2",
+    "nuxt-scripts-devtools": "workspace:*"
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*",
