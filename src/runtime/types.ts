@@ -15,7 +15,7 @@ import type { GoogleMapsInput } from '~/src/runtime/registry/google-maps'
 import type { GoogleTagManagerInput } from '~/src/runtime/registry/google-tag-manager'
 import type { MatomoAnalyticsInput } from '~/src/runtime/registry/matomo-analytics'
 import type { StripeInput } from '~/src/runtime/registry/stripe'
-import type { VimeoInput } from '~/src/runtime/registry/vimeo'
+import type { VimeoPlayerInput } from '~/src/runtime/registry/vimeo-player'
 import type { XPixelInput } from '~/src/runtime/registry/x-pixel'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
@@ -87,7 +87,7 @@ export interface ScriptRegistry {
   matomoAnalytics?: ScriptRegistryEntry<MatomoAnalyticsInput>
   segment?: ScriptRegistryEntry<SegmentInput>
   stripe?: ScriptRegistryEntry<StripeInput>
-  vimeo?: ScriptRegistryEntry<VimeoInput>
+  vimeo?: ScriptRegistryEntry<VimeoPlayerInput>
   xPixel?: ScriptRegistryEntry<XPixelInput>
 }
 
