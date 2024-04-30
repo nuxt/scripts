@@ -9,5 +9,5 @@ export function useElementScriptTrigger(trigger: ElementScriptTrigger | undefine
     return new Promise<void>(() => {})
 
   const activeRef = trigger ? (trigger === 'mouseover' ? useElementHover(el) : useElementVisibility(el)) : ref(false)
-  return trigger ? new Promise<void>(resolve => watchOnce(activeRef, resolve)) : Promise.resolve()
+  return trigger ? new Promise<void>(resolve => watchOnce([activeRef], () => resolve())) : Promise.resolve()
 }
