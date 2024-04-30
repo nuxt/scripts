@@ -5,7 +5,7 @@ import { defu } from 'defu'
 import { onNuxtReady, useNuxtApp, useRuntimeConfig } from '#imports'
 import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
 
-export function useScript<T>(input: UseScriptInput, options?: NuxtUseScriptOptions) {
+export function useScript<T extends Record<string | symbol, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions) {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useRuntimeConfig().public['nuxt-scripts']?.defaultScriptOptions)
 
