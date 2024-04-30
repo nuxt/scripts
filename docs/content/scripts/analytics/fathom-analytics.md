@@ -156,6 +156,8 @@ $script.then(({ trackGoal }) => {
 })
 ```
 
+::
+
 ## Example
 
 Loading Fathom Analytics through the `app.vue` when Nuxt is ready.
