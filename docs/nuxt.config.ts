@@ -18,6 +18,15 @@ export default defineNuxtConfig({
       globals.forEach(c => c.global = true)
     },
   },
+  $production: {
+    scripts: {
+      registry: {
+        fathomAnalytics: {
+          site: 'PKLQEZGU',
+        },
+      },
+    },
+  },
   app: {
     seoMeta: {
       themeColor: [
