@@ -3,10 +3,25 @@ import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const FathomAnalyticsOptions = object({
-  site: string(), // site is required
+  /**
+   * The Fathom Analytics site ID.
+   */
+  site: string(),
+  /**
+   * The Fathom Analytics tracking mode.
+   */
   spa: optional(union([literal('auto'), literal('history'), literal('hash')])),
+  /**
+   * Automatically track page views.
+   */
   auto: optional(boolean()),
+  /**
+   * Enable canonical URL tracking.
+   */
   canonical: optional(boolean()),
+  /**
+   * Honor Do Not Track requests.
+   */
   honorDnt: optional(boolean()),
 })
 
@@ -46,7 +61,7 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?
           return acc
         }, {}),
     },
-    schema: FathomAnalyticsOptions,
+    schema: import.meta.dev ? FathomAnalyticsOptions : undefined,
     scriptOptions: {
       use() {
         return window.fathom
