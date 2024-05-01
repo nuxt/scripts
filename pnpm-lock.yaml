@@ -39,6 +39,9 @@ importers:
       '@unhead/vue':
         specifier: ^1.9.7
         version: 1.9.7(vue@3.4.26(typescript@5.4.5))
+      '@vueuse/core':
+        specifier: ^10.9.0
+        version: 10.9.0(vue@3.4.26(typescript@5.4.5))
       consola:
         specifier: ^3.2.3
         version: 3.2.3
@@ -194,8 +197,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(focus-trap@7.5.4)(nuxt@3.11.2(@parcel/watcher@2.4.1)(@types/node@20.12.7)(@unocss/reset@0.59.4)(encoding@0.1.13)(eslint@9.1.1)(floating-vue@5.2.2(@nuxt/kit@3.11.2(rollup@4.16.4))(vue@3.4.26(typescript@5.4.5)))(fuse.js@6.6.2)(ioredis@5.4.1)(optionator@0.9.4)(rollup@4.16.4)(sass@1.75.0)(terser@5.30.4)(typescript@5.4.5)(unocss@0.59.4(@unocss/webpack@0.59.4(rollup@4.16.4)(webpack@5.91.0))(postcss@8.4.38)(rollup@4.16.4)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(rollup@4.16.4)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4))(vue@3.4.26(typescript@5.4.5))
       '@nuxthq/studio':
-        specifier: ^1.0.13
-        version: 1.0.13(rollup@4.16.4)
+        specifier: ^1.0.15
+        version: 1.0.15(rollup@4.16.4)
       '@nuxtjs/seo':
         specifier: ^2.0.0-rc.10
         version: 2.0.0-rc.10(@lezer/common@1.2.1)(@nuxt/devtools@1.2.0(@unocss/reset@0.59.4)(floating-vue@5.2.2(@nuxt/kit@3.11.2(rollup@4.16.4))(vue@3.4.26(typescript@5.4.5)))(fuse.js@6.6.2)(nuxt@3.11.2(@parcel/watcher@2.4.1)(@types/node@20.12.7)(@unocss/reset@0.59.4)(encoding@0.1.13)(eslint@9.1.1)(floating-vue@5.2.2(@nuxt/kit@3.11.2(rollup@4.16.4))(vue@3.4.26(typescript@5.4.5)))(fuse.js@6.6.2)(ioredis@5.4.1)(optionator@0.9.4)(rollup@4.16.4)(sass@1.75.0)(terser@5.30.4)(typescript@5.4.5)(unocss@0.59.4(@unocss/webpack@0.59.4(rollup@4.16.4)(webpack@5.91.0))(postcss@8.4.38)(rollup@4.16.4)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(rollup@4.16.4)(unocss@0.59.4(@unocss/webpack@0.59.4(rollup@4.16.4)(webpack@5.91.0))(postcss@8.4.38)(rollup@4.16.4)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4))(vue@3.4.26(typescript@5.4.5)))(@unhead/shared@1.9.7)(@unocss/webpack@0.59.4(rollup@4.16.4)(webpack@5.91.0))(@vue/compiler-core@3.4.26)(fuse.js@6.6.2)(h3@1.11.1)(nuxt@3.11.2(@parcel/watcher@2.4.1)(@types/node@20.12.7)(@unocss/reset@0.59.4)(encoding@0.1.13)(eslint@9.1.1)(floating-vue@5.2.2(@nuxt/kit@3.11.2(rollup@4.16.4))(vue@3.4.26(typescript@5.4.5)))(fuse.js@6.6.2)(ioredis@5.4.1)(optionator@0.9.4)(rollup@4.16.4)(sass@1.75.0)(terser@5.30.4)(typescript@5.4.5)(unocss@0.59.4(@unocss/webpack@0.59.4(rollup@4.16.4)(webpack@5.91.0))(postcss@8.4.38)(rollup@4.16.4)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4)))(postcss@8.4.38)(rollup@4.16.4)(unhead@1.9.7)(vite@5.2.10(@types/node@20.12.7)(sass@1.75.0)(terser@5.30.4))(vue@3.4.26(typescript@5.4.5))(webpack@5.91.0)
@@ -1243,8 +1246,8 @@ packages:
     peerDependencies:
       vue: ^3.4.26
 
-  '@nuxthq/studio@1.0.13':
-    resolution: {integrity: sha512-C4j+K53om5Kj5xLrehWEbnDJlid5tDsHP7QdOIsK550dHOxPmvaXMH4YxsSNU8cDppMheMbN59zdYhQaQfko6g==}
+  '@nuxthq/studio@1.0.15':
+    resolution: {integrity: sha512-FdlSpNk+mCZrA1a3SiZIEm7JFx2pLUtAJfwPfGkllF6vTpCB6Jm1zTnRPw/i3dd20AZ5Ch/P9TOzE61km39NTA==}
 
   '@nuxtjs/color-mode@3.4.0':
     resolution: {integrity: sha512-rS51nG3zW8ksOwNubIP3BPQ+vBL0r2M6td1kkB/VaR1e1uVtNfWlBPfZjb604bgNCE2AeRNqaI0CrxkfnQ6h6Q==}
@@ -8454,7 +8457,7 @@ snapshots:
       - vti
       - vue-tsc
 
-  '@nuxthq/studio@1.0.13(rollup@4.16.4)':
+  '@nuxthq/studio@1.0.15(rollup@4.16.4)':
     dependencies:
       '@nuxt/kit': 3.11.2(rollup@4.16.4)
       defu: 6.1.4
@@ -9844,8 +9847,8 @@ snapshots:
     dependencies:
       '@volar/language-core': 1.11.1
       '@volar/source-map': 1.11.1
-      '@vue/compiler-dom': 3.4.24
-      '@vue/shared': 3.4.24
+      '@vue/compiler-dom': 3.4.26
+      '@vue/shared': 3.4.26
       computeds: 0.0.1
       minimatch: 9.0.4
       muggle-string: 0.3.1

@@ -61,6 +61,7 @@
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.0.50",
     "@unhead/vue": "^1.9.7",
+    "@vueuse/core": "^10.9.0",
     "consola": "^3.2.3",
     "defu": "^6.1.4",
     "estree-walker": "^3.0.3",
@@ -92,12 +93,12 @@
     "bumpp": "^9.4.1",
     "eslint": "9.1.1",
     "nuxt": "^3.11.2",
+    "nuxt-scripts-devtools": "workspace:*",
     "playwright-core": "^1.43.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.3",
     "vue": "^3.4.26",
-    "vue-router": "^4.3.2",
-    "nuxt-scripts-devtools": "workspace:*"
+    "vue-router": "^4.3.2"
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*",

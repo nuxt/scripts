@@ -17,7 +17,7 @@
     "@nuxt/image": "^1.6.0",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/ui-pro": "^1.1.0",
-    "@nuxthq/studio": "^1.0.13",
+    "@nuxthq/studio": "^1.0.15",
     "@nuxtjs/seo": "^2.0.0-rc.10",
     "@vueuse/core": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
