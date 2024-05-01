@@ -12,7 +12,7 @@ import { createStorage } from 'unstorage'
 import fsDriver from 'unstorage/drivers/fs-lite'
 import { logger } from './logger'
 
-import type { ModuleOptions } from './types'
+import type { ModuleOptions } from './module'
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
@@ -105,7 +105,8 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
           let size = 0
           res = await fetch(url).then((r) => {
             encoding = r.headers.get('content-encoding')
-            size = Number(r.headers.get('content-length') / 1024)
+            const contentLength = r.headers.get('content-length')
+            size = contentLength ? Number(contentLength) / 1024 : 0
             return r.arrayBuffer()
           }).then(r => Buffer.from(r))
           logger.log(colors.gray(`  ├─ ${url} → ${joinURL(assetsBaseURL, filename)} (${size.toFixed(2)} kB ${encoding})`))
