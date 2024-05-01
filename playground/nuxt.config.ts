@@ -12,9 +12,6 @@ const scripts: ScriptRegistry = {
       bundle: true,
     },
   ],
-  confetti: {
-    version: 'latest',
-  },
   googleAnalytics: true,
 }
 

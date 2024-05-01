@@ -9,7 +9,6 @@ import type { FacebookPixelInput } from './registry/facebook-pixel'
 import type { FathomAnalyticsInput } from './registry/fathom-analytics'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
-import type { ConfettiInput } from './registry/confetti'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleMapsInput } from './registry/google-maps'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
@@ -76,7 +75,6 @@ export type ScriptRegistryEntry<T> = true | T | [T, NuxtUseScriptOptions<T>]
 
 export interface ScriptRegistry {
   cloudflareWebAnalytics?: ScriptRegistryEntry<CloudflareWebAnalyticsInput>
-  confetti?: ScriptRegistryEntry<ConfettiInput>
   facebookPixel?: ScriptRegistryEntry<FacebookPixelInput>
   fathomAnalytics?: ScriptRegistryEntry<FathomAnalyticsInput>
   googleAnalytics?: ScriptRegistryEntry<GoogleAnalyticsInput>
