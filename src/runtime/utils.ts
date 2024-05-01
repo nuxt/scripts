@@ -39,7 +39,7 @@ export function registryScript<T extends Record<string | symbol, any>, O extends
   const userOptions = Object.assign(_userOptions || {}, runtimeOptions || {})
   const options = optionsFn(userOptions)
 
-  const scriptInput = defu({ key }, options.scriptInput) as UseScriptInput
+  const scriptInput = defu(options.scriptInput, { key }) as UseScriptInput
   const scriptOptions = Object.assign(_userOptions?.scriptOptions || {}, options.scriptOptions || {})
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
