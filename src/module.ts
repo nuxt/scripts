@@ -3,8 +3,7 @@ import {
   addComponentsDir,
   addImports,
   addImportsDir,
-  addPlugin,
-  addTemplate,
+  addPluginTemplate,
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
@@ -150,9 +149,8 @@ ${newScripts.map((i) => {
 
       if (config.globals?.length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
-        const template = addTemplate({
+        addPluginTemplate({
           filename: `modules/${name!.replace('/', '-')}.mjs`,
-          write: true,
           getContents() {
             const imports = ['useScript', 'defineNuxtPlugin']
             const inits = []
@@ -178,9 +176,6 @@ ${(config.globals || []).map(g => !Array.isArray(g)
   }
 })`
           },
-        })
-        addPlugin({
-          src: template.dst,
         })
       }
       const scriptMap = new Map<string, string>()
