@@ -12,12 +12,12 @@ export const NpmOptions = object({
 
 export type NpmInput = RegistryScriptInput<typeof NpmOptions>
 
-export function useScriptNpm<T extends Record<string | symbol, any>>(key: string, _options: NpmInput) {
+export function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput) {
   // TODO support multiple providers? (e.g. jsdelivr, cdnjs, etc.) Only unpkg for now
-  return registryScript<T, typeof NpmOptions>(`${key}-npm`, options => ({
+  return registryScript<T, typeof NpmOptions>(`${_options.packageName}-npm`, options => ({
     scriptInput: {
       src: withBase(options.file || '', `https://unpkg.com/${options?.packageName}@${options.version || 'latest'}`),
     },
-    schema: NpmOptions,
+    schema: import.meta.dev ? NpmOptions : undefined,
   }), _options)
 }

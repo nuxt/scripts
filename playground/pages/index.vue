@@ -113,6 +113,24 @@ const features = [
           <Icon
             name="carbon:script"
             class="opacity-70 mr-2"
+          />NPM Scripts
+        </h2>
+        <div class="grid grid-cols-3 gap-5">
+          <div>
+            <ULink
+              to="/npm/js-confetti"
+              class="underline"
+            >
+              js-confetti
+            </ULink>
+          </div>
+        </div>
+      </div>
+      <div class="mb-10">
+        <h2 class="font-bold mb-5 text-xl flex items-center">
+          <Icon
+            name="carbon:script"
+            class="opacity-70 mr-2"
           />Third Party Components
         </h2>
         <div class="grid grid-cols-3 gap-5">
