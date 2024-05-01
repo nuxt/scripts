@@ -1,11 +1,11 @@
 import type { ConsentPromiseOptions } from '../types'
 import { isRef, onNuxtReady, ref, requestIdleCallback, toValue, tryUseNuxtApp, watch } from '#imports'
 
-type CreateScriptConsentTriggerApi = { accept: () => void } & Promise<void>
+type CreateConsentScriptTriggerApi = { accept: () => void } & Promise<void>
 
-export function createScriptConsentTrigger(options?: ConsentPromiseOptions): CreateScriptConsentTriggerApi {
+export function createConsentScriptTrigger(options?: ConsentPromiseOptions): CreateConsentScriptTriggerApi {
   if (import.meta.server)
-    return new Promise(() => {}) as CreateScriptConsentTriggerApi
+    return new Promise(() => {}) as CreateConsentScriptTriggerApi
 
   const consented = ref<boolean>(false)
   // user may want ot still load the script on idle
@@ -37,10 +37,10 @@ export function createScriptConsentTrigger(options?: ConsentPromiseOptions): Cre
         }, { immediate: true })
       }
     }
-  }) as CreateScriptConsentTriggerApi
+  }) as CreateConsentScriptTriggerApi
   // we augment the promise with a consent API
   promise.accept = () => {
     consented.value = true
   }
-  return promise as CreateScriptConsentTriggerApi
+  return promise as CreateConsentScriptTriggerApi
 }
