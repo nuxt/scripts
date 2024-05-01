@@ -33,13 +33,13 @@ useSeoMeta({
       <div class="relative hidden xl:block">
         <div class="absolute -z-1 -right-[450px] -top-[350px]">
           <div class="w-[500px] grid-transform grid grid-cols-3 gap-7">
-            <UCard v-for="(script, key) in registry" :key="key" class="card">
+            <button v-for="(script, key) in registry" :key="key" class="card px-3 py-5 rounded">
               <template v-if="typeof script.logo !== 'string'">
                 <div class="logo h-10 w-auto block dark:hidden" v-html="script.logo.light" />
                 <div class="logo h-10 w-auto hidden dark:block" v-html="script.logo.dark" />
               </template>
               <div v-else class="logo h-10 w-auto" v-html="script.logo" />
-            </UCard>
+            </button>
           </div>
         </div>
       </div>
@@ -98,6 +98,11 @@ useSeoMeta({
   3px 3px 10px rgba(217, 251, 232, 0.5),
   6px 6px 20px rgba(217, 251, 232, 0.1);
   transition: transform 0.2s, box-shadow 0.5s;
+}
+.dark .card {
+  box-shadow:  2px 2px 5px rgba(31, 41, 55, 0.5),
+  3px 3px 10px rgba(31, 41, 55, 0.5),
+  6px 6px 20px rgba(31, 41, 55, 0.1);
 }
 .card svg {
   opacity: 0.7;
