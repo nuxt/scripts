@@ -52,7 +52,6 @@
     "externals": [
       "@unhead/vue",
       "@unhead/schema",
-      "@unhead/vue",
       "#nuxt-scripts"
     ]
   },
