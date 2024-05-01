@@ -20,7 +20,7 @@ export function useAnalyticsPageEvent(onChange?: (payload: TrackedPage) => void)
     Promise.race([
       // possibly no head update is needed
       new Promise(resolve => setTimeout(resolve, 100)),
-      new Promise((resolve) => {
+      new Promise<void>((resolve) => {
         stopDomWatcher = head.hooks.hook('dom:rendered', () => resolve())
       }),
     ]).finally(() => {

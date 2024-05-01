@@ -37,7 +37,7 @@ export function createScriptConsentTrigger(options?: ConsentPromiseOptions): Cre
         }, { immediate: true })
       }
     }
-  })
+  }) as CreateScriptConsentTriggerApi
   // we augment the promise with a consent API
   promise.accept = () => {
     consented.value = true

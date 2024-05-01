@@ -35,7 +35,6 @@ type OptionsFn<O extends ObjectSchema<any>> = (options: Input<O>) => ({
 
 export function registryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
   const runtimeConfig = useRuntimeConfig().public.scripts || {}
-  // @ts-expect-error untyped
   const runtimeOptions = runtimeConfig[key]
   const userOptions = Object.assign(_userOptions || {}, runtimeOptions || {})
   const options = optionsFn(userOptions)
