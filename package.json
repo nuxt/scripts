@@ -96,6 +96,7 @@
     "bumpp": "^9.4.1",
     "eslint": "9.1.1",
     "nuxt": "^3.11.2",
+    "nuxt-scripts-devtools": "workspace:*",
     "playwright-core": "^1.43.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.3",
