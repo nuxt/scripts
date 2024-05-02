@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useScriptGoogleTagManager } from '../../../src/runtime/registry/google-tag-manager'
-import { createConsentScriptTrigger } from '#imports'
+import { useConsentScriptTrigger } from '#imports'
 
 const showCookieBanner = ref(true)
-const scriptConsent = createConsentScriptTrigger()
+const scriptConsent = useConsentScriptTrigger()
 function acceptCookies() {
   scriptConsent.accept()
   showCookieBanner.value = false

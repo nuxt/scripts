@@ -44,7 +44,7 @@ export interface TrackedPage {
   path: string
 }
 
-export interface ConsentPromiseOptions {
+export interface ConsentScriptTriggerOptions {
   /**
    * An optional reactive (or promise) reference to the consent state. You can use this to accept the consent for scripts
    * instead of using the accept() method.
