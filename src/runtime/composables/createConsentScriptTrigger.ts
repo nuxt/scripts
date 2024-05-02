@@ -14,8 +14,17 @@ export function createConsentScriptTrigger(options?: ConsentPromiseOptions): Cre
     watch(consented, (ready) => {
       if (ready) {
         const runner = nuxtApp?.runWithContext || ((cb: () => void) => cb())
-        const idleTimeout = options?.loadOnNuxtReady ? (nuxtApp ? onNuxtReady : requestIdleCallback) : (cb: () => void) => cb()
-        runner(() => idleTimeout(resolve))
+        if (options?.postConsentTrigger instanceof Promise) {
+          options.postConsentTrigger.then(() => runner(resolve))
+          return
+        }
+        if (options?.postConsentTrigger === 'onNuxtReady') {
+          const idleTimeout = options?.postConsentTrigger ? (nuxtApp ? onNuxtReady : requestIdleCallback) : (cb: () => void) => cb()
+          runner(() => idleTimeout(resolve))
+          return
+        }
+        // other trigger not supported
+        runner(resolve)
       }
     })
     if (options?.consent) {
