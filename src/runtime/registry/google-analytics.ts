@@ -1,4 +1,4 @@
-import type { GoogleAnalyticsApi } from 'third-party-capital'
+import type { GTag, GoogleAnalyticsApi } from 'third-party-capital'
 import { registryScript } from '../utils'
 import { GoogleAnalyticsScriptResolver } from '../../registry'
 import { object, string } from '#nuxt-scripts-validator'
@@ -43,7 +43,7 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
           window.dataLayer = window.dataLayer || []
           window.gtag = function gtag(...p) {
             window.dataLayer.push(p)
-          }
+          } as GTag
           window.gtag('js', new Date())
           window.gtag('config', options?.id)
         },
