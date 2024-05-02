@@ -47,7 +47,11 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
       <UPage>
         <UPageHeader title="Script Registry" description="The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts." />
         <UPageBody>
-          <p class="mb-5">To learn more about these scripts, please read the <NuxtLink to="/docs/guides/registry-scripts" class="underline text-primary">Registry Scripts</NuxtLink> documentation.</p>
+          <p class="mb-5">
+            To learn more about these scripts, please read the <NuxtLink to="/docs/guides/registry-scripts" class="underline text-primary">
+              Registry Scripts
+            </NuxtLink> documentation.
+          </p>
           <div class="space-y-10">
             <div v-for="(scripts, category) in scriptsCategories" :key="category">
               <div class="mb-5">

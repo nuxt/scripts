@@ -22,8 +22,8 @@
     "@vueuse/core": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
     "nuxt": "^3.11.2",
+    "nuxt-scripts-devtools": "workspace:*",
     "vue": "^3.4.26",
-    "vue-router": "^4.3.2",
-    "nuxt-scripts-devtools": "workspace:*"
+    "vue-router": "^4.3.2"
   }
 }
