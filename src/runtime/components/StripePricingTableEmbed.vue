@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const table = ref()
 useScript(`https://js.stripe.com/v3/pricing-table.js`, {
-  trigger: useElementScriptTrigger(props.trigger, table),
+  trigger: useElementScriptTrigger({ trigger: props.trigger, el: table }),
 })
 </script>
 

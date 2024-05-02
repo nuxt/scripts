@@ -48,7 +48,7 @@ const elMap = ref<HTMLElement>()
 const { $script } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
-    trigger: useElementScriptTrigger(props.trigger, elMap),
+    trigger: useElementScriptTrigger({ trigger: props.trigger, el: elMap }),
   },
 })
 

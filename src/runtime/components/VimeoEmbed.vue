@@ -104,7 +104,7 @@ const root = ref()
 const ready = ref(false)
 const { $script } = useScriptVimeoPlayer({
   scriptOptions: {
-    trigger: useElementScriptTrigger(props.trigger, root.value),
+    trigger: useElementScriptTrigger({ trigger: props.trigger, el: root.value }),
   },
 })
 

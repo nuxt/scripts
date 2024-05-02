@@ -7,7 +7,7 @@ const { addConfetti } = useScriptNpm<JSConfettiApi>({
   file: 'dist/js-confetti.browser.js',
   version: '0.12.0',
   scriptOptions: {
-    trigger: useElementScriptTrigger('mouseover', mouseOverEl),
+    trigger: useElementScriptTrigger({ trigger: 'mouseover', el: mouseOverEl }),
     bundle: true,
     use() {
       return typeof window.JSConfetti !== 'undefined' && new window.JSConfetti()

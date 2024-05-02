@@ -37,7 +37,7 @@ const elYoutube = ref()
 const ready = ref(false)
 const { $script } = useScriptYouTubeIframe({
   scriptOptions: {
-    trigger: useElementScriptTrigger(props.trigger, elYoutube.value),
+    trigger: useElementScriptTrigger({ trigger: props.trigger, el: elYoutube.value }),
   },
 })
 
