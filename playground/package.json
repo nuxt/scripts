@@ -8,9 +8,10 @@
     "generate": "nuxi generate"
   },
   "dependencies": {
-    "@nuxt/scripts": "latest",
+    "@nuxt/scripts": "workspace:*",
     "@nuxt/ui": "^2.15.2",
     "nuxt": "^3.11.2",
+    "nuxt-scripts-devtools": "workspace:*",
     "vue": "^3.4.26",
     "vue-router": "^4.3.2"
   }
