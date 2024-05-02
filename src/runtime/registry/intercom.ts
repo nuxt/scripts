@@ -1,6 +1,6 @@
-import { type Input, literal, number, object, optional, string, union } from 'valibot'
 import { joinURL } from 'ufo'
 import { registryScript } from '../utils'
+import { type Input, literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
@@ -61,7 +61,7 @@ export function useScriptIntercom<T extends IntercomApi>(_options?: IntercomInpu
           return acc
         }),
     },
-    schema: IntercomOptions,
+    schema: import.meta.dev ? IntercomOptions : undefined,
     scriptOptions: {
       use() {
         return { Intercom: window.Intercom }

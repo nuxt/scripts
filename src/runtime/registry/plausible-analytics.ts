@@ -1,6 +1,6 @@
-import { array, literal, object, optional, string, union } from 'valibot'
 import { registryScript } from '../utils'
 import { PlausibleAnalyticsScriptResolver } from '../../registry'
+import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 const extensions = [
@@ -43,7 +43,7 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
         'src': PlausibleAnalyticsScriptResolver(options),
         'data-domain': options?.domain,
       },
-      schema: PlausibleAnalyticsOptions,
+      schema: import.meta.dev ? PlausibleAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
           return { plausible: window.plausible }

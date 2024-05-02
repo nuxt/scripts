@@ -1,5 +1,5 @@
-import { object, optional, string } from 'valibot'
 import { registryScript } from '../utils'
+import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 interface ContentProperties {
@@ -50,7 +50,7 @@ export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
     scriptInput: {
       src: 'https://static.ads-twitter.com/uwt.js',
     },
-    schema: XPixelOptions,
+    schema: import.meta.dev ? XPixelOptions : undefined,
     scriptOptions: {
       use() {
         return { twq: window.twq }

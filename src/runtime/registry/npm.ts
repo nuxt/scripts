@@ -1,6 +1,6 @@
-import { object, optional, string } from 'valibot'
 import { withBase } from 'ufo'
 import { registryScript } from '../utils'
+import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const NpmOptions = object({

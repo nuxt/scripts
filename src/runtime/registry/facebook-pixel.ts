@@ -1,6 +1,6 @@
-import { number, object, string, union } from 'valibot'
 import { registryScript } from '../utils'
 import { FacebookPixelScriptResolver } from '../../registry'
+import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
@@ -47,7 +47,7 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(_options?: Fa
     scriptInput: {
       src: FacebookPixelScriptResolver(),
     },
-    schema: FacebookPixelOptions,
+    schema: import.meta.dev ? FacebookPixelOptions : undefined,
     scriptOptions: {
       use() {
         return { fbq: window.fbq }

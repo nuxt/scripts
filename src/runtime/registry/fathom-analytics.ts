@@ -1,5 +1,5 @@
-import { boolean, literal, object, optional, string, union } from 'valibot'
 import { registryScript } from '../utils'
+import { boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const FathomAnalyticsOptions = object({

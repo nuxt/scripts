@@ -1,5 +1,5 @@
-import { object } from 'valibot'
 import { registryScript } from '../utils'
+import { object } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const LemonSqueezyOptions = object({})
@@ -77,7 +77,7 @@ export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: Lemo
       // @ts-expect-error untyped
       crossorigin: null,
     },
-    schema: LemonSqueezyOptions,
+    schema: import.meta.dev ? LemonSqueezyOptions : undefined,
     scriptOptions: {
       use() {
         if (typeof window.createLemonSqueezy === 'undefined')

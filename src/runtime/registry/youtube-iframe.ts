@@ -1,6 +1,6 @@
-import { object } from 'valibot'
-import type YT from '@types/youtube'
+/// <reference types="youtube" />
 import { registryScript } from '../utils'
+import { object } from '#nuxt-scripts-validator'
 import { useHead } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -30,7 +30,7 @@ export function useScriptYouTubeIframe<T extends YouTubeIframeApi>(_options: You
       // @ts-expect-error TODO add types
       crossorigin: null,
     },
-    schema: YouTubeIframeOptions,
+    schema: import.meta.dev ? YouTubeIframeOptions : undefined,
     scriptOptions: {
       use() {
         return {

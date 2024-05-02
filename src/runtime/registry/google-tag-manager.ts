@@ -1,7 +1,7 @@
 import type { GoogleTagManagerApi } from 'third-party-capital'
-import { object, string } from 'valibot'
 import { withQuery } from 'ufo'
 import { registryScript } from '../utils'
+import { object, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 const GoogleTagManagerOptions = object({
@@ -27,7 +27,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(options
         id: options?.id,
       }),
     },
-    schema: GoogleTagManagerOptions,
+    schema: import.meta.dev ? GoogleTagManagerOptions : undefined,
     scriptOptions: {
       use() {
         return { dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }

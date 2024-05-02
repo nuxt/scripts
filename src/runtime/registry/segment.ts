@@ -1,6 +1,6 @@
-import { object, optional, string } from 'valibot'
 import { registryScript } from '../utils'
 import { SegmentScriptResolver } from '../../registry'
+import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const SegmentOptions = object({
@@ -33,7 +33,7 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
         'data-global-segment-analytics-key': analyticsKey,
         'src': SegmentScriptResolver(options),
       },
-      schema: SegmentOptions,
+      schema: import.meta.dev ? SegmentOptions : undefined,
       scriptOptions: {
         use() {
           return { analytics: window[analyticsKey] }

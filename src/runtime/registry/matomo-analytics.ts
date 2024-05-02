@@ -1,5 +1,5 @@
-import { boolean, object, optional, string } from 'valibot'
 import { registryScript } from '../utils'
+import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const MatomoAnalyticsOptions = object({
@@ -24,7 +24,7 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
     scriptInput: {
       src: `https://${options?.matomoUrl}/matomo.js`,
     },
-    schema: MatomoAnalyticsOptions,
+    schema: import.meta.dev ? MatomoAnalyticsOptions : undefined,
     scriptOptions: {
       use() {
         return { _paq: window._paq }

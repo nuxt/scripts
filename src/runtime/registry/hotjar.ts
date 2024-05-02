@@ -1,5 +1,5 @@
-import { number, object, optional } from 'valibot'
 import { registryScript } from '../utils'
+import { number, object, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export interface HotjarApi {
@@ -26,7 +26,7 @@ export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
     scriptInput: {
       src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
     },
-    schema: HotjarOptions,
+    schema: import.meta.dev ? HotjarOptions : undefined,
     scriptOptions: {
       use() {
         return { hj: window.hj }

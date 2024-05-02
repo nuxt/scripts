@@ -1,6 +1,6 @@
-import { object } from 'valibot'
 import type VimeoPlayer from 'vimeo__player'
 import { registryScript } from '../utils'
+import { object } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
 
@@ -23,7 +23,7 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },
-    schema: VimeoPlayerOptions,
+    schema: import.meta.dev ? VimeoPlayerOptions : undefined,
     scriptOptions: {
       use() {
         let Player: VimeoPlayer

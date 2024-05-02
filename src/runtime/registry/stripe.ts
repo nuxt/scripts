@@ -1,7 +1,7 @@
-import { boolean, object, optional } from 'valibot'
-import type { Stripe } from '@types/stripe-v3'
+/// <reference types="stripe-v3" />
 import { withQuery } from 'ufo'
 import { registryScript } from '../utils'
+import { boolean, object, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const StripeOptions = object({
@@ -11,7 +11,7 @@ export const StripeOptions = object({
 export type StripeInput = RegistryScriptInput<typeof StripeOptions, false>
 
 export interface StripeApi {
-  Stripe: Stripe
+  Stripe: stripe.StripeStatic
 }
 
 declare global {
@@ -31,7 +31,7 @@ export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
       // @ts-expect-error TODO add types
       referrerpolicy: null,
     },
-    schema: StripeOptions,
+    schema: import.meta.dev ? StripeOptions : undefined,
     scriptOptions: {
       use() {
         return { Stripe: window.Stripe }

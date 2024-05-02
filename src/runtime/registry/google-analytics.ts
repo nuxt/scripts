@@ -1,7 +1,7 @@
 import type { GoogleAnalyticsApi } from 'third-party-capital'
-import { object, string } from 'valibot'
 import { registryScript } from '../utils'
 import { GoogleAnalyticsScriptResolver } from '../../registry'
+import { object, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 const GoogleAnalyticsOptions = object({
@@ -25,7 +25,7 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
     scriptInput: {
       src: GoogleAnalyticsScriptResolver(options),
     },
-    schema: GoogleAnalyticsOptions,
+    schema: import.meta.dev ? GoogleAnalyticsOptions : undefined,
     scriptOptions: {
       use() {
         return { dataLayer: window.dataLayer, gtag: window.gtag }

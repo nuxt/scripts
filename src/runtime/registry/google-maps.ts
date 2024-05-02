@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
-import { array, literal, object, optional, string, union } from 'valibot'
 import { withQuery } from 'ufo'
 import { registryScript } from '../utils'
+import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const GoogleMapsOptions = object({
@@ -51,7 +51,7 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
               window.google.maps.__ib__ = resolve
             })
           },
-      schema: GoogleMapsOptions,
+      schema: import.meta.dev ? GoogleMapsOptions : undefined,
       scriptOptions: {
         use() {
           return {
