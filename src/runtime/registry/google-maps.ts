@@ -1,5 +1,5 @@
+/// <reference types="google.maps" />
 import { array, literal, object, optional, string, union } from 'valibot'
-import type google from 'google.maps'
 import { withQuery } from 'ufo'
 import { registryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -12,8 +12,15 @@ export const GoogleMapsOptions = object({
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
+// eslint-disable-next-line ts/no-namespace
+declare namespace google.maps {
+  /**
+   * @internal
+   */
+  export function __ib__(): void
+}
 export interface GoogleMapsApi {
-  maps: google.maps
+  maps: typeof google.maps
 }
 
 declare global {
