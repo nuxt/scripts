@@ -10,16 +10,19 @@
 
 Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
-- [👾 &nbsp;Playground](https://stackblitz.com/github/nuxt/scripts/tree/main/playground)
+- [👾 &nbsp;Playground](https://stackblitz.com/edit/nuxt-starter-pkwfkx?file=pages%2Findex.vue)
+
+> [!IMPORTANT]
+> Nuxt Scripts is in public preview and is not yet officially announced. Use with caution.
 
 ## Features
 
-- 🪨 [useScript by Unhead](https://unhead.unjs.io/usage/composables/use-script)
+- 🪨 Built on top of [Unhead](https://unhead.unjs.io/usage/composables/use-script)
 - 🎁 20+ third-party scripts integrations with fine-grained performance optimizations
-- ⏬ Serve scripts from your own server
-- 🕵️ Privacy Features - Protect end users identity, provide consent to scripts.
-- 🪵 DevTools integration - View your script with their status and see function logs
-- 🚀 0 Runtime Dependencies
+- 🏎️ Performance: Self hosting, advanced script loading triggers, best-practice defaults.
+- 🕵️ Privacy: Defaults to protect end users identity, script consent management APIs.
+- 🪵 DevTools: View your script with their status and see function logs
+- 🚀 0 dependencies, ~2kb minimal runtime
 
 ## Background
 
@@ -37,11 +40,17 @@ To get started, simply run:
 npx nuxi@latest module add @nuxt/scripts
 ```
 
-Done! You can now start using Nuxt Scripts in your Nuxt app.
+That's it! The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
 
-Check out the [📖 &nbsp;docs](https://nuxt-scripts.vercel.app/) or these resources to get started:
-- [👉 &nbsp;Script Registry](https://nuxt-scripts.vercel.app/scripts)
-- [👉 &nbsp;useScript](https://unhead.unjs.io/usage/composables/use-script)
+## Next Steps
+
+Need some inspiration to start using Nuxt Scripts? Try out the following:
+
+1. 🎉 Make it rain emojis with the [Confetti Tutorial](https://scripts.nuxt.com/docs/getting-started/confetti-tutorial).
+2. 📚 Learn about how the [Script Loading](https://scripts.nuxt.com/docs/guides/script-loading) works.
+3. 🔍 Explore the [Script Registry](https://scripts.nuxt.com/scripts) for popular pre-configured third-party scripts.
+3. 🚀 Load other scripts with [useScript](https://unhead.unjs.io/usage/composables/use-script) or [Global Scripts](https://scripts.nuxt.com/docs/guides/globals).
+4. 🔨 Fine-tune your performance and privacy with [Bundling](https://scripts.nuxt.com/docs/guides/bundling) and [Consent Management](https://scripts.nuxt.com/docs/guides/consent).
 
 ## License
 
