@@ -5,7 +5,9 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
 
 export interface VimeoPlayerApi {
-  Player: VimeoPlayer
+  Vimeo: {
+    Player: VimeoPlayer
+  }
 }
 
 export const VimeoPlayerOptions = object({})
@@ -13,9 +15,7 @@ export const VimeoPlayerOptions = object({})
 export type VimeoPlayerInput = RegistryScriptInput<typeof VimeoPlayerOptions>
 
 declare global {
-  interface Window {
-    Vimeo: VimeoPlayerApi
-  }
+  interface Window extends VimeoPlayerApi {}
 }
 
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
@@ -26,10 +26,8 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
     schema: import.meta.dev ? VimeoPlayerOptions : undefined,
     scriptOptions: {
       use() {
-        if (typeof window.Vimeo?.Player === 'undefined')
-          return
         return {
-          Player: window.Vimeo.Player,
+          Vimeo: window.Vimeo,
         }
       },
     },

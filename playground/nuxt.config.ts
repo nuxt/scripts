@@ -1,19 +1,6 @@
 import { createResolver } from '@nuxt/kit'
-import type { ScriptRegistry } from '#nuxt-scripts'
 
 const { resolve } = createResolver(import.meta.url)
-
-const scripts: ScriptRegistry = {
-  myCustomScript: [
-    {
-      id: '123',
-    },
-    {
-      bundle: true,
-    },
-  ],
-  googleAnalytics: true,
-}
 
 export default defineNuxtConfig({
   modules: [
@@ -22,10 +9,6 @@ export default defineNuxtConfig({
     '@nuxt/ui',
   ],
   devtools: { enabled: true },
-  scripts: {
-    registry: scripts,
-    // TODO globals
-  },
   runtimeConfig: {
     public: {
       scripts: {

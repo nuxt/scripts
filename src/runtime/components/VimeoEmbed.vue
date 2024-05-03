@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type Player from 'vimeo__player'
 import type { EventMap, VimeoVideoQuality } from 'vimeo__player'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
@@ -104,7 +104,7 @@ const root = ref()
 const ready = ref(false)
 const { $script } = useScriptVimeoPlayer({
   scriptOptions: {
-    trigger: useElementScriptTrigger({ trigger: props.trigger, el: root.value }),
+    trigger: props.trigger ? useElementScriptTrigger({ trigger: props.trigger, el: root }) : undefined,
   },
 })
 
@@ -118,25 +118,30 @@ const { data: payload } = useAsyncData(
 )
 
 const poster = computed(() => {
-  const { width, height } = props
   // 2 dpi for retina, this is safest while SSR
-  return payload.value.thumbnail_large.replace(/-d_[\dx]+$/i, `-d_${Math.round(width * 2)}x${Math.round(height * 2)}`)
+  return payload.value?.thumbnail_large // .replace(/-d_[\dx]+$/i, `-d_${Math.round(width * 2)}x${Math.round(height * 2)}`)
 })
 
 let player: Player
-$script.then(({ Player }) => {
-  // filter props for false values
-  player = Player(elVimeo.value, {
-    ...props,
-    url: encodeURI(`https://vimeo.com/${props.id}`),
+onMounted(() => {
+  $script.then(({ Vimeo }) => {
+    // filter props for false values
+    player = new Vimeo.Player(elVimeo.value, {
+      ...props,
+      url: encodeURI(`https://vimeo.com/${props.id}`),
+    })
+
+    events.forEach((event) => {
+      player.on(event, (e: any) => {
+        emits(event as keyof typeof emits, e, player)
+        if (event === 'loaded')
+          ready.value = true
+      })
+    })
   })
 
-  events.forEach((event) => {
-    player.on(event, (e: any) => {
-      emits(event as keyof typeof emits, e, player)
-      if (event === 'loaded')
-        ready.value = true
-    })
+  watch(() => props.id, (v) => {
+    v && player?.loadVideo(v)
   })
 })
 
@@ -145,17 +150,14 @@ onBeforeUnmount(() => player?.unload())
 defineExpose({
   player,
 })
-
-watch(() => props.id, (v) => {
-  v && player?.loadVideo(v)
-})
 </script>
 
 <template>
   <div ref="root" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
     <div v-show="ready" ref="elVimeo" style="width: 100%; height: 100%;" />
-    <slot v-bind="payload" :poster="poster">
-      <img v-if="!ready" :src="poster" v-bind="trigger ? { loading: 'lazy' } : {}" :width="width" :height="height" :style="{ aspectRatio: '4/3', cursor: $script.status.value !== 'awaitingLoad' ? 'wait' : '' }">
+    <slot v-bind="payload" :poster="poster" name="poster">
+      <div v-if="!ready" v-bind="trigger ? { loading: 'lazy' } : {}" :style="{ backgroundImage: `url(${poster})`, width: `${width}px`, height: `${height}px`, cursor: 'wait', backgroundRepeat: 'no-repeat', backgroundPosition: '50% 50%', backgroundColor: 'black' }" />
     </slot>
+    <slot />
   </div>
 </template>
