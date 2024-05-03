@@ -32,3 +32,9 @@ provide('navigation', computed(() => {
     <UNotifications />
   </div>
 </template>
+
+<style>
+body {
+  font-family: 'Inter var experimental', 'Inter var', 'Inter', sans-serif;
+}
+</style>

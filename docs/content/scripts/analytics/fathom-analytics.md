@@ -4,7 +4,7 @@ description: Use Fathom Analytics in your Nuxt app.
 links:
   - label: Source
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/cloudflare-web-analytics.ts
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/fathom-analytics.ts
     size: xs
 ---
 
