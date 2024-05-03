@@ -12,13 +12,12 @@ links:
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
-
 ### Nuxt Config Setup
 
 The simplest way to load Google Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptGoogleAnalytics](#useScriptGoogleAnalytics) composable.
 
-If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to 
+If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
 disable the script in development.
 
 ::code-group
