@@ -4,7 +4,10 @@ import { GoogleAnalyticsScriptResolver } from '../../registry'
 import { object, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-const GoogleAnalyticsOptions = object({
+export const GoogleAnalyticsOptions = object({
+  /**
+   * The Google Analytics ID.
+   */
   id: string(),
 })
 

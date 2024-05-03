@@ -10,6 +10,11 @@ links:
 
 The `useGoogleTagManager` composable allows you to install [Google Tag Manager](https://developers.google.com/tag-platform/tag-manager/web) in your Nuxt application.
 
+::callout
+Using Google Tag Manager with Nuxt Scripts may be an anti-pattern. GTM is 82kb and provides many features you can easily
+implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the `useGoogleAnalytics` composable.
+::
+
 ## Minimal Example
 
 ```vue
