@@ -64,7 +64,7 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
               </div>
               <div class="flex flex-wrap gap-4">
                 <NuxtLink v-for="(script, key) in scripts" :key="key" :to="`/scripts/${category}/${script.key}`">
-                  <UCard class="min-w-[120px] text-center hover:bg-gray-100 transition">
+                  <UCard class="min-w-[120px] text-center hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                     <div v-if="script.logo" class="mb-2">
                       <template v-if="typeof script.logo !== 'string'">
                         <div class="logo h-10 w-auto block dark:hidden" v-html="script.logo.light" />

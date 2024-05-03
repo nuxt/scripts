@@ -10,6 +10,47 @@ useSeoMeta({
   description: page.value.description,
   ogDescription: page.value.description,
 })
+
+const card = ref()
+onMounted(() => {
+  card.value.forEach((el, i) => {
+    const { isOutside } = useMouseInElement(el)
+    const adjacentCards = [
+      i - 1,
+      i + 1,
+      i - 4,
+      i + 4,
+    ]
+      .filter((index) => {
+        if (index < 0 || index > 15)
+          return false
+        if (i % 4 === 0 && index === i - 1)
+          return false
+        if (i % 4 === 3 && index === i + 1)
+          return false
+        return true
+      })
+      .map(index => card.value[index])
+    // add class when mouse is inside the element
+    const removeClasses = useDebounceFn(() => {
+      el.classList.remove('card-raised-big')
+      adjacentCards.forEach((adjacentCard) => {
+        adjacentCard.classList.remove('card-raised-small')
+      })
+    }, 200)
+    watch(isOutside, (isOutside) => {
+      if (!isOutside) {
+        el.classList.add('card-raised-big')
+        adjacentCards.forEach((adjacentCard) => {
+          adjacentCard.classList.add('card-raised-small')
+        })
+      }
+      else {
+        removeClasses()
+      }
+    })
+  })
+})
 </script>
 
 <template>
@@ -31,15 +72,15 @@ useSeoMeta({
         </div>
       </template>
       <div class="relative hidden xl:block">
-        <div class="absolute -z-1 -right-[450px] -top-[350px]">
-          <div class="w-[500px] grid-transform grid grid-cols-3 gap-7">
-            <button v-for="(script, key) in registry" :key="key" class="card px-3 py-5 rounded">
+        <div class="absolute -z-1 -right-[450px] -top-[200px]">
+          <div class="w-[450px] grid-transform justify-center items-center grid grid-cols-4 ">
+            <a v-for="(script, key) in registry.slice(0, 16)" :key="key" ref="card" :href="`/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`" class="card py-5 px-3 rounded block" :style="{ zIndex: key }">
               <template v-if="typeof script.logo !== 'string'">
-                <div class="logo h-10 w-auto block dark:hidden" v-html="script.logo.light" />
-                <div class="logo h-10 w-auto hidden dark:block" v-html="script.logo.dark" />
+                <div class="logo h-12 w-auto block dark:hidden" v-html="script.logo.light" />
+                <div class="logo h-12 w-auto hidden dark:block" v-html="script.logo.dark" />
               </template>
               <div v-else class="logo h-10 w-auto" v-html="script.logo" />
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -94,30 +135,73 @@ useSeoMeta({
   background: radial-gradient(circle, #1F2937 0%, #020420 70%, transparent 100%);
 }
 .card {
+  border: 1px solid transparent;
   box-shadow:  2px 2px 5px rgba(217, 251, 232, 0.5),
   3px 3px 10px rgba(217, 251, 232, 0.5),
   6px 6px 20px rgba(217, 251, 232, 0.1);
-  transition: transform 0.2s, box-shadow 0.5s;
+  transition: all 0.2s;
 }
 .dark .card {
-  box-shadow:  2px 2px 5px rgba(31, 41, 55, 0.5),
-  3px 3px 10px rgba(31, 41, 55, 0.5),
+  box-shadow:  2px 2px 5px rgba(31, 41, 55, 0.2),
+  3px 3px 10px rgba(31, 41, 55, 0.2),
   6px 6px 20px rgba(31, 41, 55, 0.1);
 }
 .card svg {
   opacity: 0.7;
   transition: 0.2s;
 }
-.card:hover {
-  box-shadow:  3px 3px 5px rgba(217, 251, 232, 1),
-  5px 5px 10px rgba(217, 251, 232, 1),
-  10px 10px 20px rgba(217, 251, 232, 1);
-  transform: translateX(-7px) translateY(-7px);
+
+.dark .card:hover {
+  box-shadow:  3px 3px 5px rgba(31, 41, 55, 1),
+  5px 5px 10px rgba(31, 41, 55, 1),
+  10px 10px 20px rgba(31, 41, 55, 1);
 }
+
 .card:hover svg {
   opacity: 1;
 }
 .card svg {
   shape-rendering: geometricPrecision;
+}
+
+.card-raised-small {
+  border: 1px solid rgba(0, 193, 106, 0.3);
+  transform: scale(1.05) translateX(-5px) translateY(-5px) translateZ(0);
+  animation: text-glow-small 1.5s alternate infinite ease-in-out;
+}
+
+.card-raised-big {
+  border: 1px solid rgba(0, 193, 106, 0.5);
+  background-color: white;
+  transform: scale(1.15) translateX(-20px) translateY(-20px) translateZ(15px);
+  animation: text-glow 1.5s alternate infinite ease-in-out;
+}
+
+.dark .card-raised-big {
+  border: 1px solid rgba(217, 251, 232, 0.3);
+  background-color: #020420;
+}
+
+.dark .card-raised-small {
+  border: 1px solid rgba(217, 251, 232, 0.2);
+  transform: scale(1.05) translateX(-5px) translateY(-5px) translateZ(0);
+}
+
+@keyframes text-glow {
+  0% {
+    filter: drop-shadow(0px 0px 2px rgba(56,239,125, 0.5));
+  }
+  100% {
+    filter: drop-shadow(0px 1px 8px rgba(56,239,125, 1));
+  }
+}
+
+@keyframes text-glow-small {
+  0% {
+    filter: drop-shadow(0px 0px 2px rgba(56,239,125, 0.1));
+  }
+  100% {
+    filter: drop-shadow(0px 1px 4px rgba(56,239,125, 0.5));
+  }
 }
 </style>
