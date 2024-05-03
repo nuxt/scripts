@@ -100,7 +100,7 @@ export interface ScriptRegistry {
   [key: `${string}-npm`]: NpmInput
 }
 
-export type NuxtConfigScriptRegistryEntry<T> = true | T | [T, NuxtUseScriptOptions<T>]
+export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptions<T>]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<
   Record<T, NuxtConfigScriptRegistryEntry<ScriptRegistry[T]>>
 >

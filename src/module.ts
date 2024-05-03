@@ -173,7 +173,10 @@ ${newScripts.map((i) => {
               if (importDefinition) {
                 // title case
                 imports.unshift(importDefinition.import.name)
-                inits.push(`${importDefinition.import.name}(${JSON.stringify(c === true ? {} : c)});`)
+                const args = (typeof c !== 'object' ? {} : c) || {}
+                if (c === 'mock')
+                  args.scriptOptions = { trigger: 'manual', skipValidation: true }
+                inits.push(`${importDefinition.import.name}(${JSON.stringify(args)});`)
               }
             }
             return `import { ${imports.join(', ')} } from '#imports'
