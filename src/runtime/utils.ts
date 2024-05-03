@@ -1,5 +1,5 @@
 import { defu } from 'defu'
-import type { BaseSchema, Input, ObjectSchema } from 'valibot'
+import type { BaseSchema, Input, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
 import { createError, useRuntimeConfig, useScript } from '#imports'
@@ -10,11 +10,12 @@ function validateScriptInputSchema<T extends BaseSchema<any>>(key: string, schem
     try {
       parse(schema, options)
     }
-    catch (e) {
+    catch (_e) {
+      const e = _e as ValiError
       // TODO nicer error handling
-      createError({
+      throw createError({
         cause: e,
-        message: `Invalid script options for ${key}`,
+        message: `Invalid script options for ${key}.\n${e.issues.map(i => `${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n')}`,
       })
     }
   }
@@ -39,11 +40,13 @@ export function registryScript<T extends Record<string | symbol, any>, O extends
   const scriptOptions = Object.assign(_userOptions?.scriptOptions || {}, options.scriptOptions || {})
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
-    // validate input in dev
     import.meta.dev && options.schema && validateScriptInputSchema(key, options.schema, userOptions)
     // avoid clearing the user beforeInit
     init?.()
-    import.meta.client && options.clientInit?.()
+    if (import.meta.client) {
+      // validate input in dev
+      options.clientInit?.()
+    }
   }
   return useScript<T>(scriptInput, scriptOptions)
 }
