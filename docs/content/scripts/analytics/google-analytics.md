@@ -16,12 +16,14 @@ It provides detailed insights into how your website is performing, how users are
 Using Google Tag Manager? You can configure Google Analytics directly using it. Refer to the [documentation](https://developers.google.com/analytics/devguides/collection/ga4/tag-options#what-is-gtm) to learn more.
 ::
 
-## Nuxt Config Setup
+
+### Nuxt Config Setup
 
 The simplest way to load Google Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptGoogleAnalytics](#useScriptGoogleAnalytics) composable.
 
-If you'd like to avoid loading the analytics in development, you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) in your Nuxt config.
+If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to 
+disable the script in development.
 
 ::code-group
 
@@ -37,18 +39,13 @@ export default defineNuxtConfig({
 })
 ```
 
-```ts [Mock Development]
+```ts [Production only]
 export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      googleAnalytics: 'mock'
-    }
-  },
   $production: {
     scripts: {
       registry: {
         googleAnalytics: {
-          id: 'YOUR_ID',
+          token: 'YOUR_TOKEN_ID',
         }
       }
     }
@@ -91,21 +88,12 @@ NUXT_SCRIPTS_GOOGLE_ANALYTICS_ID=<YOUR_ID>
 The `useScriptGoogleAnalytics` composable lets you have fine-grain control over when and how Google Analytics is loaded on your site.
 
 ```ts
-function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(options?: GoogleAnalyticsInput) {}
+const { gtag, $script } = useScriptGoogleAnalytics({
+  id: 'YOUR_ID'
+})
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-### GoogleAnalyticsInput
-
-```ts
-export const GoogleAnalyticsOptions = object({
-  /**
-   * The Google Analytics ID.
-   */
-  id: string(),
-})
-```
 
 ### GoogleAnalyticsApi
 
@@ -132,6 +120,19 @@ interface GoogleAnalyticsApi {
   dataLayer: Record<string, any>[]
   gtag: GTag
 }
+```
+
+### Config Schema
+
+You must provide the options when setting up the script for the first time.
+
+```ts
+export const GoogleAnalyticsOptions = object({
+  /**
+   * The Google Analytics ID.
+   */
+  id: string(),
+})
 ```
 
 ## Example
@@ -161,7 +162,7 @@ function sendConversion() {
 </template>
 ```
 
-```ts
+```ts [nuxt.config.ts Mock development]
 import { isDevelopment } from 'std-env'
 
 export default defineNuxtConfig({
