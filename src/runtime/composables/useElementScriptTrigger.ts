@@ -1,6 +1,12 @@
-import { useElementHover, useElementVisibility, watchOnce } from '@vueuse/core'
-import type { Ref } from 'vue'
-import { ref } from 'vue'
+import type {
+  MaybeComputedElementRef,
+  MaybeElement,
+  UseIntersectionObserverReturn,
+} from '@vueuse/core'
+import {
+  useEventListener,
+  useIntersectionObserver,
+} from '@vueuse/core'
 
 export type ElementScriptTrigger = 'visible' | 'mouseover' | false
 
@@ -13,7 +19,29 @@ export interface ElementScriptTriggerOptions {
    * The element to watch for the trigger event.
    * @default document.body
    */
-  el?: HTMLElement | Ref<HTMLElement | undefined> | null
+  el?: MaybeComputedElementRef<MaybeElement>
+}
+
+function useElementVisibilityPromise(element: MaybeComputedElementRef) {
+  let observer: UseIntersectionObserverReturn
+  return new Promise<void>((resolve) => {
+    observer = useIntersectionObserver(
+      element,
+      (intersectionObserverEntries) => {
+        // Get the latest value of isIntersecting based on the entry time
+        for (const entry of intersectionObserverEntries) {
+          if (entry.isIntersecting)
+            resolve()
+        }
+      },
+      {
+        rootMargin: '30px 0 0 0',
+        threshold: 0,
+      },
+    )
+  }).finally(() => {
+    observer.stop()
+  })
 }
 
 /**
@@ -23,7 +51,16 @@ export function useElementScriptTrigger(options: ElementScriptTriggerOptions): P
   const { el, trigger } = options
   if (import.meta.server || !el)
     return new Promise<void>(() => {})
-  const $el = typeof el !== 'undefined' ? el : document.body
-  const activeRef = trigger ? (trigger === 'mouseover' ? useElementHover($el) : useElementVisibility($el)) : ref(false)
-  return trigger ? new Promise<void>(resolve => watchOnce([activeRef], () => resolve())) : Promise.resolve()
+  if (el && options.trigger === 'visible')
+    return useElementVisibilityPromise(el)
+  if (trigger === 'mouseover') {
+    // TODO optimize this, only have 1 instance of intersection observer, stop on find
+    return new Promise<void>(resolve => useEventListener(
+      typeof el !== 'undefined' ? (el as EventTarget) : document.body,
+      'mouseenter',
+      resolve,
+      { passive: true },
+    ))
+  }
+  return Promise.resolve()
 }
