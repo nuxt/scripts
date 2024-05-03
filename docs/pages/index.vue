@@ -5,11 +5,11 @@ const registry = useScriptsRegistry()
 const { data: page } = await useAsyncData('index', () => queryContent('/').findOne())
 
 useSeoMeta({
-  title: page.value.title,
-  ogTitle: page.value.title,
-  description: page.value.description,
-  ogDescription: page.value.description,
+  title: 'Third-Party Scripts Meets Nuxt DX.',
+  description: 'Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
 })
+
+defineOgImageComponent('Home')
 
 const card = ref()
 onMounted(() => {
@@ -57,7 +57,7 @@ onMounted(() => {
   <div>
     <ULandingHero
       v-bind="page?.hero" orientation="horizontal"
-      :ui="{ container: 'flex flex-row justify-start items-center' }"
+      :ui="{ container: 'flex flex-row justify-start items-center', links: 'flex items-center gap-2' }"
     >
       <template #title>
         <div class="leading-tight">

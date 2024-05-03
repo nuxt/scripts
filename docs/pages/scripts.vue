@@ -28,6 +28,13 @@ const categories = {
   },
 }
 
+defineOgImageComponent('Home')
+
+useSeoMeta({
+  title: 'Script Registry',
+  description: 'The registry is a collection of third-party scripts with out-of-the-box composable and component integrations for Nuxt Scripts.',
+})
+
 // group by category
 const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
   if (!acc[script.category])

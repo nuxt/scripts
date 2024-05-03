@@ -14,9 +14,6 @@ export default defineAppConfig({
       },
     },
   },
-  seo: {
-    siteName: 'Nuxt Scripts',
-  },
   header: {
     links: [{
       'icon': 'i-simple-icons-github',
