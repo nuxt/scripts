@@ -50,28 +50,28 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
       schema: import.meta.dev ? SegmentOptions : undefined,
       scriptOptions: {
         use() {
-          // @ts-expect-error
+          // @ts-expect-error untyped
           return { analytics: window[analyticsKey] as SegmentApi['analytics'] }
         },
         clientInit: import.meta.server
           ? undefined
           : () => {
-            window.analytics = window.analytics || []
-            window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
-            window.analytics.factory = function (method) {
-              return function (...params) {
-                const args = Array.prototype.slice.call(params)
-                args.unshift(method)
-                window.analytics.push(args)
-                return window.analytics
+              window.analytics = window.analytics || []
+              window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
+              window.analytics.factory = function (method) {
+                return function (...params) {
+                  const args = Array.prototype.slice.call(params)
+                  args.unshift(method)
+                  window.analytics.push(args)
+                  return window.analytics
+                }
               }
-            }
-            for (let i = 0; i < window.analytics.methods.length; i++) {
-              const key = window.analytics.methods[i]
-              window.analytics[key] = window.analytics.factory(key)
-            }
-            window.analytics.page()
-          },
+              for (let i = 0; i < window.analytics.methods.length; i++) {
+                const key = window.analytics.methods[i]
+                window.analytics[key] = window.analytics.factory(key)
+              }
+              window.analytics.page()
+            },
       },
     }
   }, _options)

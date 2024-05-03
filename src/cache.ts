@@ -1,7 +1,7 @@
 import { createStorage } from 'unstorage'
 import fsDriver from 'unstorage/drivers/fs'
 
-type Awaitable<T> = T | PromiseLike<T>;
+type Awaitable<T> = T | PromiseLike<T>
 
 // TODO: refactor to use nitro storage when possible
 const storage = createStorage({
