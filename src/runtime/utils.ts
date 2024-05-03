@@ -2,8 +2,8 @@ import { defu } from 'defu'
 import type { BaseSchema, Input, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
-import { createError, useRuntimeConfig, useScript } from '#imports'
-import type { NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry } from '#nuxt-scripts'
+import { useRuntimeConfig, useScript } from '#imports'
+import type { NuxtConfigScriptRegistry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry } from '#nuxt-scripts'
 
 function validateScriptInputSchema<T extends BaseSchema<any>>(key: string, schema: T, options?: Input<T>) {
   if (import.meta.dev) {
@@ -13,10 +13,7 @@ function validateScriptInputSchema<T extends BaseSchema<any>>(key: string, schem
     catch (_e) {
       const e = _e as ValiError
       // TODO nicer error handling
-      throw createError({
-        cause: e,
-        message: `Invalid script options for ${key}.\n${e.issues.map(i => `${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n')}`,
-      })
+      console.error(e.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n'))
     }
   }
 }
