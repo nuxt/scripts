@@ -25,16 +25,17 @@ type OptionsFn<O extends ObjectSchema<any>> = (options: Input<O>) => ({
   clientInit?: () => void
 })
 
-export function scriptRuntimeConfig(key: keyof ScriptRegistry) {
-  return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key] || {}
+export function scriptRuntimeConfig(key: keyof NuxtConfigScriptRegistry) {
+  return ((useRuntimeConfig().public.scripts || {}) as NuxtConfigScriptRegistry)[key] || {}
 }
 
 export function registryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: keyof ScriptRegistry, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
-  const userOptions = Object.assign(_userOptions || {}, scriptRuntimeConfig(key))
+  const scriptConfig = scriptRuntimeConfig(key)
+  const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions)
 
   const scriptInput = defu(options.scriptInput, { key }) as UseScriptInput
-  const scriptOptions = Object.assign(_userOptions?.scriptOptions || {}, options.scriptOptions || {})
+  const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
     // a manual trigger also means it was disabled by nuxt.config
