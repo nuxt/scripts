@@ -18,13 +18,18 @@ import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
 import { extendTypes, installNuxtModule } from './kit'
 import { registry } from './registry'
-import type { NuxtUseScriptInput, NuxtUseScriptOptions, RegistryScripts, ScriptRegistry } from '#nuxt-scripts'
+import type {
+  NuxtConfigScriptRegistry,
+  NuxtUseScriptInput,
+  NuxtUseScriptOptions,
+  RegistryScripts,
+} from '#nuxt-scripts'
 
 export interface ModuleOptions {
   /**
    * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
-  registry?: ScriptRegistry
+  registry?: NuxtConfigScriptRegistry
   /**
    * Default options for scripts.
    */
@@ -86,7 +91,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
-
     const { version, name } = await readPackageJSON(resolve('../package.json'))
     const { version: unheadVersion } = await readPackageJSON(join(await resolvePath('@unhead/vue'), 'package.json'))
 
@@ -129,23 +133,31 @@ export default defineNuxtModule<ModuleOptions>({
 
       // augment types to support the integrations registry
       extendTypes(name!, async ({ typesPath }) => {
-        return `
+        let types = `
 declare module '#app' {
   interface NuxtApp {
-    ${nuxt.options.dev ? `_scripts: (import('#nuxt-scripts').NuxtAppScript)[]` : ''}
+    _scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)>
+  }
+  interface RuntimeNuxtHooks {
+    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)> }) => void | Promise<void>
   }
 }
+`
+        if (newScripts.length) {
+          types = `${types}
 declare module '#nuxt-scripts' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
 ${newScripts.map((i) => {
-  const key = i.import.name.replace('useScript', '')
-          const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-          return `        ${keyLcFirst}?: import('${i.import.from}').${key}Input | [import('${i.import.from}').${key}Input, NuxtUseScriptOptions]`
-        }).join('\n')}
+            const key = i.import.name.replace('useScript', '')
+            const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+            return `        ${keyLcFirst}?: import('${i.import.from}').${key}Input | [import('${i.import.from}').${key}Input, NuxtUseScriptOptions]`
+          }).join('\n')}
     }
-}
-`
+}`
+          return types
+        }
+        return types
       })
 
       if (config.globals?.length || Object.keys(config.registry || {}).length) {

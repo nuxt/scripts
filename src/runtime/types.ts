@@ -16,6 +16,10 @@ import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { StripeInput } from './registry/stripe'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XPixelInput } from './registry/x-pixel'
+import type { YouTubeIFrameInput } from './registry/youtube-iframe'
+import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
+import type { NpmInput } from './registry/npm'
+import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -71,23 +75,30 @@ export interface NuxtAppScript {
   }[]
 }
 
-export type ScriptRegistryEntry<T> = true | T | [T, NuxtUseScriptOptions<T>]
-
 export interface ScriptRegistry {
-  cloudflareWebAnalytics?: ScriptRegistryEntry<CloudflareWebAnalyticsInput>
-  facebookPixel?: ScriptRegistryEntry<FacebookPixelInput>
-  fathomAnalytics?: ScriptRegistryEntry<FathomAnalyticsInput>
-  googleAnalytics?: ScriptRegistryEntry<GoogleAnalyticsInput>
-  googleMaps?: ScriptRegistryEntry<GoogleMapsInput>
-  googleTagManager?: ScriptRegistryEntry<GoogleTagManagerInput>
-  hotjar?: ScriptRegistryEntry<HotjarInput>
-  intercom?: ScriptRegistryEntry<IntercomInput>
-  matomoAnalytics?: ScriptRegistryEntry<MatomoAnalyticsInput>
-  segment?: ScriptRegistryEntry<SegmentInput>
-  stripe?: ScriptRegistryEntry<StripeInput>
-  vimeo?: ScriptRegistryEntry<VimeoPlayerInput>
-  xPixel?: ScriptRegistryEntry<XPixelInput>
+  cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
+  facebookPixel?: FacebookPixelInput
+  fathomAnalytics?: FathomAnalyticsInput
+  plausibleAnalytics?: PlausibleAnalyticsInput
+  googleAnalytics?: GoogleAnalyticsInput
+  googleMaps?: GoogleMapsInput
+  lemonSqueezy?: LemonSqueezyInput
+  googleTagManager?: GoogleTagManagerInput
+  hotjar?: HotjarInput
+  intercom?: IntercomInput
+  matomoAnalytics?: MatomoAnalyticsInput
+  segment?: SegmentInput
+  stripe?: StripeInput
+  xPixel?: XPixelInput
+  youtubeIframe?: YouTubeIFrameInput
+  vimeoPlayer?: VimeoPlayerInput
+  [key: `${string}-npm`]: NpmInput
 }
+
+export type NuxtConfigScriptRegistryEntry<T> = true | T | [T, NuxtUseScriptOptions<T>]
+export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<
+  Record<T, NuxtConfigScriptRegistryEntry<ScriptRegistry[T]>>
+>
 
 export type RegistryScriptInput<T extends ObjectSchema<any>, Bundelable extends boolean = true> = Input<T> & {
   scriptInput?: UseScriptInput

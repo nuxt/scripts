@@ -26,13 +26,11 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
     schema: import.meta.dev ? VimeoPlayerOptions : undefined,
     scriptOptions: {
       use() {
-        let Player: VimeoPlayer
-        if (import.meta.client) {
-          Player = function (...params: any[]) {
-            return new window.Vimeo.Player(...params)
-          }
+        if (typeof window.Vimeo?.Player === 'undefined')
+          return
+        return {
+          Player: window.Vimeo.Player,
         }
-        return { Player }
       },
     },
     beforeInit() {

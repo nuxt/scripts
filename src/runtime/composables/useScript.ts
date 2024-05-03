@@ -5,17 +5,23 @@ import { defu } from 'defu'
 import { onNuxtReady, useNuxtApp, useRuntimeConfig } from '#imports'
 import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
 
+function useNuxtScriptRuntimeConfig() {
+  return useRuntimeConfig().public['nuxt-scripts'] as {
+    defaultScriptOptions: NuxtUseScriptOptions
+  }
+}
+
 export function useScript<T extends Record<string | symbol, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions): T & { $script: Promise<T> & VueScriptInstance<T> } {
   input = typeof input === 'string' ? { src: input } : input
-  options = defu(options, useRuntimeConfig().public['nuxt-scripts']?.defaultScriptOptions)
+  options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions)
 
   if (options.trigger === 'onNuxtReady')
     options.trigger = onNuxtReady
   const nuxtApp = useNuxtApp()
-  const id = input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))
-  // only validate if we're initializing the script
-  if (!nuxtApp.scripts?.[id]) {
-    if (import.meta.client) {
+  const id = (input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))) as keyof typeof nuxtApp._scripts
+  if (import.meta.client) {
+    // only validate if we're initializing the script
+    if (!nuxtApp._scripts?.[id]) {
       performance?.mark?.('mark_feature_usage', {
         detail: {
           feature: `nuxt-scripts:${id}`,
@@ -37,7 +43,7 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
 
     function syncScripts() {
       nuxtApp._scripts[instance.$script.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts })
+      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtAppScript> })
     }
 
     if (!nuxtApp._scripts[instance.$script.id]) {
@@ -61,7 +67,6 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
         payload.events.push({
           type: 'fn-call',
           fn: ctx.fn,
-          args: ctx.args,
           at: Date.now(),
         })
         syncScripts()

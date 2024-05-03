@@ -5,7 +5,7 @@ import MagicString from 'magic-string'
 import type { SourceMapInput } from 'rollup'
 import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
-import type { SimpleCallExpression } from 'estree'
+import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
 import type { Input } from 'valibot'
 import type { RegistryScripts } from '#nuxt-scripts'
 
@@ -47,6 +47,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
         const s = new MagicString(code)
         walk(ast as Node, {
           enter(_node) {
+            // @ts-expect-error untyped
             const calleeName = (_node as SimpleCallExpression).callee?.name
             // check it starts with useScriptX where X must be a A-Z alphabetical letter
             const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9)))
@@ -58,18 +59,18 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               // both cases
               const fnName = _node.callee?.name
               const node = _node as SimpleCallExpression
-              let scriptSrcNode: any | undefined
+              let scriptSrcNode: Literal & { start: number, end: number } | undefined
               let src: false | string | undefined
               if (fnName === 'useScript') {
                 // do easy case first where first argument is a literal
                 if (node.arguments[0].type === 'Literal') {
-                  scriptSrcNode = node.arguments[0]
+                  scriptSrcNode = node.arguments[0] as Literal & { start: number, end: number }
                 }
                 else if (node.arguments[0].type === 'ObjectExpression') {
                   const srcProperty = node.arguments[0].properties.find(
-                    (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
+                    (p: any) => (p.key?.name === 'src' || p.key?.value === 'src') && p?.value.type === 'Literal',
                   )
-                  scriptSrcNode = srcProperty?.value
+                  scriptSrcNode = (srcProperty as Property | undefined)?.value as Literal & { start: number, end: number }
                 }
               }
               else {
@@ -79,28 +80,26 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                   // silent failure
                   return
                 }
-                // TODO add stubs for any module integrations
-                options.moduleDetected?.(registryNode.module)
                 // this is only needed when we have a dynamic src that we need to compute
                 if (!registryNode.scriptBundling && !registryNode.src)
                   return
 
                 // integration case
                 // extract the options as the first argument that we'll use to reconstruct the src
-                const optionsNode = node.arguments[0]
-                if (optionsNode?.type === 'ObjectExpression') {
+                if (node.arguments[0]?.type === 'ObjectExpression') {
+                  const optionsNode = node.arguments[0] as ObjectExpression
                   const fnArg0 = {}
                   // extract literal values from the object to reconstruct the options
                   for (const prop of optionsNode.properties) {
-                    if (prop.value.type === 'Literal')
+                    if (prop.type === 'Property' && prop.value.type === 'Literal')
                       // @ts-expect-error untyped
                       fnArg0[prop.key.name] = prop.value.value
                   }
                   const srcProperty = node.arguments[0].properties.find(
-                    (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
-                  )
-                  if (srcProperty?.value?.value) {
-                    scriptSrcNode = srcProperty.value
+                    (p: any) => (p.key?.name === 'src' || p.key?.value === 'src') && p?.value.type === 'Literal' && p.type === 'Property',
+                  ) as Property | undefined
+                  if ((srcProperty?.value as Literal)?.value) {
+                    scriptSrcNode = srcProperty?.value as Literal & { start: number, end: number }
                   }
                   else {
                     src = registryNode.scriptBundling && registryNode.scriptBundling(fnArg0 as any as Input<any>)
@@ -112,24 +111,26 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
               }
 
               if (scriptSrcNode || src) {
-                src = src || scriptSrcNode.value
+                src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
                 if (src) {
                   let canBundle = options.defaultBundle
                   if (node.arguments[1]?.type === 'ObjectExpression') {
+                    const scriptOptionsArg = node.arguments[1] as ObjectExpression & { start: number, end: number }
                     // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
-                    const bundleProperty = node.arguments[1]?.properties.find(
-                      (p: any) => p.key?.name === 'bundle' || p.key?.value === 'bundle',
-                    )
-                    if (bundleProperty) {
-                      if (String(bundleProperty?.value?.value) !== 'true') {
+                    const bundleProperty = scriptOptionsArg.properties.find(
+                      (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                    ) as Property & { start: number, end: number } | undefined
+                    if (bundleProperty && bundleProperty.value.type === 'Literal') {
+                      const value = bundleProperty.value as Literal
+                      if (String(value.value) !== 'true') {
                         canBundle = false
                         return
                       }
-                      if (node.arguments[1]?.properties.length === 1)
-                        s.remove(node.arguments[1].start, node.arguments[1].end)
+                      // if bundle was the only argument then strip the argument
+                      if (scriptOptionsArg.properties.length === 1)
+                        s.remove(scriptOptionsArg.start, scriptOptionsArg.end)
                       else
                         s.remove(bundleProperty.start, bundleProperty.end)
-
                       canBundle = true
                     }
                   }
@@ -139,12 +140,14 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                       s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${newSrc}'`)
                     }
                     else {
+                      const optionsNode = node.arguments[0] as ObjectExpression
                       // check if there's a scriptInput property
-                      const scriptInputProperty = node.arguments[0].properties.find(
+                      const scriptInputProperty = optionsNode.properties.find(
                         (p: any) => p.key?.name === 'scriptInput' || p.key?.value === 'scriptInput',
                       )
                       // see if there is a script input on it
                       if (scriptInputProperty) {
+                        // @ts-expect-error untyped
                         const scriptInput = scriptInputProperty.value
                         if (scriptInput.type === 'ObjectExpression') {
                           const srcProperty = scriptInput.properties.find(
@@ -157,6 +160,7 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                         }
                       }
                       else {
+                        // @ts-expect-error untyped
                         s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${newSrc}' }, `)
                       }
                     }

@@ -3,7 +3,7 @@ import type { BaseSchema, Input, ObjectSchema } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
 import { createError, useRuntimeConfig, useScript } from '#imports'
-import type { NuxtUseScriptOptions, RegistryScriptInput } from '#nuxt-scripts'
+import type { NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry } from '#nuxt-scripts'
 
 function validateScriptInputSchema<T extends BaseSchema<any>>(key: string, schema: T, options?: Input<T>) {
   if (import.meta.dev) {
@@ -27,10 +27,12 @@ type OptionsFn<O extends ObjectSchema<any>> = (options: Input<O>) => ({
   clientInit?: () => void
 })
 
-export function registryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
-  const runtimeConfig = useRuntimeConfig().public.scripts || {}
-  const runtimeOptions = runtimeConfig[key]
-  const userOptions = Object.assign(_userOptions || {}, runtimeOptions || {})
+export function scriptRuntimeConfig(key: keyof ScriptRegistry) {
+  return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key] || {}
+}
+
+export function registryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: keyof ScriptRegistry, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
+  const userOptions = Object.assign(_userOptions || {}, scriptRuntimeConfig(key))
   const options = optionsFn(userOptions)
 
   const scriptInput = defu(options.scriptInput, { key }) as UseScriptInput
