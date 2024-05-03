@@ -12,10 +12,6 @@ links:
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
-::callout
-Using Google Tag Manager just for Google Analytics? Consider switching to Google Analytics directly.
-::
-
 
 ### Nuxt Config Setup
 
