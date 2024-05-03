@@ -10,12 +10,16 @@ links:
 
 [Cloudflare Web Analytics](https://developers.cloudflare.com/analytics/web-analytics/) with Nuxt is a great privacy analytics solution. It offers free, privacy-centric analytics for your website. It doesn't gather personal data from your visitors, yet provides detailed insights into your web pages' performance as experienced by your visitors.
 
-## Nuxt Config
+## Nuxt Config Setup
 
-The simplest way to load Cloudflare Web Analytics globally in your Nuxt App is to use your Nuxt config and provide the token
-as a string.
+The simplest way to load Cloudflare Web Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+use the [useScriptCloudflareWebAnalytics](#usescriptcloudflarewebanalytics) composable.
 
-```ts [nuxt.config.ts]
+If you'd like to avoid loading the analytics in development, you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) in your Nuxt config.
+
+::code-group
+
+```ts [Always enabled]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -27,26 +31,23 @@ export default defineNuxtConfig({
 })
 ```
 
-If you'd like to avoid loading the analytics in development, you can conditionally set the config.
-
-```ts [nuxt.config.ts]
-import { isDevelopment } from 'std-env'
-
+```ts [Production only]
 export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      // only load cloudflare web analytics in production
-      cloudflareWebAnalytics: isDevelopment
-        ? undefined
-        : {
-            token: 'YOUR_TOKEN_ID',
-          }
+  $production: {
+    scripts: {
+      registry: {
+        cloudflareWebAnalytics: {
+          token: 'YOUR_TOKEN_ID',
+        }
+      }
     }
   }
 })
 ```
 
-### With Environment Variables
+::
+
+#### With Environment Variables
 
 If you prefer to configure your token using environment variables.
 
@@ -74,19 +75,20 @@ export default defineNuxtConfig({
 NUXT_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<YOUR_TOKEN>
 ```
 
-## Composable `useScriptCloudflareWebAnalytics`
+## useScriptCloudflareWebAnalytics
 
 The `useScriptCloudflareWebAnalytics` composable lets you have fine-grain control over when and how Cloudflare Web Analytics is loaded on your site.
 
 ```ts
-useScriptCloudflareWebAnalytics(options)
+function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(_options?: CloudflareWebAnalyticsInput) {}
 ```
 
-## Defaults
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-- **Trigger**: Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
+The composable comes with the following defaults:
+- **Trigger: Client** Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
 
-## Options
+### CloudflareWebAnalyticsInput
 
 ```ts
 export const CloudflareWebAnalyticsOptions = object({
@@ -104,16 +106,16 @@ export const CloudflareWebAnalyticsOptions = object({
 })
 ```
 
-## Return values
-
-The Cloudflare Web Analytics composable injects a `window.__cfBeacon` object into the global scope. If you need
-to access this you can do by awaiting the script.
+### CloudflareWebAnalyticsApi
 
 ```ts
-const { $script } = useScriptCloudflareWebAnalytics()
-$script.then(({ cfBeacon }) => {
-  console.log(cfBeacon)
-})
+export interface CloudflareWebAnalyticsApi {
+  __cfBeacon: {
+    load: 'single'
+    spa: boolean
+    token: string
+  }
+}
 ```
 
 ## Example
@@ -129,4 +131,14 @@ useScriptCloudflareWebAnalytics({
   }
 })
 </script>
+```
+
+The Cloudflare Web Analytics composable injects a `window.__cfBeacon` object into the global scope. If you need
+to access this you can do by awaiting the script.
+
+```ts
+const { $script } = useScriptCloudflareWebAnalytics()
+$script.then(({ cfBeacon }) => {
+  console.log(cfBeacon)
+})
 ```

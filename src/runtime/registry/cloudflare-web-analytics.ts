@@ -11,7 +11,6 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
  */
 
 export interface CloudflareWebAnalyticsApi {
-  // access for this isn't really needed
   __cfBeacon: {
     load: 'single'
     spa: boolean
