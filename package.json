@@ -59,7 +59,7 @@
     "@nuxt/devtools-kit": "^1.2.0",
     "@nuxt/devtools-ui-kit": "^1.2.0",
     "@nuxt/kit": "^3.11.2",
-    "@types/google.maps": "^3.55.7",
+    "@types/google.maps": "^3.55.8",
     "@types/stripe-v3": "^3.1.33",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.0.50",

@@ -25,8 +25,8 @@ importers:
         specifier: ^3.11.2
         version: 3.11.2(rollup@4.17.2)
       '@types/google.maps':
-        specifier: ^3.55.7
-        version: 3.55.7
+        specifier: ^3.55.8
+        version: 3.55.8
       '@types/stripe-v3':
         specifier: ^3.1.33
         version: 3.1.33
@@ -1744,8 +1744,8 @@ packages:
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
 
-  '@types/google.maps@3.55.7':
-    resolution: {integrity: sha512-SlWFx0vo7RSAOC63+PTz8FeqLDaRYs7PrS/L0bZSKswxIN5TnCuckbeIwZpgD/S+DWalPteXfDbg5JsUER5Cyw==}
+  '@types/google.maps@3.55.8':
+    resolution: {integrity: sha512-aSyvlCRXzF9Jtjqq4zmA24sczKZ0QWJnn4zRrkufCoohHulS6LCf4KsF22eAlnHBuVYwEhQoMXIufUS7kXF5uA==}
 
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
@@ -9076,7 +9076,7 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
-  '@types/google.maps@3.55.7': {}
+  '@types/google.maps@3.55.8': {}
 
   '@types/hast@3.0.4':
     dependencies:
