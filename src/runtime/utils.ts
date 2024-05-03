@@ -40,7 +40,8 @@ export function registryScript<T extends Record<string | symbol, any>, O extends
   const scriptOptions = Object.assign(_userOptions?.scriptOptions || {}, options.scriptOptions || {})
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
-    import.meta.dev && options.schema && validateScriptInputSchema(key, options.schema, userOptions)
+    // a manual trigger also means it was disabled by nuxt.config
+    import.meta.dev && !scriptOptions.skipValidation && options.schema && validateScriptInputSchema(key, options.schema, userOptions)
     // avoid clearing the user beforeInit
     init?.()
     if (import.meta.client) {
