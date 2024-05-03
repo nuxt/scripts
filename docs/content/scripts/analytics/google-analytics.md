@@ -13,7 +13,7 @@ links:
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
 ::callout
-Using Google Tag Manager? You can configure Google Analytics directly using it. Refer to the [documentation](https://developers.google.com/analytics/devguides/collection/ga4/tag-options#what-is-gtm) to learn more.
+Using Google Tag Manager just for Google Analytics? Consider switching to Google Analytics directly.
 ::
 
 
