@@ -106,6 +106,7 @@ export default defineNuxtModule<ModuleOptions>({
     // allow augmenting the options
     nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
+    nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaultScriptOptions: config.defaultScriptOptions }
     addImportsDir([

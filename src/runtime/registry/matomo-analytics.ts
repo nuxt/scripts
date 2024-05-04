@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -20,7 +20,7 @@ declare global {
 }
 
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
-  return registryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
+  return useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
     scriptInput: {
       src: `https://${options?.matomoUrl}/matomo.js`,
     },

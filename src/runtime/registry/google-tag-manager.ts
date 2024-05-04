@@ -1,6 +1,6 @@
 import type { GoogleTagManagerApi } from 'third-party-capital'
 import { withQuery } from 'ufo'
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { object, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -20,7 +20,7 @@ declare global {
  * A 3P wrapper for Google Tag Manager that takes an options input to feed into third-party-capital({@link https://github.com/GoogleChromeLabs/third-party-capital}), which returns instructions for nuxt-scripts.
  */
 export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(options?: GoogleTagManagerInput) {
-  return registryScript<T, typeof GoogleTagManagerOptions>('googleTagManager', options => ({
+  return useRegistryScript<T, typeof GoogleTagManagerOptions>('googleTagManager', options => ({
     scriptInput: {
       async: true,
       src: withQuery('https://www.googletagmanager.com/gtm.js', {

@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -46,7 +46,7 @@ export const XPixelOptions = object({
 export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
-  return registryScript<T, typeof XPixelOptions>('xPixel', options => ({
+  return useRegistryScript<T, typeof XPixelOptions>('xPixel', options => ({
     scriptInput: {
       src: 'https://static.ads-twitter.com/uwt.js',
     },

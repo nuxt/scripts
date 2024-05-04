@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { object } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -71,7 +71,7 @@ declare global {
 }
 
 export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: LemonSqueezyInput) {
-  return registryScript<T, typeof LemonSqueezyOptions>('lemonSqueezy', () => ({
+  return useRegistryScript<T, typeof LemonSqueezyOptions>('lemonSqueezy', () => ({
     scriptInput: {
       src: 'https://assets.lemonsqueezy.com/lemon.js',
       // @ts-expect-error untyped

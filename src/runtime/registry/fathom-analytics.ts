@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -47,7 +47,7 @@ declare global {
 }
 
 export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?: FathomAnalyticsInput) {
-  return registryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
+  return useRegistryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
     scriptInput: {
       src: 'https://cdn.usefathom.com/script.js', // can't be bundled
       // append the data attr's

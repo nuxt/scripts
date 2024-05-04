@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { number, object, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -22,7 +22,7 @@ export const HotjarOptions = object({
 export type HotjarInput = RegistryScriptInput<typeof HotjarOptions>
 
 export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
-  return registryScript<T, typeof HotjarOptions>('hotjar', options => ({
+  return useRegistryScript<T, typeof HotjarOptions>('hotjar', options => ({
     scriptInput: {
       src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
     },

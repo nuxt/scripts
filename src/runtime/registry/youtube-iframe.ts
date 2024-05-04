@@ -1,5 +1,5 @@
 /// <reference types="youtube" />
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { object } from '#nuxt-scripts-validator'
 import { useHead } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -23,7 +23,7 @@ export type YouTubeIFrameInput = RegistryScriptInput<typeof YouTubeIframeOptions
 
 export function useScriptYouTubeIframe<T extends YouTubeIframeApi>(_options: YouTubeIFrameInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return registryScript<T, typeof YouTubeIframeOptions>('youtubeIframe', () => ({
+  return useRegistryScript<T, typeof YouTubeIframeOptions>('youtubeIframe', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
       // opt-out of privacy defaults

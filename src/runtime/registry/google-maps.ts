@@ -1,6 +1,6 @@
 /// <reference types="google.maps" />
 import { withQuery } from 'ufo'
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -31,7 +31,7 @@ declare global {
 
 export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return registryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
+  return useRegistryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
     const libraries = options?.libraries || ['places']
     return {
       scriptInput: {

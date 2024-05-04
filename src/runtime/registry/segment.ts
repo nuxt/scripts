@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { SegmentScriptResolver } from '../../registry'
 import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -40,7 +40,7 @@ declare global {
 }
 
 export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) {
-  return registryScript<T, typeof SegmentOptions>('segment', (options) => {
+  return useRegistryScript<T, typeof SegmentOptions>('segment', (options) => {
     const analyticsKey: string = options?.analyticsKey ?? 'analytics'
     return {
       scriptInput: {

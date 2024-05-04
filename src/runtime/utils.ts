@@ -29,8 +29,8 @@ export function scriptRuntimeConfig(key: keyof NuxtConfigScriptRegistry) {
   return ((useRuntimeConfig().public.scripts || {}) as NuxtConfigScriptRegistry)[key] || {}
 }
 
-export function registryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: keyof ScriptRegistry, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
-  const scriptConfig = scriptRuntimeConfig(key)
+export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
+  const scriptConfig = scriptRuntimeConfig(key as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions)
 

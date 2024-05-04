@@ -1,5 +1,5 @@
 import { joinURL } from 'ufo'
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { type Input, literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -49,7 +49,7 @@ declare global {
 }
 
 export function useScriptIntercom<T extends IntercomApi>(_options?: IntercomInput) {
-  return registryScript<T, typeof IntercomOptions>('intercom', options => ({
+  return useRegistryScript<T, typeof IntercomOptions>('intercom', options => ({
     scriptInput: {
       src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
       // append the data attr's

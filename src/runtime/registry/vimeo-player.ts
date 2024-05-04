@@ -1,5 +1,5 @@
 import type VimeoPlayer from 'vimeo__player'
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { object } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
@@ -19,7 +19,7 @@ declare global {
 }
 
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
-  return registryScript<T, typeof VimeoPlayerOptions>('vimeoPlayer', () => ({
+  return useRegistryScript<T, typeof VimeoPlayerOptions>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },

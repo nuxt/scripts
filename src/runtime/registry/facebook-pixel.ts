@@ -1,4 +1,4 @@
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { FacebookPixelScriptResolver } from '../../registry'
 import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -43,7 +43,7 @@ export const FacebookPixelOptions = object({
 export type FacebookPixelInput = RegistryScriptInput<typeof FacebookPixelOptions>
 
 export function useScriptFacebookPixel<T extends FacebookPixelApi>(_options?: FacebookPixelInput) {
-  return registryScript<T, typeof FacebookPixelOptions>('facebookPixel', options => ({
+  return useRegistryScript<T, typeof FacebookPixelOptions>('facebookPixel', options => ({
     scriptInput: {
       src: FacebookPixelScriptResolver(),
     },

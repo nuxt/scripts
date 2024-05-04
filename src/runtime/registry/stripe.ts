@@ -1,6 +1,6 @@
 /// <reference types="stripe-v3" />
 import { withQuery } from 'ufo'
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { boolean, object, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -19,7 +19,7 @@ declare global {
 }
 
 export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
-  return registryScript<T, typeof StripeOptions>('stripe', options => ({
+  return useRegistryScript<T, typeof StripeOptions>('stripe', options => ({
     scriptInput: {
       src: withQuery(
         `https://js.stripe.com/v3/`,
