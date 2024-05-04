@@ -2,7 +2,7 @@
 /// <reference types="youtube" />
 import { type Ref, computed, onMounted, ref, watch } from 'vue'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
-import { useElementScriptTrigger, useScriptYouTubeIframe } from '#imports'
+import { useElementScriptTrigger, useScriptYouTubePlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
@@ -11,21 +11,19 @@ const props = withDefaults(defineProps<{
   width?: number
   height?: number
 }>(), {
+  trigger: 'mousedown',
   // @ts-expect-error untyped
-  trigger: ['mousemove', 'mousedown'],
-  // @ts-expect-error untyped
-  playerVars: { autoplay: 1, playsinline: 1 },
+  playerVars: { autoplay: 0, playsinline: 1 },
   width: 640,
   height: 480,
 })
 
 const emits = defineEmits<{
-  onReady: [e: YT.PlayerEvent]
-  onStateChange: [e: YT.PlayerEvent]
-  onPlaybackQualityChange: [e: YT.PlayerEvent]
-  onPlaybackRateChange: [e: YT.PlayerEvent]
-  onError: [e: YT.PlayerEvent]
-  onApiChange: [e: YT.PlayerEvent]
+  'ready': [e: YT.PlayerEvent]
+  'state-change': [e: YT.OnStateChangeEvent, target: YT.Player]
+  'playback-quality-change': [e: YT.OnPlaybackQualityChangeEvent, target: YT.Player]
+  'playback-rate-change': [e: YT.OnPlaybackRateChangeEvent, target: YT.Player]
+  'error': [e: YT.OnErrorEvent, target: YT.Player]
 }>()
 const events: (keyof YT.Events)[] = [
   'onReady',
@@ -37,16 +35,22 @@ const events: (keyof YT.Events)[] = [
 ]
 const rootEl = ref()
 const youtubeEl = ref()
-
 const ready = ref(false)
-const { $script } = useScriptYouTubeIframe({
+const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
+const { $script } = useScriptYouTubePlayer({
   scriptOptions: {
-    trigger: props.trigger ? useElementScriptTrigger({ trigger: props.trigger, el: rootEl }) : undefined,
+    trigger,
   },
   bundle: true,
 })
 
 const player: Ref<YT.Player | undefined> = ref()
+let clickTriggered = false
+if (props.trigger === 'mousedown') {
+  trigger.then(() => {
+    clickTriggered = true
+  })
+}
 onMounted(() => {
   $script.then(async (instance) => {
     const YouTube: typeof YT & { ready: (fn: () => void) => void } = await instance.YT
@@ -59,9 +63,14 @@ onMounted(() => {
     player.value = new YT.Player(youtubeEl.value, {
       ...props,
       events: Object.fromEntries(events.map(event => [event, (e: any) => {
+        const emitEventName = event.replace(/([A-Z])/g, '-$1').replace('on-', '').toLowerCase()
         // @ts-expect-error untyped
-        emits(event, e)
+        emits(emitEventName, e)
         if (event === 'onReady') {
+          if (clickTriggered) {
+            player.value?.playVideo()
+            clickTriggered = false
+          }
           watch(() => props.videoId, () => {
             player.value?.loadVideoById(props.videoId)
           })
@@ -79,10 +88,10 @@ const poster = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sdde
 </script>
 
 <template>
-  <div ref="rootEl" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
+  <div ref="rootEl" :style="{ maxWidth: '100%', width: `${width}px`, height: `${height}px`, position: 'relative', cursor: 'pointer', backgroundColor: 'black' }">
     <div ref="youtubeEl" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;" />
-    <slot v-if="!ready" name="poster" :poster="poster">
-      <img v-if="!ready" :src="poster" title="" :width="width" :height="height">
+    <slot v-if="!ready" :poster="poster" name="poster">
+      <div :style="{ backgroundImage: `url(${poster})`, width: `100%`, height: `${height}px`, backgroundRepeat: 'no-repeat', backgroundPosition: '50% 50%', cursor: 'pointer', backgroundColor: 'black' }" />
     </slot>
     <slot v-if="$script.status.value === 'loading'" name="loading" />
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
