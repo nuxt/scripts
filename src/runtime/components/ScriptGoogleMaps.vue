@@ -6,7 +6,7 @@ import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useElementScriptTrigger, useRuntimeConfig, useScriptGoogleMaps } from '#imports'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   /**
    * Defines the trigger event to load the script.
    */
@@ -31,7 +31,11 @@ const props = defineProps<{
    * Defines the height of the map
    */
   height?: number
-}>()
+}>(), {
+  trigger: 'mouseenter',
+  width: 600,
+  height: 400,
+})
 
 const apiKey = props.apiKey || useRuntimeConfig().public.scripts?.googleMaps?.apikey
 
@@ -62,7 +66,7 @@ function queryMaps(maps: google.maps, marker: google.maps.MarkerLibrary, map: go
     query: props.query,
     fields: ['name', 'geometry'],
   }
-  const markers: google.maps.AdvancedMarkerElement[] = []
+  const markers: google.maps.marker.AdvancedMarkerElement[] = []
   const service = new maps.places.PlacesService(map)
   service.findPlaceFromQuery(request, (results, status) => {
     if (status === maps.places.PlacesServiceStatus.OK && results) {
