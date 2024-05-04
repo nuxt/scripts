@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import type YT from 'youtube'
+/// <reference types="youtube" />
+import { type Ref, computed, onMounted, ref, watch } from 'vue'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useElementScriptTrigger, useScriptYouTubeIframe } from '#imports'
 
@@ -35,30 +35,39 @@ const events: (keyof YT.Events)[] = [
   'onError',
   'onApiChange',
 ]
-const elYoutube = ref()
+const rootEl = ref()
+const youtubeEl = ref()
 
 const ready = ref(false)
 const { $script } = useScriptYouTubeIframe({
   scriptOptions: {
-    trigger: useElementScriptTrigger({ trigger: props.trigger, el: elYoutube.value }),
+    trigger: props.trigger ? useElementScriptTrigger({ trigger: props.trigger, el: rootEl }) : undefined,
   },
+  bundle: true,
 })
 
-let player: YT.Player
-$script.then(async (instance) => {
-  const YT = await instance.YT
-  await new Promise<void>((resolve) => {
-    if (typeof YT.Player === 'undefined')
-      YT.ready(resolve)
-    else
-      resolve()
-  })
-  player = new YT.Player(elYoutube.value, {
-    ...props,
-    events: Object.fromEntries(events.map(event => [event, (e: any) => {
-      // @ts-expect-error untyped
-      emits(event, e)
-    }])),
+const player: Ref<YT.Player | undefined> = ref()
+onMounted(() => {
+  $script.then(async (instance) => {
+    const YouTube: typeof YT & { ready: (fn: () => void) => void } = await instance.YT
+    await new Promise<void>((resolve) => {
+      if (typeof YT.Player === 'undefined')
+        YouTube.ready(resolve)
+      else
+        resolve()
+    })
+    player.value = new YT.Player(youtubeEl.value, {
+      ...props,
+      events: Object.fromEntries(events.map(event => [event, (e: any) => {
+        // @ts-expect-error untyped
+        emits(event, e)
+        if (event === 'onReady') {
+          watch(() => props.videoId, () => {
+            player.value?.loadVideoById(props.videoId)
+          })
+        }
+      }])),
+    })
   })
 })
 
@@ -66,17 +75,16 @@ defineExpose({
   player,
 })
 
-watch(() => props.videoId, () => {
-  player?.loadVideoById(props.videoId)
-})
-
 const poster = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
 </script>
 
 <template>
-  <div ref="elYoutube" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
-    <slot :poster="poster">
+  <div ref="rootEl" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
+    <div ref="youtubeEl" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;" />
+    <slot v-if="!ready" name="poster" :poster="poster">
       <img v-if="!ready" :src="poster" title="" :width="width" :height="height">
     </slot>
+    <slot v-if="$script.status.value === 'loading'" name="loading" />
+    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type Player from 'vimeo__player'
 import type { EventMap, VimeoVideoQuality } from 'vimeo__player'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
@@ -119,21 +119,20 @@ const { data: payload } = useAsyncData(
 )
 
 const poster = computed(() => {
-  // 2 dpi for retina, this is safest while SSR
-  return payload.value?.thumbnail_large // .replace(/-d_[\dx]+$/i, `-d_${Math.round(width * 2)}x${Math.round(height * 2)}`)
+  return payload.value?.thumbnail_large
 })
 
-let player: Player
+const player: Ref<Player | undefined> = ref()
 onMounted(() => {
   $script.then(({ Vimeo }) => {
     // filter props for false values
-    player = new Vimeo.Player(elVimeo.value, {
+    player.value = new Vimeo.Player(elVimeo.value, {
       ...props,
       url: encodeURI(`https://vimeo.com/${props.id}`),
     })
 
     events.forEach((event) => {
-      player.on(event, (e: any) => {
+      player.value?.on(event, (e: any) => {
         emits(event as keyof typeof emits, e, player)
         if (event === 'loaded')
           ready.value = true
@@ -142,11 +141,11 @@ onMounted(() => {
   })
 
   watch(() => props.id, (v) => {
-    v && player?.loadVideo(v)
+    v && player.value?.loadVideo(v)
   })
 })
 
-onBeforeUnmount(() => player?.unload())
+onBeforeUnmount(() => player.value?.unload())
 
 defineExpose({
   player,
@@ -156,9 +155,11 @@ defineExpose({
 <template>
   <div ref="root" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
     <div v-show="ready" ref="elVimeo" style="width: 100%; height: 100%;" />
-    <slot v-bind="payload" :poster="poster" name="poster">
-      <div v-if="!ready" v-bind="trigger ? { loading: 'lazy' } : {}" :style="{ backgroundImage: `url(${poster})`, width: `${width}px`, height: `${height}px`, cursor: 'wait', backgroundRepeat: 'no-repeat', backgroundPosition: '50% 50%', backgroundColor: 'black' }" />
+    <slot v-if="!ready" v-bind="payload" :poster="poster" name="poster">
+      <div :style="{ backgroundImage: `url(${poster})`, width: `${width}px`, height: `${height}px`, backgroundRepeat: 'no-repeat', backgroundPosition: '50% 50%', backgroundColor: 'black' }" />
     </slot>
+    <slot v-if="$script.status.value === 'loading'" name="loading" />
+    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
     <slot />
   </div>
 </template>
