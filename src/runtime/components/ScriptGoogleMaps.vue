@@ -113,6 +113,7 @@ const poster = computed(() => {
     size: `${props.width}x${props.height}`,
     key: apiKey,
     scale: 2, // we assume a high DPI to avoid hydration issues
+    markers: `color:red|${props.query}`,
     ...options.value,
   })
 })
