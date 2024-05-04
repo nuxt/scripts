@@ -35,7 +35,7 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
         }
       },
       {
-        rootMargin: '30px 0 0 0',
+        rootMargin: '30px 0px 0px 0px',
         threshold: 0,
       },
     )
@@ -58,6 +58,7 @@ export function useElementScriptTrigger(options: ElementScriptTriggerOptions): P
     return new Promise<void>((resolve) => {
       const _ = useEventListener(
         typeof el !== 'undefined' ? (el as EventTarget) : document.body,
+        // @ts-expect-error untyped
         trigger,
         () => {
           resolve()
