@@ -27,9 +27,9 @@ export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
       ),
       // opt-out of privacy defaults
       // @ts-expect-error TODO add types
-      crossorigin: null,
+      crossorigin: false,
       // @ts-expect-error TODO add types
-      referrerpolicy: null,
+      referrerpolicy: false,
     },
     schema: import.meta.dev ? StripeOptions : undefined,
     scriptOptions: {
