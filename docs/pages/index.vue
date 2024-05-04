@@ -2,7 +2,6 @@
 import { useScriptsRegistry } from '~/composables/useScriptsRegistry'
 
 const registry = useScriptsRegistry()
-const { data: page } = await useAsyncData('index', () => queryContent('/').findOne())
 
 useSeoMeta({
   title: 'Third-Party Scripts Meets Nuxt DX.',
@@ -51,13 +50,58 @@ onMounted(() => {
     })
   })
 })
+const links = [
+  {
+    label: 'Get started',
+    trailingIcon: 'i-heroicons-arrow-right-20-solid',
+    to: '/docs/getting-started',
+    size: 'lg',
+  },
+  {
+    label: 'Star on GitHub',
+    icon: 'i-simple-icons-github',
+    size: 'lg',
+    color: 'gray',
+    variant: 'ghost',
+    to: 'https://github.com/nuxt/scripts',
+    target: '_blank',
+  },
+]
+
+const features = [
+  {
+    name: 'Beat the benchmarks',
+    description: 'Load scripts when they\'re needed with best practices non-blocking the rendering of your Nuxt app by default.',
+    icon: 'i-ph-rocket-launch-duotone',
+  },
+  {
+    name: 'Privacy for your users',
+    description: 'Avoid leaking user data to third-party scripts that don\'t need it. Ensure your scripts are GDPR compliant.',
+    icon: 'i-ph-user-circle-dashed-duotone',
+  },
+  {
+    name: 'Developer Experience First',
+    description: 'Type-safe and SSR friendly composables that just work wherever you need them.',
+    icon: 'i-ph-code-simple-duotone',
+  },
+  {
+    name: 'Secure third-parties',
+    description: 'Protect your app from third-party scripts that could be made compromised.',
+    icon: 'i-ph-lock-open-duotone',
+  },
+]
 </script>
 
 <template>
   <div>
     <ULandingHero
-      v-bind="page?.hero" orientation="horizontal"
-      :ui="{ container: 'flex flex-row justify-start items-center', links: 'flex items-center gap-2' }"
+      :links="links"
+      orientation="horizontal"
+      :ui="{
+        container: 'flex flex-row justify-start items-center',
+        links: 'flex items-center gap-2',
+        description: 'text-gray-500 dark:text-gray-400 text-xl max-w-2xl leading-normal mb-10',
+      }"
     >
       <template #title>
         <div class="leading-tight">
@@ -66,11 +110,10 @@ onMounted(() => {
       </template>
 
       <template #description>
-        <div class="text-gray-500 dark:text-gray-400 text-xl max-w-2xl leading-normal mb-10">
-          Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes
-          many popular third-parties out of the box.
-        </div>
+        Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes
+        many popular third-parties out of the box.
       </template>
+
       <div class="relative hidden xl:block">
         <div class="absolute -z-1 -right-[450px] -top-[200px]">
           <div class="w-[450px] grid-transform justify-center items-center grid grid-cols-4 ">
@@ -88,7 +131,7 @@ onMounted(() => {
 
     <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">
       <ul class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-16">
-        <li v-for="feature in page?.features" :key="feature.name" class="flex flex-col gap-y-2">
+        <li v-for="feature in features" :key="feature.name" class="flex flex-col gap-y-2">
           <UIcon :name="feature.icon" class="h-8 w-8 shrink-0 text-primary" />
           <div class="flex flex-col gap-y-1">
             <h5 class="font-medium text-gray-900 dark:text-white">
