@@ -17,7 +17,7 @@ import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { StripeInput } from './registry/stripe'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XPixelInput } from './registry/x-pixel'
-import type { YouTubeIFrameInput } from './registry/youtube-iframe'
+import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
@@ -96,7 +96,7 @@ export interface ScriptRegistry {
   segment?: SegmentInput
   stripe?: StripeInput
   xPixel?: XPixelInput
-  youtubeIframe?: YouTubeIFrameInput
+  youtubePlayer?: YouTubePlayerInput
   vimeoPlayer?: VimeoPlayerInput
   [key: `${string}-npm`]: NpmInput
 }
