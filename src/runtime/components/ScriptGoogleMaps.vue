@@ -1,40 +1,37 @@
 <script lang="ts" setup>
-import { type PropType, computed, ref, watch } from 'vue'
+/// <reference types="google.maps" />
+import { computed, ref, watch } from 'vue'
 import { withQuery } from 'ufo'
-import type google from 'google.maps'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useElementScriptTrigger, useRuntimeConfig, useScriptGoogleMaps } from '#imports'
 
-const props = defineProps({
-  trigger: { type: String as PropType<ElementScriptTrigger>, required: false, default: 'mouseover' },
+const props = defineProps<{
+  /**
+   * Defines the trigger event to load the script.
+   */
+  trigger?: ElementScriptTrigger
   /**
    * Defines the Google Maps API key. Must have access to the Static Maps API as well.
-   *
-   * @see https://developers.google.com/maps/documentation/javascript/get-api-key
    */
-  apiKey: { type: String, required: true },
+  apiKey: string
   /**
    * Defines map marker location.
-   *
-   * @example City Hall, New York, NY
    */
-  query: { type: String, required: false, default: '' },
+  query?: string
   /**
-   * Defines center of the map view.
-   *
-   * @example 37.4218,-122.0840
+   * Options for the map.
    */
-  options: { type: Object as PropType<Omit<google.maps.MapOptions, 'center'>>, required: false, default: undefined },
+  options?: Omit<google.maps.MapOptions, 'center'>
   /**
    * Defines the width of the map.
    */
-  width: { type: Number, required: false, default: 500 },
+  width?: number
   /**
    * Defines the height of the map
    */
-  height: { type: Number, required: false, default: 400 },
-})
+  height?: number
+}>()
 
 const apiKey = props.apiKey || useRuntimeConfig().public.scripts?.googleMaps?.apikey
 
