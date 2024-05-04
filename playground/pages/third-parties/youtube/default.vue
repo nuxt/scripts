@@ -11,9 +11,7 @@ function changeVideo() {
 <template>
   <div>
     <div>
-      <YouTubeEmbed
-        :video-id="videoid"
-      />
+      <iframe width="640" height="480" :src="`https://www.youtube.com/embed/${videoid}`" title="" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
     </div>
     <UButton
       class="mt-5"
