@@ -53,14 +53,19 @@ export function useElementScriptTrigger(options: ElementScriptTriggerOptions): P
     return new Promise<void>(() => {})
   if (el && options.trigger === 'visible')
     return useElementVisibilityPromise(el)
-  if (trigger === 'mouseover') {
+  if (trigger) {
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
-    return new Promise<void>(resolve => useEventListener(
-      typeof el !== 'undefined' ? (el as EventTarget) : document.body,
-      'mouseenter',
-      resolve,
-      { passive: true },
-    ))
+    return new Promise<void>((resolve) => {
+      const _ = useEventListener(
+        typeof el !== 'undefined' ? (el as EventTarget) : document.body,
+        trigger,
+        () => {
+          resolve()
+          _()
+        },
+        { once: true, passive: true },
+      )
+    })
   }
   return Promise.resolve()
 }
