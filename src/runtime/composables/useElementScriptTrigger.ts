@@ -8,7 +8,7 @@ import {
   useIntersectionObserver,
 } from '@vueuse/core'
 
-export type ElementScriptTrigger = 'visible' | keyof GlobalEventHandlersEventMap | (keyof GlobalEventHandlersEventMap)[] | false
+export type ElementScriptTrigger = 'immediate' | 'visible' | keyof GlobalEventHandlersEventMap | (keyof GlobalEventHandlersEventMap)[] | false
 
 export interface ElementScriptTriggerOptions {
   /**
@@ -53,7 +53,7 @@ export function useElementScriptTrigger(options: ElementScriptTriggerOptions): P
     return new Promise<void>(() => {})
   if (el && options.trigger === 'visible')
     return useElementVisibilityPromise(el)
-  if (trigger) {
+  if (trigger !== 'immediate') {
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
     return new Promise<void>((resolve) => {
       const _ = useEventListener(
