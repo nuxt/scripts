@@ -8,7 +8,7 @@ import {
   useIntersectionObserver,
 } from '@vueuse/core'
 
-export type ElementScriptTrigger = 'visible' | 'mouseover' | false
+export type ElementScriptTrigger = 'visible' | keyof GlobalEventHandlersEventMap | false
 
 export interface ElementScriptTriggerOptions {
   /**
