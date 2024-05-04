@@ -150,11 +150,13 @@ As the component is provided headless, there are a number of slots for you to cu
 The default slot is used to display content that will always be visible.
 
 ```vue
-<ScriptVimeoPlayer :id="331567154">
-  <div class="bg-blue-500 text-white p-5">
-    Video by NuxtJS
-  </div>
-</ScriptVimeoPlayer>
+<template>
+  <ScriptVimeoPlayer :id="331567154">
+    <div class="bg-blue-500 text-white p-5">
+      Video by NuxtJS
+    </div>
+  </ScriptVimeoPlayer>
+</template>
 ```
 
 **awaitingLoad**
@@ -162,13 +164,15 @@ The default slot is used to display content that will always be visible.
 The slot is used to display content while the video is loading.
 
 ```vue
-<ScriptVimeoPlayer :id="331567154">
-  <template #awaitingLoad>
-    <div class="bg-blue-500 text-white p-5">
-      Click to play!
-    </div>
-  </template>
-</ScriptVimeoPlayer>
+<template>
+  <ScriptVimeoPlayer :id="331567154">
+    <template #awaitingLoad>
+      <div class="bg-blue-500 text-white p-5">
+        Click to play!
+      </div>
+    </template>
+  </ScriptVimeoPlayer>
+</template>
 ```
 
 **loading**
@@ -176,13 +180,15 @@ The slot is used to display content while the video is loading.
 The slot is used to display content while the video is loading.
 
 ```vue
-<ScriptVimeoPlayer :id="331567154">
-  <template #loading>
-    <div class="bg-blue-500 text-white p-5">
-      Loading...
-    </div>
-  </template>
-</ScriptVimeoPlayer>
+<template>
+  <ScriptVimeoPlayer :id="331567154">
+    <template #loading>
+      <div class="bg-blue-500 text-white p-5">
+        Loading...
+      </div>
+    </template>
+  </ScriptVimeoPlayer>
+</template>
 ```
 
 **poster**
@@ -191,11 +197,13 @@ The slot is used to display a poster image before the video is loaded. By defaul
 vimeo thumbnail for the video. You can display it however you like.
 
 ```vue
-<ScriptVimeoPlayer :id="331567154">
-  <template #poster="{ poster }">
-    <img src="https://via.placeholder.com/1920x1080" alt="Video Poster" />
-  </template>
-</ScriptVimeoPlayer>
+<template>
+  <ScriptVimeoPlayer :id="331567154">
+    <template #poster="{ poster }">
+      <img :src="poster" alt="Video Poster">
+    </template>
+  </ScriptVimeoPlayer>
+</template>
 ```
 
 ## useScriptVimeoPlayer

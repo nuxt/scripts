@@ -109,11 +109,13 @@ As the component is provided headless, there are a number of slots for you to cu
 The default slot is used to display content that will always be visible.
 
 ```vue
-<ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
-  <div class="bg-blue-500 text-white p-5">
-    Video by NuxtJS
-  </div>
-</ScriptYouTubePlayer>
+<template>
+  <ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
+    <div class="bg-blue-500 text-white p-5">
+      Video by Nuxt
+    </div>
+  </ScriptYouTubePlayer>
+</template>
 ```
 
 **awaitingLoad**
@@ -121,13 +123,15 @@ The default slot is used to display content that will always be visible.
 The slot is used to display content while the video is loading.
 
 ```vue
-<ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
-  <template #awaitingLoad>
-    <div class="bg-blue-500 text-white p-5">
-      Click to play!
-    </div>
-  </template>
-</ScriptYouTubePlayer>
+<template>
+  <ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
+    <template #awaitingLoad>
+      <div class="bg-blue-500 text-white p-5">
+        Click to play!
+      </div>
+    </template>
+  </ScriptYouTubePlayer>
+</template>
 ```
 
 **loading**
@@ -135,13 +139,15 @@ The slot is used to display content while the video is loading.
 The slot is used to display content while the video is loading.
 
 ```vue
-<ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
-  <template #loading>
-    <div class="bg-blue-500 text-white p-5">
-      Loading...
-    </div>
-  </template>
-</ScriptYouTubePlayer>
+<template>
+  <ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
+    <template #loading>
+      <div class="bg-blue-500 text-white p-5">
+        Loading...
+      </div>
+    </template>
+  </ScriptYouTubePlayer>
+</template>
 ```
 
 **poster**
@@ -150,11 +156,13 @@ The slot is used to display a poster image before the video is loaded. By defaul
 youtube thumbnail for the video. You can display it however you like.
 
 ```vue
-<ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
-  <template #poster="{ poster }">
-    <img src="https://via.placeholder.com/1920x1080" alt="Video Poster" />
-  </template>
-</ScriptYouTubePlayer>
+<template>
+  <ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
+    <template #poster="{ poster }">
+      <img :src="poster" alt="Video Poster">
+    </template>
+  </ScriptYouTubePlayer>
+</template>
 ```
 
 ## useScriptYouTubePlayer
