@@ -3,7 +3,13 @@ import type { BaseSchema, Input, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig, useScript } from '#imports'
-import type { NuxtConfigScriptRegistry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry } from '#nuxt-scripts'
+import type {
+  EmptyOptionsSchema,
+  NuxtConfigScriptRegistry,
+  NuxtUseScriptOptions,
+  RegistryScriptInput,
+  ScriptRegistry,
+} from '#nuxt-scripts'
 
 function validateScriptInputSchema<T extends BaseSchema<any>>(key: string, schema: T, options?: Input<T>) {
   if (import.meta.dev) {
@@ -29,7 +35,7 @@ export function scriptRuntimeConfig(key: keyof NuxtConfigScriptRegistry) {
   return ((useRuntimeConfig().public.scripts || {}) as NuxtConfigScriptRegistry)[key] || {}
 }
 
-export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any>>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
+export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
   const scriptConfig = scriptRuntimeConfig(key as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions)

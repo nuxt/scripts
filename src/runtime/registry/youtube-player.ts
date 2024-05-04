@@ -1,36 +1,29 @@
 /// <reference types="youtube" />
 import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
-import { object } from '#nuxt-scripts-validator'
 import { useHead } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-export interface YouTubeIframeApi {
-  // YT is a class -> new YT -> new YT.Player
+export interface YouTubePlayerApi {
   YT: typeof YT
 }
 
 declare global {
-  interface Window extends YouTubeIframeApi {
+  interface Window extends YouTubePlayerApi {
     onYouTubeIframeAPIReady: () => void
   }
 }
 
-export const YouTubeIframeOptions = object({
-  // no options afaik
-})
+export type YouTubePlayerInput = RegistryScriptInput
 
-export type YouTubeIFrameInput = RegistryScriptInput<typeof YouTubeIframeOptions>
-
-export function useScriptYouTubeIframe<T extends YouTubeIframeApi>(_options: YouTubeIFrameInput) {
+export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  const instance = useRegistryScript<T, typeof YouTubeIframeOptions>('youtubeIframe', () => ({
+  const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
       // @ts-expect-error TODO fix types upstream
       crossorigin: false, // crossorigin can't be set or it breaks
     },
-    schema: import.meta.dev ? YouTubeIframeOptions : undefined,
     scriptOptions: {
       use() {
         return {

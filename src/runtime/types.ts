@@ -3,6 +3,7 @@ import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { Input, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
+import { object } from 'valibot'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
 import type { FacebookPixelInput } from './registry/facebook-pixel'
@@ -105,7 +106,11 @@ export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof Scri
   Record<T, NuxtConfigScriptRegistryEntry<ScriptRegistry[T]>>
 >
 
-export type RegistryScriptInput<T extends ObjectSchema<any>, Bundelable extends boolean = true> = Input<T> & {
+const emptyOptions = object({})
+
+export type EmptyOptionsSchema = typeof emptyOptions
+
+export type RegistryScriptInput<T extends ObjectSchema<any> = EmptyOptionsSchema, Bundelable extends boolean = true> = Input<T> & {
   scriptInput?: UseScriptInput
   scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'bundle' | 'use'>
 }
