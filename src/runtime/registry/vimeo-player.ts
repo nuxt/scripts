@@ -1,4 +1,5 @@
 import type VimeoPlayer from 'vimeo__player'
+import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
 import { object } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -19,7 +20,7 @@ declare global {
 }
 
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
-  return useRegistryScript<T, typeof VimeoPlayerOptions>('vimeoPlayer', () => ({
+  const instance = useRegistryScript<T, typeof VimeoPlayerOptions>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },
@@ -31,27 +32,29 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
         }
       },
     },
-    beforeInit() {
-      useHead({
-        link: [
-          {
-            rel: 'preconnect',
-            href: 'https://player.vimeo.com',
-          },
-          {
-            rel: 'preconnect',
-            href: 'https://i.vimeocdn.com',
-          },
-          {
-            rel: 'preconnect',
-            href: 'https://f.vimeocdn.com',
-          },
-          {
-            rel: 'preconnect',
-            href: 'https://fresnel.vimeocdn.com',
-          },
-        ],
-      })
-    },
   }), _options)
+  if (import.meta.client) {
+    const _ = watch(instance.$script.status, (status) => {
+      if (status === 'loading') {
+        useHead({
+          link: [
+            {
+              rel: 'preconnect',
+              href: 'https://i.vimeocdn.com',
+            },
+            {
+              rel: 'preconnect',
+              href: 'https://f.vimeocdn.com',
+            },
+            {
+              rel: 'preconnect',
+              href: 'https://fresnel.vimeocdn.com',
+            },
+          ],
+        })
+        _()
+      }
+    })
+  }
+  return instance
 }

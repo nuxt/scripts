@@ -1,4 +1,5 @@
 /// <reference types="youtube" />
+import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
 import { object } from '#nuxt-scripts-validator'
 import { useHead } from '#imports'
@@ -23,12 +24,11 @@ export type YouTubeIFrameInput = RegistryScriptInput<typeof YouTubeIframeOptions
 
 export function useScriptYouTubeIframe<T extends YouTubeIframeApi>(_options: YouTubeIFrameInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return useRegistryScript<T, typeof YouTubeIframeOptions>('youtubeIframe', () => ({
+  const instance = useRegistryScript<T, typeof YouTubeIframeOptions>('youtubeIframe', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
-      // opt-out of privacy defaults
-      // @ts-expect-error TODO add types
-      crossorigin: null,
+      // @ts-expect-error TODO fix types upstream
+      crossorigin: false, // crossorigin can't be set or it breaks
     },
     schema: import.meta.dev ? YouTubeIframeOptions : undefined,
     scriptOptions: {
@@ -46,7 +46,12 @@ export function useScriptYouTubeIframe<T extends YouTubeIframeApi>(_options: You
               window.onYouTubeIframeAPIReady = resolve
             })
           },
-      beforeInit() {
+    },
+  }), _options)
+  // insert preconnect once we start loading the script
+  if (import.meta.client) {
+    const _ = watch(instance.$script.status, (status) => {
+      if (status === 'loading') {
         useHead({
           link: [
             {
@@ -67,7 +72,9 @@ export function useScriptYouTubeIframe<T extends YouTubeIframeApi>(_options: You
             },
           ],
         })
-      },
-    },
-  }), _options)
+        _()
+      }
+    })
+  }
+  return instance
 }
