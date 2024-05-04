@@ -11,6 +11,9 @@ const props = withDefaults(defineProps<{
   width?: number
   height?: number
 }>(), {
+  // @ts-expect-error untyped
+  trigger: ['mousemove', 'mousedown'],
+  // @ts-expect-error untyped
   playerVars: { autoplay: 1, playsinline: 1 },
   width: 640,
   height: 480,

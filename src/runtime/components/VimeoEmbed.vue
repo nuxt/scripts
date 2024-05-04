@@ -37,7 +37,8 @@ const props = withDefaults(defineProps<{
   transparent?: boolean | undefined
   width?: number | undefined
 }>(), {
-  trigger: 'mouseover',
+  // @ts-expect-error untyped
+  trigger: ['mousemove', 'mousedown'],
   width: 640,
   height: 480,
   loop: false,
