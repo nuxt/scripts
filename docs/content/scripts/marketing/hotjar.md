@@ -4,11 +4,11 @@ description: A simple and performant YouTube component.
 links:
   - label: Source
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts-and-assets/blob/main/modules/nuxt-third-party-capital/src/runtime/components/YoutubeEmbed.ts
+    to: https://github.com/nuxt/scripts-and-assets/blob/main/modules/nuxt-third-party-capital/src/runtime/components/ScriptYouTubePlayer.ts
     size: xs
 ---
 
-The `<YoutubeEmbed>` component can be used to display a YouTube embed.
+The `<ScriptYouTubePlayer>` component can be used to display a YouTube embed.
 It uses [lite-youtube-embed](https://github.com/paulirish/lite-youtube-embed) to load significantly faster.
 
 ## Minimal Example
@@ -16,7 +16,7 @@ It uses [lite-youtube-embed](https://github.com/paulirish/lite-youtube-embed) to
 ```vue
 <template>
   <div>
-    <YoutubeEmbed
+    <ScriptYouTubePlayer
       video-id="d_IFKP1Ofq0"
       play-label="Play"
     />

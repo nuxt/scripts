@@ -11,7 +11,7 @@ function changeVideo() {
 <template>
   <div>
     <div>
-      <VimeoEmbed
+      <ScriptVimeoPlayer
         :id="videoid"
       />
     </div>
