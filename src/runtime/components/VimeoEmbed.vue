@@ -126,18 +126,21 @@ const player: Ref<Player | undefined> = ref()
 onMounted(() => {
   $script.then(({ Vimeo }) => {
     // filter props for false values
-    player.value = new Vimeo.Player(elVimeo.value, {
+    const _player = new Vimeo.Player(elVimeo.value, {
       ...props,
       url: encodeURI(`https://vimeo.com/${props.id}`),
     })
+    ready.value = true
 
-    events.forEach((event) => {
-      player.value?.on(event, (e: any) => {
-        emits(event as keyof typeof emits, e, player)
-        if (event === 'loaded')
+    for (const event of events) {
+      _player.on(event, (e) => {
+        emits(event, e, player)
+        if (event === 'loaded') {
+          player.value = _player.value
           ready.value = true
+        }
       })
-    })
+    }
   })
 
   watch(() => props.id, (v) => {
