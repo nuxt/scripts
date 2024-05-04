@@ -1,5 +1,5 @@
 import type { GTag, GoogleAnalyticsApi } from 'third-party-capital'
-import { registryScript } from '../utils'
+import { useRegistryScript } from '../utils'
 import { GoogleAnalyticsScriptResolver } from '../../registry'
 import { object, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -24,7 +24,7 @@ declare global {
  */
 export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput) {
   // Note: inputs.useScriptInput is not usable, needs to be normalized
-  return registryScript<T, typeof GoogleAnalyticsOptions>('googleAnalytics', options => ({
+  return useRegistryScript<T, typeof GoogleAnalyticsOptions>('googleAnalytics', options => ({
     scriptInput: {
       src: GoogleAnalyticsScriptResolver(options),
     },
@@ -43,12 +43,15 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
     clientInit: import.meta.server
       ? undefined
       : () => {
-          window.dataLayer = window.dataLayer || []
-          window.gtag = function gtag(...p) {
-            window.dataLayer.push(p)
-          } as GTag
-          window.gtag('js', new Date())
-          window.gtag('config', options?.id)
+          const w = window
+          w.dataLayer = w.dataLayer || []
+          const gtag: GTag = function () {
+            // eslint-disable-next-line prefer-rest-params
+            w.dataLayer.push(arguments)
+          }
+          gtag('js', new Date())
+          gtag('config', 'G-TR58L0EF8P')
+          w.gtag = gtag
         },
   }), _options)
 }
