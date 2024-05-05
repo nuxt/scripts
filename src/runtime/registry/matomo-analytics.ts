@@ -1,3 +1,4 @@
+import { withBase, withHttps } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -22,7 +23,7 @@ declare global {
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
   return useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
     scriptInput: {
-      src: `https://${options?.matomoUrl}/matomo.js`,
+      src: withBase(`/matomo.js`, withHttps(options?.matomoUrl)),
     },
     schema: import.meta.dev ? MatomoAnalyticsOptions : undefined,
     scriptOptions: {
@@ -41,8 +42,8 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
             const _paq = window._paq = window._paq || []
             options?.trackPageView !== false && _paq.push(['trackPageView'])
             options?.enableLinkTracking !== false && _paq.push(['enableLinkTracking'])
-            _paq.push(['setTrackerUrl', `//${options?.matomoUrl}/matomo.php`])
-            _paq.push(['setSiteId', options?.siteId])
+            _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(options?.matomoUrl))])
+            _paq.push(['setSiteId', options?.siteId || '1'])
           },
     },
   }), _options)

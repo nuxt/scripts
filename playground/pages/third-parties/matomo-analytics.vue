@@ -8,8 +8,8 @@ useHead({
 
 // composables return the underlying api as a proxy object and a $script with the script state
 const { $script, _paq } = useScriptMatomoAnalytics({
-  matomoUrl: 'https://matomo.example.com',
-  siteId: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C',
+  matomoUrl: 'https://nuxt-scripts-demo.matomo.cloud',
+  siteId: '1',
 })
 
 _paq.push(['trackPageView'])
