@@ -236,8 +236,6 @@ Loading the Lemon Squeezy SDK and interacting with it programmatically.
 
 ```vue
 <script setup>
-import { useScriptGoogleMaps } from 'nuxt-scripts'
-
 const { $script } = useScriptGoogleMaps({
   apiKey: 'key'
 })

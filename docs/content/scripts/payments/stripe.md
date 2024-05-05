@@ -1,82 +1,46 @@
 ---
 title: Stripe
-description: Use performance-optimized Stripe in your Nuxt app.
+description: Use Stripe in your Nuxt app.
 links:
   - label: useScriptStripe
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-maps.ts
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/stripe.ts
     size: xs
-  - label: "<ScriptStripe>"
+  - label: "<ScriptStripePricingTable>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptStripe.vue
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptStripePricingTable.vue
     size: xs
 ---
 
-[Stripe](https://maps.google.com/) allows you to embed maps in your website and customize them with your content.
+[Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.
 
-Nuxt Scripts provides a `useScriptStripe` composable and a headless `ScriptStripe` component to interact with the Stripe.
+Nuxt Scripts provides two Stripe features:
+- `useScriptStripe` composable which gives loads in the Stripe SDK and provides a way to interact with it programmatically.
+- `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site.
 
-## ScriptStripe
+## ScriptStripePricingTable
 
-The `ScriptStripe` component is a wrapper around the `useScriptStripe` composable. It provides a simple way to embed Stripe in your Nuxt app.
+The `ScriptStripePricingTable` component allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site
+in an optimized way.
 
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Stripe when specific elements events happen.
-
-Before Stripe is loaded, it shows a placeholder using [Maps Static API](https://developers.google.com/maps/documentation/maps-static).
+To improve performance it will load the table when it's visible using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers).
 
 ::callout
-You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) and the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
+You'll need to create your own [Pricing Table](https://dashboard.stripe.com/pricing-tables) before proceeding.
 ::
-
-By default, it will load on the `mouseover` and `mouseclick` events.
 
 ### Demo
 
 ::code-group
 
-:google-maps-demo{label="Output"}
+:stripe-demo{label="Output"}
 
 ```vue [Input]
-<script setup lang="ts">
-import { type Ref, ref } from 'vue'
-
-const isLoaded = ref(false)
-const center = ref()
-const maps = ref()
-
-const query = ref('Space+Needle,Seattle+WA')
-function handleReady(_map: Ref<google.maps.Map>) {
-  const map = _map.value
-  center.value = map.getCenter()
-  map.addListener('center_changed', () => {
-    center.value = map.getCenter()
-  })
-  isLoaded.value = true
-}
-</script>
-
 <template>
-  <div class="not-prose">
-    <div class="flex items-center justify-center p-5">
-      <ScriptStripe
-        ref="maps"
-        :query="query"
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        width="600"
-        height="400"
-        class="group"
-        @ready="handleReady"
-      />
-    </div>
-    <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Hover to load" description="Hover the map will load the Stripe iframe." />
-      <UAlert v-if="isLoaded" class="mb-5" size="sm" color="blue" variant="soft">
-        <template #title>
-          Center: {{ center }}
-        </template>
-      </UAlert>
-    </div>
-  </div>
+  <ScriptStripePricingTable
+    pricing-table-id="prctbl_1PD0MMEclFNgdHcR8t0Jop2H"
+    publishable-key="pk_live_51OhXSKEclFNgdHcRNi5xBjBClxsA0alYgt6NzBwUZ880pLG88rYSCYPQqpzM3TedzNYu5g2AynKiPI5QVLYSorLJ002iD4VZIB"
+  />
 </template>
 ```
 
@@ -84,62 +48,23 @@ function handleReady(_map: Ref<google.maps.Map>) {
 
 ### Props
 
-The `ScriptStripe` component accepts the following props:
+The `ScriptStripePricingTable` component accepts the following props:
 
 - `trigger`: The trigger event to load the Stripe. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `apiKey`: The Stripe API key. Must have access to the Static Maps API as well. You can optionally provide this as runtime config using the `public.scripts.stripe.apiKey` key.
-- `query`: Map marker location. You can provide a string with the location or use the `google.maps.LatLng` object.
-- `options`: Options for the map. See [MapOptions](https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions).
-- `width`: The width of the map. Default is `600`.
-- `height`: The height of the map. Default is `400`.
-- `placeholderOptions`: Customize the placeholder image attributes. See [Static Maps API](https://developers.google.com/maps/documentation/maps-static/start).
-- `placeholderAttrs`: Customize the placeholder image attributes.
-
-#### Eager Loading Placeholder
-
-The Stripe placeholder image is lazy-loaded by default. You should change this behavior if your map is above the fold
-or consider using the `#placeholder` slot to customize the placeholder image.
-
-::code-group
-
-```vue [Placeholder Attrs]
-<ScriptStripe :placeholder-attrs="{ loading: 'eager' }" />
-```
-
-```vue [Placeholder Slot]
-<ScriptStripe>
-  <template #placeholder="{ placeholder }">
-    <img :src="placeholder" alt="Map Placeholder">
-  </template>
-</ScriptStripe>
-```
-
-::
+- `pricing-table-id`: The ID of the Pricing Table you created in the Stripe Dashboard.
+- `publishable-key`: Your Stripe publishable key.
+- `client-reference-id`: A unique identifier for the client.
+- `customer-email`: The email of the customer.
+- `customer-session-client-secret`: The client secret of the customer session.
 
 ### Events
 
-The `ScriptStripe` component emits a single `ready` event when the Stripe is loaded.
+The `ScriptStripePricingTable` component emits a single `ready` event when the pricing table is loaded.
 
 ```ts
 const emits = defineEmits<{
-  ready: [map: google.maps.Map]
+  ready: []
 }>()
-```
-
-To subscribe to Google Map events, you can use the `ready` event.
-
-```vue
-<script setup>
-function handleReady(map) {
-  map.addListener('center_changed', () => {
-    console.log('Center changed', map.getCenter())
-  })
-}
-</script>
-
-<template>
-  <ScriptStripe @ready="handleReady" />
-</template>
 ```
 
 ### Slots
@@ -150,66 +75,13 @@ The component provides minimal UI by default, only enough to be functional and a
 
 The default slot is used to display content that will always be visible.
 
-```vue
-<template>
-  <ScriptStripe>
-    <div class="absolute top-0 left-0 right-0 p-5 bg-white text-black">
-      <h1 class="text-xl font-bold">
-        My Custom Map
-      </h1>
-    </div>
-  </ScriptStripe>
-</template>
-```
-
 **awaitingLoad**
 
 The slot is used to display content while the Stripe is loading.
 
-```vue
-<template>
-  <ScriptStripe>
-    <template #awaitingLoad>
-      <div class="bg-blue-500 text-white p-5">
-        Click to load the map!
-      </div>
-    </template>
-  </ScriptStripe>
-</template>
-```
-
 **loading**
 
 The slot is used to display content while the Stripe is loading.
-
-Note: This shows a `ScriptLoadingIndicator` by default for accessibility and UX, by providing a slot you will
-override this component. Make sure you provide a loading indicator.
-
-```vue
-<template>
-  <ScriptStripe>
-    <template #loading>
-      <div class="bg-blue-500 text-white p-5">
-        Loading...
-      </div>
-    </template>
-  </ScriptStripe>
-</template>
-```
-
-**placeholder**
-
-The slot is used to display a placeholder image before the Stripe is loaded. By default, this will show the Stripe Static API image for the map. You can display it however you like.
-
-```vue
-<template>
-  <ScriptStripe>
-    <template #placeholder="{ placeholder }">
-      <img :src="placeholder">
-    </template>
-  </ScriptStripe>
-</template>
-```
 
 ## useScriptStripe
 
@@ -221,31 +93,41 @@ export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {}
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
+### Options
+
+```ts
+export const StripeOptions = object({
+  advancedFraudSignals: optional(boolean()),
+})
+```
+
 ### StripeApi
 
 ```ts
 export interface StripeApi {
-  // @types/google.maps
-  maps: typeof google.maps
+  Stripe: stripe.StripeStatic
 }
 ```
 
 ## Example
 
-Loading the Stripe SDK and interacting with it programmatically.
+Loading the Stripe SDK and using it to create a payment element.
 
 ```vue
 <script setup>
-import { useScriptStripe } from 'nuxt-scripts'
-
-const { $script } = useScriptStripe({
-  apiKey: 'key'
-})
-$script.then(({ maps }) => {
-  const map = new maps.Map(document.getElementById('map'), {
-    center: { lat: -34.397, lng: 150.644 },
-    zoom: 8
+const paymentEl = ref(null)
+const { $script } = useScriptStripe()
+onMounted(() => {
+  $script.then(({ Stripe }) => {
+    const stripe = Stripe('YOUR_STRIPE_KEY')
+    const elements = stripe.elements()
+    const paymentElement = elements.create('payment', { /* pass keys */})
+    paymentElement.mount(paymentEl.value)
   })
 })
 </script>
+
+<template>
+  <div ref="paymentEl" />
+</template>
 ```
