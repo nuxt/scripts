@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Google Analytics](https://marketingplatform.google.com/about/analytics/) is a great analytics solution for Nuxt Apps.
+[Google Analytics](https://marketingplatform.google.com/about/analytics/) is an analytics solution for Nuxt Apps.
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
@@ -66,7 +66,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         googleAnalytics: {
-          id: '', // NUXT_SCRIPTS_GOOGLE_ANALYTICS_ID
+          id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
         },
       },
     },
@@ -75,7 +75,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_GOOGLE_ANALYTICS_ID=<YOUR_ID>
+NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID=<YOUR_ID>
 ```
 
 ## useScriptGoogleAnalytics

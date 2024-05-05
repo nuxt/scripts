@@ -63,7 +63,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         cloudflareWebAnalytics: {
-          token: '', // NUXT_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN
+          token: '', // NUXT_PUBLIC_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN
         },
       },
     },
@@ -72,7 +72,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<YOUR_TOKEN>
+NUXT_PUBLIC_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<YOUR_TOKEN>
 ```
 
 ## useScriptCloudflareWebAnalytics

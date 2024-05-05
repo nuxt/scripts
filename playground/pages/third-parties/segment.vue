@@ -6,7 +6,9 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { $script } = useScriptSegment({ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' })
+const { page, $script } = useScriptSegment({ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' })
+
+page('Segment')
 </script>
 
 <template>

@@ -32,14 +32,14 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
           }),
         }
       },
-      clientInit: import.meta.server
-        ? undefined
-        : () => {
-            readyPromise = new Promise((resolve) => {
-              window.onYouTubeIframeAPIReady = resolve
-            })
-          },
     },
+    clientInit: import.meta.server
+      ? undefined
+      : () => {
+          readyPromise = new Promise((resolve) => {
+            window.onYouTubeIframeAPIReady = resolve
+          })
+        },
   }), _options)
   // insert preconnect once we start loading the script
   if (import.meta.client) {

@@ -18,9 +18,9 @@ function triggerEvent() {
 </script>
 
 <template>
-<div>
-  <UButton @click="() => triggerEvent()">
-    Trigger Event
-  </UButton>
-</div>
+  <div>
+    <UButton @click="() => triggerEvent()">
+      Trigger Event
+    </UButton>
+  </div>
 </template>

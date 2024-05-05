@@ -70,7 +70,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         googleTagManager: {
-          id: '', // NUXT_SCRIPTS_GOOGLE_TAG_MANAGER_ID
+          id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID
         },
       },
     },
@@ -79,7 +79,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<YOUR_ID>
+NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<YOUR_ID>
 ```
 
 ## useScriptGoogleTagManager
@@ -98,8 +98,8 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 
 ```ts
 interface GoogleTagManagerApi {
-  dataLayer: Record<string, any>[];
-  google_tag_manager: GoogleTagManager;
+  dataLayer: Record<string, any>[]
+  google_tag_manager: GoogleTagManager
 }
 ```
 

@@ -61,7 +61,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         fathomAnalytics: {
-          token: '', // NUXT_SCRIPTS_FATHOM_ANALYTICS_SITE
+          token: '', // NUXT_PUBLIC_SCRIPTS_FATHOM_ANALYTICS_SITE
         },
       },
     },
@@ -70,7 +70,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_FATHOM_ANALYTICS_SITE=<YOUR_SITE>
+NUXT_PUBLIC_SCRIPTS_FATHOM_ANALYTICS_SITE=<YOUR_SITE>
 ```
 
 ## Composable `useScriptFathomAnalytics`

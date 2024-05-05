@@ -36,15 +36,15 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
         : ({ fn }) => {
             return fn === '_paq' ? [] : undefined
           },
-      clientInit: import.meta.server
-        ? undefined
-        : () => {
-            const _paq = window._paq = window._paq || []
-            options?.trackPageView !== false && _paq.push(['trackPageView'])
-            options?.enableLinkTracking !== false && _paq.push(['enableLinkTracking'])
-            _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(options?.matomoUrl))])
-            _paq.push(['setSiteId', options?.siteId || '1'])
-          },
     },
+    clientInit: import.meta.server
+      ? undefined
+      : () => {
+          const _paq = window._paq = window._paq || []
+          options?.trackPageView !== false && _paq.push(['trackPageView'])
+          options?.enableLinkTracking !== false && _paq.push(['enableLinkTracking'])
+          _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(options?.matomoUrl))])
+          _paq.push(['setSiteId', options?.siteId || '1'])
+        },
   }), _options)
 }

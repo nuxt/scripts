@@ -66,7 +66,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         matomoAnalytics: {
-          siteId: '', // NUXT_SCRIPTS_MATOMO_ANALYTICS_SITE_ID
+          siteId: '', // NUXT_PUBLIC_SCRIPTS_MATOMO_ANALYTICS_SITE_ID
         },
       },
     },
@@ -75,7 +75,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_MATOMO_ANALYTICS_SITE_ID=<YOUR_ID>
+NUXT_PUBLIC_SCRIPTS_MATOMO_ANALYTICS_SITE_ID=<YOUR_ID>
 ```
 
 ## useScriptMatomoAnalytics

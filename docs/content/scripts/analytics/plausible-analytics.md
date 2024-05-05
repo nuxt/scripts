@@ -64,7 +64,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         plausibleAnalytics: {
-          domain: '', // NUXT_SCRIPTS_PLAUSIBLE_DOMAIN
+          domain: '', // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_DOMAIN
         },
       },
     },
@@ -73,7 +73,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN=<YOUR_DOMAIN>
+NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN=<YOUR_DOMAIN>
 ```
 
 ## useScriptPlausibleAnalytics
@@ -95,8 +95,8 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 ```ts
 export interface PlausibleAnalyticsApi {
   plausible: ((event: '404', options: Record<string, any>) => void) &
-    ((event: 'event', options: Record<string, any>) => void) &
-    ((...params: any[]) => void) & {
+  ((event: 'event', options: Record<string, any>) => void) &
+  ((...params: any[]) => void) & {
     q: any[]
   }
 }

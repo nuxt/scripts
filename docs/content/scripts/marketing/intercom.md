@@ -64,7 +64,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         intercom: {
-          app_id: '', // NUXT_SCRIPTS_INTERCOM_APP_ID
+          app_id: '', // NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID
         },
       },
     },
@@ -73,7 +73,7 @@ export default defineNuxtConfig({
 ```
 
 ```text [.env]
-NUXT_SCRIPTS_INTERCOM_APP_ID=<YOUR_APP_ID>
+NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID=<YOUR_APP_ID>
 ```
 
 ## useScriptIntercom
@@ -97,27 +97,27 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 ```ts
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: Input<typeof IntercomOptions>) => void)
-    & ((event: 'shutdown') => void)
-    & ((event: 'update', options?: Input<typeof IntercomOptions>) => void)
-    & ((event: 'hide') => void)
-    & ((event: 'show') => void)
-    & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)
-    & ((event: 'showMessages') => void)
-    & ((event: 'showNewMessage', content?: string) => void)
-    & ((event: 'onHide', fn: () => void) => void)
-    & ((event: 'onShow', fn: () => void) => void)
-    & ((event: 'onUnreadCountChange', fn: () => void) => void)
-    & ((event: 'trackEvent', eventName: string, metadata?: Record<string, any>) => void)
-    & ((event: 'getVisitorId') => Promise<string>)
-    & ((event: 'startTour', tourId: string | number) => void)
-    & ((event: 'showArticle', articleId: string | number) => void)
-    & ((event: 'showNews', newsItemId: string | number) => void)
-    & ((event: 'startSurvey', surveyId: string | number) => void)
-    & ((event: 'startChecklist', checklistId: string | number) => void)
-    & ((event: 'showTicket', ticketId: string | number) => void)
-    & ((event: 'showConversation', conversationId: string | number) => void)
-    & ((event: 'onUserEmailSupplied', fn: () => void) => void)
-    & ((event: string, ...params: any[]) => void)
+  & ((event: 'shutdown') => void)
+  & ((event: 'update', options?: Input<typeof IntercomOptions>) => void)
+  & ((event: 'hide') => void)
+  & ((event: 'show') => void)
+  & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)
+  & ((event: 'showMessages') => void)
+  & ((event: 'showNewMessage', content?: string) => void)
+  & ((event: 'onHide', fn: () => void) => void)
+  & ((event: 'onShow', fn: () => void) => void)
+  & ((event: 'onUnreadCountChange', fn: () => void) => void)
+  & ((event: 'trackEvent', eventName: string, metadata?: Record<string, any>) => void)
+  & ((event: 'getVisitorId') => Promise<string>)
+  & ((event: 'startTour', tourId: string | number) => void)
+  & ((event: 'showArticle', articleId: string | number) => void)
+  & ((event: 'showNews', newsItemId: string | number) => void)
+  & ((event: 'startSurvey', surveyId: string | number) => void)
+  & ((event: 'startChecklist', checklistId: string | number) => void)
+  & ((event: 'showTicket', ticketId: string | number) => void)
+  & ((event: 'showConversation', conversationId: string | number) => void)
+  & ((event: 'onUserEmailSupplied', fn: () => void) => void)
+  & ((event: string, ...params: any[]) => void)
 }
 ```
 
