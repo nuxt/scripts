@@ -24,7 +24,7 @@ export type HotjarInput = RegistryScriptInput<typeof HotjarOptions>
 export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
   return useRegistryScript<T, typeof HotjarOptions>('hotjar', options => ({
     scriptInput: {
-      src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv}`,
+      src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv || 6}`,
     },
     schema: import.meta.dev ? HotjarOptions : undefined,
     scriptOptions: {
@@ -35,7 +35,7 @@ export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
     clientInit: import.meta.server
       ? undefined
       : () => {
-          window._hjSettings = window._hjSettings || { hjid: options?.id, hjsv: options?.sv }
+          window._hjSettings = window._hjSettings || { hjid: options?.id, hjsv: options?.sv || 6 }
           window.hj = window.hj || function (...params: any[]) {
             (window.hj.q = window.hj.q || []).push(params)
           }
