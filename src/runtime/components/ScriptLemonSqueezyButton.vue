@@ -20,12 +20,12 @@ const { $script } = useScriptLemonSqueezy({
   },
 })
 onMounted(() => {
+  // @ts-expect-error untyped
   $script.then(({ Setup }) => {
-    console.log('doing setup')
     Setup({
+      // @ts-expect-error untyped
       eventHandler(event) {
         emits('event', event)
-        console.log(event)
       },
     })
   })
