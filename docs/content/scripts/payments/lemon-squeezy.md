@@ -1,249 +1,102 @@
 ---
 title: Lemon Squeezy
-description: Show performance-optimized Lemon Squeezy in your Nuxt app.
+description: Use Lemon Squeezy in your Nuxt app.
 links:
-  - label: useScriptGoogleMaps
+  - label: useScriptLemonSqueezy
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-maps.ts
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/lemon-squeezy.ts
     size: xs
-  - label: "<ScriptGoogleMaps>"
+  - label: "<ScriptLemonSqueezyButton>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGoogleMaps.vue
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptLemonSqueezyButton.vue
     size: xs
 ---
 
-[Lemon Squeezy](https://maps.google.com/) allows you to embed maps in your website and customize them with your content.
+[Lemon Squeezy](https://www.lemonsqueezy.com/) is a popular payment gateway that allows you to accept payments online.
 
-Nuxt Scripts provides a `useScriptGoogleMaps` composable and a headless `ScriptGoogleMaps` component to interact with the Lemon Squeezy.
+## useScriptLemonSqueezy
 
-## ScriptGoogleMaps
-
-The `ScriptGoogleMaps` component is a wrapper around the `useScriptGoogleMaps` composable. It provides a simple way to embed Lemon Squeezy in your Nuxt app.
-
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Lemon Squeezy when specific elements events happen.
-
-Before Lemon Squeezy is loaded, it shows a placeholder using [Maps Static API](https://developers.google.com/maps/documentation/maps-static).
-
-::callout
-You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) and the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
-::
-
-By default, it will load on the `mouseover` and `mouseclick` events.
-
-### Demo
-
-::code-group
-
-:google-maps-demo{label="Output"}
-
-```vue [Input]
-<script setup lang="ts">
-import { type Ref, ref } from 'vue'
-
-const isLoaded = ref(false)
-const center = ref()
-const maps = ref()
-
-const query = ref('Space+Needle,Seattle+WA')
-function handleReady(_map: Ref<google.maps.Map>) {
-  const map = _map.value
-  center.value = map.getCenter()
-  map.addListener('center_changed', () => {
-    center.value = map.getCenter()
-  })
-  isLoaded.value = true
-}
-</script>
-
-<template>
-  <div class="not-prose">
-    <div class="flex items-center justify-center p-5">
-      <ScriptGoogleMaps
-        ref="maps"
-        :query="query"
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        width="600"
-        height="400"
-        class="group"
-        @ready="handleReady"
-      />
-    </div>
-    <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Hover to load" description="Hover the map will load the Lemon Squeezy iframe." />
-      <UAlert v-if="isLoaded" class="mb-5" size="sm" color="blue" variant="soft">
-        <template #title>
-          Center: {{ center }}
-        </template>
-      </UAlert>
-    </div>
-  </div>
-</template>
-```
-
-::
-
-### Props
-
-The `ScriptGoogleMaps` component accepts the following props:
-
-- `trigger`: The trigger event to load the Lemon Squeezy. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `apiKey`: The Lemon Squeezy API key. Must have access to the Static Maps API as well. You can optionally provide this as runtime config using the `public.scripts.googleMaps.apiKey` key.
-- `query`: Map marker location. You can provide a string with the location or use the `google.maps.LatLng` object.
-- `options`: Options for the map. See [MapOptions](https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions).
-- `width`: The width of the map. Default is `600`.
-- `height`: The height of the map. Default is `400`.
-- `placeholderOptions`: Customize the placeholder image attributes. See [Static Maps API](https://developers.google.com/maps/documentation/maps-static/start).
-- `placeholderAttrs`: Customize the placeholder image attributes.
-
-#### Eager Loading Placeholder
-
-The Lemon Squeezy placeholder image is lazy-loaded by default. You should change this behavior if your map is above the fold
-or consider using the `#placeholder` slot to customize the placeholder image.
-
-::code-group
-
-```vue [Placeholder Attrs]
-<ScriptGoogleMaps :placeholder-attrs="{ loading: 'eager' }" />
-```
-
-```vue [Placeholder Slot]
-<ScriptGoogleMaps>
-  <template #placeholder="{ placeholder }">
-    <img :src="placeholder" alt="Map Placeholder">
-  </template>
-</ScriptGoogleMaps>
-```
-
-::
-
-### Events
-
-The `ScriptGoogleMaps` component emits a single `ready` event when the Lemon Squeezy is loaded.
+The `useScriptLemonSqueezy` composable lets you have fine-grain control over the Lemon Squeezy SDK. It provides a way to load the Lemon Squeezy SDK and interact with it programmatically.
 
 ```ts
-const emits = defineEmits<{
-  ready: [map: google.maps.Map]
-}>()
-```
-
-To subscribe to Google Map events, you can use the `ready` event.
-
-```vue
-<script setup>
-function handleReady(map) {
-  map.addListener('center_changed', () => {
-    console.log('Center changed', map.getCenter())
-  })
-}
-</script>
-
-<template>
-  <ScriptGoogleMaps @ready="handleReady" />
-</template>
-```
-
-### Slots
-
-The component provides minimal UI by default, only enough to be functional and accessible. There are a number of slots for you to customize the maps however you like.
-
-**default**
-
-The default slot is used to display content that will always be visible.
-
-```vue
-<template>
-  <ScriptGoogleMaps>
-    <div class="absolute top-0 left-0 right-0 p-5 bg-white text-black">
-      <h1 class="text-xl font-bold">
-        My Custom Map
-      </h1>
-    </div>
-  </ScriptGoogleMaps>
-</template>
-```
-
-**awaitingLoad**
-
-The slot is used to display content while the Lemon Squeezy is loading.
-
-```vue
-<template>
-  <ScriptGoogleMaps>
-    <template #awaitingLoad>
-      <div class="bg-blue-500 text-white p-5">
-        Click to load the map!
-      </div>
-    </template>
-  </ScriptGoogleMaps>
-</template>
-```
-
-**loading**
-
-The slot is used to display content while the Lemon Squeezy is loading.
-
-Note: This shows a `ScriptLoadingIndicator` by default for accessibility and UX, by providing a slot you will
-override this component. Make sure you provide a loading indicator.
-
-```vue
-<template>
-  <ScriptGoogleMaps>
-    <template #loading>
-      <div class="bg-blue-500 text-white p-5">
-        Loading...
-      </div>
-    </template>
-  </ScriptGoogleMaps>
-</template>
-```
-
-**placeholder**
-
-The slot is used to display a placeholder image before the Lemon Squeezy is loaded. By default, this will show the Lemon Squeezy Static API image for the map. You can display it however you like.
-
-```vue
-<template>
-  <ScriptGoogleMaps>
-    <template #placeholder="{ placeholder }">
-      <img :src="placeholder">
-    </template>
-  </ScriptGoogleMaps>
-</template>
-```
-
-## useScriptGoogleMaps
-
-The `useScriptGoogleMaps` composable lets you have fine-grain control over the Lemon Squeezy SDK. It provides a way to load the Lemon Squeezy SDK and interact with it programmatically.
-
-```ts
-export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {}
+export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: LemonSqueezyInput) {}
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### GoogleMapsApi
+### LemonSqueezyApi
 
 ```ts
-export interface GoogleMapsApi {
-  // @types/google.maps
-  maps: typeof google.maps
+export interface LemonSqueezyApi {
+  /**
+   * Initialises Lemon.js on your page.
+   * @param options - An object with a single property, eventHandler, which is a function that will be called when Lemon.js emits an event.
+   */
+  Setup: (options: {
+    eventHandler: (event:
+                     { event: 'Checkout.Success', data: Record<string, any> }
+                     & { event: 'PaymentMethodUpdate.Mounted' }
+                     & { event: 'PaymentMethodUpdate.Closed' }
+                     & { event: 'PaymentMethodUpdate.Updated' }
+                     & { event: string }
+    ) => void
+  }) => void
+  /**
+   * Refreshes `lemonsqueezy-button` listeners on the page.
+   */
+  Refresh: () => void
+
+  Url: {
+    /**
+     * Opens a given Lemon Squeezy URL, typically these are Checkout or Payment Details Update overlays.
+     * @param url - The URL to open.
+     */
+    Open: (url: string) => void
+
+    /**
+     * Closes the current opened Lemon Squeezy overlay checkout window.
+     */
+    Close: () => void
+  }
+  Affiliate: {
+    /**
+     * Retrieve the affiliate tracking ID
+     */
+    GetID: () => string
+
+    /**
+     * Append the affiliate tracking parameter to the given URL
+     * @param url - The URL to append the affiliate tracking parameter to.
+     */
+    Build: (url: string) => string
+  }
+  Loader: {
+    /**
+     * Show the Lemon.js loader.
+     */
+    Show: () => void
+
+    /**
+     * Hide the Lemon.js loader.
+     */
+    Hide: () => void
+  }
 }
 ```
 
 ## Example
 
-Loading the Lemon Squeezy SDK and interacting with it programmatically.
+Using the Lemon Squeezy SDK with a payment link.
 
 ```vue
 <script setup>
-const { $script } = useScriptGoogleMaps({
-  apiKey: 'key'
-})
-$script.then(({ maps }) => {
-  const map = new maps.Map(document.getElementById('map'), {
-    center: { lat: -34.397, lng: 150.644 },
-    zoom: 8
-  })
+const { Setup } = useScriptLemonSqueezy()
+onMounted(() => {
+  Setup()
 })
 </script>
+
+<template>
+<a href="https://harlantest.lemonsqueezy.com/buy/52a40427-36d2-4450-a514-ae80d9e1a333?embed=1" class="lemonsqueezy-button" />
+</template>
 ```
