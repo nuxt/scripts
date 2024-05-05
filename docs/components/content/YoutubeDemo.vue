@@ -22,7 +22,7 @@ function stateChange(event) {
       </ScriptYouTubePlayer>
     </div>
     <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the Vimeo iframe and start the video." />
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the YouTube iframe and start the video." />
       <UButton v-if="isLoaded && !isPlaying" @click="play">
         Play Video
       </UButton>

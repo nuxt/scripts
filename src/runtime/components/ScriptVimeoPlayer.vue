@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type HTMLAttributes, type ImgHTMLAttributes, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type Player from 'vimeo__player'
 import type { EventMap, VimeoVideoQuality } from 'vimeo__player'
+import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useAsyncData, useElementScriptTrigger, useScriptVimeoPlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
   // custom
   trigger?: ElementScriptTrigger
+  placeholderAttrs?: ImgHTMLAttributes
   // copied from @types/vimeo__player
   id: string | number | undefined
   url?: string | undefined
@@ -124,7 +126,7 @@ const { data: payload } = useAsyncData(
   },
 )
 
-const poster = computed(() => {
+const placeholder = computed(() => {
   return payload.value?.thumbnail_large
 })
 
@@ -152,7 +154,6 @@ onMounted(() => {
       ...props,
       url: encodeURI(`https://vimeo.com/${props.id}`),
     })
-    ready.value = true
     if (clickTriggered) {
       player!.play()
       clickTriggered = false
@@ -164,7 +165,6 @@ onMounted(() => {
           ready.value = true
       })
     }
-    // player.value = _player
   })
 
   watch(() => props.id, (v) => {
@@ -172,16 +172,51 @@ onMounted(() => {
   })
 })
 
+const rootAttrs = computed(() => {
+  return {
+    'aria-busy': $script.status.value === 'loading',
+    'aria-label': $script.status.value === 'awaitingLoad'
+      ? 'Vimeo Player - Placeholder'
+      : $script.status.value === 'loading'
+        ? 'Vimeo Player - Loading'
+        : 'Vimeo Player - Loaded',
+    'aria-live': 'polite',
+    'role': 'application',
+    'style': {
+      width: `${props.width}px`,
+      height: `${props.height}px`,
+      position: 'relative',
+      backgroundColor: 'black',
+    },
+  } satisfies HTMLAttributes
+})
+
+const placeholderAttrs = computed(() => {
+  return defu(props.placeholderAttrs, {
+    src: placeholder.value,
+    alt: '',
+    loading: 'lazy',
+    style: {
+      cursor: 'pointer',
+      width: '100%',
+      objectFit: 'contain',
+      height: '100%',
+    },
+  } satisfies ImgHTMLAttributes)
+})
+
 onBeforeUnmount(() => player?.unload())
 </script>
 
 <template>
-  <div ref="rootEl" :style="{ width: `${width}px`, height: `${height}px`, position: 'relative' }">
+  <div ref="rootEl" v-bind="rootAttrs">
     <div v-show="ready" ref="elVimeo" class="vimeo-player" style="width: 100%; height: 100%; max-width: 100%;" />
-    <slot v-if="!ready" v-bind="payload" :poster="poster" name="poster">
-      <div :style="{ backgroundImage: `url(${poster})`, width: `100%`, height: `${height}px`, backgroundRepeat: 'no-repeat', backgroundPosition: '50% 50%', cursor: 'pointer', backgroundColor: 'black' }" />
+    <slot v-if="!ready" v-bind="payload" :placeholder="placeholder" name="placeholder">
+      <img v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value === 'loading'" name="loading" />
+    <slot v-if="$script.status.value === 'loading'" name="loading">
+      <ScriptLoadingIndicator color="white" />
+    </slot>
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
     <slot />
   </div>

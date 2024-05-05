@@ -68,15 +68,13 @@ async function play() {
 The `ScriptVimeoPlayer` component accepts the following props:
 
 - `trigger`: The trigger event to load the Vimeo Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
+- `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
 
 All script options from the Player SDK are supported, please consult the [Embed Options](https://developer.vimeo.com/player/sdk/embed)
 for full documentation.
 
 ```ts
-defineProps<{
-  // Nuxt Scripts
-  trigger?: ElementScriptTrigger
-  // vimeo__player
+interface VimeoPlayerProps {
   id: number | undefined
   url?: string | undefined
   autopause?: boolean | undefined
@@ -87,7 +85,6 @@ defineProps<{
   controls?: boolean | undefined
   dnt?: boolean | undefined
   height?: number | undefined
-
   interactive_params?: string | undefined
   keyboard?: boolean | undefined
   loop?: boolean | undefined
@@ -104,8 +101,29 @@ defineProps<{
   title?: boolean | undefined
   transparent?: boolean | undefined
   width?: number | undefined
-}>()
+}
 ```
+
+#### Eager Loading Placeholder
+
+The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+or consider using the `#placeholder` slot to customize the placeholder image.
+
+::code-group
+
+```vue [Placeholder Attrs]
+<ScriptVimeoPlayer :placeholder-attrs="{ loading: 'eager' }" />
+```
+
+```vue [Placeholder Slot]
+<ScriptVimeoPlayer>
+  <template #placeholder="{ placeholder }">
+    <img :src="placeholder" alt="Video Placeholder">
+  </template>
+</ScriptVimeoPlayer>
+```
+
+::
 
 ### Events
 
@@ -191,16 +209,16 @@ The slot is used to display content while the video is loading.
 </template>
 ```
 
-**poster**
+**placeholder**
 
-The slot is used to display a poster image before the video is loaded. By default, this will show the
+The slot is used to display a placeholder image before the video is loaded. By default, this will show the
 vimeo thumbnail for the video. You can display it however you like.
 
 ```vue
 <template>
   <ScriptVimeoPlayer :id="331567154">
-    <template #poster="{ poster }">
-      <img :src="poster" alt="Video Poster">
+    <template #placeholder="{ placeholder }">
+      <img :src="placeholder" alt="Video Placeholder">
     </template>
   </ScriptVimeoPlayer>
 </template>

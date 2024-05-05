@@ -1,10 +1,12 @@
 <script setup lang="ts">
 /// <reference types="youtube" />
-import { type Ref, computed, onMounted, ref, watch } from 'vue'
+import { type HTMLAttributes, type ImgHTMLAttributes, type Ref, computed, onMounted, ref, watch } from 'vue'
+import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useElementScriptTrigger, useScriptYouTubePlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
+  placeholderAttrs?: ImgHTMLAttributes
   trigger?: ElementScriptTrigger
   videoId: string
   playerVars?: YT.PlayerVars
@@ -67,6 +69,7 @@ onMounted(() => {
         // @ts-expect-error untyped
         emits(emitEventName, e)
         if (event === 'onReady') {
+          ready.value = true
           if (clickTriggered) {
             player.value?.playVideo()
             clickTriggered = false
@@ -84,16 +87,52 @@ defineExpose({
   player,
 })
 
-const poster = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
+const rootAttrs = computed(() => {
+  return {
+    'aria-busy': $script.status.value === 'loading',
+    'aria-label': $script.status.value === 'awaitingLoad'
+      ? 'YouTube Player - Placeholder'
+      : $script.status.value === 'loading'
+        ? 'YouTube Player - Loading'
+        : 'YouTube Player - Loaded',
+    'aria-live': 'polite',
+    'role': 'application',
+    'style': {
+      cursor: 'pointer',
+      width: `${props.width}px`,
+      height: `${props.height}px`,
+      position: 'relative',
+      backgroundColor: 'black',
+    },
+  } satisfies HTMLAttributes
+})
+
+const placeholder = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
+
+const placeholderAttrs = computed(() => {
+  return defu(props.placeholderAttrs, {
+    src: placeholder.value,
+    alt: '',
+    loading: 'lazy',
+    style: {
+      cursor: 'pointer',
+      width: '100%',
+      objectFit: 'contain',
+      height: '100%',
+    },
+  } satisfies ImgHTMLAttributes)
+})
 </script>
 
 <template>
-  <div ref="rootEl" :style="{ maxWidth: '100%', width: `${width}px`, height: `${height}px`, position: 'relative', cursor: 'pointer', backgroundColor: 'black' }">
+  <div ref="rootEl" v-bind="rootAttrs">
     <div ref="youtubeEl" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;" />
-    <slot v-if="!ready" :poster="poster" name="poster">
-      <div :style="{ backgroundImage: `url(${poster})`, width: `100%`, height: `${height}px`, backgroundRepeat: 'no-repeat', backgroundPosition: '50% 50%', cursor: 'pointer', backgroundColor: 'black' }" />
+    <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
+      <img v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value === 'loading'" name="loading" />
+    <slot v-if="$script.status.value === 'loading'" name="loading">
+      <ScriptLoadingIndicator />
+    </slot>
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
   </div>
 </template>

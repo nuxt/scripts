@@ -71,20 +71,40 @@ function stateChange(event) {
 The `ScriptYouTubePlayer` component accepts the following props:
 
 - `trigger`: The trigger event to load the YouTube Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
+- `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
 
 All script options from the [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference) are supported on the `playerVars` prop, please consult the [Supported paramters](https://developers.google.com/youtube/player_parameters#Parameters) for full documentation.
 
 ```ts
-defineProps<{
-  // Nuxt Scripts
-  trigger?: ElementScriptTrigger
+export interface YouTubeProps {
   // YouTube Player
   videoId: string
   playerVars?: YT.PlayerVars
   width?: number
   height?: number
-}>()
+}
 ```
+
+#### Eager Loading Placeholder
+
+The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+or consider using the `#placeholder` slot to customize the placeholder image.
+
+::code-group
+
+```vue [Placeholder Attrs]
+<ScriptYouTubePlayer :placeholder-attrs="{ loading: 'eager' }" />
+```
+
+```vue [Placeholder Slot]
+<ScriptYouTubePlayer>
+  <template #placeholder="{ placeholder }">
+    <img :src="placeholder" alt="Video Placeholder">
+  </template>
+</ScriptYouTubePlayer>
+```
+
+::
 
 ### Events
 
@@ -150,16 +170,16 @@ The slot is used to display content while the video is loading.
 </template>
 ```
 
-**poster**
+**placeholder**
 
-The slot is used to display a poster image before the video is loaded. By default, this will show the
+The slot is used to display a placeholder image before the video is loaded. By default, this will show the
 youtube thumbnail for the video. You can display it however you like.
 
 ```vue
 <template>
   <ScriptYouTubePlayer video-id="d_IFKP1Ofq0">
-    <template #poster="{ poster }">
-      <img :src="poster" alt="Video Poster">
+    <template #placeholder="{ placeholder }">
+      <img :src="placeholder" alt="Video Placeholder">
     </template>
   </ScriptYouTubePlayer>
 </template>
