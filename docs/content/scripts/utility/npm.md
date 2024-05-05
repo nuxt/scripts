@@ -1,64 +1,86 @@
 ---
 title: NPM
-description: A simple and performant Google Maps component.
+description: Load IIFE scripts from NPM in your Nuxt app.
 links:
   - label: Source
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts-and-assets/blob/main/modules/nuxt-third-party-capital/src/runtime/components/GoogleMaps.ts
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/npm.ts
     size: xs
 ---
 
-The `<GoogleMaps>` component uses the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript) to load a map to your page.
+## Background
 
-::callout
-You need an API key to use Google Maps.
+When working with NPM files, you'd typically include them as a node_module dependency in the `package.json` file. However,
+optimizing the script loading of these scripts can be difficult, requiring a dynamic import of the module from a separate chunk and
+loading it only when needed. It also slows down your build as the module needs to be transpiled.
+
+The `useScriptNpm` registry script abstracts this process, allowing you to load scripts that have been exported as immediately invokable functions,
+with a single line of code .
+
+In many instances it will still make more sense to include the script as a dependency in the `package.json` file, but for scripts that are not used often or
+are not critical to the application, this can be a great alternative.
+
+To begin with we can think of using this script as an alternative to the `useHead` composable. You can see an example of the abstraction
+layers in the following code sample.
+
+::code-group
+
+```ts [Registry Script useScriptNpm]
+useScriptNpm({
+  packageName: 'js-confetti',
+  file: 'dist/js-confetti.browser.js',
+  version: '0.12.0',
+})
+```
+
+```ts [useScript]
+useScript('https://cdn.jsdelivr.net/npm/js-confetti@0.12.0/dist/js-confetti.browser.js')
+```
+
+```ts [useHead]
+useHead({
+  scripts: [
+    { src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js' }
+  ]
+})
+```
+
 ::
 
-## Example with Query
+## useScriptNpm
 
-```vue
-<template>
-  <div>
-    <GoogleMaps
-      api-key="API_KEY"
-      width="600"
-      height="400"
-      q="Space+Needle,Seattle+WA"
-    />
-  </div>
-</template>
+The `useScriptNpm` composable lets you have fine-grain control over when and how NPM scripts are loaded on your site.
+
+```ts
+function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput) {}
 ```
 
-## Example with Coordinates
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-```vue
-<template>
-  <div>
-    <GoogleMaps
-      api-key="API_KEY"
-      width="600"
-      height="400"
-      :center="{ lat: 47.62065090386302, lng: -122.34932031714334 }"
-    />
-  </div>
-</template>
+### NpmOptions
+
+```ts
+export const NpmOptions = object({
+  packageName: string(),
+  file: optional(string()),
+  version: optional(string()),
+  type: optional(string()),
+})
 ```
 
-## Props
+### Return
 
-- `apiKey`: The [API key](https://developers.google.com/maps/documentation/javascript/get-api-key) to use Google Maps API.
-  - **type**: `string`
-  - **required**
-- `q`: A query to search for.
-  - **type**: `string`
-- `center`: Coordinates to set the map to
-  - **type**: `LatLng`
-- `zoom`: Zoom value for the map
-  - **type**: `number`
-- `width`: Width of the player
-  - **type**: `string`
-- `height`: Height of the player
-  - **type**: `string`
-- `params`: [Parameters](https://developers.google.com/maps/documentation/javascript/load-maps-js-api#optional_parameters) for the map.
+To get types for the script you're loading, you'll need to augment the types of the `useScriptNpm` function.
 
-Either a query (q) or coordinates (center) are needed for the map to function properly.
+```ts
+interface SomeApi {
+  doSomething: () => void
+}
+useScriptNpm<SomeApi>({
+  packageName: 'some-api'
+})
+```
+
+## Example
+
+See the [Tutorial: Load js-confetti](/docs/getting-started/confetti-tutorial) for further examples.
