@@ -34,11 +34,11 @@ export interface LemonSqueezyApi {
    */
   Setup: (options: {
     eventHandler: (event:
-                     { event: 'Checkout.Success', data: Record<string, any> }
-                     & { event: 'PaymentMethodUpdate.Mounted' }
-                     & { event: 'PaymentMethodUpdate.Closed' }
-                     & { event: 'PaymentMethodUpdate.Updated' }
-                     & { event: string }
+      { event: 'Checkout.Success', data: Record<string, any> }
+      & { event: 'PaymentMethodUpdate.Mounted' }
+      & { event: 'PaymentMethodUpdate.Closed' }
+      & { event: 'PaymentMethodUpdate.Updated' }
+      & { event: string }
     ) => void
   }) => void
   /**
@@ -97,6 +97,6 @@ onMounted(() => {
 </script>
 
 <template>
-<a href="https://harlantest.lemonsqueezy.com/buy/52a40427-36d2-4450-a514-ae80d9e1a333?embed=1" class="lemonsqueezy-button" />
+  <a href="https://harlantest.lemonsqueezy.com/buy/52a40427-36d2-4450-a514-ae80d9e1a333?embed=1" class="lemonsqueezy-button" />
 </template>
 ```
