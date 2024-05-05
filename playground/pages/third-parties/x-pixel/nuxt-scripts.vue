@@ -9,7 +9,7 @@ useHead({
 const { $script, twq } = useScriptXPixel({ id: 'ol7lz' })
 // this will be triggered once the script is ready async
 function triggerEvent() {
-  twq('event', ' tw-ol7lz-ol7mb', {
+  twq('event', 'tw-ol7lz-ol7mb', {
     value: 123,
   })
 }
@@ -21,9 +21,9 @@ function triggerEvent() {
       <div>
         status: {{ $script.status }}
       </div>
-      <button @click="triggerEvent">
+      <UButton @click="triggerEvent">
         Trigger Event
-      </button>
+      </UButton>
     </ClientOnly>
   </div>
 </template>

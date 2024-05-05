@@ -1,64 +1,188 @@
 ---
 title: X Pixel
-description: A simple and performant Google Maps component.
+description: Use X Pixel in your Nuxt app.
 links:
-  - label: Source
-    icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts-and-assets/blob/main/modules/nuxt-third-party-capital/src/runtime/components/GoogleMaps.ts
-    size: xs
+- label: Source
+  icon: i-simple-icons-github
+  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/x-pixel.ts
+  size: xs
 ---
 
-The `<GoogleMaps>` component uses the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript) to load a map to your page.
+[X Pixel](https://x.com/) lets you collect, clean, and control your customer data. X helps you to understand your customers and personalize their experience.
 
-::callout
-You need an API key to use Google Maps.
+Nuxt Scripts provides a registry script composable `useScriptXPixel` to easily integrate X Pixel in your Nuxt app.
+
+### Nuxt Config Setup
+
+The simplest way to load Meta Pixel globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+use the [useScriptXPixel](#useScriptXPixel) composable.
+
+If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
+disable the script in development.
+
+::code-group
+
+```ts [Always enabled]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      xPixel: {
+        id: 'YOUR_ID'
+      }
+    }
+  }
+})
+```
+
+```ts [Production only]
+export default defineNuxtConfig({
+  $production: {
+    scripts: {
+      registry: {
+        xPixel: {
+          id: 'YOUR_ID',
+        }
+      }
+    }
+  }
+})
+```
+
 ::
 
-## Example with Query
+#### With Environment Variables
 
-```vue
+If you prefer to configure your id using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      xPixel: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        xPixel: {
+          id: '', // NUXT_PUBLIC_SCRIPTS_X_PIXEL_ID
+        },
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_X_PIXEL_ID=<YOUR_ID>
+```
+
+## useScriptXPixel
+
+The `useScriptXPixel` composable lets you have fine-grain control over when and how X Pixel is loaded on your site.
+
+```ts
+const { twq, $script } = useScriptXPixel({
+  id: 'YOUR_ID'
+})
+// example
+twq('event', '<EventId>', {
+  value: 1,
+})
+```
+
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+### XPixelApi
+
+```ts
+export interface XPixelApi {
+  fbq: FbqFns & {
+    push: FbqFns
+    loaded: boolean
+    version: string
+    queue: any[]
+  }
+  _fbq: XPixelApi['fbq']
+}
+type FbqFns = ((event: 'track', eventName: StandardEvents, data?: EventObjectProperties) => void)
+  & ((event: 'trackCustom', eventName: string, data?: EventObjectProperties) => void)
+  & ((event: 'init', id: number, data?: Record<string, any>) => void)
+  & ((event: 'init', id: string) => void)
+  & ((event: string, ...params: any[]) => void)
+type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
+interface EventObjectProperties {
+  content_category?: string
+  content_ids?: string[]
+  content_name?: string
+  content_type?: string
+  contents: { id: string, quantity: number }[]
+  currency?: string
+  delivery_category?: 'in_store' | 'curbside' | 'home_delivery'
+  num_items?: number
+  predicted_ltv?: number
+  search_string?: string
+  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | string
+  value?: number
+  [key: string]: any
+}
+```
+
+### Config Schema
+
+You must provide the options when setting up the script for the first time.
+
+```ts
+export const XPixelOptions = object({
+  id: string(),
+  version: optional(string()),
+})
+```
+
+## Example
+
+Using X Pixel only in production while using `twq` to send a conversion event.
+
+::code-group
+
+```vue [ConversionButton.vue]
+<script setup>
+const { twq } = useScriptXPixel()
+
+// noop in development, ssr
+// just works in production, client
+function sendConversion() {
+  twq('event', 'Purchase', {
+    value: 1,
+    currency: 'USD'
+  })
+}
+</script>
+
 <template>
   <div>
-    <GoogleMaps
-      api-key="API_KEY"
-      width="600"
-      height="400"
-      q="Space+Needle,Seattle+WA"
-    />
+    <button @click="sendConversion">
+      Send Conversion
+    </button>
   </div>
 </template>
 ```
 
-## Example with Coordinates
+```ts [nuxt.config.ts Mock development]
+import { isDevelopment } from 'std-env'
 
-```vue
-<template>
-  <div>
-    <GoogleMaps
-      api-key="API_KEY"
-      width="600"
-      height="400"
-      :center="{ lat: 47.62065090386302, lng: -122.34932031714334 }"
-    />
-  </div>
-</template>
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      xPixel: isDevelopment
+        ? 'mock' // script won't load unless manually callined load()
+        : {
+            id: 'YOUR_ID',
+          },
+    },
+  },
+})
 ```
 
-## Props
-
-- `apiKey`: The [API key](https://developers.google.com/maps/documentation/javascript/get-api-key) to use Google Maps API.
-  - **type**: `string`
-  - **required**
-- `q`: A query to search for.
-  - **type**: `string`
-- `center`: Coordinates to set the map to
-  - **type**: `LatLng`
-- `zoom`: Zoom value for the map
-  - **type**: `number`
-- `width`: Width of the player
-  - **type**: `string`
-- `height`: Height of the player
-  - **type**: `string`
-- `params`: [Parameters](https://developers.google.com/maps/documentation/javascript/load-maps-js-api#optional_parameters) for the map.
-
-Either a query (q) or coordinates (center) are needed for the map to function properly.
+::

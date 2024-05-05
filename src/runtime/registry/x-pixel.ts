@@ -46,22 +46,21 @@ export const XPixelOptions = object({
 export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
-  return useRegistryScript<T, typeof XPixelOptions>('xPixel', options => ({
-    scriptInput: {
-      src: 'https://static.ads-twitter.com/uwt.js',
-    },
-    schema: import.meta.dev ? XPixelOptions : undefined,
-    scriptOptions: {
-      use() {
-        return { twq: window.twq }
+  return useRegistryScript<T, typeof XPixelOptions>('xPixel', (options) => {
+    return ({
+      scriptInput: {
+        src: 'https://static.ads-twitter.com/uwt.js',
+        // @ts-expect-error TODO fix upstream
+        crossorigin: false,
       },
       clientInit: import.meta.server
         ? undefined
         : () => {
           // @ts-expect-error untyped
-            const s = window.twq = function (...params: any[]) {
+            const s = window.twq = function () {
             // @ts-expect-error untyped
-              s.exe ? s.exe(s, ...params) : s.queue.push(params)
+              // eslint-disable-next-line prefer-rest-params
+              s.exe ? s.exe(s, arguments) : s.queue.push(arguments)
             }
             // @ts-expect-error untyped
             s.version = options?.version || '1.1'
@@ -70,6 +69,12 @@ export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
               ['config', options?.id],
             ]
           },
-    },
-  }), _options)
+      schema: import.meta.dev ? XPixelOptions : undefined,
+      scriptOptions: {
+        use() {
+          return { twq: window.twq }
+        },
+      },
+    })
+  }, _options)
 }
