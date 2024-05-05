@@ -5,7 +5,6 @@ import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig, useScript } from '#imports'
 import type {
   EmptyOptionsSchema,
-  NuxtConfigScriptRegistry,
   NuxtUseScriptOptions,
   RegistryScriptInput,
   ScriptRegistry,
@@ -31,8 +30,8 @@ type OptionsFn<O extends ObjectSchema<any>> = (options: Input<O>) => ({
   clientInit?: () => void
 })
 
-export function scriptRuntimeConfig(key: keyof NuxtConfigScriptRegistry) {
-  return ((useRuntimeConfig().public.scripts || {}) as NuxtConfigScriptRegistry)[key] || {}
+export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
+  return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
 export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
