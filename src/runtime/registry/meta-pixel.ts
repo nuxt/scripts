@@ -1,5 +1,5 @@
 import { useRegistryScript } from '../utils'
-import { FacebookPixelScriptResolver } from '../../registry'
+import { MetaPixelScriptResolver } from '../../registry'
 import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -22,32 +22,32 @@ interface EventObjectProperties {
 
 type FbqFns = ((event: 'track', eventName: StandardEvents, data?: EventObjectProperties) => void) & ((event: 'trackCustom', eventName: string, data?: EventObjectProperties) => void) & ((event: 'init', id: number, data?: Record<string, any>) => void) & ((event: 'init', id: string) => void) & ((event: string, ...params: any[]) => void)
 
-export interface FacebookPixelApi {
+export interface MetaPixelApi {
   fbq: FbqFns & {
     push: FbqFns
     loaded: boolean
     version: string
     queue: any[]
   }
-  _fbq: FacebookPixelApi['fbq']
+  _fbq: MetaPixelApi['fbq']
 }
 
 declare global {
-  interface Window extends FacebookPixelApi {
+  interface Window extends MetaPixelApi {
   }
 }
 
-export const FacebookPixelOptions = object({
+export const MetaPixelOptions = object({
   id: union([string(), number()]),
 })
-export type FacebookPixelInput = RegistryScriptInput<typeof FacebookPixelOptions>
+export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions>
 
-export function useScriptFacebookPixel<T extends FacebookPixelApi>(_options?: FacebookPixelInput) {
-  return useRegistryScript<T, typeof FacebookPixelOptions>('facebookPixel', options => ({
+export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
+  return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
     scriptInput: {
-      src: FacebookPixelScriptResolver(),
+      src: MetaPixelScriptResolver(),
     },
-    schema: import.meta.dev ? FacebookPixelOptions : undefined,
+    schema: import.meta.dev ? MetaPixelOptions : undefined,
     scriptOptions: {
       use() {
         return { fbq: window.fbq }
@@ -56,10 +56,10 @@ export function useScriptFacebookPixel<T extends FacebookPixelApi>(_options?: Fa
     clientInit: import.meta.server
       ? undefined
       : () => {
-          const fbq: FacebookPixelApi['fbq'] = window.fbq = function (...params: any[]) {
+          const fbq: MetaPixelApi['fbq'] = window.fbq = function (...params: any[]) {
           // @ts-expect-error untyped
             fbq.callMethod ? fbq.callMethod(...params) : fbq.queue.push(params)
-          } as any as FacebookPixelApi['fbq']
+          } as any as MetaPixelApi['fbq']
           if (!window._fbq)
             window._fbq = fbq
           fbq.push = fbq

@@ -6,7 +6,7 @@ import type { Import } from 'unimport'
 import { object } from 'valibot'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
-import type { FacebookPixelInput } from './registry/facebook-pixel'
+import type { MetaPixelInput } from './registry/meta-pixel'
 import type { FathomAnalyticsInput } from './registry/fathom-analytics'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
@@ -83,7 +83,7 @@ export interface NuxtAppScript {
 
 export interface ScriptRegistry {
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
-  facebookPixel?: FacebookPixelInput
+  metaPixel?: MetaPixelInput
   fathomAnalytics?: FathomAnalyticsInput
   plausibleAnalytics?: PlausibleAnalyticsInput
   googleAnalytics?: GoogleAnalyticsInput

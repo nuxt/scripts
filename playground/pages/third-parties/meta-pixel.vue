@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { useHead, useScriptFacebookPixel } from '#imports'
+import { useHead, useScriptMetaPixel } from '#imports'
 
 useHead({
-  title: 'Facebook Pixel',
+  title: 'Meta Pixel',
 })
 
 // composables return the underlying api as a proxy object and a $script with the script state
-const { $script, fbq } = useScriptFacebookPixel({ id: '3925006' })
+const { $script, fbq } = useScriptMetaPixel({ id: '3925006' })
 // this will be triggered once the script is ready async
 function triggerEvent() {
   fbq('track', 'ViewContent', {

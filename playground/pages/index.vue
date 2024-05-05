@@ -19,8 +19,8 @@ const thirdParties = [
     path: '/third-parties/google-tag-manager',
   },
   {
-    name: 'Facebook Pixel',
-    path: '/third-parties/facebook-pixel',
+    name: 'Meta Pixel',
+    path: '/third-parties/meta-pixel',
   },
   {
     name: 'X Pixel',
