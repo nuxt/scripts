@@ -1,64 +1,162 @@
 ---
 title: Google Tag Manager
-description: useGoogleTagManager allows you to install Google Tag Manager in your Nuxt app.
+description: Use Google Tag Manager in your Nuxt app.
 links:
-  - label: Source
-    icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts-and-assets/blob/main/modules/nuxt-third-party-capital/src/runtime/composables/googleTagManager.ts
-    size: xs
+- label: Source
+  icon: i-simple-icons-github
+  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-tag-manager.ts
+  size: xs
 ---
 
-The `useGoogleTagManager` composable allows you to install [Google Tag Manager](https://developers.google.com/tag-platform/tag-manager/web) in your Nuxt application.
+[Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.
 
 ::callout
-Using Google Tag Manager with Nuxt Scripts may be an anti-pattern. GTM is 82kb and provides many features you can easily
-implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the `useGoogleAnalytics` composable.
+You may not need Google Tag Manager with Nuxt Scripts. GTM is 82kb and will slow down your site.
+Nuxt Scripts provides many features you can easily
+implement within your Nuxt app. If you're using GTM for Google Tag Manager, you can use the `useScriptGoogleAnalytics` composable instead.
 ::
 
-## Minimal Example
+### Nuxt Config Setup
 
-```vue
-<script setup>
-useGoogleTagManager({ id: 'GTM-123456' })
-</script>
+The simplest way to load Google Tag Manager globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+use the [useScriptGoogleTagManager](#useScriptGoogleTagManager) composable.
+
+If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
+disable the script in development.
+
+::code-group
+
+```ts [Always enabled]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: 'YOUR_ID'
+      }
+    }
+  }
+})
 ```
 
-## Example with Custom Event
-
-```vue
-<script setup>
-const { $script } = useGoogleTagManager({
-  id: 'GTM-123456'
+```ts [Production only]
+export default defineNuxtConfig({
+  $production: {
+    scripts: {
+      registry: {
+        googleTagManager: {
+          token: 'YOUR_TOKEN_ID',
+        }
+      }
+    }
+  }
 })
-$script.waitForLoad().then(({ dataLayer }) => {
-  dataLayer.push({
-    event: 'pageview',
-    page_path: '/google-tag-manager'
-  })
-})
-</script>
 ```
 
-## Type
+::
+
+#### With Environment Variables
+
+If you prefer to configure your id using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        googleTagManager: {
+          id: '', // NUXT_SCRIPTS_GOOGLE_TAG_MANAGER_ID
+        },
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<YOUR_ID>
+```
+
+## useScriptGoogleTagManager
+
+The `useScriptGoogleTagManager` composable lets you have fine-grain control over when and how Google Tag Manager is loaded on your site.
 
 ```ts
-type useGoogleTagManager = (options: ThirdPartyScriptOptions<GoogleTagManagerOptions, GoogleTagManagerApi>) => ThirdPartyScriptApi<GoogleTagManagerApi>
+const { dataLayer, $script } = useScriptGoogleTagManager({
+  id: 'YOUR_ID'
+})
 ```
 
-## Params
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-An object containing the following options:
+### GoogleTagManagerApi
 
-- `id`: Your GTM container ID. Usually starts with 'GTM-'.
-  - **type**: `string`
-  - **required**
+```ts
+interface GoogleTagManagerApi {
+  dataLayer: Record<string, any>[];
+  google_tag_manager: GoogleTagManager;
+}
+```
 
-## Return Values
+### Config Schema
 
-An object that contains a special `$script` property that gives you access to the underlying script instance.
+You must provide the options when setting up the script for the first time.
 
-- `$script.waitForLoad`: A promise that resolves when the script is ready to use. It exposes `google_tag_manager` and `dataLayer`, which lets you interact with the API.
+```ts
+export const GoogleTagManagerOptions = object({
+  /**
+   * The Google Tag Manager ID.
+   */
+  id: string(),
+})
+```
 
-::callout
-Learn more about [`useScript`](https://unhead.unjs.io/usage/composables/use-script).
+## Example
+
+Using Google Tag Manager only in production while using `dataLayer` to send a conversion event.
+
+::code-group
+
+```vue [ConversionButton.vue]
+<script setup>
+const { dataLayer } = useScriptGoogleTagManager()
+
+// noop in development, ssr
+// just works in production, client
+dataLayer.push({ event: 'conversion-step', value: 1 })
+function sendConversion() {
+  dataLayer.push({ event: 'conversion', value: 1 })
+}
+</script>
+
+<template>
+  <div>
+    <button @click="sendConversion">
+      Send Conversion
+    </button>
+  </div>
+</template>
+```
+
+```ts [nuxt.config.ts Mock development]
+import { isDevelopment } from 'std-env'
+
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: isDevelopment
+        ? 'mock' // script won't load unless manually callined load()
+        : {
+            id: 'YOUR_ID',
+          },
+    },
+  },
+})
+```
+
 ::
