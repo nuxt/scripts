@@ -1,64 +1,166 @@
 ---
 title: Segment
-description: A simple and performant Google Maps component.
+description: Use Segment in your Nuxt app.
 links:
-  - label: Source
-    icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts-and-assets/blob/main/modules/nuxt-third-party-capital/src/runtime/components/GoogleMaps.ts
-    size: xs
+- label: Source
+  icon: i-simple-icons-github
+  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/segment.ts
+  size: xs
 ---
 
-The `<GoogleMaps>` component uses the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript) to load a map to your page.
+[Segment](https://segment.com/) lets you collect, clean, and control your customer data. Segment helps you to understand your customers and personalize their experience.
 
-::callout
-You need an API key to use Google Maps.
+Nuxt Scripts provides a registry script composable `useScriptSegment` to easily integrate Segment in your Nuxt app.
+
+### Nuxt Config Setup
+
+The simplest way to load Segment globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+use the [useScriptSegment](#useScriptSegment) composable.
+
+If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
+disable the script in development.
+
+::code-group
+
+```ts [Always enabled]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      segment: {
+        writeKey: 'YOUR_WRITE_KEY'
+      }
+    }
+  }
+})
+```
+
+```ts [Production only]
+export default defineNuxtConfig({
+  $production: {
+    scripts: {
+      registry: {
+        segment: {
+          writeKey: 'YOUR_WRITE_KEY'
+        }
+      }
+    }
+  }
+})
+```
+
 ::
 
-## Example with Query
+#### With Environment Variables
 
-```vue
+If you prefer to configure your id using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      segment: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        segment: {
+          writeKey: '' // NUXT_PUBLIC_SCRIPTS_SEGMENT_WRITE_KEY
+        }
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_SEGMENT_WRITE_KEY=<YOUR_WRITE_KEY>
+```
+
+## useScriptSegment
+
+The `useScriptSegment` composable lets you have fine-grain control over when and how Segment is loaded on your site.
+
+```ts
+const { track, $script } = useScriptSegment({
+  id: 'YOUR_ID'
+})
+// example
+track('event', {
+  foo: 'bar'
+})
+```
+
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+### SegmentApi
+
+```ts
+interface SegmentApi {
+  track: (event: string, properties?: Record<string, any>) => void
+  page: (name?: string, properties?: Record<string, any>) => void
+  identify: (userId: string, traits?: Record<string, any>, options?: Record<string, any>) => void
+  group: (groupId: string, traits?: Record<string, any>, options?: Record<string, any>) => void
+  alias: (userId: string, previousId: string, options?: Record<string, any>) => void
+  reset: () => void
+}
+```
+
+### Config Schema
+
+You must provide the options when setting up the script for the first time.
+
+```ts
+export const SegmentOptions = object({
+  writeKey: string(),
+  analyticsKey: optional(string()),
+})
+```
+
+## Example
+
+Using Segment only in production while using `analytics` to send a conversion event.
+
+::code-group
+
+```vue [ConversionButton.vue]
+<script setup>
+const { track, analytics } = useScriptSegment()
+
+// noop in development, ssr
+// just works in production, client
+function sendConversion() {
+  track('conversion', {
+    value: 1,
+    currency: 'USD'
+  })
+}
+</script>
+
 <template>
   <div>
-    <GoogleMaps
-      api-key="API_KEY"
-      width="600"
-      height="400"
-      q="Space+Needle,Seattle+WA"
-    />
+    <button @click="sendConversion">
+      Send Conversion
+    </button>
   </div>
 </template>
 ```
 
-## Example with Coordinates
+```ts [nuxt.config.ts Mock development]
+import { isDevelopment } from 'std-env'
 
-```vue
-<template>
-  <div>
-    <GoogleMaps
-      api-key="API_KEY"
-      width="600"
-      height="400"
-      :center="{ lat: 47.62065090386302, lng: -122.34932031714334 }"
-    />
-  </div>
-</template>
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      segment: isDevelopment
+        ? 'mock' // script won't load unless manually callined load()
+        : {
+            writeKey: 'YOUR_WRITE_KEY',
+          },
+    },
+  },
+})
 ```
 
-## Props
-
-- `apiKey`: The [API key](https://developers.google.com/maps/documentation/javascript/get-api-key) to use Google Maps API.
-  - **type**: `string`
-  - **required**
-- `q`: A query to search for.
-  - **type**: `string`
-- `center`: Coordinates to set the map to
-  - **type**: `LatLng`
-- `zoom`: Zoom value for the map
-  - **type**: `number`
-- `width`: Width of the player
-  - **type**: `string`
-- `height`: Height of the player
-  - **type**: `string`
-- `params`: [Parameters](https://developers.google.com/maps/documentation/javascript/load-maps-js-api#optional_parameters) for the map.
-
-Either a query (q) or coordinates (center) are needed for the map to function properly.
+::

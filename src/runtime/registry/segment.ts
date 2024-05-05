@@ -31,47 +31,67 @@ interface AnalyticsApi {
   push: (args: any[]) => void
 }
 
-export interface SegmentApi {
-  analytics: AnalyticsApi & { [key: string]: (...args: any[]) => AnalyticsApi }
+export interface SegmentApi extends Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'> {
 }
 
 declare global {
   interface Window extends SegmentApi { }
 }
 
+const methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
+
 export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) {
   return useRegistryScript<T, typeof SegmentOptions>('segment', (options) => {
-    const analyticsKey: string = options?.analyticsKey ?? 'analytics'
+    const k = (options?.analyticsKey ?? 'analytics') as keyof Window
     return {
       scriptInput: {
-        'data-global-segment-analytics-key': analyticsKey,
+        'data-global-segment-analytics-key': k,
         'src': SegmentScriptResolver(options),
       },
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+          // @ts-expect-error untyped
+            window[k] = window[k] || []
+            window[k].methods = methods
+            window[k].factory = function (method: string) {
+              return function (...params: any[]) {
+                const args = Array.prototype.slice.call(params)
+                args.unshift(method)
+                window[k].push(args)
+                return window[k]
+              }
+            }
+            for (let i = 0; i < window[k].methods.length; i++) {
+              const key = window[k].methods[i]
+              window[k][key] = window[k].factory(key)
+            }
+            window[k].page()
+          },
       schema: import.meta.dev ? SegmentOptions : undefined,
       scriptOptions: {
-        use() {
-          // @ts-expect-error untyped
-          return { analytics: window[analyticsKey] as SegmentApi['analytics'] }
-        },
-        clientInit: import.meta.server
-          ? undefined
-          : () => {
-              window.analytics = window.analytics || []
-              window.analytics.methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
-              window.analytics.factory = function (method) {
-                return function (...params) {
-                  const args = Array.prototype.slice.call(params)
-                  args.unshift(method)
-                  window.analytics.push(args)
-                  return window.analytics
+        stub: import.meta.server
+          // ensure ssr works
+          ? ({ fn }) => {
+              if (fn === 'analytics') {
+                return {
+                  track: () => {},
+                  page: () => {},
+                  identify: () => {},
+                  group: () => {},
+                  alias: () => {},
+                  reset: () => {},
                 }
               }
-              for (let i = 0; i < window.analytics.methods.length; i++) {
-                const key = window.analytics.methods[i]
-                window.analytics[key] = window.analytics.factory(key)
-              }
-              window.analytics.page()
-            },
+            }
+          : undefined,
+        use() {
+          return methods.reduce((acc, key) => {
+            // @ts-expect-error untyped
+            acc[key] = window[k].factory(key) as SegmentApi['analytics']
+            return acc
+          }, {})
+        },
       },
     }
   }, _options)
