@@ -52,14 +52,6 @@ export function useScriptIntercom<T extends IntercomApi>(_options?: IntercomInpu
   return useRegistryScript<T, typeof IntercomOptions>('intercom', options => ({
     scriptInput: {
       src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
-      // append the data attr's
-      ...Object.entries(options)
-        .filter(([key]) => key.startsWith('data-'))
-        .reduce((acc, [key, value]) => {
-          // @ts-expect-error untyped
-          acc[key] = value
-          return acc
-        }),
     },
     schema: import.meta.dev ? IntercomOptions : undefined,
     scriptOptions: {
