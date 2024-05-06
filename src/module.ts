@@ -92,10 +92,10 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
-    const unheadPath = await resolvePath('@unhead/vue')
+    const unheadPath = await resolvePath('@unhead/vue').catch(() => undefined)
     // couldn't be found for some reason, assume compatibility
     if (unheadPath) {
-      const { version: unheadVersion } = await readPackageJSON(join(await resolvePath('@unhead/vue'), 'package.json'))
+      const { version: unheadVersion } = await readPackageJSON(join(unheadPath, 'package.json'))
       if (!unheadVersion || lt(unheadVersion, '1.9.0')) {
         logger.warn('@nuxt/scripts requires @unhead/vue >= 1.9.0, please upgrade to use the module.')
         return
