@@ -12,7 +12,6 @@ const emits = defineEmits<{
   event: [{ event: string, data?: Record<string, any> }]
 }>()
 
-const ready = ref(false)
 const rootEl = ref<HTMLElement | null>(null)
 const { $script } = useScriptLemonSqueezy({
   scriptOptions: {
