@@ -97,7 +97,7 @@ const benchmarks = {
     label: 'Google Maps',
     nuxt: {
       fcp: 1500,
-      tbt: 50,
+      tbt: 70,
       lcp: 2700,
       si: 2500,
     },
@@ -156,6 +156,7 @@ function timesFaster(nuxt: number, iframe: number) {
   // should display as 2.5 for 2500%
   return (iframe / nuxt).toFixed(1)
 }
+
 </script>
 
 <template>
@@ -211,7 +212,7 @@ function timesFaster(nuxt: number, iframe: number) {
       </ul>
     </ULandingSection>
 
-    <div class="py-6 sm:py-12 gap-20 mb-12 flex flex-col xl:flex-row items-center max-w-5xl mx-auto">
+    <div class="py-6 sm:py-20 gap-20 mb-12 flex flex-col xl:flex-row items-center max-w-7xl mx-auto">
       <div class="max-w-lg">
         <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
           <UIcon name="i-ph-speedometer-duotone" class="h-12 w-12 shrink-0 text-primary" />
@@ -224,7 +225,7 @@ function timesFaster(nuxt: number, iframe: number) {
           and developer experience.
         </p>
         <p class="text-gray-500 dark:text-gray-400">
-          <span class="opacity-50">*Benchmarks below are from pagespeed.web.dev running Mobile with variability, they are not accurate.</span>
+          <span class="opacity-50 text-sm">*Benchmarks are from pagespeed.web.dev Mobile report running with variability, they are not accurate.</span>
         </p>
         <UButtonGroup class="mt-10 flex flex-col md:flex-row">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
@@ -253,7 +254,7 @@ function timesFaster(nuxt: number, iframe: number) {
               </div>
               <div class="flex items-center gap-3 max-w-full">
                 <UProgress :value="benchmark.nuxt[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="flex flex-grow" />
-                <div class="w-14 flex-grow">
+                <div class="w-14 flex-grow text-right">
                   {{ humanizeMs(benchmark.nuxt[webVital]) }}
                 </div>
               </div>
@@ -264,7 +265,7 @@ function timesFaster(nuxt: number, iframe: number) {
               </div>
               <div class="flex items-center gap-3">
                 <UProgress :value="benchmark.iframe[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="" />
-                <div class="w-14 flex-grow">
+                <div class="w-14 flex-grow text-right">
                   {{ humanizeMs(benchmark.iframe[webVital]) }}
                 </div>
               </div>
@@ -279,6 +280,12 @@ function timesFaster(nuxt: number, iframe: number) {
 <style lang="postcss">
 .hero_code div div {
   @apply dark:bg-gray-900/60 backdrop-blur-3xl bg-white/60;
+}
+.logo svg {
+  max-height: 100%;
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
 }
 .radial-fade {
   position: absolute;

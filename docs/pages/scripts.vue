@@ -107,7 +107,7 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .logo svg {
   max-height: 100%;
   max-width: 100%;
