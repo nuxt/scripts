@@ -3,10 +3,11 @@
 import { type HTMLAttributes, type ImgHTMLAttributes, type Ref, computed, onMounted, ref, watch } from 'vue'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
-import { useElementScriptTrigger, useScriptYouTubePlayer } from '#imports'
+import { useElementScriptTrigger, useHead, useScriptYouTubePlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes
+  aboveTheFold?: boolean
   trigger?: ElementScriptTrigger
   videoId: string
   playerVars?: YT.PlayerVars
@@ -43,7 +44,6 @@ const { $script } = useScriptYouTubePlayer({
   scriptOptions: {
     trigger,
   },
-  bundle: true,
 })
 
 const player: Ref<YT.Player | undefined> = ref()
@@ -109,11 +109,31 @@ const rootAttrs = computed(() => {
 
 const placeholder = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
 
+if (import.meta.server) {
+  // dns-prefetch https://i.vimeocdn.com
+  useHead({
+    link: [
+      {
+        rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
+        href: 'https://i.ytimg.com',
+      },
+      props.aboveTheFold
+        // we can preload the placeholder image
+        ? {
+            rel: 'preload',
+            as: 'image',
+            href: placeholder.value,
+          }
+        : {},
+    ],
+  })
+}
+
 const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: placeholder.value,
     alt: '',
-    loading: 'lazy',
+    loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       cursor: 'pointer',
       width: '100%',

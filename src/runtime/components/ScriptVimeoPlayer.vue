@@ -4,12 +4,13 @@ import type Player from 'vimeo__player'
 import type { EventMap, VimeoVideoQuality } from 'vimeo__player'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
-import { useAsyncData, useElementScriptTrigger, useScriptVimeoPlayer } from '#imports'
+import { useAsyncData, useElementScriptTrigger, useHead, useScriptVimeoPlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
   // custom
   trigger?: ElementScriptTrigger
   placeholderAttrs?: ImgHTMLAttributes
+  aboveTheFold?: boolean
   // copied from @types/vimeo__player
   id: string | number | undefined
   url?: string | undefined
@@ -117,6 +118,18 @@ const { $script } = useScriptVimeoPlayer({
   },
 })
 
+if (import.meta.server) {
+  // dns-prefetch https://i.vimeocdn.com
+  useHead({
+    link: [
+      {
+        rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
+        href: 'https://i.vimeocdn.com',
+      },
+    ],
+  })
+}
+
 const { data: payload } = useAsyncData(
   `vimeo-embed:${props.id}`,
   // TODO ideally we cache this
@@ -126,9 +139,7 @@ const { data: payload } = useAsyncData(
   },
 )
 
-const placeholder = computed(() => {
-  return payload.value?.thumbnail_large
-})
+const placeholder = computed(() => payload.value?.thumbnail_large)
 
 let player: Player | undefined
 // we can't directly expose the player as vue will break the proxy
@@ -195,7 +206,9 @@ const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: placeholder.value,
     alt: '',
-    loading: 'lazy',
+    loading: props.aboveTheFold ? 'eager' : 'lazy',
+    // @ts-expect-error untyped
+    fetchpriority: props.aboveTheFold ? 'high' : undefined,
     style: {
       cursor: 'pointer',
       width: '100%',

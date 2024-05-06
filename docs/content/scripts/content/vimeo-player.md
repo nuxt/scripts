@@ -69,6 +69,7 @@ The `ScriptVimeoPlayer` component accepts the following props:
 
 - `trigger`: The trigger event to load the Vimeo Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
 - `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
+- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
 
 All script options from the Player SDK are supported, please consult the [Embed Options](https://developer.vimeo.com/player/sdk/embed)
 for full documentation.
@@ -112,7 +113,7 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 ::code-group
 
 ```vue [Placeholder Attrs]
-<ScriptVimeoPlayer :placeholder-attrs="{ loading: 'eager' }" />
+<ScriptVimeoPlayer above-the-fold />
 ```
 
 ```vue [Placeholder Slot]

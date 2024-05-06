@@ -87,6 +87,7 @@ function handleReady(_map: Ref<google.maps.Map>) {
 The `ScriptGoogleMaps` component accepts the following props:
 
 - `trigger`: The trigger event to load the Google Maps. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
+- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
 - `apiKey`: The Google Maps API key. Must have access to the Static Maps API as well. You can optionally provide this as runtime config using the `public.scripts.googleMaps.apiKey` key.
 - `query`: Map marker location. You can provide a string with the location or use the `google.maps.LatLng` object.
 - `options`: Options for the map. See [MapOptions](https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions).
@@ -103,7 +104,7 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 ::code-group
 
 ```vue [Placeholder Attrs]
-<ScriptGoogleMaps :placeholder-attrs="{ loading: 'eager' }" />
+<ScriptGoogleMaps above-the-fold />
 ```
 
 ```vue [Placeholder Slot]

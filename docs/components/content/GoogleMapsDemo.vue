@@ -26,6 +26,7 @@ function handleReady(_map: Ref<google.maps.Map>) {
         width="600"
         height="400"
         class="group"
+        above-the-fold
         @ready="handleReady"
       />
     </div>

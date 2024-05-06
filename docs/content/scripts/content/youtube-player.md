@@ -72,7 +72,8 @@ The `ScriptYouTubePlayer` component accepts the following props:
 
 - `trigger`: The trigger event to load the YouTube Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
 - `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
-
+- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
+-
 All script options from the [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference) are supported on the `playerVars` prop, please consult the [Supported paramters](https://developers.google.com/youtube/player_parameters#Parameters) for full documentation.
 
 ```ts
@@ -93,7 +94,7 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 ::code-group
 
 ```vue [Placeholder Attrs]
-<ScriptYouTubePlayer :placeholder-attrs="{ loading: 'eager' }" />
+<ScriptYouTubePlayer above-the-fold />
 ```
 
 ```vue [Placeholder Slot]

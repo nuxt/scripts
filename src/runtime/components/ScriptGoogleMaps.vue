@@ -15,7 +15,7 @@ import { type QueryObject, withQuery } from 'ufo'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { scriptRuntimeConfig } from '../utils'
-import { resolveComponent, useElementScriptTrigger, useScriptGoogleMaps } from '#imports'
+import { resolveComponent, useElementScriptTrigger, useHead, useScriptGoogleMaps } from '#imports'
 
 interface PlaceholderOptions {
   width?: string | number
@@ -42,6 +42,11 @@ const props = withDefaults(defineProps<{
    * Defines the trigger event to load the script.
    */
   trigger?: ElementScriptTrigger
+  /**
+   * Is Google Maps being rendered above the fold?
+   * This will load the placeholder image with higher priority.
+   */
+  aboveTheFold?: boolean
   /**
    * Defines the Google Maps API key. Must have access to the Static Maps API as well.
    */
@@ -169,6 +174,17 @@ onMounted(() => {
   })
 })
 
+if (import.meta.server) {
+  useHead({
+    link: [
+      {
+        rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
+        href: 'https://maps.googleapis.com',
+      },
+    ],
+  })
+}
+
 const placeholder = computed(() => {
   const placeholderOptions: PlaceholderOptions = defu(props.placeholderOptions, {
     // only map option values
@@ -187,7 +203,7 @@ const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: placeholder.value,
     alt: props.query || '',
-    loading: 'lazy',
+    loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       cursor: 'pointer',
       width: '100%',

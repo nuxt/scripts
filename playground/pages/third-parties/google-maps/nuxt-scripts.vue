@@ -11,11 +11,12 @@ function changeQuery() {
 <template>
   <div>
     <div>
-      <GoogleMaps
+      <ScriptGoogleMaps
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="600"
         :height="400"
         :query="query"
+        above-the-fold
       />
     </div>
     <div class="button-container">

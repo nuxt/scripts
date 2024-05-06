@@ -13,6 +13,7 @@ function changeVideo() {
     <div>
       <ScriptVimeoPlayer
         :id="videoid"
+        above-the-fold
       />
     </div>
     <UButton

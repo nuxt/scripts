@@ -24,7 +24,7 @@ const thirdParties = [
   },
   {
     name: 'X Pixel',
-    path: '/third-parties/x-pixel',
+    path: '/third-parties/x-pixel/nuxt-scripts',
   },
   {
     name: 'Fathom Analytics',
@@ -48,7 +48,7 @@ const thirdParties = [
   },
   {
     name: 'Stripe',
-    path: '/third-parties/stripe',
+    path: '/third-parties/stripe/nuxt-scripts',
   },
   {
     name: 'Segment',
@@ -59,15 +59,15 @@ const thirdParties = [
 const thirdPartyComponents = [
   {
     name: 'Vimeo',
-    path: '/third-parties/vimeo',
+    path: '/third-parties/vimeo/nuxt-scripts',
   },
   {
     name: 'YouTube',
-    path: '/third-parties/youtube',
+    path: '/third-parties/youtube/nuxt-scripts',
   },
   {
     name: 'Google Maps',
-    path: '/third-parties/google-maps',
+    path: '/third-parties/google-maps/nuxt-scripts',
   },
 ]
 
@@ -86,6 +86,22 @@ const benchmark = [
   {
     name: 'Google Analytics',
     path: '/third-parties/google-analytics/unhead',
+  },
+  {
+    name: 'Google Maps',
+    path: '/third-parties/google-maps/default',
+  },
+  {
+    name: 'Vimeo',
+    path: '/third-parties/vimeo/default',
+  },
+  {
+    name: 'xPixel',
+    path: '/third-parties/x-pixel/default',
+  },
+  {
+    name: 'YouTube',
+    path: '/third-parties/youtube/default',
   },
 ]
 </script>
