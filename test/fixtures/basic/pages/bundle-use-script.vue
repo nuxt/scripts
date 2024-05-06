@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useScript, injectHead, ref } from '#imports'
+import { injectHead, ref, useScript } from '#imports'
 
 const { myScript, $script } = useScript<{ myScript: (arg: string) => void }>(
   // need a real script to bundle
