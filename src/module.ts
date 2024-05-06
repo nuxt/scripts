@@ -13,7 +13,7 @@ import { lt } from 'semver'
 import { resolvePath } from 'mlly'
 import { join } from 'pathe'
 import { setupDevToolsUI } from './devtools'
-import { NuxtScriptAssetBundlerTransformer } from './plugins/transform'
+import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
 import { extendTypes, installNuxtModule } from './kit'
@@ -202,7 +202,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
       const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
-      addBuildPlugin(NuxtScriptAssetBundlerTransformer({
+      addBuildPlugin(NuxtScriptBundleTransformer({
         scripts,
         defaultBundle: config.defaultScriptOptions?.bundle,
         moduleDetected(module) {

@@ -16,10 +16,10 @@ export interface AssetBundlerTransformerOptions {
   scripts?: RegistryScripts
 }
 
-export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransformerOptions) {
+export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions) {
   return createUnplugin(() => {
     return {
-      name: 'nuxt:scripts:asset-bundler-transformer',
+      name: 'nuxt:scripts:bundler-transformer',
 
       transformInclude(id) {
         const { pathname, search } = parseURL(decodeURIComponent(pathToFileURL(id).href))
