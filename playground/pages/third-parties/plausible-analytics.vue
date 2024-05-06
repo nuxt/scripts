@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { useScriptPlausibleAnalytics } from '../../../src/runtime/registry/plausible-analytics'
-import { ref, useHead } from '#imports'
+import { ref, useHead, useScriptPlausibleAnalytics } from '#imports'
 
 useHead({
   title: 'Plausible',

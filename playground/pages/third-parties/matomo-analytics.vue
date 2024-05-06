@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { useScriptMatomoAnalytics } from '../../../src/runtime/registry/matomo-analytics'
-import { useHead } from '#imports'
+import { useHead, useScriptMatomoAnalytics } from '#imports'
 
 useHead({
   title: 'Matomo Analytics',

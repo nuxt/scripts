@@ -156,7 +156,6 @@ function timesFaster(nuxt: number, iframe: number) {
   // should display as 2.5 for 2500%
   return (iframe / nuxt).toFixed(1)
 }
-
 </script>
 
 <template>

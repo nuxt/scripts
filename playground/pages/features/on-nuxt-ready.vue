@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useScriptGoogleTagManager } from '../../../src/runtime/registry/google-tag-manager'
+import { useScriptGoogleTagManager } from '#imports'
 
 const { $script } = useScriptGoogleTagManager({
   id: 'GTM-5ZQZJZ',
