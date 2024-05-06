@@ -92,11 +92,14 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
-    const { version: unheadVersion } = await readPackageJSON(join(await resolvePath('@unhead/vue'), 'package.json'))
-
-    if (!unheadVersion || lt(unheadVersion, '1.8.0')) {
-      logger.warn('@nuxt/scripts requires @unhead/vue >= 1.8.0, please upgrade to use the module.')
-      return
+    const unheadPath = await resolvePath('@unhead/vue')
+    // couldn't be found for some reason, assume compatibility
+    if (unheadPath) {
+      const { version: unheadVersion } = await readPackageJSON(join(await resolvePath('@unhead/vue'), 'package.json'))
+      if (!unheadVersion || lt(unheadVersion, '1.9.0')) {
+        logger.warn('@nuxt/scripts requires @unhead/vue >= 1.9.0, please upgrade to use the module.')
+        return
+      }
     }
     if (!config.enabled) {
       // TODO fallback to useHead?
