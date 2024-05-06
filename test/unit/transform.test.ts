@@ -3,12 +3,12 @@ import { parse } from 'acorn-loose'
 import { joinURL, parseURL, withBase } from 'ufo'
 import { hash } from 'ohash'
 import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform'
-import { NuxtScriptAssetBundlerTransformer } from '../../src/plugins/transform'
+import { NuxtScriptBundleTransformer } from '../../src/plugins/transform'
 import type { IntercomInput } from '~/src/runtime/registry/intercom'
 import type { NpmInput } from '~/src/runtime/registry/npm'
 
 async function transform(code: string | string[], options: AssetBundlerTransformerOptions) {
-  const plugin = NuxtScriptAssetBundlerTransformer(options).vite() as any
+  const plugin = NuxtScriptBundleTransformer(options).vite() as any
   const res = await plugin.transform.call(
     { parse: (code: string) => parse(code, { ecmaVersion: 2022, sourceType: 'module', allowImportExportEverywhere: true, allowAwaitOutsideFunction: true }) },
     Array.isArray(code) ? code.join('\n') : code,
@@ -251,5 +251,37 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/soMXoYlUxl.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
+  })
+
+  it('useScript broken #1', async () => {
+    const code = await transform(
+      `import { defineComponent as _defineComponent } from "vue";
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "bundle-use-script",
+  setup(__props, { expose: __expose }) {
+    __expose();
+    const { myScript, $script } = useScript("/myScript.js", {
+      bundle: true,
+      use() {
+        return {
+          // @ts-expect-error untyped
+          myScript: window.myScript
+        };
+      }
+    });
+    myScript("test");
+    const __returned__ = { myScript, $script };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});`,
+      {
+        resolveScript(src) {
+          return `/_scripts/${hash(parseURL(src).pathname)}.js`
+        },
+      },
+    )
+    expect(code.includes('useScript(\'/_scripts/JvFMRwu6zQ.js\', {')).toBeTruthy()
   })
 })
