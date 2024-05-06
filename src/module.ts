@@ -111,6 +111,9 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaultScriptOptions: config.defaultScriptOptions }
     addImportsDir([
       resolve('./runtime/composables'),
+      // auto-imports aren't working without this for some reason
+      // TODO find solution as we're double-registering
+      resolve('./runtime/registry'),
     ])
 
     addComponentsDir({
