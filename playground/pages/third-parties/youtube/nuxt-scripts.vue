@@ -11,7 +11,7 @@ function changeVideo() {
 <template>
   <div>
     <div>
-      <ScriptYouTubePlayer :video-id="videoid">
+      <ScriptYouTubePlayer :video-id="videoid" above-the-fold>
         <template #awaitingLoad>
           <div class="text-lg top-5 absolute left-10">
             Nuxt Nation 2023: Daniel Roe - A New Nuxt - Release of Nuxt v3.8
