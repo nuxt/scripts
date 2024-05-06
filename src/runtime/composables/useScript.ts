@@ -2,7 +2,8 @@ import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { UseScriptOptions } from '@unhead/schema'
 import { hashCode } from '@unhead/shared'
 import { defu } from 'defu'
-import { useScript as _useScript, injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig } from '#imports'
+import { useScript as _useScript } from '@unhead/vue'
+import { injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig } from '#imports'
 import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 function useNuxtScriptRuntimeConfig() {
