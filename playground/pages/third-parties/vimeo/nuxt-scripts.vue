@@ -10,12 +10,10 @@ function changeVideo() {
 
 <template>
   <div>
-    <div>
-      <ScriptVimeoPlayer
-        :id="videoid"
-        above-the-fold
-      />
-    </div>
+    <ScriptVimeoPlayer
+      :id="videoid"
+      above-the-fold
+    />
     <UButton
       class="mt-5"
       @click="changeVideo"

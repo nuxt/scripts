@@ -7,6 +7,7 @@ import { useElementScriptTrigger, useHead, useScriptYouTubePlayer } from '#impor
 
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes
+  rootAttrs?: HTMLAttributes
   aboveTheFold?: boolean
   trigger?: ElementScriptTrigger
   videoId: string
@@ -88,7 +89,7 @@ defineExpose({
 })
 
 const rootAttrs = computed(() => {
-  return {
+  return defu(props.rootAttrs, {
     'aria-busy': $script.status.value === 'loading',
     'aria-label': $script.status.value === 'awaitingLoad'
       ? 'YouTube Player - Placeholder'
@@ -99,12 +100,14 @@ const rootAttrs = computed(() => {
     'role': 'application',
     'style': {
       cursor: 'pointer',
-      width: `${props.width}px`,
-      height: `${props.height}px`,
       position: 'relative',
       backgroundColor: 'black',
+      maxWidth: '100%',
+      width: `${props.width}px`,
+      height: `'auto'`,
+      aspectRatio: `${props.width}/${props.height}`,
     },
-  } satisfies HTMLAttributes
+  }) as HTMLAttributes
 })
 
 const placeholder = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
@@ -135,7 +138,6 @@ const placeholderAttrs = computed(() => {
     alt: '',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
-      cursor: 'pointer',
       width: '100%',
       objectFit: 'contain',
       height: '100%',

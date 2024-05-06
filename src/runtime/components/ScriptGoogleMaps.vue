@@ -77,6 +77,10 @@ const props = withDefaults(defineProps<{
    * Customize the placeholder image attributes.
    */
   placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>
+  /**
+   * Customize the root element attributes.
+   */
+  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
 }>(), {
   // @ts-expect-error untyped
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
@@ -214,7 +218,7 @@ const placeholderAttrs = computed(() => {
 })
 
 const rootAttrs = computed(() => {
-  return {
+  return defu(props.rootAttrs, {
     'aria-busy': $script.status.value === 'loading',
     'aria-label': $script.status.value === 'awaitingLoad'
       ? 'Google Maps Static Map'
@@ -224,11 +228,14 @@ const rootAttrs = computed(() => {
     'aria-live': 'polite',
     'role': 'application',
     'style': {
-      width: `${props.width}px`,
-      height: `${props.height}px`,
+      cursor: 'pointer',
       position: 'relative',
+      maxWidth: '100%',
+      width: `${props.width}px`,
+      height: `'auto'`,
+      aspectRatio: `${props.width}/${props.height}`,
     },
-  } satisfies HTMLAttributes
+  }) as HTMLAttributes
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')

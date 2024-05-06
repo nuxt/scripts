@@ -19,8 +19,8 @@ function changeVideo() {
         allowfullscreen
         referrerpolicy="no-referrer-when-downgrade"
         src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU
-    &q=Space+Needle,Seattle+WA">
-      </iframe>
+    &q=Space+Needle,Seattle+WA"
+      />
     </div>
     <UButton
       class="mt-5"

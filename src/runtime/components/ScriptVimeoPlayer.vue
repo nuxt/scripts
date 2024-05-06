@@ -10,6 +10,7 @@ const props = withDefaults(defineProps<{
   // custom
   trigger?: ElementScriptTrigger
   placeholderAttrs?: ImgHTMLAttributes
+  rootAttrs?: HTMLAttributes
   aboveTheFold?: boolean
   // copied from @types/vimeo__player
   id: string | number | undefined
@@ -184,7 +185,7 @@ onMounted(() => {
 })
 
 const rootAttrs = computed(() => {
-  return {
+  return defu(props.rootAttrs, {
     'aria-busy': $script.status.value === 'loading',
     'aria-label': $script.status.value === 'awaitingLoad'
       ? 'Vimeo Player - Placeholder'
@@ -194,12 +195,14 @@ const rootAttrs = computed(() => {
     'aria-live': 'polite',
     'role': 'application',
     'style': {
+      maxWidth: '100%',
       width: `${props.width}px`,
-      height: `${props.height}px`,
+      height: `'auto'`,
+      aspectRatio: `${props.width}/${props.height}`,
       position: 'relative',
       backgroundColor: 'black',
     },
-  } satisfies HTMLAttributes
+  }) as HTMLAttributes
 })
 
 const placeholderAttrs = computed(() => {
@@ -225,7 +228,7 @@ onBeforeUnmount(() => player?.unload())
   <div ref="rootEl" v-bind="rootAttrs">
     <div v-show="ready" ref="elVimeo" class="vimeo-player" style="width: 100%; height: 100%; max-width: 100%;" />
     <slot v-if="!ready" v-bind="payload" :placeholder="placeholder" name="placeholder">
-      <img v-bind="placeholderAttrs">
+      <img v-if="placeholder" v-bind="placeholderAttrs">
     </slot>
     <slot v-if="$script.status.value === 'loading'" name="loading">
       <ScriptLoadingIndicator color="white" />
