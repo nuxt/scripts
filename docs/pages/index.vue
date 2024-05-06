@@ -211,8 +211,8 @@ function timesFaster(nuxt: number, iframe: number) {
       </ul>
     </ULandingSection>
 
-    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12 mx-auto mb-12' }">
-      <div class="max-w-xl">
+    <div class="py-6 sm:py-12 gap-20 mb-12 flex flex-col xl:flex-row items-center max-w-5xl mx-auto">
+      <div class="max-w-lg">
         <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
           <UIcon name="i-ph-speedometer-duotone" class="h-12 w-12 shrink-0 text-primary" />
           <span>Master Your Web Vitals</span>
@@ -226,9 +226,7 @@ function timesFaster(nuxt: number, iframe: number) {
         <p class="text-gray-500 dark:text-gray-400">
           <span class="opacity-50">*Benchmarks below are from pagespeed.web.dev running Mobile with variability, they are not accurate.</span>
         </p>
-      </div>
-      <div>
-        <UButtonGroup class="mb-10 flex flex-col md:flex-row">
+        <UButtonGroup class="mt-10 flex flex-col md:flex-row">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
             First Contentful Paint
           </UButton>
@@ -239,7 +237,9 @@ function timesFaster(nuxt: number, iframe: number) {
             Speed Index
           </UButton>
         </UButtonGroup>
-        <div class="xl:grid flex flex-col grid-cols-2 gap-8">
+      </div>
+      <div class="w-full">
+        <div class="flex flex-col grid-cols-2 gap-8">
           <div v-for="(benchmark, key) in benchmarks" :key="key">
             <h3 class="md:text-xl font-bold flex items-center gap-2 mb-5">
               <div class="hidden md:block logo h-5 w-auto" v-html="benchmark.logo" />
@@ -272,7 +272,7 @@ function timesFaster(nuxt: number, iframe: number) {
           </div>
         </div>
       </div>
-    </ULandingSection>
+    </div>
   </div>
 </template>
 
