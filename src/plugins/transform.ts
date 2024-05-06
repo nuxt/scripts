@@ -127,10 +127,15 @@ export function NuxtScriptAssetBundlerTransformer(options: AssetBundlerTransform
                         return
                       }
                       // if bundle was the only argument then strip the argument
-                      if (scriptOptionsArg.properties.length === 1)
+                      if (scriptOptionsArg.properties.length === 1) {
                         s.remove(scriptOptionsArg.start, scriptOptionsArg.end)
-                      else
-                        s.remove(bundleProperty.start, bundleProperty.end)
+                      }
+                      else {
+                        const nextProperty = scriptOptionsArg.properties.find(
+                          (p: any) => p.start > bundleProperty.end && p.type === 'Property',
+                        ) as undefined | (Property & { start: number, end: number })
+                        s.remove(bundleProperty.start, nextProperty ? nextProperty.start : bundleProperty.end)
+                      }
                       canBundle = true
                     }
                   }
