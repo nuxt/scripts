@@ -70,7 +70,7 @@ const links = [
 
 const features = [
   {
-    name: 'Beat the benchmarks',
+    name: 'Better Web Vitals',
     description: 'Load scripts when they\'re needed with best practices non-blocking the rendering of your Nuxt app by default.',
     icon: 'i-ph-rocket-launch-duotone',
   },
@@ -90,6 +90,83 @@ const features = [
     icon: 'i-ph-lock-open-duotone',
   },
 ]
+
+const benchmarks = {
+  googleMaps: {
+    logo: registry.find(s => s.import.name === 'useScriptGoogleMaps').logo,
+    label: 'Google Maps',
+    nuxt: {
+      fcp: 1500,
+      tbt: 50,
+      lcp: 2700,
+      si: 2500,
+    },
+    iframe: {
+      fcp: 1600,
+      tbt: 830,
+      lcp: 1600,
+      si: 5600,
+    },
+  },
+  youtube: {
+    logo: registry.find(s => s.import.name === 'useScriptYouTubePlayer').logo,
+    label: 'YouTube',
+    nuxt: {
+      fcp: 1200,
+      tbt: 70,
+      lcp: 1200,
+      si: 1600,
+    },
+    iframe: {
+      fcp: 1600,
+      tbt: 3250,
+      lcp: 1600,
+      si: 8200,
+    },
+  },
+  vimeo: {
+    logo: registry.find(s => s.import.name === 'useScriptVimeoPlayer').logo,
+    label: 'Vimeo',
+    nuxt: {
+      fcp: 1500,
+      tbt: 70,
+      lcp: 2400,
+      si: 2100,
+    },
+    iframe: {
+      fcp: 2200,
+      tbt: 260,
+      lcp: 2200,
+      si: 3900,
+    },
+  },
+}
+
+const webVital = ref('tbt')
+
+function humanizeMs(ms: number) {
+  // if seconds, convert with 1 decimal place
+  if (ms > 1000) {
+    return `${(ms / 1000).toFixed(1)}s`
+  }
+  return `${ms}ms`
+}
+
+function timesFaster(nuxt: number, iframe: number) {
+  // should display as 2.5 for 2500%
+  return (iframe / nuxt).toFixed(1)
+}
+
+const webVitalLabel = computed(() => {
+  switch (webVital.value) {
+    case 'fcp':
+      return 'First Contentful Paint'
+    case 'tbt':
+      return 'Total Blocking Time'
+    case 'si':
+      return 'Speed Index'
+  }
+})
 </script>
 
 <template>
@@ -143,6 +220,61 @@ const features = [
           </div>
         </li>
       </ul>
+    </ULandingSection>
+
+    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12 mx-auto mb-12' }">
+      <div class="max-w-xl">
+        <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
+          <UIcon name="i-ph-speedometer-duotone" class="h-12 w-12 shrink-0 text-primary" />
+          <span>Master Your Web Vitals</span>
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 mb-1">
+          Nuxt Scripts comes with <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">Facade Components</NuxtLink> preconfigured for maximum performance
+          and developer experience.
+        </p>
+        <p class="text-gray-500 dark:text-gray-400">
+        <span class="opacity-50">*Benchmarks below are from pagespeed.web.dev running Mobile with variability, they are not accurate.</span>
+        </p>
+      </div>
+      <div>
+        <UButtonGroup class="mb-10 flex flex-col md:flex-row">
+          <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">First Contentful Paint</UButton>
+          <UButton :variant="webVital === 'tbt' ? 'solid' : 'soft'" :active="webVital === 'tbt'" @click="webVital = 'tbt'">Total Blocking Time</UButton>
+          <UButton :variant="webVital === 'si' ? 'solid' : 'soft'" :active="webVital === 'si'" @click="webVital = 'si'">Speed Index</UButton>
+        </UButtonGroup>
+        <div class="xl:grid flex flex-col grid-cols-2 gap-8">
+          <div v-for="(benchmark, key) in benchmarks" :key="key">
+            <h3 class="md:text-xl font-bold flex items-center gap-2 mb-5">
+              <div class="hidden md:block logo h-5 w-auto" v-html="benchmark.logo" />
+              {{ benchmark.label }} <UBadge variant="soft" color="blue">
+              {{ timesFaster(benchmark.nuxt[webVital], benchmark.iframe[webVital]) }}x Faster
+            </UBadge>
+            </h3>
+            <div class="mb-3">
+              <div class="text-sm font-semibold">
+                Nuxt Scripts
+              </div>
+              <div class="flex items-center gap-3 max-w-full">
+                <UProgress :value="benchmark.nuxt[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="flex flex-grow" />
+                <div class="w-14 flex-grow">
+                  {{ humanizeMs(benchmark.nuxt[webVital]) }}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="text-sm font-semibold">
+                Iframe
+              </div>
+              <div class="flex items-center gap-3">
+                <UProgress :value="benchmark.iframe[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="" />
+                <div class="w-14 flex-grow">
+                  {{ humanizeMs(benchmark.iframe[webVital]) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </ULandingSection>
   </div>
 </template>
