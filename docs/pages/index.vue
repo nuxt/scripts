@@ -156,17 +156,6 @@ function timesFaster(nuxt: number, iframe: number) {
   // should display as 2.5 for 2500%
   return (iframe / nuxt).toFixed(1)
 }
-
-const webVitalLabel = computed(() => {
-  switch (webVital.value) {
-    case 'fcp':
-      return 'First Contentful Paint'
-    case 'tbt':
-      return 'Total Blocking Time'
-    case 'si':
-      return 'Speed Index'
-  }
-})
 </script>
 
 <template>
