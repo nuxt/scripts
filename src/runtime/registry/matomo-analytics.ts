@@ -24,6 +24,8 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
   return useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
     scriptInput: {
       src: withBase(`/matomo.js`, withHttps(options?.matomoUrl)),
+      // @ts-expect-error untyped TODO fix upstream
+      crossorigin: false,
     },
     schema: import.meta.dev ? MatomoAnalyticsOptions : undefined,
     scriptOptions: {
