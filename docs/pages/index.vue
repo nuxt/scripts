@@ -146,9 +146,9 @@ const webVital = ref('tbt')
 
 function humanizeMs(ms: number) {
   // if seconds, convert with 1 decimal place
-  if (ms > 1000) {
+  if (ms > 1000)
     return `${(ms / 1000).toFixed(1)}s`
-  }
+
   return `${ms}ms`
 }
 
@@ -229,26 +229,34 @@ const webVitalLabel = computed(() => {
           <span>Master Your Web Vitals</span>
         </h2>
         <p class="text-gray-500 dark:text-gray-400 mb-1">
-          Nuxt Scripts comes with <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">Facade Components</NuxtLink> preconfigured for maximum performance
+          Nuxt Scripts comes with <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
+            Facade Components
+          </NuxtLink> preconfigured for maximum performance
           and developer experience.
         </p>
         <p class="text-gray-500 dark:text-gray-400">
-        <span class="opacity-50">*Benchmarks below are from pagespeed.web.dev running Mobile with variability, they are not accurate.</span>
+          <span class="opacity-50">*Benchmarks below are from pagespeed.web.dev running Mobile with variability, they are not accurate.</span>
         </p>
       </div>
       <div>
         <UButtonGroup class="mb-10 flex flex-col md:flex-row">
-          <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">First Contentful Paint</UButton>
-          <UButton :variant="webVital === 'tbt' ? 'solid' : 'soft'" :active="webVital === 'tbt'" @click="webVital = 'tbt'">Total Blocking Time</UButton>
-          <UButton :variant="webVital === 'si' ? 'solid' : 'soft'" :active="webVital === 'si'" @click="webVital = 'si'">Speed Index</UButton>
+          <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
+            First Contentful Paint
+          </UButton>
+          <UButton :variant="webVital === 'tbt' ? 'solid' : 'soft'" :active="webVital === 'tbt'" @click="webVital = 'tbt'">
+            Total Blocking Time
+          </UButton>
+          <UButton :variant="webVital === 'si' ? 'solid' : 'soft'" :active="webVital === 'si'" @click="webVital = 'si'">
+            Speed Index
+          </UButton>
         </UButtonGroup>
         <div class="xl:grid flex flex-col grid-cols-2 gap-8">
           <div v-for="(benchmark, key) in benchmarks" :key="key">
             <h3 class="md:text-xl font-bold flex items-center gap-2 mb-5">
               <div class="hidden md:block logo h-5 w-auto" v-html="benchmark.logo" />
               {{ benchmark.label }} <UBadge variant="soft" color="blue">
-              {{ timesFaster(benchmark.nuxt[webVital], benchmark.iframe[webVital]) }}x Faster
-            </UBadge>
+                {{ timesFaster(benchmark.nuxt[webVital], benchmark.iframe[webVital]) }}x Faster
+              </UBadge>
             </h3>
             <div class="mb-3">
               <div class="text-sm font-semibold">
