@@ -1,4 +1,3 @@
-import { defu } from 'defu'
 import { useRegistryScript } from '../utils'
 import { boolean, minLength, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'

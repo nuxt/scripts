@@ -15,5 +15,5 @@ useHead({
 </script>
 
 <template>
-<div>useHead</div>
+  <div>useHead</div>
 </template>
