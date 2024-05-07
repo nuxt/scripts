@@ -42,7 +42,7 @@ export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalytics
   return useRegistryScript<T, typeof CloudflareWebAnalyticsOptions>('cloudflareWebAnalytics', options => ({
     scriptInput: {
       'src': 'https://static.cloudflareinsights.com/beacon.min.js',
-      'data-cf-beacon': JSON.stringify(defu(options, { spa: true })),
+      'data-cf-beacon': JSON.stringify({ token: options.token, spa: options.spa || true }),
       // @ts-expect-error untyped TODO fix upstream
       'crossorigin': false,
     },
