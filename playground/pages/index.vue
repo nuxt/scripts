@@ -8,7 +8,7 @@ useHead({
 const thirdParties = [
   {
     name: 'Cloudflare Web Analytics',
-    path: '/third-parties/cloudflare-web-analytics',
+    path: '/third-parties/cloudflare-web-analytics/nuxt-scripts',
   },
   {
     name: 'Google Analytics',
@@ -102,6 +102,10 @@ const benchmark = [
   {
     name: 'YouTube',
     path: '/third-parties/youtube/default',
+  },
+  {
+    name: 'Cloudflare Web Analytics',
+    path: '/third-parties/cloudflare-web-analytics/default',
   },
 ]
 </script>
