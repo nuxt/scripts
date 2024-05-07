@@ -42,14 +42,14 @@ npx nuxi@latest module add @nuxt/scripts
 
 That's it! The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
 
-## Next Steps
+## ⛰️ Next Steps
 
 Need some inspiration to start using Nuxt Scripts? Try out the following:
 
 1. 🎉 Make it rain emojis with the [Confetti Tutorial](https://scripts.nuxt.com/docs/getting-started/confetti-tutorial).
 2. 📚 Learn about how the [Script Loading](https://scripts.nuxt.com/docs/guides/script-loading) works.
 3. 🔍 Explore the [Script Registry](https://scripts.nuxt.com/scripts) for popular pre-configured third-party scripts.
-3. 🚀 Load other scripts with [useScript](https://unhead.unjs.io/usage/composables/use-script) or [Global Scripts](https://scripts.nuxt.com/docs/guides/globals).
+3. 🚀 Load other scripts with [useScript](https://scripts.nuxt.com/docs/api/use-script) or [Global Scripts](https://scripts.nuxt.com/docs/guides/global).
 4. 🔨 Fine-tune your performance and privacy with [Bundling](https://scripts.nuxt.com/docs/guides/bundling) and [Consent Management](https://scripts.nuxt.com/docs/guides/consent).
 
 ## ⚖️ License
