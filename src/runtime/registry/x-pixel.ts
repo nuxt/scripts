@@ -1,3 +1,4 @@
+import type { UseScriptInput } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -48,11 +49,11 @@ export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
   return useRegistryScript<T, typeof XPixelOptions>('xPixel', (options) => {
     return ({
+      // @ts-expect-error TODO fix upstream
       scriptInput: {
         src: 'https://static.ads-twitter.com/uwt.js',
-        // @ts-expect-error TODO fix upstream
         crossorigin: false,
-      },
+      } as UseScriptInput,
       clientInit: import.meta.server
         ? undefined
         : () => {

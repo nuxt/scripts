@@ -45,8 +45,8 @@
     "release": "pnpm build && bumpp && pnpm publish --no-git-checks",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "true",
-    "test:types": "true"
+    "test": "vitest",
+    "test:types": "tsc --noEmit"
   },
   "build": {
     "externals": [
