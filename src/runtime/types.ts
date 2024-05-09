@@ -115,7 +115,7 @@ export type RegistryScriptInput<T extends ObjectSchema<any> = EmptyOptionsSchema
   scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'bundle' | 'use'>
 }
 
-export type RegistryScript = {
+export interface RegistryScript {
   import: Import
   scriptBundling?: false | ((options?: any) => string)
   label?: string
