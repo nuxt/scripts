@@ -23,7 +23,7 @@ import type {
   NuxtUseScriptInput,
   NuxtUseScriptOptions,
   RegistryScripts,
-} from '#nuxt-scripts'
+} from './runtime/types'
 
 export interface ModuleOptions {
   /**

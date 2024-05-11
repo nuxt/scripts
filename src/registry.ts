@@ -5,7 +5,7 @@ import type { SegmentInput } from './runtime/registry/segment'
 import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
 import type { GoogleAnalyticsInput } from './runtime/registry/google-analytics'
-import type { RegistryScripts } from '#nuxt-scripts'
+import type { RegistryScripts } from './runtime/types'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
