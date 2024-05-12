@@ -50,7 +50,7 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             w.dataLayer.push(arguments)
           }
           gtag('js', new Date())
-          gtag('config', 'G-TR58L0EF8P')
+          gtag('config', options?.id)
           w.gtag = gtag
         },
   }), _options)
