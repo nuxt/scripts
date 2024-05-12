@@ -26,6 +26,14 @@
     "./registry": {
       "types": "./dist/registry.d.ts",
       "import": "./dist/registry.mjs"
+    },
+    "./runtime/composables/useScript": {
+      "types": "./dist/runtime/composables/useScript.d.ts",
+      "import": "./dist/runtime/composables/useScript.mjs"
+    },
+    "./runtime/composables/composables/useElementScriptTrigger": {
+      "types": "./dist/runtime/composables/useElementScriptTrigger.d.ts",
+      "import": "./dist/runtime/composables/useElementScriptTrigger.mjs"
     }
   },
   "main": "./dist/module.cjs",
