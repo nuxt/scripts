@@ -8,7 +8,6 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 declare namespace google {
   // eslint-disable-next-line ts/no-namespace
   export namespace maps {
-
     /**
      * @internal
      */
