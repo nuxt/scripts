@@ -4,6 +4,18 @@ import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
+// eslint-disable-next-line ts/no-namespace
+declare namespace google {
+  // eslint-disable-next-line ts/no-namespace
+  export namespace maps {
+
+    /**
+     * @internal
+     */
+    export function __ib__(): void
+  }
+}
+
 export const GoogleMapsOptions = object({
   apiKey: string(),
   libraries: optional(array(string())),
@@ -12,13 +24,6 @@ export const GoogleMapsOptions = object({
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
-// eslint-disable-next-line ts/no-namespace
-declare namespace google.maps {
-  /**
-   * @internal
-   */
-  export function __ib__(): void
-}
 export interface GoogleMapsApi {
   maps: typeof google.maps
 }
