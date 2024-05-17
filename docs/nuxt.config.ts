@@ -12,6 +12,9 @@ export default defineNuxtConfig({
     '@nuxtjs/seo',
     '@nuxt/image',
   ],
+  future: {
+    compatibilityVersion: 4,
+  },
   hooks: {
     // Define `@nuxt/ui` components as global to use them in `.md` (feel free to add those you need)
     'components:extend': (components) => {

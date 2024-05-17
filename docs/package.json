@@ -17,11 +17,11 @@
     "@nuxt/image": "^1.7.0",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/ui-pro": "^1.2.0",
-    "@nuxthq/studio": "^1.0.15",
+    "@nuxthq/studio": "^1.1.0",
     "@nuxtjs/seo": "^2.0.0-rc.10",
     "@vueuse/core": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
-    "nuxt": "^3.11.2",
+    "nuxt": "npm:nuxt-nightly@latest",
     "nuxt-scripts-devtools": "workspace:*",
     "vue": "^3.4.27",
     "vue-router": "^4.3.2"
