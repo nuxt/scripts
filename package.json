@@ -46,7 +46,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest",
-    "test:types": "tsc --noEmit"
+    "test:types": "npx nuxi typecheck"
   },
   "build": {
     "externals": [
