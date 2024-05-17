@@ -5,7 +5,7 @@ import { useHead } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export interface YouTubePlayerApi {
-  YT: typeof YT
+  YT: typeof YT & { ready: (fn: () => void) => void }
 }
 
 declare global {
