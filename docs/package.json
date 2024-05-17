@@ -1,6 +1,7 @@
 {
   "name": "nuxt-scripts-docs",
   "type": "module",
+  "packageManager": "pnpm@9.1.1",
   "private": true,
   "scripts": {
     "dev": "nuxi dev",
