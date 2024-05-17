@@ -13,7 +13,7 @@ import {
 } from 'vue'
 import { type QueryObject, withQuery } from 'ufo'
 import { defu } from 'defu'
-import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
 import { resolveComponent, useElementScriptTrigger, useHead, useScriptGoogleMaps } from '#imports'
 

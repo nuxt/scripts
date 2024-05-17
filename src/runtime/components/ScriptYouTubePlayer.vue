@@ -2,7 +2,7 @@
 /// <reference types="youtube" />
 import { type HTMLAttributes, type ImgHTMLAttributes, type Ref, computed, onMounted, ref, watch } from 'vue'
 import { defu } from 'defu'
-import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import type { ElementScriptTrigger } from '../types'
 import { useElementScriptTrigger, useHead, useScriptYouTubePlayer } from '#imports'
 
 const props = withDefaults(defineProps<{
