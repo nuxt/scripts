@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   },
   site: {
     name: 'Nuxt Scripts',
-    url: 'nuxt.scripts.com',
+    url: 'scripts.nuxt.com',
   },
   sitemap: {
     strictNuxtContentPaths: true,
