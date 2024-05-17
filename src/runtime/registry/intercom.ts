@@ -44,7 +44,7 @@ export interface IntercomApi {
 
 declare global {
   interface Window extends IntercomApi {
-    intercomSettings?: IntercomInput
+    intercomSettings?: any
   }
 }
 

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { type ElementScriptTrigger, onMounted, ref, useElementScriptTrigger, useScriptLemonSqueezy } from '#imports'
+import type { ElementScriptTrigger } from '../types'
+import { onMounted, ref, useElementScriptTrigger, useScriptLemonSqueezy } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger

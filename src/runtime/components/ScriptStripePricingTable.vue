@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import type { ElementScriptTrigger } from '../types'
 import { onBeforeUnmount, useElementScriptTrigger, useScript } from '#imports'
 
 const props = withDefaults(defineProps<{

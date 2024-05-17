@@ -7,8 +7,7 @@ import {
   useEventListener,
   useIntersectionObserver,
 } from '@vueuse/core'
-
-export type ElementScriptTrigger = 'immediate' | 'visible' | keyof GlobalEventHandlersEventMap | (keyof GlobalEventHandlersEventMap)[] | false
+import type { ElementScriptTrigger } from '../types'
 
 export interface ElementScriptTriggerOptions {
   /**
