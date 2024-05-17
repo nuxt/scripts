@@ -1,4 +1,4 @@
-import type ScriptVimeoPlayer from 'vimeo__player'
+/// <reference types="vimeo__player" />
 import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
@@ -6,7 +6,7 @@ import { useHead } from '#imports'
 
 export interface VimeoPlayerApi {
   Vimeo: {
-    Player: ScriptVimeoPlayer
+    Player: VimeoPlayerApi
   }
 }
 

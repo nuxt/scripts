@@ -1,7 +1,6 @@
 <script setup lang="ts">
+/// <reference types="vimeo__player" />
 import { type HTMLAttributes, type ImgHTMLAttributes, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type Player from 'vimeo__player'
-import type { EventMap, VimeoVideoQuality } from 'vimeo__player'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useAsyncData, useElementScriptTrigger, useHead, useScriptVimeoPlayer } from '#imports'
