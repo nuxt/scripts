@@ -4,9 +4,11 @@ import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
 
+type Constructor<T extends new (...args: any) => any> = T extends new (...args: infer A) => infer R ? new (...args: A) => R : never
+
 export interface VimeoPlayerApi {
   Vimeo: {
-    Player: VimeoPlayerApi
+    Player: Constructor<typeof window.Vimeo>
   }
 }
 
