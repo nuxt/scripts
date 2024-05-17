@@ -52,7 +52,8 @@
     "externals": [
       "@unhead/vue",
       "@unhead/schema",
-      "#nuxt-scripts"
+      "#nuxt-scripts",
+      "#nuxt-scripts-validator"
     ]
   },
   "dependencies": {
