@@ -1,8 +1,8 @@
 {
   "name": "nuxt-scripts-docs",
   "type": "module",
-  "packageManager": "pnpm@9.1.1",
   "private": true,
+  "packageManager": "pnpm@9.1.1",
   "scripts": {
     "dev": "nuxi dev",
     "generate": "nuxi generate",
