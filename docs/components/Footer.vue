@@ -1,14 +1,6 @@
-<script setup lang="ts">
-const { footer } = useAppConfig()
-
-const links = [
-]
-</script>
-
 <template>
   <UFooter :links="links">
     <template #left>
-      <span class="inline">Made by <a href="https://github.com/harlan-zw" target="_blank" class="text-gray-900 dark:text-gray-50 hover:underline underline-offset-2 font-medium">Harlan Wilton</a>.</span>
     </template>
 
     <template #right>
