@@ -1,7 +1,7 @@
 {
   "name": "@nuxt/scripts",
   "type": "module",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "packageManager": "pnpm@9.1.1",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
