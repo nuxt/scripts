@@ -1,7 +1,6 @@
 <template>
   <UFooter :links="links">
-    <template #left>
-    </template>
+    <template #left />
 
     <template #right>
       <UColorModeButton v-if="footer?.colorMode" />
