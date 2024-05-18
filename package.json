@@ -95,6 +95,7 @@
     "@unhead/schema": "^1.9.10",
     "acorn-loose": "^8.4.0",
     "bumpp": "^9.4.1",
+    "changelogen": "^0.5.5",
     "eslint": "9.2.0",
     "nuxt": "^3.11.2",
     "playwright-core": "^1.44.0",
