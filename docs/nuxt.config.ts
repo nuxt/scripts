@@ -25,8 +25,8 @@ export default defineNuxtConfig({
   $production: {
     scripts: {
       registry: {
-        fathomAnalytics: {
-          site: 'PKLQEZGU',
+        plausibleAnalytics: {
+          domain: 'scripts.nuxt.com',
         },
       },
     },
