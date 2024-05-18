@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes
   aboveTheFold?: boolean
   // copied from @types/vimeo__player
-  id: string | number | undefined
+  id: number | undefined
   url?: string | undefined
   autopause?: boolean | undefined
   autoplay?: boolean | undefined
@@ -34,7 +34,7 @@ const props = withDefaults(defineProps<{
   portrait?: boolean | undefined
   responsive?: boolean | undefined
   speed?: boolean | undefined
-  quality?: VimeoVideoQuality | undefined
+  quality?: Vimeo.VimeoVideoQuality | undefined
   texttrack?: string | undefined
   title?: boolean | undefined
   transparent?: boolean | undefined
@@ -47,35 +47,40 @@ const props = withDefaults(defineProps<{
   controls: true,
 })
 
-const emits = defineEmits<{
-  play: [e: EventMap['play'], player: Player]
-  playing: [e: EventMap['playing'], player: Player]
-  pause: [e: EventMap['pause'], player: Player]
-  ended: [e: EventMap['ended'], player: Player]
-  timeupdate: [e: EventMap['timeupdate'], player: Player]
-  progress: [e: EventMap['progress'], player: Player]
-  seeking: [e: EventMap['seeking'], player: Player]
-  seeked: [e: EventMap['seeked'], player: Player]
-  texttrackchange: [e: EventMap['texttrackchange'], player: Player]
-  chapterchange: [e: EventMap['chapterchange'], player: Player]
-  cuechange: [e: EventMap['cuechange'], player: Player]
-  cuepoint: [e: EventMap['cuepoint'], player: Player]
-  volumechange: [e: EventMap['volumechange'], player: Player]
-  playbackratechange: [e: EventMap['playbackratechange'], player: Player]
-  bufferstart: [e: EventMap['bufferstart'], player: Player]
-  bufferend: [e: EventMap['bufferend'], player: Player]
-  error: [e: EventMap['error'], player: Player]
-  loaded: [e: EventMap['loaded'], player: Player]
-  durationchange: [e: EventMap['durationchange'], player: Player]
-  fullscreenchange: [e: EventMap['fullscreenchange'], player: Player]
-  qualitychange: [e: EventMap['qualitychange'], player: Player]
-  camerachange: [e: EventMap['camerachange'], player: Player]
-  resize: [e: EventMap['resize'], player: Player]
-  enterpictureinpicture: [e: EventMap['enterpictureinpicture'], player: Player]
-  leavepictureinpicture: [e: EventMap['leavepictureinpicture'], player: Player]
-}>()
+const emits = defineEmits<TEmits>()
 
-const events = [
+type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
+
+// eslint-disable-next-line ts/consistent-type-definitions
+type TEmits = {
+  play: EventMap<'play'>
+  playing: EventMap<'playing'>
+  pause: EventMap<'pause'>
+  ended: EventMap<'ended'>
+  timeupdate: EventMap<'timeupdate'>
+  progress: EventMap<'progress'>
+  seeking: EventMap<'seeking'>
+  seeked: EventMap<'seeked'>
+  texttrackchange: EventMap<'texttrackchange'>
+  chapterchange: EventMap<'chapterchange'>
+  cuechange: EventMap<'cuechange'>
+  cuepoint: EventMap<'cuepoint'>
+  volumechange: EventMap<'volumechange'>
+  playbackratechange: EventMap<'playbackratechange'>
+  bufferstart: EventMap<'bufferstart'>
+  bufferend: EventMap<'bufferend'>
+  error: EventMap<'error'>
+  loaded: EventMap<'loaded'>
+  durationchange: EventMap<'durationchange'>
+  fullscreenchange: EventMap<'fullscreenchange'>
+  qualitychange: EventMap<'qualitychange'>
+  camerachange: EventMap<'camerachange'>
+  resize: EventMap<'resize'>
+  enterpictureinpicture: EventMap<'enterpictureinpicture'>
+  leavepictureinpicture: EventMap<'leavepictureinpicture'>
+}
+
+const events: (keyof TEmits)[] = [
   'play',
   'playing',
   'pause',
@@ -99,6 +104,8 @@ const events = [
   'qualitychange',
   'camerachange',
   'resize',
+  'enterpictureinpicture',
+  'leavepictureinpicture',
 ]
 
 const elVimeo = ref()
@@ -133,7 +140,7 @@ if (import.meta.server) {
 const { data: payload } = useAsyncData(
   `vimeo-embed:${props.id}`,
   // TODO ideally we cache this
-  () => $fetch(`https://vimeo.com/api/v2/video/${props.id}.json`).then(res => res[0]),
+  () => $fetch(`https://vimeo.com/api/v2/video/${props.id}.json`).then(res => (res as any)[0]),
   {
     watch: [() => props.id],
   },
@@ -141,7 +148,7 @@ const { data: payload } = useAsyncData(
 
 const placeholder = computed(() => payload.value?.thumbnail_large)
 
-let player: Player | undefined
+let player: Vimeo | undefined
 // we can't directly expose the player as vue will break the proxy
 defineExpose({
   play: () => player?.play(),
@@ -158,6 +165,7 @@ defineExpose({
   getPlaybackRate: () => player?.getPlaybackRate(),
   setPlaybackRate: (rate: number) => player?.setPlaybackRate(rate),
 })
+
 onMounted(() => {
   $script.then(async ({ Vimeo }) => {
     // filter props for false values
@@ -170,7 +178,8 @@ onMounted(() => {
       clickTriggered = false
     }
     for (const event of events) {
-      player!.on(event, (e) => {
+      player!.on(event, (e: EventMap<typeof event>) => {
+        // @ts-expect-error ts isn't able to infer the correct event type
         emits(event, e, player)
         if (event === 'loaded')
           ready.value = true
