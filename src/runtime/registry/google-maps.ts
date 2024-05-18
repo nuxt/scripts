@@ -24,7 +24,7 @@ export const GoogleMapsOptions = object({
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
 export interface GoogleMapsApi {
-  maps: typeof google.maps
+  maps: typeof window.google.maps
 }
 
 declare global {
