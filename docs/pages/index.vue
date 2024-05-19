@@ -211,7 +211,7 @@ function timesFaster(nuxt: number, iframe: number) {
       </ul>
     </ULandingSection>
 
-    <div class="py-6 sm:py-20 gap-20 mb-12 flex flex-col xl:flex-row items-center max-w-7xl mx-auto">
+    <div class="py-6 sm:py-20 gap-20 mb-12 flex flex-col xl:flex-row items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-lg">
         <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
           <UIcon name="i-ph-speedometer-duotone" class="h-12 w-12 shrink-0 text-primary" />
@@ -226,7 +226,7 @@ function timesFaster(nuxt: number, iframe: number) {
         <p class="text-gray-500 dark:text-gray-400">
           <span class="opacity-50 text-sm">*Benchmarks are from pagespeed.web.dev Mobile report running with variability, they are not accurate.</span>
         </p>
-        <UButtonGroup class="mt-10 flex flex-col md:flex-row">
+        <UButtonGroup class="mt-10 flex flex-col sm:flex-row">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
             First Contentful Paint
           </UButton>
