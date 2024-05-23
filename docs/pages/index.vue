@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useScriptsRegistry } from '~/composables/useScriptsRegistry'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { useScriptsRegistry } from '~/composables/useScriptsRegistry'
 
 const registry = useScriptsRegistry()
 const breakpoints = useBreakpoints(breakpointsTailwind)
