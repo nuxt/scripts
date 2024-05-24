@@ -1,5 +1,6 @@
 /// <reference types="vimeo__player" />
 import { watch } from 'vue'
+import type { VueScriptInstance } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
@@ -18,7 +19,9 @@ declare global {
   interface Window extends VimeoPlayerApi {}
 }
 
-export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
+export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput): T & {
+  $script: Promise<T> & VueScriptInstance<T>
+} {
   const instance = useRegistryScript<T>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
