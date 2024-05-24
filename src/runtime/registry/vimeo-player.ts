@@ -19,9 +19,7 @@ declare global {
   interface Window extends VimeoPlayerApi {}
 }
 
-export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput): T & {
-  $script: Promise<T> & VueScriptInstance<T>
-} {
+export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
   const instance = useRegistryScript<T>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
