@@ -1,6 +1,6 @@
 import { defu } from 'defu'
 import type { BaseSchema, Input, ObjectSchema, ValiError } from 'valibot'
-import type { UseScriptInput } from '@unhead/vue'
+import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig, useScript } from '#imports'
 import type {
@@ -34,7 +34,9 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
-export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
+export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): T & {
+  $script: Promise<T> & VueScriptInstance<T>
+} {
   const scriptConfig = scriptRuntimeConfig(key as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions)
