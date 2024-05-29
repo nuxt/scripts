@@ -43,6 +43,11 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * loading the actual script and not getting warnings.
    */
   skipValidation?: boolean
+  /**
+   * Called when the script is registered for the first time. Is called before clientInit and is intended to be used
+   * for logic that needs to run immediately with the script invocation.
+   */
+  onRegister?: () => void
 }
 
 export type NuxtUseScriptIntegrationOptions = Omit<NuxtUseScriptOptions, 'use'>
