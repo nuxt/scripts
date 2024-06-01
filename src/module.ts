@@ -26,6 +26,7 @@ import type {
 } from './runtime/types'
 import { GoogleTagManager } from 'third-party-capital'
 import { getTpcScriptContent } from './tpc/utils'
+import addGoogleTagManager from './tpc/google-tag-manager'
 
 export interface ModuleOptions {
   /**
@@ -124,25 +125,13 @@ export default defineNuxtModule<ModuleOptions>({
     addComponentsDir({
       path: resolve('./runtime/components'),
     })
-console.log(GoogleTagManager({}))
-    console.log(getTpcScriptContent({
-      data: GoogleTagManager({}),
-      scriptFunctionName: 'useScriptGoogleTagManager',
-      use: () => {
-        return { dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }
-      },
-      stub: ({ fn }) => {
-        return fn === 'dataLayer' ? [] : undefined
-      },
-      'TpcKey': 'gtm',
-      apiTypeImport: 'GoogleTagManagerApi',
-      augmentWindowTypes: true
-    }))
 
-    const scripts = registry(resolve)
+    const scripts =   registry(resolve)
+    scripts.push({
+      ...(await addGoogleTagManager()).registry,
+    })
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
-      // @ts-expect-error runtime
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       addImports(registryScripts.map((i) => {
         return {

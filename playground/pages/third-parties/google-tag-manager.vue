@@ -9,12 +9,16 @@ useHead({
 const { dataLayer, $script } = useScriptGoogleTagManager({
   id: 'GTM-MNJD4B',
 }) // id is set via runtime config
-dataLayer.push({
-  event: 'page_view',
-  page_title: 'Google Analytics',
-  page_location: 'https://harlanzw.com/third-parties/google-analytics',
-  page_path: '/third-parties/google-analytics',
-})
+console.log($script.status, dataLayer, typeof dataLayer)
+console.log(dataLayer)
+// disabled for test purposes, also because there's an issue https://github.com/nuxt/scripts/issues/77
+
+// dataLayer.push({
+//   event: 'page_view',
+//   page_title: 'Google Analytics',
+//   page_location: 'https://harlanzw.com/third-parties/google-analytics',
+//   page_path: '/third-parties/google-analytics',
+// })
 $script.then(({ google_tag_manager, dataLayer }) => {
   // eslint-disable-next-line no-console
   console.log('google_tag_manager is ready', google_tag_manager)
@@ -39,7 +43,7 @@ $script.then(({ google_tag_manager, dataLayer }) => {
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ $script.status }}
       </div>
     </ClientOnly>
   </div>
