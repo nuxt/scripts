@@ -98,6 +98,7 @@
     "bumpp": "^9.4.1",
     "changelogen": "^0.5.5",
     "eslint": "9.3.0",
+    "knitwork": "^1.1.0",
     "nuxt": "^3.11.2",
     "playwright-core": "^1.44.1",
     "typescript": "^5.4.5",
