@@ -36,20 +36,18 @@ export function MetaPixelScriptResolver() {
 export const registry: (resolve?: (s: string) => string) => RegistryScripts = (resolve?: (s: string) => string) => {
   resolve = resolve || ((s: string) => s)
 
-
-
-  return [ 
+  return [
     // analytics
-    {
-      label: 'Google Analytics',
-      category: 'analytics',
-      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="28.85" height="32" viewBox="0 0 256 284"><path fill="#F9AB00" d="M256.003 247.933a35.224 35.224 0 0 1-39.376 35.161c-18.044-2.67-31.266-18.371-30.826-36.606V36.845C185.365 18.591 198.62 2.881 216.687.24a35.221 35.221 0 0 1 39.316 35.16z"/><path fill="#E37400" d="M35.101 213.193c19.386 0 35.101 15.716 35.101 35.101c0 19.386-15.715 35.101-35.101 35.101S0 267.68 0 248.295c0-19.386 15.715-35.102 35.101-35.102m92.358-106.387c-19.477 1.068-34.59 17.406-34.137 36.908v94.285c0 25.588 11.259 41.122 27.755 44.433a35.161 35.161 0 0 0 42.146-34.56V142.089a35.222 35.222 0 0 0-35.764-35.282"/></svg>`,
-      scriptBundling: GoogleAnalyticsScriptResolver,
-      import: {
-        name: 'useScriptGoogleAnalytics',
-        from: resolve('./runtime/registry/google-analytics'),
-      },
-    },
+    // {
+    //   label: 'Google Analytics',
+    //   category: 'analytics',
+    //   logo: `<svg xmlns="http://www.w3.org/2000/svg" width="28.85" height="32" viewBox="0 0 256 284"><path fill="#F9AB00" d="M256.003 247.933a35.224 35.224 0 0 1-39.376 35.161c-18.044-2.67-31.266-18.371-30.826-36.606V36.845C185.365 18.591 198.62 2.881 216.687.24a35.221 35.221 0 0 1 39.316 35.16z"/><path fill="#E37400" d="M35.101 213.193c19.386 0 35.101 15.716 35.101 35.101c0 19.386-15.715 35.101-35.101 35.101S0 267.68 0 248.295c0-19.386 15.715-35.102 35.101-35.102m92.358-106.387c-19.477 1.068-34.59 17.406-34.137 36.908v94.285c0 25.588 11.259 41.122 27.755 44.433a35.161 35.161 0 0 0 42.146-34.56V142.089a35.222 35.222 0 0 0-35.764-35.282"/></svg>`,
+    //   scriptBundling: GoogleAnalyticsScriptResolver,
+    //   import: {
+    //     name: 'useScriptGoogleAnalytics',
+    //     from: resolve('./runtime/registry/google-analytics'),
+    //   },
+    // },
     {
       label: 'Plausible Analytics',
       category: 'analytics',
@@ -90,6 +88,16 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
         from: resolve('./runtime/registry/matomo-analytics'),
       },
     },
+    // tracking
+    // {
+    //   label: 'Google Tag Manager',
+    //   category: 'tracking',
+    //   logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#8AB4F8" d="m150.262 245.516l-44.437-43.331l95.433-97.454l46.007 45.091z"/><path fill="#4285F4" d="M150.45 53.938L106.176 8.731L9.36 104.629c-12.48 12.48-12.48 32.713 0 45.207l95.36 95.986l45.09-42.182l-72.654-76.407z"/><path fill="#8AB4F8" d="m246.625 105.37l-96-96c-12.494-12.494-32.756-12.494-45.25 0c-12.495 12.495-12.495 32.757 0 45.252l96 96c12.494 12.494 32.756 12.494 45.25 0c12.495-12.495 12.495-32.757 0-45.251"/><circle cx="127.265" cy="224.731" r="31.273" fill="#246FDB"/></svg>`,
+    //   import: {
+    //     name: 'useScriptGoogleTagManager',
+    //     from: resolve('./runtime/registry/google-tag-manager'),
+    //   },
+    // },
     {
       label: 'Segment',
       scriptBundling: SegmentScriptResolver,

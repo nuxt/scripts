@@ -12,6 +12,7 @@ import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
 import { resolvePath } from 'mlly'
 import { join } from 'pathe'
+import { GoogleTagManager } from 'third-party-capital'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -24,9 +25,9 @@ import type {
   NuxtUseScriptOptions,
   RegistryScripts,
 } from './runtime/types'
-import { GoogleTagManager } from 'third-party-capital'
 import { getTpcScriptContent } from './tpc/utils'
 import addGoogleTagManager from './tpc/google-tag-manager'
+import addGoogleAnalytics from './tpc/google-analytics'
 
 export interface ModuleOptions {
   /**
@@ -122,16 +123,23 @@ export default defineNuxtModule<ModuleOptions>({
       resolve('./runtime/registry'),
     ])
 
+    addImports({
+      from: resolve('./runtime/utils'),
+      name: 'useRegistryScript',
+    })
+
     addComponentsDir({
       path: resolve('./runtime/components'),
     })
 
-    const scripts =   registry(resolve)
+    const scripts = registry(resolve)
     scripts.push({
       ...(await addGoogleTagManager()).registry,
+      ...(await addGoogleAnalytics()).registry,
     })
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
+      // @ts-expect-error - untyped
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       addImports(registryScripts.map((i) => {
         return {

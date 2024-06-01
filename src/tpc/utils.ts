@@ -4,7 +4,7 @@ import { useNuxt } from '@nuxt/kit'
 
 interface Input {
   data: Output
-  apiTypeImport: string
+  TpcTypeImport: string
   augmentWindowTypes: boolean
   TpcKey: string
   scriptFunctionName: string
@@ -26,7 +26,7 @@ export function getTpcScriptContent(input: Input) {
 
   const imports = new Set<string>([
     'import { withQuery } from \'ufo\'',
-    'import { useRegistryScript } from \'#nuxt-scripts\'',
+    'import { useRegistryScript } from \'#imports\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
   ])
 
@@ -34,9 +34,9 @@ export function getTpcScriptContent(input: Input) {
 
   const hasParams = mainScript.params?.length
 
-  if (input.apiTypeImport) {
+  if (input.TpcTypeImport) {
     // TPC type import
-    imports.add(genImport('third-party-capital', [input.apiTypeImport]))
+    imports.add(genImport('third-party-capital', [input.TpcTypeImport]))
   }
 
   if (hasParams) {
@@ -50,7 +50,7 @@ export function getTpcScriptContent(input: Input) {
   if (input.augmentWindowTypes) {
     chunks.push(`
             declare global {
-                interface Window extends ${input.apiTypeImport} {}
+                interface Window extends ${input.TpcTypeImport} {}
             }
         `)
   }
@@ -61,14 +61,14 @@ export function getTpcScriptContent(input: Input) {
     // todo handle <link>
     // todo handle additionnal scripts
     if ('code' in script)
-      clientInitCode.push(script.code)
+      clientInitCode.push(clearUnreplacedCode(script.code))
   }
 
   chunks.push(`export type Input = RegistryScriptInput${hasParams ? '<typeof OptionSchema>' : ''}`)
 
   chunks.push(`
-export function ${input.scriptFunctionName}<T extends ${input.apiTypeImport}>(options?: Input) {
-    return useRegistryScript${hasParams ? '<typeof OptionSchema>' : ''}('${input.TpcKey}', options => ({
+export function ${input.scriptFunctionName}<T extends ${input.TpcTypeImport}>(options?: Input) {
+  return useRegistryScript${hasParams ? '<typeof OptionSchema>' : ''}('${input.TpcKey}', options => ({
         scriptInput: {
             async: true,
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
@@ -85,4 +85,9 @@ export function ${input.scriptFunctionName}<T extends ${input.apiTypeImport}>(op
 
   chunks.unshift(...Array.from(imports))
   return chunks.join('\n')
+}
+
+function clearUnreplacedCode(code: string) {
+  // todo handle it in runtime code ?
+  return code.split(';').filter(c => !c.match(/\{\{(.*?)\}\}/g)).join(';')
 }
