@@ -21,7 +21,6 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
-      // @ts-expect-error TODO fix types upstream
       crossorigin: false, // crossorigin can't be set or it breaks
     },
     scriptOptions: {

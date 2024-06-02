@@ -46,7 +46,6 @@ export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelI
   return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
     scriptInput: {
       src: MetaPixelScriptResolver(),
-      // @ts-expect-error TODO fix upstream
       crossorigin: false,
     },
     schema: import.meta.dev ? MetaPixelOptions : undefined,
