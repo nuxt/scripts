@@ -77,7 +77,7 @@
     "pathe": "^1.1.2",
     "pkg-types": "^1.1.1",
     "semver": "^7.6.2",
-    "shiki": "^1.6.1",
+    "shiki": "^1.6.2",
     "sirv": "^2.0.4",
     "std-env": "^3.7.0",
     "third-party-capital": "^1.0.28",
