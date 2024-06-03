@@ -19,7 +19,7 @@ export default async function addGoogleTagManager() {
           return fn === 'dataLayer' ? [] : undefined
         },
         TpcKey: 'gtm',
-        TpcTypeImport: 'GoogleTagManagerApi',
+        tpcTypeImport: 'GoogleTagManagerApi',
         augmentWindowTypes: true,
       })
     },

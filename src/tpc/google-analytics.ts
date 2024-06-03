@@ -18,7 +18,7 @@ export default async function addGoogleAnalytics() {
           return fn === 'dataLayer' ? [] : undefined
         },
         TpcKey: 'gtag',
-        TpcTypeImport: 'GoogleAnalyticsApi',
+        tpcTypeImport: 'GoogleAnalyticsApi',
         augmentWindowTypes: true,
       })
     },
