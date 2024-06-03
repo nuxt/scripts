@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.4.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.4.4...v0.4.5)
+
+### 🏡 Chore
+
+- Bump docs ([b762e13](https://github.com/nuxt/scripts/commit/b762e13))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
 ## v0.4.4
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.4.3...v0.4.4)
