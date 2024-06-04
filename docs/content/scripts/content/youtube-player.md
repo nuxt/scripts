@@ -14,7 +14,7 @@ links:
 
 [YouTube](https://youtube.com/) is a video hosting platform that allows you to upload and share videos.
 
-Nuxt Scripts provides a `useScriptYouTubePlayer` composable and a headless `ScriptYouTubePlayer` a component to interact with the YouTube Player.
+Nuxt Scripts provides a `useScriptYouTubePlayer` composable and a headless `ScriptYouTubePlayer` component to interact with the YouTube Player.
 
 ## ScriptYouTubePlayer
 
@@ -73,7 +73,7 @@ The `ScriptYouTubePlayer` component accepts the following props:
 - `trigger`: The trigger event to load the YouTube Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
 - `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
 - `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
--
+
 All script options from the [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference) are supported on the `playerVars` prop, please consult the [Supported paramters](https://developers.google.com/youtube/player_parameters#Parameters) for full documentation.
 
 ```ts

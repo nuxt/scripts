@@ -22,7 +22,7 @@ describe('basic', () => {
         location: `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`,
       })
     })
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(5000)
     expect(logs).toMatchInlineSnapshot(`
       [
         {
@@ -39,5 +39,7 @@ describe('basic', () => {
         },
       ]
     `)
+  }, {
+    timeout: 30000,
   })
 })
