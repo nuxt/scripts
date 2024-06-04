@@ -16,11 +16,6 @@ const props = withDefaults(defineProps<{
   dataFullWidthResponsive: true,
 })
 
-const emit = defineEmits<{
-  error: [error: string | Event]
-  load: []
-}>()
-
 const rootEl = ref(null)
 const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
 

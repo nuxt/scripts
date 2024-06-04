@@ -60,17 +60,6 @@ At a minimum you must provide the following tags:
 Nuxt Scripts exposes the following additional props:
 - `trigger`: The trigger event to load the script. Default is `undefined`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
 
-### Events
-
-The component emits the script events.
-
-```ts
-const emits = defineEmits<{
-  error: [e: string | Event]
-  load: []
-}>()
-```
-
 ### Slots
 
 There are a number of slots mapped to the script status that you can use to customize the ad experience.

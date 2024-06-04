@@ -13,10 +13,14 @@ useHead({
       data-ad-slot="6039709756"
     >
       <template #awaitingLoad>
-      <div class="text-white text-3xl">...waiting</div>
+        <div class="text-white text-3xl">
+          ...waiting
+        </div>
       </template>
       <template #loading>
-      <div class="text-white text-3xl">...loading</div>
+        <div class="text-white text-3xl">
+          ...loading
+        </div>
       </template>
     </ScriptGoogleAdsense>
   </div>
