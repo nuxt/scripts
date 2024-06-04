@@ -1,5 +1,4 @@
 import { useRegistryScript } from '../utils'
-import { MetaPixelScriptResolver } from '../../registry'
 import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -45,7 +44,7 @@ export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions>
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
   return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
     scriptInput: {
-      src: MetaPixelScriptResolver(),
+      src: 'https://connect.facebook.net/en_US/fbevents.js',
       crossorigin: false,
     },
     schema: import.meta.dev ? MetaPixelOptions : undefined,

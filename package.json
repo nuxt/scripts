@@ -17,6 +17,7 @@
   "bugs": {
     "url": "https://github.com/nuxt/scripts/issues"
   },
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/types.d.ts",
