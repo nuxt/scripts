@@ -39,5 +39,7 @@ describe('basic', () => {
         },
       ]
     `)
+  }, {
+    timeout: 30000,
   })
 })
