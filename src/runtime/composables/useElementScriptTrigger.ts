@@ -57,7 +57,6 @@ export function useElementScriptTrigger(options: ElementScriptTriggerOptions): P
     return new Promise<void>((resolve) => {
       const _ = useEventListener(
         typeof el !== 'undefined' ? (el as EventTarget) : document.body,
-        // @ts-expect-error untyped
         trigger,
         () => {
           resolve()
