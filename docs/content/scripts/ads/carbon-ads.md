@@ -22,9 +22,9 @@ want to load the ads on a specific event.
 
 ```vue
 <template>
-  <ScriptGoogleAdsenseAd
-    data-ad-client="..."
-    data-ad-slot="..."
+  <ScriptCarbonAds
+    serve="..."
+    placement="..."
   />
 </template>
 ```
