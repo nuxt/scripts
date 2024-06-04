@@ -28,7 +28,6 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
           feature: `nuxt-scripts:${id}`,
         },
       })
-      options?.onRegister?.()
     }
   }
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)

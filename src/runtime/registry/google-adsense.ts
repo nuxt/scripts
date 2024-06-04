@@ -46,21 +46,16 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
         : ({ fn }) => {
             return fn === 'adsbygoogle' ? [] : undefined
           },
-      onRegister() {
+      beforeInit() {
         useHead({
           meta: [
             {
               name: 'google-adsense-account',
-              content: _options?.client,
+              content: options?.client,
             },
           ],
         })
       },
     },
-    clientInit: import.meta.server
-      ? undefined
-      : () => {
-          (window.adsbygoogle = window.adsbygoogle || [])
-        },
   }), _options)
 }
