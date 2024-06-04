@@ -2,6 +2,10 @@
 import { useScriptsRegistry } from '~/composables/useScriptsRegistry'
 
 const categories = {
+  ads: {
+    label: 'Ads',
+    description: 'Monetize your website with ads.',
+  },
   analytics: {
     label: 'Analytics',
     description: 'Track your users and their behavior on your website.',

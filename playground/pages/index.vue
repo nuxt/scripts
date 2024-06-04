@@ -27,6 +27,10 @@ const thirdParties = [
     path: '/third-parties/x-pixel/nuxt-scripts',
   },
   {
+    name: 'Google Adsense',
+    path: '/third-parties/google-adsense/nuxt-scripts',
+  },
+  {
     name: 'Fathom Analytics',
     path: '/third-parties/fathom-analytics',
   },

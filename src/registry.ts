@@ -6,6 +6,7 @@ import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
 import type { GoogleAnalyticsInput } from './runtime/registry/google-analytics'
 import type { RegistryScripts } from './runtime/types'
+import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
@@ -111,6 +112,21 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
       import: {
         name: 'useScriptXPixel',
         from: resolve('./runtime/registry/x-pixel'),
+      },
+    },
+    // ads
+    {
+      label: 'Google Adsense',
+      scriptBundling: (options?: GoogleAdsenseInput) => {
+        return withQuery('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+          client: options?.client,
+        })
+      },
+      category: 'ads',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="36.09" height="32" viewBox="0 0 256 227"><path fill="#FBBC04" d="M161.8 62.158c11.581-19.822 4.705-45.154-15.355-56.603C126.376-5.878 100.723.899 89.142 20.72c-.51.888-.99 1.794-1.44 2.715L48.553 90.41a49.41 49.41 0 0 0-2.401 4.112L5.495 164.681l72.65 40.721l40.45-69.566a40.013 40.013 0 0 0 2.402-4.112l39.15-66.983a45.769 45.769 0 0 0 1.654-2.583"/><path fill="#34A853" d="M78.483 205.189c-11.515 20.142-37.49 27.553-57.434 15.931c-19.954-11.63-27.036-36.847-15.513-56.982c11.523-20.134 37.267-27.578 57.22-15.956c19.954 11.63 27.241 36.872 15.727 56.998"/><path fill="#4285F4" d="M235.257 75.417c-19.83-11.429-45.17-4.661-56.661 15.134l-41.478 71.67c-11.428 19.755-4.678 45.033 15.076 56.46l.107.062c19.835 11.433 45.18 4.66 56.67-15.142l41.469-71.663c11.426-19.76 4.67-45.042-15.09-56.468z"/></svg>`,
+      import: {
+        name: 'useScriptGoogleAdsense',
+        from: resolve('./runtime/registry/google-adsense'),
       },
     },
     // marketing
