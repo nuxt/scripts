@@ -97,7 +97,7 @@ const btnGroupOrientation = computed(() => breakpoints.smaller('sm').value ? 've
 
 const benchmarks = {
   googleMaps: {
-    logo: registry.find(s => s.import.name === 'useScriptGoogleMaps').logo,
+    logo: registry.find(s => s.import?.name === 'useScriptGoogleMaps').logo,
     label: 'Google Maps',
     nuxt: {
       fcp: 1500,
@@ -113,7 +113,7 @@ const benchmarks = {
     },
   },
   youtube: {
-    logo: registry.find(s => s.import.name === 'useScriptYouTubePlayer').logo,
+    logo: registry.find(s => s.import?.name === 'useScriptYouTubePlayer').logo,
     label: 'YouTube',
     nuxt: {
       fcp: 1200,
@@ -129,7 +129,7 @@ const benchmarks = {
     },
   },
   vimeo: {
-    logo: registry.find(s => s.import.name === 'useScriptVimeoPlayer').logo,
+    logo: registry.find(s => s.import?.name === 'useScriptVimeoPlayer').logo,
     label: 'Vimeo',
     nuxt: {
       fcp: 1500,
