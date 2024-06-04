@@ -41,7 +41,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O exte
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions)
 
-  const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key }) as UseScriptInput
+  const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key }) as any as UseScriptInput
   const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {

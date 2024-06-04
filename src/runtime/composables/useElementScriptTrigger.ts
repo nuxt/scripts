@@ -52,12 +52,13 @@ export function useElementScriptTrigger(options: ElementScriptTriggerOptions): P
     return new Promise<void>(() => {})
   if (el && options.trigger === 'visible')
     return useElementVisibilityPromise(el)
+  if (!trigger)
+    return Promise.resolve()
   if (trigger !== 'immediate') {
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
     return new Promise<void>((resolve) => {
       const _ = useEventListener(
         typeof el !== 'undefined' ? (el as EventTarget) : document.body,
-        // @ts-expect-error untyped
         trigger,
         () => {
           resolve()

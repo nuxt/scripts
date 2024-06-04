@@ -42,7 +42,6 @@ export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalytics
     scriptInput: {
       'src': 'https://static.cloudflareinsights.com/beacon.min.js',
       'data-cf-beacon': JSON.stringify({ token: options.token, spa: options.spa || true }),
-      // @ts-expect-error untyped TODO fix upstream
       'crossorigin': false,
     },
     schema: import.meta.dev ? CloudflareWebAnalyticsOptions : undefined,

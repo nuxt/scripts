@@ -71,7 +71,6 @@ export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: Lemo
   return useRegistryScript<T>('lemonSqueezy', () => ({
     scriptInput: {
       src: 'https://assets.lemonsqueezy.com/lemon.js',
-      // @ts-expect-error untyped
       crossorigin: false,
     },
     scriptOptions: {

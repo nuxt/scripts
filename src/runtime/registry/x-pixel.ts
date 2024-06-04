@@ -49,7 +49,6 @@ export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
   return useRegistryScript<T, typeof XPixelOptions>('xPixel', (options) => {
     return ({
-      // @ts-expect-error TODO fix upstream
       scriptInput: {
         src: 'https://static.ads-twitter.com/uwt.js',
         crossorigin: false,

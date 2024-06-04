@@ -1,5 +1,5 @@
+import { joinURL } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { SegmentScriptResolver } from '../../registry'
 import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
@@ -46,7 +46,7 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
     return {
       scriptInput: {
         'data-global-segment-analytics-key': k,
-        'src': SegmentScriptResolver(options),
+        'src': joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js'),
       },
       clientInit: import.meta.server
         ? undefined

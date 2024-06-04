@@ -23,6 +23,7 @@ import type {
   NuxtConfigScriptRegistry,
   NuxtUseScriptInput,
   NuxtUseScriptOptions,
+  RegistryScript,
   RegistryScripts,
 } from './runtime/types'
 import { getTpcScriptContent } from './tpc/utils'
@@ -141,7 +142,8 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScripts = [...scripts]
       // @ts-expect-error - untyped
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
-      addImports(registryScripts.map((i) => {
+      const withComposables = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
+      addImports(withComposables.map((i) => {
         return {
           priority: -1,
           ...i.import,
@@ -149,7 +151,7 @@ export default defineNuxtModule<ModuleOptions>({
       }))
 
       // compare the registryScripts to the original registry to find new scripts
-      const newScripts = registryScripts.filter(i => !scripts.some(r => r.import.name === i.import.name))
+      const newScripts = withComposables.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
       // augment types to support the integrations registry
       extendTypes(name!, async ({ typesPath }) => {
@@ -169,9 +171,9 @@ declare module '#nuxt-scripts' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
 ${newScripts.map((i) => {
-            const key = i.import.name.replace('useScript', '')
+            const key = i.import?.name.replace('useScript', '')
             const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-            return `        ${keyLcFirst}?: import('${i.import.from}').${key}Input | [import('${i.import.from}').${key}Input, NuxtUseScriptOptions]`
+            return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
           }).join('\n')}
     }
 }`
@@ -189,7 +191,7 @@ ${newScripts.map((i) => {
             const inits = []
             // for global scripts, we can initialise them script away
             for (const [k, c] of Object.entries(config.registry || {})) {
-              const importDefinition = registryScripts.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+              const importDefinition = withComposables.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
               if (importDefinition) {
                 // title case
                 imports.unshift(importDefinition.import.name)
@@ -219,7 +221,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
       addBuildPlugin(NuxtScriptBundleTransformer({
-        scripts,
+        scripts: withComposables,
         defaultBundle: config.defaultScriptOptions?.bundle,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
