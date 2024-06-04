@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.4.7
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.4.6...v0.4.7)
+
+### 🚀 Enhancements
+
+- Carbon ads ([#80](https://github.com/nuxt/scripts/pull/80))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](http://github.com/harlan-zw))
+
 ## v0.4.6
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.4.5...v0.4.6)
