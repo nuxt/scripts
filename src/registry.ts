@@ -10,35 +10,6 @@ import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
-export function GoogleAnalyticsScriptResolver(options?: GoogleAnalyticsInput) {
-  return withQuery('https://www.googletagmanager.com/gtag/js', {
-    id: options?.id,
-  })
-}
-
-export function GoogleAdsenseScriptResolver(options?: GoogleAdsenseInput) {
-  return withQuery('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
-    client: options?.client,
-  })
-}
-
-export function PlausibleAnalyticsScriptResolver(options: PlausibleAnalyticsInput) {
-  const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
-  return options?.extension ? `https://plausible.io/js/script.${extensions}.js` : 'https://plausible.io/js/script.js'
-}
-
-export function CloudflareWebAnalyticsScriptResolver() {
-  return 'https://static.cloudflareinsights.com/beacon.min.js'
-}
-
-export function SegmentScriptResolver(options: SegmentInput) {
-  return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
-}
-
-export function MetaPixelScriptResolver() {
-  return 'https://connect.facebook.net/en_US/fbevents.js'
-}
-
 export const registry: (resolve?: (s: string) => string) => RegistryScripts = (resolve?: (s: string) => string) => {
   resolve = resolve || ((s: string) => s)
   return [
@@ -47,7 +18,9 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
       label: 'Google Analytics',
       category: 'analytics',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="28.85" height="32" viewBox="0 0 256 284"><path fill="#F9AB00" d="M256.003 247.933a35.224 35.224 0 0 1-39.376 35.161c-18.044-2.67-31.266-18.371-30.826-36.606V36.845C185.365 18.591 198.62 2.881 216.687.24a35.221 35.221 0 0 1 39.316 35.16z"/><path fill="#E37400" d="M35.101 213.193c19.386 0 35.101 15.716 35.101 35.101c0 19.386-15.715 35.101-35.101 35.101S0 267.68 0 248.295c0-19.386 15.715-35.102 35.101-35.102m92.358-106.387c-19.477 1.068-34.59 17.406-34.137 36.908v94.285c0 25.588 11.259 41.122 27.755 44.433a35.161 35.161 0 0 0 42.146-34.56V142.089a35.222 35.222 0 0 0-35.764-35.282"/></svg>`,
-      scriptBundling: GoogleAnalyticsScriptResolver,
+      scriptBundling: (options?: GoogleAnalyticsInput) => withQuery('https://www.googletagmanager.com/gtag/js', {
+        id: options?.id,
+      }),
       import: {
         name: 'useScriptGoogleAnalytics',
         from: resolve('./runtime/registry/google-analytics'),
@@ -56,7 +29,10 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
     {
       label: 'Plausible Analytics',
       category: 'analytics',
-      scriptBundling: PlausibleAnalyticsScriptResolver,
+      scriptBundling: (options?: PlausibleAnalyticsInput) => {
+        const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
+        return options?.extension ? `https://plausible.io/js/script.${extensions}.js` : 'https://plausible.io/js/script.js'
+      },
       logo: `<svg height="32" id="Layer_2" viewBox="0 0 46 60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><linearGradient id="New_Gradient_Swatch_1" x1="14.841" y1="22.544" x2="27.473" y2="44.649" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#909cf7"/><stop offset="1" stop-color="#4b38d8"/></linearGradient><linearGradient id="New_Gradient_Swatch_1-2" x1="7.984" y1="-1.358" x2="21.001" y2="21.422" xlink:href="#New_Gradient_Swatch_1"/><style>.cls-3{stroke-width:0;fill:#1f2961}</style></defs><g id="Plausible_-_Branding"><g id="Gradient_Logo_-_Purple_Gradient_on_White"><g id="Symbol_-_Purple_Gradient"><path d="M45.246 22.603C44.155 33.059 35.013 40.83 24.5 40.83h-4.047v9.57a9.6 9.6 0 0 1-9.6 9.6H3.36A3.36 3.36 0 0 1 0 56.64V36.938l5.038-7.07a3.362 3.362 0 0 1 4.037-1.149l2.866 1.2a3.353 3.353 0 0 0 4.025-1.145l6.717-9.417a3.34 3.34 0 0 1 4.014-1.14l5.52 2.32a3.347 3.347 0 0 0 4.022-1.142l6.46-9.063c2.025 3.56 3.014 7.789 2.547 12.27Z" style="stroke-width:0;fill:url(#New_Gradient_Swatch_1)"/><path d="M3.292 28.873c.823-1.155 2.021-2.044 3.414-2.312a5.41 5.41 0 0 1 3.147.316l2.865 1.2a1.357 1.357 0 0 0 1.62-.464l6.594-9.245c.823-1.154 2.02-2.041 3.412-2.309a5.368 5.368 0 0 1 3.128.314l5.52 2.32a1.35 1.35 0 0 0 1.619-.46l6.919-9.707C37.827 3.364 31.78 0 24.945 0H3.36A3.36 3.36 0 0 0 0 3.36v30.132l3.292-4.62Z" style="fill:url(#New_Gradient_Swatch_1-2);stroke-width:0"/></g></g></g></svg>`,
       import: {
         name: 'useScriptPlausibleAnalytics',
@@ -65,7 +41,7 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
     },
     {
       label: 'Cloudflare Web Analytics',
-      scriptBundling: CloudflareWebAnalyticsScriptResolver,
+      src: 'https://static.cloudflareinsights.com/beacon.min.js',
       category: 'analytics',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="70.02" height="32" viewBox="0 0 256 117"><path fill="#FBAD41" d="M205.52 50.813c-.858 0-1.705.03-2.551.058c-.137.007-.272.04-.398.094a1.424 1.424 0 0 0-.92.994l-3.628 12.672c-1.565 5.449-.983 10.48 1.646 14.174c2.41 3.416 6.42 5.421 11.289 5.655l19.679 1.194c.585.03 1.092.312 1.4.776a1.92 1.92 0 0 1 .2 1.692a2.496 2.496 0 0 1-2.134 1.662l-20.448 1.193c-11.11.515-23.062 9.58-27.255 20.633l-1.474 3.9a1.092 1.092 0 0 0 .967 1.49h70.425a1.872 1.872 0 0 0 1.81-1.365A51.172 51.172 0 0 0 256 101.828c0-28.16-22.582-50.984-50.449-50.984"/><path fill="#F6821F" d="m174.782 115.362l1.303-4.583c1.568-5.449.987-10.48-1.639-14.173c-2.418-3.417-6.424-5.422-11.296-5.656l-92.312-1.193a1.822 1.822 0 0 1-1.459-.776a1.919 1.919 0 0 1-.203-1.693a2.496 2.496 0 0 1 2.154-1.662l93.173-1.193c11.063-.511 23.015-9.58 27.208-20.633l5.313-14.04c.214-.596.27-1.238.156-1.86C191.126 20.51 166.91 0 137.96 0C111.269 0 88.626 17.403 80.5 41.596a26.996 26.996 0 0 0-19.156-5.359C48.549 37.524 38.25 47.946 36.979 60.88a27.905 27.905 0 0 0 .702 9.642C16.773 71.145 0 88.454 0 109.726c0 1.923.137 3.818.413 5.667c.115.897.879 1.57 1.783 1.568h170.48a2.223 2.223 0 0 0 2.106-1.63"/></svg>`,
       import: {
@@ -105,7 +81,9 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
     },
     {
       label: 'Segment',
-      scriptBundling: SegmentScriptResolver,
+      scriptBundling: (options?: SegmentInput) => {
+        return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
+      },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="30.92" height="32" viewBox="0 0 256 265"><path fill="#4FB58B" d="m233.56 141.927l.17.013l17.892 1.87a4.927 4.927 0 0 1 3.225 1.707l.133.163l-.17.085a4.93 4.93 0 0 1 1.02 3.74a133.272 133.272 0 0 1-41.604 81.083a128.86 128.86 0 0 1-87.629 34.38a127.488 127.488 0 0 1-46.156-8.57l-.802-.312a4.716 4.716 0 0 1-2.686-2.533l-.077-.187a4.891 4.891 0 0 1-.083-3.66l7.062-17.23a4.846 4.846 0 0 1 6.118-2.799l.163.06c36.097 13.939 76.98 6.089 105.349-20.227a104.455 104.455 0 0 0 32.891-63.32a4.93 4.93 0 0 1 5.013-4.27zm-190.08 64.31l.251-.002l.253.002c8.12.093 14.658 6.659 14.746 14.749v.253c0 .084 0 .168-.002.252c-.141 8.284-6.97 14.886-15.254 14.745c-8.284-.141-14.885-6.97-14.745-15.254c.139-8.115 6.695-14.615 14.75-14.745M4.93 147.082h146.316a4.973 4.973 0 0 1 4.928 4.844l.002.171v18.316a4.974 4.974 0 0 1-4.76 5.01l-.17.005H4.93A4.975 4.975 0 0 1 0 170.584v-18.659a4.975 4.975 0 0 1 4.755-4.838zM169.56 7.311a4.974 4.974 0 0 1 2.848 2.635a5.096 5.096 0 0 1 0 3.867l-6.375 16.999a4.845 4.845 0 0 1-6.162 2.974A101.228 101.228 0 0 0 62.13 51.252a105.267 105.267 0 0 0-34.507 54.99a4.93 4.93 0 0 1-4.76 3.698h-1.105L4.25 105.733a4.886 4.886 0 0 1-3.103-2.295h-.085A4.929 4.929 0 0 1 .51 99.57a133.393 133.393 0 0 1 44.41-70.204C79.739.7 127.019-7.666 169.56 7.311m-64.807 73.434H251.07a4.972 4.972 0 0 1 4.922 4.67l.008.174v18.317a4.973 4.973 0 0 1-4.76 5.01l-.17.005H104.754a4.972 4.972 0 0 1-4.886-4.842l-.002-.173V85.759a4.972 4.972 0 0 1 4.715-5.008zm101.572-55.883l.252-.002l.253.002c8.12.093 14.658 6.659 14.746 14.748v.253c0 .085 0 .17-.002.253c-.14 8.284-6.97 14.885-15.254 14.744c-8.284-.14-14.885-6.97-14.744-15.253c.138-8.116 6.694-14.616 14.749-14.745"/></svg>`,
       category: 'tracking',
       import: {
@@ -115,7 +93,7 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
     },
     {
       label: 'Meta Pixel',
-      scriptBundling: MetaPixelScriptResolver,
+      src: 'https://connect.facebook.net/en_US/fbevents.js',
       category: 'tracking',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#1877F2" d="M256 128C256 57.308 198.692 0 128 0C57.308 0 0 57.308 0 128c0 63.888 46.808 116.843 108 126.445V165H75.5v-37H108V99.8c0-32.08 19.11-49.8 48.348-49.8C170.352 50 185 52.5 185 52.5V84h-16.14C152.959 84 148 93.867 148 103.99V128h35.5l-5.675 37H148v89.445c61.192-9.602 108-62.556 108-126.445"/><path fill="#FFF" d="m177.825 165l5.675-37H148v-24.01C148 93.866 152.959 84 168.86 84H185V52.5S170.352 50 156.347 50C127.11 50 108 67.72 108 99.8V128H75.5v37H108v89.445A128.959 128.959 0 0 0 128 256a128.9 128.9 0 0 0 20-1.555V165z"/></svg>`,
       import: {
@@ -139,7 +117,11 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
     // ads
     {
       label: 'Google Adsense',
-      scriptBundling: GoogleAdsenseScriptResolver,
+      scriptBundling: (options?: GoogleAdsenseInput) => {
+        return withQuery('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+          client: options?.client,
+        })
+      },
       category: 'ads',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="36.09" height="32" viewBox="0 0 256 227"><path fill="#FBBC04" d="M161.8 62.158c11.581-19.822 4.705-45.154-15.355-56.603C126.376-5.878 100.723.899 89.142 20.72c-.51.888-.99 1.794-1.44 2.715L48.553 90.41a49.41 49.41 0 0 0-2.401 4.112L5.495 164.681l72.65 40.721l40.45-69.566a40.013 40.013 0 0 0 2.402-4.112l39.15-66.983a45.769 45.769 0 0 0 1.654-2.583"/><path fill="#34A853" d="M78.483 205.189c-11.515 20.142-37.49 27.553-57.434 15.931c-19.954-11.63-27.036-36.847-15.513-56.982c11.523-20.134 37.267-27.578 57.22-15.956c19.954 11.63 27.241 36.872 15.727 56.998"/><path fill="#4285F4" d="M235.257 75.417c-19.83-11.429-45.17-4.661-56.661 15.134l-41.478 71.67c-11.428 19.755-4.678 45.033 15.076 56.46l.107.062c19.835 11.433 45.18 4.66 56.67-15.142l41.469-71.663c11.426-19.76 4.67-45.042-15.09-56.468z"/></svg>`,
       import: {

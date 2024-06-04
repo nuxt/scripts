@@ -26,9 +26,7 @@ export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
         (typeof options?.advancedFraudSignals === 'boolean' && !options?.advancedFraudSignals) ? { advancedFraudSignals: false } : {},
       ),
       // opt-out of privacy defaults
-      // @ts-expect-error TODO add types
       crossorigin: false,
-      // @ts-expect-error TODO add types
       referrerpolicy: false,
     },
     schema: import.meta.dev ? StripeOptions : undefined,
