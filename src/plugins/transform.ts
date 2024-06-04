@@ -7,13 +7,13 @@ import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
 import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
 import type { Input } from 'valibot'
-import type { RegistryScripts } from '#nuxt-scripts'
+import type { RegistryScript } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
   resolveScript: (src: string) => string
   moduleDetected?: (module: string) => void
   defaultBundle?: boolean
-  scripts?: RegistryScripts
+  scripts?: Required<RegistryScript>[]
 }
 
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions) {
