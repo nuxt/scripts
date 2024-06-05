@@ -169,9 +169,7 @@ defineExpose({
 onMounted(() => {
   $script.then(async ({ Vimeo }) => {
     // filter props for false values
-    player = new Vimeo.Player(elVimeo.value, {
-      ...props
-    })
+    player = new Vimeo.Player(elVimeo.value, props)
     if (clickTriggered) {
       player!.play()
       clickTriggered = false
