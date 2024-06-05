@@ -287,7 +287,7 @@ const contributors = useRuntimeConfig().public.contributors
             <span>A collaboration in making the web faster</span>
           </h2>
           <p class="text-gray-500 dark:text-gray-400 mb-1">
-            Nuxt Scripts was designed and built by the Nuxt core team in collaboration with <a href="https://developer.chrome.com/docs/aurora/overview" target="_blank" class="underline">Google Aurora</a>.
+            Nuxt Scripts was designed and built by the Nuxt core team in collaboration with the <a href="https://developer.chrome.com/aurora" target="_blank" class="underline">Chrome Aurora</a> team at Google.
           </p>
           <p class="text-gray-500 dark:text-gray-400 mb-1">
             It's being actively maintained by the Nuxt core team and amazing community contributors.
