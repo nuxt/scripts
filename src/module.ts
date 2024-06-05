@@ -74,9 +74,7 @@ export interface ModuleHooks {
   'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
 }
 declare module '@nuxt/schema' {
-  interface NuxtHooks {
-    'scripts:registry': ModuleHooks['scripts:registry']
-  }
+  interface NuxtHooks extends ModuleHooks {}
 }
 
 export default defineNuxtModule<ModuleOptions>({
