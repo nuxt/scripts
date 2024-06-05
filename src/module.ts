@@ -73,6 +73,11 @@ export interface ModuleHooks {
    */
   'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
 }
+declare module '@nuxt/schema' {
+  interface NuxtHooks {
+    'scripts:registry': ModuleHooks['scripts:registry']
+  }
+}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -127,7 +132,6 @@ export default defineNuxtModule<ModuleOptions>({
     const scripts = registry(resolve)
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
-      // @ts-expect-error runtime
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       const withComposables = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       addImports(withComposables.map((i) => {
