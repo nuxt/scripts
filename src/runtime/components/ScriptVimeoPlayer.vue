@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes
   aboveTheFold?: boolean
   // copied from @types/vimeo__player
-  id: number | undefined
+  id?: number | undefined
   url?: string | undefined
   autopause?: boolean | undefined
   autoplay?: boolean | undefined
@@ -170,8 +170,7 @@ onMounted(() => {
   $script.then(async ({ Vimeo }) => {
     // filter props for false values
     player = new Vimeo.Player(elVimeo.value, {
-      ...props,
-      url: encodeURI(`https://vimeo.com/${props.id}`),
+      ...props
     })
     if (clickTriggered) {
       player!.play()
