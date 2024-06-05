@@ -24,11 +24,23 @@ It's optimized for performance by leveraging the [Element Event Triggers](/docs/
 
 Before Google Maps is loaded, it shows a placeholder using [Maps Static API](https://developers.google.com/maps/documentation/maps-static).
 
+By default, it will load on the `mouseover` and `mouseclick` events.
+
+### Billing & Permissions
+
 ::callout
 You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) and the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
 ::
 
-By default, it will load on the `mouseover` and `mouseclick` events.
+Showing an interactive JS map requires the Maps JavaScript API, which is a paid service, the following costs will be incurred:
+- $7 per 1000 loads for the Maps JavaScript API
+- $5 per 1000 loads for the Geocoding API
+- $2 per 1000 loads for the Static Maps API
+
+Billing will be optimized in a [future update](https://github.com/nuxt/scripts/issues/83).
+
+You should consider using the [Iframe Embed](https://developers.google.com/maps/documentation/embed/get-started) instead if you want to avoid these costs
+and are okay with a less interactive map.
 
 ### Demo
 
