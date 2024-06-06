@@ -1,7 +1,7 @@
 import type { ExternalScript, Output } from 'third-party-capital'
 import { genImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
-import { type Link, type ReactiveHead, type Script, type UseHeadInput, useHead } from '@unhead/vue'
+import type { Link, Script } from '@unhead/vue'
 
 interface Input {
   data: Output

@@ -12,7 +12,6 @@ import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
 import { resolvePath } from 'mlly'
 import { join } from 'pathe'
-import { GoogleTagManager } from 'third-party-capital'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -26,9 +25,6 @@ import type {
   RegistryScript,
   RegistryScripts,
 } from './runtime/types'
-import { getTpcScriptContent } from './tpc/utils'
-import googleTagManagerRegistry from './tpc/google-tag-manager'
-import googleAnalitycsRegistry from './tpc/google-analytics'
 
 export interface ModuleOptions {
   /**
