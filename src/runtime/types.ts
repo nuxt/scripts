@@ -117,7 +117,7 @@ export type RegistryScriptInput<T extends ObjectSchema<any> = EmptyOptionsSchema
 
 export interface RegistryScript {
   import?: Import // might just be a component
-  scriptBundling?: false | ((options?: any) => string)
+  scriptBundling?: false | ((options?: any) => string | false)
   label?: string
   src?: string | false
   category?: string
