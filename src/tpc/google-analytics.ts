@@ -1,5 +1,6 @@
 import { addImports, addTemplate, useNuxt } from '@nuxt/kit'
-import { GoogleAnalytics } from 'third-party-capital'
+import type { Output } from 'third-party-capital'
+import { GooglaAnalyticsData, GoogleAnalytics } from 'third-party-capital'
 import type { RegistryScript } from '../runtime/types'
 import { getTpcScriptContent } from './utils'
 
@@ -8,7 +9,7 @@ export default function googleAnalitycsRegistry() {
   const { dst } = addTemplate({
     getContents() {
       return getTpcScriptContent({
-        data: GoogleAnalytics({}),
+        data: GooglaAnalyticsData as Output,
         scriptFunctionName: 'useScriptGoogleAnalytics',
         use: () => {
           return { dataLayer: window.dataLayer, gtag: window.gtag }

@@ -1,16 +1,17 @@
 import { addImports, addTemplate, useNuxt } from '@nuxt/kit'
-import { GoogleTagManager } from 'third-party-capital'
+import type { Output } from 'third-party-capital'
+import { GoogleTagManager, GoogleTagManagerData } from 'third-party-capital'
 
 import type { RegistryScript } from '../runtime/types'
 import { getTpcScriptContent } from './utils'
 
 export default function googleTagManagerRegistry() {
   const nuxt = useNuxt()
-  const data = GoogleTagManager({})
+
   const { dst } = addTemplate({
     getContents() {
       return getTpcScriptContent({
-        data,
+        data: GoogleTagManagerData as Output,
         scriptFunctionName: 'useScriptGoogleTagManager',
         use: () => {
           return { dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }
