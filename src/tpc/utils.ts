@@ -1,5 +1,5 @@
 import type { ExternalScript, Output } from 'third-party-capital'
-import { genImport } from 'knitwork'
+import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
 import type { Link, Script } from '@unhead/vue'
 
@@ -42,7 +42,7 @@ export function getTpcScriptContent(input: Input) {
 
   if (input.tpcTypeImport) {
     // TPC type import
-    imports.add(genImport('third-party-capital', [input.tpcTypeImport]))
+    imports.add(genTypeImport('third-party-capital', [input.tpcTypeImport]))
   }
 
   if (hasParams) {
@@ -95,7 +95,7 @@ declare global {
   chunks.push(`
 export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_options?: Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? '<typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
+  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
         scriptInput: {
             async: true,
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
