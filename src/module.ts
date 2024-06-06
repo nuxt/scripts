@@ -27,8 +27,8 @@ import type {
   RegistryScripts,
 } from './runtime/types'
 import { getTpcScriptContent } from './tpc/utils'
-import addGoogleTagManager from './tpc/google-tag-manager'
-import addGoogleAnalytics from './tpc/google-analytics'
+import googleTagManagerRegistry from './tpc/google-tag-manager'
+import googleAnalitycsRegistry from './tpc/google-analytics'
 
 export interface ModuleOptions {
   /**
@@ -76,6 +76,12 @@ export interface ModuleHooks {
    * Transform a script before it's registered.
    */
   'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
+}
+
+declare module '@nuxt/schema' {
+  interface NuxtHooks {
+    'scripts:registry': ModuleHooks['scripts:registry']
+  }
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -134,13 +140,9 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     const scripts = registry(resolve)
-    scripts.push({
-      ...(await addGoogleTagManager()).registry,
-      ...(await addGoogleAnalytics()).registry,
-    })
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
-      // @ts-expect-error - untyped
+
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       const withComposables = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       addImports(withComposables.map((i) => {
