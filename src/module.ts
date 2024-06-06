@@ -25,6 +25,8 @@ import type {
   RegistryScript,
   RegistryScripts,
 } from './runtime/types'
+import addGoogleAnalyticsRegistry from './tpc/google-analytics'
+import addGoogleTagManagerRegistry from './tpc/google-tag-manager'
 
 export interface ModuleOptions {
   /**
@@ -136,6 +138,10 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     const scripts = registry(resolve)
+
+    addGoogleAnalyticsRegistry()
+    addGoogleTagManagerRegistry()
+
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
