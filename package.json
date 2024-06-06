@@ -55,7 +55,8 @@
       "@unhead/schema",
       "#nuxt-scripts",
       "#nuxt-scripts-validator",
-      "third-party-capital"
+      "third-party-capital",
+      "knitwork"
     ]
   },
   "peerDependencies": {
