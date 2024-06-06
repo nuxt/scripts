@@ -54,7 +54,8 @@
       "@unhead/vue",
       "@unhead/schema",
       "#nuxt-scripts",
-      "#nuxt-scripts-validator"
+      "#nuxt-scripts-validator",
+      "third-party-capital"
     ]
   },
   "dependencies": {
@@ -81,7 +82,6 @@
     "shiki": "^1.6.2",
     "sirv": "^2.0.4",
     "std-env": "^3.7.0",
-    "third-party-capital": "^1.0.28",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2",
     "unplugin": "^1.10.1",
@@ -106,6 +106,9 @@
     "vitest": "^1.6.0",
     "vue": "^3.4.27",
     "vue-router": "^4.3.2"
+  },
+  "peerDependencies": {
+    "third-party-capital": "^1.0.29"
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*",
