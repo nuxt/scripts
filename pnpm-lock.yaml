@@ -85,8 +85,8 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
       third-party-capital:
-        specifier: ^1.0.29
-        version: 1.0.29
+        specifier: ^1.0.30
+        version: 1.0.30
       ufo:
         specifier: ^1.5.3
         version: 1.5.3
@@ -6613,8 +6613,8 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  third-party-capital@1.0.29:
-    resolution: {integrity: sha512-kGWvBT7I70atHrHf7Ur3lwt20X2P7RbBTqTYfHQiWgWC7+bXO5gZ7LkoQEsujSZyqDJmt6NJVw40UMz2SkUFwg==}
+  third-party-capital@1.0.30:
+    resolution: {integrity: sha512-hiXyTwFcgmVBCfhPZz92OxqBvd36EbsI6LVesOCHGVcgQwmSM/mr4GC6AkbPiR6KdOkfsGctoqrHII7n3UZRFg==}
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
@@ -17475,7 +17475,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  third-party-capital@1.0.29:
+  third-party-capital@1.0.30:
     dependencies:
       semver: 7.6.2
 
