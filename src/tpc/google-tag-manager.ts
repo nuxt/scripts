@@ -52,13 +52,6 @@ export default function googleTagManagerRegistry() {
   }
 
   nuxt.hook('scripts:registry', (scripts) => {
-    const oldRegistry = scripts.find(script => script.label === 'Google Tag Manager')
-
-    if (oldRegistry) {
-      Object.assign(oldRegistry, registry)
-    }
-    else {
-      scripts.push(registry)
-    }
+    scripts.push(registry)
   })
 }

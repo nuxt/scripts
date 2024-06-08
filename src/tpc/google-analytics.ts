@@ -49,12 +49,6 @@ export default function googleAnalitycsRegistry() {
     },
   }
   nuxt.hook('scripts:registry', (scripts) => {
-    const oldRegistry = scripts.find(script => script.label === 'Google Analytics')
-    if (oldRegistry) {
-      Object.assign(oldRegistry, registry)
-    }
-    else {
-      scripts.push(registry)
-    }
+    scripts.push(registry)
   })
 }
