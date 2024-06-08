@@ -10,9 +10,7 @@ import type { MetaPixelInput } from './registry/meta-pixel'
 import type { FathomAnalyticsInput } from './registry/fathom-analytics'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
-import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleMapsInput } from './registry/google-maps'
-import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { StripeInput } from './registry/stripe'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
@@ -21,6 +19,8 @@ import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
+import type { Input as GoogleTagManagerInput } from '#build/tpc/google-tag-manager'
+import type { Input as GoogleAnalyticsInput } from '#build/tpc/google-analytics'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
