@@ -1,0 +1,65 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tpc composable generation in 'development' > expect to generate script content > composable generation in development 1`] = `
+"import { withQuery } from 'ufo'
+import { useRegistryScript } from '#imports'
+import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { GoogleAnalyticsInput } from "third-party-capital";
+import { object, any } from "#nuxt-scripts-validator";
+const OptionSchema = object({id:  any()})
+
+declare global {
+  interface Window extends GoogleAnalyticsInput {}
+}
+export type Input = RegistryScriptInput<typeof OptionSchema>
+
+export function useScriptGoogleAnalytics<T extends GoogleAnalyticsInput>(_options?: Input) {
+
+  return useRegistryScript<T, typeof OptionSchema>('google-analytics', options => ({
+        scriptInput: {
+            async: true,
+            src: withQuery('https://www.google-analytics.com/analytics.js', {id: options?.id})
+        },
+        schema: OptionSchema,
+        scriptOptions: {
+            use: () => {
+      },
+            stub: true ? undefined :  () => {
+      }
+        },
+        
+    }), _options)
+}"
+`;
+
+exports[`tpc composable generation in 'production' > expect to generate script content > composable generation in production 1`] = `
+"import { withQuery } from 'ufo'
+import { useRegistryScript } from '#imports'
+import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { GoogleAnalyticsInput } from "third-party-capital";
+import { object, any } from "#nuxt-scripts-validator";
+const OptionSchema = object({id:  any()})
+
+declare global {
+  interface Window extends GoogleAnalyticsInput {}
+}
+export type Input = RegistryScriptInput<typeof OptionSchema>
+
+export function useScriptGoogleAnalytics<T extends GoogleAnalyticsInput>(_options?: Input) {
+
+  return useRegistryScript<T, typeof OptionSchema>('google-analytics', options => ({
+        scriptInput: {
+            async: true,
+            src: withQuery('https://www.google-analytics.com/analytics.js', {id: options?.id})
+        },
+        schema: OptionSchema,
+        scriptOptions: {
+            use: () => {
+      },
+            stub: true ? undefined :  () => {
+      }
+        },
+        
+    }), _options)
+}"
+`;
