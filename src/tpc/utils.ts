@@ -33,7 +33,7 @@ export function getTpcScriptContent(input: Input) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#imports\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
-    'import { useRegistryScript } from \'#nuxt-scripts\'',
+    'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
   ])
 
   const chunks: string[] = []
