@@ -85,7 +85,7 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
       third-party-capital:
-        specifier: ^1.0.30
+        specifier: '>=1'
         version: 1.0.30
       ufo:
         specifier: ^1.5.3

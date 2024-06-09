@@ -128,11 +128,6 @@ export default defineNuxtModule<ModuleOptions>({
       resolve('./runtime/registry'),
     ])
 
-    addImports({
-      from: resolve('./runtime/utils'),
-      name: 'useRegistryScript',
-    })
-
     addComponentsDir({
       path: resolve('./runtime/components'),
     })

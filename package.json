@@ -60,7 +60,7 @@
     ]
   },
   "peerDependencies": {
-    "third-party-capital": "^1.0.30"
+    "third-party-capital": ">=1"
   },
   "dependencies": {
     "@nuxt/devtools-kit": "^1.3.2",
