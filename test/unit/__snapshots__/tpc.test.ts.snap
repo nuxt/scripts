@@ -4,6 +4,7 @@ exports[`tpc composable generation in 'development' > expect to generate script 
 "import { withQuery } from 'ufo'
 import { useRegistryScript } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
+import { useRegistryScript } from '#nuxt-scripts'
 import type { GoogleAnalyticsInput } from "third-party-capital";
 import { object, any } from "#nuxt-scripts-validator";
 const OptionSchema = object({id:  any()})
@@ -17,7 +18,6 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsInput>(_option
 
   return useRegistryScript<T, typeof OptionSchema>('google-analytics', options => ({
         scriptInput: {
-            async: true,
             src: withQuery('https://www.google-analytics.com/analytics.js', {id: options?.id})
         },
         schema: OptionSchema,
@@ -36,6 +36,7 @@ exports[`tpc composable generation in 'production' > expect to generate script c
 "import { withQuery } from 'ufo'
 import { useRegistryScript } from '#imports'
 import type { RegistryScriptInput } from '#nuxt-scripts'
+import { useRegistryScript } from '#nuxt-scripts'
 import type { GoogleAnalyticsInput } from "third-party-capital";
 import { object, any } from "#nuxt-scripts-validator";
 const OptionSchema = object({id:  any()})
@@ -49,7 +50,6 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsInput>(_option
 
   return useRegistryScript<T, typeof OptionSchema>('google-analytics', options => ({
         scriptInput: {
-            async: true,
             src: withQuery('https://www.google-analytics.com/analytics.js', {id: options?.id})
         },
         schema: OptionSchema,
