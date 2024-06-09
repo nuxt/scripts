@@ -2,9 +2,8 @@
 
 exports[`tpc composable generation in 'development' > expect to generate script content > composable generation in development 1`] = `
 "import { withQuery } from 'ufo'
-import { useRegistryScript } from '#imports'
-import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useRegistryScript } from '#nuxt-scripts-utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 import type { GoogleAnalyticsInput } from "third-party-capital";
 import { object, any } from "#nuxt-scripts-validator";
 const OptionSchema = object({id:  any()})
@@ -34,9 +33,8 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsInput>(_option
 
 exports[`tpc composable generation in 'production' > expect to generate script content > composable generation in production 1`] = `
 "import { withQuery } from 'ufo'
-import { useRegistryScript } from '#imports'
-import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useRegistryScript } from '#nuxt-scripts-utils'
+import type { RegistryScriptInput } from '#nuxt-scripts'
 import type { GoogleAnalyticsInput } from "third-party-capital";
 import { object, any } from "#nuxt-scripts-validator";
 const OptionSchema = object({id:  any()})
