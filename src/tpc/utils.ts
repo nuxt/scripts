@@ -31,9 +31,8 @@ export function getTpcScriptContent(input: Input) {
 
   const imports = new Set<string>([
     'import { withQuery } from \'ufo\'',
-    'import { useRegistryScript } from \'#imports\'',
-    'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
+    'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
   ])
 
   const chunks: string[] = []

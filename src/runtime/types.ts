@@ -19,8 +19,8 @@ import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
-import type { Input as GoogleTagManagerInput } from '#build/tpc/google-tag-manager'
-import type { Input as GoogleAnalyticsInput } from '#build/tpc/google-analytics'
+import type { Input as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
+import type { Input as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
