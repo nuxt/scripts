@@ -6,6 +6,9 @@ export default createConfigForNuxt({
     stylistic: true,
     tooling: true,
   },
+  dirs: {
+    src: ['./src', './client', './docs'],
+  },
 })
   .override('nuxt/javascript', {
     rules: {
