@@ -36,6 +36,7 @@ export default createConfigForNuxt({
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
+      'vue/no-multiple-template-root': 'off',
       // NOTE: Disable this style rules if stylistic is not enabled
       'vue/max-attributes-per-line': 'off',
     },
