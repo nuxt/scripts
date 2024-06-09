@@ -51,7 +51,7 @@ const emits = defineEmits<TEmits>()
 
 type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
 
-// eslint-disable-next-line ts/consistent-type-definitions
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 type TEmits = {
   play: EventMap<'play'>
   playing: EventMap<'playing'>

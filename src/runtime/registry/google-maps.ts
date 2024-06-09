@@ -4,9 +4,9 @@ import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-// eslint-disable-next-line ts/no-namespace
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace google {
-  // eslint-disable-next-line ts/no-namespace
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace maps {
     /**
      * @internal

@@ -48,6 +48,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('dynamic src is not transformed', async () => {
     const code = await transform(
+      // eslint-disable-next-line no-useless-escape
       `const instance = useScript({ key: 'cloudflareAnalytics', src: \`https://static.cloudflareinsights.com/$\{123\}beacon.min.js\` })`,
       {
         resolveScript(src) {
