@@ -23,7 +23,7 @@ export default function googleAnalitycsRegistry() {
         augmentWindowTypes: true,
       })
     },
-    filename: 'tpc/google-analytics.ts',
+    filename: 'nuxt-scripts/tpc/google-analytics.ts',
   })
 
   addImports({

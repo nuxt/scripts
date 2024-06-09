@@ -24,7 +24,7 @@ export default function googleTagManagerRegistry() {
         augmentWindowTypes: true,
       })
     },
-    filename: 'tpc/google-tag-manager.ts',
+    filename: 'nuxt-scripts/tpc/google-tag-manager.ts',
   })
 
   addImports({
