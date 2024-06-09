@@ -3,8 +3,7 @@ import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
 
 export default createConfigForNuxt({
   features: {
-    // TODO: Consider setting it to true later.
-    stylistic: false,
+    stylistic: true,
     tooling: true,
   },
 })
@@ -34,5 +33,7 @@ export default createConfigForNuxt({
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
+      // NOTE: Disable this style rules if stylistic is not enabled
+      'vue/max-attributes-per-line': 'off',
     },
   })
