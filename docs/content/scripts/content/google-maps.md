@@ -32,10 +32,12 @@ By default, it will load on the `mouseover` and `mouseclick` events.
 You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) and the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
 ::
 
-Showing an interactive JS map requires the Maps JavaScript API, which is a paid service, the following costs will be incurred:
-- $7 per 1000 loads for the Maps JavaScript API
+Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
+- $7 per 1000 loads for the Maps JavaScript API (default for using Google Maps)
 - $5 per 1000 loads for the Geocoding API
 - $2 per 1000 loads for the Static Maps API
+
+However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged.
 
 Billing will be optimized in a [future update](https://github.com/nuxt/scripts/issues/83).
 
