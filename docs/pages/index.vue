@@ -227,10 +227,10 @@ const contributors = useRuntimeConfig().public.contributors
           Nuxt Scripts comes with <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
             Facade Components
           </NuxtLink> preconfigured for maximum performance
-          and developer experience.
+          and developer experience. Initial testing with mobile lab data from the PageSpeed Insights API is promising.
         </p>
         <p class="text-gray-500 dark:text-gray-400">
-          <span class="opacity-50 text-sm">*Benchmarks are from pagespeed.web.dev Mobile report running with variability, they are not accurate.</span>
+          <span class="opacity-50 text-sm">*Note that PageSpeed Insights lab data is a snapshot from a particular day, which tends to be variable. We will be updating this section with aggregated results and/or field data from production usage as soon as it's available.</span>
         </p>
         <UButtonGroup class="mt-10 flex" :orientation="btnGroupOrientation">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
