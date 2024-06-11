@@ -1,4 +1,5 @@
 import { defineNuxtConfig } from 'nuxt/config'
+import { $fetch } from 'ofetch'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -11,6 +12,11 @@ export default defineNuxtConfig({
     // '@nuxthq/studio',
     '@nuxtjs/seo',
     '@nuxt/image',
+    async (_, nuxt) => {
+      // build time for caching
+      const { contributors } = await $fetch(`https://api.nuxt.com/modules/scripts`)
+      nuxt.options.runtimeConfig.public.contributors = contributors.map(m => m.id)
+    },
   ],
   future: {
     compatibilityVersion: 4,

@@ -160,6 +160,8 @@ function timesFaster(nuxt: number, iframe: number) {
   // should display as 2.5 for 2500%
   return (iframe / nuxt).toFixed(1)
 }
+
+const contributors = useRuntimeConfig().public.contributors
 </script>
 
 <template>
@@ -225,10 +227,10 @@ function timesFaster(nuxt: number, iframe: number) {
           Nuxt Scripts comes with <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
             Facade Components
           </NuxtLink> preconfigured for maximum performance
-          and developer experience.
+          and developer experience. Initial testing with mobile lab data from the PageSpeed Insights API is promising.
         </p>
         <p class="text-gray-500 dark:text-gray-400">
-          <span class="opacity-50 text-sm">*Benchmarks are from pagespeed.web.dev Mobile report running with variability, they are not accurate.</span>
+          <span class="opacity-50 text-sm">*Note that PageSpeed Insights lab data is a snapshot from a particular day, which tends to be variable. We will be updating this section with aggregated results and/or field data from production usage as soon as it's available.</span>
         </p>
         <UButtonGroup class="mt-10 flex" :orientation="btnGroupOrientation">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
@@ -277,6 +279,36 @@ function timesFaster(nuxt: number, iframe: number) {
         </div>
       </div>
     </UContainer>
+    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">
+      <div class="xl:flex items-center gap-12 mx-auto">
+        <div class="max-w-lg">
+          <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
+            <UIcon name="i-ph-handshake-duotone" class="h-12 w-12 shrink-0 text-primary" />
+            <span>A collaboration in making the web faster</span>
+          </h2>
+          <p class="text-gray-500 dark:text-gray-400 mb-1">
+            Nuxt Scripts was designed and built by the Nuxt core team in collaboration with the <a href="https://developer.chrome.com/aurora" target="_blank" class="underline">Chrome Aurora</a> team at Google.
+          </p>
+          <p class="text-gray-500 dark:text-gray-400 mb-1">
+            It's being actively maintained by the Nuxt core team and amazing community contributors.
+          </p>
+        </div>
+        <div>
+          <div class="xl:flex justify-center items-center gap-3 mb-8">
+            <div class="font-light text-6xl mb-2">
+              <Icon name="carbon:user-favorite-alt" />
+              {{ contributors.length }}
+            </div>
+            <div class="text-sm opacity-80">
+              Contributors
+            </div>
+          </div>
+          <div class="mb-7 gap-2 mx-auto text-center grid grid-cols-4 sm:grid-cols-7">
+            <UAvatar v-for="(c, index) in contributors" :key="index" :alt="`GitHub User ${c}`" size="xl" height="45" width="45" loading="lazy" :src="`https://avatars.githubusercontent.com/u/${c}?s=80&v=4`" />
+          </div>
+        </div>
+      </div>
+    </ULandingSection>
   </div>
 </template>
 

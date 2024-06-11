@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes
   aboveTheFold?: boolean
   // copied from @types/vimeo__player
-  id: number | undefined
+  id?: number | undefined
   url?: string | undefined
   autopause?: boolean | undefined
   autoplay?: boolean | undefined
@@ -51,7 +51,7 @@ const emits = defineEmits<TEmits>()
 
 type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
 
-// eslint-disable-next-line ts/consistent-type-definitions
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 type TEmits = {
   play: EventMap<'play'>
   playing: EventMap<'playing'>
@@ -169,10 +169,7 @@ defineExpose({
 onMounted(() => {
   $script.then(async ({ Vimeo }) => {
     // filter props for false values
-    player = new Vimeo.Player(elVimeo.value, {
-      ...props,
-      url: encodeURI(`https://vimeo.com/${props.id}`),
-    })
+    player = new Vimeo.Player(elVimeo.value, props)
     if (clickTriggered) {
       player!.play()
       clickTriggered = false
