@@ -12,3 +12,5 @@ export const union = noop
 export const record = noop
 export const any = noop
 export const minLength = noop
+
+export const pipe = noop
