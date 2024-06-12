@@ -81,7 +81,8 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
                         <div class="logo h-10 w-auto block dark:hidden" v-html="script.logo.light" />
                         <div class="logo h-10 w-auto hidden dark:block" v-html="script.logo.dark" />
                       </template>
-                      <div v-else class="logo h-10 w-auto" v-html="script.logo" />
+                      <div v-else-if="script.logo.startsWith('<svg')" class="logo h-10 w-auto" v-html="script.logo" />
+                      <img v-else class="h-10 w-auto mx-auto logo" :src="script.logo">
                     </div>
                     <div class="text-gray-500 text-sm font-semibold">
                       {{ script.label }}
