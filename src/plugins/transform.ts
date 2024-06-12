@@ -6,7 +6,7 @@ import type { SourceMapInput } from 'rollup'
 import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
 import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
-import type { Input } from 'valibot'
+import type { InferInput } from 'valibot'
 import type { RegistryScript } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
@@ -102,7 +102,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     scriptSrcNode = srcProperty?.value as Literal & { start: number, end: number }
                   }
                   else {
-                    src = registryNode.scriptBundling && registryNode.scriptBundling(fnArg0 as any as Input<any>)
+                    src = registryNode.scriptBundling && registryNode.scriptBundling(fnArg0 as any as InferInput<any>)
                     // not supported
                     if (src === false)
                       return

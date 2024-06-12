@@ -1,7 +1,7 @@
 import type { UseScriptOptions } from '@unhead/schema'
 import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
-import type { Input, ObjectSchema } from 'valibot'
+import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
 import { object } from 'valibot'
 import type { SegmentInput } from './registry/segment'
@@ -19,8 +19,10 @@ import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
-import type { Input as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
-import type { Input as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
+// @ts-expect-error build-time
+import type { InferInput as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
+// @ts-expect-error build-time
+import type { InferInput as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -110,7 +112,7 @@ const emptyOptions = object({})
 
 export type EmptyOptionsSchema = typeof emptyOptions
 
-export type RegistryScriptInput<T extends ObjectSchema<any> = EmptyOptionsSchema, Bundelable extends boolean = true> = Input<T> & {
+export type RegistryScriptInput<T extends ObjectSchema<any, any> = EmptyOptionsSchema, Bundelable extends boolean = true> = InferInput<T> & {
   scriptInput?: UseScriptInput
   scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'bundle' | 'use'>
 }

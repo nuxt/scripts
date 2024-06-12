@@ -1,6 +1,6 @@
 import { joinURL } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { type Input, literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
+import { type InferInput, literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const IntercomOptions = object({
@@ -18,9 +18,9 @@ export const IntercomOptions = object({
 export type IntercomInput = RegistryScriptInput<typeof IntercomOptions>
 
 export interface IntercomApi {
-  Intercom: ((event: 'boot', data?: Input<typeof IntercomOptions>) => void)
+  Intercom: ((event: 'boot', data?: InferInput<typeof IntercomOptions>) => void)
   & ((event: 'shutdown') => void)
-  & ((event: 'update', options?: Input<typeof IntercomOptions>) => void)
+  & ((event: 'update', options?: InferInput<typeof IntercomOptions>) => void)
   & ((event: 'hide') => void)
   & ((event: 'show') => void)
   & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)

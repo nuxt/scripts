@@ -1,5 +1,5 @@
 import { defu } from 'defu'
-import type { BaseSchema, Input, ObjectSchema, ValiError } from 'valibot'
+import type { GenericSchema, InferInput, ObjectSchema, ValiError} from 'valibot'
 import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig, useScript } from '#imports'
@@ -10,20 +10,21 @@ import type {
   ScriptRegistry,
 } from '#nuxt-scripts'
 
-function validateScriptInputSchema<T extends BaseSchema<any>>(key: string, schema: T, options?: Input<T>) {
+function validateScriptInputSchema<T extends GenericSchema>(key: string, schema: T, options?: InferInput<T>) {
   if (import.meta.dev) {
     try {
       parse(schema, options)
     }
     catch (_e) {
-      const e = _e as ValiError
+      const e = _e as ValiError<any>
       // TODO nicer error handling
+      // @ts-expect-error untyped?
       console.error(e.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n'))
     }
   }
 }
 
-type OptionsFn<O extends ObjectSchema<any>> = (options: Input<O>) => ({
+type OptionsFn<O extends ObjectSchema<any, any>> = (options: InferInput<O>) => ({
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
   schema?: O
@@ -34,7 +35,7 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
-export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): T & {
+export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any, any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): T & {
   $script: Promise<T> & VueScriptInstance<T>
 } {
   const scriptConfig = scriptRuntimeConfig(key as keyof ScriptRegistry)

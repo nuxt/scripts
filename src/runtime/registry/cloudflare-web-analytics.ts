@@ -1,5 +1,5 @@
 import { useRegistryScript } from '../utils'
-import { boolean, minLength, object, optional, string } from '#nuxt-scripts-validator'
+import { boolean, minLength, object, optional, pipe, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 /**
@@ -25,7 +25,7 @@ export const CloudflareWebAnalyticsOptions = object({
   /**
    * The Cloudflare Web Analytics token.
    */
-  token: string([minLength(32)]),
+  token: pipe(string(), minLength(32)),
   /**
    * Cloudflare Web Analytics enables measuring SPAs automatically by overriding the History API’s pushState function
    * and listening to the onpopstate. Hash-based router is not supported.
