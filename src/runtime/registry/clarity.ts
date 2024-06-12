@@ -63,8 +63,8 @@ export function useScriptClarity<T extends ClarityApi>(
       clientInit: import.meta.server
         ? undefined
         : () => {
-            window.clarity = window.clarity || function () {
-              (window.clarity.q = window.clarity.q || []).push(arguments)
+            window.clarity = window.clarity || function (...params: any[]) {
+              (window.clarity.q = window.clarity.q || []).push(params)
             }
           },
     }),
