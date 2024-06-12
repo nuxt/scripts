@@ -19,6 +19,8 @@ import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
+import type { GoogleAdsenseInput } from './registry/google-adsense'
+import type { ClarityInput } from './registry/clarity'
 // @ts-expect-error build-time
 import type { InferInput as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
 // @ts-expect-error build-time
@@ -84,10 +86,12 @@ export interface NuxtAppScript {
 }
 
 export interface ScriptRegistry {
+  clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
   metaPixel?: MetaPixelInput
   fathomAnalytics?: FathomAnalyticsInput
   plausibleAnalytics?: PlausibleAnalyticsInput
+  googleAdsense?: GoogleAdsenseInput
   googleAnalytics?: GoogleAnalyticsInput
   googleMaps?: GoogleMapsInput
   lemonSqueezy?: LemonSqueezyInput
