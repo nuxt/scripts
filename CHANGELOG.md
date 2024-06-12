@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.5.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.5.0...v0.5.1)
+
+### 🩹 Fixes
+
+- Missing registry types ([564898e](https://github.com/nuxt/scripts/commit/564898e))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
 ## v0.5.0
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.4.10...v0.5.0)
