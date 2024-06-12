@@ -1,6 +1,10 @@
 # Changelog
 
 
+## v0.4.9
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.4.8...v0.4.9)
+
 ## v0.4.8
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.4.7...v0.4.8)
