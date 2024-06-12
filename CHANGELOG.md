@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.5.0
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.4.10...v0.5.0)
+
+### 🩹 Fixes
+
+- Mock validation `pipe` ([7c2fabb](https://github.com/nuxt/scripts/commit/7c2fabb))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
 ## v0.4.10
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.4.9...v0.4.10)
