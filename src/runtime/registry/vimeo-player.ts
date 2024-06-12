@@ -1,5 +1,5 @@
-/// <reference types="vimeo__player" />
 import { watch } from 'vue'
+import type Vimeo from 'vimeo__player'
 import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
@@ -8,7 +8,7 @@ type Constructor<T extends new (...args: any) => any> = T extends new (...args: 
 
 export interface VimeoPlayerApi {
   Vimeo: {
-    Player: Constructor<typeof window.Vimeo>
+    Player: Constructor<typeof Vimeo>
   }
 }
 

@@ -144,7 +144,7 @@ onMounted(() => {
   })
   // create the map
   $script.then(async (instance) => {
-    const maps = await instance.maps
+    const maps = await instance.maps as any as typeof google.maps // some weird type issue here
     const _map = new maps.Map(mapEl.value!, options.value)
     const placesService = new maps.places.PlacesService(_map)
 

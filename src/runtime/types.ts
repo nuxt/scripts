@@ -126,6 +126,6 @@ export interface RegistryScript {
   logo?: string | { light: string, dark: string }
 }
 
-export type ElementScriptTrigger = 'immediate' | 'visible' | keyof GlobalEventHandlersEventMap | (keyof GlobalEventHandlersEventMap)[] | false
+export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false
 
 export type RegistryScripts = RegistryScript[]
