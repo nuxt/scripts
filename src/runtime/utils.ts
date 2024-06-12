@@ -1,5 +1,5 @@
 import { defu } from 'defu'
-import type { GenericSchema, InferInput, ObjectSchema, ValiError} from 'valibot'
+import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig, useScript } from '#imports'
