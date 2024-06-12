@@ -6,6 +6,7 @@ import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
 import type { RegistryScripts } from './runtime/types'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
+import type { ClarityInput } from './runtime/registry/clarity'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
@@ -137,6 +138,18 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
       import: {
         name: 'useScriptHotjar',
         from: resolve('./runtime/registry/hotjar'),
+      },
+    },
+    {
+      label: 'Clarity',
+      scriptBundling(options?: ClarityInput) {
+        return `https://www.clarity.ms/tag/${options?.id}`
+      },
+      logo: `https://store-images.s-microsoft.com/image/apps.29332.512b1d3d-80ec-4aec-83bb-411008d2f7cd.76371b6f-9386-463f-bfb0-b75cffb86a4f.bd99f4b1-b18e-4380-aa79-93768763c90d.png`,
+      category: 'marketing',
+      import: {
+        name: 'useScriptClarity',
+        from: resolve('./runtime/registry/clarity'),
       },
     },
     // payments
