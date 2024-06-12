@@ -54,7 +54,9 @@
       "@unhead/vue",
       "@unhead/schema",
       "#nuxt-scripts",
-      "#nuxt-scripts-validator"
+      "#nuxt-scripts-validator",
+      "third-party-capital",
+      "knitwork"
     ]
   },
   "dependencies": {
@@ -81,7 +83,7 @@
     "shiki": "^1.6.2",
     "sirv": "^2.0.4",
     "std-env": "^3.7.0",
-    "third-party-capital": "^1.0.28",
+    "third-party-capital": "^1.0.30",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2",
     "unplugin": "^1.10.1",
@@ -99,6 +101,7 @@
     "bumpp": "^9.4.1",
     "changelogen": "^0.5.5",
     "eslint": "9.4.0",
+    "knitwork": "^1.1.0",
     "nuxt": "^3.11.2",
     "playwright-core": "^1.44.1",
     "typescript": "^5.4.5",

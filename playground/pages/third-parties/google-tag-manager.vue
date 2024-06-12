@@ -39,7 +39,7 @@ $script.then(({ google_tag_manager, dataLayer }) => {
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ $script.status }}
       </div>
     </ClientOnly>
   </div>
