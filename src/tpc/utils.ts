@@ -3,7 +3,7 @@ import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
 import type { Link, Script } from '@unhead/vue'
 
-interface Input {
+export interface Input {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
@@ -47,8 +47,10 @@ export function getTpcScriptContent(input: Input) {
 
   if (hasParams) {
     imports.add(genImport('#nuxt-scripts-validator', ['object', 'any']))
-    // need schema validation from tpc
-    chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
+    if (nuxt.options.dev) {
+      // need schema validation from tpc
+      chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
+    }
   }
 
   if (input.augmentWindowTypes) {
