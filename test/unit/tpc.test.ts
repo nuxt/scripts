@@ -68,7 +68,7 @@ describe.each([
       },
     }
 
-    it(`expect to${isDev ? '' : ' not'} generate the schema`, () => {
+    it(`expect to${isDev ? '' : ' not'} add the schema to the script options`, () => {
       const result = getTpcScriptContent(input)
       const returnStatement = getTpcScriptReturnStatement(result, 'useScriptGoogleAnalytics')
       if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {

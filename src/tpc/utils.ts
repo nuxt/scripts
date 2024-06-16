@@ -3,7 +3,7 @@ import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
 import type { Link, Script } from '@unhead/vue'
 
-interface Input {
+export interface Input {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
