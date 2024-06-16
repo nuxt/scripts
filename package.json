@@ -57,7 +57,8 @@
       "#nuxt-scripts",
       "#nuxt-scripts-validator",
       "third-party-capital",
-      "knitwork"
+      "knitwork",
+      "estree-walker"
     ]
   },
   "dependencies": {
