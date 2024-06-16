@@ -13,9 +13,11 @@ vi.mock('@nuxt/kit', async (og) => {
 
 describe.each([
   {
+    env: 'production',
     isDev: false,
   },
   {
+    env: 'development',
     isDev: true,
   },
 ])('tpc composable generation in $env', ({ isDev }) => {
