@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNuxt } from '@nuxt/kit'
-import { getTpcScriptContent } from '../../src/tpc/utils'
+import { TSESTree, parse } from '@typescript-eslint/typescript-estree'
+import { getTpcScriptContent, type Input } from '../../src/tpc/utils'
 
 vi.mock('@nuxt/kit', async (og) => {
   const mod = await og<typeof import('@nuxt/kit')>()
@@ -19,9 +20,11 @@ describe.each([
     env: 'development',
     isDev: true,
   },
-])('tpc composable generation in $env', ({ isDev, env }) => {
-  // @ts-expect-error mock only needed properties
-  vi.mocked(useNuxt).mockReturnValue({ options: { dev: isDev } })
+])('tpc composable generation in $env', ({ isDev }) => {
+  beforeEach(() => {
+    // @ts-expect-error mock only needed properties
+    vi.mocked(useNuxt).mockReturnValue({ options: { dev: isDev } })
+  })
 
   it ('expect to throw if no main scripts', () => {
     expect(() => getTpcScriptContent({
@@ -39,8 +42,8 @@ describe.each([
     })).toThrowError('no main script found for google-analytics in third-party-capital')
   })
 
-  it('expect to generate script content', () => {
-    const result = getTpcScriptContent({
+  describe('script content generation', () => {
+    const input: Input = {
       data: {
         id: 'google-analytics',
         scripts: [
@@ -59,10 +62,88 @@ describe.each([
       tpcTypeImport: 'GoogleAnalyticsInput',
       augmentWindowTypes: true,
       scriptFunctionName: 'useScriptGoogleAnalytics',
-      use: () => {},
-      stub: () => {},
+      use: () => {
+        return { dataLayer: window.dataLayer, gtag: window.gtag }
+      },
+      stub: () => {
+        return []
+      },
+    }
+
+    it(`expect to${isDev ? '' : ' not'} add the schema to the script options`, () => {
+      const result = getTpcScriptContent(input)
+      const returnStatement = getTpcScriptReturnStatement(result, 'useScriptGoogleAnalytics')
+      if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {
+        throw new Error('TPC Scripts must return a call expression of useRegistryScript')
+      }
+      const optionFnTree = returnStatement.argument.arguments[1] as TSESTree.ArrowFunctionExpression
+      const optionFnReturn = optionFnTree.body as TSESTree.ObjectExpression
+      const scriptOptionAst = optionFnReturn.properties.find((node): node is TSESTree.Property => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'scriptOptions')!
+
+      const useFn = (scriptOptionAst.value as TSESTree.ObjectExpression).properties.find(node => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'use')
+      if (!useFn) throw new Error('use function not found')
+      expect(getCodeFromAst(result, useFn)).toContain('return { dataLayer: window.dataLayer, gtag: window.gtag }')
+
+      const schemaNode = optionFnReturn.properties.find(node => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'schema')
+      if (isDev) {
+        expect(schemaNode).toBeTruthy()
+        expect(getCodeFromAst(result, schemaNode!)).toContain('schema: OptionSchema')
+      }
+      else {
+        expect(schemaNode).toBeUndefined()
+      }
     })
 
-    expect(result).toMatchSnapshot(`composable generation in ${env}`)
+    it('expect to stringify the use and stub functions', () => {
+      const result = getTpcScriptContent(input)
+      const returnStatement = getTpcScriptReturnStatement(result, 'useScriptGoogleAnalytics')
+      if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {
+        throw new Error('TPC Scripts must return a call expression of useRegistryScript')
+      }
+      const optionFnTree = returnStatement.argument.arguments[1] as TSESTree.ArrowFunctionExpression
+      const optionFnReturn = optionFnTree.body as TSESTree.ObjectExpression
+      const scriptOptionAst = optionFnReturn.properties.find((node): node is TSESTree.Property => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'scriptOptions')!
+
+      const useFn = (scriptOptionAst.value as TSESTree.ObjectExpression).properties.find(node => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'use')
+      if (!useFn) throw new Error('use function not found')
+      expect(getCodeFromAst(result, useFn)).toContain('return { dataLayer: window.dataLayer, gtag: window.gtag }')
+
+      const stubFn = (scriptOptionAst.value as TSESTree.ObjectExpression).properties.find(node => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'stub')
+      if (!stubFn) throw new Error('stub function not found')
+      expect(getCodeFromAst(result, stubFn)).toContain('return []')
+    })
+
+    it('expect to augment window types', () => {
+      const result = getTpcScriptContent(input)
+      const ast = parse(result, { loc: true, range: true })
+      const augmentWindowTypes = ast.body.find((node): node is TSESTree.TSModuleDeclaration => node.type === TSESTree.AST_NODE_TYPES.TSModuleDeclaration)
+      expect(augmentWindowTypes).toBeTruthy()
+      expect(getCodeFromAst(result, augmentWindowTypes!)).toContain('interface Window extends GoogleAnalyticsInput {}')
+    })
   })
 })
+
+function getTpcScriptAst(code: string, name: string) {
+  const ast = parse(code, { loc: true, range: true })
+  const tpcScriptAst = ast.body.find((node): node is TSESTree.ExportDefaultDeclaration => node.type === TSESTree.AST_NODE_TYPES.ExportNamedDeclaration && node.declaration?.type === TSESTree.AST_NODE_TYPES.FunctionDeclaration && node.declaration.id?.name === name)
+  if (!tpcScriptAst) {
+    throw new Error(`no function declaration found for ${name}`)
+  }
+
+  const functionAst = tpcScriptAst.declaration
+
+  return functionAst as TSESTree.FunctionDeclaration
+}
+
+function getCodeFromAst(code: string, ast: TSESTree.Node) {
+  return code.slice(ast.range[0], ast.range[1])
+}
+
+function getTpcScriptReturnStatement(code: string, name: string) {
+  const tpcScriptAst = getTpcScriptAst(code, name)
+  const returnStatement = tpcScriptAst.body.body.find((node): node is TSESTree.ReturnStatement => node.type === TSESTree.AST_NODE_TYPES.ReturnStatement)
+  if (!returnStatement) {
+    throw new Error('TPC Scripts must return a call expression of useRegistryScript')
+  }
+  return returnStatement
+}
