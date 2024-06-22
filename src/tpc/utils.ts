@@ -1,9 +1,9 @@
-import type { ExternalScript, Output } from 'third-party-capital'
+import type { ExternalScript, Output, Script } from 'third-party-capital'
 import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
-import type { Link, Script } from '@unhead/vue'
+import type { HeadEntryOptions, UseHeadOptions } from '@unhead/vue'
 
-export interface Input {
+export interface ScriptContentOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
@@ -19,7 +19,10 @@ export interface Input {
   stub: (params: { fn: string }) => any
 }
 
-export function getTpcScriptContent(input: Input) {
+const HEAD_VAR = '__head'
+const INJECTHEAD_CODE = `const ${HEAD_VAR} =  injectHead()`
+
+export function getTpcScriptContent(input: ScriptContentOpts) {
   const nuxt = useNuxt()
   if (!input.data.scripts)
     throw new Error('input.data has no scripts !')
@@ -28,6 +31,8 @@ export function getTpcScriptContent(input: Input) {
 
   if (!mainScript)
     throw new Error(`no main script found for ${input.tpcKey} in third-party-capital`)
+
+  const mainScriptOptions = getScriptInputOption(mainScript)
 
   const imports = new Set<string>([
     'import { withQuery } from \'ufo\'',
@@ -59,13 +64,12 @@ declare global {
   }
 
   const clientInitCode: string[] = []
-  const runtimeHead: { script: Script[], link: Link[] } = {
-    script: [],
-    link: input.data.stylesheets?.map(s => ({ ref: 'stylesheet', href: s })) || [],
-  }
 
   if (input.data.stylesheets) {
-    runtimeHead.link.push(...input.data.stylesheets.map(s => ({ href: s, ref: 'stylesheet' })))
+    if (!functionBody.includes(INJECTHEAD_CODE)) {
+      functionBody.unshift(INJECTHEAD_CODE)
+    }
+    functionBody.push(`${HEAD_VAR}.link.value.push(...${JSON.stringify(input.data.stylesheets.map(s => ({ ref: 'stylesheet', href: s })))})`)
   }
 
   for (const script of input.data.scripts) {
@@ -75,19 +79,9 @@ declare global {
     if (script === mainScript)
       continue
 
-    if ('url' in script && script.url) {
-      if (!runtimeHead.script)
-        runtimeHead.script = []
-
-      runtimeHead.script.push({
-        src: script.url,
-        async: true,
-      })
+    if ('url' in script) {
+      functionBody.push(`${HEAD_VAR}.script.value.push({ async: true, src: ${script.url} },${JSON.stringify(getScriptInputOption(script))})`)
     }
-  }
-
-  if (runtimeHead.script.length || runtimeHead.link.length) {
-    functionBody.push(`useHead(${JSON.stringify(runtimeHead)})`)
   }
 
   chunks.push(`export type Input = RegistryScriptInput${hasParams ? '<typeof OptionSchema>' : ''}`)
@@ -102,7 +96,8 @@ ${functionBody.join('\n')}
         ${nuxt.options.dev ? 'schema: OptionSchema,' : ''}
         scriptOptions: {
             use: ${input.use.toString()},
-            stub: import.meta.client ? undefined :  ${input.stub.toString()}
+            stub: import.meta.client ? undefined :  ${input.stub.toString()},
+            ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}
     }), _options)
@@ -114,4 +109,17 @@ ${functionBody.join('\n')}
 
 function replaceTokenToRuntime(code: string) {
   return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1')).join(';')
+}
+
+function getScriptInputOption(script: Script): HeadEntryOptions | undefined {
+  if (script.location === 'body') {
+    if (script.action === 'append') {
+      return { tagPosition: 'bodyClose' }
+    }
+    return { tagPosition: 'bodyOpen' }
+  }
+
+  if (script.action === 'append') {
+    return { tagPriority: 1 }
+  }
 }
