@@ -1,4 +1,5 @@
-import { type Input, object, string } from 'valibot'
+import { object, string } from 'valibot'
+import type { Input } from 'valibot'
 import { useScript } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
