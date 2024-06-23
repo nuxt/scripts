@@ -32,23 +32,11 @@ function handleReady(_map: Ref<google.maps.Map>) {
       />
     </div>
     <div class="text-center">
-      <UAlert
-        v-if="!isLoaded"
-        class="mb-5"
-        size="sm"
-        color="blue"
-        variant="soft"
-        title="Hover to load"
-        description="Hover the map will load the Google Maps iframe."
-      />
-      <UAlert
-        v-if="isLoaded"
-        class="mb-5"
-        size="sm"
-        color="blue"
-        variant="soft"
-      >
-        <template #title> Center: {{ center }} </template>
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Hover to load" description="Hover the map will load the Google Maps iframe." />
+      <UAlert v-if="isLoaded" class="mb-5" size="sm" color="blue" variant="soft">
+        <template #title>
+          Center: {{ center }}
+        </template>
       </UAlert>
     </div>
   </div>
