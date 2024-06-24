@@ -26,7 +26,7 @@ describe.each([
     vi.mocked(useNuxt).mockReturnValue({ options: { dev: isDev } })
   })
 
-  it ('expect to throw if no main scripts', () => {
+  it('expect to throw if no main scripts', () => {
     expect(() => getTpcScriptContent({
       data: {
         scripts: [],
@@ -37,8 +37,8 @@ describe.each([
       tpcTypeImport: 'GoogleAnalyticsInput',
       augmentWindowTypes: true,
       scriptFunctionName: 'useScriptGoogleAnalytics',
-      use: () => {},
-      stub: () => {},
+      use: () => { },
+      stub: () => { },
     })).toThrowError('no main script found for google-analytics in third-party-capital')
   })
 
@@ -123,6 +123,51 @@ describe.each([
   })
 })
 
+describe('script content generation with head positioning', () => {
+  const inputBase: ScriptContentOpts = {
+    data: {
+      id: 'google-analytics',
+      scripts: [
+        {
+          key: 'google-analytics',
+          params: ['id'],
+          url: 'https://www.google-analytics.com/analytics.js',
+          strategy: 'client',
+          location: 'body',
+          action: 'append',
+        },
+      ],
+      description: 'for test purpose',
+    },
+    tpcKey: 'google-analytics',
+    tpcTypeImport: 'GoogleAnalyticsInput',
+    augmentWindowTypes: true,
+    scriptFunctionName: 'useScriptGoogleAnalytics',
+    use: () => { },
+    stub: () => { },
+  }
+
+  describe('main script', () => {
+    it('main script post body position', () => {
+      const scriptOptsAst = getTpcScriptOptsASt(getTpcScriptContent(inputBase), 'useScriptGoogleAnalytics')
+      expect(getCodeFromAst(getTpcScriptContent(inputBase), scriptOptsAst)).toContain('"tagPosition":"bodyClose"')
+    })
+    it('main script pre body position', () => {
+      const scriptOptsAst = getTpcScriptOptsASt(getTpcScriptContent({
+        ...inputBase,
+        data: {
+          ...inputBase.data,
+          scripts: [{
+            ...inputBase.data.scripts![0],
+            action: 'prepend',
+          }],
+        },
+      }), 'useScriptGoogleAnalytics')
+      expect(getCodeFromAst(getTpcScriptContent(inputBase), scriptOptsAst)).toContain('"tagPosition":"bodyClose"')
+    })
+  })
+})
+
 function getTpcScriptAst(code: string, name: string) {
   const ast = parse(code, { loc: true, range: true })
   const tpcScriptAst = ast.body.find((node): node is TSESTree.ExportDefaultDeclaration => node.type === TSESTree.AST_NODE_TYPES.ExportNamedDeclaration && node.declaration?.type === TSESTree.AST_NODE_TYPES.FunctionDeclaration && node.declaration.id?.name === name)
@@ -146,4 +191,16 @@ function getTpcScriptReturnStatement(code: string, name: string) {
     throw new Error('TPC Scripts must return a call expression of useRegistryScript')
   }
   return returnStatement
+}
+
+function getTpcScriptOptsASt(code: string, name: string) {
+  const returnStatement = getTpcScriptReturnStatement(code, name)
+  if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {
+    throw new Error('TPC Scripts must return a call expression of useRegistryScript')
+  }
+  const optionFnTree = returnStatement.argument.arguments[1] as TSESTree.ArrowFunctionExpression
+  const optionFnReturn = optionFnTree.body as TSESTree.ObjectExpression
+  const scriptOptionAst = optionFnReturn.properties.find((node): node is TSESTree.Property => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'scriptOptions')!
+  if (!scriptOptionAst) throw new Error('scriptOptions not found')
+  return scriptOptionAst
 }
