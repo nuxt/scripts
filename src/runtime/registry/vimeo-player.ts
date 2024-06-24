@@ -1,5 +1,5 @@
 import { watch } from 'vue'
-import type Vimeo from 'vimeo__player'
+import type Vimeo from "@vimeo/player"
 import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'

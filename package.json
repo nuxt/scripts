@@ -58,7 +58,10 @@
       "#nuxt-scripts-validator",
       "third-party-capital",
       "knitwork",
-      "estree-walker"
+      "estree-walker",
+      "#build/nuxt-scripts/tpc/google-tag-manager",
+      "#build/nuxt-scripts/tpc/google-analytics",
+      "@vimeo/player"
     ]
   },
   "dependencies": {
@@ -94,7 +97,7 @@
   "devDependencies": {
     "@nuxt/devtools-ui-kit": "^1.3.3",
     "@nuxt/eslint-config": "^0.3.13",
-    "@nuxt/module-builder": "^0.7.1",
+    "@nuxt/module-builder": "^0.8.0",
     "@nuxt/test-utils": "3.13.1",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/typescript-estree": "^7.13.0",
