@@ -52,7 +52,8 @@ and are okay with a less interactive map.
 
 ```vue [Input]
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
+import { ref } from 'vue'
+import type { Ref } from 'vue'
 
 const isLoaded = ref(false)
 const center = ref()

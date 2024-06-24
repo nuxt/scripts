@@ -1,17 +1,9 @@
 <script lang="ts" setup>
 /// <reference types="google.maps" />
-import {
-  type HTMLAttributes,
-  type ImgHTMLAttributes,
-  type Ref,
-  type ReservedProps,
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
-import { type QueryObject, withQuery } from 'ufo'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
+import { withQuery } from 'ufo'
+import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'

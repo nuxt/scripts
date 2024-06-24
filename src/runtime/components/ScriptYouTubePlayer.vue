@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /// <reference types="youtube" />
-import { type HTMLAttributes, type ImgHTMLAttributes, type Ref, computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
 import { useElementScriptTrigger, useHead, useScriptYouTubePlayer } from '#imports'
