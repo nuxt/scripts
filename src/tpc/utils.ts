@@ -1,9 +1,12 @@
-import type { ExternalScript, Output } from 'third-party-capital'
+import type { ExternalScript, Output, Data, Script as TpcScript } from 'third-party-capital'
 import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
-import type { Link, Script } from '@unhead/vue'
+import type { HeadEntryOptions, Link, Script } from '@unhead/vue'
 
-export interface Input {
+const HEAD_VAR = '__head'
+const INJECTHEAD_CODE = `const ${HEAD_VAR} = injectHead()`
+
+export interface ScriptOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
@@ -19,7 +22,7 @@ export interface Input {
   stub: (params: { fn: string }) => any
 }
 
-export function getTpcScriptContent(input: Input) {
+export function getTpcScriptContent(input: ScriptOpts) {
   const nuxt = useNuxt()
   if (!input.data.scripts)
     throw new Error('input.data has no scripts !')
@@ -114,4 +117,101 @@ ${functionBody.join('\n')}
 
 function replaceTokenToRuntime(code: string) {
   return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1')).join(';')
+}
+
+
+
+export function getTpcEmbedComponent(input: Data) {
+  if(!input.html) {
+    throw new Error(`[@nuxt/scripts]: ${input.id} should have an html property.`)
+  }
+  const imports: Set<string> = new Set([
+    genImport('vue', ['defineComponent', 'h', 'mergeProps'])
+  ])
+
+
+  const props = []
+  const setupChunks: string[]= []
+  let src: string | undefined
+
+  const { attributes } = input.html  
+  if (attributes.src) {
+    imports.add(genImport('pathe', ['join']))
+    imports.add(genImport('ufo', ['withQuery']))
+
+    if(attributes.src.params) {
+      props.push(...attributes.src.params)
+    }
+    src = `withQuery('${attributes.src.url}', mergeProps(getPropertiesFromObject(props, ${JSON.stringify(attributes.src.params)}), {key: props.apiKey}))`
+  }
+
+  if (input.scripts) {
+    imports.add(genImport('@unhead/vue', ['injectHead']))
+    if (!setupChunks.includes(INJECTHEAD_CODE)) {
+      setupChunks.unshift(INJECTHEAD_CODE)
+    }
+    
+    for(const script of input.scripts) {
+      if('url' in script) {
+        setupChunks.push(`${HEAD_VAR}.push({
+          script: [{ async: true, src: '${script.url}' }]
+        },${JSON.stringify(getScriptInputOption(script))})`)
+      }
+
+      // todo handle CodeBlock
+    }
+  }
+
+  if(input.stylesheets) {
+    imports.add(genImport('@unhead/vue', ['injectHead']))
+    if (!setupChunks.includes(INJECTHEAD_CODE)) {
+      setupChunks.unshift(INJECTHEAD_CODE)
+    }
+    setupChunks.push(`${HEAD_VAR}.push({
+      link: ${JSON.stringify(input.stylesheets.map(s => ({ rel: 'stylesheet', href: s })))}
+    })`)
+  }
+
+  for(const attr in attributes) {
+    if(attributes[attr] === null) {
+      // null values should be defined by the user
+      props.push(attr)
+    }
+  }
+
+  return `
+${Array.from(imports).join('\n')}
+function getPropertiesFromObject(obj: Record<string, any>, properties: string[]): Record<string, any> {
+  return properties.reduce<Record<string, any>>((acc, property) => {
+      if (obj[property] !== undefined) {
+          acc[property] = obj[property];
+      }
+      return acc;
+  }
+  , {});
+}
+export default defineComponent({
+  name: "${input.id}",
+  props: ${JSON.stringify(props.map(p => p === 'key' ? 'apiKey' : p))},
+  setup(props) {
+    ${setupChunks.join('\n')}
+    return () => h('${input.html.element}', mergeProps(${JSON.stringify(attributes)}, getPropertiesFromObject(props, ${JSON.stringify(Object.keys(attributes))}), {
+      ${src ? `src: ${src}` : ''}
+    }))
+  }
+})
+  `
+}
+
+function getScriptInputOption(script: TpcScript): HeadEntryOptions | undefined {
+  if (script.location === 'body') {
+    if (script.action === 'append') {
+      return { tagPosition: 'bodyClose' }
+    }
+    return { tagPosition: 'bodyOpen' }
+  }
+
+  if (script.action === 'append') {
+    return { tagPriority: 1 }
+  }
 }

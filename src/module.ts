@@ -27,6 +27,8 @@ import type {
 } from './runtime/types'
 import addGoogleAnalyticsRegistry from './tpc/google-analytics'
 import addGoogleTagManagerRegistry from './tpc/google-tag-manager'
+import youtubeEmbedRegistry from './tpc/youtube-embed'
+import GoogleMapsEmbedRegistry from './tpc/google-maps-embed'
 
 export interface ModuleOptions {
   /**
@@ -136,6 +138,8 @@ export default defineNuxtModule<ModuleOptions>({
 
     addGoogleAnalyticsRegistry()
     addGoogleTagManagerRegistry()
+    youtubeEmbedRegistry()
+    GoogleMapsEmbedRegistry()
 
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]

@@ -87,6 +87,9 @@ importers:
       ufo:
         specifier: ^1.5.3
         version: 1.5.3
+      ultrahtml:
+        specifier: ^1.5.3
+        version: 1.5.3
       unimport:
         specifier: ^3.7.2
         version: 3.7.2(rollup@4.18.0)

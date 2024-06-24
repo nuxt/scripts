@@ -86,6 +86,7 @@
     "std-env": "^3.7.0",
     "third-party-capital": "^1.0.30",
     "ufo": "^1.5.3",
+    "ultrahtml": "^1.5.3",
     "unimport": "^3.7.2",
     "unplugin": "^1.10.1",
     "unstorage": "^1.10.2",
