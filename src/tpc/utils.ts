@@ -69,7 +69,7 @@ declare global {
     if (!functionBody.includes(INJECTHEAD_CODE)) {
       functionBody.unshift(INJECTHEAD_CODE)
     }
-    functionBody.push(`${HEAD_VAR}.link.value.push(...${JSON.stringify(input.data.stylesheets.map(s => ({ ref: 'stylesheet', href: s })))})`)
+    functionBody.push(`${HEAD_VAR}.push({link: ${JSON.stringify(input.data.stylesheets.map(s => ({ ref: 'stylesheet', href: s })))}})`)
   }
 
   for (const script of input.data.scripts) {
@@ -80,7 +80,7 @@ declare global {
       continue
 
     if ('url' in script) {
-      functionBody.push(`${HEAD_VAR}.script.value.push({ async: true, src: ${script.url} },${JSON.stringify(getScriptInputOption(script))})`)
+      functionBody.push(`${HEAD_VAR}.push({scripts:{ async: true, src: ${script.url} }},${JSON.stringify(getScriptInputOption(script))})`)
     }
   }
 
