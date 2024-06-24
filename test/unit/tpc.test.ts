@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNuxt } from '@nuxt/kit'
 import { TSESTree, parse } from '@typescript-eslint/typescript-estree'
-import { getTpcScriptContent, type Input } from '../../src/tpc/utils'
+import { getTpcScriptContent, type ScriptContentOpts } from '../../src/tpc/utils'
 
 vi.mock('@nuxt/kit', async (og) => {
   const mod = await og<typeof import('@nuxt/kit')>()
@@ -43,7 +43,7 @@ describe.each([
   })
 
   describe('script content generation', () => {
-    const input: Input = {
+    const input: ScriptContentOpts = {
       data: {
         id: 'google-analytics',
         scripts: [
