@@ -1,5 +1,6 @@
 // @ts-check
 import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
+import pluginNode from 'eslint-plugin-n'
 
 export default createConfigForNuxt({
   features: {
@@ -10,11 +11,6 @@ export default createConfigForNuxt({
     src: ['./src', './client', './docs'],
   },
 })
-  .override('nuxt/javascript', {
-    rules: {
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-    },
-  })
   .override('nuxt/typescript/rules', {
     rules: {
       '@typescript-eslint/ban-ts-comment': [
@@ -39,5 +35,23 @@ export default createConfigForNuxt({
       'vue/no-multiple-template-root': 'off',
       // NOTE: Disable this style rules if stylistic is not enabled
       'vue/max-attributes-per-line': 'off',
+    },
+  })
+  .append({
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  })
+  .append({
+    plugins: {
+      node: pluginNode,
+    },
+    rules: {
+      'node/handle-callback-err': ['error', '^(err|error)$'],
+      'node/no-deprecated-api': 'error',
+      'node/no-exports-assign': 'error',
+      'node/no-new-require': 'error',
+      'node/no-path-concat': 'error',
+      'node/process-exit-as-throw': 'error',
     },
   })
