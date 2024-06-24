@@ -1,7 +1,7 @@
 import type { ExternalScript, Output, Script } from 'third-party-capital'
 import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
-import type { HeadEntryOptions, UseHeadOptions } from '@unhead/vue'
+import type { HeadEntryOptions } from '@unhead/vue'
 
 export interface ScriptContentOpts {
   data: Output
