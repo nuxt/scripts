@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       hotjar: {
-        id: 'YOUR_ID'
+        id: 123456, // your id
       }
     }
   }
@@ -40,7 +40,7 @@ export default defineNuxtConfig({
     scripts: {
       registry: {
         hotjar: {
-          id: 'YOUR_ID',
+          id: 123456, // your id
         }
       }
     }
@@ -66,7 +66,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         hotjar: {
-          id: '', // NUXT_PUBLIC_SCRIPTS_HOTJAR_ID
+          id: 123456, // NUXT_PUBLIC_SCRIPTS_HOTJAR_ID
         },
       },
     },
@@ -83,8 +83,8 @@ NUXT_PUBLIC_SCRIPTS_HOTJAR_ID=<YOUR_ID>
 The `useScriptHotjar` composable lets you have fine-grain control over when and how Hotjar is loaded on your site.
 
 ```ts
-const { hotjar, $script } = useScriptHotjar({
-  id: 'YOUR_ID'
+const { hj, $script } = useScriptHotjar({
+  id: 123546,
 })
 // example
 hj('identify', 123456, {
@@ -133,7 +133,7 @@ const { hj } = useScriptHotjar()
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  hotjar('event', 'conversion')
+  hj('event', 'conversion')
 }
 </script>
 
@@ -155,7 +155,7 @@ export default defineNuxtConfig({
       hotjar: isDevelopment
         ? 'mock' // script won't load unless manually callined load()
         : {
-            id: 'YOUR_ID',
+            id: 123456 // your id
           },
     },
   },
