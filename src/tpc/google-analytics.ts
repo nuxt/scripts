@@ -24,6 +24,7 @@ export default function googleAnalitycsRegistry() {
       })
     },
     filename: 'nuxt-scripts/tpc/google-analytics.ts',
+    write: true,
   })
 
   addImports({
