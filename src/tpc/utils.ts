@@ -38,12 +38,12 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
-    'import { useFeatureDetection } from \'#imports\''
+    'import { useFeatureDetection } from \'#imports\'',
   ])
 
   const chunks: string[] = []
   const functionBody: string[] = [
-    `useFeatureDetection('${input.featureDetection}')`
+    `useFeatureDetection('${input.featureDetection}')`,
   ]
 
   const hasParams = mainScript.params?.length
@@ -59,7 +59,7 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
   }
 
-    chunks.push(`
+  chunks.push(`
 declare global {
   interface Window extends ${input.tpcTypeImport} {}
 }`)
