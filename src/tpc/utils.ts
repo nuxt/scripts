@@ -7,7 +7,6 @@ export interface ScriptContentOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
-  augmentWindowTypes?: boolean
   tpcKey: string
   /**
    * This will be stringified. The function must be pure.
@@ -17,6 +16,7 @@ export interface ScriptContentOpts {
    * This will be stringified. The function must be pure.
    */
   stub: (params: { fn: string }) => any
+  featureDetection: string
 }
 
 const HEAD_VAR = '__head'
@@ -38,10 +38,13 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
+    'import { useFeatureDetection } from \'#imports\''
   ])
 
   const chunks: string[] = []
-  const functionBody: string[] = []
+  const functionBody: string[] = [
+    `useFeatureDetection('${input.featureDetection}')`
+  ]
 
   const hasParams = mainScript.params?.length
 
@@ -56,12 +59,10 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
   }
 
-  if (input.augmentWindowTypes) {
     chunks.push(`
 declare global {
   interface Window extends ${input.tpcTypeImport} {}
 }`)
-  }
 
   const clientInitCode: string[] = []
 
