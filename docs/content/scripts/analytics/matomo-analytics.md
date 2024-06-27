@@ -84,6 +84,7 @@ The `useScriptMatomoAnalytics` composable lets you have fine-grain control over 
 
 ```ts
 const { _paq, $script } = useScriptMatomoAnalytics({
+  matomoUrl: 'YOUR_MATOMO_URL'
   siteId: 'YOUR_SITE_ID'
 })
 ```
