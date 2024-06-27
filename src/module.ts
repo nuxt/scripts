@@ -27,6 +27,7 @@ import type {
 } from './runtime/types'
 import addGoogleAnalyticsRegistry from './tpc/google-analytics'
 import addGoogleTagManagerRegistry from './tpc/google-tag-manager'
+import checkScripts from './plugins/check-scripts'
 
 export interface ModuleOptions {
   /**
@@ -99,6 +100,7 @@ export default defineNuxtModule<ModuleOptions>({
     debug: false,
   },
   async setup(config, nuxt) {
+    addBuildPlugin(checkScripts())
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
     const unheadPath = await resolvePath('@unhead/vue').catch(() => undefined)
@@ -234,6 +236,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
           return url
         },
       }))
+
       nuxt.hooks.hook('build:done', async () => {
         const initPromise = Array.from(moduleInstallPromises.values())
         for (const p of initPromise)
