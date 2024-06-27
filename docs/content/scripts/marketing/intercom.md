@@ -146,7 +146,7 @@ Using Intercom only in production.
 ::code-group
 
 ```vue [IntercomButton.vue]
-<script setup>
+<script setup lang="ts">
 const { Intercom } = useScriptIntercom()
 
 // noop in development, ssr

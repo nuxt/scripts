@@ -137,7 +137,7 @@ Using Google Analytics only in production while using `gtag` to send a conversio
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { gtag } = useScriptGoogleAnalytics()
 
 // noop in development, ssr

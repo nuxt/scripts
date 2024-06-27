@@ -118,7 +118,7 @@ Using Matomo Analytics only in production while using `_paq` to send a conversio
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { _paq } = useScriptMatomoAnalytics()
 
 // noop in development, ssr

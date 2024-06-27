@@ -145,7 +145,7 @@ const emits = defineEmits<{
 To subscribe to Google Map events, you can use the `ready` event.
 
 ```vue
-<script setup>
+<script setup lang="ts">
 function handleReady(map) {
   map.addListener('center_changed', () => {
     console.log('Center changed', map.getCenter())
@@ -251,7 +251,7 @@ export interface GoogleMapsApi {
 Loading the Google Maps SDK and interacting with it programmatically.
 
 ```vue
-<script setup>
+<script setup lang="ts">
 const { $script } = useScriptGoogleMaps({
   apiKey: 'key'
 })

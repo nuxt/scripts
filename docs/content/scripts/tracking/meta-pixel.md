@@ -148,7 +148,7 @@ Using Meta Pixel only in production while using `fbq` to send a conversion event
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { fbq } = useScriptMetaPixel()
 
 // noop in development, ssr

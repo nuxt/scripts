@@ -137,7 +137,7 @@ Using Clarity only in production while using `clarity` to send a conversion even
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { clarity } = useScriptClarity()
 
 // noop in development, ssr
