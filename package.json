@@ -62,7 +62,8 @@
       "estree-walker",
       "#build/nuxt-scripts/tpc/google-tag-manager",
       "#build/nuxt-scripts/tpc/google-analytics",
-      "@vimeo/player"
+      "@vimeo/player",
+      "esbuild"
     ]
   },
   "dependencies": {
@@ -75,6 +76,7 @@
     "@types/youtube": "^0.0.50",
     "@unhead/vue": "^1.9.12",
     "@vueuse/core": "^10.10.1",
+    "acorn": "^8.12.0",
     "consola": "^3.2.3",
     "defu": "^6.1.4",
     "h3": "^1.11.1",

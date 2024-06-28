@@ -42,6 +42,9 @@ importers:
       '@vueuse/core':
         specifier: ^10.10.1
         version: 10.10.1(vue@3.4.27(typescript@5.4.5))
+      acorn:
+        specifier: ^8.12.0
+        version: 8.12.0
       consola:
         specifier: ^3.2.3
         version: 3.2.3
@@ -2502,6 +2505,11 @@ packages:
 
   acorn@8.11.3:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
+  acorn@8.12.0:
+    resolution: {integrity: sha512-RTvkC4w+KNXrM39/lWCUaG0IbRkWdCv7W/IOW9oU6SawyxulvkQy5HQPVTKxEjczcUvapcrw3cFx/60VN/NRNw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -9023,7 +9031,7 @@ snapshots:
   '@stylistic/eslint-plugin-js@2.1.0(eslint@9.5.0)':
     dependencies:
       '@types/eslint': 8.56.10
-      acorn: 8.11.3
+      acorn: 8.12.0
       eslint: 9.5.0
       eslint-visitor-keys: 4.0.0
       espree: 10.0.1
@@ -9670,8 +9678,8 @@ snapshots:
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.11(encoding@0.1.13)
       '@rollup/pluginutils': 4.2.1
-      acorn: 8.11.3
-      acorn-import-attributes: 1.9.5(acorn@8.11.3)
+      acorn: 8.12.0
+      acorn-import-attributes: 1.9.5(acorn@8.12.0)
       async-sema: 3.1.1
       bindings: 1.5.0
       estree-walker: 2.0.2
@@ -10169,17 +10177,23 @@ snapshots:
     dependencies:
       acorn: 8.11.3
 
-  acorn-jsx@5.3.2(acorn@8.11.3):
+  acorn-import-attributes@1.9.5(acorn@8.12.0):
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
+
+  acorn-jsx@5.3.2(acorn@8.12.0):
+    dependencies:
+      acorn: 8.12.0
 
   acorn-loose@8.4.0:
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
 
   acorn-walk@8.3.2: {}
 
   acorn@8.11.3: {}
+
+  acorn@8.12.0: {}
 
   agent-base@6.0.2:
     dependencies:
@@ -11330,14 +11344,14 @@ snapshots:
 
   espree@10.0.1:
     dependencies:
-      acorn: 8.11.3
-      acorn-jsx: 5.3.2(acorn@8.11.3)
+      acorn: 8.12.0
+      acorn-jsx: 5.3.2(acorn@8.12.0)
       eslint-visitor-keys: 4.0.0
 
   espree@9.6.1:
     dependencies:
-      acorn: 8.11.3
-      acorn-jsx: 5.3.2(acorn@8.11.3)
+      acorn: 8.12.0
+      acorn-jsx: 5.3.2(acorn@8.12.0)
       eslint-visitor-keys: 3.4.3
 
   esquery@1.5.0:
@@ -12830,7 +12844,7 @@ snapshots:
 
   mlly@1.7.1:
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
       pathe: 1.1.2
       pkg-types: 1.1.1
       ufo: 1.5.3
@@ -14990,7 +15004,7 @@ snapshots:
   terser@5.31.1:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.11.3
+      acorn: 8.12.0
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -15141,7 +15155,7 @@ snapshots:
 
   unctx@2.3.1:
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
       estree-walker: 3.0.3
       magic-string: 0.30.10
       unplugin: 1.10.1
@@ -15194,7 +15208,7 @@ snapshots:
   unimport@3.7.2(rollup@4.18.0):
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.0)
-      acorn: 8.11.3
+      acorn: 8.12.0
       escape-string-regexp: 5.0.0
       estree-walker: 3.0.3
       fast-glob: 3.3.2
@@ -15341,7 +15355,7 @@ snapshots:
 
   unplugin@1.10.1:
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
       chokidar: 3.6.0
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.6.2
