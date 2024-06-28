@@ -114,7 +114,7 @@ export interface StripeApi {
 Loading the Stripe SDK and using it to create a payment element.
 
 ```vue
-<script setup>
+<script setup lang="ts">
 const paymentEl = ref(null)
 const { $script } = useScriptStripe()
 onMounted(() => {

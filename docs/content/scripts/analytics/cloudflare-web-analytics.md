@@ -123,7 +123,7 @@ export interface CloudflareWebAnalyticsApi {
 Loading Cloudflare Web Analytics through the `app.vue` when Nuxt is ready.
 
 ```vue [app.vue]
-<script setup>
+<script setup lang="ts">
 useScriptCloudflareWebAnalytics({
   token: '12ee46bf598b45c2868bbc07a3073f58',
   scriptOptions: {

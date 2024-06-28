@@ -89,7 +89,7 @@ export interface LemonSqueezyApi {
 Using the Lemon Squeezy SDK with a payment link.
 
 ```vue
-<script setup>
+<script setup lang="ts">
 const { Setup } = useScriptLemonSqueezy()
 onMounted(() => {
   Setup()
