@@ -21,10 +21,8 @@ import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { GoogleAdsenseInput } from './registry/google-adsense'
 import type { ClarityInput } from './registry/clarity'
-// @ts-expect-error build-time
-import type { InferInput as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
-// @ts-expect-error build-time
-import type { InferInput as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
+import type { Input as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
+import type { Input as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
