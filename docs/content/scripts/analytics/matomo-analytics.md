@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Matomo Analytics](https://marketingplatform.matomo.com/about/analytics/) is a great analytics solution for Nuxt Apps.
+[Matomo Analytics](https://matomo.org/) is a great analytics solution for Nuxt Apps.
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
@@ -84,6 +84,7 @@ The `useScriptMatomoAnalytics` composable lets you have fine-grain control over 
 
 ```ts
 const { _paq, $script } = useScriptMatomoAnalytics({
+  matomoUrl: 'YOUR_MATOMO_URL'
   siteId: 'YOUR_SITE_ID'
 })
 ```
