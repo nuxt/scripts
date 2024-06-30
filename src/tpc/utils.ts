@@ -7,7 +7,6 @@ export interface ScriptContentOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
-  augmentWindowTypes?: boolean
   tpcKey: string
   /**
    * This will be stringified. The function must be pure.
@@ -55,13 +54,11 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     // need schema validation from tpc
     chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
   }
-
-  if (input.augmentWindowTypes) {
-    chunks.push(`
+  
+  chunks.push(`
 declare global {
   interface Window extends ${input.tpcTypeImport} {}
 }`)
-  }
 
   const clientInitCode: string[] = []
 

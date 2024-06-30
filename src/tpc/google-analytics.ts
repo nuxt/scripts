@@ -20,7 +20,6 @@ export default function googleAnalitycsRegistry() {
         },
         tpcKey: 'gtag',
         tpcTypeImport: 'GoogleAnalyticsApi',
-        augmentWindowTypes: true,
       })
     },
     filename: 'nuxt-scripts/tpc/google-analytics.ts',
