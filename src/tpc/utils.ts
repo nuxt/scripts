@@ -54,7 +54,7 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     // need schema validation from tpc
     chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
   }
-  
+
   chunks.push(`
 declare global {
   interface Window extends ${input.tpcTypeImport} {}
