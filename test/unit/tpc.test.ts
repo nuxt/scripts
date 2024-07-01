@@ -35,7 +35,6 @@ describe.each([
       },
       tpcKey: 'google-analytics',
       tpcTypeImport: 'GoogleAnalyticsInput',
-      augmentWindowTypes: true,
       scriptFunctionName: 'useScriptGoogleAnalytics',
       use: () => { },
       stub: () => { },
@@ -60,7 +59,6 @@ describe.each([
       },
       tpcKey: 'google-analytics',
       tpcTypeImport: 'GoogleAnalyticsInput',
-      augmentWindowTypes: true,
       scriptFunctionName: 'useScriptGoogleAnalytics',
       use: () => {
         return { dataLayer: window.dataLayer, gtag: window.gtag }
@@ -141,7 +139,6 @@ describe('script content generation with head positioning', () => {
     },
     tpcKey: 'google-analytics',
     tpcTypeImport: 'GoogleAnalyticsInput',
-    augmentWindowTypes: true,
     scriptFunctionName: 'useScriptGoogleAnalytics',
     use: () => { },
     stub: () => { },
