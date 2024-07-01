@@ -49,7 +49,6 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest",
     "test:types": "npx nuxi typecheck",
-    "postinstall": "pnpm dev:prepare"
   },
   "build": {
     "externals": [
