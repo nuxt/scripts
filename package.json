@@ -68,7 +68,7 @@
   "dependencies": {
     "@nuxt/devtools-kit": "^1.3.3",
     "@nuxt/devtools-ui-kit": "^1.3.3",
-    "@nuxt/kit": "^3.12.1",
+    "@nuxt/kit": "^3.12.3",
     "@types/google.maps": "^3.55.9",
     "@types/stripe-v3": "^3.1.33",
     "@types/vimeo__player": "^2.18.3",
@@ -110,7 +110,7 @@
     "eslint": "9.5.0",
     "eslint-plugin-n": "^17.9.0",
     "knitwork": "^1.1.0",
-    "nuxt": "^3.12.1",
+    "nuxt": "^3.12.3",
     "playwright-core": "^1.44.1",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0",
@@ -119,7 +119,7 @@
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*",
-    "nuxt": "^3.12.1",
+    "nuxt": "^3.12.3",
     "nuxt-scripts-devtools": "workspace:*",
     "vue": "^3.4.27",
     "vue-router": "^4.3.3"
