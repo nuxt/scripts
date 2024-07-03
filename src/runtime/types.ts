@@ -47,7 +47,7 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
   skipValidation?: boolean
 }
 
-export type NuxtUseScriptIntegrationOptions = Omit<NuxtUseScriptOptions, 'use'>
+export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
 
 export type NuxtUseScriptInput = UseScriptInput
 
@@ -105,7 +105,7 @@ export interface ScriptRegistry {
   [key: `${string}-npm`]: NpmInput
 }
 
-export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptions<T>]
+export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<
   Record<T, NuxtConfigScriptRegistryEntry<ScriptRegistry[T]>>
 >
