@@ -7,6 +7,7 @@ export interface ScriptContentOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
+  registryId?: string
   tpcKey: string
   /**
    * This will be stringified. The function must be pure.
@@ -86,7 +87,7 @@ declare global {
   chunks.push(`
 export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_options?: Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
+  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.registryId ?? input.tpcKey}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
