@@ -21,10 +21,8 @@ import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { GoogleAdsenseInput } from './registry/google-adsense'
 import type { ClarityInput } from './registry/clarity'
-// @ts-expect-error build-time
-import type { InferInput as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
-// @ts-expect-error build-time
-import type { InferInput as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
+import type { Input as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
+import type { Input as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -49,7 +47,7 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
   skipValidation?: boolean
 }
 
-export type NuxtUseScriptIntegrationOptions = Omit<NuxtUseScriptOptions, 'use'>
+export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
 
 export type NuxtUseScriptInput = UseScriptInput
 
@@ -107,7 +105,7 @@ export interface ScriptRegistry {
   [key: `${string}-npm`]: NpmInput
 }
 
-export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptions<T>]
+export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<
   Record<T, NuxtConfigScriptRegistryEntry<ScriptRegistry[T]>>
 >

@@ -127,7 +127,7 @@ Using Hotjar only in production while using `hj` to send a conversion event.
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { hj } = useScriptHotjar()
 
 // noop in development, ssr

@@ -120,7 +120,7 @@ Using Plausible Analytics only in production while using `plausible` to send a c
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { plausible } = useScriptPlausibleAnalytics()
 
 // noop in development, ssr

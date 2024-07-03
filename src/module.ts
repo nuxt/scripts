@@ -21,12 +21,14 @@ import { registry } from './registry'
 import type {
   NuxtConfigScriptRegistry,
   NuxtUseScriptInput,
-  NuxtUseScriptOptions,
+  NuxtUseScriptOptionsSerializable,
   RegistryScript,
   RegistryScripts,
 } from './runtime/types'
 import addGoogleAnalyticsRegistry from './tpc/google-analytics'
 import addGoogleTagManagerRegistry from './tpc/google-tag-manager'
+import checkScripts from './plugins/check-scripts'
+import { templatePlugin } from './templates'
 
 export interface ModuleOptions {
   /**
@@ -36,11 +38,11 @@ export interface ModuleOptions {
   /**
    * Default options for scripts.
    */
-  defaultScriptOptions?: NuxtUseScriptOptions
+  defaultScriptOptions?: NuxtUseScriptOptionsSerializable
   /**
    * Register scripts that should be loaded globally on all pages.
    */
-  globals?: (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptions])[]
+  globals?: (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptionsSerializable])[]
   /** Configure the way scripts assets are exposed */
   assets?: {
     /**
@@ -99,6 +101,7 @@ export default defineNuxtModule<ModuleOptions>({
     debug: false,
   },
   async setup(config, nuxt) {
+    addBuildPlugin(checkScripts())
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
     const unheadPath = await resolvePath('@unhead/vue').catch(() => undefined)
@@ -141,8 +144,8 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScripts = [...scripts]
 
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
-      const withComposables = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
-      addImports(withComposables.map((i) => {
+      const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
+      addImports(registryScriptsWithImport.map((i) => {
         return {
           priority: -1,
           ...i.import,
@@ -150,7 +153,7 @@ export default defineNuxtModule<ModuleOptions>({
       }))
 
       // compare the registryScripts to the original registry to find new scripts
-      const newScripts = withComposables.filter(i => !scripts.some(r => r.import?.name === i.import.name))
+      const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
       // augment types to support the integrations registry
       extendTypes(name!, async ({ typesPath }) => {
@@ -186,32 +189,7 @@ ${newScripts.map((i) => {
         addPluginTemplate({
           filename: `modules/${name!.replace('/', '-')}.mjs`,
           getContents() {
-            const imports = ['useScript', 'defineNuxtPlugin']
-            const inits = []
-            // for global scripts, we can initialise them script away
-            for (const [k, c] of Object.entries(config.registry || {})) {
-              const importDefinition = withComposables.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
-              if (importDefinition) {
-                // title case
-                imports.unshift(importDefinition.import.name)
-                const args = (typeof c !== 'object' ? {} : c) || {}
-                if (c === 'mock')
-                  args.scriptOptions = { trigger: 'manual', skipValidation: true }
-                inits.push(`${importDefinition.import.name}(${JSON.stringify(args)});`)
-              }
-            }
-            return `import { ${imports.join(', ')} } from '#imports'
-export default defineNuxtPlugin({
-  name: "${name}:init",
-  setup() {
-${(config.globals || []).map(g => !Array.isArray(g)
-              ? `    useScript("${g.toString()}")`
-              : g.length === 2
-                ? `    useScript(${JSON.stringify(g[0])}, ${JSON.stringify(g[1])} })`
-                : `    useScript(${JSON.stringify(g[0])})`).join('\n')}
-    ${inits.join('\n    ')}
-  }
-})`
+            return templatePlugin(config, registryScriptsWithImport)
           },
         })
       }
@@ -220,7 +198,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
       addBuildPlugin(NuxtScriptBundleTransformer({
-        scripts: withComposables,
+        scripts: registryScriptsWithImport,
         defaultBundle: config.defaultScriptOptions?.bundle,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
@@ -234,6 +212,7 @@ ${(config.globals || []).map(g => !Array.isArray(g)
           return url
         },
       }))
+
       nuxt.hooks.hook('build:done', async () => {
         const initPromise = Array.from(moduleInstallPromises.values())
         for (const p of initPromise)

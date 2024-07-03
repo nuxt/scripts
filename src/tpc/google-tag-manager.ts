@@ -25,6 +25,7 @@ export default function googleTagManagerRegistry() {
       })
     },
     filename: 'nuxt-scripts/tpc/google-tag-manager.ts',
+    write: true,
   })
 
   addImports({

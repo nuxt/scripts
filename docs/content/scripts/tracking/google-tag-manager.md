@@ -123,7 +123,7 @@ Using Google Tag Manager only in production while using `dataLayer` to send a co
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { dataLayer } = useScriptGoogleTagManager()
 
 // noop in development, ssr

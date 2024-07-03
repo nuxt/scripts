@@ -100,12 +100,14 @@ const benchmarks = {
     logo: registry.find(s => s.import?.name === 'useScriptGoogleMaps').logo,
     label: 'Google Maps',
     nuxt: {
+      link: 'https://scripts-phi.vercel.app/third-parties/google-maps/nuxt-scripts',
       fcp: 1500,
       tbt: 70,
       lcp: 2700,
       si: 2500,
     },
     iframe: {
+      link: 'https://scripts-phi.vercel.app/third-parties/google-maps/default',
       fcp: 1600,
       tbt: 830,
       lcp: 1600,
@@ -116,12 +118,14 @@ const benchmarks = {
     logo: registry.find(s => s.import?.name === 'useScriptYouTubePlayer').logo,
     label: 'YouTube',
     nuxt: {
+      link: 'https://scripts-phi.vercel.app/third-parties/youtube/nuxt-scripts',
       fcp: 1200,
       tbt: 70,
       lcp: 1200,
       si: 1600,
     },
     iframe: {
+      link: 'https://scripts-phi.vercel.app/third-parties/youtube/default',
       fcp: 1600,
       tbt: 3250,
       lcp: 1600,
@@ -132,12 +136,14 @@ const benchmarks = {
     logo: registry.find(s => s.import?.name === 'useScriptVimeoPlayer').logo,
     label: 'Vimeo',
     nuxt: {
+      link: 'https://scripts-phi.vercel.app/third-parties/vimeo/nuxt-scripts',
       fcp: 1500,
       tbt: 70,
       lcp: 2400,
       si: 2100,
     },
     iframe: {
+      link: 'https://scripts-phi.vercel.app/third-parties/vimeo/default',
       fcp: 2200,
       tbt: 260,
       lcp: 2200,
@@ -218,22 +224,58 @@ const contributors = useRuntimeConfig().public.contributors
       </ul>
     </ULandingSection>
 
-    <UContainer class="py-6 sm:py-20 gap-20 mb-12 flex flex-col xl:flex-row items-center">
+    <UContainer class="py-6 sm:py-20 gap-8 lg:gap-20 mb-12 flex flex-col xl:flex-row ">
       <div class="max-w-lg">
+        <UIcon name="i-ph-speedometer-duotone" class="h-[100px] w-[100px] text-primary" />
         <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
-          <UIcon name="i-ph-speedometer-duotone" class="h-12 w-12 shrink-0 text-primary" />
-          <span>Master Your Web Vitals</span>
+          <span>Speed up with Facade Components</span>
         </h2>
-        <p class="text-gray-500 dark:text-gray-400 mb-1">
-          Nuxt Scripts comes with <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
+        <p class="text-gray-500 dark:text-gray-400 mb-3">
+          <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
             Facade Components
-          </NuxtLink> preconfigured for maximum performance
-          and developer experience. Initial testing with mobile lab data from the PageSpeed Insights API is promising.
+          </NuxtLink> are fake UI elements that get replaced once a third-party script loads.
         </p>
-        <p class="text-gray-500 dark:text-gray-400">
-          <span class="opacity-50 text-sm">*Note that PageSpeed Insights lab data is a snapshot from a particular day, which tends to be variable. We will be updating this section with aggregated results and/or field data from production usage as soon as it's available.</span>
+        <p class="text-gray-500 dark:text-gray-400 mb-3">
+          They can significantly improve your performance while still providing a great user experience, however they do have some trade-offs.
         </p>
-        <UButtonGroup class="mt-10 flex" :orientation="btnGroupOrientation">
+      </div>
+      <div class="w-full ">
+        <div class="flex flex-col lg:grid grid-cols-2 mb-8 gap-8">
+          <div v-for="(benchmark, key) in benchmarks" :key="key">
+            <h3 class="md:text-xl font-bold flex items-center gap-3 mb-5">
+              <div class="logo h-auto w-7" v-html="benchmark.logo" />
+              {{ benchmark.label }}
+            </h3>
+            <div class="mb-3">
+              <div class="flex items-center mb-1">
+                <NuxtLink :to="benchmark.nuxt.link" class="dark:text-gray-300 text-gray-600 text-sm font-semibold underline">
+                  Nuxt Scripts
+                </NuxtLink>
+                <UBadge variant="subtle" color="blue" class="ml-3">
+                  {{ timesFaster(benchmark.nuxt[webVital], benchmark.iframe[webVital]) }}x Faster
+                </UBadge>
+              </div>
+              <div class="flex items-center gap-3 max-w-full">
+                <UProgress :value="benchmark.nuxt[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="flex flex-grow" />
+                <div class="w-14 flex-grow text-right">
+                  {{ humanizeMs(benchmark.nuxt[webVital]) }}
+                </div>
+              </div>
+            </div>
+            <div>
+              <NuxtLink :to="benchmark.iframe.link" class="text-sm font-semibold underline">
+                Iframe
+              </NuxtLink>
+              <div class="flex items-center gap-3">
+                <UProgress :value="benchmark.iframe[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="" />
+                <div class="w-14 flex-grow text-right">
+                  {{ humanizeMs(benchmark.iframe[webVital]) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <UButtonGroup class="mb-4 flex" :orientation="btnGroupOrientation">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
             First Contentful Paint
           </UButton>
@@ -244,40 +286,9 @@ const contributors = useRuntimeConfig().public.contributors
             Speed Index
           </UButton>
         </UButtonGroup>
-      </div>
-      <div class="w-full">
-        <div class="flex flex-col grid-cols-2 gap-8">
-          <div v-for="(benchmark, key) in benchmarks" :key="key">
-            <h3 class="md:text-xl font-bold flex items-center gap-2 mb-5">
-              <div class="hidden md:block logo h-5 w-auto" v-html="benchmark.logo" />
-              {{ benchmark.label }} <UBadge variant="soft" color="blue">
-                {{ timesFaster(benchmark.nuxt[webVital], benchmark.iframe[webVital]) }}x Faster
-              </UBadge>
-            </h3>
-            <div class="mb-3">
-              <div class="text-sm font-semibold">
-                Nuxt Scripts
-              </div>
-              <div class="flex items-center gap-3 max-w-full">
-                <UProgress :value="benchmark.nuxt[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="flex flex-grow" />
-                <div class="w-14 flex-grow text-right">
-                  {{ humanizeMs(benchmark.nuxt[webVital]) }}
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="text-sm font-semibold">
-                Iframe
-              </div>
-              <div class="flex items-center gap-3">
-                <UProgress :value="benchmark.iframe[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="" />
-                <div class="w-14 flex-grow text-right">
-                  {{ humanizeMs(benchmark.iframe[webVital]) }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <p class="text-gray-500 dark:text-gray-400">
+          <span class="opacity-50 text-sm">*Note that PageSpeed Insights lab data is a snapshot from a particular day, which tends to be variable. We will be updating this section with aggregated results and/or field data from production usage as soon as it's available.</span>
+        </p>
       </div>
     </UContainer>
     <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">

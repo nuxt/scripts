@@ -125,7 +125,7 @@ Using Segment only in production while using `analytics` to send a conversion ev
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { track, analytics } = useScriptSegment()
 
 // noop in development, ssr

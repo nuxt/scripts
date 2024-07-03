@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 const list = ref()
 // list is a html element, we need to set up a transition to scroll it to the bottom
 onMounted(async () => {

@@ -147,7 +147,7 @@ Using X Pixel only in production while using `twq` to send a conversion event.
 ::code-group
 
 ```vue [ConversionButton.vue]
-<script setup>
+<script setup lang="ts">
 const { twq } = useScriptXPixel()
 
 // noop in development, ssr
