@@ -38,7 +38,6 @@ describe.each([
       scriptFunctionName: 'useScriptGoogleAnalytics',
       use: () => { },
       stub: () => { },
-      featureDetection: 'ga',
     })).toThrowError('no main script found for google-analytics in third-party-capital')
   })
 
@@ -67,7 +66,6 @@ describe.each([
       stub: () => {
         return []
       },
-      featureDetection: 'google-analytics',
     }
 
     it(`expect to${isDev ? '' : ' not'} add the schema to the script options`, () => {
@@ -113,13 +111,12 @@ describe.each([
       expect(getCodeFromAst(result, stubFn)).toContain('return []')
     })
 
-    it('expect to augment window types and useFeature detection', () => {
+    it('expect to augment window types', () => {
       const result = getTpcScriptContent(input)
       const ast = parse(result, { loc: true, range: true })
       const augmentWindowTypes = ast.body.find((node): node is TSESTree.TSModuleDeclaration => node.type === TSESTree.AST_NODE_TYPES.TSModuleDeclaration)
       expect(augmentWindowTypes).toBeTruthy()
       expect(getCodeFromAst(result, augmentWindowTypes!)).toContain('interface Window extends GoogleAnalyticsInput {}')
-      expect(result).toContain('useFeatureDetection(\'google-analytics\')')
     })
   })
 })
@@ -145,7 +142,6 @@ describe('script content generation with head positioning', () => {
     scriptFunctionName: 'useScriptGoogleAnalytics',
     use: () => { },
     stub: () => { },
-    featureDetection: 'google-analytics',
   }
 
   describe('main script', () => {

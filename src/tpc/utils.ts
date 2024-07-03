@@ -16,7 +16,6 @@ export interface ScriptContentOpts {
    * This will be stringified. The function must be pure.
    */
   stub: (params: { fn: string }) => any
-  featureDetection: string
 }
 
 const HEAD_VAR = '__head'
@@ -38,13 +37,10 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
-    'import { useFeatureDetection } from \'#imports\'',
   ])
 
   const chunks: string[] = []
-  const functionBody: string[] = [
-    `useFeatureDetection('${input.featureDetection}')`,
-  ]
+  const functionBody: string[] = []
 
   const hasParams = mainScript.params?.length
 
