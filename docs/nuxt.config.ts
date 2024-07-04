@@ -4,6 +4,7 @@ import { $fetch } from 'ofetch'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   extends: ['@nuxt/ui-pro'],
+
   modules: [
     '@nuxt/fonts',
     '@nuxt/content',
@@ -18,9 +19,11 @@ export default defineNuxtConfig({
       nuxt.options.runtimeConfig.public.contributors = contributors.map(m => m.id)
     },
   ],
+
   future: {
     compatibilityVersion: 4,
   },
+
   hooks: {
     // Define `@nuxt/ui` components as global to use them in `.md` (feel free to add those you need)
     'components:extend': (components) => {
@@ -28,6 +31,7 @@ export default defineNuxtConfig({
       globals.forEach(c => c.global = true)
     },
   },
+
   $production: {
     scripts: {
       registry: {
@@ -37,6 +41,7 @@ export default defineNuxtConfig({
       },
     },
   },
+
   app: {
     seoMeta: {
       themeColor: [
@@ -50,29 +55,38 @@ export default defineNuxtConfig({
       },
     },
   },
+
   ui: {
     icons: ['heroicons', 'ph', 'simple-icons'],
   },
+
   routeRules: {
     '/api/search.json': { prerender: true },
   },
+
   site: {
     name: 'Nuxt Scripts',
     url: 'scripts.nuxt.com',
   },
+
   sitemap: {
     strictNuxtContentPaths: true,
   },
+
   nitro: {
     prerender: {
       // For CF trailing slash issue
       autoSubfolderIndex: false,
     },
   },
+
   devtools: {
     enabled: true,
   },
+
   typescript: {
     strict: false,
   },
+
+  compatibilityDate: '2024-07-03',
 })
