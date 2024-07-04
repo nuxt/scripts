@@ -5,7 +5,7 @@ describe('template plugin file', () => {
   // global
   it('empty global', async () => {
     const res = templatePlugin({
-      globals: [],
+      globals: {},
       registry: {},
     }, [])
     expect(res).toMatchInlineSnapshot(`
@@ -16,15 +16,16 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
+          return { provide: { $scripts: {  } } }
         }
       })"
     `)
   })
   it('string global', async () => {
     const res = templatePlugin({
-      globals: [
-        'https://js.stripe.com/v3/',
-      ],
+      globals: {
+        stripe: 'https://js.stripe.com/v3/',
+      },
     }, [])
     expect(res).toContain('useScript("https://js.stripe.com/v3/")')
   })
@@ -90,9 +91,10 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
-          useScript("https://js.stripe.com/v3/")
-          useScript({"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"})
-          useScript("https://js.stripe.com/v3/", {"trigger":"onNuxtReady","mode":"client"} })
+          const 0 = useScript({"src":"https://js.stripe.com/v3/","key":"0"}, { use: () => ({ 0: window.0 }) })
+          const 1 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ 1: window.1 }) })
+          const 2 = useScript({"key":"2","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ 2: window.2 } }) )
+          return { provide: { $scripts: { 0, 1, 2 } } }
         }
       })"
     `)
@@ -100,7 +102,7 @@ describe('template plugin file', () => {
   // registry
   it('registry object', async () => {
     const res = templatePlugin({
-      globals: [],
+      globals: {},
       registry: {
         stripe: {
           id: 'test',
@@ -117,7 +119,7 @@ describe('template plugin file', () => {
   })
   it('registry array', async () => {
     const res = templatePlugin({
-      globals: [],
+      globals: {},
       registry: {
         stripe: [
           {

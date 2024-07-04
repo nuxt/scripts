@@ -12,6 +12,7 @@ import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
 import { resolvePath } from 'mlly'
 import { join } from 'pathe'
+import { hash } from 'ohash'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -42,7 +43,7 @@ export interface ModuleOptions {
   /**
    * Register scripts that should be loaded globally on all pages.
    */
-  globals?: (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptionsSerializable])[]
+  globals?: Record<string, (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptionsSerializable])[]>
   /** Configure the way scripts assets are exposed */
   assets?: {
     /**
@@ -123,7 +124,11 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
     nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
-    nuxt.options.runtimeConfig.public['nuxt-scripts'] = { defaultScriptOptions: config.defaultScriptOptions }
+    nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
+      // expose for devtools
+      version: nuxt.options.dev ? version : undefined,
+      defaultScriptOptions: config.defaultScriptOptions,
+    }
     addImportsDir([
       resolve('./runtime/composables'),
       // auto-imports aren't working without this for some reason
@@ -160,6 +165,7 @@ export default defineNuxtModule<ModuleOptions>({
         let types = `
 declare module '#app' {
   interface NuxtApp {
+    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).join(' | ')}, Pick<(import('#nuxt-scripts').NuxtAppScript), '$script'> & Record<string, any>>
     _scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)>
   }
   interface RuntimeNuxtHooks {
@@ -184,7 +190,12 @@ ${newScripts.map((i) => {
         return types
       })
 
-      if (config.globals?.length || Object.keys(config.registry || {}).length) {
+      if (Array.isArray(config.globals)) {
+        // convert to object
+        config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
+        logger.warn('The `globals` array option is deprecated, please convert to an object.')
+      }
+      if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         addPluginTemplate({
           filename: `modules/${name!.replace('/', '-')}.mjs`,
