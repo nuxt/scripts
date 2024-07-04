@@ -101,9 +101,13 @@ export default defineNuxtModule<ModuleOptions>({
     debug: false,
   },
   async setup(config, nuxt) {
-    addBuildPlugin(checkScripts())
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
+    if (!config.enabled) {
+      // TODO fallback to useHead?
+      logger.debug('The module is disabled, skipping setup.')
+      return
+    }
     const unheadPath = await resolvePath('@unhead/vue').catch(() => undefined)
     // couldn't be found for some reason, assume compatibility
     if (unheadPath) {
@@ -113,11 +117,7 @@ export default defineNuxtModule<ModuleOptions>({
         return
       }
     }
-    if (!config.enabled) {
-      // TODO fallback to useHead?
-      logger.debug('The module is disabled, skipping setup.')
-      return
-    }
+    addBuildPlugin(checkScripts())
     // allow augmenting the options
     nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
