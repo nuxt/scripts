@@ -37,7 +37,7 @@ have better privacy and be better DX overall.
 To get started, simply run:
 
 ```bash
-npx nuxi@latest module add @nuxt/scripts
+npx nuxi@latest module add scripts
 ```
 
 That's it! The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
