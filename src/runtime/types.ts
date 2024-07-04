@@ -106,9 +106,9 @@ export interface ScriptRegistry {
 }
 
 export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
-export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<
-  Record<T, NuxtConfigScriptRegistryEntry<ScriptRegistry[T]>>
->
+export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
+  [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
+}>
 
 const emptyOptions = object({})
 
