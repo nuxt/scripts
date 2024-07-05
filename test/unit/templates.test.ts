@@ -92,9 +92,9 @@ describe('template plugin file', () => {
         parallel: true,
         setup() {
           const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
-          const strip2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ strip2: window.strip2 }) })
+          const stripe2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe2: window.stripe2 }) })
           const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 } }) )
-          return { provide: { $scripts: { stripe1, strip2, stripe3 } } }
+          return { provide: { $scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
     `)
