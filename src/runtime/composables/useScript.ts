@@ -22,8 +22,8 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
   const id = (input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))) as keyof typeof nuxtApp._scripts
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   // return early
-  if (nuxtApp.$scripts[id]) {
-    return nuxtApp.$scripts[id]
+  if ((nuxtApp.$scripts as Record<string, any>)[id]) {
+    return (nuxtApp.$scripts as Record<string, any>)[id]
   }
   if (import.meta.client) {
     // only validate if we're initializing the script
@@ -36,6 +36,7 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
     }
   }
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
+  // @ts-expect-error untyped
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
