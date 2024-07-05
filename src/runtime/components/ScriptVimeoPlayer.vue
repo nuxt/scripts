@@ -4,7 +4,9 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
-import { useAsyncData, useElementScriptTrigger, useHead, useScriptVimeoPlayer } from '#imports'
+import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptVimeoPlayer } from '../registry/vimeo-player'
+import { useAsyncData, useHead } from '#imports'
 
 const props = withDefaults(defineProps<{
   // custom

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { callOnce, onMounted, ref, useElementScriptTrigger, useScriptGoogleAdsense } from '#imports'
+import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptGoogleAdsense } from '../registry/google-adsense'
+import { callOnce, onMounted, ref } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
