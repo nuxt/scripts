@@ -12,7 +12,6 @@ import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
 import { resolvePath } from 'mlly'
 import { join } from 'pathe'
-import { hash } from 'ohash'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -43,7 +42,7 @@ export interface ModuleOptions {
   /**
    * Register scripts that should be loaded globally on all pages.
    */
-  globals?: Record<string, (NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptionsSerializable])[]>
+  globals?: Record<string, NuxtUseScriptInput | [NuxtUseScriptInput, NuxtUseScriptOptionsSerializable]>
   /** Configure the way scripts assets are exposed */
   assets?: {
     /**
@@ -190,11 +189,6 @@ ${newScripts.map((i) => {
         return types
       })
 
-      if (Array.isArray(config.globals)) {
-        // convert to object
-        config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
-        logger.warn('The `globals` array option is deprecated, please convert to an object.')
-      }
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         addPluginTemplate({

@@ -1,7 +1,14 @@
+import { hash } from 'ohash'
 import type { ModuleOptions } from './module'
+import { logger } from './logger'
 import type { RegistryScript } from '#nuxt-scripts'
 
 export function templatePlugin(config: Partial<ModuleOptions>, registry: Required<RegistryScript>[]) {
+  if (Array.isArray(config.globals)) {
+    // convert to object
+    config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
+    logger.warn('The `globals` array option is deprecated, please convert to an object.')
+  }
   const imports = ['useScript', 'defineNuxtPlugin']
   const inits = []
   // for global scripts, we can initialise them script away

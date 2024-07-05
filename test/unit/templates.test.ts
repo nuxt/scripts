@@ -27,26 +27,26 @@ describe('template plugin file', () => {
         stripe: 'https://js.stripe.com/v3/',
       },
     }, [])
-    expect(res).toContain('useScript("https://js.stripe.com/v3/")')
+    expect(res).toContain('const stripe = useScript({"src":"https://js.stripe.com/v3/","key":"stripe"}, { use: () => ({ stripe: window.stripe }) })')
   })
   it('object global', async () => {
     const res = templatePlugin({
-      globals: [
-        {
+      globals: {
+        stripe: {
           async: true,
           src: 'https://js.stripe.com/v3/',
           key: 'stripe',
           defer: true,
           referrerpolicy: 'no-referrer',
         },
-      ],
+      },
     }, [])
-    expect(res).toContain('useScript({"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"})')
+    expect(res).toContain('const stripe = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe: window.stripe }) })')
   })
   it('array global', async () => {
     const res = templatePlugin({
-      globals: [
-        [
+      globals: {
+        stripe: [
           {
             async: true,
             src: 'https://js.stripe.com/v3/',
@@ -59,29 +59,29 @@ describe('template plugin file', () => {
             mode: 'client',
           },
         ],
-      ],
+      },
     }, [])
-    expect(res).toContain('useScript({"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, {"trigger":"onNuxtReady","mode":"client"} })')
+    expect(res).toContain('const stripe = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe: window.stripe } }) )')
   })
   it('mixing global', async () => {
     const res = templatePlugin({
-      globals: [
-        'https://js.stripe.com/v3/',
-        {
+      globals: {
+        stripe1: 'https://js.stripe.com/v3/',
+        stripe2: {
           async: true,
           src: 'https://js.stripe.com/v3/',
           key: 'stripe',
           defer: true,
           referrerpolicy: 'no-referrer',
         },
-        [
+        stripe3: [
           'https://js.stripe.com/v3/',
           {
             trigger: 'onNuxtReady',
             mode: 'client',
           },
         ],
-      ],
+      },
     }, [])
     expect(res).toMatchInlineSnapshot(`
       "import { useScript, defineNuxtPlugin } from '#imports'
@@ -91,10 +91,10 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
-          const 0 = useScript({"src":"https://js.stripe.com/v3/","key":"0"}, { use: () => ({ 0: window.0 }) })
-          const 1 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ 1: window.1 }) })
-          const 2 = useScript({"key":"2","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ 2: window.2 } }) )
-          return { provide: { $scripts: { 0, 1, 2 } } }
+          const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
+          const strip2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ strip2: window.strip2 }) })
+          const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 } }) )
+          return { provide: { $scripts: { stripe1, strip2, stripe3 } } }
         }
       })"
     `)
