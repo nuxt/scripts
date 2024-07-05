@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, useElementScriptTrigger, useScriptCrisp, onMounted } from '#imports'
+import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptCrisp } from '../registry/crisp'
+import { ref, onMounted } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -14,7 +16,7 @@ const props = withDefaults(defineProps<{
 
 const emits = defineEmits<{
   // our emit
-  ready: [e: ReturnType<useScriptCrisp>]
+  ready: [e: ReturnType<typeof useScriptCrisp>]
 }>()
 
 const rootEl = ref(null)
