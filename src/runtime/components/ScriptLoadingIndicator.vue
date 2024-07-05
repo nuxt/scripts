@@ -1,22 +1,26 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import { computed } from '#imports'
+
+const props = withDefaults(defineProps<{
   color?: string
+  size?: number
 }>(), {
   color: 'currentColor',
+  size: 30,
 })
+
+const styles = computed(() => ({
+  width: `${props.size}px`,
+  height: `${props.size}px`,
+}))
 </script>
 
 <template>
-  <div class="loader" aria-label="Loading..." role="status" />
+  <div class="loader" :styles="styles" aria-label="Loading..." role="status" />
 </template>
 
 <style scoped>
 .loader {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  width: 30px;
-  height: 30px;
   border: 5px solid v-bind(color);
   opacity: 0.5;
   border-bottom-color: transparent;
