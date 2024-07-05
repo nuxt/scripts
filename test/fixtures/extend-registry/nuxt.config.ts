@@ -7,6 +7,9 @@ export default defineNuxtConfig({
   devtools: {
     enabled: true,
   },
+  modules: [
+    '@nuxt/scripts',
+  ],
   hooks: {
     'scripts:registry': function (registry) {
       registry.push({
