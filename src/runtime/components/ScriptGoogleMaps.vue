@@ -7,7 +7,9 @@ import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
-import { resolveComponent, useElementScriptTrigger, useHead, useScriptGoogleMaps } from '#imports'
+import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptGoogleMaps } from '../registry/google-maps'
+import { resolveComponent, useHead } from '#imports'
 
 interface PlaceholderOptions {
   width?: string | number
