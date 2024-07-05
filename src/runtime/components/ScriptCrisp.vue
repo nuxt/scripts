@@ -5,7 +5,7 @@ import { ref, onMounted } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
-  id?: string
+  id: string
   /**
    * Defines the trigger event to load the script.
    */
