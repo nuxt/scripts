@@ -2,7 +2,7 @@
 import { ref, useElementScriptTrigger, useScript } from '#imports'
 
 const trigger = ref()
-const { myScript } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
+const { myScript, $script } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
   trigger: useElementScriptTrigger({
     trigger: 'mouseover',
     el: trigger,
@@ -22,6 +22,9 @@ myScript('test')
   <div>
     <div id="el-trigger" ref="trigger">
       Load script when seen!
+    </div>
+    <div>
+      {{ $script.status }}
     </div>
   </div>
 </template>

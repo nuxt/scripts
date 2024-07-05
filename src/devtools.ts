@@ -3,13 +3,11 @@ import type { Nuxt } from 'nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
 import { useNuxt } from '@nuxt/kit'
 import type { ModuleOptions } from './module'
+import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
 export interface ServerFunctions {}
 
 export interface ClientFunctions {}
-
-export const DEVTOOLS_UI_ROUTE = '/__nuxt-scripts'
-export const DEVTOOLS_UI_LOCAL_PORT = 3030
 
 export function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolve'], nuxt: Nuxt = useNuxt()) {
   const clientPath = resolve('./client')

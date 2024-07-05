@@ -3,7 +3,7 @@ import type { UseScriptOptions } from '@unhead/schema'
 import { hashCode } from '@unhead/shared'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
-import { injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig } from '#imports'
+import { injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
 import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 function useNuxtScriptRuntimeConfig() {
@@ -20,6 +20,11 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
     options.trigger = onNuxtReady
   const nuxtApp = useNuxtApp()
   const id = (input.key || input.src || hashCode((typeof input.innerHTML === 'string' ? input.innerHTML : ''))) as keyof typeof nuxtApp._scripts
+  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+  // return early
+  if (nuxtApp.$scripts[id]) {
+    return nuxtApp.$scripts[id]
+  }
   if (import.meta.client) {
     // only validate if we're initializing the script
     if (!nuxtApp._scripts?.[id]) {
@@ -31,6 +36,7 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
     }
   }
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
+  nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     // sync scripts to nuxtApp with debug details
