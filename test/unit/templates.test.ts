@@ -5,7 +5,7 @@ describe('template plugin file', () => {
   // global
   it('empty global', async () => {
     const res = templatePlugin({
-      globals: [],
+      globals: {},
       registry: {},
     }, [])
     expect(res).toMatchInlineSnapshot(`
@@ -16,36 +16,37 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
+          return { provide: { $scripts: {  } } }
         }
       })"
     `)
   })
   it('string global', async () => {
     const res = templatePlugin({
-      globals: [
-        'https://js.stripe.com/v3/',
-      ],
+      globals: {
+        stripe: 'https://js.stripe.com/v3/',
+      },
     }, [])
-    expect(res).toContain('useScript("https://js.stripe.com/v3/")')
+    expect(res).toContain('const stripe = useScript({"src":"https://js.stripe.com/v3/","key":"stripe"}, { use: () => ({ stripe: window.stripe }) })')
   })
   it('object global', async () => {
     const res = templatePlugin({
-      globals: [
-        {
+      globals: {
+        stripe: {
           async: true,
           src: 'https://js.stripe.com/v3/',
           key: 'stripe',
           defer: true,
           referrerpolicy: 'no-referrer',
         },
-      ],
+      },
     }, [])
-    expect(res).toContain('useScript({"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"})')
+    expect(res).toContain('const stripe = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe: window.stripe }) })')
   })
   it('array global', async () => {
     const res = templatePlugin({
-      globals: [
-        [
+      globals: {
+        stripe: [
           {
             async: true,
             src: 'https://js.stripe.com/v3/',
@@ -58,29 +59,29 @@ describe('template plugin file', () => {
             mode: 'client',
           },
         ],
-      ],
+      },
     }, [])
-    expect(res).toContain('useScript({"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, {"trigger":"onNuxtReady","mode":"client"} })')
+    expect(res).toContain('const stripe = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe: window.stripe } }) )')
   })
   it('mixing global', async () => {
     const res = templatePlugin({
-      globals: [
-        'https://js.stripe.com/v3/',
-        {
+      globals: {
+        stripe1: 'https://js.stripe.com/v3/',
+        stripe2: {
           async: true,
           src: 'https://js.stripe.com/v3/',
           key: 'stripe',
           defer: true,
           referrerpolicy: 'no-referrer',
         },
-        [
+        stripe3: [
           'https://js.stripe.com/v3/',
           {
             trigger: 'onNuxtReady',
             mode: 'client',
           },
         ],
-      ],
+      },
     }, [])
     expect(res).toMatchInlineSnapshot(`
       "import { useScript, defineNuxtPlugin } from '#imports'
@@ -90,9 +91,10 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
-          useScript("https://js.stripe.com/v3/")
-          useScript({"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"})
-          useScript("https://js.stripe.com/v3/", {"trigger":"onNuxtReady","mode":"client"} })
+          const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
+          const stripe2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe2: window.stripe2 }) })
+          const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 } }) )
+          return { provide: { $scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
     `)
@@ -100,7 +102,7 @@ describe('template plugin file', () => {
   // registry
   it('registry object', async () => {
     const res = templatePlugin({
-      globals: [],
+      globals: {},
       registry: {
         stripe: {
           id: 'test',
@@ -117,7 +119,7 @@ describe('template plugin file', () => {
   })
   it('registry array', async () => {
     const res = templatePlugin({
-      globals: [],
+      globals: {},
       registry: {
         stripe: [
           {
