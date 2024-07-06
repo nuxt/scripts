@@ -123,8 +123,6 @@ export interface IntercomApi {
 
 ### Config Schema
 
-You must provide the options when setting up the script for the first time.
-
 ```ts
 export const IntercomOptions = object({
   app_id: string(),
@@ -172,7 +170,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       intercom: isDevelopment
-        ? 'mock' // script won't load unless manually callined load()
+        ? 'mock' // script won't load unless manually calling load()
         : {
             app_id: 'YOUR_APP_ID',
           },
