@@ -11,11 +11,11 @@ const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
   id: string
   runtimeConfig?: {
-    websiteId: string
+    locale: string
   }
   tokenId?: string
   cookieDomain?: string
-  cookieExpiry?: string
+  cookieExpiry?: number
 }>(), {
   trigger: 'click',
 })
@@ -30,7 +30,11 @@ const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
 
 const isReady = ref(false)
 const crisp = useScriptCrisp({
-  ...props,
+  id: props.id,
+  runtimeConfig: props.runtimeConfig,
+  tokenId: props.tokenId,
+  cookieDomain: props.cookieDomain,
+  cookieExpiry: props.cookieExpiry,
   scriptOptions: {
     trigger,
   },
