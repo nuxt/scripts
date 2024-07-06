@@ -11,6 +11,9 @@ const route = useRoute()
 provide('navigation', computed(() => {
   return route.path.startsWith('/docs') ? navigation.value?.[0]?.children : navigation.value?.[1]?.children || []
 }))
+provide('topGuides', computed(() => {
+  return navigation.value?.[0]?.children.find(nav => nav.title === 'Guides')?.children || []
+}))
 </script>
 
 <template>

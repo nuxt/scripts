@@ -1,5 +1,8 @@
 <script lang="ts" setup>
+import type { NavItem } from '@nuxt/content'
+import type { Ref } from 'vue'
 
+const topGuides = inject<Ref<NavItem[]>>('topGuides')
 </script>
 
 <template>
@@ -35,10 +38,9 @@
               </h3>
               <nav>
                 <ul class="grid grid-cols-2 gap-6">
-                  <li v-for="(module, key) in modules" :key="key">
-                    <NuxtLink :to="module.to">
-                      <Icon :name="module.icon" />
-                      {{ module.label }}
+                  <li v-for="(module, key) in topGuides" :key="key">
+                    <NuxtLink :to="module._path">
+                      {{ module.title }}
                     </NuxtLink>
                   </li>
                 </ul>

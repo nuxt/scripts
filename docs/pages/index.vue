@@ -52,6 +52,42 @@ onMounted(() => {
     })
   })
 })
+
+interface JSConfettiApi {
+  // JSConfetti is a class
+  JSConfetti: {
+    new(): {
+      addConfetti: (options?: { emojis: string[] }) => void
+    }
+  }
+}
+declare global {
+  interface Window {
+    JSConfetti: { new (): JSConfettiApi }
+  }
+}
+
+const confettiEl = ref()
+const { $script } = useScript<JSConfettiApi>({
+  key: 'confetti',
+  src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
+}, {
+  trigger: useScriptTriggerElement({
+    trigger: 'visibility',
+    el: confettiEl,
+  }),
+  use() {
+    return { JSConfetti: window.JSConfetti }
+  },
+})
+onMounted(() => {
+  confettiEl.value && useEventListener(confettiEl.value, 'mouseenter', () => {
+    $script.then(({ JSConfetti }) => {
+      new JSConfetti().addConfetti({ emojis: ['🎉', '🎊'] })
+    })
+  })
+})
+
 const links = [
   {
     label: 'Get started',
@@ -391,6 +427,23 @@ const contributors = useRuntimeConfig().public.contributors
           </div>
         </div>
       </div>
+    </ULandingSection>
+    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+      <ULandingCTA
+        description="Learn all of the fundamentals of Nuxt Scripts in the fun interactive confetti tutorial."
+        card
+      >
+        <template #title>
+          Try out our JS Confetti Tutorial
+        </template>
+        <template #links>
+          <div ref="confettiEl">
+            <UButton size="xl" variant="solid" icon="i-ph-sparkle-duotone" color="primary" to="/docs/guides/confetti-tutorial">
+              Get started
+            </UButton>
+          </div>
+        </template>
+      </ULandingCTA>
     </ULandingSection>
   </div>
 </template>
