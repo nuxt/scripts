@@ -52,7 +52,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
             if (!calleeName)
               return
             // check it starts with useScriptX where X must be a A-Z alphabetical letter
-            const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9))  && !calleeName.startsWith('useScriptTrigger') && !calleeName.startsWith('useScriptEvent'))
+            const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9)) && !calleeName.startsWith('useScriptTrigger') && !calleeName.startsWith('useScriptEvent'))
             if (
               _node.type === 'CallExpression'
               && _node.callee.type === 'Identifier'
