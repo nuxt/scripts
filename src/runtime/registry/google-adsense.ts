@@ -17,7 +17,7 @@ export interface GoogleAdsenseApi {
   /**
    * The Google Adsense API.
    */
-  adsbygoogle: any[] & { loaded: boolean }
+  adsbygoogle: any[] & { loaded?: boolean }
 }
 
 declare global {
