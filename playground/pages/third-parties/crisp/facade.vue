@@ -1,23 +1,14 @@
-<script setup lang="ts">
-const isLoaded = ref(false)
-</script>
-
 <template>
-  <div class="not-prose">
-    <div class="flex items-center justify-center p-5">
-      <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp">
-        <template #awaitingLoad>
-          <div class="crisp-icon" />
-        </template>
-        <template #loading>
-          <ScriptLoadingIndicator color="black" />
-        </template>
-      </ScriptCrisp>
-    </div>
-    <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load the Crisp script" />
-      <UAlert v-else color="green" variant="soft" title="Crisp is loaded" description="The Crisp Facade component is no longer being displayed." />
-    </div>
+  <div>
+    <div>crisp</div>
+    <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp">
+      <template #awaitingLoad>
+        <div class="crisp-icon" />
+      </template>
+      <template #loading>
+        <ScriptLoadingIndicator color="black" />
+      </template>
+    </ScriptCrisp>
   </div>
 </template>
 
@@ -28,7 +19,7 @@ const isLoaded = ref(false)
   border-radius: 54px;
   cursor: pointer;
   background-color: #1972F5;
-  position: relative;
+  position: fixed;
   bottom: 20px;
   right: 24px;
   z-index: 100000;

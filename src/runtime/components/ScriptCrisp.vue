@@ -63,7 +63,7 @@ onMounted(() => {
 <template>
   <div
     ref="rootEl"
-    style="display: block; position: absolute; bottom: 14px; right: 14px; z-index: 100000;"
+    :style="{ display: isReady ? 'hidden' : 'block' }"
   >
     <slot :ready="isReady" />
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
