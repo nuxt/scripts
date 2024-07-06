@@ -176,7 +176,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       xPixel: isDevelopment
-        ? 'mock' // script won't load unless manually callined load()
+        ? 'mock' // script won't load unless manually calling load()
         : {
             id: 'YOUR_ID',
           },

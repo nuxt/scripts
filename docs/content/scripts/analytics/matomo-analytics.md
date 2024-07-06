@@ -145,7 +145,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       matomoAnalytics: isDevelopment
-        ? 'mock' // script won't load unless manually callined load()
+        ? 'mock' // script won't load unless manually calling load()
         : {
             siteId: 'YOUR_SITE_ID',
           },

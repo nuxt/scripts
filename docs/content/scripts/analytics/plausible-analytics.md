@@ -147,7 +147,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       plausibleAnalytics: isDevelopment
-        ? 'mock' // script won't load unless manually callined load()
+        ? 'mock' // script won't load unless manually calling load()
         : {
             domain: 'YOUR_DOMAIN',
           },

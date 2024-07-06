@@ -153,7 +153,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       hotjar: isDevelopment
-        ? 'mock' // script won't load unless manually callined load()
+        ? 'mock' // script won't load unless manually calling load()
         : {
             id: 123456 // your id
           },
