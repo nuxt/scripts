@@ -21,7 +21,7 @@ Nuxt Scripts provides a [useScriptIntercom](#usescriptintercom) composable and a
 
 The `ScriptIntercom` component is headless Facade Component wrapping the [useScriptIntercom](#usescriptintercom) composable, providing a simple, performance optimized way to load Intercom in your Nuxt app.
 
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading intercom when specific elements events happen.
+It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading Intercom when specific elements events happen.
 
 By default, it will load on the `click` DOM event.
 
@@ -45,7 +45,7 @@ const isLoaded = ref(false)
   </ScriptIntercom>
   <div class="text-center">
     <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load the Intercom script" />
-    <UAlert v-else color="green" variant="soft" title="Crisp is loaded" description="The Intercom Facade component is no longer being displayed." />
+    <UAlert v-else color="green" variant="soft" title="Intercom is loaded" description="The Intercom Facade component is no longer being displayed." />
   </div>
 </div>
 </template>
@@ -89,7 +89,7 @@ See the [Config Schema](#config-schema) for full details.
 
 ### Events
 
-The `ScriptIntercom` component emits a single `ready` event when intercom is loaded.
+The `ScriptIntercom` component emits a single `ready` event when Intercom is loaded.
 
 ```ts
 const emits = defineEmits<{
@@ -136,7 +136,7 @@ The default slot is used to display content that will always be visible.
 
 **awaitingLoad**
 
-The slot is used to display content while intercom is loading.
+The slot is used to display content while Intercom is not loading.
 
 ```vue
 <template>
@@ -152,7 +152,7 @@ The slot is used to display content while intercom is loading.
 
 **loading**
 
-The slot is used to display content while intercom is loading.
+The slot is used to display content while Intercom is loading.
 
 Tip: You should use the `ScriptLoadingIndicator` by default for accessibility and UX.
 
