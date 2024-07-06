@@ -3,6 +3,14 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export type LemonSqueezyInput = RegistryScriptInput
 
+export type LemonSqueezyEventPayload = { event: 'Checkout.Success', data: Record<string, any> }
+  & { event: 'Checkout.ViewCart', data: Record<string, any> }
+  & { event: 'GA.ViewCart', data: Record<string, any> }
+  & { event: 'PaymentMethodUpdate.Mounted' }
+  & { event: 'PaymentMethodUpdate.Closed' }
+  & { event: 'PaymentMethodUpdate.Updated' }
+  & { event: string }
+
 // from https://docs.lemonsqueezy.com/help/lemonjs/what-is-lemonjs
 export interface LemonSqueezyApi {
   /**
@@ -10,13 +18,7 @@ export interface LemonSqueezyApi {
    * @param options - An object with a single property, eventHandler, which is a function that will be called when Lemon.js emits an event.
    */
   Setup: (options: {
-    eventHandler: (event:
-      { event: 'Checkout.Success', data: Record<string, any> }
-      & { event: 'PaymentMethodUpdate.Mounted' }
-      & { event: 'PaymentMethodUpdate.Closed' }
-      & { event: 'PaymentMethodUpdate.Updated' }
-      & { event: string }
-    ) => void
+    eventHandler: (event: LemonSqueezyEventPayload) => void
   }) => void
   /**
    * Refreshes `lemonsqueezy-button` listeners on the page.
