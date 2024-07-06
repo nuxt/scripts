@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   error: [error: string | Event]
-  load: []
+  ready: [HTMLScriptElement]
 }>()
 
 const attrId = `_carbonads_js`
@@ -40,7 +40,7 @@ function loadCarbon() {
   }
   script.onload = () => {
     status.value = 'loaded'
-    emit('load')
+    emit('ready', script)
   }
   carbonadsEl.value.appendChild(script)
 }
