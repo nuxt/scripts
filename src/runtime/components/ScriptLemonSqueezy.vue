@@ -2,42 +2,44 @@
 import type { ElementScriptTrigger } from '../types'
 import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useScriptLemonSqueezy } from '../registry/lemon-squeezy'
+import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
 import { onMounted, ref } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
-  href: string
 }>(), {
   trigger: 'visible',
 })
 
 const emits = defineEmits<{
-  event: [{ event: string, data?: Record<string, any> }]
+  ready: [ReturnType<typeof useScriptLemonSqueezy>]
+  lemonSqueezyEvent: [LemonSqueezyEventPayload]
 }>()
 
 const rootEl = ref<HTMLElement | null>(null)
-const { $script } = useScriptLemonSqueezy({
+const instance = useScriptLemonSqueezy({
   scriptOptions: {
     trigger: useElementScriptTrigger({ trigger: props.trigger, el: rootEl }),
   },
 })
 onMounted(() => {
-  $script.then(({ Setup }) => {
+  rootEl.value?.querySelectorAll('a[href]').forEach((a) => {
+    a.classList.add('lemonsqueezy-button')
+  })
+  instance.$script.then(({ Setup, Refresh }) => {
     Setup({
       eventHandler(event) {
-        emits('event', event)
+        emits('lemonSqueezyEvent', event)
       },
     })
+    Refresh()
+    emits('ready', instance)
   })
 })
 </script>
 
 <template>
   <div ref="rootEl">
-    <slot v-bind="{ class: 'lemonsqueezy-button', href }">
-      <a :href="href" class="lemonsqueezy-button">
-        Buy me
-      </a>
-    </slot>
+    <slot />
   </div>
 </template>
