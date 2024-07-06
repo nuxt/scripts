@@ -23,6 +23,7 @@ const props = withDefaults(defineProps<{
 const emits = defineEmits<{
   // our emit
   ready: [e: ReturnType<typeof useScriptCrisp>]
+  error: []
 }>()
 
 const rootEl = ref(null)
@@ -60,6 +61,9 @@ onMounted(() => {
       })
       observer.observe(document.body, { childList: true, subtree: true })
     }
+    else if (status === 'error') {
+      emits('error')
+    }
   })
 })
 onBeforeUnmount(() => {
@@ -75,5 +79,6 @@ onBeforeUnmount(() => {
     <slot :ready="isReady" />
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="$script.status.value === 'loading' || !isReady" name="loading" />
+    <slot v-else-if="$script.status.value === 'error'" name="error" />
   </div>
 </template>

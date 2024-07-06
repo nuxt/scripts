@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
-import { callOnce, onMounted, ref } from '#imports'
+import { callOnce, onMounted, ref, watch } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -18,19 +18,35 @@ const props = withDefaults(defineProps<{
   dataFullWidthResponsive: true,
 })
 
+const emits = defineEmits<{
+  // our emit
+  ready: [e: ReturnType<typeof useScriptGoogleAdsense>]
+  error: []
+}>()
+
 const rootEl = ref(null)
 const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
 
-const { $script } = useScriptGoogleAdsense({
+const instance = useScriptGoogleAdsense({
   client: props.dataAdClient,
   scriptOptions: {
     trigger,
   },
 })
 
+const { $script } = instance
+
 onMounted(() => {
   callOnce(() => {
     (window.adsbygoogle = window.adsbygoogle || []).push({})
+  })
+  watch(instance.$script.status, () => {
+    if (instance.$script.status.value === 'loaded') {
+      emits('ready', instance)
+    }
+    else if (instance.$script.status.value === 'error') {
+      emits('error')
+    }
   })
 })
 </script>
@@ -47,6 +63,7 @@ onMounted(() => {
     v-bind="{ ...$attrs }"
   >
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-if="$script.status.value === 'loading'" name="loading" />
+    <slot v-else-if="$script.status.value === 'loading'" name="loading" />
+    <slot v-else-if="$script.status.value === 'error'" name="error" />
   </ins>
 </template>

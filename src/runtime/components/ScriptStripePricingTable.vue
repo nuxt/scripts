@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type { ElementScriptTrigger } from '../types'
 import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useScript } from '../composables/useScript'
-import { onBeforeUnmount } from '#imports'
+import { onBeforeUnmount, onMounted, watch } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
@@ -17,30 +17,39 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  ready: []
+  ready: [ReturnType<typeof useScript>]
+  error: []
 }>()
 
 const rootEl = ref<HTMLDivElement | undefined>()
 const containerEl = ref<HTMLDivElement | undefined>()
-const { $script } = useScript(`https://js.stripe.com/v3/pricing-table.js`, {
+const instance = useScript(`https://js.stripe.com/v3/pricing-table.js`, {
   trigger: useElementScriptTrigger({ trigger: props.trigger, el: rootEl }),
 })
+const { $script } = instance
 
 const pricingTable = ref<HTMLElement | undefined>()
-$script.then(() => {
-  const StripePricingTable = window.customElements.get('stripe-pricing-table')!
-  const stripePricingTable = new StripePricingTable()
-  stripePricingTable.setAttribute('publishable-key', props.publishableKey)
-  stripePricingTable.setAttribute('pricing-table-id', props.pricingTableId)
-  if (props.clientReferenceId)
-    stripePricingTable.setAttribute('client-reference-id', props.clientReferenceId)
-  if (props.customerEmail)
-    stripePricingTable.setAttribute('customer-email', props.customerEmail)
-  if (props.customerSessionClientSecret)
-    stripePricingTable.setAttribute('customer-session-client-secret', props.customerSessionClientSecret)
-  pricingTable.value = stripePricingTable
-  rootEl.value!.appendChild(stripePricingTable)
-  emit('ready')
+onMounted(() => {
+  $script.then(() => {
+    const StripePricingTable = window.customElements.get('stripe-pricing-table')!
+    const stripePricingTable = new StripePricingTable()
+    stripePricingTable.setAttribute('publishable-key', props.publishableKey)
+    stripePricingTable.setAttribute('pricing-table-id', props.pricingTableId)
+    if (props.clientReferenceId)
+      stripePricingTable.setAttribute('client-reference-id', props.clientReferenceId)
+    if (props.customerEmail)
+      stripePricingTable.setAttribute('customer-email', props.customerEmail)
+    if (props.customerSessionClientSecret)
+      stripePricingTable.setAttribute('customer-session-client-secret', props.customerSessionClientSecret)
+    pricingTable.value = stripePricingTable
+    rootEl.value!.appendChild(stripePricingTable)
+    emit('ready', instance)
+  })
+  watch($script.status, (status) => {
+    if (status === 'error') {
+      emit('error')
+    }
+  })
 })
 
 onBeforeUnmount(() => {
@@ -53,6 +62,7 @@ onBeforeUnmount(() => {
     <div ref="containerEl" />
     <slot v-if="$script.status.value === 'loading'" name="loading" />
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="$script.status.value === 'error'" name="error" />
     <slot />
   </div>
 </template>

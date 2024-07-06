@@ -85,6 +85,12 @@ onMounted(() => {
       }])),
     })
   })
+  watch($script.status, (status) => {
+    if (status === 'error') {
+      // @ts-expect-error untyped
+      emits('error')
+    }
+  })
 })
 
 defineExpose({
@@ -159,5 +165,6 @@ const placeholderAttrs = computed(() => {
       <ScriptLoadingIndicator />
     </slot>
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="$script.status.value === 'error'" name="error" />
   </div>
 </template>

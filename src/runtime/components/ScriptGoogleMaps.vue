@@ -85,6 +85,7 @@ const props = withDefaults(defineProps<{
 const emits = defineEmits<{
   // our emit
   ready: [e: Ref<google.maps.Map | undefined>]
+  error: []
 }>()
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
@@ -135,6 +136,11 @@ defineExpose({
 onMounted(() => {
   watch(ready, (v) => {
     v && emits('ready', map)
+  })
+  watch($script.status, () => {
+    if ($script.status.value === 'error') {
+      emits('error')
+    }
   })
   // create the map
   $script.then(async (instance) => {
@@ -253,6 +259,7 @@ onBeforeUnmount(() => {
       <ScriptLoadingIndicator color="black" />
     </slot>
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="$script.status.value === 'error'" name="error" />
     <slot />
   </div>
 </template>

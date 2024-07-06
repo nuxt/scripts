@@ -190,6 +190,12 @@ onMounted(() => {
   watch(() => props.id, (v) => {
     v && player?.loadVideo(Number(v))
   })
+  watch($script.status, (status) => {
+    if (status === 'error') {
+      // @ts-expect-error untyped
+      emits('error')
+    }
+  })
 })
 
 const rootAttrs = computed(() => {
@@ -242,6 +248,7 @@ onBeforeUnmount(() => player?.unload())
       <ScriptLoadingIndicator color="white" />
     </slot>
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="$script.status.value === 'error'" name="error" />
     <slot />
   </div>
 </template>
