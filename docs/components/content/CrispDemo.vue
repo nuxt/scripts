@@ -5,7 +5,7 @@ const isLoaded = ref(false)
 <template>
   <div class="not-prose">
     <div class="flex items-center justify-center p-5">
-      <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp">
+      <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp" @ready="isLoaded = true">
         <template #awaitingLoad>
           <div class="crisp-icon" />
         </template>

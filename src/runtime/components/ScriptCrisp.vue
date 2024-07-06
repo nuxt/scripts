@@ -70,7 +70,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="rootEl"
-    :style="{ display: isReady ? 'hidden' : 'block' }"
+    :style="{ display: isReady ? 'none' : 'block' }"
   >
     <slot :ready="isReady" />
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />

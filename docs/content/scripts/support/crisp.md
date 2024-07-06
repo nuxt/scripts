@@ -14,13 +14,13 @@ links:
 
 [Crisp](https://crisp.chat/) is a customer messaging platform that lets you communicate with your customers through chat, email, and more.
 
-Nuxt Scripts provides a [useScriptCrisp](#usescriptcrisp) composable and a headless Facade Component [useScriptCrisp](#scriptcrisp) component to interact with the Crisp.
+Nuxt Scripts provides a [useScriptCrisp](#usescriptcrisp) composable and a headless Facade Component [useScriptCrisp](#scriptcrisp) component to interact with crisp.
 
 ## ScriptCrisp
 
 The `ScriptCrisp` component is headless Facade Component wrapping the [useScriptCrisp](#usescriptcrisp) composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.
 
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Crisp when specific elements events happen.
+It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading crisp when specific elements events happen.
 
 By default, it will load on the `click` DOM event.
 
@@ -48,7 +48,7 @@ const isLoaded = ref(false)
     </ScriptCrisp>
   </div>
   <div class="text-center">
-    <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load the Crisp script" />
+    <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load crisp script" />
     <UAlert v-else color="green" variant="soft" title="Crisp is loaded" description="The Crisp Facade component is no longer being displayed." />
   </div>
 </div>
@@ -91,18 +91,18 @@ const isLoaded = ref(false)
 
 ### Props
 
-- `trigger`: The trigger event to load the Crisp. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `id`: The Crisp ID.
+- `trigger`: The trigger event to load crisp. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
+- `id`: Crisp ID.
 - `runtimeConfig`: Extra configuration options. Used to configure the locale. Same as CRISP_RUNTIME_CONFIG.
 - `tokenId`: Associated a session, equivalent to using CRISP_TOKEN_ID variable. Same as CRISP_TOKEN_ID.
-- `cookieDomain`: Restrict the domain that the Crisp cookie is set on. Same as CRISP_COOKIE_DOMAIN.
+- `cookieDomain`: Restrict the domain that crisp cookie is set on. Same as CRISP_COOKIE_DOMAIN.
 - `cookieExpiry`: The cookie expiry in seconds. Same as CRISP_COOKIE_EXPIRATION.
 
 See the [Config Schema](#config-schema) for full details.
 
 ### Events
 
-The `ScriptCrisp` component emits a single `ready` event when the Crisp is loaded.
+The `ScriptCrisp` component emits a single `ready` event when crisp is loaded.
 
 ```ts
 const emits = defineEmits<{
@@ -147,11 +147,11 @@ The component provides minimal UI by default, only enough to be functional and a
 
 The default slot is used to display content that will always be visible.
 
-Tip: It's best to leave this empty as the Crisp replaces this component in its own component.
+Tip: It's best to leave this empty as crisp replaces this component in its own component.
 
 **awaitingLoad**
 
-The slot is used to display content while the Crisp is loading.
+The slot is used to display content while crisp is loading.
 
 ```vue
 <template>
@@ -167,7 +167,7 @@ The slot is used to display content while the Crisp is loading.
 
 **loading**
 
-The slot is used to display content while the Crisp is loading.
+The slot is used to display content while crisp is loading.
 
 Tip: You should use the `ScriptLoadingIndicator` by default for accessibility and UX.
 
@@ -185,7 +185,7 @@ Tip: You should use the `ScriptLoadingIndicator` by default for accessibility an
 
 ## useScriptCrisp
 
-The `useScriptCrisp` composable lets you have fine-grain control over the Crisp SDK. It provides a way to load the Crisp SDK and interact with it programmatically.
+The `useScriptCrisp` composable lets you have fine-grain control over Crisp SDK. It provides a way to load crisp SDK and interact with it programmatically.
 
 ```ts
 export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}
@@ -198,7 +198,7 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 ```ts
 export const CrispOptions = object({
   /**
-   * The Crisp ID.
+   * Crisp ID.
    */
   id: string(),
   /**
@@ -216,7 +216,7 @@ export const CrispOptions = object({
    */
   tokenId: optional(string()),
   /**
-   * Restrict the domain that the Crisp cookie is set on.
+   * Restrict the domain that crisp cookie is set on.
    * Same as CRISP_COOKIE_DOMAIN.
    * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/
    */
