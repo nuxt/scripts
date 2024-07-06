@@ -50,16 +50,17 @@ export function useScriptTriggerElement(options: ElementScriptTriggerOptions): P
   const { el, trigger } = options
   if (import.meta.server || !el)
     return new Promise<void>(() => {})
-  if (el && options.trigger === 'visible')
+  const triggers = (Array.isArray(options.trigger) ? options.trigger : [options.trigger]).filter(Boolean) as string[]
+  if (el && triggers.some(t => ['visibility', 'visible'].includes(t)))
     return useElementVisibilityPromise(el)
   if (!trigger)
     return Promise.resolve()
-  if (trigger !== 'immediate') {
+  if (!triggers.includes('immediate')) {
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
     return new Promise<void>((resolve) => {
       const _ = useEventListener(
         typeof el !== 'undefined' ? (el as EventTarget) : document.body,
-        trigger,
+        triggers,
         () => {
           resolve()
           _()
