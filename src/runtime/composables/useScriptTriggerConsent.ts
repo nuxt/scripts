@@ -12,7 +12,7 @@ interface UseConsentScriptTriggerApi extends Promise<void> {
  * Load a script once consent has been provided either through a resolvable `consent` or calling the `accept` method.
  * @param options
  */
-export function useConsentScriptTrigger(options?: ConsentScriptTriggerOptions): UseConsentScriptTriggerApi {
+export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): UseConsentScriptTriggerApi {
   if (import.meta.server)
     return new Promise(() => {}) as UseConsentScriptTriggerApi
 

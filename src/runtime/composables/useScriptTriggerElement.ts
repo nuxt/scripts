@@ -46,7 +46,7 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
 /**
  * Create a trigger for an element to load a script based on specific element events.
  */
-export function useElementScriptTrigger(options: ElementScriptTriggerOptions): Promise<void> {
+export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<void> {
   const { el, trigger } = options
   if (import.meta.server || !el)
     return new Promise<void>(() => {})

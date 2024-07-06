@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
 import { useHead } from '#imports'
 
@@ -43,7 +43,7 @@ const events: (keyof YT.Events)[] = [
 const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
-const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const { $script } = useScriptYouTubePlayer({
   scriptOptions: {
     trigger,

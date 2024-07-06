@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { withQuery } from 'ufo'
-import { onBeforeUnmount, onMounted, ref, useElementScriptTrigger } from '#imports'
+import { onBeforeUnmount, onMounted, ref, useScriptTriggerElement } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = defineProps<{
@@ -50,7 +50,7 @@ onMounted(() => {
     loadCarbon()
   }
   else {
-    useElementScriptTrigger({ trigger: props.trigger, el: carbonadsEl })
+    useScriptTriggerElement({ trigger: props.trigger, el: carbonadsEl })
   }
 })
 

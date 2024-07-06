@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { ElementScriptTrigger } from '../types'
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScript } from '../composables/useScript'
 import { onBeforeUnmount, onMounted, watch } from '#imports'
 
@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const rootEl = ref<HTMLDivElement | undefined>()
 const containerEl = ref<HTMLDivElement | undefined>()
 const instance = useScript(`https://js.stripe.com/v3/pricing-table.js`, {
-  trigger: useElementScriptTrigger({ trigger: props.trigger, el: rootEl }),
+  trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
 })
 const { $script } = instance
 

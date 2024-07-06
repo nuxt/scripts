@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, useElementScriptTrigger, useScriptNpm } from '#imports'
+import { ref, useScriptTriggerElement, useScriptNpm } from '#imports'
 
 const mouseOverEl = ref()
 const { addConfetti } = useScriptNpm<JSConfettiApi>({
@@ -7,7 +7,7 @@ const { addConfetti } = useScriptNpm<JSConfettiApi>({
   file: 'dist/js-confetti.browser.js',
   version: '0.12.0',
   scriptOptions: {
-    trigger: useElementScriptTrigger({ trigger: 'mouseover', el: mouseOverEl }),
+    trigger: useScriptTriggerElement({ trigger: 'mouseover', el: mouseOverEl }),
     bundle: true,
     use() {
       return typeof window.JSConfetti !== 'undefined' && new window.JSConfetti()

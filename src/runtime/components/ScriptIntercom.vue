@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useScriptIntercom } from '../registry/intercom'
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { ref, onMounted, watch, onBeforeUnmount } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
@@ -29,7 +29,7 @@ const emits = defineEmits<{
 }>()
 
 const rootEl = ref(null)
-const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
 const isReady = ref(false)
 const intercom = useScriptIntercom({

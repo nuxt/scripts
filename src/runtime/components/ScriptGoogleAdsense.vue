@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
 import { callOnce, onMounted, ref, watch } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
@@ -25,7 +25,7 @@ const emits = defineEmits<{
 }>()
 
 const rootEl = ref(null)
-const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
 const instance = useScriptGoogleAdsense({
   client: props.dataAdClient,

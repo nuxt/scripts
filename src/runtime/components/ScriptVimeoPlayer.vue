@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
 import { useAsyncData, useHead } from '#imports'
 
@@ -114,7 +114,7 @@ const events: (keyof TEmits)[] = [
 const elVimeo = ref()
 const rootEl = ref()
 
-const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 let clickTriggered = false
 if (props.trigger === 'mousedown') {
   trigger.then(() => {

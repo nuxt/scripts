@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, useElementScriptTrigger, useScript } from '#imports'
+import { ref, useScriptTriggerElement, useScript } from '#imports'
 
 const trigger = ref()
 const { myScript, $script } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
-  trigger: useElementScriptTrigger({
+  trigger: useScriptTriggerElement({
     trigger: 'mouseover',
     el: trigger,
   }),

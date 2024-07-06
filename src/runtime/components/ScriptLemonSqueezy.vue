@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ElementScriptTrigger } from '../types'
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptLemonSqueezy } from '../registry/lemon-squeezy'
 import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
 import { onMounted, ref } from '#imports'
@@ -19,7 +19,7 @@ const emits = defineEmits<{
 const rootEl = ref<HTMLElement | null>(null)
 const instance = useScriptLemonSqueezy({
   scriptOptions: {
-    trigger: useElementScriptTrigger({ trigger: props.trigger, el: rootEl }),
+    trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
   },
 })
 onMounted(() => {

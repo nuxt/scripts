@@ -7,7 +7,7 @@ import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
-import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
 import { resolveComponent, useHead } from '#imports'
 
@@ -101,7 +101,7 @@ const mapEl = ref<HTMLElement>()
 const { $script } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
-    trigger: useElementScriptTrigger({ trigger: props.trigger, el: rootEl }),
+    trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
   },
 })
 
