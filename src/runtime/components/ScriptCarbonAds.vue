@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { withQuery } from 'ufo'
-import { onBeforeUnmount, onMounted, ref, useScriptTriggerElement } from '#imports'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { onBeforeUnmount, onMounted, ref } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = defineProps<{
