@@ -5,9 +5,7 @@ const { Setup, Refresh } = useScriptLemonSqueezy()
 onMounted(() => {
   Refresh()
   Setup({
-    eventHandler: (...args) => {
-      console.log('handler', args)
-    },
+    eventHandler: () => {},
   })
 })
 </script>

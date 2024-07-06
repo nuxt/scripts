@@ -22,7 +22,7 @@ function handleEvent(payload: LemonSqueezyEventPayload) {
     <div class="my-5 font-mono">
       <div>Events</div>
       <ul>
-        <li v-for="event in events">
+        <li v-for="(event, key) in events" :key="key">
           {{ event.event }}
         </li>
       </ul>

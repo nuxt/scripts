@@ -22,11 +22,11 @@ const events = ref([])
           <div class="mb-2">
             Buttons are live and will open the modal, tracking events:
           </div>
-          <div v-for="event in events" class="text-xs">
+          <li v-for="(event, key) in events" :key="key" class="text-xs">
             {{ event.event }}
-          </div>
+          </li>
         </template>
-      </UAlert>
+      </ualert>
     </div>
   </div>
 </template>
