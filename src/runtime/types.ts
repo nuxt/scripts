@@ -1,5 +1,5 @@
-import type { UseScriptOptions } from '@unhead/schema'
-import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
+import type { UseScriptOptions, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
+import type { UseScriptInput, VueScriptInstance, MaybeComputedRefEntriesOnly } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
@@ -117,7 +117,7 @@ const emptyOptions = object({})
 export type EmptyOptionsSchema = typeof emptyOptions
 
 export type RegistryScriptInput<T extends ObjectSchema<any, any> = EmptyOptionsSchema, Bundelable extends boolean = true> = InferInput<T> & {
-  scriptInput?: UseScriptInput
+  scriptInput?: MaybeComputedRefEntriesOnly<Omit<ScriptBase & DataKeys & SchemaAugmentations['script'], 'src'>>
   scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'bundle' | 'use'>
 }
 
