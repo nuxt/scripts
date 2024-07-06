@@ -120,7 +120,7 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
         return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
       },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8.968 8.972" width="64" height="64"><path d="M7.853 0h-6.73C.496 0-.002.498-.002 1.117v6.73a1.12 1.12 0 0 0 1.126 1.126h6.73c.618 0 1.117-.498 1.117-1.117v-6.73A1.119 1.119 0 0 0 7.853 0zM5.68 1.645c0-.17.13-.3.3-.3s.3.13.3.3v3.998c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm-1.495-.15c0-.17.13-.3.3-.3s.3.13.3.3v4.336c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm-1.495.15c0-.17.13-.3.3-.3s.3.13.3.3v3.998c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm-1.495.598c0-.17.13-.3.3-.3s.3.13.3.3v2.692c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm6.48 4.566c-.05.04-1.156.967-3.2.967s-3.14-.927-3.2-.967a.29.29 0 0 1-.03-.419.29.29 0 0 1 .419-.03c.02 0 1.007.817 2.8.817 1.814 0 2.79-.817 2.79-.827.13-.1.32-.1.42.03a.3.3 0 0 1-.02.429zm.1-1.874c0 .17-.13.3-.3.3s-.3-.13-.3-.3V2.243c0-.17.13-.3.3-.3s.3.13.3.3z" fill="#1f8ded"/></svg>`,
-      category: 'marketing',
+      category: 'support',
       import: {
         name: 'useScriptIntercom',
         from: resolve('./runtime/registry/intercom'),
@@ -199,6 +199,19 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
       import: {
         name: 'useScriptGoogleMaps',
         from: resolve('./runtime/registry/google-maps'),
+      },
+    },
+    // chat
+    {
+      label: 'Crisp',
+      category: 'support',
+      logo: {
+        light: `<svg height="30" width="35" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="a" height="138.7%" width="131.4%" x="-15.7%" y="-15.1%"><feMorphology in="SourceAlpha" operator="dilate" radius="1" result="shadowSpreadOuter1"/><feOffset dy="1" in="shadowSpreadOuter1" result="shadowOffsetOuter1"/><feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="1"/><feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/><feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0"/></filter><path id="b" d="M14.23 20.46l-9.65 1.1L3 5.12 30.07 2l1.58 16.46-9.37 1.07-3.5 5.72-4.55-4.8z"/></defs><g fill="none" fill-rule="evenodd"><use fill="#000" filter="url(#a)" xlink:href="#b"/><use fill="#1972f5" stroke="#1972f5" stroke-width="2" xlink:href="#b"/></g></svg>`,
+        dark: `<svg height="30" width="35" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="a" height="138.7%" width="131.4%" x="-15.7%" y="-15.1%"><feMorphology in="SourceAlpha" operator="dilate" radius="1" result="shadowSpreadOuter1"/><feOffset dy="1" in="shadowSpreadOuter1" result="shadowOffsetOuter1"/><feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="1"/><feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/><feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0"/></filter><path id="b" d="M14.23 20.46l-9.65 1.1L3 5.12 30.07 2l1.58 16.46-9.37 1.07-3.5 5.72-4.55-4.8z"/></defs><g fill="none" fill-rule="evenodd"><use fill="#000" filter="url(#a)" xlink:href="#b"/><use fill="#fff" stroke="#fff" stroke-width="2" xlink:href="#b"/></g></svg>`,
+      },
+      import: {
+        name: 'useScriptCrisp',
+        from: resolve('./runtime/registry/crisp'),
       },
     },
     // other

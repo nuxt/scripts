@@ -21,6 +21,7 @@ import type { NpmInput } from './registry/npm'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { GoogleAdsenseInput } from './registry/google-adsense'
 import type { ClarityInput } from './registry/clarity'
+import type { CrispInput } from './registry/crisp'
 import type { Input as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
 import type { Input as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
 
@@ -84,6 +85,7 @@ export interface NuxtAppScript {
 }
 
 export interface ScriptRegistry {
+  crisp?: CrispInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
   metaPixel?: MetaPixelInput

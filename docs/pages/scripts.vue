@@ -26,6 +26,10 @@ const categories = {
     label: 'Content',
     description: 'Display videos, maps and other content on your website.',
   },
+  support: {
+    label: 'Support',
+    description: 'Live chat, help desks and other support tools.',
+  },
   utility: {
     label: 'Tools',
     description: 'Miscellaneous tools to help you build your website.',
