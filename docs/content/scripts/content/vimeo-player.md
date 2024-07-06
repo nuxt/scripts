@@ -126,6 +126,10 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::
 
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Events
 
 The `ScriptVimeoPlayer` component emits all events from the Vimeo Player SDK. Please consult the [Player Events](https://developer.vimeo.com/player/sdk/reference#about-player-events) for full documentation.

@@ -156,50 +156,17 @@ use this example from nuxt.com.
 </style>
 ```
 
+
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
+Note: The Carbon Ads script _does not_ extend the `useScript` composable. Accessing the script will return the `HTMLScriptElement`.
+
 ### Props
 
 The `ScriptCarbonAds` component accepts the following props:
 
 - `serve`: The serve URL provided by Carbon Ads.
 - `placement`: The placement ID provided by Carbon Ads.
-- `trigger`: The trigger event to load the script. Default is `undefined`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
 
-### Events
-
-The component emits the script events.
-
-```ts
-const emits = defineEmits<{
-  error: [e: string | Event]
-  load: []
-}>()
-```
-
-### Slots
-
-There are a number of slots mapped to the script status that you can use to customize the ad experience.
-
-- **error**:
-  The slot is used to display content when the ad fails to load.
-
-- **awaitingLoad**
-  The slot is used to display content before the ad script is loaded.
-
-- **loaded**
-  The slot is used to display content after the ad script is loaded.
-
-- **loading**
-  The slot is used to display content while the ad script is loading.
-
-```vue
-<template>
-  <ScriptCarbonAds
-    serve="..."
-    placement="..."
-  >
-    <template #awaitingLoad>
-      Loading ads...
-    </template>
-  </ScriptCarbonAds>
-</template>
-```

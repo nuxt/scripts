@@ -49,6 +49,11 @@ You can use these hooks to add a fallback when the Google Adsense script is bloc
 </template>
 ```
 
+
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Props
 
 The `ScriptGoogleAdsense` component supports all props that Google Adsense supports on the `<ins>` tag. See the [Ad tags documentation](https://developers.google.com/adsense/platforms/transparent/ad-tags) for more information.
@@ -56,38 +61,6 @@ The `ScriptGoogleAdsense` component supports all props that Google Adsense suppo
 At a minimum you must provide the following tags:
 - `data-ad-client`: The Google Adsense ID.
 - `data-ad-slot`: The slot ID.
-
-Nuxt Scripts exposes the following additional props:
-- `trigger`: The trigger event to load the script. Default is `undefined`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-
-### Slots
-
-There are a number of slots mapped to the script status that you can use to customize the ad experience.
-
-- **error**:
-  The slot is used to display content when the ad fails to load.
-
-- **awaitingLoad**
-  The slot is used to display content before the ad script is loaded.
-
-- **loaded**
-  The slot is used to display content after the ad script is loaded.
-
-- **loading**
-  The slot is used to display content while the ad script is loading.
-
-```vue
-<template>
-  <ScriptGoogleAdsense
-    serve="..."
-    placement="..."
-  >
-    <template #awaitingLoad>
-      Loading ads...
-    </template>
-  </ScriptGoogleAdsense>
-</template>
-```
 
 ## useScriptGoogleAdsense
 

@@ -231,12 +231,14 @@ const contributors = useRuntimeConfig().public.contributors
           <span>Speed up with Facade Components</span>
         </h2>
         <p class="text-gray-500 dark:text-gray-400 mb-3">
-          <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
+          Nuxt Scripts provides several <NuxtLink to="https://developer.chrome.com/docs/lighthouse/performance/third-party-facades" class="underline" target="_blank">
             Facade Components
-          </NuxtLink> are fake UI elements that get replaced once a third-party script loads.
+          </NuxtLink> out of the box.
         </p>
-        <p class="text-gray-500 dark:text-gray-400 mb-3">
-          They can significantly improve your performance while still providing a great user experience, however they do have some trade-offs.
+        <p class="text-gray-500 dark:text-gray-400 mb-3 text-pretty">
+          Facade components are  fake UI elements that get replaced once a third-party script loads, they can significantly improve your performance while still providing a great user experience, however they do have <NuxtLink to="/docs/guides/facade-components" class="underline">
+            trade-offs
+          </NuxtLink>.
         </p>
       </div>
       <div class="w-full ">

@@ -107,6 +107,10 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::
 
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Events
 
 The `ScriptYouTubePlayer` component emits all events from the YouTube Player SDK. Please consult the [Player Events](https://developers.google.com/youtube/iframe_api_reference#Events) for full documentation.

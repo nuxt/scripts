@@ -46,6 +46,10 @@ You'll need to create your own [Pricing Table](https://dashboard.stripe.com/pric
 
 ::
 
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Props
 
 The `ScriptStripePricingTable` component accepts the following props:
@@ -57,31 +61,6 @@ The `ScriptStripePricingTable` component accepts the following props:
 - `customer-email`: The email of the customer.
 - `customer-session-client-secret`: The client secret of the customer session.
 
-### Events
-
-The `ScriptStripePricingTable` component emits a single `ready` event when the pricing table is loaded.
-
-```ts
-const emits = defineEmits<{
-  ready: []
-}>()
-```
-
-### Slots
-
-The component provides minimal UI by default, only enough to be functional and accessible. There are a number of slots for you to customize the maps however you like.
-
-**default**
-
-The default slot is used to display content that will always be visible.
-
-**awaitingLoad**
-
-The slot is used to display content while the Stripe is loading.
-
-**loading**
-
-The slot is used to display content while the Stripe is loading.
 
 ## useScriptStripe
 

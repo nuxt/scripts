@@ -14,7 +14,7 @@ links:
 
 [Crisp](https://crisp.chat/) is a customer messaging platform that lets you communicate with your customers through chat, email, and more.
 
-Nuxt Scripts provides a [useScriptCrisp](#usescriptcrisp) composable and a headless Facade Component [useScriptCrisp](#scriptcrisp) component to interact with crisp.
+Nuxt Scripts provides a [useScriptCrisp](#usescriptcrisp) composable and a headless Facade Component [ScriptCrisp](#scriptcrisp) component to interact with crisp.
 
 ## ScriptCrisp
 
@@ -89,6 +89,10 @@ const isLoaded = ref(false)
 
 ::
 
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Props
 
 - `trigger`: The trigger event to load crisp. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
@@ -122,32 +126,7 @@ function onReady(crisp) {
 </template>
 ```
 
-### Crisp API
-
-The component exposes a `crisp` instance that you can access the underlying Crisp API.
-
-```vue
-<script setup lang="ts">
-const crispEl = ref()
-onMounted(() => {
-  crispEl.value.crisp.do('chat:open')
-})
-</script>
-
-<template>
-  <ScriptCrisp ref="crispEl" />
-</template>
-```
-
 ### Slots
-
-The component provides minimal UI by default, only enough to be functional and accessible. There are a number of slots for you to customize the maps however you like.
-
-**default**
-
-The default slot is used to display content that will always be visible.
-
-Tip: It's best to leave this empty as crisp replaces this component in its own component.
 
 **awaitingLoad**
 

@@ -69,6 +69,10 @@ const isLoaded = ref(false)
 
 ::
 
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Props
 
 - `trigger`: The trigger event to load intercom. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.

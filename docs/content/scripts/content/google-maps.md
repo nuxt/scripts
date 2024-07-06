@@ -132,6 +132,10 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::
 
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
 ### Events
 
 The `ScriptGoogleMaps` component emits a single `ready` event when the Google Maps is loaded.
