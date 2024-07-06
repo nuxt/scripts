@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
 import { useScriptCrisp } from '../registry/crisp'
-import { ref, onMounted } from '#imports'
+import { ref, onMounted, onBeforeUnmount, watch } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -47,16 +47,23 @@ defineExpose({
   crisp,
 })
 
-// add a listener to detect when the dom element #crisp-chatbox is added
+let observer: MutationObserver
 onMounted(() => {
-  const observer = new MutationObserver(() => {
-    if (document.getElementById('crisp-chatbox')) {
-      isReady.value = true
-      emits('ready', crisp)
-      observer.disconnect()
+  watch($script.status, (status) => {
+    if (status === 'loaded') {
+      observer = new MutationObserver(() => {
+        if (document.getElementById('crisp-chatbox')) {
+          isReady.value = true
+          emits('ready', crisp)
+          observer.disconnect()
+        }
+      })
+      observer.observe(document.body, { childList: true, subtree: true })
     }
   })
-  observer.observe(document.body, { childList: true, subtree: true })
+})
+onBeforeUnmount(() => {
+  observer?.disconnect()
 })
 </script>
 
