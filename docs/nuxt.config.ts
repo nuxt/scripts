@@ -17,6 +17,7 @@ export default defineNuxtConfig({
     async (_, nuxt) => {
       // build time for caching
       const { contributors } = await $fetch(`https://api.nuxt.com/modules/scripts`)
+        .catch(() => ({ contributors: [] }))
       nuxt.options.runtimeConfig.public.contributors = contributors.map(m => m.id)
     },
   ],
