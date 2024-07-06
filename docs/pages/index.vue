@@ -150,6 +150,24 @@ const benchmarks = {
       si: 3900,
     },
   },
+  intercom: {
+    logo: registry.find(s => s.import?.name === 'useScriptIntercom').logo,
+    label: 'Intercom',
+    nuxt: {
+      link: 'https://scripts-phi.vercel.app/third-parties/intercom/nuxt-scripts',
+      fcp: 1400,
+      tbt: 220,
+      lcp: 1400,
+      si: 1900,
+    },
+    iframe: {
+      link: 'https://scripts-phi.vercel.app/third-parties/intercom/default',
+      fcp: 1400,
+      tbt: 850,
+      lcp: 1400,
+      si: 2800,
+    },
+  },
 }
 
 const webVital = ref('tbt')
@@ -166,6 +184,8 @@ function timesFaster(nuxt: number, iframe: number) {
   // should display as 2.5 for 2500%
   return (iframe / nuxt).toFixed(1)
 }
+const { data } = await useAsyncData('code-example', () => queryContent('/_magic-api').findOne())
+const { data: data2 } = await useAsyncData('code-example2', () => queryContent('/_cookie-api').findOne())
 
 const contributors = useRuntimeConfig().public.contributors
 </script>
@@ -208,23 +228,39 @@ const contributors = useRuntimeConfig().public.contributors
       </div>
     </ULandingHero>
 
-    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">
+    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
       <ul class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-16">
-        <li v-for="feature in features" :key="feature.name" class="flex flex-col gap-y-2">
-          <UIcon :name="feature.icon" class="h-8 w-8 shrink-0 text-primary" />
-          <div class="flex flex-col gap-y-1">
-            <h5 class="font-medium text-gray-900 dark:text-white">
-              {{ feature.name }}
-            </h5>
-            <p class="text-gray-500 dark:text-gray-400">
-              {{ feature.description }}
-            </p>
-          </div>
-        </li>
+        <ShowcaseCard v-for="feature in features" :key="feature.name" :label="feature.name" :description="feature.description">
+          <UIcon :name="feature.icon" class="h-20 w-20 shrink-0 text-primary" />
+        </ShowcaseCard>
       </ul>
     </ULandingSection>
 
-    <UContainer class="py-6 sm:py-20 gap-8 lg:gap-20 mb-12 flex flex-col xl:flex-row ">
+    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+      <div class="xl:flex items-center justify-between gap-12">
+        <div class="max-w-lg">
+          <UIcon name="i-ph-magic-wand-duotone" class="h-[100px] w-[100px] text-primary" />
+          <h2 class="text-xl xl:text-4xl font-bold mb-4">
+            A powerful API with <span class="italic">just enough</span> magic
+          </h2>
+          <p class="text-gray-500 dark:text-gray-400 mb-3">
+            Nuxt Scripts provides an abstraction layer on top of third-party scripts, providing SSR support and type-safety and
+            while still giving you full low-level control over how a script is loaded.
+          </p>
+        </div>
+        <UCard>
+          <div class="padded-code xl:col-span-7 hidden sm:block">
+            <div class="flex justify-center xl:justify-end">
+              <div class="flex relative items-center bg-gradient-to-br to-green-200/50 from-blue-100/50 dark:from-green-500/10 dark:to-blue-500/20 rounded">
+                <ContentRenderer :value="data" class="xl:col-span-6 max-w-full" />
+              </div>
+            </div>
+          </div>
+        </UCard>
+      </div>
+    </ULandingSection>
+
+    <UContainer class="py-6 sm:py-20 gap-8 lg:gap-20 flex flex-col xl:flex-row ">
       <div class="max-w-lg">
         <UIcon name="i-ph-speedometer-duotone" class="h-[100px] w-[100px] text-primary" />
         <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
@@ -245,7 +281,7 @@ const contributors = useRuntimeConfig().public.contributors
         <div class="flex flex-col lg:grid grid-cols-2 mb-8 gap-8">
           <div v-for="(benchmark, key) in benchmarks" :key="key">
             <h3 class="md:text-xl font-bold flex items-center gap-3 mb-5">
-              <div class="logo h-auto w-7" v-html="benchmark.logo" />
+              <div class="logo h-auto w-7 max-h-7" v-html="benchmark.logo" />
               {{ benchmark.label }}
             </h3>
             <div class="mb-3">
@@ -293,32 +329,65 @@ const contributors = useRuntimeConfig().public.contributors
         </p>
       </div>
     </UContainer>
-    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">
-      <div class="xl:flex items-center gap-12 mx-auto">
+
+    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+      <div class="xl:flex items-center justify-between gap-12">
         <div class="max-w-lg">
-          <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
-            <UIcon name="i-ph-handshake-duotone" class="h-12 w-12 shrink-0 text-primary" />
-            <span>A collaboration in making the web faster</span>
+          <UIcon name="i-ph-cookie-duotone" class="h-[100px] w-[100px] text-primary" />
+          <h2 class="text-xl xl:text-4xl font-bold mb-4">
+            Cookie consent that's good enough to eat
           </h2>
-          <p class="text-gray-500 dark:text-gray-400 mb-1">
-            Nuxt Scripts was designed and built by the Nuxt core team in collaboration with the <a href="https://developer.chrome.com/aurora" target="_blank" class="underline">Chrome Aurora</a> team at Google.
+          <p class="text-gray-500 dark:text-gray-400 mb-3">
+            Nuxt Scripts aims to improve end-user privacy by providing a <NuxtLink to="/docs/guide/consent" class="underline">
+              simple API for managing cookie consent
+            </NuxtLink>.
           </p>
-          <p class="text-gray-500 dark:text-gray-400 mb-1">
-            It's being actively maintained by the Nuxt core team and amazing community contributors.
+          <p class="text-gray-500 dark:text-gray-400 mb-3">
+            All scripts can be loaded conditionally based on user consent, set it up however you need.
           </p>
         </div>
-        <div>
-          <div class="xl:flex justify-center items-center gap-3 mb-8">
-            <div class="font-light text-6xl mb-2">
-              <Icon name="carbon:user-favorite-alt" />
-              {{ contributors.length }}
-            </div>
-            <div class="text-sm opacity-80">
-              Contributors
+        <UCard>
+          <div class="padded-code xl:col-span-7 hidden sm:block">
+            <div class="flex justify-center xl:justify-end">
+              <div class="flex relative items-center bg-gradient-to-br to-green-200/50 from-blue-100/50 dark:from-green-500/10 dark:to-blue-500/20 rounded">
+                <ContentRenderer :value="data2" class="xl:col-span-6 max-w-full" />
+              </div>
             </div>
           </div>
-          <div class="mb-7 gap-2 mx-auto text-center grid grid-cols-4 sm:grid-cols-7">
-            <UAvatar v-for="(c, index) in contributors" :key="index" :alt="`GitHub User ${c}`" size="xl" height="45" width="45" loading="lazy" :src="`https://avatars.githubusercontent.com/u/${c}?s=80&v=4`" />
+        </UCard>
+      </div>
+    </ULandingSection>
+
+    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">
+      <div class="xl:flex items-center gap-12">
+        <div>
+          <div class="max-w-lg">
+            <UIcon name="i-ph-handshake-duotone" class="h-[100px] w-[100px] text-primary" />
+            <h2 class="text-xl xl:text-4xl font-bold flex items-center gap-4 mb-4">
+              <span>A faster web collaboration</span>
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-4">
+              Nuxt Scripts was designed and built by the Nuxt core team in collaboration with the <a href="https://developer.chrome.com/aurora" target="_blank" class="underline">Chrome Aurora</a> team at Google.
+            </p>
+            <p class="text-gray-500 dark:text-gray-400 mb-1">
+              Nuxt Scripts is being actively maintained by the Nuxt core team and amazing community contributors, we welcome all contributions.
+            </p>
+          </div>
+        </div>
+        <div class="flex-grow">
+          <div class="max-w-lg flex flex-col items-center">
+            <div class="xl:flex justify-center items-center gap-3 mb-8">
+              <div class="font-light text-6xl mb-2">
+                <Icon name="carbon:user-favorite-alt" />
+                {{ contributors.length }}
+              </div>
+              <div class="text-sm opacity-80">
+                Contributors
+              </div>
+            </div>
+            <div class="mb-7 gap-2 mx-auto text-center grid grid-cols-4 sm:grid-cols-7">
+              <UAvatar v-for="(c, index) in contributors" :key="index" :alt="`GitHub User ${c}`" size="xl" height="45" width="45" loading="lazy" :src="`https://avatars.githubusercontent.com/u/${c}?s=80&v=4`" />
+            </div>
           </div>
         </div>
       </div>
@@ -431,5 +500,8 @@ const contributors = useRuntimeConfig().public.contributors
   100% {
     filter: drop-shadow(0px 1px 4px rgba(56,239,125, 0.5));
   }
+}
+.padded-code pre {
+  padding: 0.75em 1em;
 }
 </style>
