@@ -90,6 +90,19 @@ plausible('event', { name: 'conversion' })
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
+### Self-hosted Plausible
+
+If you are using a self-hosted version of Plausible, you will need to provide an explicit src for the script so that
+the API events are sent to the correct endpoint.
+
+```ts
+useScriptPlausible({
+  scriptInput: {
+    src: 'https://my-self-hosted-plausible.io/js/script.js'
+  }
+})
+```
+
 ### PlausibleAnalyticsApi
 
 ```ts
