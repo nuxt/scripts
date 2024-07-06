@@ -1,5 +1,5 @@
 import { useRegistryScript } from '../utils'
-import { object, string } from '#nuxt-scripts-validator'
+import { object, string, optional, number } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const CrispOptions = object({
@@ -7,6 +7,32 @@ export const CrispOptions = object({
    * The Crisp ID.
    */
   id: string(),
+  /**
+   * Extra configuration options. Used to configure the locale.
+   * Same as CRISP_RUNTIME_CONFIG.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/language-customization/
+   */
+  runtimeConfig: optional(object({
+    locale: optional(string()),
+  })),
+  /**
+   * Associated a session, equivalent to using CRISP_TOKEN_ID variable.
+   * Same as CRISP_TOKEN_ID.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/session-continuity/
+   */
+  tokenId: optional(string()),
+  /**
+   * Restrict the domain that the Crisp cookie is set on.
+   * Same as CRISP_COOKIE_DOMAIN.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/
+   */
+  cookieDomain: optional(string()),
+  /**
+   * The cookie expiry in seconds.
+   * Same as CRISP_COOKIE_EXPIRATION.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/#change-cookie-expiration-date
+   */
+  cookieExpiry: optional(number()),
 })
 
 export type CrispInput = RegistryScriptInput<typeof CrispOptions, false>
@@ -28,6 +54,10 @@ declare global {
   interface Window {
     CRISP_READY_TRIGGER: () => void
     CRISP_WEBSITE_ID: string
+    CRISP_RUNTIME_CONFIG?: { locale?: string }
+    CRISP_COOKIE_DOMAIN?: string
+    CRISP_COOKIE_EXPIRATION?: number
+    CRISP_TOKEN_ID?: string
     $crisp: CrispApi
   }
 }
@@ -62,6 +92,14 @@ export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {
         // @ts-expect-error untyped
           window.$crisp = []
           window.CRISP_WEBSITE_ID = options.id
+          if (options.runtimeConfig?.locale)
+            window.CRISP_RUNTIME_CONFIG = { locale: options.runtimeConfig.locale }
+          if (options.cookieDomain)
+            window.CRISP_COOKIE_DOMAIN = options.cookieDomain
+          if (options.cookieExpiry)
+            window.CRISP_COOKIE_EXPIRATION = options.cookieExpiry
+          if (options.tokenId)
+            window.CRISP_TOKEN_ID = options.tokenId
           readyPromise = new Promise((resolve) => {
             window.CRISP_READY_TRIGGER = resolve
           })

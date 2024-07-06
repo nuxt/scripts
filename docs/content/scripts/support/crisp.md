@@ -63,10 +63,14 @@ const isLoaded = ref(false)
 
 ### Props
 
-The `ScriptCrisp` component accepts the following props:
+- `trigger`: The trigger event to load the Crisp. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
+- `id`: The Crisp ID.
+- `runtimeConfig`: Extra configuration options. Used to configure the locale. Same as CRISP_RUNTIME_CONFIG.
+- `tokenId`: Associated a session, equivalent to using CRISP_TOKEN_ID variable. Same as CRISP_TOKEN_ID.
+- `cookieDomain`: Restrict the domain that the Crisp cookie is set on. Same as CRISP_COOKIE_DOMAIN.
+- `cookieExpiry`: The cookie expiry in seconds. Same as CRISP_COOKIE_EXPIRATION.
 
-- `trigger`: The trigger event to load the Crisp. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `id`: The Crisp ID to load. You can find this in the Crisp dashboard.
+See the [Config Schema](#config-schema) for full details.
 
 ### Events
 
@@ -76,6 +80,18 @@ The `ScriptCrisp` component emits a single `ready` event when the Crisp is loade
 const emits = defineEmits<{
   ready: [crisp: Crisp]
 }>()
+```
+
+```vue
+<script setup lang="ts">
+function onReady(crisp) {
+  console.log('Crisp is ready', crisp)
+}
+</script>
+
+<template>
+  <ScriptCrisp @ready="onReady" />
+</template>
 ```
 
 ### Crisp API
@@ -149,6 +165,43 @@ export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
+### Config Schema
+
+```ts
+export const CrispOptions = object({
+  /**
+   * The Crisp ID.
+   */
+  id: string(),
+  /**
+   * Extra configuration options. Used to configure the locale.
+   * Same as CRISP_RUNTIME_CONFIG.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/language-customization/
+   */
+  runtimeConfig: optional(object({
+    locale: optional(string()),
+  })),
+  /**
+   * Associated a session, equivalent to using CRISP_TOKEN_ID variable.
+   * Same as CRISP_TOKEN_ID.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/session-continuity/
+   */
+  tokenId: optional(string()),
+  /**
+   * Restrict the domain that the Crisp cookie is set on.
+   * Same as CRISP_COOKIE_DOMAIN.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/
+   */
+  cookieDomain: optional(string()),
+  /**
+   * The cookie expiry in seconds.
+   * Same as CRISP_COOKIE_EXPIRATION.
+   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/#change-cookie-expiration-date
+   */
+  cookieExpiry: optional(number()),
+})
+```
+
 ### CrispApi
 
 ```ts
@@ -165,6 +218,8 @@ export interface CrispApi {
   [key: string]: any
 }
 ```
+
+For more information, please refer to the [Crisp API documentation](https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/dollar-crisp/).
 
 ## Example
 

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { useElementScriptTrigger } from '../composables/useElementScriptTrigger'
+import type { CrispOptions } from '../registry/crisp'
 import { useScriptCrisp } from '../registry/crisp'
 import { ref, onMounted } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
+import type { InferInput } from '#nuxt-scripts-validator'
 
-const props = withDefaults(defineProps<{
-  id: string
+type Crisp = InferInput<typeof CrispOptions>
+
+const props = withDefaults(defineProps<Crisp & {
   /**
    * Defines the trigger event to load the script.
    */
@@ -24,7 +27,7 @@ const trigger = useElementScriptTrigger({ trigger: props.trigger, el: rootEl })
 
 const isReady = ref(false)
 const crisp = useScriptCrisp({
-  id: props.id,
+  ...props,
   scriptOptions: {
     trigger,
   },
