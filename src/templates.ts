@@ -28,7 +28,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       inits.push(`const ${k} = useScript(${JSON.stringify({ src: c, key: k })}, { use: () => ({ ${k}: window.${k} }) })`)
     }
     else if (Array.isArray(c) && c.length === 2) {
-      inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${JSON.stringify(c[1])}, use: () => ({ ${k}: window.${k} } }) )`)
+      inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${JSON.stringify(c[1])}, use: () => ({ ${k}: window.${k} }) })`)
     }
     else {
       inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...c })}, { use: () => ({ ${k}: window.${k} }) })`)
