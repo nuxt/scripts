@@ -1,13 +1,11 @@
-import { addImports, addTemplate, useNuxt } from '@nuxt/kit'
+import { addImports, addTemplate } from '@nuxt/kit'
 import type { Output } from 'third-party-capital'
 import { GoogleTagManager, GoogleTagManagerData } from 'third-party-capital'
 
 import type { RegistryScript } from '../runtime/types'
 import { getTpcScriptContent } from './utils'
 
-export default function googleTagManagerRegistry() {
-  const nuxt = useNuxt()
-
+export default function googleTagManagerRegistry(scripts: RegistryScript[]) {
   const { dst } = addTemplate({
     getContents() {
       return getTpcScriptContent({
@@ -51,7 +49,5 @@ export default function googleTagManagerRegistry() {
     },
   }
 
-  nuxt.hook('scripts:registry', (scripts) => {
-    scripts.push(registry)
-  })
+  scripts.push(registry)
 }
