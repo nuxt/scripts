@@ -2,6 +2,7 @@ import type { ExternalScript, Output, Script } from 'third-party-capital'
 import { genImport, genTypeImport } from 'knitwork'
 import { useNuxt } from '@nuxt/kit'
 import type { HeadEntryOptions } from '@unhead/vue'
+import { resolvePath } from 'mlly'
 
 export interface ScriptContentOpts {
   data: Output
@@ -21,7 +22,7 @@ export interface ScriptContentOpts {
 const HEAD_VAR = '__head'
 const INJECTHEAD_CODE = `const ${HEAD_VAR} =  injectHead()`
 
-export function getTpcScriptContent(input: ScriptContentOpts) {
+export async function getTpcScriptContent(input: ScriptContentOpts) {
   const nuxt = useNuxt()
   if (!input.data.scripts)
     throw new Error('input.data has no scripts !')
@@ -46,7 +47,9 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
 
   if (input.tpcTypeImport) {
     // TPC type import
-    imports.add(genTypeImport('third-party-capital', [input.tpcTypeImport]))
+    imports.add(genTypeImport(await resolvePath('third-party-capital', {
+      url: import.meta.url,
+    }), [input.tpcTypeImport]))
   }
 
   if (hasParams) {
