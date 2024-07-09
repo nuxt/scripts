@@ -438,7 +438,7 @@ const contributors = useRuntimeConfig().public.contributors
         </template>
         <template #links>
           <div ref="confettiEl">
-            <UButton size="xl" variant="solid" icon="i-ph-sparkle-duotone" color="primary" to="/docs/guides/confetti-tutorial">
+            <UButton size="xl" variant="solid" icon="i-ph-sparkle-duotone" color="primary" to="/docs/getting-started/confetti-tutorial">
               Get started
             </UButton>
           </div>
