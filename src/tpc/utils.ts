@@ -54,7 +54,9 @@ export async function getTpcScriptContent(input: ScriptContentOpts) {
   }
 
   if (hasParams) {
-    imports.add(genImport('#nuxt-scripts-validator', ['object', 'any']))
+    imports.add(genImport(await resolvePath('valibot', {
+      url: import.meta.url,
+    }), ['object', 'any']))
     // need schema validation from tpc
     chunks.push(`const OptionSchema = object({${mainScript.params?.map(p => `${p}:  any()`)}})`)
   }
