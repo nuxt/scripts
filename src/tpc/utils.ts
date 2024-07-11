@@ -95,7 +95,7 @@ ${functionBody.join('\n')}
         scriptOptions: {
             use: ${input.use.toString()},
             stub: import.meta.client ? undefined :  ${input.stub.toString()},
-            ${input.featureDetectionName ? `performanceMarkFeature: ${input.featureDetectionName},` : ''}
+            ${input.featureDetectionName ? `performanceMarkFeature: ${JSON.stringify(input.featureDetectionName)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}
