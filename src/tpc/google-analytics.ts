@@ -1,11 +1,10 @@
-import { addImports, addTemplate, useNuxt } from '@nuxt/kit'
+import { addImports, addTemplate } from '@nuxt/kit'
 import type { Output } from 'third-party-capital'
 import { GooglaAnalyticsData, GoogleAnalytics } from 'third-party-capital'
 import type { RegistryScript } from '../runtime/types'
 import { getTpcScriptContent } from './utils'
 
-export default function googleAnalitycsRegistry() {
-  const nuxt = useNuxt()
+export default function googleAnalitycsRegistry(scripts: RegistryScript[]) {
   const { dst } = addTemplate({
     getContents() {
       return getTpcScriptContent({
@@ -48,7 +47,5 @@ export default function googleAnalitycsRegistry() {
       return false
     },
   }
-  nuxt.hook('scripts:registry', (scripts) => {
-    scripts.push(registry)
-  })
+  scripts.push(registry)
 }

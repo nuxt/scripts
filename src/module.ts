@@ -141,8 +141,8 @@ export default defineNuxtModule<ModuleOptions>({
 
     const scripts = registry(resolve)
 
-    addGoogleAnalyticsRegistry()
-    addGoogleTagManagerRegistry()
+    addGoogleAnalyticsRegistry(scripts)
+    addGoogleTagManagerRegistry(scripts)
 
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
