@@ -1,6 +1,25 @@
 # Changelog
 
 
+## v0.6.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.2...v0.6.3)
+
+### 🩹 Fixes
+
+- **tpc:** Annotate return type of tpc composables ([#141](https://github.com/nuxt/scripts/pull/141))
+- **tpc:** Directly push tpc composables into registry ([#139](https://github.com/nuxt/scripts/pull/139))
+- **tpc:** Use mlly to resolve third-party-capital ([#138](https://github.com/nuxt/scripts/pull/138))
+
+### 🏡 Chore
+
+- Bump deps ([ce084bf](https://github.com/nuxt/scripts/commit/ce084bf))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+
 ## v0.6.2
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.1...v0.6.2)
