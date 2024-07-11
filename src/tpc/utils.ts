@@ -37,6 +37,7 @@ export function getTpcScriptContent(input: ScriptContentOpts) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
+    'import type { VueScriptInstance } from \'@unhead/vue\'',
   ])
 
   const chunks: string[] = []
@@ -84,7 +85,9 @@ declare global {
   chunks.push(`export type Input = RegistryScriptInput${hasParams ? '<typeof OptionSchema>' : ''}`)
 
   chunks.push(`
-export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_options?: Input) {
+export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_options?: Input): T & {
+  $script: Promise<T> & VueScriptInstance<T>;
+} {
 ${functionBody.join('\n')}
   return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
         scriptInput: {
