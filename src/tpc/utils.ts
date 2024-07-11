@@ -7,7 +7,6 @@ export interface ScriptContentOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
-  registryId?: string
   tpcKey: string
   /**
    * This will be stringified. The function must be pure.
@@ -17,6 +16,7 @@ export interface ScriptContentOpts {
    * This will be stringified. The function must be pure.
    */
   stub: (params: { fn: string }) => any
+  featureDetectionName?: string
 }
 
 const HEAD_VAR = '__head'
@@ -87,7 +87,7 @@ declare global {
   chunks.push(`
 export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_options?: Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.registryId ?? input.tpcKey}', options => ({
+  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
@@ -95,6 +95,7 @@ ${functionBody.join('\n')}
         scriptOptions: {
             use: ${input.use.toString()},
             stub: import.meta.client ? undefined :  ${input.stub.toString()},
+            ${input.featureDetectionName ? `performanceMarkFeature: ${input.featureDetectionName},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}

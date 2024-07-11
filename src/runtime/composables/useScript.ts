@@ -25,7 +25,7 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
     if (!nuxtApp._scripts?.[id]) {
       performance?.mark?.('mark_feature_usage', {
         detail: {
-          feature: `nuxt-third-parties-${id}`,
+          feature: options.performanceMarkFeature ?? `nuxt-scripts:${id}`,
         },
       })
     }

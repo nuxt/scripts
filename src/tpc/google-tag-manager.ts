@@ -21,6 +21,7 @@ export default function googleTagManagerRegistry() {
         },
         tpcKey: 'gtm',
         tpcTypeImport: 'GoogleTagManagerApi',
+        featureDetectionName: 'nuxt-third-parties-gtm',
       })
     },
     filename: 'nuxt-scripts/tpc/google-tag-manager.ts',
