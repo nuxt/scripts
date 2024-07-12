@@ -17,6 +17,7 @@ export interface ScriptContentOpts {
    * This will be stringified. The function must be pure.
    */
   stub: (params: { fn: string }) => any
+  featureDetectionName?: string
 }
 
 const HEAD_VAR = '__head'
@@ -100,6 +101,7 @@ ${functionBody.join('\n')}
         scriptOptions: {
             use: ${input.use.toString()},
             stub: import.meta.client ? undefined :  ${input.stub.toString()},
+            ${input.featureDetectionName ? `performanceMarkFeature: ${JSON.stringify(input.featureDetectionName)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}

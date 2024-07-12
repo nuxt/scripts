@@ -19,6 +19,7 @@ export default function googleAnalitycsRegistry(scripts: RegistryScript[]) {
         },
         tpcKey: 'gtag',
         tpcTypeImport: 'GoogleAnalyticsApi',
+        featureDetectionName: 'nuxt-third-parties-ga',
       })
     },
     filename: 'nuxt-scripts/tpc/google-analytics.ts',

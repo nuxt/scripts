@@ -46,6 +46,10 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * loading the actual script and not getting warnings.
    */
   skipValidation?: boolean
+  /**
+   * @internal
+   */
+  performanceMarkFeature?: string
 }
 
 export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
