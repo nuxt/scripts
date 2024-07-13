@@ -42,7 +42,7 @@ export const MetaPixelOptions = object({
 export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions>
 
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
-  return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
+  return useRegistryScript<T, typeof MetaPixelOptions>(_options?.key || 'metaPixel', options => ({
     scriptInput: {
       src: 'https://connect.facebook.net/en_US/fbevents.js',
       crossorigin: false,

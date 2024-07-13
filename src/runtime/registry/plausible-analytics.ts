@@ -36,7 +36,7 @@ declare global {
 }
 
 export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_options?: PlausibleAnalyticsInput) {
-  return useRegistryScript<T, typeof PlausibleAnalyticsOptions>('plausibleAnalytics', (options) => {
+  return useRegistryScript<T, typeof PlausibleAnalyticsOptions>(_options?.key || 'plausibleAnalytics', (options) => {
     const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
     return {
       scriptInput: {

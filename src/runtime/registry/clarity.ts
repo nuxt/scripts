@@ -49,7 +49,7 @@ export function useScriptClarity<T extends ClarityApi>(
   _options?: ClarityInput,
 ) {
   return useRegistryScript<T, typeof ClarityOptions>(
-    'clarity',
+    _options?.key || 'clarity',
     options => ({
       scriptInput: {
         src: `https://www.clarity.ms/tag/${options.id}`,

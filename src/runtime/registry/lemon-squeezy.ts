@@ -70,7 +70,7 @@ declare global {
 }
 
 export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: LemonSqueezyInput) {
-  return useRegistryScript<T>('lemonSqueezy', () => ({
+  return useRegistryScript<T>(_options?.key || 'lemonSqueezy', () => ({
     scriptInput: {
       src: 'https://assets.lemonsqueezy.com/lemon.js',
       crossorigin: false,

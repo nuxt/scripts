@@ -18,7 +18,7 @@ export type YouTubePlayerInput = RegistryScriptInput
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  const instance = useRegistryScript<T>('youtubePlayer', () => ({
+  const instance = useRegistryScript<T>(_options?.key || 'youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
       crossorigin: false, // crossorigin can't be set or it breaks
