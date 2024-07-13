@@ -19,7 +19,7 @@ declare global {
 }
 
 export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
-  return useRegistryScript<T, typeof StripeOptions>('stripe', options => ({
+  return useRegistryScript<T, typeof StripeOptions>(_options?.key || 'stripe', options => ({
     scriptInput: {
       src: withQuery(
         `https://js.stripe.com/v3/`,

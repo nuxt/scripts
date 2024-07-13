@@ -93,7 +93,7 @@ export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_o
   $script: Promise<T> & VueScriptInstance<T>;
 } {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
+  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}(_options?.key || '${input.tpcKey}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },

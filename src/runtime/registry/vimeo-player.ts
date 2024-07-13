@@ -19,7 +19,7 @@ declare global {
 }
 
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
-  const instance = useRegistryScript<T>('vimeoPlayer', () => ({
+  const instance = useRegistryScript<T>(_options?.key || 'vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },

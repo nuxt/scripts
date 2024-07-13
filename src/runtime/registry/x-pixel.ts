@@ -47,7 +47,7 @@ export const XPixelOptions = object({
 export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
 
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
-  return useRegistryScript<T, typeof XPixelOptions>('xPixel', (options) => {
+  return useRegistryScript<T, typeof XPixelOptions>(_options?.key || 'xPixel', (options) => {
     return ({
       scriptInput: {
         src: 'https://static.ads-twitter.com/uwt.js',

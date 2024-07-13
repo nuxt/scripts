@@ -38,7 +38,7 @@ export const CloudflareWebAnalyticsOptions = object({
 export type CloudflareWebAnalyticsInput = RegistryScriptInput<typeof CloudflareWebAnalyticsOptions>
 
 export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalyticsApi>(_options?: CloudflareWebAnalyticsInput) {
-  return useRegistryScript<T, typeof CloudflareWebAnalyticsOptions>('cloudflareWebAnalytics', options => ({
+  return useRegistryScript<T, typeof CloudflareWebAnalyticsOptions>(_options?.key || 'cloudflareWebAnalytics', options => ({
     scriptInput: {
       'src': 'https://static.cloudflareinsights.com/beacon.min.js',
       'data-cf-beacon': JSON.stringify({ token: options.token, spa: options.spa || true }),
