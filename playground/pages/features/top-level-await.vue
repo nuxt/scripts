@@ -5,6 +5,8 @@
 
 // uncomment will trigger build-error
 // await $script
+// or
+// await $script.load()
 </script>
 
 <template>

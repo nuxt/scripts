@@ -81,6 +81,30 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       ]
     `)
   })
+  it('const await throws with a CallExpression on $script', async () => {
+    const code = `
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                            
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "top-level-await-alt",
+  async setup(__props, { expose: __expose }) {
+    __expose();
+    let __temp, __restore;
+    const { $script } = useScript("/test.js");
+    const res = ([__temp, __restore] = _withAsyncContext(() => $script.load()), __temp = await __temp, __restore(), __temp);
+    const __returned__ = { $script, res };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});
+        `
+
+    expect(await transform(code)).toMatchInlineSnapshot(`
+      [
+        [Error: You can't use a top-level await on $script as it will never resolve.],
+      ]
+    `)
+  })
   it('expect to not throw', async () => {
     const code = `
 import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                             3:14:59 pm
