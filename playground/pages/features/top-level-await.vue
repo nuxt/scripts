@@ -3,7 +3,8 @@ import { useScript } from '#imports'
 
 const { $script } = useScript('/test.js')
 
-await $script
+// uncomment will trigger build-error
+// await $script
 </script>
 
 <template>
