@@ -120,13 +120,13 @@ const emptyOptions = object({})
 
 export type EmptyOptionsSchema = typeof emptyOptions
 
-export type RegistryScriptInput<T extends ObjectSchema<any, any> = EmptyOptionsSchema, Bundelable extends boolean = true> = InferInput<T> & {
+export type RegistryScriptInput<T extends ObjectSchema<any, any> = EmptyOptionsSchema, Bundelable extends boolean = true, Usable extends boolean = false> = InferInput<T> & {
   /**
    * A unique key to use for the script, this can be used to load multiple of the same script with different options.
    */
   key?: string
   scriptInput?: MaybeComputedRefEntriesOnly<Omit<ScriptBase & DataKeys & SchemaAugmentations['script'], 'src'>>
-  scriptOptions?: Bundelable extends true ? Omit<NuxtUseScriptOptions, 'use'> : Omit<NuxtUseScriptOptions, 'bundle' | 'use'>
+  scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
 }
 
 export interface RegistryScript {
