@@ -2,19 +2,38 @@ import { describe, it, expect } from 'vitest'
 import { parse } from 'acorn-loose'
 import { NuxtScriptsCheckScripts } from '../../src/plugins/check-scripts'
 
-const plugin = NuxtScriptsCheckScripts({ throwExceptions: true }).vite() as any
+const plugin = NuxtScriptsCheckScripts().vite() as any
 
 async function transform(code: string | string[]) {
-  const res = await plugin.transform.call(
-    { parse: (code: string) => parse(code, { ecmaVersion: 2022, sourceType: 'module', allowImportExportEverywhere: true, allowAwaitOutsideFunction: true }) },
+  const errors = []
+  await plugin.transform.call(
+    {
+      error: (e: Error) => {
+        errors.push(e)
+      },
+      parse: (code: string) => {
+        try {
+          return parse(code, {
+            ecmaVersion: 2022,
+            sourceType: 'module',
+            allowImportExportEverywhere: true,
+            allowAwaitOutsideFunction: true,
+          })
+        }
+        catch (e) {
+          console.error('Failed to parse code', e)
+          return ''
+        }
+      },
+    },
     Array.isArray(code) ? code.join('\n') : code,
-    'file.js',
+    'file.vue',
   )
-  return res?.code
+  return errors
 }
 
 describe('vue parsed SFC', () => {
-  it('expect to throw', async () => {
+  it('just await throws', async () => {
     const code = `
      import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                             3:14:59 pm
 import { useScript } from "#imports";
@@ -32,9 +51,37 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 });
         `
 
-    expect(transform(code)).rejects.toMatchInlineSnapshot(`[Error: You should avoid doing a top-level $script.load() as it will lead to a blocking load.]`)
+    expect(await transform(code)).toMatchInlineSnapshot(`
+      [
+        [Error: You can't use a top-level await on $script as it will never resolve.],
+      ]
+    `)
   })
-  it('expect to not throw', () => {
+  it('const await throws', async () => {
+    const code = `
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                            
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "top-level-await-alt",
+  async setup(__props, { expose: __expose }) {
+    __expose();
+    let __temp, __restore;
+    const { $script } = useScript("/test.js");
+    const res = ([__temp, __restore] = _withAsyncContext(() => $script), __temp = await __temp, __restore(), __temp);
+    const __returned__ = { $script, res };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});
+        `
+
+    expect(await transform(code)).toMatchInlineSnapshot(`
+      [
+        [Error: You can't use a top-level await on $script as it will never resolve.],
+      ]
+    `)
+  })
+  it('expect to not throw', async () => {
     const code = `
 import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                             3:14:59 pm
 import { useScript } from "#imports";
@@ -50,6 +97,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });
         `
-    expect(transform(code)).resolves.toBeUndefined()
+    expect(await transform(code)).toMatchInlineSnapshot(`[]`)
   })
 })

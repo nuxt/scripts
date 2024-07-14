@@ -201,7 +201,10 @@ ${newScripts.map((i) => {
       const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
-      addBuildPlugin(NuxtScriptsCheckScripts())
+
+      addBuildPlugin(NuxtScriptsCheckScripts(), {
+        dev: true,
+      })
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
         defaultBundle: config.defaultScriptOptions?.bundle,

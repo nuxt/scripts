@@ -1,32 +1,17 @@
-import { pathToFileURL } from 'node:url'
 import { createUnplugin } from 'unplugin'
-import { parseQuery, parseURL } from 'ufo'
 import { type Node, walk } from 'estree-walker'
 import type { CallExpression, ObjectPattern } from 'estree'
+import { isVue } from './util'
 
-export function NuxtScriptsCheckScripts(options?: { throwExceptions: boolean }) {
+export function NuxtScriptsCheckScripts() {
   return createUnplugin(() => {
     return {
       name: 'nuxt-scripts:check-scripts',
       transformInclude(id) {
-        const { pathname, search } = parseURL(decodeURIComponent(pathToFileURL(id).href))
-        const { type } = parseQuery(search)
-
-        if (pathname.includes('node_modules/@unhead') || pathname.includes('node_modules/vueuse'))
-          return false
-
-        // vue files
-        if (pathname.endsWith('.vue') && (type === 'script' || !search))
-          return true
-
-        // // js files
-        if (pathname.match(/\.((c|m)?j|t)sx?$/g))
-          return true
-
-        return false
+        return isVue(id, { type: ['script'] })
       },
 
-      async transform(code, id) {
+      async transform(code) {
         if (!code.includes('useScript')) // all integrations should start with useScript*
           return
 
@@ -44,25 +29,29 @@ export function NuxtScriptsCheckScripts(options?: { throwExceptions: boolean }) 
               }
             }
             if (nameNode) {
-              if (_node.type === 'SequenceExpression') {
-                if (_node.expressions[1]?.type === 'AwaitExpression' && _node.expressions[0]?.type === 'AssignmentExpression' && _node.expressions[0]?.left?.type === 'ArrayPattern' && _node.expressions[0]?.right?.type === 'CallExpression') {
-                  // check right call expression is calling $script
-                  const right = _node.expressions[0].right as CallExpression
-                  if (right.callee?.name === '_withAsyncContext' && right.arguments[0]?.body?.name === '$script') {
-                    errorNode = nameNode
-                  }
+              let sequence = _node.type === 'SequenceExpression' ? _node : null
+              let assignmentExpression
+              if (_node.type === 'VariableDeclaration') {
+                if (_node.declarations[0]?.init?.type === 'SequenceExpression') {
+                  sequence = _node.declarations[0]?.init
+                  assignmentExpression = _node.declarations[0]?.init?.expressions?.[0]
+                }
+              }
+              if (sequence && !assignmentExpression) {
+                assignmentExpression = (sequence.expressions[0]?.type === 'AssignmentExpression' ? sequence.expressions[0] : null)
+              }
+              if (assignmentExpression) {
+                // check right call expression is calling $script
+                const right = assignmentExpression?.right as CallExpression
+                if (right.callee?.name === '_withAsyncContext' && right.arguments[0]?.body?.name === '$script') {
+                  errorNode = nameNode
                 }
               }
             }
           },
         })
         if (errorNode) {
-          const err = new Error('You should avoid doing a top-level $script.load() as it will lead to a blocking load.')
-          // testing purposes
-          if (options?.throwExceptions) {
-            throw err
-          }
-          return this.error(err, nameNode.loc?.start)
+          return this.error(new Error('You can\'t use a top-level await on $script as it will never resolve.'))
         }
       },
     }
