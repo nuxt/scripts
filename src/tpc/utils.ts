@@ -4,11 +4,13 @@ import { useNuxt } from '@nuxt/kit'
 import type { HeadEntryOptions } from '@unhead/vue'
 import { resolvePath } from 'mlly'
 
-export interface ScriptContentOpts {
+export interface BaseOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
   tpcKey: string
+}
+export interface ScriptContentOpts extends BaseOpts {
   /**
    * This will be stringified. The function must be pure.
    */
@@ -23,14 +25,7 @@ export interface ScriptContentOpts {
 const HEAD_VAR = '__head'
 const INJECTHEAD_CODE = `const ${HEAD_VAR} =  injectHead()`
 
-export interface TypeOpts {
-  data: Output
-  scriptFunctionName: string
-  tpcTypeImport: string
-  tpcKey: string
-}
-
-export async function generateTpcTypes(input: TypeOpts) {
+export async function generateTpcTypes(input: BaseOpts) {
   const mainScript = input.data.scripts?.find(({ key }) => key === input.tpcKey) as ExternalScript
 
   if (!mainScript)
@@ -73,7 +68,7 @@ ${chunks.join('\n')}
   `
 }
 
-export async function getTpcScriptContent(input: ScriptContentOpts) {
+export async function generateTpcContent(input: ScriptContentOpts) {
   const nuxt = useNuxt()
   if (!input.data.scripts)
     throw new Error('input.data has no scripts !')
