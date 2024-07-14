@@ -17,6 +17,7 @@ export interface ScriptContentOpts {
    * This will be stringified. The function must be pure.
    */
   stub: (params: { fn: string }) => any
+  key: string
 }
 
 const HEAD_VAR = '__head'
@@ -92,7 +93,7 @@ export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_o
   $script: Promise<T> & VueScriptInstance<T>;
 } {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.tpcKey}', options => ({
+  return useRegistryScript${hasParams ? '<T, typeof OptionSchema>' : ''}('${input.key}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
@@ -103,7 +104,7 @@ ${functionBody.join('\n')}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}
-    }), _options)
+    }), _options, ${JSON.stringify(input.tpcKey)})
 }`)
 
   chunks.unshift(...Array.from(imports))

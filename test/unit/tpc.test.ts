@@ -38,6 +38,7 @@ describe.each([
       scriptFunctionName: 'useScriptGoogleAnalytics',
       use: () => { },
       stub: () => { },
+      key: 'google-analytics',
     })).rejects.toThrow('no main script found for google-analytics in third-party-capital')
   })
 
@@ -66,6 +67,7 @@ describe.each([
       stub: () => {
         return []
       },
+      key: 'google-analytics',
     }
 
     it(`expect to${isDev ? '' : ' not'} add the schema to the script options`, async () => {
@@ -142,6 +144,7 @@ describe('script content generation with head positioning', () => {
     scriptFunctionName: 'useScriptGoogleAnalytics',
     use: () => { },
     stub: () => { },
+    key: 'google-analytics',
   }
 
   describe('main script', () => {
