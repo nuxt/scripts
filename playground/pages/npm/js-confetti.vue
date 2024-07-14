@@ -1,21 +1,41 @@
 <script lang="ts" setup>
-import { ref, useScriptTriggerElement, useScriptNpm } from '#imports'
+import { ref, useScriptTriggerElement, useScriptNpm, onMounted } from '#imports'
 
 const mouseOverEl = ref()
-const { addConfetti } = useScriptNpm<JSConfettiApi>({
+export interface JSConfettiApi {
+  JSConfetti: {
+    new (): {
+      addConfetti: (options?: { emojis: string[] }) => void
+    }
+  }
+}
+
+declare global {
+  interface Window extends JSConfettiApi {}
+}
+
+const { $script } = useScriptNpm<JSConfettiApi>({
   packageName: 'js-confetti',
   file: 'dist/js-confetti.browser.js',
   version: '0.12.0',
   scriptOptions: {
     trigger: useScriptTriggerElement({ trigger: 'mouseover', el: mouseOverEl }),
-    bundle: true,
     use() {
-      return typeof window.JSConfetti !== 'undefined' && new window.JSConfetti()
+      return { JSConfetti: window.JSConfetti }
     },
   },
 })
 
-addConfetti({ emojis: ['L', 'O', 'A', 'D', 'E', 'D'] })
+function addConfetti(options: { emojis: string[] }) {
+  $script.then(({ JSConfetti }) => {
+    const confetti = new JSConfetti()
+    confetti.addConfetti(options)
+  })
+}
+
+onMounted(() => {
+  addConfetti({ emojis: ['L', 'O', 'A', 'D', 'E', 'D'] })
+})
 </script>
 
 <template>
