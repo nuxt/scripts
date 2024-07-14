@@ -1,11 +1,26 @@
-import { addImports, addTemplate } from '@nuxt/kit'
+import { addImports, addTemplate, useNuxt } from '@nuxt/kit'
 import type { Output } from 'third-party-capital'
 import { GoogleTagManager, GoogleTagManagerData } from 'third-party-capital'
 
 import type { RegistryScript } from '../runtime/types'
-import { getTpcScriptContent } from './utils'
+import { extendTypes } from '../kit'
+import { generateTpcTypes, getTpcScriptContent } from './utils'
 
 export default function googleTagManagerRegistry(scripts: RegistryScript[]) {
+  extendTypes('nuxt-scripts-gtm', async () => await generateTpcTypes({
+    data: GoogleTagManagerData as Output,
+    scriptFunctionName: 'useScriptGoogleTagManager',
+    tpcKey: 'gtm',
+    tpcTypeImport: 'GoogleTagManagerApi',
+  }))
+  useNuxt().hook('prepare:types', async ({ declarations }) => {
+    declarations.push(`
+      import { useScriptGoogleTagManager } from '#build/modules/nuxt-scripts-gtm'
+      declare module '#imports' {
+        export { useScriptGoogleTagManager }
+      }
+      `)
+  })
   const { dst } = addTemplate({
     getContents() {
       return getTpcScriptContent({
@@ -22,10 +37,8 @@ export default function googleTagManagerRegistry(scripts: RegistryScript[]) {
         featureDetectionName: 'nuxt-third-parties-gtm',
       })
     },
-    filename: 'nuxt-scripts/tpc/google-tag-manager.ts',
-    write: true,
+    filename: 'modules/nuxt-scripts-gtm.ts',
   })
-
   addImports({
     from: dst,
     name: 'useScriptGoogleTagManager',

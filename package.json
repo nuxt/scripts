@@ -59,8 +59,8 @@
       "third-party-capital",
       "knitwork",
       "estree-walker",
-      "#build/nuxt-scripts/tpc/google-tag-manager",
-      "#build/nuxt-scripts/tpc/google-analytics",
+      "#build/modules/nuxt-scripts-gtm",
+      "#build/modules/nuxt-scripts-ga",
       "@vimeo/player",
       "esbuild"
     ]

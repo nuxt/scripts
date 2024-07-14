@@ -1,10 +1,27 @@
-import { addImports, addTemplate } from '@nuxt/kit'
+import { addImports, addTemplate, useNuxt } from '@nuxt/kit'
 import type { Output } from 'third-party-capital'
 import { GooglaAnalyticsData, GoogleAnalytics } from 'third-party-capital'
 import type { RegistryScript } from '../runtime/types'
-import { getTpcScriptContent } from './utils'
+import { extendTypes } from '../kit'
+import { generateTpcTypes, getTpcScriptContent } from './utils'
 
 export default function googleAnalitycsRegistry(scripts: RegistryScript[]) {
+  extendTypes('nuxt-scripts-ga', async () => await generateTpcTypes({
+    data: GooglaAnalyticsData as Output,
+    scriptFunctionName: 'useScriptGoogleAnalytics',
+
+    tpcKey: 'gtag',
+    tpcTypeImport: 'GoogleAnalyticsApi',
+  }))
+  useNuxt().hook('prepare:types', async ({ declarations }) => {
+    declarations.push(`
+      import { useScriptGoogleAnalytics } from '#build/modules/nuxt-scripts-ga'
+      declare module '#imports' {
+        export { useScriptGoogleAnalytics }
+      }
+      `)
+  })
+
   const { dst } = addTemplate({
     getContents() {
       return getTpcScriptContent({
@@ -22,8 +39,7 @@ export default function googleAnalitycsRegistry(scripts: RegistryScript[]) {
         featureDetectionName: 'nuxt-third-parties-ga',
       })
     },
-    filename: 'nuxt-scripts/tpc/google-analytics.ts',
-    write: true,
+    filename: 'modules/nuxt-scripts-ga.ts',
   })
 
   addImports({
