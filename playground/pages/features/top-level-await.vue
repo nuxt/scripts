@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { useScript } from '#imports'
+// import { useScript } from '#imports'
 
-const { $script } = useScript('/test.js')
+// const { $script } = useScript('/test.js')
 
 // uncomment will trigger build-error
 // await $script
