@@ -1,6 +1,6 @@
 import { createUnplugin } from 'unplugin'
 import { type Node, walk } from 'estree-walker'
-import type { CallExpression, ObjectPattern } from 'estree'
+import type { AssignmentExpression, CallExpression, ObjectPattern } from 'estree'
 import { isVue } from './util'
 
 export function NuxtScriptsCheckScripts() {
@@ -42,7 +42,8 @@ export function NuxtScriptsCheckScripts() {
               }
               if (assignmentExpression) {
                 // check right call expression is calling $script
-                const right = assignmentExpression?.right as CallExpression
+                const right = (assignmentExpression as AssignmentExpression)?.right as CallExpression
+                // @ts-expect-error untyped
                 if (right.callee?.name === '_withAsyncContext' && right.arguments[0]?.body?.name === '$script') {
                   errorNode = nameNode
                 }
