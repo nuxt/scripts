@@ -1,120 +1,70 @@
+import { pathToFileURL } from 'node:url'
 import { createUnplugin } from 'unplugin'
-import type { AnyNode, VariableDeclarator, ExportDefaultDeclaration, Property } from 'acorn'
-import { extname } from 'pathe'
-import { parse } from 'acorn'
-import { transform } from 'esbuild'
+import { parseQuery, parseURL } from 'ufo'
+import { type Node, walk } from 'estree-walker'
+import type { CallExpression, ObjectPattern } from 'estree'
 
-const SCRIPT_RE = /<script[^>]*>([\s\S]*)<\/script>/
+export function NuxtScriptsCheckScripts(options?: { throwExceptions: boolean }) {
+  return createUnplugin(() => {
+    return {
+      name: 'nuxt-scripts:check-scripts',
+      transformInclude(id) {
+        const { pathname, search } = parseURL(decodeURIComponent(pathToFileURL(id).href))
+        const { type } = parseQuery(search)
 
-export default () => createUnplugin(() => {
-  return {
-    name: 'nuxt-scripts:check-scripts',
-    enforce: 'pre',
-    async transform(code, id) {
-      if (!code.includes('useScript')) // all integrations should start with useScript*
-        return
+        if (pathname.includes('node_modules/@unhead') || pathname.includes('node_modules/vueuse'))
+          return false
 
-      const extName = extname(id)
-      if (extName === '.vue') {
-        const scriptAst = await extractScriptContentAst(code)
-        if (scriptAst) {
-          analyzeNodes(id, scriptAst)
-        }
-      }
-      else if (extName === '.ts' || extName === '.js') {
-        if (!code.includes('defineComponent')) return
-
-        let result = code
-
-        if (extName === '.ts') {
-          result = (await transform(code, { loader: 'ts' })).code
-        }
-
-        const setupFunction = extractSetupFunction(result)
-
-        if (setupFunction) {
-          analyzeNodes(id, setupFunction)
-        }
-      }
-
-      return undefined
-    },
-  }
-})
-
-function analyzeNodes(id: string, nodes: AnyNode[]) {
-  let name: string | undefined
-
-  for (const node of nodes) {
-    if (name) {
-      if (isAwaitingLoad(name, node)) {
-        throw new Error('Awaiting load should not be used at top level of a composable or <script>')
-      }
-    }
-    else {
-      if (node.type === 'VariableDeclaration') {
-        name = findScriptVar(node.declarations[0])
-      }
-    }
-  }
-}
-
-function findScriptVar(scriptDeclaration: VariableDeclarator) {
-  if (scriptDeclaration.id.type === 'ObjectPattern') {
-    for (const property of scriptDeclaration.id.properties) {
-      if (property.type === 'Property' && property.key.type === 'Identifier' && property.key.name === '$script' && property.value.type === 'Identifier') {
-        return property.value.name
-      }
-    }
-  }
-  else if (scriptDeclaration.id.type === 'Identifier') {
-    return scriptDeclaration.id.name
-  }
-}
-
-function isAwaitingLoad(name: string, node: AnyNode) {
-  if (node.type === 'ExpressionStatement' && node.expression.type === 'AwaitExpression') {
-    const arg = node.expression.argument
-    if (arg.type === 'CallExpression') {
-      const callee = arg.callee
-      if (callee.type === 'MemberExpression' && callee.object.type === 'Identifier' && callee.object.name === name) {
-        // $script or alias is used
-        if (callee.property.type === 'Identifier' && callee.property.name === 'load') {
+        // vue files
+        if (pathname.endsWith('.vue') && (type === 'script' || !search))
           return true
+
+        // // js files
+        if (pathname.match(/\.((c|m)?j|t)sx?$/g))
+          return true
+
+        return false
+      },
+
+      async transform(code, id) {
+        if (!code.includes('useScript')) // all integrations should start with useScript*
+          return
+
+        const ast = this.parse(code)
+        let nameNode: Node | undefined
+        let errorNode: Node | undefined
+        walk(ast as Node, {
+          enter(_node) {
+            if (_node.type === 'VariableDeclaration' && _node.declarations?.[0]?.id?.type === 'ObjectPattern') {
+              const objPattern = _node.declarations[0]?.id as ObjectPattern
+              for (const property of objPattern.properties) {
+                if (property.type === 'Property' && property.key.type === 'Identifier' && property.key.name === '$script' && property.value.type === 'Identifier') {
+                  nameNode = _node
+                }
+              }
+            }
+            if (nameNode) {
+              if (_node.type === 'SequenceExpression') {
+                if (_node.expressions[1]?.type === 'AwaitExpression' && _node.expressions[0]?.type === 'AssignmentExpression' && _node.expressions[0]?.left?.type === 'ArrayPattern' && _node.expressions[0]?.right?.type === 'CallExpression') {
+                  // check right call expression is calling $script
+                  const right = _node.expressions[0].right as CallExpression
+                  if (right.callee?.name === '_withAsyncContext' && right.arguments[0]?.body?.name === '$script') {
+                    errorNode = nameNode
+                  }
+                }
+              }
+            }
+          },
+        })
+        if (errorNode) {
+          const err = new Error('You should avoid doing a top-level $script.load() as it will lead to a blocking load.')
+          // testing purposes
+          if (options?.throwExceptions) {
+            throw err
+          }
+          return this.error(err, nameNode.loc?.start)
         }
-      }
+      },
     }
-  }
-}
-
-async function extractScriptContentAst(code: string): Promise<AnyNode[] | undefined> {
-  const scriptCode = code.match(SCRIPT_RE)
-  return scriptCode
-    ? parse((await transform(scriptCode[1], { loader: 'ts' })).code, {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-    }).body
-    : undefined
-}
-
-function extractSetupFunction(code: string): AnyNode[] | undefined {
-  const ast = parse(code, {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
   })
-
-  const defaultExport = ast.body.find((node): node is ExportDefaultDeclaration => node.type === 'ExportDefaultDeclaration')
-
-  if (defaultExport && defaultExport.declaration.type === 'CallExpression' && defaultExport.declaration.callee.type === 'Identifier' && defaultExport.declaration.callee.name === 'defineComponent') {
-    const arg = defaultExport.declaration.arguments[0]
-    if (arg && arg.type === 'ObjectExpression') {
-      const setupProperty = arg.properties.find((prop): prop is Property => prop.type === 'Property' && prop.key.type === 'Identifier' && prop.key.name === 'setup')
-      if (setupProperty) {
-        const setupValue = setupProperty.value
-        if (setupValue.type === 'FunctionExpression') {
-          return setupValue.body.body
-        }
-      }
-    }
-  }
 }

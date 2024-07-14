@@ -27,7 +27,7 @@ import type {
 } from './runtime/types'
 import addGoogleAnalyticsRegistry from './tpc/google-analytics'
 import addGoogleTagManagerRegistry from './tpc/google-tag-manager'
-import checkScripts from './plugins/check-scripts'
+import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { templatePlugin } from './templates'
 
 export interface ModuleOptions {
@@ -117,7 +117,6 @@ export default defineNuxtModule<ModuleOptions>({
         return
       }
     }
-    addBuildPlugin(checkScripts())
     // allow augmenting the options
     nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
@@ -202,6 +201,7 @@ ${newScripts.map((i) => {
       const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
+      addBuildPlugin(NuxtScriptsCheckScripts())
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
         defaultBundle: config.defaultScriptOptions?.bundle,
