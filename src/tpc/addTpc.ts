@@ -24,7 +24,7 @@ const scripts: TpcDescriptor[] = [{
     tpcTypeImport: 'GoogleTagManagerApi',
     featureDetectionName: 'nuxt-third-parties-gtm',
   },
-  filename: 'modules/nuxt-scripts-gtm',
+  filename: 'nuxt-scripts-gtm',
   registry: {
     label: 'Google Tag Manager',
     category: 'tracking',
@@ -54,7 +54,7 @@ const scripts: TpcDescriptor[] = [{
     tpcTypeImport: 'GoogleAnalyticsApi',
     featureDetectionName: 'nuxt-third-parties-ga',
   },
-  filename: 'modules/nuxt-scripts-ga',
+  filename: 'nuxt-scripts-ga',
   registry: {
     label: 'Google Analytics',
     category: 'tracking',
