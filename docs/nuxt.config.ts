@@ -82,6 +82,10 @@ export default defineNuxtConfig({
     },
   },
 
+  build: {
+    transpile: ['shiki'],
+  },
+
   devtools: {
     enabled: true,
   },

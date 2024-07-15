@@ -21,6 +21,7 @@
     "@nuxtjs/seo": "^2.0.0-rc.12",
     "@vueuse/core": "^10.11.0",
     "@vueuse/nuxt": "^10.11.0",
-    "nuxt-scripts-devtools": "workspace:*"
+    "nuxt-scripts-devtools": "workspace:*",
+    "shiki": "^1.10.3"
   }
 }
