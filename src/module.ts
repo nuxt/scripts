@@ -27,7 +27,6 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { templatePlugin } from './templates'
-import { addTpc } from './tpc/addTpc'
 
 export interface ModuleOptions {
   /**
@@ -138,7 +137,6 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     const scripts = registry(resolve)
-    addTpc(scripts)
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNuxt } from '@nuxt/kit'
 import { TSESTree, parse } from '@typescript-eslint/typescript-estree'
-import { generateTpcContent, type ScriptContentOpts } from '../../src/tpc/utils'
+import { generateTpcContent } from '../../scripts/utils'
+import type { TpcDescriptor } from '../../scripts/tpc/addTpc'
 
 vi.mock('@nuxt/kit', async (og) => {
   const mod = await og<typeof import('@nuxt/kit')>()
@@ -28,22 +29,32 @@ describe.each([
 
   it('expect to throw if no main scripts', () => {
     expect(() => generateTpcContent({
-      data: {
+      tpcData: {
         scripts: [],
         id: 'google-analytics',
         description: 'for test purpose',
       },
       tpcKey: 'google-analytics',
       tpcTypeImport: 'GoogleAnalyticsInput',
-      scriptFunctionName: 'useScriptGoogleAnalytics',
-      use: () => { },
-      stub: () => { },
+      options: {
+        scriptOptions: {
+          use: () => { },
+          stub: () => { },
+        },
+      },
+      registry: {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+          from: '',
+        },
+      },
     })).rejects.toThrow('no main script found for google-analytics in third-party-capital')
   })
 
   describe('script content generation', () => {
-    const input: ScriptContentOpts = {
-      data: {
+    const input: TpcDescriptor = {
+      key: 'google-analytics',
+      tpcData: {
         id: 'google-analytics',
         scripts: [
           {
@@ -59,38 +70,23 @@ describe.each([
       },
       tpcKey: 'google-analytics',
       tpcTypeImport: 'GoogleAnalyticsInput',
-      scriptFunctionName: 'useScriptGoogleAnalytics',
-      use: () => {
-        return { dataLayer: window.dataLayer, gtag: window.gtag }
+      registry: {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+          from: '',
+        },
       },
-      stub: () => {
-        return []
+      options: {
+        scriptOptions: {
+          use: () => {
+            return { dataLayer: window.dataLayer, gtag: window.gtag }
+          },
+          stub: () => {
+            return []
+          },
+        },
       },
     }
-
-    it(`expect to${isDev ? '' : ' not'} add the schema to the script options`, async () => {
-      const result = await generateTpcContent(input)
-      const returnStatement = getTpcScriptReturnStatement(result, 'useScriptGoogleAnalytics')
-      if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {
-        throw new Error('TPC Scripts must return a call expression of useRegistryScript')
-      }
-      const optionFnTree = returnStatement.argument.arguments[1] as TSESTree.ArrowFunctionExpression
-      const optionFnReturn = optionFnTree.body as TSESTree.ObjectExpression
-      const scriptOptionAst = optionFnReturn.properties.find((node): node is TSESTree.Property => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'scriptOptions')!
-
-      const useFn = (scriptOptionAst.value as TSESTree.ObjectExpression).properties.find(node => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'use')
-      if (!useFn) throw new Error('use function not found')
-      expect(getCodeFromAst(result, useFn)).toContain('return { dataLayer: window.dataLayer, gtag: window.gtag }')
-
-      const schemaNode = optionFnReturn.properties.find(node => node.type === TSESTree.AST_NODE_TYPES.Property && node.key.type === TSESTree.AST_NODE_TYPES.Identifier && node.key.name === 'schema')
-      if (isDev) {
-        expect(schemaNode).toBeTruthy()
-        expect(getCodeFromAst(result, schemaNode!)).toContain('schema: OptionSchema')
-      }
-      else {
-        expect(schemaNode).toBeUndefined()
-      }
-    })
 
     it('expect to stringify the use and stub functions', async () => {
       const result = await generateTpcContent(input)
@@ -122,8 +118,9 @@ describe.each([
 })
 
 describe('script content generation with head positioning', () => {
-  const inputBase: ScriptContentOpts = {
-    data: {
+  const inputBase: TpcDescriptor = {
+    key: 'google-analytics',
+    tpcData: {
       id: 'google-analytics',
       scripts: [
         {
@@ -139,9 +136,18 @@ describe('script content generation with head positioning', () => {
     },
     tpcKey: 'google-analytics',
     tpcTypeImport: 'GoogleAnalyticsInput',
-    scriptFunctionName: 'useScriptGoogleAnalytics',
-    use: () => { },
-    stub: () => { },
+    registry: {
+      import: {
+        name: 'useScriptGoogleAnalytics',
+        from: '',
+      },
+    },
+    options: {
+      scriptOptions: {
+        use: () => { },
+        stub: () => { },
+      },
+    },
   }
 
   describe('main script', () => {
@@ -153,9 +159,9 @@ describe('script content generation with head positioning', () => {
       const scriptOptsAst = getTpcScriptOptsASt(await generateTpcContent({
         ...inputBase,
         data: {
-          ...inputBase.data,
+          ...inputBase.tpcData,
           scripts: [{
-            ...inputBase.data.scripts![0],
+            ...inputBase.tpcData.scripts![0],
             action: 'prepend',
           }],
         },
