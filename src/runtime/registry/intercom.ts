@@ -16,7 +16,7 @@ export const IntercomOptions = object({
   vertical_padding: optional(number()),
 })
 
-export type IntercomInput = RegistryScriptInput<typeof IntercomOptions>
+export type IntercomInput = RegistryScriptInput<typeof IntercomOptions, true, false, false>
 
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: InferInput<typeof IntercomOptions>) => void)

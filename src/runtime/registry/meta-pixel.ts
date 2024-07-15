@@ -39,7 +39,7 @@ declare global {
 export const MetaPixelOptions = object({
   id: union([string(), number()]),
 })
-export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions>
+export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false, false>
 
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
   return useRegistryScript<T, typeof MetaPixelOptions>(_options?.key || 'metaPixel', options => ({

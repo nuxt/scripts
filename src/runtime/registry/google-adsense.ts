@@ -11,7 +11,7 @@ export const GoogleAdsenseOptions = object({
   client: optional(string()),
 })
 
-export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions>
+export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions, true, false, false>
 
 export interface GoogleAdsenseApi {
   /**

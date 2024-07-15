@@ -25,7 +25,7 @@ export const FathomAnalyticsOptions = object({
   honorDnt: optional(boolean()),
 })
 
-export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false>
+export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false, false>
 
 export interface FathomAnalyticsApi {
   beacon: (ctx: { url: string, referrer?: string }) => void

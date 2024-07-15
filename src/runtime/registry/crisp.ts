@@ -35,7 +35,7 @@ export const CrispOptions = object({
   cookieExpiry: optional(number()),
 })
 
-export type CrispInput = RegistryScriptInput<typeof CrispOptions, false>
+export type CrispInput = RegistryScriptInput<typeof CrispOptions, false, false, false>
 
 export interface CrispApi {
   push: (...args: any[]) => void

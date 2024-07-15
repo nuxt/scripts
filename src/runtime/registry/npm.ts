@@ -10,7 +10,7 @@ export const NpmOptions = object({
   type: optional(string()),
 })
 
-export type NpmInput = RegistryScriptInput<typeof NpmOptions, true, true>
+export type NpmInput = RegistryScriptInput<typeof NpmOptions, true, true, false>
 
 export function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput) {
   // TODO support multiple providers? (e.g. jsdelivr, cdnjs, etc.) Only unpkg for now

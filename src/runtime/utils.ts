@@ -48,7 +48,12 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O exte
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
     // a manual trigger also means it was disabled by nuxt.config
-    import.meta.dev && !scriptOptions.skipValidation && options.schema && validateScriptInputSchema(key, options.schema, userOptions)
+    if (import.meta.dev && !scriptOptions.skipValidation && options.schema) {
+      // overriding the src will skip validation
+      if (!userOptions.scriptInput?.src) {
+        validateScriptInputSchema(key, options.schema, userOptions)
+      }
+    }
     // avoid clearing the user beforeInit
     init?.()
     if (import.meta.client) {
