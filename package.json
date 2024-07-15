@@ -48,7 +48,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest",
-    "test:types": "npx nuxi typecheck"
+    "test:types": "npx nuxi typecheck",
+    "script:generate-tpc": "bun ./scripts/generateTpcScripts.ts && pnpm lint:fix"
   },
   "build": {
     "externals": [
