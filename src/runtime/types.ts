@@ -1,5 +1,5 @@
 import type { UseScriptOptions, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
-import type { UseScriptInput, VueScriptInstance, MaybeComputedRefEntriesOnly } from '@unhead/vue'
+import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
@@ -22,8 +22,8 @@ import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { GoogleAdsenseInput } from './registry/google-adsense'
 import type { ClarityInput } from './registry/clarity'
 import type { CrispInput } from './registry/crisp'
-import type { Input as GoogleTagManagerInput } from '#build/nuxt-scripts/tpc/google-tag-manager'
-import type { Input as GoogleAnalyticsInput } from '#build/nuxt-scripts/tpc/google-analytics'
+import type { Input as GoogleTagManagerInput } from '#build/modules/nuxt-scripts-gtm'
+import type { Input as GoogleAnalyticsInput } from '#build/modules/nuxt-scripts-ga'
 
 export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -120,14 +120,31 @@ const emptyOptions = object({})
 
 export type EmptyOptionsSchema = typeof emptyOptions
 
-export type RegistryScriptInput<T extends ObjectSchema<any, any> = EmptyOptionsSchema, Bundelable extends boolean = true, Usable extends boolean = false> = InferInput<T> & {
-  /**
-   * A unique key to use for the script, this can be used to load multiple of the same script with different options.
-   */
-  key?: string
-  scriptInput?: MaybeComputedRefEntriesOnly<Omit<ScriptBase & DataKeys & SchemaAugmentations['script'], 'src'>>
-  scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-}
+type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
+
+export type RegistryScriptInput<
+  T extends ObjectSchema<any, any> = EmptyOptionsSchema,
+  Bundelable extends boolean = true,
+  Usable extends boolean = false,
+  CanBypassOptions extends boolean = true,
+> =
+    (InferInput<T>
+    & {
+      /**
+       * A unique key to use for the script, this can be used to load multiple of the same script with different options.
+       */
+      key?: string
+      scriptInput?: ScriptInput
+      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+    })
+    | (CanBypassOptions extends true ? {
+      /**
+       * A unique key to use for the script, this can be used to load multiple of the same script with different options.
+       */
+      key?: string
+      scriptInput: Required<Pick<ScriptInput, 'src'>> & ScriptInput
+      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+    } : never)
 
 export interface RegistryScript {
   import?: Import // might just be a component

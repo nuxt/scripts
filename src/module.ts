@@ -25,10 +25,9 @@ import type {
   RegistryScript,
   RegistryScripts,
 } from './runtime/types'
-import addGoogleAnalyticsRegistry from './tpc/google-analytics'
-import addGoogleTagManagerRegistry from './tpc/google-tag-manager'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { templatePlugin } from './templates'
+import { addTpc } from './tpc/addTpc'
 
 export interface ModuleOptions {
   /**
@@ -139,10 +138,7 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     const scripts = registry(resolve)
-
-    addGoogleAnalyticsRegistry(scripts)
-    addGoogleTagManagerRegistry(scripts)
-
+    addTpc(scripts)
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 

@@ -44,7 +44,7 @@ export const XPixelOptions = object({
   id: string(),
   version: optional(string()),
 })
-export type XPixelInput = RegistryScriptInput<typeof XPixelOptions>
+export type XPixelInput = RegistryScriptInput<typeof XPixelOptions, true, false, false>
 
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
   return useRegistryScript<T, typeof XPixelOptions>(_options?.key || 'xPixel', (options) => {

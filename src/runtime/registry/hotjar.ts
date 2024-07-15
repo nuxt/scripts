@@ -19,7 +19,7 @@ export const HotjarOptions = object({
   sv: optional(number()),
 })
 
-export type HotjarInput = RegistryScriptInput<typeof HotjarOptions>
+export type HotjarInput = RegistryScriptInput<typeof HotjarOptions, true, false, false>
 
 export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
   return useRegistryScript<T, typeof HotjarOptions>(_options?.key || 'hotjar', options => ({

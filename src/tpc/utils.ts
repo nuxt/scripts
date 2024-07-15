@@ -4,11 +4,13 @@ import { useNuxt } from '@nuxt/kit'
 import type { HeadEntryOptions } from '@unhead/vue'
 import { resolvePath } from 'mlly'
 
-export interface ScriptContentOpts {
+export interface BaseOpts {
   data: Output
   scriptFunctionName: string
   tpcTypeImport: string
   tpcKey: string
+}
+export interface ScriptContentOpts extends BaseOpts {
   /**
    * This will be stringified. The function must be pure.
    */
@@ -23,7 +25,50 @@ export interface ScriptContentOpts {
 const HEAD_VAR = '__head'
 const INJECTHEAD_CODE = `const ${HEAD_VAR} =  injectHead()`
 
-export async function getTpcScriptContent(input: ScriptContentOpts) {
+export async function generateTpcTypes(input: BaseOpts) {
+  const mainScript = input.data.scripts?.find(({ key }) => key === input.tpcKey) as ExternalScript
+
+  if (!mainScript)
+    throw new Error(`no main script found for ${input.tpcKey} in third-party-capital`)
+
+  const imports = new Set<string>([
+    'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
+    'import type { VueScriptInstance } from \'@unhead/vue\'',
+  ])
+
+  imports.add(genImport('#nuxt-scripts-validator', ['object', 'any']))
+
+  const chunks: string[] = []
+
+  if (input.tpcTypeImport) {
+    // TPC type import
+    imports.add(genTypeImport(await resolvePath('third-party-capital', {
+      url: import.meta.url,
+    }), [input.tpcTypeImport]))
+
+    chunks.push(`
+    declare global {
+      interface Window extends ${input.tpcTypeImport} {}
+    }`)
+  }
+
+  const hasParams = mainScript.params?.length
+
+  if (hasParams) {
+    imports.add(genTypeImport('#nuxt-scripts-validator', ['ObjectSchema', 'AnySchema']))
+  }
+  // need schema validation from tpc
+  chunks.push(`export type Schema = ObjectSchema<{${mainScript.params?.map(p => `${p}:  AnySchema`)}}, undefined>`)
+  chunks.push(`export type Input = RegistryScriptInput<Schema>`)
+  chunks.push(`export function ${input.scriptFunctionName}<T extends ${input.tpcTypeImport}>(_options?: Input): T & {$script: Promise<T> & VueScriptInstance<T>;}`)
+
+  return `
+${Array.from(imports).join('\n')}
+${chunks.join('\n')}
+  `
+}
+
+export async function generateTpcContent(input: ScriptContentOpts) {
   const nuxt = useNuxt()
   if (!input.data.scripts)
     throw new Error('input.data has no scripts !')

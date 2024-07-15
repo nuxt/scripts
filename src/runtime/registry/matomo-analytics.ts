@@ -10,7 +10,7 @@ export const MatomoAnalyticsOptions = object({
   enableLinkTracking: optional(boolean()),
 })
 
-export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false>
+export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false, false>
 
 interface MatomoAnalyticsApi {
   _paq: unknown[]

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNuxt } from '@nuxt/kit'
 import { TSESTree, parse } from '@typescript-eslint/typescript-estree'
-import { getTpcScriptContent, type ScriptContentOpts } from '../../src/tpc/utils'
+import { generateTpcContent, type ScriptContentOpts } from '../../src/tpc/utils'
 
 vi.mock('@nuxt/kit', async (og) => {
   const mod = await og<typeof import('@nuxt/kit')>()
@@ -27,7 +27,7 @@ describe.each([
   })
 
   it('expect to throw if no main scripts', () => {
-    expect(() => getTpcScriptContent({
+    expect(() => generateTpcContent({
       data: {
         scripts: [],
         id: 'google-analytics',
@@ -69,7 +69,7 @@ describe.each([
     }
 
     it(`expect to${isDev ? '' : ' not'} add the schema to the script options`, async () => {
-      const result = await getTpcScriptContent(input)
+      const result = await generateTpcContent(input)
       const returnStatement = getTpcScriptReturnStatement(result, 'useScriptGoogleAnalytics')
       if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {
         throw new Error('TPC Scripts must return a call expression of useRegistryScript')
@@ -93,7 +93,7 @@ describe.each([
     })
 
     it('expect to stringify the use and stub functions', async () => {
-      const result = await getTpcScriptContent(input)
+      const result = await generateTpcContent(input)
       const returnStatement = getTpcScriptReturnStatement(result, 'useScriptGoogleAnalytics')
       if (!returnStatement || returnStatement.argument?.type !== TSESTree.AST_NODE_TYPES.CallExpression || (returnStatement.argument?.callee as TSESTree.Identifier).name !== 'useRegistryScript') {
         throw new Error('TPC Scripts must return a call expression of useRegistryScript')
@@ -112,7 +112,7 @@ describe.each([
     })
 
     it('expect to augment window types', async () => {
-      const result = await getTpcScriptContent(input)
+      const result = await generateTpcContent(input)
       const ast = parse(result, { loc: true, range: true })
       const augmentWindowTypes = ast.body.find((node): node is TSESTree.TSModuleDeclaration => node.type === TSESTree.AST_NODE_TYPES.TSModuleDeclaration)
       expect(augmentWindowTypes).toBeTruthy()
@@ -146,11 +146,11 @@ describe('script content generation with head positioning', () => {
 
   describe('main script', () => {
     it('main script post body position', async () => {
-      const scriptOptsAst = getTpcScriptOptsASt(await getTpcScriptContent(inputBase), 'useScriptGoogleAnalytics')
-      expect(getCodeFromAst(await getTpcScriptContent(inputBase), scriptOptsAst)).toContain('"tagPosition":"bodyClose"')
+      const scriptOptsAst = getTpcScriptOptsASt(await generateTpcContent(inputBase), 'useScriptGoogleAnalytics')
+      expect(getCodeFromAst(await generateTpcContent(inputBase), scriptOptsAst)).toContain('"tagPosition":"bodyClose"')
     })
     it('main script pre body position', async () => {
-      const scriptOptsAst = getTpcScriptOptsASt(await getTpcScriptContent({
+      const scriptOptsAst = getTpcScriptOptsASt(await generateTpcContent({
         ...inputBase,
         data: {
           ...inputBase.data,
@@ -160,7 +160,7 @@ describe('script content generation with head positioning', () => {
           }],
         },
       }), 'useScriptGoogleAnalytics')
-      expect(getCodeFromAst(await getTpcScriptContent(inputBase), scriptOptsAst)).toContain('"tagPosition":"bodyClose"')
+      expect(getCodeFromAst(await generateTpcContent(inputBase), scriptOptsAst)).toContain('"tagPosition":"bodyClose"')
     })
   })
 })
