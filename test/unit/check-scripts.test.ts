@@ -1,96 +1,126 @@
 import { describe, it, expect } from 'vitest'
-import checkScripts from '../../src/plugins/check-scripts'
+import { parse } from 'acorn-loose'
+import { NuxtScriptsCheckScripts } from '../../src/plugins/check-scripts'
 
-const plugin = checkScripts().vite()
+const plugin = NuxtScriptsCheckScripts().vite() as any
 
-describe('ts file', () => {
-  const id = 'test.ts'
-
-  it('expect to throw', async () => {
-    const code = `
-        import { useScript } from 'nuxt-scripts'
-        interface SomeInterface {}
-        export default defineComponent({
-        async setup(){
-            const { $script } = useScript('google-analytics')
-            await $script.load()
-
-            return {}
+async function transform(code: string | string[]) {
+  const errors = []
+  await plugin.transform.call(
+    {
+      error: (e: Error) => {
+        errors.push(e)
+      },
+      parse: (code: string) => {
+        try {
+          return parse(code, {
+            ecmaVersion: 2022,
+            sourceType: 'module',
+            allowImportExportEverywhere: true,
+            allowAwaitOutsideFunction: true,
+          })
         }
-        })
-        `
-    expect((plugin as any).transform(code, id)).rejects.toThrow()
-  })
-  it('expect to not throw', () => {
-    const code = `
-        import { useScript } from 'nuxt-scripts'
-        interface SomeInterface {}
-        export default defineComponent({
-        setup(){
-            const { $script } = useScript('google-analytics')
-            $script.load()
-
-            return {}
+        catch (e) {
+          console.error('Failed to parse code', e)
+          return ''
         }
-        })
+      },
+    },
+    Array.isArray(code) ? code.join('\n') : code,
+    'file.vue',
+  )
+  return errors
+}
+
+describe('vue parsed SFC', () => {
+  it('just await throws', async () => {
+    const code = `
+     import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                             3:14:59 pm
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "top-level-await",
+  async setup(__props, { expose: __expose }) {
+    __expose();
+    let __temp, __restore;
+    const { $script } = useScript("/test.js");
+    [__temp, __restore] = _withAsyncContext(() => $script), await __temp, __restore();
+    const __returned__ = { $script };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});
         `
-    expect((plugin as any).transform(code, id)).resolves.toBeUndefined()
+
+    expect(await transform(code)).toMatchInlineSnapshot(`
+      [
+        [Error: You can't use a top-level await on $script as it will never resolve.],
+      ]
+    `)
   })
-})
-
-describe('js file', () => {
-  const id = 'test.js'
-
-  it('expect to throw', () => {
+  it('const await throws', async () => {
     const code = `
-        import { useScript } from 'nuxt-scripts'
-        export default defineComponent({
-        setup(){
-            const { $script } = useScript('google-analytics')
-            await $script.load()
-
-            return {}
-        }
-        })
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                            
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "top-level-await-alt",
+  async setup(__props, { expose: __expose }) {
+    __expose();
+    let __temp, __restore;
+    const { $script } = useScript("/test.js");
+    const res = ([__temp, __restore] = _withAsyncContext(() => $script), __temp = await __temp, __restore(), __temp);
+    const __returned__ = { $script, res };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});
         `
-    expect((plugin as any).transform(code, id)).rejects.toThrow()
-  })
-  it('expect to not throw', () => {
-    const code = `
-        import { useScript } from 'nuxt-scripts'
-        export default defineComponent({
-        setup(){
-            const { $script } = useScript('google-analytics')
-            $script.load()
 
-            return {}
-        }
-        })
+    expect(await transform(code)).toMatchInlineSnapshot(`
+      [
+        [Error: You can't use a top-level await on $script as it will never resolve.],
+      ]
+    `)
+  })
+  it('const await throws with a CallExpression on $script', async () => {
+    const code = `
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                            
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "top-level-await-alt",
+  async setup(__props, { expose: __expose }) {
+    __expose();
+    let __temp, __restore;
+    const { $script } = useScript("/test.js");
+    const res = ([__temp, __restore] = _withAsyncContext(() => $script.load()), __temp = await __temp, __restore(), __temp);
+    const __returned__ = { $script, res };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});
         `
-    expect((plugin as any).transform(code, id)).resolves.toBeUndefined()
+
+    expect(await transform(code)).toMatchInlineSnapshot(`
+      [
+        [Error: You can't use a top-level await on $script as it will never resolve.],
+      ]
+    `)
   })
-})
-
-describe('SFC file', () => {
-  const id = 'test.vue'
-  it('expect to throw', () => {
+  it('expect to not throw', async () => {
     const code = `
-<template><div>hello world</div></template>
-<script setup lang="ts">
-const { $script } = useScript('google-analytics')
-await $script.load()
-</script>`
-
-    expect((plugin as any).transform(code, id)).rejects.toThrow()
-  })
-  it('expect notto throw', () => {
-    const code = `
-<template><div>hello world</div></template>
-<script setup lang="ts">
-const { $script } = useScript('google-analytics')
-$script.load()
-</script>`
-
-    expect((plugin as any).transform(code, id)).resolves.toBeUndefined()
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                             3:14:59 pm
+import { useScript } from "#imports";
+const _sfc_main = /* @__PURE__ */ _defineComponent({
+  __name: "top-level-await",
+  async setup(__props, { expose: __expose }) {
+    __expose();
+    let __temp, __restore;
+    const { $script } = useScript("/test.js");
+    const __returned__ = { $script };
+    Object.defineProperty(__returned__, "__isScriptSetup", { enumerable: false, value: true });
+    return __returned__;
+  }
+});
+        `
+    expect(await transform(code)).toMatchInlineSnapshot(`[]`)
   })
 })

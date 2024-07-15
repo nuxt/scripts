@@ -1,12 +1,11 @@
-import { pathToFileURL } from 'node:url'
 import { createUnplugin } from 'unplugin'
-import { parseQuery, parseURL } from 'ufo'
 import MagicString from 'magic-string'
 import type { SourceMapInput } from 'rollup'
 import type { Node } from 'estree-walker'
 import { walk } from 'estree-walker'
 import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
 import type { InferInput } from 'valibot'
+import { isJS, isVue } from './util'
 import type { RegistryScript } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
@@ -22,21 +21,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       name: 'nuxt:scripts:bundler-transformer',
 
       transformInclude(id) {
-        const { pathname, search } = parseURL(decodeURIComponent(pathToFileURL(id).href))
-        const { type } = parseQuery(search)
-
-        if (pathname.includes('node_modules/@unhead') || pathname.includes('node_modules/vueuse'))
-          return false
-
-        // vue files
-        if (pathname.endsWith('.vue') && (type === 'script' || !search))
-          return true
-
-        // js files
-        if (pathname.match(/\.((c|m)?j|t)sx?$/g))
-          return true
-
-        return false
+        return isVue(id, { type: ['template', 'script'] }) || isJS(id)
       },
 
       async transform(code, id) {
