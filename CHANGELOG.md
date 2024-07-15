@@ -1,6 +1,39 @@
 # Changelog
 
 
+## v0.6.4
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.3...v0.6.4)
+
+### 🚀 Enhancements
+
+- Support manual script deduping ([#148](https://github.com/nuxt/scripts/pull/148))
+
+### 🩹 Fixes
+
+- **tpc:** Custom feature detection flags ([#113](https://github.com/nuxt/scripts/pull/113))
+- Allow `use` with npm scripts ([dfec3b4](https://github.com/nuxt/scripts/commit/dfec3b4))
+- Support explicit `scriptInput.src` override ([be2389f](https://github.com/nuxt/scripts/commit/be2389f))
+- Safer top level await checks ([#149](https://github.com/nuxt/scripts/pull/149))
+- Prefer module build-time tpc ([#153](https://github.com/nuxt/scripts/pull/153))
+
+### 💅 Refactors
+
+- **tpc:** Write only declaration files ([#151](https://github.com/nuxt/scripts/pull/151))
+
+### 🏡 Chore
+
+- Bump deps ([14d6c7f](https://github.com/nuxt/scripts/commit/14d6c7f))
+- Improve type api ([188fcf5](https://github.com/nuxt/scripts/commit/188fcf5))
+- Bump deps, maybe fix docs deployment ([0d6abed](https://github.com/nuxt/scripts/commit/0d6abed))
+- Maybe fix docs deployment ([7f21bc3](https://github.com/nuxt/scripts/commit/7f21bc3))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Harlan Wilton ([@harlan-zw](http://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+
 ## v0.6.3
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.2...v0.6.3)
