@@ -252,7 +252,7 @@ export const registry: (resolve?: (s: string) => string) => RegistryScripts = (r
     },
     {
       label: 'Google Analytics',
-      category: 'tracking',
+      category: 'analytics',
       import: {
         name: 'useScriptGoogleAnalytics',
         from: resolve('./runtime/registry/google-analytics'),
