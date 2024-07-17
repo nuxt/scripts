@@ -33,7 +33,6 @@ const scripts: TpcDescriptor[] = [
       scriptOptions: {
         performanceMarkFeature: 'nuxt-third-parties-gtm',
         use: () => {
-          // @ts-expect-error untyped
           return { dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }
         },
         stub: ({ fn }) => {
@@ -53,7 +52,6 @@ const scripts: TpcDescriptor[] = [
       scriptOptions: {
         performanceMarkFeature: 'nuxt-third-parties-ga',
         use: () => {
-          // @ts-expect-error untyped
           return { dataLayer: window.dataLayer, gtag: window.gtag }
         },
         // allow dataLayer to be accessed on the server
