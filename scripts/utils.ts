@@ -30,12 +30,12 @@ export async function generateTpcContent(input: TpcDescriptor) {
   const chunks: string[] = []
   const functionBody: string[] = []
 
-  const hasParams = mainScript.params?.length
+  const params = [...new Set(input.tpcData.scripts?.map(s => s.params || []).flat() || [])]
 
-  if (hasParams) {
+  if (params.length) {
     imports.add(genImport('#nuxt-scripts-validator', ['object', 'string']))
     // need schema validation from tpc
-    chunks.push(`export const ${titleKey}Options = object({${mainScript.params?.map(p => `${p}:  string()`)}})`)
+    chunks.push(`export const ${titleKey}Options = object({${params.map(p => `${p}:  string()`)}})`)
   }
 
   chunks.push(`
@@ -64,20 +64,22 @@ declare global {
     }
   }
 
-  chunks.push(`export type ${titleKey}Input = RegistryScriptInput${hasParams ? `<typeof ${titleKey}Options>` : ''}`)
+  const options = input.getOptions({})
+
+  chunks.push(`export type ${titleKey}Input = RegistryScriptInput${params.length ? `<typeof ${titleKey}Options>` : ''}`)
 
   chunks.push(`
 export function ${input.registry.import!.name}<T extends ${input.tpcTypeImport}>(_options?: ${titleKey}Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? `<T, typeof ${titleKey}Options>` : ''}(_options?.key || '${input.key}', options => ({
+  return useRegistryScript${params.length ? `<T, typeof ${titleKey}Options>` : ''}(_options?.key || '${input.key}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
         schema: import.meta.dev ? undefined : ${titleKey}Options,
         scriptOptions: {
-            use: ${input.options.scriptOptions!.use!.toString()},
-            stub: import.meta.client ? undefined :  ${input.options.scriptOptions!.stub!.toString()},
-            ${input.options.scriptOptions?.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.options.scriptOptions?.performanceMarkFeature)},` : ''}
+            use: ${options.scriptOptions!.use!.toString()},
+            stub: import.meta.client ? undefined :  ${options.scriptOptions!.stub!.toString()},
+            ${options.scriptOptions?.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(options.scriptOptions?.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         // eslint-disable-next-line

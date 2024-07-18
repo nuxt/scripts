@@ -5,7 +5,7 @@ import { useRegistryScript } from '#nuxt-scripts-utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { object, string } from '#nuxt-scripts-validator'
 
-export const GoogleAnalyticsOptions = object({ id: string() })
+export const GoogleAnalyticsOptions = object({ id: string(), dataLayerName: string() })
 
 declare global {
   interface Window extends GoogleAnalyticsApi {}
@@ -20,17 +20,17 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
     schema: import.meta.dev ? undefined : GoogleAnalyticsOptions,
     scriptOptions: {
       use: () => {
-        return { dataLayer: window.dataLayer, gtag: window.gtag }
+        return { dataLayer: window.dataLayers[options.dataLayerName], gtag: window.gtag }
       },
       stub: import.meta.client
         ? undefined
         : ({ fn }) => {
-            return fn === 'dataLayer' ? [] : void 0
+            return fn === 'dataLayer' ? [] : undefined
           },
       performanceMarkFeature: 'nuxt-third-parties-ga',
       ...({ tagPriority: 1 }),
     },
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window.dataLayer=window.dataLayer||[];window.gtag=function gtag(){window.dataLayer.push(arguments);};window.gtag('js',new Date());window.gtag('config',options.id)},
+        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName]=window.dataLayers[options.dataLayerName]||[];window.gtag=function gtag(){window.dataLayers[options.dataLayerName].push(arguments);};window.gtag('js',new Date());window.gtag('config',options.id)},
   }), _options)
 }
