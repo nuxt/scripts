@@ -9,7 +9,7 @@ links:
 ---
 
 ::tip
-This composable is generated with `GoogleChromeLabs/third-party-capital` in collaboration with the Aurora team.
+This composable is generated with `GoogleChromeLabs/third-party-capital` in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
 ::
 
 [Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.

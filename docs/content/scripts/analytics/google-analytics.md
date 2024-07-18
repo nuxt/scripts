@@ -9,7 +9,7 @@ links:
 ---
 
 ::tip
-This composable is generated with `GoogleChromeLabs/third-party-capital` in collaboration with the Aurora team.
+This composable is generated with `GoogleChromeLabs/third-party-capital` in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
 ::
 
 [Google Analytics](https://marketingplatform.google.com/about/analytics/) is an analytics solution for Nuxt Apps.
