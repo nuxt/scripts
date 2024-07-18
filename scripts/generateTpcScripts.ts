@@ -37,7 +37,7 @@ const scripts: Array<TpcDescriptor> = [
           return { dataLayer: window.dataLayers[options.dataLayerName], google_tag_manager: window.google_tag_manager }
         },
         stub: ({ fn }) => {
-          return fn === 'dataLayer' ? [] : undefined
+          return fn === 'dataLayer' ? [] : void 0
         },
       },
     }),
@@ -60,7 +60,7 @@ const scripts: Array<TpcDescriptor> = [
         },
         // allow dataLayer to be accessed on the server
         stub: ({ fn }) => {
-          return fn === 'dataLayer' ? [] : undefined
+          return fn === 'dataLayer' ? [] : void 0
         },
       },
     }),
