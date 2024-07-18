@@ -32,7 +32,7 @@ export async function generateTpcContent(input: TpcDescriptor) {
   const functionBody: string[] = []
 
   if (input.defaultOptions) {
-    imports.add(genImport(await resolvePath('defu'), ['defu']))
+    imports.add(genImport('defu', ['defu']))
     functionBody.push(`_options = defu(_options, ${JSON.stringify(input.defaultOptions)})`)
   }
 
