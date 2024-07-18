@@ -4,9 +4,9 @@ import type { GoogleAnalyticsApi } from 'third-party-capital'
 import { useRegistryScript } from '#nuxt-scripts-utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { defu } from 'D:/repo/scripts/node_modules/.pnpm/defu@6.1.4/node_modules/defu/dist/defu.mjs'
-import { object, string } from '#nuxt-scripts-validator'
+import { object, string, optional } from '#nuxt-scripts-validator'
 
-export const GoogleAnalyticsOptions = object({ id: string(), dataLayerName: string() })
+export const GoogleAnalyticsOptions = object({ id: string(), dataLayerName: optional(string()) })
 
 declare global {
   interface Window extends GoogleAnalyticsApi {}

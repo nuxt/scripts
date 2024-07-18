@@ -39,9 +39,16 @@ export async function generateTpcContent(input: TpcDescriptor) {
   const params = [...new Set(input.tpcData.scripts?.map(s => s.params || []).flat() || [])]
 
   if (params.length) {
-    imports.add(genImport('#nuxt-scripts-validator', ['object', 'string']))
+    const validatorImports = new Set<string>(['object', 'string'])
     // need schema validation from tpc
-    chunks.push(`export const ${titleKey}Options = object({${params.map(p => `${p}:  string()`)}})`)
+    chunks.push(`export const ${titleKey}Options = object({${params.map((p) => {
+      if (input.defaultOptions && p in input.defaultOptions) {
+        validatorImports.add('optional')
+        return `${p}: optional(string())`
+      }
+      return `${p}: string()`
+    })}})`)
+    imports.add(genImport('#nuxt-scripts-validator', [...validatorImports]))
   }
 
   chunks.push(`
