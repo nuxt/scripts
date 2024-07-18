@@ -27,7 +27,8 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       googleAnalytics: {
-        id: 'YOUR_ID'
+        id: 'YOUR_ID',
+        dataLayerName: 'defaultGa'
       }
     }
   }
@@ -40,7 +41,7 @@ export default defineNuxtConfig({
     scripts: {
       registry: {
         googleAnalytics: {
-          token: 'YOUR_TOKEN_ID',
+          id: 'YOUR_ID',
         }
       }
     }
@@ -67,6 +68,7 @@ export default defineNuxtConfig({
       scripts: {
         googleAnalytics: {
           id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
+          dataLayerName: 'defaultGa' // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_DATALAYERNAME
         },
       },
     },
@@ -85,6 +87,7 @@ The `useScriptGoogleAnalytics` composable lets you have fine-grain control over 
 ```ts
 const { gtag, $script } = useScriptGoogleAnalytics({
   id: 'YOUR_ID'
+  dataLayerName: 'defaultGa'
 })
 ```
 
@@ -127,6 +130,10 @@ export const GoogleAnalyticsOptions = object({
    * The Google Analytics ID.
    */
   id: string(),
+  /**
+   * The datalayer's name you want it to be associated with
+   */
+  dataLayerName: string()
 })
 ```
 
@@ -167,6 +174,7 @@ export default defineNuxtConfig({
         ? 'mock' // script won't load unless manually calling load()
         : {
             id: 'YOUR_ID',
+            dataLayerName: 'defaultGa'
           },
     },
   },

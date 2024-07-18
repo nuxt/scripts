@@ -3,6 +3,7 @@ import { withQuery } from 'ufo'
 import type { GoogleTagManagerApi } from 'third-party-capital'
 import { useRegistryScript } from '#nuxt-scripts-utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
+import { defu } from 'D:/repo/scripts/node_modules/.pnpm/defu@6.1.4/node_modules/defu/dist/defu.mjs'
 import { object, string } from '#nuxt-scripts-validator'
 
 export const GoogleTagManagerOptions = object({ id: string(), dataLayerName: string() })
@@ -13,6 +14,7 @@ declare global {
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
 export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput) {
+  _options = defu(_options, { dataLayerName: 'defaultGtm' })
   return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'google-tag-manager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id }),
@@ -20,12 +22,12 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_option
     schema: import.meta.dev ? undefined : GoogleTagManagerOptions,
     scriptOptions: {
       use: () => {
-        return { dataLayers: window.dataLayers[options.dataLayerName], google_tag_manager: window.google_tag_manager }
+        return { dataLayer: window.dataLayers[options.dataLayerName], google_tag_manager: window.google_tag_manager }
       },
       stub: import.meta.client
         ? undefined
         : ({ fn }) => {
-            return fn === 'dataLayer' ? {} : undefined
+            return fn === 'dataLayer' ? [] : undefined
           },
       performanceMarkFeature: 'nuxt-third-parties-gtm',
       ...({ tagPriority: 1 }),

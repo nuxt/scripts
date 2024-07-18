@@ -32,6 +32,7 @@ export default defineNuxtConfig({
     registry: {
       googleTagManager: {
         id: 'YOUR_ID'
+        dataLayerName: 'defaultGtm'
       }
     }
   }
@@ -45,6 +46,7 @@ export default defineNuxtConfig({
       registry: {
         googleTagManager: {
           token: 'YOUR_TOKEN_ID',
+          dataLayerName: 'defaultGtm'
         }
       }
     }
@@ -71,6 +73,7 @@ export default defineNuxtConfig({
       scripts: {
         googleTagManager: {
           id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID
+          dataLayerName: 'defaultGtm' // NUXT_PUBLIC_SCRIPTS_DATA_LAYER_NAME
         },
       },
     },
@@ -113,6 +116,11 @@ export const GoogleTagManagerOptions = object({
    * The Google Tag Manager ID.
    */
   id: string(),
+  /**
+   * The name of the dataLayer you want to use
+   * @default 'defaultGtm'
+   */
+  dataLayerName: string()
 })
 ```
 

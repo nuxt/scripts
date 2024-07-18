@@ -19,6 +19,7 @@ export interface TpcDescriptor {
     schema?: any
     clientInit?: () => void
   })
+  defaultOptions?: Record<string, unknown>
 }
 
 const scripts: Array<TpcDescriptor> = [
@@ -33,13 +34,16 @@ const scripts: Array<TpcDescriptor> = [
       scriptOptions: {
         performanceMarkFeature: 'nuxt-third-parties-gtm',
         use: () => {
-          return { dataLayers: window.dataLayers[options.dataLayerName], google_tag_manager: window.google_tag_manager }
+          return { dataLayer: window.dataLayers[options.dataLayerName], google_tag_manager: window.google_tag_manager }
         },
         stub: ({ fn }) => {
-          return fn === 'dataLayer' ? {} : undefined
+          return fn === 'dataLayer' ? [] : undefined
         },
       },
     }),
+    defaultOptions: {
+      dataLayerName: 'defaultGtm',
+    },
   },
   // GA
   {
@@ -60,6 +64,9 @@ const scripts: Array<TpcDescriptor> = [
         },
       },
     }),
+    defaultOptions: {
+      dataLayerName: 'defaultGa',
+    },
   }]
 
 export async function generate() {

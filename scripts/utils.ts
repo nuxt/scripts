@@ -1,6 +1,7 @@
 import type { ExternalScript, Script } from 'third-party-capital'
 import { genImport } from 'knitwork'
 import type { HeadEntryOptions } from '@unhead/vue'
+import { resolvePath } from 'mlly'
 import type { TpcDescriptor } from './generateTpcScripts'
 
 const HEAD_VAR = '__head'
@@ -29,6 +30,11 @@ export async function generateTpcContent(input: TpcDescriptor) {
 
   const chunks: string[] = []
   const functionBody: string[] = []
+
+  if (input.defaultOptions) {
+    imports.add(genImport(await resolvePath('defu'), ['defu']))
+    functionBody.push(`_options = defu(_options, ${JSON.stringify(input.defaultOptions)})`)
+  }
 
   const params = [...new Set(input.tpcData.scripts?.map(s => s.params || []).flat() || [])]
 
