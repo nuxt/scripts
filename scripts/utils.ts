@@ -76,8 +76,6 @@ declare global {
     }
   }
 
-  const options = input.getOptions({})
-
   chunks.push(`export type ${titleKey}Input = RegistryScriptInput${params.length ? `<typeof ${titleKey}Options>` : ''}`)
 
   chunks.push(`
@@ -89,9 +87,9 @@ ${functionBody.join('\n')}
         },
         schema: import.meta.dev ? undefined : ${titleKey}Options,
         scriptOptions: {
-            use: ${options.scriptOptions!.use!.toString()},
-            stub: import.meta.client ? undefined :  ${options.scriptOptions!.stub!.toString()},
-            ${options.scriptOptions?.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(options.scriptOptions?.performanceMarkFeature)},` : ''}
+            use: () => { return ${input.returnUse} },
+            stub: import.meta.client ? undefined : ({fn}) => { return ${input.returnStub}},
+            ${input.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         // eslint-disable-next-line
@@ -105,7 +103,7 @@ ${functionBody.join('\n')}
 }
 
 function replaceTokenToRuntime(code: string) {
-  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1')).join(';')
+  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1!')).join(';')
 }
 
 function getScriptInputOption(script: Script): HeadEntryOptions | undefined {

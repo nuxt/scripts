@@ -21,18 +21,12 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_option
     },
     schema: import.meta.dev ? undefined : GoogleTagManagerOptions,
     scriptOptions: {
-      use: () => {
-        return { dataLayer: window.dataLayers[options.dataLayerName], google_tag_manager: window.google_tag_manager }
-      },
-      stub: import.meta.client
-        ? undefined
-        : ({ fn }) => {
-            return fn === 'dataLayer' ? [] : void 0
-          },
+      use: () => { return { dataLayer: window.dataLayers[options.dataLayerName!], google_tag_manager: window.google_tag_manager } },
+      stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-gtm',
       ...({ tagPriority: 1 }),
     },
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName]=window.dataLayers[options.dataLayerName]||[];window.dataLayers[options.dataLayerName].push({'gtm.start':new Date().getTime(),event:'gtm.js'});},
+        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName!]=window.dataLayers[options.dataLayerName!]||[];window.dataLayers[options.dataLayerName!].push({'gtm.start':new Date().getTime(),event:'gtm.js'});},
   }), _options)
 }

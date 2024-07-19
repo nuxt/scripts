@@ -21,18 +21,12 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
     },
     schema: import.meta.dev ? undefined : GoogleAnalyticsOptions,
     scriptOptions: {
-      use: () => {
-        return { dataLayer: window.dataLayers[options.dataLayerName], gtag: window.gtag }
-      },
-      stub: import.meta.client
-        ? undefined
-        : ({ fn }) => {
-            return fn === 'dataLayer' ? [] : void 0
-          },
+      use: () => { return { dataLayer: window.dataLayers[options.dataLayerName!], gtag: window.gtag } },
+      stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-ga',
       ...({ tagPriority: 1 }),
     },
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName]=window.dataLayers[options.dataLayerName]||[];window.gtag=function gtag(){window.dataLayers[options.dataLayerName].push(arguments);};window.gtag('js',new Date());window.gtag('config',options.id)},
+        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName!]=window.dataLayers[options.dataLayerName!]||[];window.gtag=function gtag(){window.dataLayers[options.dataLayerName!].push(arguments);};window.gtag('js',new Date());window.gtag('config',options.id!)},
   }), _options)
 }
