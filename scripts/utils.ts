@@ -1,7 +1,6 @@
 import type { ExternalScript, Script } from 'third-party-capital'
 import { genImport } from 'knitwork'
 import type { HeadEntryOptions } from '@unhead/vue'
-import { resolvePath } from 'mlly'
 import type { TpcDescriptor } from './generateTpcScripts'
 
 const HEAD_VAR = '__head'
