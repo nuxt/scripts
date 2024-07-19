@@ -28,7 +28,6 @@ export default defineNuxtConfig({
     registry: {
       googleAnalytics: {
         id: 'YOUR_ID',
-        dataLayerName: 'defaultGa'
       }
     }
   }
@@ -86,7 +85,6 @@ The `useScriptGoogleAnalytics` composable lets you have fine-grain control over 
 ```ts
 const { gtag, $script } = useScriptGoogleAnalytics({
   id: 'YOUR_ID'
-  dataLayerName: 'defaultGa'
 })
 ```
 
