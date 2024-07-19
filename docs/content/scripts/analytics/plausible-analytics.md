@@ -64,7 +64,7 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         plausibleAnalytics: {
-          domain: '', // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_DOMAIN
+          domain: '', // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN
         },
       },
     },
