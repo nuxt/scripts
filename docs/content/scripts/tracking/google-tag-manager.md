@@ -71,7 +71,6 @@ export default defineNuxtConfig({
       scripts: {
         googleTagManager: {
           id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID
-          dataLayerName: 'defaultGtm' // NUXT_PUBLIC_SCRIPTS_DATA_LAYER_NAME
         },
       },
     },

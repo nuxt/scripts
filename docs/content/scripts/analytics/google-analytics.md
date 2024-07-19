@@ -173,7 +173,6 @@ export default defineNuxtConfig({
         ? 'mock' // script won't load unless manually calling load()
         : {
             id: 'YOUR_ID',
-            dataLayerName: 'defaultGa'
           },
     },
   },
