@@ -68,7 +68,6 @@ export default defineNuxtConfig({
       scripts: {
         googleAnalytics: {
           id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
-          dataLayerName: 'defaultGa' // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_DATALAYERNAME
         },
       },
     },
@@ -133,7 +132,7 @@ export const GoogleAnalyticsOptions = object({
   /**
    * The datalayer's name you want it to be associated with
    */
-  dataLayerName: string()
+  dataLayerName: optional(string())
 })
 ```
 
