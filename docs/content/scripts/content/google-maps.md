@@ -29,7 +29,7 @@ By default, it will load on the `mouseover` and `mouseclick` events.
 ### Billing & Permissions
 
 ::callout
-You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) and the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
+You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup), the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup) and [Places API](https://developers.google.com/maps/documentation/places/web-service/cloud-setup).
 ::
 
 Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
