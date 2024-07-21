@@ -12,6 +12,7 @@ const { gtag: gtag1, $script: $script1 } = useScriptGoogleAnalytics({
 })
 
 const { gtag: gtag2, $script: $script2 } = useScriptGoogleAnalytics({
+  key: 'test',
   id: 'G-123456',
   dataLayerName: 'dataLayer2',
 })
