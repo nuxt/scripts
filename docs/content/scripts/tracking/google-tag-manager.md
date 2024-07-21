@@ -117,6 +117,11 @@ export const GoogleTagManagerOptions = object({
    * The Google Tag Manager ID.
    */
   id: string(),
+  /**
+   * The name of the dataLayer you want to use
+   * @default 'defaultGtm'
+   */
+  dataLayerName: optional(string())
 })
 ```
 

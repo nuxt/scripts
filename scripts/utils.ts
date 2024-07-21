@@ -30,12 +30,24 @@ export async function generateTpcContent(input: TpcDescriptor) {
   const chunks: string[] = []
   const functionBody: string[] = []
 
-  const hasParams = mainScript.params?.length
+  if (input.defaultOptions) {
+    imports.add(genImport('defu', ['defu']))
+    functionBody.push(`_options = defu(_options, ${JSON.stringify(input.defaultOptions)})`)
+  }
 
-  if (hasParams) {
-    imports.add(genImport('#nuxt-scripts-validator', ['object', 'string']))
+  const params = [...new Set(input.tpcData.scripts?.map(s => s.params || []).flat() || [])]
+
+  if (params.length) {
+    const validatorImports = new Set<string>(['object', 'string'])
     // need schema validation from tpc
-    chunks.push(`export const ${titleKey}Options = object({${mainScript.params?.map(p => `${p}:  string()`)}})`)
+    chunks.push(`export const ${titleKey}Options = object({${params.map((p) => {
+      if (input.defaultOptions && p in input.defaultOptions) {
+        validatorImports.add('optional')
+        return `${p}: optional(string())`
+      }
+      return `${p}: string()`
+    })}})`)
+    imports.add(genImport('#nuxt-scripts-validator', [...validatorImports]))
   }
 
   chunks.push(`
@@ -64,20 +76,20 @@ declare global {
     }
   }
 
-  chunks.push(`export type ${titleKey}Input = RegistryScriptInput${hasParams ? `<typeof ${titleKey}Options>` : ''}`)
+  chunks.push(`export type ${titleKey}Input = RegistryScriptInput${params.length ? `<typeof ${titleKey}Options>` : ''}`)
 
   chunks.push(`
 export function ${input.registry.import!.name}<T extends ${input.tpcTypeImport}>(_options?: ${titleKey}Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${hasParams ? `<T, typeof ${titleKey}Options>` : ''}(_options?.key || '${input.key}', options => ({
+  return useRegistryScript${params.length ? `<T, typeof ${titleKey}Options>` : ''}(_options?.key || '${input.key}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
         schema: import.meta.dev ? undefined : ${titleKey}Options,
         scriptOptions: {
-            use: ${input.options.scriptOptions!.use!.toString()},
-            stub: import.meta.client ? undefined :  ${input.options.scriptOptions!.stub!.toString()},
-            ${input.options.scriptOptions?.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.options.scriptOptions?.performanceMarkFeature)},` : ''}
+            use: () => { return ${input.returnUse} },
+            stub: import.meta.client ? undefined : ({fn}) => { return ${input.returnStub}},
+            ${input.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
         // eslint-disable-next-line
@@ -91,7 +103,7 @@ ${functionBody.join('\n')}
 }
 
 function replaceTokenToRuntime(code: string) {
-  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1')).join(';')
+  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1!')).join(';')
 }
 
 function getScriptInputOption(script: Script): HeadEntryOptions | undefined {

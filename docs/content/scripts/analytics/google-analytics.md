@@ -31,7 +31,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       googleAnalytics: {
-        id: 'YOUR_ID'
+        id: 'YOUR_ID',
       }
     }
   }
@@ -44,7 +44,7 @@ export default defineNuxtConfig({
     scripts: {
       registry: {
         googleAnalytics: {
-          token: 'YOUR_TOKEN_ID',
+          id: 'YOUR_ID',
         }
       }
     }
@@ -131,6 +131,10 @@ export const GoogleAnalyticsOptions = object({
    * The Google Analytics ID.
    */
   id: string(),
+  /**
+   * The datalayer's name you want it to be associated with
+   */
+  dataLayerName: optional(string())
 })
 ```
 

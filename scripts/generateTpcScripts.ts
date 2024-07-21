@@ -2,7 +2,6 @@ import { writeFile } from 'node:fs/promises'
 import { GooglaAnalyticsData, GoogleTagManagerData, type Output } from 'third-party-capital'
 import type { UseScriptInput } from '@unhead/vue'
 import { resolve } from 'pathe'
-import type { NuxtUseScriptOptions } from '../src/runtime/types'
 import { registry } from '../src/registry'
 import { generateTpcContent } from './utils'
 
@@ -13,15 +12,15 @@ export interface TpcDescriptor {
   tpcTypeImport: string
   key: string
   registry?: any
-  options: ({
-    scriptInput?: UseScriptInput
-    scriptOptions?: NuxtUseScriptOptions
-    schema?: any
-    clientInit?: () => void
-  })
+  scriptInput?: UseScriptInput
+  performanceMarkFeature?: string
+  returnUse?: string
+  returnStub?: string
+  clientInit?: string
+  defaultOptions?: Record<string, unknown>
 }
 
-const scripts: TpcDescriptor[] = [
+const scripts: Array<TpcDescriptor> = [
   // GTM
   {
     label: 'Google Tag Manager',
@@ -29,16 +28,11 @@ const scripts: TpcDescriptor[] = [
     tpcData: GoogleTagManagerData as Output,
     tpcTypeImport: 'GoogleTagManagerApi',
     key: 'google-tag-manager',
-    options: {
-      scriptOptions: {
-        performanceMarkFeature: 'nuxt-third-parties-gtm',
-        use: () => {
-          return { dataLayer: window.dataLayer, google_tag_manager: window.google_tag_manager }
-        },
-        stub: ({ fn }) => {
-          return fn === 'dataLayer' ? [] : undefined
-        },
-      },
+    performanceMarkFeature: 'nuxt-third-parties-gtm',
+    returnUse: '{ dataLayer: window.dataLayers[options.dataLayerName!], google_tag_manager: window.google_tag_manager }',
+    returnStub: 'fn === \'dataLayer\' ? [] : void 0',
+    defaultOptions: {
+      dataLayerName: 'defaultGtm',
     },
   },
   // GA
@@ -48,17 +42,12 @@ const scripts: TpcDescriptor[] = [
     tpcData: GooglaAnalyticsData as Output,
     key: 'google-analytics',
     tpcTypeImport: 'GoogleAnalyticsApi',
-    options: {
-      scriptOptions: {
-        performanceMarkFeature: 'nuxt-third-parties-ga',
-        use: () => {
-          return { dataLayer: window.dataLayer, gtag: window.gtag }
-        },
-        // allow dataLayer to be accessed on the server
-        stub: ({ fn }) => {
-          return fn === 'dataLayer' ? [] : undefined
-        },
-      },
+    performanceMarkFeature: 'nuxt-third-parties-ga',
+    returnUse: '{ dataLayer: window.dataLayers[options.dataLayerName!], gtag: window.gtag }',
+    // allow dataLayer to be accessed on the server
+    returnStub: 'fn === \'dataLayer\' ? [] : void 0',
+    defaultOptions: {
+      dataLayerName: 'defaultGa',
     },
   }]
 
