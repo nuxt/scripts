@@ -13,15 +13,19 @@ declare global {
 }
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
-export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput) {
+function use(options: GoogleTagManagerInput) {
+  return { dataLayer: window.dataLayers[options.dataLayerName!], google_tag_manager: window.google_tag_manager }
+}
+
+export function useScriptGoogleTagManager(_options?: GoogleTagManagerInput) {
   _options = defu(_options, { dataLayerName: 'defaultGtm' })
-  return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'google-tag-manager', options => ({
+  return useRegistryScript<ReturnType<typeof use>, typeof GoogleTagManagerOptions>(_options?.key || 'google-tag-manager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id }),
     },
     schema: import.meta.dev ? undefined : GoogleTagManagerOptions,
     scriptOptions: {
-      use: () => { return { dataLayer: window.dataLayers[options.dataLayerName!], google_tag_manager: window.google_tag_manager } },
+      use: () => use(options),
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-gtm',
       ...({ tagPriority: 1 }),

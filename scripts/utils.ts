@@ -54,7 +54,6 @@ export async function generateTpcContent(input: TpcDescriptor) {
 declare global {
   interface Window extends ${input.tpcTypeImport} {}
 }`)
-
   const clientInitCode: string[] = []
 
   if (input.tpcData.stylesheets) {
@@ -78,16 +77,24 @@ declare global {
 
   chunks.push(`export type ${titleKey}Input = RegistryScriptInput${params.length ? `<typeof ${titleKey}Options>` : ''}`)
 
+  if (input.returnUse) {
+    chunks.push(`
+function use(options: ${titleKey}Input) { 
+  return ${input.returnUse} 
+}
+    `)
+  }
+
   chunks.push(`
-export function ${input.registry.import!.name}<T extends ${input.tpcTypeImport}>(_options?: ${titleKey}Input) {
+export function ${input.registry.import!.name}(_options?: ${titleKey}Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${params.length ? `<T, typeof ${titleKey}Options>` : ''}(_options?.key || '${input.key}', options => ({
+  return useRegistryScript<${input.returnUse ? `ReturnType<typeof use>` : `Record<string | symbol, any>`},${params.length ? `typeof ${titleKey}Options` : ''}>(_options?.key || '${input.key}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
         schema: import.meta.dev ? undefined : ${titleKey}Options,
         scriptOptions: {
-            use: () => { return ${input.returnUse} },
+            ${input.returnUse ? `use: () => use(options),` : ''}
             stub: import.meta.client ? undefined : ({fn}) => { return ${input.returnStub}},
             ${input.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}

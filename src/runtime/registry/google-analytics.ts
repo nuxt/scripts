@@ -13,15 +13,19 @@ declare global {
 }
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
-export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput) {
+function use(options: GoogleAnalyticsInput) {
+  return { dataLayer: window.dataLayers[options.dataLayerName!], gtag: window.gtag }
+}
+
+export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
   _options = defu(_options, { dataLayerName: 'defaultGa' })
-  return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'google-analytics', options => ({
+  return useRegistryScript<ReturnType<typeof use>, typeof GoogleAnalyticsOptions>(_options?.key || 'google-analytics', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id }),
     },
     schema: import.meta.dev ? undefined : GoogleAnalyticsOptions,
     scriptOptions: {
-      use: () => { return { dataLayer: window.dataLayers[options.dataLayerName!], gtag: window.gtag } },
+      use: () => use(options),
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-ga',
       ...({ tagPriority: 1 }),
