@@ -8,6 +8,10 @@ links:
   size: xs
 ---
 
+::tip
+This composable is generated with [GoogleChromeLabs/third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital) in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
+::
+
 [Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.
 
 ::callout
@@ -113,6 +117,11 @@ export const GoogleTagManagerOptions = object({
    * The Google Tag Manager ID.
    */
   id: string(),
+  /**
+   * The name of the dataLayer you want to use
+   * @default 'defaultGtm'
+   */
+  dataLayerName: optional(string())
 })
 ```
 
