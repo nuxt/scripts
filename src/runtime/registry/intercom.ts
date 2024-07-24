@@ -50,7 +50,7 @@ declare global {
 }
 
 export function useScriptIntercom<T extends IntercomApi>(_options?: IntercomInput) {
-  return useRegistryScript<T, typeof IntercomOptions>(_options?.key || 'intercom', options => ({
+  return useRegistryScript<T, typeof IntercomOptions>('intercom', options => ({
     scriptInput: {
       src: joinURL(`https://widget.intercom.io/widget`, options?.app_id || ''),
     },

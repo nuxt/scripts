@@ -21,7 +21,7 @@ declare global {
 }
 
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
-  return useRegistryScript<T, typeof MatomoAnalyticsOptions>(_options?.key || 'matomoAnalytics', options => ({
+  return useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
     scriptInput: {
       src: withBase(`/matomo.js`, withHttps(options?.matomoUrl)),
       crossorigin: false,

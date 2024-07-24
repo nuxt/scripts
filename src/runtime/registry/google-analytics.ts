@@ -27,6 +27,6 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
       ...({ tagPriority: 1 }),
     },
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName!]=window.dataLayers[options.dataLayerName!]||[];window.gtag=function gtag(){window.dataLayers[options.dataLayerName!].push(arguments);};window.gtag('js',new Date());window.gtag('config',options.id!)},
+        clientInit: import.meta.server ? undefined : () => {window.dataLayers=window.dataLayers||{};window.dataLayers[options.dataLayerName!]=window.dataLayers[options.dataLayerName!]||[];window.gtag=function gtag(){window.dataLayer.push(arguments);};window.gtag('js',new Date());window.gtag('config',options.id!)},
   }), _options)
 }

@@ -48,8 +48,7 @@ export type ClarityInput = RegistryScriptInput<typeof ClarityOptions>
 export function useScriptClarity<T extends ClarityApi>(
   _options?: ClarityInput,
 ) {
-  return useRegistryScript<T, typeof ClarityOptions>(
-    _options?.key || 'clarity',
+  return useRegistryScript<T, typeof ClarityOptions>('clarity',
     options => ({
       scriptInput: {
         src: `https://www.clarity.ms/tag/${options.id}`,
