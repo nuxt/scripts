@@ -24,11 +24,38 @@ export async function generateTpcContent(input: TpcDescriptor) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
-    `import type { ${input.tpcTypeImport} } from 'third-party-capital'`,
   ])
+  const tpcTypes = new Set<string>()
 
   const chunks: string[] = []
   const functionBody: string[] = []
+
+  if (input.tpcTypeAugmentation) {
+    tpcTypes.add(input.tpcTypeAugmentation)
+
+    chunks.push(`
+    declare global {
+      interface Window extends ${input.tpcTypeAugmentation} {}
+    }`)
+  }
+  else {
+    chunks.push(`
+    declare global {
+      interface Window {
+        [key: string]: any
+      }
+    }`)
+  }
+
+  if (input.tpcTypesImport) {
+    for (const typeImport of input.tpcTypesImport) {
+      tpcTypes.add(typeImport)
+    }
+  }
+
+  if (tpcTypes.size) {
+    imports.add(genImport('third-party-capital', [...tpcTypes]))
+  }
 
   if (input.defaultOptions) {
     imports.add(genImport('defu', ['defu']))
@@ -50,10 +77,6 @@ export async function generateTpcContent(input: TpcDescriptor) {
     imports.add(genImport('#nuxt-scripts-validator', [...validatorImports]))
   }
 
-  chunks.push(`
-declare global {
-  interface Window extends ${input.tpcTypeImport} {}
-}`)
   const clientInitCode: string[] = []
 
   if (input.tpcData.stylesheets) {
