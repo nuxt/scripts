@@ -19,7 +19,7 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id }),
     },
-    schema: import.meta.dev ? undefined : GoogleAnalyticsOptions,
+    schema: import.meta.dev ? GoogleAnalyticsOptions : undefined,
     scriptOptions: {
       use: () => { return { dataLayer: window.dataLayers[options.dataLayerName!], gtag: window.gtag } },
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },

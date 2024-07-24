@@ -15,11 +15,11 @@ export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerO
 
 export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput) {
   _options = defu(_options, { dataLayerName: 'defaultGtm' })
-  return useRegistryScript<T, typeof GoogleTagManagerOptions>('googleTagManager', options => ({
+  return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'googleTagManager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id }),
     },
-    schema: import.meta.dev ? undefined : GoogleTagManagerOptions,
+    schema: import.meta.dev ? GoogleTagManagerOptions : undefined,
     scriptOptions: {
       use: () => { return { dataLayer: window.dataLayers[options.dataLayerName!], google_tag_manager: window.google_tag_manager } },
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },

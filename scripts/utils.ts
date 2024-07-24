@@ -85,7 +85,7 @@ ${functionBody.join('\n')}
         scriptInput: {
             src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
         },
-        schema: import.meta.dev ? undefined : ${titleKey}Options,
+        schema: import.meta.dev ? ${titleKey}Options : undefined,
         scriptOptions: {
             use: () => { return ${input.returnUse} },
             stub: import.meta.client ? undefined : ({fn}) => { return ${input.returnStub}},
