@@ -2,3 +2,6 @@ contact_links:
   - name: Request a new registry script
     url: https://github.com/nuxt/scripts/discussions/177
     about: Want to see a new script added to the registry? Request it here.
+  - name: 📖 Documentation
+    url: https://scripts.nuxt.com
+    about: Check the documentation for guides and examples.

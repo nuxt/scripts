@@ -166,5 +166,6 @@ const placeholderAttrs = computed(() => {
     </slot>
     <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot />
   </div>
 </template>
