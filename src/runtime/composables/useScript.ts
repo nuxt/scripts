@@ -4,7 +4,7 @@ import { hashCode } from '@unhead/shared'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
 import { injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
-import type { NuxtAppScript, NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -41,8 +41,8 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     // sync scripts to nuxtApp with debug details
-    const payload: NuxtAppScript = {
-      key: (input.key || input.src) as string,
+    const payload: NuxtDevToolsScriptInstance = {
+      ...options.devtools,
       src: input.src,
       $script: null as any as VueScriptInstance<T>,
       events: [],
@@ -51,7 +51,7 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
 
     function syncScripts() {
       nuxtApp._scripts[instance.$script.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtAppScript> })
+      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtDevToolsScriptInstance> })
     }
 
     if (!nuxtApp._scripts[instance.$script.id]) {
@@ -69,7 +69,7 @@ export function useScript<T extends Record<string | symbol, any>>(input: UseScri
         syncScripts()
       })
       head.hooks.hook('script:instance-fn', (ctx) => {
-        if (ctx.script.id !== instance.$script.id)
+        if (ctx.script.id !== instance.$script.id || String(ctx.fn).startsWith('__v_'))
           return
         // log all events
         payload.events.push({

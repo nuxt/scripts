@@ -20,11 +20,11 @@ function use(options: GoogleAnalyticsInput) {
 
 export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
   _options = defu(_options, { l: 'defaultGa' })
-  return useRegistryScript<ReturnType<typeof use>, typeof GoogleAnalyticsOptions>(_options?.key || 'google-analytics', options => ({
+  return useRegistryScript<ReturnType<typeof use>, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id, l: options?.l }),
     },
-    schema: import.meta.dev ? undefined : GoogleAnalyticsOptions,
+    schema: import.meta.dev ? GoogleAnalyticsOptions : undefined,
     scriptOptions: {
       use: () => use(options),
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },

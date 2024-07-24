@@ -28,7 +28,7 @@ function onToggle(e: any) {
 
 <template>
   <details :open="open" @toggle="onToggle">
-    <summary class="cursor-pointer select-none n-bg-active hover:bg-active p4 rounded transition-all" :class="collapse ? '' : 'pointer-events-none'">
+    <summary class="cursor-pointer select-none n-bg-active hover:bg-active px-2 py-2 rounded transition-all" :class="collapse ? '' : 'pointer-events-none'">
       <NIconTitle :icon="icon" :text="text" text-xl transition :class="[open ? 'op100' : 'op60', headerClass]">
         <div>
           <div text-base>

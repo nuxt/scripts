@@ -6,6 +6,7 @@ import { registry } from '../src/registry'
 import { generateTpcContent } from './utils'
 
 export interface TpcDescriptor {
+  fileName: string
   label: string
   tpcKey: string
   tpcData: Output
@@ -24,12 +25,13 @@ export interface TpcDescriptor {
 const scripts: Array<TpcDescriptor> = [
   // GTM
   {
+    fileName: 'google-tag-manager',
     label: 'Google Tag Manager',
     tpcKey: 'gtm',
     tpcData: GoogleTagManagerData as Output,
     tpcTypeAugmentation: 'GoogleTagManagerApi',
     tpcTypesImport: ['DataLayer'],
-    key: 'google-tag-manager',
+    key: 'googleTagManager',
     performanceMarkFeature: 'nuxt-third-parties-gtm',
     returnUse: '{ dataLayer: window[options.l!] as DataLayer, google_tag_manager: window.google_tag_manager }',
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
@@ -39,10 +41,11 @@ const scripts: Array<TpcDescriptor> = [
   },
   // GA
   {
+    fileName: 'google-analytics',
     label: 'Google Analytics',
     tpcKey: 'gtag',
     tpcData: GooglaAnalyticsData as Output,
-    key: 'google-analytics',
+    key: 'googleAnalytics',
     tpcTypesImport: ['DataLayer'],
     performanceMarkFeature: 'nuxt-third-parties-ga',
     returnUse: '{ dataLayer: window[options.l!] as DataLayer }',
@@ -57,7 +60,7 @@ export async function generate() {
   for (const script of scripts) {
     script.registry = registry().find(r => r.label === script.label)
     const content = await generateTpcContent(script)
-    await writeFile(resolve(`./src/runtime/registry/${script.key}.ts`), content)
+    await writeFile(resolve(`./src/runtime/registry/${script.fileName}.ts`), content)
   }
 }
 

@@ -36,22 +36,34 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
-export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any, any> = EmptyOptionsSchema>(key: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): T & {
+export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any, any> = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): T & {
   $script: Promise<T> & VueScriptInstance<T>
 } {
-  const scriptConfig = scriptRuntimeConfig(key as keyof ScriptRegistry)
+  const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions)
 
-  const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key }) as any as UseScriptInput
+  const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
+  if (import.meta.dev) {
+    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey })
+    if (options.schema) {
+      const registryMeta: Record<string, string> = {}
+      for (const k in options.schema.entries) {
+        if (options.schema.entries[k].type !== 'optional') {
+          registryMeta[k] = String(userOptions[k as any as keyof typeof userOptions])
+        }
+      }
+      scriptOptions.devtools.registryMeta = registryMeta
+    }
+  }
   const init = scriptOptions.beforeInit
   scriptOptions.beforeInit = () => {
     // a manual trigger also means it was disabled by nuxt.config
     if (import.meta.dev && !scriptOptions.skipValidation && options.schema) {
       // overriding the src will skip validation
       if (!userOptions.scriptInput?.src) {
-        validateScriptInputSchema(key, options.schema, userOptions)
+        validateScriptInputSchema(registryKey, options.schema, userOptions)
       }
     }
     // avoid clearing the user beforeInit

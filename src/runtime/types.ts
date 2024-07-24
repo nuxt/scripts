@@ -50,6 +50,21 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * @internal
    */
   performanceMarkFeature?: string
+  /**
+   * @internal
+   */
+  devtools?: {
+    /**
+     * Key used to map to the registry script for Nuxt DevTools.
+     * @internal
+     */
+    registryKey?: string
+    /**
+     * Extra metadata to show with the registry script
+     * @internal
+     */
+    registryMeta?: Record<string, string>
+  }
 }
 
 export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
@@ -74,8 +89,9 @@ export interface ConsentScriptTriggerOptions {
   postConsentTrigger?: NuxtUseScriptOptions['trigger']
 }
 
-export interface NuxtAppScript {
-  key: string
+export interface NuxtDevToolsScriptInstance {
+  registryKey?: string
+  registryMeta?: Record<string, string>
   src: string
   $script: VueScriptInstance<any>
   events: {

@@ -31,7 +31,7 @@ declare global {
  */
 export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: GoogleAdsenseInput) {
   // Note: inputs.useScriptInput is not usable, needs to be normalized
-  return useRegistryScript<T, typeof GoogleAdsenseOptions>(_options?.key || 'googleAdsense', options => ({
+  return useRegistryScript<T, typeof GoogleAdsenseOptions>('googleAdsense', options => ({
     scriptInput: {
       src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
     },

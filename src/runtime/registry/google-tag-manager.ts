@@ -18,11 +18,11 @@ function use(options: GoogleTagManagerInput) {
 
 export function useScriptGoogleTagManager(_options?: GoogleTagManagerInput) {
   _options = defu(_options, { l: 'defaultGtm' })
-  return useRegistryScript<ReturnType<typeof use>, typeof GoogleTagManagerOptions>(_options?.key || 'google-tag-manager', options => ({
+  return useRegistryScript<ReturnType<typeof use>, typeof GoogleTagManagerOptions>(_options?.key || 'googleTagManager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id, l: options?.l }),
     },
-    schema: import.meta.dev ? undefined : GoogleTagManagerOptions,
+    schema: import.meta.dev ? GoogleTagManagerOptions : undefined,
     scriptOptions: {
       use: () => use(options),
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },

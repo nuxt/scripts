@@ -41,7 +41,7 @@ declare global {
 const methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
 
 export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) {
-  return useRegistryScript<T, typeof SegmentOptions>(_options?.key || 'segment', (options) => {
+  return useRegistryScript<T, typeof SegmentOptions>('segment', (options) => {
     const k = (options?.analyticsKey ?? 'analytics') as keyof Window
     return {
       scriptInput: {

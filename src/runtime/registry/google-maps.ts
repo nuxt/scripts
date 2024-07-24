@@ -38,7 +38,7 @@ declare global {
 
 export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return useRegistryScript<T, typeof GoogleMapsOptions>(_options?.key || 'googleMaps', (options) => {
+  return useRegistryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
     const libraries = options?.libraries || ['places']
     return {
       scriptInput: {
