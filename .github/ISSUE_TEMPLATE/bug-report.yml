@@ -1,6 +1,5 @@
 name: 🐛 Bug report
 description: Something's not working
-title: 'fix: '
 labels: [bug]
 body:
   - type: textarea

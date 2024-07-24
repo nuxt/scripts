@@ -1,6 +1,5 @@
 name: 🆕 Feature suggestion
 description: Suggest an idea! Please avoid suggesting new registry scripts here.
-title: 'feat: '
 labels: [enhancement]
 body:
   - type: textarea

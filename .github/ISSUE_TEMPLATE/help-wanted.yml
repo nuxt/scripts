@@ -1,6 +1,5 @@
 name: 🆘 Help
 description: I need help with ...
-title: 'help: '
 labels: [help wanted]
 body:
   - type: textarea

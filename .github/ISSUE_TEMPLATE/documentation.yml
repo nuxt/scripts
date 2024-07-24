@@ -1,6 +1,5 @@
 name: 📚 Documentation
 description: How do I ... ?
-title: 'docs: '
 labels: [documentation]
 body:
   - type: textarea
