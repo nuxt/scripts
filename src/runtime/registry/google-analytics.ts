@@ -15,7 +15,7 @@ export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOpt
 
 export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput) {
   _options = defu(_options, { dataLayerName: 'defaultGa' })
-  return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'google-analytics', options => ({
+  return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id }),
     },

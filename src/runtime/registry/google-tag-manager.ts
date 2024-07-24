@@ -15,7 +15,7 @@ export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerO
 
 export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput) {
   _options = defu(_options, { dataLayerName: 'defaultGtm' })
-  return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'google-tag-manager', options => ({
+  return useRegistryScript<T, typeof GoogleTagManagerOptions>('googleTagManager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id }),
     },
