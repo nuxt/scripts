@@ -2,10 +2,10 @@
 
 declare module '#app' {
   interface NuxtApp {
-    _scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)>
+    _scripts: Record<string, (import('#nuxt-scripts').NuxtDevToolsScriptInstance)>
   }
   interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)> }) => void | Promise<void>
+    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').NuxtDevToolsScriptInstance)> }) => void | Promise<void>
   }
 }
 
