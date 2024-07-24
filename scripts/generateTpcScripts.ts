@@ -48,7 +48,7 @@ const scripts: Array<TpcDescriptor> = [
     key: 'googleAnalytics',
     tpcTypesImport: ['DataLayer'],
     performanceMarkFeature: 'nuxt-third-parties-ga',
-    returnUse: '{ dataLayer: window[options.l!] as DataLayer }',
+    returnUse: '{ dataLayer: window[options.l!] as DataLayer,\n gtag(...args: any[]){(window[options.l!] as DataLayer).push(args);} }',
     // allow dataLayer to be accessed on the server
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
     defaultOptions: {

@@ -15,7 +15,8 @@ export const GoogleAnalyticsOptions = object({ id: string(), l: optional(string(
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
 function use(options: GoogleAnalyticsInput) {
-  return { dataLayer: window[options.l!] as DataLayer }
+  return { dataLayer: window[options.l!] as DataLayer,
+    gtag(...args: any[]) { (window[options.l!] as DataLayer).push(args) } }
 }
 
 export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
