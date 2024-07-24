@@ -158,7 +158,7 @@ function viewDocs(docs: string) {
     <div class="flex-row flex p4 h-full" style="min-height: calc(100vh - 64px);">
       <main class="mx-auto flex flex-col w-full bg-white dark:bg-black dark:bg-dark-700 bg-light-200 ">
         <div v-if="tab === 'scripts'" class="h-full relative max-h-full">
-          <div v-if="!Object.keys(scripts).length">
+          <div v-if="!Object.keys(scripts || {}).length">
             <div>No scripts loaded.</div>
           </div>
           <div class="space-y-3">
