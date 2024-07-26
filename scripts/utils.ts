@@ -38,14 +38,6 @@ export async function generateTpcContent(input: TpcDescriptor) {
       interface Window extends ${input.tpcTypeAugmentation} {}
     }`)
   }
-  else {
-    chunks.push(`
-    declare global {
-      interface Window {
-        [key: string]: any
-      }
-    }`)
-  }
 
   if (input.tpcTypesImport) {
     for (const typeImport of input.tpcTypesImport) {
@@ -63,17 +55,19 @@ export async function generateTpcContent(input: TpcDescriptor) {
   }
 
   const params = [...new Set(input.tpcData.scripts?.map(s => s.params || []).flat() || [])]
+  const optionalParams = [...new Set(input.tpcData.scripts?.map(s => Object.keys(s.optionalParams) || []).flat() || [])]
 
-  if (params.length) {
+  if (params.length || optionalParams.length) {
     const validatorImports = new Set<string>(['object', 'string'])
+    if (optionalParams.length) {
+      validatorImports.add('optional')
+    }
+
+    const properties = params.filter(p => !optionalParams.includes(p)).map(p => `${p}: string()`).concat(optionalParams.map(o => `${o}: optional(string())`))
     // need schema validation from tpc
-    chunks.push(`export const ${titleKey}Options = object({${params.map((p) => {
-      if (input.defaultOptions && p in input.defaultOptions) {
-        validatorImports.add('optional')
-        return `${p}: optional(string())`
-      }
-      return `${p}: string()`
-    })}})`)
+    chunks.push(`export const ${titleKey}Options = object({
+${properties.join(',\n')}
+})`)
     imports.add(genImport('#nuxt-scripts-validator', [...validatorImports]))
   }
 
@@ -88,7 +82,7 @@ export async function generateTpcContent(input: TpcDescriptor) {
 
   for (const script of input.tpcData.scripts) {
     if ('code' in script)
-      clientInitCode.push(replaceTokenToRuntime(script.code))
+      clientInitCode.push(replaceTokenToRuntime(script.code, script.optionalParams))
 
     if (script === mainScript)
       continue
@@ -108,12 +102,14 @@ function use(options: ${titleKey}Input) {
     `)
   }
 
+  const srcQueries = [...new Set<string>([...mainScript.params, ...Object.keys(mainScript.optionalParams)])].map(p => `${p}: options?.${p}`)
+
   chunks.push(`
 export function ${input.registry.import!.name}(_options?: ${titleKey}Input) {
 ${functionBody.join('\n')}
   return useRegistryScript<${input.returnUse ? `ReturnType<typeof use>` : `Record<string | symbol, any>`},${params.length ? `typeof ${titleKey}Options` : ''}>(_options?.key || '${input.key}', options => ({
         scriptInput: {
-            src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
+            src: withQuery('${mainScript.url}', {${srcQueries.join(', ')}}),
         },
         schema: import.meta.dev ? ${titleKey}Options : undefined,
         scriptOptions: {
@@ -122,6 +118,8 @@ ${functionBody.join('\n')}
             ${input.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
+        // eslint-disable-next-line
+        // @ts-ignore
         // eslint-disable-next-line
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}
     }), _options)
@@ -132,8 +130,10 @@ ${functionBody.join('\n')}
   return chunks.join('\n')
 }
 
-function replaceTokenToRuntime(code: string) {
-  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1!')).join(';')
+function replaceTokenToRuntime(code: string, defaultValues?: Record<string, string | number | undefined>) {
+  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, s) => {
+    return `options?.$1 ${defaultValues?.[s] ? `??  ${JSON.stringify(defaultValues?.[s])}` : ''}`
+  })).join(';')
 }
 
 function getScriptInputOption(script: Script): HeadEntryOptions | undefined {
