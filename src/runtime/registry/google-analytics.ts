@@ -13,7 +13,7 @@ export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOpt
 
 function use(options: GoogleAnalyticsInput) {
   return { dataLayer: (window as any)[options.l!] as DataLayer,
-    gtag(...args: any) { ((window as any)[options.l!] as DataLayer).push(args) } }
+    gtag(...args: any) { ((window as any)[options.l ?? 'dataLayer'] as DataLayer)?.push(args) } }
 }
 
 export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
@@ -31,6 +31,6 @@ export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
     // eslint-disable-next-line
         // @ts-ignore
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window[options?.$1 ??  "dataLayer"]=window[options?.$1 ??  "dataLayer"]||[];window[options?.$1 ??  "dataLayer"].push({'js':new Date()});window[options?.$1 ??  "dataLayer"].push({'config':options?.$1 })},
+        clientInit: import.meta.server ? undefined : () => {window[options?.l ?? "dataLayer"]=window[options?.l ?? "dataLayer"]||[];window[options?.l ?? "dataLayer"].push({'js':new Date()});window[options?.l ?? "dataLayer"].push({'config':options?.id })},
   }), _options)
 }

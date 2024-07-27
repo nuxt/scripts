@@ -33,7 +33,7 @@ const scripts: Array<TpcDescriptor> = [
     tpcTypesImport: ['DataLayer'],
     key: 'googleTagManager',
     performanceMarkFeature: 'nuxt-third-parties-gtm',
-    returnUse: '{ dataLayer: (window as any)[options.l!] as DataLayer, google_tag_manager: window.google_tag_manager }',
+    returnUse: '{ dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer, google_tag_manager: window.google_tag_manager }',
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
   },
   // GA
@@ -45,7 +45,7 @@ const scripts: Array<TpcDescriptor> = [
     key: 'googleAnalytics',
     tpcTypesImport: ['DataLayer'],
     performanceMarkFeature: 'nuxt-third-parties-ga',
-    returnUse: '{ dataLayer: (window as any)[options.l!] as DataLayer,\n gtag(...args: any){((window as any)[options.l!] as DataLayer).push(args);} }',
+    returnUse: '{ dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer,\n gtag(...args: any){((window as any)[options.l!] as DataLayer).push(args);} }',
     // allow dataLayer to be accessed on the server
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
   }]

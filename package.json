@@ -89,7 +89,7 @@
     "shiki": "^1.10.3",
     "sirv": "^2.0.4",
     "std-env": "^3.7.0",
-    "third-party-capital": "^2.0.0",
+    "third-party-capital": "^2.1.0",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2",
     "unplugin": "^1.11.0",

@@ -15,7 +15,7 @@ export const GoogleTagManagerOptions = object({
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
 function use(options: GoogleTagManagerInput) {
-  return { dataLayer: (window as any)[options.l!] as DataLayer, google_tag_manager: window.google_tag_manager }
+  return { dataLayer: (window as any)[options.l ?? 'dataLayer'] as DataLayer, google_tag_manager: window.google_tag_manager }
 }
 
 export function useScriptGoogleTagManager(_options?: GoogleTagManagerInput) {
@@ -33,6 +33,6 @@ export function useScriptGoogleTagManager(_options?: GoogleTagManagerInput) {
     // eslint-disable-next-line
         // @ts-ignore
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window[options?.$1 ??  "dataLayer"]=window[options?.$1 ??  "dataLayer"]||[];window[options?.$1 ??  "dataLayer"].push({'gtm.start':new Date().getTime(),event:'gtm.js'});},
+        clientInit: import.meta.server ? undefined : () => {window[options?.l ?? "dataLayer"]=window[options?.l ?? "dataLayer"]||[];window[options?.l ?? "dataLayer"].push({'gtm.start':new Date().getTime(),event:'gtm.js'});},
   }), _options)
 }
