@@ -51,6 +51,7 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
       clientInit: import.meta.server
         ? undefined
         : () => {
+          // @ts-expect-error untyped
             window[k] = window[k] || []
             window[k].methods = methods
             window[k].factory = function (method: string) {
