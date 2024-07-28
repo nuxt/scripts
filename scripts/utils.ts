@@ -94,10 +94,10 @@ ${properties.join(',\n')}
 
   chunks.push(`export type ${titleKey}Input = RegistryScriptInput${params.length ? `<typeof ${titleKey}Options>` : ''}`)
 
-  if (input.returnUse) {
+  if (input.useBody) {
     chunks.push(`
 function use(options: ${titleKey}Input) { 
-  return ${input.returnUse} 
+  ${input.useBody} 
 }
     `)
   }
@@ -107,13 +107,13 @@ function use(options: ${titleKey}Input) {
   chunks.push(`
 export function ${input.registry.import!.name}(_options?: ${titleKey}Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript<${input.returnUse ? `ReturnType<typeof use>` : `Record<string | symbol, any>`},${params.length ? `typeof ${titleKey}Options` : ''}>(_options?.key || '${input.key}', options => ({
+  return useRegistryScript<${input.useBody ? `ReturnType<typeof use>` : `Record<string | symbol, any>`},${params.length ? `typeof ${titleKey}Options` : ''}>(_options?.key || '${input.key}', options => ({
         scriptInput: {
             src: withQuery('${mainScript.url}', {${srcQueries.join(', ')}}),
         },
         schema: import.meta.dev ? ${titleKey}Options : undefined,
         scriptOptions: {
-            ${input.returnUse ? `use: () => use(options),` : ''}
+            ${input.useBody ? `use: () => use(options),` : ''}
             stub: import.meta.client ? undefined : ({fn}) => { return ${input.returnStub}},
             ${input.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}

@@ -16,7 +16,7 @@ export interface TpcDescriptor {
   registry?: any
   scriptInput?: UseScriptInput
   performanceMarkFeature?: string
-  returnUse?: string
+  useBody?: string
   returnStub?: string
   clientInit?: string
   defaultOptions?: Record<string, unknown>
@@ -33,7 +33,7 @@ const scripts: Array<TpcDescriptor> = [
     tpcTypesImport: ['DataLayer'],
     key: 'googleTagManager',
     performanceMarkFeature: 'nuxt-third-parties-gtm',
-    returnUse: '{ dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer, google_tag_manager: window.google_tag_manager }',
+    useBody: 'return { dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer, google_tag_manager: window.google_tag_manager }',
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
   },
   // GA
@@ -43,9 +43,9 @@ const scripts: Array<TpcDescriptor> = [
     tpcKey: 'gtag',
     tpcData: GooglaAnalyticsData as Output,
     key: 'googleAnalytics',
-    tpcTypesImport: ['DataLayer'],
+    tpcTypesImport: ['DataLayer', 'GTag'],
     performanceMarkFeature: 'nuxt-third-parties-ga',
-    returnUse: '{ dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer,\n gtag(...args: any){((window as any)[options.l ?? "dataLayer"] as DataLayer).push(args);} }',
+    useBody: 'const gtag: GTag = function (...args:Parameters<GTag>) { \n((window as any)[options.l ?? "dataLayer"] as DataLayer).push(args);} as GTag\nreturn { dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer,\n gtag }',
     // allow dataLayer to be accessed on the server
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
   }]
