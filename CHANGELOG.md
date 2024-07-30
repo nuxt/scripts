@@ -1,6 +1,52 @@
 # Changelog
 
 
+## v0.6.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.4...v0.6.5)
+
+### 🚀 Enhancements
+
+- **GA,GTM:** Configurable dataLayer name ([#163](https://github.com/nuxt/scripts/pull/163))
+
+### 🩹 Fixes
+
+- Fix google analytics category ([#156](https://github.com/nuxt/scripts/pull/156))
+- Use correct google analytics logo ([#172](https://github.com/nuxt/scripts/pull/172))
+- **TPC:** Use proper script keys ([c607d72](https://github.com/nuxt/scripts/commit/c607d72))
+- **TPC:** Broken schema integration ([ed115d8](https://github.com/nuxt/scripts/commit/ed115d8))
+- Disallow overriding registry key name ([2eedd4a](https://github.com/nuxt/scripts/commit/2eedd4a))
+- **devtools:** Support multiple of the same registry scripts ([8794d74](https://github.com/nuxt/scripts/commit/8794d74))
+- **ScriptYouTubePlayer:** Missing default slot ([#180](https://github.com/nuxt/scripts/pull/180))
+- **tpc:** Support customizing dataLayer variable ([09e3c2f](https://github.com/nuxt/scripts/commit/09e3c2f))
+
+### 📖 Documentation
+
+- Broken tutorial, put some `use` into `scriptOptions` ([#155](https://github.com/nuxt/scripts/pull/155))
+- Fix typo in js-confetti guide ([#162](https://github.com/nuxt/scripts/pull/162))
+- Fix typo in plausible analytics env var example ([#161](https://github.com/nuxt/scripts/pull/161))
+- Mention third-party-capital and aurora for tpc composables ([#159](https://github.com/nuxt/scripts/pull/159))
+- **GoogleMaps:** Added Places API to requirements of API key ([#168](https://github.com/nuxt/scripts/pull/168))
+
+### 🏡 Chore
+
+- Add tsconfig to scripts and remove unused ts-expect-error ([#158](https://github.com/nuxt/scripts/pull/158))
+- Add issue template ([669ed2a](https://github.com/nuxt/scripts/commit/669ed2a))
+- Push to discussion ([3c88385](https://github.com/nuxt/scripts/commit/3c88385))
+- Broken devtools when no scripts ([c355da4](https://github.com/nuxt/scripts/commit/c355da4))
+- **ci:** Add docs link in Issue template ([#178](https://github.com/nuxt/scripts/pull/178))
+- **github:** Prefer no titles ([97437c0](https://github.com/nuxt/scripts/commit/97437c0))
+
+### ❤️ Contributors
+
+- Julien Huang <julien.h.dev@gmail.com>
+- Harlan <harlan@harlanzw.com>
+- Jules Hery 
+- Gangan 
+- Mick Lawitzke <info@lawitzke.de>
+- Jonty Brook <me@jontyb.co.uk>
+- Roman Nuritdinov <github@woof.slmail.me>
+
 ## v0.6.4
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.3...v0.6.4)
