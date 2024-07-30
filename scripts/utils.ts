@@ -24,11 +24,30 @@ export async function generateTpcContent(input: TpcDescriptor) {
     'import { withQuery } from \'ufo\'',
     'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
     'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
-    `import type { ${input.tpcTypeImport} } from 'third-party-capital'`,
   ])
+  const tpcTypes = new Set<string>()
 
   const chunks: string[] = []
   const functionBody: string[] = []
+
+  if (input.tpcTypeAugmentation) {
+    tpcTypes.add(input.tpcTypeAugmentation)
+
+    chunks.push(`
+    declare global {
+      interface Window extends ${input.tpcTypeAugmentation} {}
+    }`)
+  }
+
+  if (input.tpcTypesImport) {
+    for (const typeImport of input.tpcTypesImport) {
+      tpcTypes.add(typeImport)
+    }
+  }
+
+  if (tpcTypes.size) {
+    imports.add(genImport('third-party-capital', [...tpcTypes]))
+  }
 
   if (input.defaultOptions) {
     imports.add(genImport('defu', ['defu']))
@@ -36,24 +55,21 @@ export async function generateTpcContent(input: TpcDescriptor) {
   }
 
   const params = [...new Set(input.tpcData.scripts?.map(s => s.params || []).flat() || [])]
+  const optionalParams = [...new Set(input.tpcData.scripts?.map(s => Object.keys(s.optionalParams) || []).flat() || [])]
 
-  if (params.length) {
+  if (params.length || optionalParams.length) {
     const validatorImports = new Set<string>(['object', 'string'])
+    if (optionalParams.length) {
+      validatorImports.add('optional')
+    }
+
+    const properties = params.filter(p => !optionalParams.includes(p)).map(p => `${p}: string()`).concat(optionalParams.map(o => `${o}: optional(string())`))
     // need schema validation from tpc
-    chunks.push(`export const ${titleKey}Options = object({${params.map((p) => {
-      if (input.defaultOptions && p in input.defaultOptions) {
-        validatorImports.add('optional')
-        return `${p}: optional(string())`
-      }
-      return `${p}: string()`
-    })}})`)
+    chunks.push(`export const ${titleKey}Options = object({
+${properties.join(',\n')}
+})`)
     imports.add(genImport('#nuxt-scripts-validator', [...validatorImports]))
   }
-
-  chunks.push(`
-declare global {
-  interface Window extends ${input.tpcTypeImport} {}
-}`)
 
   const clientInitCode: string[] = []
 
@@ -66,7 +82,7 @@ declare global {
 
   for (const script of input.tpcData.scripts) {
     if ('code' in script)
-      clientInitCode.push(replaceTokenToRuntime(script.code))
+      clientInitCode.push(replaceTokenToRuntime(script.code, script.optionalParams))
 
     if (script === mainScript)
       continue
@@ -78,20 +94,32 @@ declare global {
 
   chunks.push(`export type ${titleKey}Input = RegistryScriptInput${params.length ? `<typeof ${titleKey}Options>` : ''}`)
 
+  if (input.useBody) {
+    chunks.push(`
+function use(options: ${titleKey}Input) { 
+  ${input.useBody} 
+}
+    `)
+  }
+
+  const srcQueries = [...new Set<string>([...mainScript.params, ...Object.keys(mainScript.optionalParams)])].map(p => `${p}: options?.${p}`)
+
   chunks.push(`
-export function ${input.registry.import!.name}<T extends ${input.tpcTypeImport}>(_options?: ${titleKey}Input) {
+export function ${input.registry.import!.name}(_options?: ${titleKey}Input) {
 ${functionBody.join('\n')}
-  return useRegistryScript${params.length ? `<T, typeof ${titleKey}Options>` : ''}(_options?.key || '${input.key}', options => ({
+  return useRegistryScript<${input.useBody ? `ReturnType<typeof use>` : `Record<string | symbol, any>`},${params.length ? `typeof ${titleKey}Options` : ''}>(_options?.key || '${input.key}', options => ({
         scriptInput: {
-            src: withQuery('${mainScript.url}', {${mainScript.params?.map(p => `${p}: options?.${p}`)}})
+            src: withQuery('${mainScript.url}', {${srcQueries.join(', ')}}),
         },
         schema: import.meta.dev ? ${titleKey}Options : undefined,
         scriptOptions: {
-            use: () => { return ${input.returnUse} },
+            ${input.useBody ? `use: () => use(options),` : ''}
             stub: import.meta.client ? undefined : ({fn}) => { return ${input.returnStub}},
             ${input.performanceMarkFeature ? `performanceMarkFeature: ${JSON.stringify(input.performanceMarkFeature)},` : ''}
             ${mainScriptOptions ? `...(${JSON.stringify(mainScriptOptions)})` : ''}
         },
+        // eslint-disable-next-line
+        // @ts-ignore
         // eslint-disable-next-line
         ${clientInitCode.length ? `clientInit: import.meta.server ? undefined : () => {${clientInitCode.join('\n')}},` : ''}
     }), _options)
@@ -102,8 +130,10 @@ ${functionBody.join('\n')}
   return chunks.join('\n')
 }
 
-function replaceTokenToRuntime(code: string) {
-  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, 'options.$1!')).join(';')
+function replaceTokenToRuntime(code: string, defaultValues?: Record<string, string | number | undefined>) {
+  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, token) => {
+    return `options?.${token} ${defaultValues?.[token] ? `?? ${JSON.stringify(defaultValues?.[token])}` : ''}`
+  })).join(';')
 }
 
 function getScriptInputOption(script: Script): HeadEntryOptions | undefined {
