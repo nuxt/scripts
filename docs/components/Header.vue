@@ -22,7 +22,7 @@ const links = [
     <template #logo>
       <Logo />
       <UBadge class="ml-5 hidden md:block" size="xs" color="yellow" variant="subtle">
-        Public Preview
+        Beta
       </UBadge>
     </template>
 
