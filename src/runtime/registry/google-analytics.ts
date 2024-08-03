@@ -13,7 +13,7 @@ export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOpt
 
 function use(options: GoogleAnalyticsInput) {
   const gtag: GTag = function (...args: Parameters<GTag>) {
-    ((window as any)[options.l ?? 'dataLayer'] as DataLayer).push(args)
+    ((window as any)['gtag-' + (options.l ?? 'dataLayer')] as GTag)(...args)
   } as GTag
   return { dataLayer: (window as any)[options.l ?? 'dataLayer'] as DataLayer,
     gtag }
@@ -34,6 +34,6 @@ export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
     // eslint-disable-next-line
         // @ts-ignore
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window[options?.l ?? "dataLayer"]=window[options?.l ?? "dataLayer"]||[];window[options?.l ?? "dataLayer"].push({'js':new Date()});window[options?.l ?? "dataLayer"].push({'config':options?.id })},
+        clientInit: import.meta.server ? undefined : () => {window[(options?.l ?? "dataLayer")]=window[(options?.l ?? "dataLayer")]||[];window['gtag-'+(options?.l ?? "dataLayer")]=function (){window[(options?.l ?? "dataLayer")].push(arguments);};window['gtag-'+(options?.l ?? "dataLayer")]('js',new Date());window['gtag-'+(options?.l ?? "dataLayer")]('config',(options?.id ))},
   }), _options)
 }

@@ -45,7 +45,7 @@ const scripts: Array<TpcDescriptor> = [
     key: 'googleAnalytics',
     tpcTypesImport: ['DataLayer', 'GTag'],
     performanceMarkFeature: 'nuxt-third-parties-ga',
-    useBody: 'const gtag: GTag = function (...args:Parameters<GTag>) { \n((window as any)[options.l ?? "dataLayer"] as DataLayer).push(args);} as GTag\nreturn { dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer,\n gtag }',
+    useBody: 'const gtag: GTag = function (...args:Parameters<GTag>) { \n((window as any)["gtag-"+(options.l ?? "dataLayer")] as GTag)(...args);} as GTag\nreturn { dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer,\n gtag }',
     // allow dataLayer to be accessed on the server
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
   }]

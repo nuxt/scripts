@@ -132,7 +132,7 @@ ${functionBody.join('\n')}
 
 function replaceTokenToRuntime(code: string, defaultValues?: Record<string, string | number | undefined>) {
   return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, token) => {
-    return `options?.${token} ${defaultValues?.[token] ? `?? ${JSON.stringify(defaultValues?.[token])}` : ''}`
+    return `(options?.${token} ${defaultValues?.[token] ? `?? ${JSON.stringify(defaultValues?.[token])}` : ''})`
   })).join(';')
 }
 
