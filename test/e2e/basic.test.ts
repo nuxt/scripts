@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
 import { createPage, setup } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
-import type { Request } from 'playwright-core'
 
 const { resolve } = createResolver(import.meta.url)
 
