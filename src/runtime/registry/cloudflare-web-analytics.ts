@@ -18,7 +18,7 @@ export interface CloudflareWebAnalyticsApi {
 }
 
 declare global {
-  type Window = CloudflareWebAnalyticsApi
+  interface Window extends CloudflareWebAnalyticsApi {}
 }
 
 export const CloudflareWebAnalyticsOptions = object({

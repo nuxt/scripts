@@ -6,7 +6,7 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 import { object, string, optional } from '#nuxt-scripts-validator'
 
 declare global {
-  type Window = GoogleTagManagerApi
+  interface Window extends GoogleTagManagerApi {}
 }
 export const GoogleTagManagerOptions = object({
   id: string(),

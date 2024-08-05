@@ -4,7 +4,7 @@ import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// eslint-disable-next-line
 declare namespace google {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace maps {
@@ -23,7 +23,7 @@ export const GoogleMapsOptions = object({
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
-type MapsNamespace = google.maps
+type MapsNamespace = typeof google.maps
 export interface GoogleMapsApi {
   maps: MapsNamespace | Promise<MapsNamespace>
 }

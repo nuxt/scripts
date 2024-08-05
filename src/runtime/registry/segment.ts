@@ -34,7 +34,7 @@ interface AnalyticsApi {
 export type SegmentApi = Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'>
 
 declare global {
-  type Window = SegmentApi
+  interface Window extends SegmentApi {}
 }
 
 const methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
