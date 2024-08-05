@@ -149,3 +149,34 @@ describe('basic', () => {
     expect(text).toMatchInlineSnapshot(`"/_scripts/6nd5bD9YCW.js"`)
   })
 })
+
+describe('third-party-capital', () => {
+  it('expect GA to collect data', {
+    timeout: 10000,
+  }, async () => {
+    const page = await createPage('/tpc/ga')
+    await page.waitForTimeout(500)
+
+    // wait for the collect request or timeout
+    const request = page.waitForRequest(request => request.url().includes('google-analytics.com/g/collect'), {
+      timeout: 10000,
+    })
+    await page.getByText('Trigger conversion').click()
+
+    await request
+  })
+
+  it('expect GTM to work collect data', {
+    timeout: 10000,
+  }, async () => {
+    const page = await createPage('/tpc/gtm')
+    await page.waitForTimeout(500)
+
+    // wait for the collect request
+    const request = page.waitForRequest(request => request.url().includes('analytics.google.com/g/collect?'), {
+      timeout: 10000,
+    })
+    await page.getByText('trigger').click()
+    await request
+  })
+})
