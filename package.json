@@ -48,15 +48,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest",
-    "test:types": "npx nuxi typecheck",
+    "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck",
     "script:generate-tpc": "bun ./scripts/generateTpcScripts.ts && pnpm lint:fix"
   },
   "build": {
     "externals": [
       "@unhead/vue",
       "@unhead/schema",
-      "#nuxt-scripts",
-      "#nuxt-scripts-validator",
       "third-party-capital",
       "knitwork",
       "estree-walker",

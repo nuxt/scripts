@@ -33,7 +33,7 @@ export interface ClarityApi {
 }
 
 declare global {
-  type Window = ClarityApi
+  interface Window extends ClarityApi {}
 }
 
 export const ClarityOptions = object({

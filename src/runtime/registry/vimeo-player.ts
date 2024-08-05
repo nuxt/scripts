@@ -15,7 +15,7 @@ export interface VimeoPlayerApi {
 export type VimeoPlayerInput = RegistryScriptInput
 
 declare global {
-  type Window = VimeoPlayerApi
+  interface Window extends VimeoPlayerApi {}
 }
 
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {

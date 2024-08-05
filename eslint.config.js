@@ -13,6 +13,7 @@ export default createConfigForNuxt({
 })
   .override('nuxt/typescript/rules', {
     rules: {
+      '@typescript-eslint/no-empty-object-type': ['off'],
       '@typescript-eslint/ban-ts-comment': [
         'error',
         {

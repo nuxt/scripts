@@ -15,7 +15,7 @@ export interface StripeApi {
 }
 
 declare global {
-  type Window = StripeApi
+  interface Window extends StripeApi {}
 }
 
 export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {

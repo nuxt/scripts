@@ -17,7 +17,7 @@ interface MatomoAnalyticsApi {
 }
 
 declare global {
-  type Window = MatomoAnalyticsApi
+  interface Window extends MatomoAnalyticsApi {}
 }
 
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
