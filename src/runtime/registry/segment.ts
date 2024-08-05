@@ -31,11 +31,10 @@ interface AnalyticsApi {
   push: (args: any[]) => void
 }
 
-export interface SegmentApi extends Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'> {
-}
+export type SegmentApi = Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'>
 
 declare global {
-  interface Window extends SegmentApi { }
+  type Window = SegmentApi
 }
 
 const methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']

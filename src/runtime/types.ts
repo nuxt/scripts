@@ -132,9 +132,9 @@ export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof Scri
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }>
 
-const emptyOptions = object({})
+const _emptyOptions = object({})
 
-export type EmptyOptionsSchema = typeof emptyOptions
+export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
 

@@ -23,7 +23,7 @@ export const GoogleMapsOptions = object({
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
-type MapsNamespace = typeof google.maps
+type MapsNamespace = google.maps
 export interface GoogleMapsApi {
   maps: MapsNamespace | Promise<MapsNamespace>
 }

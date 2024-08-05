@@ -3,8 +3,7 @@ import type { Input } from 'valibot'
 import { useScript } from '#imports'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts'
 
-export interface MyCustomScriptApi {
-}
+export type MyCustomScriptApi = Record<string, any>
 
 export const MyCustomScriptOptions = object({
   id: string(),

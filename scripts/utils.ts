@@ -35,7 +35,7 @@ export async function generateTpcContent(input: TpcDescriptor) {
 
     chunks.push(`
     declare global {
-      interface Window extends ${input.tpcTypeAugmentation} {}
+      type Window = ${input.tpcTypeAugmentation}
     }`)
   }
 

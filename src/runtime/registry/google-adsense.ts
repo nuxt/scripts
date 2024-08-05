@@ -21,7 +21,7 @@ export interface GoogleAdsenseApi {
 }
 
 declare global {
-  interface Window extends GoogleAdsenseApi {}
+  type Window = GoogleAdsenseApi
 }
 
 /**

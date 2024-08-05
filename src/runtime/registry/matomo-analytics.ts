@@ -17,7 +17,7 @@ interface MatomoAnalyticsApi {
 }
 
 declare global {
-  interface Window extends MatomoAnalyticsApi {}
+  type Window = MatomoAnalyticsApi
 }
 
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
@@ -42,8 +42,12 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
       ? undefined
       : () => {
           const _paq = window._paq = window._paq || []
-          options?.trackPageView !== false && _paq.push(['trackPageView'])
-          options?.enableLinkTracking !== false && _paq.push(['enableLinkTracking'])
+          if (options?.trackPageView) {
+            _paq.push(['trackPageView'])
+          }
+          if (options?.enableLinkTracking) {
+            _paq.push(['enableLinkTracking'])
+          }
           _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(options?.matomoUrl))])
           _paq.push(['setSiteId', options?.siteId || '1'])
         },

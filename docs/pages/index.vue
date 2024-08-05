@@ -81,11 +81,13 @@ const { $script } = useScript<JSConfettiApi>({
   },
 })
 onMounted(() => {
-  confettiEl.value && useEventListener(confettiEl.value, 'mouseenter', () => {
-    $script.then(({ JSConfetti }) => {
-      new JSConfetti().addConfetti({ emojis: ['🎉', '🎊'] })
+  if (confettiEl.value) {
+    useEventListener(confettiEl.value, 'mouseenter', () => {
+      $script.then(({ JSConfetti }) => {
+        new JSConfetti().addConfetti({ emojis: ['🎉', '🎊'] })
+      })
     })
-  })
+  }
 })
 
 const links = [
