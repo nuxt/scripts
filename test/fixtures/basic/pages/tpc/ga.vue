@@ -7,7 +7,7 @@ useHead({
 
 // composables return the underlying api as a proxy object and a $script with the script state
 const { gtag, $script } = useScriptGoogleAnalytics({
-  id: 'G-TEST',
+  id: 'G-TR58L0EF8P',
 })
 function triggerConversion() {
   gtag('event', 'conversion')

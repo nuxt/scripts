@@ -2,7 +2,7 @@
 import { useScriptGoogleTagManager } from '#imports'
 
 const { dataLayer, $script } = useScriptGoogleTagManager({
-  id: 'G-TEST',
+  id: 'GTM-MNJD4B',
 })
 
 function pushEvent() {
