@@ -11,7 +11,7 @@ export interface JSConfettiApi {
 }
 
 declare global {
-  interface Window extends JSConfettiApi {}
+  type Window = JSConfettiApi
 }
 
 const { $script } = useScriptNpm<JSConfettiApi>({

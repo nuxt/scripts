@@ -135,7 +135,9 @@ defineExpose({
 
 onMounted(() => {
   watch(ready, (v) => {
-    v && emits('ready', map)
+    if (v) {
+      emits('ready', map)
+    }
   })
   watch($script.status, () => {
     if ($script.status.value === 'error') {

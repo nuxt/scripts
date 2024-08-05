@@ -14,7 +14,7 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
     return payload
 
   let lastPayload: TrackedPage = { path: '', title: '' }
-  let stopDomWatcher: () => void
+  let stopDomWatcher = () => {}
   // TODO make sure useAsyncData isn't running
   nuxt.hooks.hook('page:finish', () => {
     Promise.race([
@@ -23,18 +23,20 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
       new Promise<void>((resolve) => {
         stopDomWatcher = head.hooks.hook('dom:rendered', () => resolve())
       }),
-    ]).finally(() => {
-      stopDomWatcher && stopDomWatcher()
-    }).then(() => {
-      payload.value = {
-        path: route.fullPath,
-        title: document.title,
-      }
-      if (lastPayload.path !== payload.value.path || lastPayload.title !== payload.value.title) {
-        onChange && onChange(payload.value)
-        lastPayload = payload.value
-      }
-    })
+    ])
+      .finally(stopDomWatcher)
+      .then(() => {
+        payload.value = {
+          path: route.fullPath,
+          title: document.title,
+        }
+        if (lastPayload.path !== payload.value.path || lastPayload.title !== payload.value.title) {
+          if (onChange) {
+            onChange(payload.value)
+          }
+          lastPayload = payload.value
+        }
+      })
   })
   return payload
 }

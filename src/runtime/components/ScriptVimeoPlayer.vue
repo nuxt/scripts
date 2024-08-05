@@ -188,7 +188,9 @@ onMounted(() => {
   })
 
   watch(() => props.id, (v) => {
-    v && player?.loadVideo(Number(v))
+    if (v) {
+      player?.loadVideo(Number(v))
+    }
   })
   watch($script.status, (status) => {
     if (status === 'error') {
