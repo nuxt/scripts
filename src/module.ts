@@ -70,16 +70,7 @@ export interface ModuleOptions {
 }
 
 export interface ModuleHooks {
-  /**
-   * Transform a script before it's registered.
-   */
   'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
-}
-
-declare module '@nuxt/schema' {
-  interface NuxtHooks {
-    'scripts:registry': ModuleHooks['scripts:registry']
-  }
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -140,6 +131,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
+      // @ts-ignore nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       addImports(registryScriptsWithImport.map((i) => {
