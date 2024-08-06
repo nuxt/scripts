@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ScriptGoogleMaps } from '#components'
 
 const mapOptions = ref({
   center: { lat: -34.397, lng: 150.644 },
@@ -14,6 +13,9 @@ onMounted(() => {
   }
 })
 
+function setupGoogleMaps(api) {
+
+}
 function changeQuery() {
   query.value = 'Brooklyn+Bride,New+York+NY'
 }
@@ -23,10 +25,11 @@ function changeQuery() {
   <div>
     <div>
       <ScriptGoogleMaps
+        @init="setupGoogleMaps"
         ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        :width="640"
-        :height="500"
+        :width="1200"
+        :height="600"
         :map-options="mapOptions"
         above-the-fold
       />
