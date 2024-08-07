@@ -1,6 +1,37 @@
 # Changelog
 
 
+## v0.6.6
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.5...v0.6.6)
+
+### 🩹 Fixes
+
+- **tpc:** Update TPC and fix GA ([#186](https://github.com/nuxt/scripts/pull/186))
+
+### 💅 Refactors
+
+- Avoid module declaration augmentations ([b27d4ee](https://github.com/nuxt/scripts/commit/b27d4ee))
+
+### 🏡 Chore
+
+- Public release -> beta ([debf873](https://github.com/nuxt/scripts/commit/debf873))
+- Update import path for devtools port ([#190](https://github.com/nuxt/scripts/pull/190))
+- Bump deps ([05f085e](https://github.com/nuxt/scripts/commit/05f085e))
+- Broken linting ([3c46cff](https://github.com/nuxt/scripts/commit/3c46cff))
+- Broken typechecking and linting ([9285284](https://github.com/nuxt/scripts/commit/9285284))
+- Bump deps ([ea17d69](https://github.com/nuxt/scripts/commit/ea17d69))
+
+### ✅ Tests
+
+- E2e integration tests for ga and gtm ([#189](https://github.com/nuxt/scripts/pull/189))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+- Arash ([@arashsheyda](http://github.com/arashsheyda))
+
 ## v0.6.5
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.4...v0.6.5)
