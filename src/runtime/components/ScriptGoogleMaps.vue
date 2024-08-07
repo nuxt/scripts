@@ -11,7 +11,6 @@ import { scriptRuntimeConfig } from '../utils'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
 import { resolveComponent, useHead } from '#imports'
-import AdvancedMarkerElement = google.maps.marker.AdvancedMarkerElement
 
 interface PlaceholderOptions {
   width?: string | number
@@ -58,7 +57,7 @@ const props = withDefaults(defineProps<{
   /**
    * Options for the map.
    */
-  mapOptions?: Omit<google.maps.MapOptions, 'center'>
+  mapOptions?: google.maps.MapOptions
   /**
    * Defines the width of the map.
    */
@@ -95,7 +94,7 @@ const props = withDefaults(defineProps<{
 
 const emits = defineEmits<{
   // our emit
-  ready: [e: Ref<google.maps.Map | undefined>]
+  ready: [e: typeof googleMaps]
   error: []
 }>()
 
@@ -111,6 +110,8 @@ if (import.meta.dev && !apiKey)
 const rootEl = ref<HTMLElement>()
 const mapEl = ref<HTMLElement>()
 
+const centerOverride = ref()
+
 const { $script } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
@@ -119,7 +120,7 @@ const { $script } = useScriptGoogleMaps({
 })
 
 const options = computed(() => {
-  return defu(props.mapOptions, {
+  return defu({ center: centerOverride.value }, props.mapOptions, {
     center: props.center,
     zoom: 15,
     mapId: 'map',
@@ -129,6 +130,10 @@ const ready = ref(false)
 
 const map: Ref<google.maps.Map | undefined> = ref()
 const mapMarkers: Ref<Map<string, google.maps.marker.AdvancedMarkerElement>> = ref(new Map())
+
+function isLocationQuery(s: string | any) {
+  return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
+}
 
 async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
   const lib = await importLibrary('marker')
@@ -141,7 +146,8 @@ async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMark
       }
     : _options
   const mapMarkerOptions = defu(toRaw(options), {
-    map: toRaw(map.value),
+    map: toRaw(map.value!),
+    // @ts-expect-error unified API for maps and markers
     position: options.location,
   })
   const marker = new lib.AdvancedMarkerElement(mapMarkerOptions)
@@ -150,12 +156,29 @@ async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMark
   return marker
 }
 
+const queryToLatLngCache = new Map<string, google.maps.LatLng>()
+
 async function resolveQueryToLatLang(query: string) {
-  if (typeof query === 'object')
+  if (query && typeof query === 'object')
     return Promise.resolve(query)
+  if (queryToLatLngCache.has(query)) {
+    return Promise.resolve(queryToLatLngCache.get(query))
+  }
   // only if the query is a string we need to do a lookup
-  return new Promise<google.maps.LatLng>((resolve, reject) => {
-    service.findPlaceFromQuery({
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<google.maps.LatLng>(async (resolve, reject) => {
+    if (!mapsApi.value) {
+      await $script.load()
+      // await new promise, watch until mapsApi is set
+      await new Promise<void>((resolve) => {
+        const _ = watch(mapsApi, () => {
+          _()
+          resolve()
+        })
+      })
+    }
+    const placesService = new mapsApi.value!.places.PlacesService(map.value!)
+    placesService.findPlaceFromQuery({
       query,
       fields: ['name', 'geometry'],
     }, (results, status) => {
@@ -163,6 +186,9 @@ async function resolveQueryToLatLang(query: string) {
         return resolve(results[0].geometry.location)
       return reject(new Error(`No location found for ${query}`))
     })
+  }).then((res) => {
+    queryToLatLngCache.set(query, res)
+    return res
   })
 }
 
@@ -187,7 +213,7 @@ function importLibrary<T>(key: string): Promise<T> {
     }, { immediate: true })
   })
   libraries.set(key, p)
-  return p
+  return p as any as Promise<T>
 }
 
 const googleMaps = {
@@ -196,7 +222,7 @@ const googleMaps = {
   createAdvancedMapMarker,
   resolveQueryToLatLang,
   importLibrary,
-}
+} as const
 
 defineExpose(googleMaps)
 
@@ -233,28 +259,40 @@ onMounted(() => {
       if (key === centerHash) {
         return
       }
+      // @ts-expect-error broken type
       mapMarkers.value.get(key)?.setMap(null)
       mapMarkers.value.delete(key)
     })
     for (const k of toAdd) {
+      // @ts-expect-error broken
       createAdvancedMapMarker(nextMap.get(k))
     }
   }, {
     immediate: true,
     deep: true,
   })
-  watch([options, ready], (next, prev) => {
+  watch([() => props.center, ready], async (next, prev) => {
     if (!map.value) {
       return
     }
-    map.value.setCenter(next[0].center)
-    if (props.centerMarker) {
-      const prevCenterHash = hash({ position: prev[0].center })
-      mapMarkers.value.get(prevCenterHash)?.setMap(null)
-      mapMarkers.value.delete(prevCenterHash)
-      createAdvancedMapMarker({
-        position: next[0].center,
-      })
+    let center = toRaw(next[0])
+    if (center) {
+      if (isLocationQuery(center) && ready.value) {
+        // need to resolve center from query
+        // @ts-expect-error broken
+        center = await resolveQueryToLatLang(center as string)
+      }
+      map.value!.setCenter(center as google.maps.LatLng)
+      if (props.centerMarker) {
+        if (prev[0]) {
+          const prevCenterHash = hash({ position: prev[0] })
+          // @ts-expect-error broken upstream type
+          mapMarkers.value.get(prevCenterHash)?.setMap(null)
+          mapMarkers.value.delete(prevCenterHash)
+        }
+        // @ts-expect-error untyped
+        createAdvancedMapMarker({ position: center })
+      }
     }
   }, {
     immediate: true,
@@ -262,17 +300,21 @@ onMounted(() => {
   })
   // create the map
   $script.then(async (instance) => {
-    // resolve the google maps api
     mapsApi.value = await instance.maps as any as typeof google.maps // some weird type issue here
-    // init the map
-    map.value = new mapsApi.value!.Map(mapEl.value!, options.value)
-    // ready to use
+    // may need to transform the center before we can init the map
+    const center = options.value.center as string
+    const _options: google.maps.MapOptions = {
+      ...options.value,
+      // @ts-expect-error broken
+      center: !center || isLocationQuery(center) ? undefined : center,
+    }
+    map.value = new mapsApi.value!.Map(mapEl.value!, _options)
+    if (center && isLocationQuery(center)) {
+      // need to resolve center
+      centerOverride.value = await resolveQueryToLatLang(center)
+      map.value?.setCenter(centerOverride.value)
+    }
     ready.value = true
-    // if the mapOptions.center is a string not in the lat lang format, we need to resolve it to a lat lan using resolveQueryToLatLang
-
-    // const placesService = new maps.places.PlacesService(_map)
-    // if (!props.query)
-    //   ready.value = true
   })
 })
 
@@ -289,9 +331,10 @@ if (import.meta.server) {
 
 const placeholder = computed(() => {
   let center = options.value.center
-  if (typeof center === 'object') {
+  if (center && typeof center === 'object') {
     center = `${center.lat},${center.lng}`
   }
+  // @ts-expect-error lazy type
   const placeholderOptions: PlaceholderOptions = defu(props.placeholderOptions, {
     // only map option values
     zoom: options.value.zoom,
@@ -304,6 +347,7 @@ const placeholder = computed(() => {
       ...(props.markers || []),
       center,
     ]
+      .filter(Boolean)
       .map((m) => {
         if (typeof m === 'object' && m.location) {
           m = m.location
@@ -313,7 +357,6 @@ const placeholder = computed(() => {
         }
         return m
       })
-      .filter(Boolean)
       .join('|'),
   })
   return withQuery('https://maps.googleapis.com/maps/api/staticmap', placeholderOptions as QueryObject)
@@ -322,7 +365,7 @@ const placeholder = computed(() => {
 const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: placeholder.value,
-    alt: props.query || '',
+    alt: 'Google Maps Static Map',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       cursor: 'pointer',

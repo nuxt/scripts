@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 const mapOptions = ref({
   center: { lat: -34.397, lng: 150.644 },
@@ -10,16 +10,6 @@ const markers = ref([
 ])
 
 const googleMapsRef = ref()
-
-onMounted(() => {
-  if (googleMapsRef.value) {
-    console.log(googleMapsRef.value)
-  }
-})
-
-function setupGoogleMaps(api) {
-
-}
 
 let increment = 1
 function addMarker() {
@@ -41,7 +31,6 @@ function removeMarkers() {
   <div>
     <div>
       <ScriptGoogleMaps
-        @init="setupGoogleMaps"
         ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
@@ -49,6 +38,7 @@ function removeMarkers() {
         :map-options="mapOptions"
         :markers="markers"
         above-the-fold
+        @init="setupGoogleMaps"
       />
     </div>
     <div>

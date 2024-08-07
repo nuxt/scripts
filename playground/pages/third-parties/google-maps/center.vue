@@ -19,13 +19,13 @@ function changeQuery() {
   <div>
     <div>
       <ScriptGoogleMaps
-        @init="setupGoogleMaps"
         ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
         :map-options="mapOptions"
         above-the-fold
+        @init="setupGoogleMaps"
       />
     </div>
     <div class="button-container">
