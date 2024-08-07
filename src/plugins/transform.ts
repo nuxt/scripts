@@ -131,7 +131,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     (p: any) => (p.key?.name === 'scriptOptions'),
                   ) as Property | undefined
                   // we need to check if scriptOptions contains bundle: true, if it exists
-                  const bundleOption = scriptOptions?.value.properties.find((prop) => {
+                  const bundleOption = scriptOptions?.value.properties?.find((prop) => {
                     return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
                   })
                   canBundle = bundleOption ? bundleOption.value.value : canBundle
