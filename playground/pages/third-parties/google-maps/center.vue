@@ -1,15 +1,17 @@
 <script setup>
 import { ref } from 'vue'
-import { ScriptGoogleMaps } from '#components'
 
 const mapOptions = ref({
   center: { lat: -34.397, lng: 150.644 },
 })
-
-const googleMapsRef = ref()
-
 function changeQuery() {
-  query.value = 'Brooklyn+Bride,New+York+NY'
+  mapOptions.value = {
+    center: {
+      // move just a little
+      lat: mapOptions.value.center.lat + 0.01,
+      lng: mapOptions.value.center.lng + 0.01,
+    },
+  }
 }
 </script>
 
@@ -19,10 +21,11 @@ function changeQuery() {
       <ScriptGoogleMaps
         ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        :width="640"
-        :height="500"
+        :width="1200"
+        :height="600"
         :map-options="mapOptions"
         above-the-fold
+        @init="setupGoogleMaps"
       />
     </div>
     <div class="button-container">
@@ -30,7 +33,7 @@ function changeQuery() {
         class="button"
         @click="changeQuery"
       >
-        change query
+        move center
       </button>
     </div>
   </div>

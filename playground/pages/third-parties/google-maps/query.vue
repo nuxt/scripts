@@ -1,15 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
-import { ScriptGoogleMaps } from '#components'
 
-const mapOptions = ref({
-  center: { lat: -34.397, lng: 150.644 },
-})
-
-const googleMapsRef = ref()
+const center = ref<string>('Brooklyn+Bride,New+York+NY')
 
 function changeQuery() {
-  query.value = 'Brooklyn+Bride,New+York+NY'
+  if (center.value.startsWith('Statue')) {
+    center.value = 'Brooklyn+Bride,New+York+NY'
+  }
+  else {
+    center.value = 'Statue+of+Liberty+National+Monument+New+York+NY'
+  }
 }
 </script>
 
@@ -17,11 +17,10 @@ function changeQuery() {
   <div>
     <div>
       <ScriptGoogleMaps
-        ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        :width="640"
-        :height="500"
-        :map-options="mapOptions"
+        :width="1200"
+        :height="600"
+        :center="center"
         above-the-fold
       />
     </div>

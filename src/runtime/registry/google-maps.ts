@@ -25,7 +25,7 @@ export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
 type MapsNamespace = typeof google.maps
 export interface GoogleMapsApi {
-  maps: MapsNamespace | Promise<MapsNamespace>
+  maps: Promise<MapsNamespace>
 }
 
 declare global {
@@ -62,9 +62,7 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
       scriptOptions: {
         use() {
           return {
-            maps: readyPromise.then(() => {
-              return window.google.maps
-            }),
+            maps: readyPromise!.then(() => window.google.maps),
           }
         },
       },
