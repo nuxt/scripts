@@ -252,15 +252,15 @@ const contributors = useRuntimeConfig().public.contributors
 
       <div class="relative hidden xl:block">
         <div class=" w-full max-w-full w-full grid-transform justify-center items-center grid grid-cols-4 ">
-            <a v-for="(script, key) in registry.filter(s => s.label !== 'Carbon Ads').slice(0, 16)" :key="key" ref="card" :href="`/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`" class="card py-5 px-3 rounded block" :style="{ zIndex: key }">
-              <template v-if="typeof script.logo !== 'string'">
-                <div class="logo h-12 w-auto block dark:hidden" v-html="script.logo.light" />
-                <div class="logo h-12 w-auto hidden dark:block" v-html="script.logo.dark" />
-              </template>
-              <div v-else-if="script.logo.startsWith('<svg')" class="logo h-10 w-auto" v-html="script.logo" />
-              <img v-else class="h-10 w-auto mx-auto logo" :src="script.logo">
-            </a>
-          </div>
+          <a v-for="(script, key) in registry.filter(s => s.label !== 'Carbon Ads').slice(0, 16)" :key="key" ref="card" :href="`/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`" class="card py-5 px-3 rounded block" :style="{ zIndex: key }">
+            <template v-if="typeof script.logo !== 'string'">
+              <div class="logo h-12 w-auto block dark:hidden" v-html="script.logo.light" />
+              <div class="logo h-12 w-auto hidden dark:block" v-html="script.logo.dark" />
+            </template>
+            <div v-else-if="script.logo.startsWith('<svg')" class="logo h-10 w-auto" v-html="script.logo" />
+            <img v-else class="h-10 w-auto mx-auto logo" :src="script.logo">
+          </a>
+        </div>
       </div>
     </ULandingHero>
 
