@@ -6,7 +6,7 @@ const center = ref()
 const maps = ref()
 
 const query = ref({
-  lat:  -37.7995487,
+  lat: -37.7995487,
   lng: 144.9867841,
 })
 
@@ -59,10 +59,10 @@ function handleReady({ map }) {
           Center: {{ center }}
         </template>
       </UAlert>
-      <UButton @click="addMarker" type="button" class="">
+      <UButton type="button" class="" @click="addMarker">
         Add Marker
       </UButton>
-      <UButton v-if="markers.length" @click="removeMarkers" type="button" color="gray" variant="ghost" class="">
+      <UButton v-if="markers.length" type="button" color="gray" variant="ghost" class="" @click="removeMarkers">
         Remove Markers
       </UButton>
     </div>
