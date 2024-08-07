@@ -100,7 +100,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               if (scriptSrcNode || src) {
                 src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
                 if (src) {
-                  let canBundle = options.defaultBundle
+                  let canBundle = !!options.defaultBundle
+                  // useScript
                   if (node.arguments[1]?.type === 'ObjectExpression') {
                     const scriptOptionsArg = node.arguments[1] as ObjectExpression & { start: number, end: number }
                     // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
@@ -126,6 +127,14 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       canBundle = true
                     }
                   }
+                  const scriptOptions = node.arguments[0].properties.find(
+                    (p: any) => (p.key?.name === 'scriptOptions'),
+                  ) as Property | undefined
+                  // we need to check if scriptOptions contains bundle: true, if it exists
+                  const bundleOption = scriptOptions?.value.properties.find((prop) => {
+                    return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
+                  })
+                  canBundle = bundleOption ? bundleOption.value.value : canBundle
                   if (canBundle) {
                     const newSrc = options.resolveScript(src)
                     if (src === newSrc) {
