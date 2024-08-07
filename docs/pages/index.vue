@@ -234,7 +234,7 @@ const contributors = useRuntimeConfig().public.contributors
       :links="links"
       orientation="horizontal"
       :ui="{
-        container: 'flex flex-row justify-start items-center',
+        container: 'max-w-full overflow-hidden py-10 flex flex-row items-center justify-center gap-1 max-w-full',
         links: 'flex items-center gap-2',
         description: 'text-gray-500 dark:text-gray-400 text-xl max-w-2xl leading-normal mb-10',
       }"
@@ -251,8 +251,7 @@ const contributors = useRuntimeConfig().public.contributors
       </template>
 
       <div class="relative hidden xl:block">
-        <div class="absolute -z-1 -right-[450px] -top-[200px]">
-          <div class="w-[450px] grid-transform justify-center items-center grid grid-cols-4 ">
+        <div class=" w-full max-w-full w-full grid-transform justify-center items-center grid grid-cols-4 ">
             <a v-for="(script, key) in registry.filter(s => s.label !== 'Carbon Ads').slice(0, 16)" :key="key" ref="card" :href="`/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`" class="card py-5 px-3 rounded block" :style="{ zIndex: key }">
               <template v-if="typeof script.logo !== 'string'">
                 <div class="logo h-12 w-auto block dark:hidden" v-html="script.logo.light" />
@@ -262,7 +261,6 @@ const contributors = useRuntimeConfig().public.contributors
               <img v-else class="h-10 w-auto mx-auto logo" :src="script.logo">
             </a>
           </div>
-        </div>
       </div>
     </ULandingHero>
 
