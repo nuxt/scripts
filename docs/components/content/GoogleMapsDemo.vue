@@ -7,11 +7,10 @@ const center = ref()
 const maps = ref()
 
 const query = ref('Space+Needle,Seattle+WA')
-function handleReady(_map: Ref<google.maps.Map>) {
-  const map = _map.value
-  center.value = map.getCenter()
-  map.addListener('center_changed', () => {
-    center.value = map.getCenter()
+function handleReady({ map }) {
+  center.value = map.value.getCenter()
+  map.value.addListener('center_changed', () => {
+    center.value = map.value.getCenter()
   })
   isLoaded.value = true
 }
@@ -22,10 +21,8 @@ function handleReady(_map: Ref<google.maps.Map>) {
     <div class="flex items-center justify-center p-5">
       <ScriptGoogleMaps
         ref="maps"
-        :query="query"
+        :center="query"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        width="600"
-        height="400"
         class="group"
         above-the-fold
         @ready="handleReady"

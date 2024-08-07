@@ -34,8 +34,8 @@ You'll need an API key with permissions to access the [Static Maps API](https://
 
 Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
 - $7 per 1000 loads for the Maps JavaScript API (default for using Google Maps)
-- $5 per 1000 loads for the Geocoding API
-- $2 per 1000 loads for the Static Maps API
+- $2 per 1000 loads for the Static Maps API - You can avoid providing a `placeholder` slot.
+- $5 per 1000 loads for the Geocoding API - You can avoid this by providing a `google.maps.LatLng` object instead of a string for the `center` prop
 
 However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged.
 
@@ -56,15 +56,14 @@ import { ref } from 'vue'
 import type { Ref } from 'vue'
 
 const isLoaded = ref(false)
-const center = ref()
+const newCenter = ref()
 const maps = ref()
 
-const query = ref('Space+Needle,Seattle+WA')
-function handleReady(_map: Ref<google.maps.Map>) {
-  const map = _map.value
-  center.value = map.getCenter()
-  map.addListener('center_changed', () => {
-    center.value = map.getCenter()
+const center = ref('Space+Needle,Seattle+WA')
+function handleReady({ map }) {
+  newCenter.value = map.value.getCenter()
+  map.value.addListener('center_changed', () => {
+    newCenter.value =  map.value.getCenter()
   })
   isLoaded.value = true
 }
@@ -75,7 +74,7 @@ function handleReady(_map: Ref<google.maps.Map>) {
     <div class="flex items-center justify-center p-5">
       <ScriptGoogleMaps
         ref="maps"
-        :query="query"
+        :center="center"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         width="600"
         height="400"
@@ -87,7 +86,7 @@ function handleReady(_map: Ref<google.maps.Map>) {
       <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Hover to load" description="Hover the map will load the Google Maps iframe." />
       <UAlert v-if="isLoaded" class="mb-5" size="sm" color="blue" variant="soft">
         <template #title>
-          Center: {{ center }}
+          Center: {{ newCenter }}
         </template>
       </UAlert>
     </div>
@@ -101,15 +100,42 @@ function handleReady(_map: Ref<google.maps.Map>) {
 
 The `ScriptGoogleMaps` component accepts the following props:
 
-- `trigger`: The trigger event to load the Google Maps. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
+**Map**
+
+- `center`: Where to center the map. You can provide a string with the location or use a `{ lat: 0, lng: 0 }` object.
 - `apiKey`: The Google Maps API key. Must have access to the Static Maps API as well. You can optionally provide this as runtime config using the `public.scripts.googleMaps.apiKey` key.
-- `query`: Map marker location. You can provide a string with the location or use the `google.maps.LatLng` object.
-- `options`: Options for the map. See [MapOptions](https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions).
-- `width`: The width of the map. Default is `600`.
-- `height`: The height of the map. Default is `400`.
+- `centerMarker`: Whether to display a marker at the center position. Default is `true`.
+- `mapOptions`: Options for the map. See [MapOptions](https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions).
+
+**Placeholder**
+
+You can customize the placeholder image using the following props, alternatively, you can use the `#placeholder` slot to customize the placeholder image.
+
 - `placeholderOptions`: Customize the placeholder image attributes. See [Static Maps API](https://developers.google.com/maps/documentation/maps-static/start).
 - `placeholderAttrs`: Customize the placeholder image attributes.
+
+**Sizing**
+
+If you want to render a map larger than 640x640 you should provide your own placeholder as the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/start)
+does not support rendering maps larger than this.
+
+- `width`: The width of the map. Default is `640`.
+- `height`: The height of the map. Default is `400`.
+
+**Optimizations**
+
+- `trigger`: The trigger event to load the Google Maps. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
+- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
+
+**Markers**
+
+You can add markers to the static and interactive map by providing an array of `MarkerOptions`. See [MarkerOptions](https://developers.google.com/maps/documentation/javascript/reference/marker#MarkerOptions).
+
+- `markers`: An array of markers to display on the map.
+
+See the [markers](https://github.com/nuxt/scripts/blob/main/playground/pages/third-parties/google-maps/markers.vue) example for more information.
+
+### Guides
 
 #### Eager Loading Placeholder
 
@@ -132,6 +158,57 @@ or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::
 
+#### Advanced Marker Control
+
+If you need more control over the markers on the map, you can use the exposed `createAdvancedMapMarker` function which 
+will return the marker instance.
+
+```vue
+<script lang="ts" setup>
+const googleMapsRef = ref()
+onMounted(() => {
+  const marker = googleMapsRef.value.createAdvancedMapMarker({
+    position: { }
+  })
+})
+</script>
+<template>
+    <ScriptGoogleMaps ref="googleMapsRef" />
+</template>
+```
+
+
+#### Advanced Map Control
+
+The component exposes all internal APIs, so you can customize your map as needed.
+
+```vue
+<script lang="ts" setup>
+const googleMapsRef = ref()
+onMounted(async () => {
+  const api = googleMapsRef.value
+  
+  // Access internal APIs
+  const googleMaps = api.googleMaps.value // google.maps api
+  const mapInstance = api.map.value // google.maps.Map instance
+  
+  // Convert a query to lat/lng
+  const query = await api.resolveQueryToLatLang('Space Needle, Seattle, WA') // { lat: 0, lng: 0 }
+  
+  // Import a Google Maps library
+  const geometry = await api.importLibrary('geometry')
+  const distance = new googleMaps.geometry.spherical.computeDistanceBetween(
+    new googleMaps.LatLng(0, 0),
+    new googleMaps.LatLng(0, 0)
+  )
+})
+</script>
+<template>
+    <ScriptGoogleMaps ref="googleMapsRef" />
+</template>
+```
+
+
 ### Component API
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
@@ -150,7 +227,7 @@ To subscribe to Google Map events, you can use the `ready` event.
 
 ```vue
 <script setup lang="ts">
-function handleReady(map) {
+function handleReady({ map }) {
   map.addListener('center_changed', () => {
     console.log('Center changed', map.getCenter())
   })
@@ -256,14 +333,23 @@ Loading the Google Maps SDK and interacting with it programmatically.
 
 ```vue
 <script setup lang="ts">
+/// <reference types="google.maps" />
 const { $script } = useScriptGoogleMaps({
   apiKey: 'key'
 })
-$script.then(({ maps }) => {
-  const map = new maps.Map(document.getElementById('map'), {
-    center: { lat: -34.397, lng: 150.644 },
-    zoom: 8
+const map = ref()
+onMounted(() => {
+  $script.then(async (instance) => {
+    const maps = await instance.maps as any as typeof google.maps // upstream google type issue
+    new maps.Map(map.value, {
+      center: { lat: -34.397, lng: 150.644 },
+      zoom: 8
+    })
+    // Do something with the map
   })
 })
 </script>
+<template>
+    <div ref="map" />
+</template>
 ```
