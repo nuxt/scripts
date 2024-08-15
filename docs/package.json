@@ -20,7 +20,7 @@
     "@nuxthq/studio": "^2.0.3",
     "@nuxtjs/seo": "^2.0.0-rc.16",
     "@vueuse/core": "^10.11.0",
-    "@vueuse/nuxt": "^10.11.0",
+    "@vueuse/nuxt": "^11.0.0",
     "nuxt-scripts-devtools": "workspace:*",
     "shiki": "^1.12.1"
   }
