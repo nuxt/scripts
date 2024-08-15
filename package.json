@@ -73,7 +73,7 @@
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.0.50",
     "@unhead/vue": "^1.9.16",
-    "@vueuse/core": "^10.11.0",
+    "@vueuse/core": "^11.0.0",
     "consola": "^3.2.3",
     "defu": "^6.1.4",
     "h3": "^1.12.0",
