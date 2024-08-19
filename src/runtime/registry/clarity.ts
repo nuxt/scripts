@@ -2,15 +2,6 @@ import { useRegistryScript } from '../utils'
 import { minLength, object, string, pipe } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-/**
- * <script type="text/javascript">
- *     (function(c,l,a,r,i,t,y){
- *         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
- *         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
- *         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
- *     })(window, document, "clarity", "script", "mpy5c6k7xi");
- * </script>
- */
 
 type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)
   & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{
