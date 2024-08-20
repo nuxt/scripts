@@ -1,7 +1,7 @@
 ```vue
 <script lang="ts" setup>
 const cookieConsent = useScriptTriggerConsent()
-const { $script, gtag } = useScript('/my-script.js', {
+const myScript = useScript('/my-script.js', {
   trigger: cookieConsent 
 })
 </script>

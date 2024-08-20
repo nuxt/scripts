@@ -83,11 +83,11 @@ NUXT_PUBLIC_SCRIPTS_SEGMENT_WRITE_KEY=<YOUR_WRITE_KEY>
 The `useScriptSegment` composable lets you have fine-grain control over when and how Segment is loaded on your site.
 
 ```ts
-const { track, $script } = useScriptSegment({
+const { proxy } = useScriptSegment({
   id: 'YOUR_ID'
 })
 // example
-track('event', {
+proxy.track('event', {
   foo: 'bar'
 })
 ```
@@ -126,12 +126,12 @@ Using Segment only in production while using `analytics` to send a conversion ev
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { track, analytics } = useScriptSegment()
+const { proxy } = useScriptSegment()
 
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  track('conversion', {
+  proxy.track('conversion', {
     value: 1,
     currency: 'USD'
   })
@@ -145,22 +145,6 @@ function sendConversion() {
     </button>
   </div>
 </template>
-```
-
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      segment: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            writeKey: 'YOUR_WRITE_KEY',
-          },
-    },
-  },
-})
 ```
 
 ::

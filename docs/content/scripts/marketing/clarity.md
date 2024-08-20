@@ -12,10 +12,10 @@ links:
 
 Nuxt Scripts provides a registry script composable `useScriptClarity` to easily integrate Clarity in your Nuxt app.
 
-### Nuxt Config Setup
-
 The simplest way to load Clarity globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptClarity](#useScriptClarity) composable.
+
+## Loading Globally
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
 disable the script in development.
@@ -48,13 +48,8 @@ export default defineNuxtConfig({
 })
 ```
 
-::
 
-#### With Environment Variables
-
-If you prefer to configure your id using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -66,7 +61,9 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         clarity: {
-          id: '', // NUXT_PUBLIC_SCRIPTS_CLARITY_ID
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_CLARITY_ID=<your-id>
+          id: '',
         },
       },
     },
@@ -74,20 +71,18 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_CLARITY_ID=<YOUR_ID>
-```
+::
 
 ## useScriptClarity
 
 The `useScriptClarity` composable lets you have fine-grain control over when and how Clarity is loaded on your site.
 
 ```ts
-const { clarity } = useScriptClarity({
+const { proxy } = useScriptClarity({
   id: 'YOUR_ID'
 })
 // example
-clarity("identify", "custom-id", "custom-session-id", "custom-page-id", "friendly-name")	
+proxy.clarity("identify", "custom-id", "custom-session-id", "custom-page-id", "friendly-name")	
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
@@ -138,12 +133,12 @@ Using Clarity only in production while using `clarity` to send a conversion even
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { clarity } = useScriptClarity()
+const { proxy } = useScriptClarity()
 
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  clarity('event', 'conversion')
+  proxy.clarity('event', 'conversion')
 }
 </script>
 
@@ -156,20 +151,5 @@ function sendConversion() {
 </template>
 ```
 
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      clarity: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            id: 'YOUR_ID',
-          },
-    },
-  },
-})
-```
 
 ::

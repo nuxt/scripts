@@ -91,9 +91,11 @@ NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<YOUR_ID>
 The `useScriptGoogleTagManager` composable lets you have fine-grain control over when and how Google Tag Manager is loaded on your site.
 
 ```ts
-const { dataLayer, $script } = useScriptGoogleTagManager({
+const { proxy } = useScriptGoogleTagManager({
   id: 'YOUR_ID'
 })
+// example
+proxy.dataLayer.push({ event: 'conversion', value: 1 })
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
@@ -152,20 +154,5 @@ function sendConversion() {
 </template>
 ```
 
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      googleTagManager: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            id: 'YOUR_ID',
-          },
-    },
-  },
-})
-```
 
 ::

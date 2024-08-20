@@ -83,11 +83,11 @@ NUXT_PUBLIC_SCRIPTS_META_PIXEL_ID=<YOUR_ID>
 The `useScriptMetaPixel` composable lets you have fine-grain control over when and how Meta Pixel is loaded on your site.
 
 ```ts
-const { fbq, $script } = useScriptMetaPixel({
+const { proxy } = useScriptMetaPixel({
   id: 'YOUR_ID'
 })
 // example
-fbq('track', 'ViewContent', {
+proxy.fbq('track', 'ViewContent', {
   content_name: 'Nuxt Pixel',
   content_category: 'Nuxt',
 })
@@ -149,12 +149,12 @@ Using Meta Pixel only in production while using `fbq` to send a conversion event
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { fbq } = useScriptMetaPixel()
+const { proxy } = useScriptMetaPixel()
 
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  fbq('trackCustom', 'conversion', {
+  proxy.fbq('trackCustom', 'conversion', {
     value: 1,
     currency: 'USD'
   })
@@ -168,22 +168,6 @@ function sendConversion() {
     </button>
   </div>
 </template>
-```
-
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      metaPixel: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            id: 'YOUR_ID',
-          },
-    },
-  },
-})
 ```
 
 ::
