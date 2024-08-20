@@ -6,8 +6,8 @@ const registry = useScriptsRegistry()
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
 useSeoMeta({
-  title: 'Third-Party Scripts Meets Nuxt DX.',
-  description: 'Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
+  title: 'Third-Party Scripts Meets Nuxt DX',
+  description: 'Better performance, privacy, security and DX for third-party scripts.',
 })
 
 defineOgImageComponent('Home')
@@ -237,7 +237,7 @@ const contributors = useRuntimeConfig().public.contributors
     >
       <template #title>
         <div class="leading-tight">
-          <span class="text-primary">Third-Party Scripts </span><br> Meets Nuxt DX.
+          <span class="text-primary">Third-Party Scripts </span><br> Meets Nuxt DX
         </div>
       </template>
 
