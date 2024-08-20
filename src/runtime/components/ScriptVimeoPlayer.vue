@@ -142,12 +142,16 @@ if (import.meta.server) {
   })
 }
 
+const id = computed(() => {
+  return props.vimeoOptions?.id || props.id
+})
+
 const { data: payload } = useAsyncData(
-  `vimeo-embed:${props.id}`,
+  `vimeo-embed:${id.value}`,
   // TODO ideally we cache this
-  () => $fetch(`https://vimeo.com/api/v2/video/${props.id}.json`).then(res => (res as any)[0]),
+  () => $fetch(`https://vimeo.com/api/v2/video/${id.value}.json`).then(res => (res as any)[0]),
   {
-    watch: [() => props.id],
+    watch: [id],
   },
 )
 
@@ -181,13 +185,13 @@ const height = computed(() => {
 
 onMounted(() => {
   onLoaded(async ({ Vimeo }) => {
-    const vimeoOptions: VimeoOptions = defu(props.vimeoOptions, {
-      id: props.id,
-      url: props.url,
-    })
-    // width: props.width || elVimeo.value.parentNode.offsetWidth,
-    // height: props.height || elVimeo.value.parentNode.offsetHeight,
-    // filter props for false values
+    const vimeoOptions = props.vimeoOptions || {}
+    if (!vimeoOptions.id) {
+      vimeoOptions.id = props.id
+    }
+    if (!vimeoOptions.url) {
+      vimeoOptions.url = props.url
+    }
     player = new Vimeo.Player(elVimeo.value, vimeoOptions)
     if (clickTriggered) {
       player!.play()
