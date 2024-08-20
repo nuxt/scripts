@@ -71,5 +71,5 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O exte
       options.clientInit?.()
     }
   }
-  return useScript<T, U>(scriptInput, scriptOptions)
+  return useScript<T, U>(scriptInput, scriptOptions as NuxtUseScriptOptions<T, U>)
 }
