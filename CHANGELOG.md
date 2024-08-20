@@ -1,6 +1,50 @@
 # Changelog
 
 
+## v0.6.7
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.6...v0.6.7)
+
+### 🚀 Enhancements
+
+- ⚠️  Improve google maps integration ([#191](https://github.com/nuxt/scripts/pull/191))
+- ⚠️  Unhead 1.10.0 integration ([#203](https://github.com/nuxt/scripts/pull/203))
+
+### 🩹 Fixes
+
+- Registry scripts bundling with `scriptOptions.bundle` ([0c7906e](https://github.com/nuxt/scripts/commit/0c7906e))
+- **vimeo:** ⚠️  Broken player, refactor props ([#204](https://github.com/nuxt/scripts/pull/204))
+
+### 📖 Documentation
+
+- Fix broken links ([#198](https://github.com/nuxt/scripts/pull/198))
+
+### 🏡 Chore
+
+- Lint ([328d92a](https://github.com/nuxt/scripts/commit/328d92a))
+- Maybe fix tests ([c947f8a](https://github.com/nuxt/scripts/commit/c947f8a))
+- Maybe fix tests ([263e10e](https://github.com/nuxt/scripts/commit/263e10e))
+- Broken types ([d83576a](https://github.com/nuxt/scripts/commit/d83576a))
+- Bump deps ([98f4325](https://github.com/nuxt/scripts/commit/98f4325))
+- Clean up ([41cd38f](https://github.com/nuxt/scripts/commit/41cd38f))
+- Bump unhead ([d1b97e2](https://github.com/nuxt/scripts/commit/d1b97e2))
+- Lint ([3602040](https://github.com/nuxt/scripts/commit/3602040))
+- Broken devtools ([b35eaba](https://github.com/nuxt/scripts/commit/b35eaba))
+- Unhead 1.10.0 ([f9c62c7](https://github.com/nuxt/scripts/commit/f9c62c7))
+- Bump deps ([4f7c7ae](https://github.com/nuxt/scripts/commit/4f7c7ae))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Improve google maps integration ([#191](https://github.com/nuxt/scripts/pull/191))
+- ⚠️  Unhead 1.10.0 integration ([#203](https://github.com/nuxt/scripts/pull/203))
+- **vimeo:** ⚠️  Broken player, refactor props ([#204](https://github.com/nuxt/scripts/pull/204))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Harlan Wilton ([@harlan-zw](http://github.com/harlan-zw))
+- Lars Salling ([@lsalling](http://github.com/lsalling))
+
 ## v0.6.6
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.5...v0.6.6)
