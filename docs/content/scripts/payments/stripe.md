@@ -95,9 +95,9 @@ Loading the Stripe SDK and using it to create a payment element.
 ```vue
 <script setup lang="ts">
 const paymentEl = ref(null)
-const { $script } = useScriptStripe()
+const { onLoaded } = useScriptStripe()
 onMounted(() => {
-  $script.then(({ Stripe }) => {
+  onLoaded(({ Stripe }) => {
     const stripe = Stripe('YOUR_STRIPE_KEY')
     const elements = stripe.elements()
     const paymentElement = elements.create('payment', { /* pass keys */})

@@ -25,14 +25,14 @@ import type { CrispInput } from './registry/crisp'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 
-export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
+export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
   /**
    * The trigger to load the script:
    * - `onNuxtReady` - Load the script when Nuxt is ready.
-   * - `manual` - Load the script manually by calling `$script.load()` or `$script.waitForLoad()`.
+   * - `manual` - Load the script manually by calling `load()`.
    * - `Promise` - Load the script when the promise resolves.
    */
-  trigger?: UseScriptOptions<T>['trigger'] | 'onNuxtReady'
+  trigger?: UseScriptOptions<T, U>['trigger'] | 'onNuxtReady'
   /**
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also

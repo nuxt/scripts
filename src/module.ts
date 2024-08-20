@@ -104,9 +104,8 @@ export default defineNuxtModule<ModuleOptions>({
     // couldn't be found for some reason, assume compatibility
     if (unheadPath) {
       const { version: unheadVersion } = await readPackageJSON(join(unheadPath, 'package.json'))
-      if (!unheadVersion || lt(unheadVersion, '1.9.0')) {
-        logger.warn('@nuxt/scripts requires @unhead/vue >= 1.9.0, please upgrade to use the module.')
-        return
+      if (!unheadVersion || lt(unheadVersion, '1.10.0')) {
+        logger.error(`Nuxt Scripts requires Unhead >= 1.10.0, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
     }
     // allow augmenting the options
@@ -166,10 +165,10 @@ declare module '#nuxt-scripts' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
 ${newScripts.map((i) => {
-            const key = i.import?.name.replace('useScript', '')
-            const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-            return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-          }).join('\n')}
+    const key = i.import?.name.replace('useScript', '')
+    const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+    return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
+  }).join('\n')}
     }
 }`
           return types

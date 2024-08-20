@@ -42,7 +42,7 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
   }), _options)
   // insert preconnect once we start loading the script
   if (import.meta.client) {
-    const _ = watch(instance.$script.status, (status) => {
+    const _ = watch(instance.status, (status) => {
       if (status === 'loading') {
         useHead({
           link: [

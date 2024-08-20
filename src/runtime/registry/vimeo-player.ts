@@ -32,7 +32,7 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
     },
   }), _options)
   if (import.meta.client) {
-    const _ = watch(instance.$script.status, (status) => {
+    const _ = watch(instance.status, (status) => {
       if (status === 'loading') {
         useHead({
           link: [
