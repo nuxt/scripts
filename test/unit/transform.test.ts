@@ -20,14 +20,14 @@ async function transform(code: string | string[], options: AssetBundlerTransform
 describe('nuxtScriptTransformer', () => {
   it('string arg', async () => {
     const code = await transform(
-    `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+      `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
       bundle: true,
     })`,
-    {
-      resolveScript(src) {
-        return `/_scripts${parseURL(src).pathname}`
+      {
+        resolveScript(src) {
+          return `/_scripts${parseURL(src).pathname}`
+        },
       },
-    },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
   })

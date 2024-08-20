@@ -112,7 +112,7 @@ const mapEl = ref<HTMLElement>()
 
 const centerOverride = ref()
 
-const { $script } = useScriptGoogleMaps({
+const { load, status, onLoaded } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
     trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
@@ -168,7 +168,7 @@ async function resolveQueryToLatLang(query: string) {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<google.maps.LatLng>(async (resolve, reject) => {
     if (!mapsApi.value) {
-      await $script.load()
+      await load()
       // await new promise, watch until mapsApi is set
       await new Promise<void>((resolve) => {
         const _ = watch(mapsApi, () => {
@@ -232,7 +232,7 @@ onMounted(() => {
       emits('ready', googleMaps)
     }
   })
-  watch($script.status, (v) => {
+  watch(status, (v) => {
     if (v === 'error') {
       emits('error')
     }
@@ -298,8 +298,7 @@ onMounted(() => {
     immediate: true,
     deep: true,
   })
-  // create the map
-  $script.then(async (instance) => {
+  onLoaded(async (instance) => {
     mapsApi.value = await instance.maps as any as typeof google.maps // some weird type issue here
     // may need to transform the center before we can init the map
     const center = options.value.center as string
@@ -378,10 +377,10 @@ const placeholderAttrs = computed(() => {
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
-    'aria-busy': $script.status.value === 'loading',
-    'aria-label': $script.status.value === 'awaitingLoad'
+    'aria-busy': status.value === 'loading',
+    'aria-label': status.value === 'awaitingLoad'
       ? 'Google Maps Static Map'
-      : $script.status.value === 'loading'
+      : status.value === 'loading'
         ? 'Google Maps Map Embed Loading'
         : 'Google Maps Embed',
     'aria-live': 'polite',
@@ -414,11 +413,11 @@ onBeforeUnmount(() => {
     <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
       <img v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value !== 'awaitingLoad' && !ready" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'error'" name="error" />
     <slot />
   </div>
 </template>

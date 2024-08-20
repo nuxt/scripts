@@ -26,7 +26,7 @@ onMounted(() => {
   rootEl.value?.querySelectorAll('a[href]').forEach((a) => {
     a.classList.add('lemonsqueezy-button')
   })
-  instance.$script.then(({ Setup, Refresh }) => {
+  instance.onLoaded(({ Setup, Refresh }) => {
     Setup({
       eventHandler(event) {
         emits('lemonSqueezyEvent', event)

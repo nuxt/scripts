@@ -193,7 +193,7 @@ function viewDocs(docs: string) {
                       Status
                     </div>
                     <div class="capitalize">
-                      {{ script.$script.status.value }}
+                      {{ script.status.value }}
                     </div>
                   </div>
                   <div v-if="scriptSizes[script.src]">
@@ -209,10 +209,10 @@ function viewDocs(docs: string) {
                     <div>{{ script.loadTime }}</div>
                   </div>
                   <div>
-                    <NButton v-if="script.$script.status === 'awaitingLoad'" @click="script.$script.load()">
+                    <NButton v-if="script.status === 'awaitingLoad'" @click="script.load()">
                       Load
                     </NButton>
-                    <NButton v-else-if="script.$script.status === 'loaded'" @click="script.$script.remove()">
+                    <NButton v-else-if="script.status === 'loaded'" @click="script.remove()">
                       Remove
                     </NButton>
                   </div>

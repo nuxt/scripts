@@ -256,10 +256,10 @@ Loading the Vimeo Player SDK and interacting with it programmatically.
 ```vue
 <script setup lang="ts">
 const video = ref()
-const { $script } = useScriptVimeoPlayer()
+const { onLoaded } = useScriptVimeoPlayer()
 
 let player
-$script.then(({ Vimeo }) => {
+onLoaded(({ Vimeo }) => {
   player = new Vimeo.Player(video.value, {
     id: 331567154
   })

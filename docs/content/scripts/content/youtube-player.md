@@ -216,10 +216,10 @@ Loading the YouTube Player SDK and interacting with it programmatically.
 ```vue
 <script setup lang="ts">
 const video = ref()
-const { $script } = useScriptYouTubePlayer()
+const { onLoaded } = useScriptYouTubePlayer()
 
 let player
-$script.then(async ({ YT }) => {
+onLoaded(async ({ YT }) => {
   // we need to wait for the internal YouTube APIs to be ready
   const YouTube = await YT
   await new Promise<void>((resolve) => {

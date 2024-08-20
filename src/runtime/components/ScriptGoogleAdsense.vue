@@ -34,17 +34,17 @@ const instance = useScriptGoogleAdsense({
   },
 })
 
-const { $script } = instance
+const { status } = instance
 
 onMounted(() => {
   callOnce(() => {
     (window.adsbygoogle = window.adsbygoogle || []).push({})
   })
-  watch(instance.$script.status, () => {
-    if (instance.$script.status.value === 'loaded') {
+  watch(status, (val) => {
+    if (val === 'loaded') {
       emits('ready', instance)
     }
-    else if (instance.$script.status.value === 'error') {
+    else if (val === 'error') {
       emits('error')
     }
   })
@@ -62,8 +62,8 @@ onMounted(() => {
     :data-full-width-responsive="dataFullWidthResponsive"
     v-bind="{ ...$attrs }"
   >
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'loading'" name="loading" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'loading'" name="loading" />
+    <slot v-else-if="status === 'error'" name="error" />
   </ins>
 </template>

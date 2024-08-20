@@ -12,10 +12,10 @@ links:
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
-### Nuxt Config Setup
-
 The simplest way to load Matomo Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptMatomoAnalytics](#useScriptMatomoAnalytics) composable.
+
+## Loading Globally
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
 disable the script in development.
@@ -48,13 +48,7 @@ export default defineNuxtConfig({
 })
 ```
 
-::
-
-#### With Environment Variables
-
-If you prefer to configure your id using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -66,6 +60,8 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         matomoAnalytics: {
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_MATOMO_ANALYTICS_SITE_ID=<your-id>
           siteId: '', // NUXT_PUBLIC_SCRIPTS_MATOMO_ANALYTICS_SITE_ID
         },
       },
@@ -74,17 +70,15 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_MATOMO_ANALYTICS_SITE_ID=<YOUR_ID>
-```
+::
 
 ## useScriptMatomoAnalytics
 
 The `useScriptMatomoAnalytics` composable lets you have fine-grain control over when and how Matomo Analytics is loaded on your site.
 
 ```ts
-const { _paq, $script } = useScriptMatomoAnalytics({
-  matomoUrl: 'YOUR_MATOMO_URL'
+const matomoAnalytics = useScriptMatomoAnalytics({
+  matomoUrl: 'YOUR_MATOMO_URL',
   siteId: 'YOUR_SITE_ID'
 })
 ```
@@ -104,8 +98,9 @@ interface MatomoAnalyticsApi {
 You must provide the options when setting up the script for the first time.
 
 ```ts
+// matomoUrl and site are required
 export const MatomoAnalyticsOptions = object({
-  matomoUrl: string(), // site is required
+  matomoUrl: string(), 
   siteId: string(),
   trackPageView: optional(boolean()),
   enableLinkTracking: optional(boolean()),
@@ -120,12 +115,12 @@ Using Matomo Analytics only in production while using `_paq` to send a conversio
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { _paq } = useScriptMatomoAnalytics()
+const { proxy } = useScriptMatomoAnalytics()
 
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  _paq.push(['trackGoal', 1])
+  proxy._paq.push(['trackGoal', 1])
 }
 </script>
 
@@ -136,22 +131,6 @@ function sendConversion() {
     </button>
   </div>
 </template>
-```
-
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      matomoAnalytics: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            siteId: 'YOUR_SITE_ID',
-          },
-    },
-  },
-})
 ```
 
 ::

@@ -363,12 +363,12 @@ Loading the Google Maps SDK and interacting with it programmatically.
 ```vue
 <script setup lang="ts">
 /// <reference types="google.maps" />
-const { $script } = useScriptGoogleMaps({
+const { onLoaded } = useScriptGoogleMaps({
   apiKey: 'key'
 })
 const map = ref()
 onMounted(() => {
-  $script.then(async (instance) => {
+  onLoaded(async (instance) => {
     const maps = await instance.maps as any as typeof google.maps // upstream google type issue
     new maps.Map(map.value, {
       center: { lat: -34.397, lng: 150.644 },

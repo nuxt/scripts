@@ -10,12 +10,14 @@ links:
 
 [Fathom Analytics](https://usefathom.com/) is a great privacy analytics solution for your Nuxt app. It doesn't gather personal data from your visitors, yet provides detailed insights into how your site is used.
 
-## Nuxt Config
+## Loading Globally
 
 The simplest way to load Fathom Analytics globally in your Nuxt App is to use your Nuxt config, providing your site ID
 as a string.
 
-```ts [nuxt.config.ts]
+::code-group
+
+```ts [Always enabled]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -27,11 +29,7 @@ export default defineNuxtConfig({
 })
 ```
 
-If you'd like to avoid loading the analytics in development, you can conditionally set the config.
-
-```ts [nuxt.config.ts]
-import { isDevelopment } from 'std-env'
-
+```ts [Production only]
 export default defineNuxtConfig({
   $production: {
     scripts: {
@@ -45,11 +43,8 @@ export default defineNuxtConfig({
 })
 ```
 
-### With Environment Variables
 
-If you prefer to configure your token using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -61,7 +56,9 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         fathomAnalytics: {
-          token: '', // NUXT_PUBLIC_SCRIPTS_FATHOM_ANALYTICS_SITE
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_FATHOM_ANALYTICS_SITE=<your-token>
+          token: '',
         },
       },
     },
@@ -69,9 +66,7 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_FATHOM_ANALYTICS_SITE=<YOUR_SITE>
-```
+::
 
 ## Composable `useScriptFathomAnalytics`
 
@@ -142,16 +137,15 @@ to use the proxy for any void functions.
 ::code-group
 
 ```ts [Proxy]
-const { trackGoal } = useScriptFathomAnalytics()
-
+const { proxy } = useScriptFathomAnalytics()
 function trackMyGoal() {
-  trackGoal('MY_GOAL_ID', 100)
+  proxy.trackGoal('MY_GOAL_ID', 100)
 }
 ```
 
-```ts [Await Promise]
-const { $script } = useScriptFathomAnalytics()
-$script.then(({ trackGoal }) => {
+```ts [onLoaded]
+const { onLoaded } = useScriptFathomAnalytics()
+onLoaded(({ trackGoal }) => {
   trackGoal('MY_GOAL_ID', 100)
 })
 ```
