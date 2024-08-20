@@ -13,6 +13,7 @@ function changeVideo() {
     <ScriptVimeoPlayer
       :id="videoid"
       above-the-fold
+      class="w-[900px] w-[100%] h-[700px]"
     />
     <UButton
       class="mt-5"
