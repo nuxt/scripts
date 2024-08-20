@@ -11,12 +11,12 @@ overrides:
   shiki: 1.10.3
   vue: ^3.4.38
   vue-router: ^4.4.3
-  '@unhead/ssr': 1.10.0-beta.6
-  '@unhead/dom': 1.10.0-beta.6
-  '@unhead/vue': 1.10.0-beta.6
-  '@unhead/shared': 1.10.0-beta.6
-  '@unhead/schema': 1.10.0-beta.6
-  unhead: 1.10.0-beta.6
+  '@unhead/ssr': 1.10.0
+  '@unhead/dom': 1.10.0
+  '@unhead/vue': 1.10.0
+  '@unhead/shared': 1.10.0
+  '@unhead/schema': 1.10.0
+  unhead: 1.10.0
 
 importers:
 
@@ -44,8 +44,8 @@ importers:
         specifier: ^0.0.50
         version: 0.0.50
       '@unhead/vue':
-        specifier: 1.10.0-beta.6
-        version: 1.10.0-beta.6(vue@3.4.38(typescript@5.5.4))
+        specifier: 1.10.0
+        version: 1.10.0(vue@3.4.38(typescript@5.5.4))
       '@vueuse/core':
         specifier: ^11.0.1
         version: 11.0.1(vue@3.4.38(typescript@5.5.4))
@@ -123,8 +123,8 @@ importers:
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.5.4)
       '@unhead/schema':
-        specifier: 1.10.0-beta.6
-        version: 1.10.0-beta.6
+        specifier: 1.10.0
+        version: 1.10.0
       acorn-loose:
         specifier: ^8.4.0
         version: 8.4.0
@@ -1983,23 +1983,23 @@ packages:
   '@unhead/addons@1.9.16':
     resolution: {integrity: sha512-5F6jReJceeeTnY774/OIAjEBMZ2EWuEivLLanpOJzZdxf30zzsZ+v9WwIEx5tb3+TTdvEhHFcB3rTH6UoLvxWg==}
 
-  '@unhead/dom@1.10.0-beta.6':
-    resolution: {integrity: sha512-JH/hhgbPNYXHN9JwyKUI2VV1pnbw51Qdyn5ky4/WXvQmW/DMqpMewcXFEV22Ta8EYLtPcG/r+/rT5Q7GbNUtzg==}
+  '@unhead/dom@1.10.0':
+    resolution: {integrity: sha512-LdgtOlyMHOyuQNsUKM+1d8ViiiY4LxjCPJlgUU/5CwgqeRYf4LWFu8oRMQfSQVTusbPwwvr3MolM9iTUu2I4BQ==}
 
   '@unhead/schema-org@1.9.16':
     resolution: {integrity: sha512-xMQZgc4TZzm8vBmspMCTRCjdto6tDoNL++EKWugsU2x9tWcEWn/ANWXEa4+l6T7uTlczejP2qjC3050qNjfcdA==}
 
-  '@unhead/schema@1.10.0-beta.6':
-    resolution: {integrity: sha512-zX1JsnhmecMZdSTwOyjiDAP5K9lFE0sbo49DE+01aXgWALrFCAv0+a/eYcXUxgeJo2WFGfQc67PcHKKZa9yxbQ==}
+  '@unhead/schema@1.10.0':
+    resolution: {integrity: sha512-hmgkFdLzm/VPLAXBF89Iry4Wz/6FpHMfMKCnAdihAt1Ublsi04RrA0hQuAiuGG2CZiKL4VCxtmV++UXj/kyakA==}
 
-  '@unhead/shared@1.10.0-beta.6':
-    resolution: {integrity: sha512-yVk0StmzoenOHJ28Hk2Vr1ANlmuBZPZHnFIkF0Hc8Es2aY81FrPAJkAtjox2PEq3R9880rECSZIGZ1jPYhrM0Q==}
+  '@unhead/shared@1.10.0':
+    resolution: {integrity: sha512-Lv7pP0AoWJy+YaiWd4kGD+TK78ahPUwnIRx6YCC6FjPmE0KCqooeDS4HbInYaklLlEMQZislXyIwLczK2DTWiw==}
 
-  '@unhead/ssr@1.10.0-beta.6':
-    resolution: {integrity: sha512-wCVdQ++rnk7XFXIamG8q9nuFN1Nr+VBsfWSY1PHGyUlGlbp84jaHeB2TF4F7oY2nLqJ91mXw4CgDskbrwDdbow==}
+  '@unhead/ssr@1.10.0':
+    resolution: {integrity: sha512-L2XqGUQ05+a/zBAJk4mseLpsDoHMsuEsZNWp5f7E/Kx8P1oBAAs6J/963nvVFdec41HuClNHtJZ5swz77dmb1Q==}
 
-  '@unhead/vue@1.10.0-beta.6':
-    resolution: {integrity: sha512-21avh5G+wraFBufaCNhy2OgxrEQK2nOUlj4bvDurDjC67kw8qj1SlcKApD3R6aXhzyqD23nKnywQfEQuwZ1FEg==}
+  '@unhead/vue@1.10.0':
+    resolution: {integrity: sha512-Cv9BViaOwCBdXy3bsTvJ10Rs808FSSq/ZfeBXzOjOxt08sbubf6Mr5opBdOlv/i1bzyFVIAqe5ABmrhC9mB80w==}
     peerDependencies:
       vue: ^3.4.38
 
@@ -5967,8 +5967,8 @@ packages:
   unenv@1.10.0:
     resolution: {integrity: sha512-wY5bskBQFL9n3Eca5XnhH6KbUo/tfvkwm9OpcdCvLaeA7piBNbavbOKJySEwQ1V0RH6HvNlSAFRTpvTqgKRQXQ==}
 
-  unhead@1.10.0-beta.6:
-    resolution: {integrity: sha512-Uf2fkExeO3vgGUj5Zwg6aY0AcN5EoKuNxHlnWVmOaBfEq2dxG7bGnuq2fbMN5BKVZ3VhtGjoe8RNC/DxiiJ2kg==}
+  unhead@1.10.0:
+    resolution: {integrity: sha512-nv75Hvhu0asuD/rbP6b3tSRJUltxmThq/iZU5rLCGEkCqTkFk7ruQGNk+TRtx/RCYqL0R/IzIY9aqvhNOGe3mg==}
 
   unicode-emoji-modifier-base@1.0.0:
     resolution: {integrity: sha512-yLSH4py7oFH3oG/9K+XWrz1pSi3dfUrWEnInbxMfArOfc1+33BlGPQtLsOYwvdMy11AwUBetYuaRxSPqgkq+8g==}
@@ -9159,8 +9159,8 @@ snapshots:
   '@unhead/addons@1.9.16(rollup@4.21.0)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.21.0)
-      '@unhead/schema': 1.10.0-beta.6
-      '@unhead/shared': 1.10.0-beta.6
+      '@unhead/schema': 1.10.0
+      '@unhead/shared': 1.10.0
       magic-string: 0.30.11
       mlly: 1.7.1
       ufo: 1.5.4
@@ -9169,35 +9169,35 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  '@unhead/dom@1.10.0-beta.6':
+  '@unhead/dom@1.10.0':
     dependencies:
-      '@unhead/schema': 1.10.0-beta.6
-      '@unhead/shared': 1.10.0-beta.6
+      '@unhead/schema': 1.10.0
+      '@unhead/shared': 1.10.0
 
   '@unhead/schema-org@1.9.16':
     dependencies:
       ufo: 1.5.4
 
-  '@unhead/schema@1.10.0-beta.6':
+  '@unhead/schema@1.10.0':
     dependencies:
       hookable: 5.5.3
       zhead: 2.2.4
 
-  '@unhead/shared@1.10.0-beta.6':
+  '@unhead/shared@1.10.0':
     dependencies:
-      '@unhead/schema': 1.10.0-beta.6
+      '@unhead/schema': 1.10.0
 
-  '@unhead/ssr@1.10.0-beta.6':
+  '@unhead/ssr@1.10.0':
     dependencies:
-      '@unhead/schema': 1.10.0-beta.6
-      '@unhead/shared': 1.10.0-beta.6
+      '@unhead/schema': 1.10.0
+      '@unhead/shared': 1.10.0
 
-  '@unhead/vue@1.10.0-beta.6(vue@3.4.38(typescript@5.5.4))':
+  '@unhead/vue@1.10.0(vue@3.4.38(typescript@5.5.4))':
     dependencies:
-      '@unhead/schema': 1.10.0-beta.6
-      '@unhead/shared': 1.10.0-beta.6
+      '@unhead/schema': 1.10.0
+      '@unhead/shared': 1.10.0
       hookable: 5.5.3
-      unhead: 1.10.0-beta.6
+      unhead: 1.10.0
       vue: 3.4.38(typescript@5.5.4)
 
   '@unocss/astro@0.61.9(rollup@3.29.4)':
@@ -9802,10 +9802,10 @@ snapshots:
 
   '@vueuse/head@2.0.0(vue@3.4.38(typescript@5.5.4))':
     dependencies:
-      '@unhead/dom': 1.10.0-beta.6
-      '@unhead/schema': 1.10.0-beta.6
-      '@unhead/ssr': 1.10.0-beta.6
-      '@unhead/vue': 1.10.0-beta.6(vue@3.4.38(typescript@5.5.4))
+      '@unhead/dom': 1.10.0
+      '@unhead/schema': 1.10.0
+      '@unhead/ssr': 1.10.0
+      '@unhead/vue': 1.10.0(vue@3.4.38(typescript@5.5.4))
       vue: 3.4.38(typescript@5.5.4)
 
   '@vueuse/integrations@10.11.0(focus-trap@7.5.4)(fuse.js@6.6.2)(vue@3.4.38(typescript@5.5.4))':
@@ -12922,9 +12922,9 @@ snapshots:
       '@nuxt/schema': 3.12.4(rollup@3.29.4)
       '@nuxt/telemetry': 2.5.4(magicast@0.3.4)(rollup@3.29.4)
       '@nuxt/vite-builder': 3.12.4(@types/node@22.4.1)(eslint@9.9.0(jiti@1.21.6))(magicast@0.3.4)(optionator@0.9.4)(rollup@3.29.4)(terser@5.31.6)(typescript@5.5.4)(vue@3.4.38(typescript@5.5.4))
-      '@unhead/dom': 1.10.0-beta.6
-      '@unhead/ssr': 1.10.0-beta.6
-      '@unhead/vue': 1.10.0-beta.6(vue@3.4.38(typescript@5.5.4))
+      '@unhead/dom': 1.10.0
+      '@unhead/ssr': 1.10.0
+      '@unhead/vue': 1.10.0(vue@3.4.38(typescript@5.5.4))
       '@vue/shared': 3.4.35
       acorn: 8.12.1
       c12: 1.11.1(magicast@0.3.4)
@@ -13028,9 +13028,9 @@ snapshots:
       '@nuxt/schema': 3.12.4(rollup@4.20.0)
       '@nuxt/telemetry': 2.5.4(magicast@0.3.4)(rollup@4.20.0)
       '@nuxt/vite-builder': 3.12.4(@types/node@22.4.1)(eslint@9.9.0(jiti@1.21.6))(magicast@0.3.4)(optionator@0.9.4)(rollup@4.20.0)(terser@5.31.6)(typescript@5.5.4)(vue@3.4.38(typescript@5.5.4))
-      '@unhead/dom': 1.10.0-beta.6
-      '@unhead/ssr': 1.10.0-beta.6
-      '@unhead/vue': 1.10.0-beta.6(vue@3.4.38(typescript@5.5.4))
+      '@unhead/dom': 1.10.0
+      '@unhead/ssr': 1.10.0
+      '@unhead/vue': 1.10.0(vue@3.4.38(typescript@5.5.4))
       '@vue/shared': 3.4.35
       acorn: 8.12.1
       c12: 1.11.1(magicast@0.3.4)
@@ -13134,9 +13134,9 @@ snapshots:
       '@nuxt/schema': 3.12.4(rollup@4.21.0)
       '@nuxt/telemetry': 2.5.4(magicast@0.3.4)(rollup@4.21.0)
       '@nuxt/vite-builder': 3.12.4(@types/node@22.4.1)(eslint@9.9.0(jiti@1.21.6))(magicast@0.3.4)(optionator@0.9.4)(rollup@4.21.0)(terser@5.31.6)(typescript@5.5.4)(vue@3.4.38(typescript@5.5.4))
-      '@unhead/dom': 1.10.0-beta.6
-      '@unhead/ssr': 1.10.0-beta.6
-      '@unhead/vue': 1.10.0-beta.6(vue@3.4.38(typescript@5.5.4))
+      '@unhead/dom': 1.10.0
+      '@unhead/ssr': 1.10.0
+      '@unhead/vue': 1.10.0(vue@3.4.38(typescript@5.5.4))
       '@vue/shared': 3.4.35
       acorn: 8.12.1
       c12: 1.11.1(magicast@0.3.4)
@@ -14838,11 +14838,11 @@ snapshots:
       node-fetch-native: 1.6.4
       pathe: 1.1.2
 
-  unhead@1.10.0-beta.6:
+  unhead@1.10.0:
     dependencies:
-      '@unhead/dom': 1.10.0-beta.6
-      '@unhead/schema': 1.10.0-beta.6
-      '@unhead/shared': 1.10.0-beta.6
+      '@unhead/dom': 1.10.0
+      '@unhead/schema': 1.10.0
+      '@unhead/shared': 1.10.0
       hookable: 5.5.3
 
   unicode-emoji-modifier-base@1.0.0: {}
