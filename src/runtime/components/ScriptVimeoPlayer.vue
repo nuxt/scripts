@@ -176,22 +176,24 @@ defineExpose({
 })
 
 const width = computed(() => {
-  return props.vimeoOptions?.width || elVimeo.value.parentNode?.offsetWidth || 640
+  return props.vimeoOptions?.width || elVimeo.value?.parentNode?.offsetWidth || 640
 })
 
 const height = computed(() => {
-  return props.vimeoOptions?.height || elVimeo.value.parentNode?.offsetHeight || 480
+  return props.vimeoOptions?.height || elVimeo.value?.parentNode?.offsetHeight || 480
 })
 
 onMounted(() => {
   onLoaded(async ({ Vimeo }) => {
     const vimeoOptions = props.vimeoOptions || {}
-    if (!vimeoOptions.id) {
+    if (!vimeoOptions.id && props.id) {
       vimeoOptions.id = props.id
     }
-    if (!vimeoOptions.url) {
+    if (!vimeoOptions.url && props.url) {
       vimeoOptions.url = props.url
     }
+    vimeoOptions.width = width.value
+    vimeoOptions.height = height.value
     player = new Vimeo.Player(elVimeo.value, vimeoOptions)
     if (clickTriggered) {
       player!.play()
@@ -233,8 +235,8 @@ const rootAttrs = computed(() => {
     'style': {
       maxWidth: '100%',
       width: `${width.value}px`,
-      height: `'auto'`,
-      aspectRatio: `${width.value}/${height.value}`,
+      height: 'auto',
+      aspectRatio: `16/9`,
       position: 'relative',
       backgroundColor: 'black',
     },
@@ -262,7 +264,7 @@ onBeforeUnmount(() => player?.unload())
 
 <template>
   <div ref="rootEl" v-bind="rootAttrs">
-    <div v-show="ready" ref="elVimeo" class="vimeo-player" style="width: 100%; height: 100%; max-width: 100%;" />
+    <div v-show="ready" ref="elVimeo" class="vimeo-player" />
     <slot v-if="!ready" v-bind="payload" :placeholder="placeholder" name="placeholder">
       <img v-if="placeholder" v-bind="placeholderAttrs">
     </slot>
@@ -277,6 +279,9 @@ onBeforeUnmount(() => player?.unload())
 
 <style>
 .vimeo-player iframe {
+  height: auto;
+  aspect-ratio: 16/9;
+  width: 100%;
   max-width: 100% !important;
 }
 </style>
