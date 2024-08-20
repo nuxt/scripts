@@ -167,7 +167,7 @@ function viewDocs(docs: string) {
                 <div class="flex items-center justify-between w-full  gap-7">
                   <div class="flex items-center gap-7">
                     <div class="flex items-center gap-1">
-                      <div v-if="script.registry" class="flex items-center max-w-6 h-6" v-html="script.registry.logo" />
+                      <div v-if="script.registry" class="flex items-center max-w-6 h-6" v-html="script.registry.logo?.dark || script.registry.logo" />
                       <img v-else-if="!script.src.startsWith('/')" :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`" class="w-4 h-4 rounded-lg">
                       <div>
                         <a title="View script source" class="text-base hover:bg-gray-800/50 px-2 transition py-1 rounded-xl font-semibold flex gap-2  items-center" target="_blank" :href="script.src">
@@ -193,7 +193,7 @@ function viewDocs(docs: string) {
                       Status
                     </div>
                     <div class="capitalize">
-                      {{ script.status.value }}
+                      {{ script.$script.status.value }}
                     </div>
                   </div>
                   <div v-if="scriptSizes[script.src]">
