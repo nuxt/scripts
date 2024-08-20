@@ -46,9 +46,12 @@ const intercom = useScriptIntercom({
     trigger,
   },
 })
-if (props.trigger === 'click')
-  intercom.Intercom('show')
-const { $script } = intercom
+const { status, onLoaded } = intercom
+if (props.trigger === 'click') {
+  onLoaded((instance) => {
+    instance.Intercom('show')
+  })
+}
 
 defineExpose({
   intercom,
@@ -56,7 +59,7 @@ defineExpose({
 
 let observer: MutationObserver
 onMounted(() => {
-  watch($script.status, (status) => {
+  watch(status, (status) => {
     if (status === 'loading') {
       observer = new MutationObserver(() => {
         if (document.getElementById('intercom-frame')) {
@@ -86,8 +89,8 @@ onBeforeUnmount(() => {
     }"
   >
     <slot :ready="isReady" />
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'loading' || !isReady" name="loading" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'loading' || !isReady" name="loading" />
+    <slot v-else-if="status === 'error'" name="error" />
   </div>
 </template>

@@ -26,11 +26,11 @@ const containerEl = ref<HTMLDivElement | undefined>()
 const instance = useScript(`https://js.stripe.com/v3/pricing-table.js`, {
   trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
 })
-const { $script } = instance
+const { onLoaded, status } = instance
 
 const pricingTable = ref<HTMLElement | undefined>()
 onMounted(() => {
-  $script.then(() => {
+  onLoaded(() => {
     const StripePricingTable = window.customElements.get('stripe-pricing-table')!
     const stripePricingTable = new StripePricingTable()
     stripePricingTable.setAttribute('publishable-key', props.publishableKey)
@@ -45,7 +45,7 @@ onMounted(() => {
     rootEl.value!.appendChild(stripePricingTable)
     emit('ready', instance)
   })
-  watch($script.status, (status) => {
+  watch(status, (status) => {
     if (status === 'error') {
       emit('error')
     }
@@ -60,9 +60,9 @@ onBeforeUnmount(() => {
 <template>
   <div ref="rootEl">
     <div ref="containerEl" />
-    <slot v-if="$script.status.value === 'loading'" name="loading" />
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'loading'" name="loading" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'error'" name="error" />
     <slot />
   </div>
 </template>

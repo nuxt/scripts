@@ -10,10 +10,10 @@ links:
 
 [Plausible Analytics](https://plausible.io/) is a privacy-friendly analytics solution for Nuxt Apps, allowing you to track your website's traffic without compromising your users' privacy.
 
-### Nuxt Config Setup
-
 The simplest way to load Plausible Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptPlausibleAnalytics](#useScriptPlausibleAnalytics) composable.
+
+## Loading Globally
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
 disable the script in development.
@@ -46,13 +46,7 @@ export default defineNuxtConfig({
 })
 ```
 
-::
-
-#### With Environment Variables
-
-If you prefer to configure your id using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -64,7 +58,9 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         plausibleAnalytics: {
-          domain: '', // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN=<your-domin>
+          domain: ''
         },
       },
     },
@@ -72,20 +68,14 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN=<YOUR_DOMAIN>
-```
-
 ## useScriptPlausibleAnalytics
 
 The `useScriptPlausibleAnalytics` composable lets you have fine-grain control over when and how Plausible Analytics is loaded on your site.
 
 ```ts
-const { plausible, $script } = useScriptPlausibleAnalytics({
+const plausible = useScriptPlausibleAnalytics({
   domain: 'YOUR_DOMAIN'
 })
-// example
-plausible('event', { name: 'conversion' })
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
@@ -134,13 +124,13 @@ Using Plausible Analytics only in production while using `plausible` to send a c
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { plausible } = useScriptPlausibleAnalytics()
+const { proxy } = useScriptPlausibleAnalytics()
 
 // noop in development, ssr
 // just works in production, client
-plausible('event', { name: 'conversion-step' })
+proxy.plausible('event', { name: 'conversion-step' })
 function sendConversion() {
-  plausible('event', { name: 'conversion' })
+  proxy.plausible('event', { name: 'conversion' })
 }
 </script>
 
@@ -151,22 +141,6 @@ function sendConversion() {
     </button>
   </div>
 </template>
-```
-
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      plausibleAnalytics: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            domain: 'YOUR_DOMAIN',
-          },
-    },
-  },
-})
 ```
 
 ::

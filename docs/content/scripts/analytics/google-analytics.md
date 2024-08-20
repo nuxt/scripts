@@ -16,10 +16,10 @@ This composable is generated with [GoogleChromeLabs/third-party-capital](https:/
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
-### Nuxt Config Setup
-
 The simplest way to load Google Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptGoogleAnalytics](#useScriptGoogleAnalytics) composable.
+
+### Loading Globally
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
 disable the script in development.
@@ -52,13 +52,7 @@ export default defineNuxtConfig({
 })
 ```
 
-::
-
-#### With Environment Variables
-
-If you prefer to configure your id using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -70,7 +64,9 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         googleAnalytics: {
-          id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID=<your-id>
+          id: '',
         },
       },
     },
@@ -78,16 +74,14 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID=<YOUR_ID>
-```
+::
 
 ## useScriptGoogleAnalytics
 
 The `useScriptGoogleAnalytics` composable lets you have fine-grain control over when and how Google Analytics is loaded on your site.
 
 ```ts
-const { gtag, $script } = useScriptGoogleAnalytics({
+const googleAnalytics = useScriptGoogleAnalytics({
   id: 'YOUR_ID'
 })
 ```
@@ -146,13 +140,13 @@ Using Google Analytics only in production while using `gtag` to send a conversio
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { gtag } = useScriptGoogleAnalytics()
+const { proxy } = useScriptGoogleAnalytics()
 
 // noop in development, ssr
 // just works in production, client
-gtag('event', 'conversion-test')
+proxy.gtag('event', 'conversion-test')
 function sendConversion() {
-  gtag('event', 'conversion')
+  proxy.gtag('event', 'conversion')
 }
 </script>
 
@@ -163,22 +157,6 @@ function sendConversion() {
     </button>
   </div>
 </template>
-```
-
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      googleAnalytics: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            id: 'YOUR_ID',
-          },
-    },
-  },
-})
 ```
 
 ::

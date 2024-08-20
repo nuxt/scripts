@@ -44,7 +44,7 @@ const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
-const { $script } = useScriptYouTubePlayer({
+const { onLoaded, status } = useScriptYouTubePlayer({
   scriptOptions: {
     trigger,
   },
@@ -58,7 +58,7 @@ if (props.trigger === 'mousedown') {
   })
 }
 onMounted(() => {
-  $script.then(async (instance) => {
+  onLoaded(async (instance) => {
     const YouTube: typeof YT & { ready: (fn: () => void) => void } = await instance.YT
     await new Promise<void>((resolve) => {
       if (typeof YT.Player === 'undefined')
@@ -85,7 +85,7 @@ onMounted(() => {
       }])),
     })
   })
-  watch($script.status, (status) => {
+  watch(status, (status) => {
     if (status === 'error') {
       // @ts-expect-error untyped
       emits('error')
@@ -99,10 +99,10 @@ defineExpose({
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
-    'aria-busy': $script.status.value === 'loading',
-    'aria-label': $script.status.value === 'awaitingLoad'
+    'aria-busy': status.value === 'loading',
+    'aria-label': status.value === 'awaitingLoad'
       ? 'YouTube Player - Placeholder'
-      : $script.status.value === 'loading'
+      : status.value === 'loading'
         ? 'YouTube Player - Loading'
         : 'YouTube Player - Loaded',
     'aria-live': 'polite',
@@ -161,11 +161,11 @@ const placeholderAttrs = computed(() => {
     <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
       <img v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value === 'loading'" name="loading">
+    <slot v-if="status === 'loading'" name="loading">
       <ScriptLoadingIndicator />
     </slot>
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'error'" name="error" />
     <slot />
   </div>
 </template>

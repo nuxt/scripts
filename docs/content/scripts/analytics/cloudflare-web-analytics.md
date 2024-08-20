@@ -10,10 +10,10 @@ links:
 
 [Cloudflare Web Analytics](https://developers.cloudflare.com/analytics/web-analytics/) with Nuxt is a great privacy analytics solution. It offers free, privacy-centric analytics for your website. It doesn't gather personal data from your visitors, yet provides detailed insights into your web pages' performance as experienced by your visitors.
 
-## Nuxt Config Setup
-
 The simplest way to load Cloudflare Web Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptCloudflareWebAnalytics](#usescriptcloudflarewebanalytics) composable.
+
+## Loading Globally
 
 If you'd like to avoid loading the analytics in development, you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) in your Nuxt config.
 
@@ -45,13 +45,7 @@ export default defineNuxtConfig({
 })
 ```
 
-::
-
-#### With Environment Variables
-
-If you prefer to configure your token using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -63,7 +57,9 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         cloudflareWebAnalytics: {
-          token: '', // NUXT_PUBLIC_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<your-token>
+          token: '', 
         },
       },
     },
@@ -71,9 +67,7 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_CLOUDFLARE_WEB_ANALYTICS_TOKEN=<YOUR_TOKEN>
-```
+::
 
 ## useScriptCloudflareWebAnalytics
 
@@ -137,8 +131,8 @@ The Cloudflare Web Analytics composable injects a `window.__cfBeacon` object int
 to access this you can do by awaiting the script.
 
 ```ts
-const { $script } = useScriptCloudflareWebAnalytics()
-$script.then(({ cfBeacon }) => {
+const { onLoaded } = useScriptCloudflareWebAnalytics()
+onLoaded(({ cfBeacon }) => {
   console.log(cfBeacon)
 })
 ```

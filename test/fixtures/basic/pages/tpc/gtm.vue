@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useScriptGoogleTagManager } from '#imports'
 
-const { dataLayer, $script } = useScriptGoogleTagManager({
+const { dataLayer, status } = useScriptGoogleTagManager({
   id: 'GTM-MNJD4B',
 })
 
@@ -17,7 +17,7 @@ function pushEvent() {
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ status }}
       </div>
     </ClientOnly>
 

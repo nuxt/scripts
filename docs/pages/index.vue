@@ -53,22 +53,18 @@ onMounted(() => {
   })
 })
 
-interface JSConfettiApi {
-  // JSConfetti is a class
-  JSConfetti: {
-    new(): {
-      addConfetti: (options?: { emojis: string[] }) => void
-    }
-  }
-}
 declare global {
   interface Window {
-    JSConfetti: { new (): JSConfettiApi }
+    JSConfetti: {
+      new (): {
+        addConfetti: (options?: { emojis: string[] }) => void
+      }
+    }
   }
 }
 
 const confettiEl = ref()
-const { $script } = useScript<JSConfettiApi>({
+const { onLoaded } = useScript({
   key: 'confetti',
   src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
 }, {
@@ -83,7 +79,7 @@ const { $script } = useScript<JSConfettiApi>({
 onMounted(() => {
   if (confettiEl.value) {
     useEventListener(confettiEl.value, 'mouseenter', () => {
-      $script.then(({ JSConfetti }) => {
+      onLoaded(({ JSConfetti }) => {
         new JSConfetti().addConfetti({ emojis: ['🎉', '🎊'] })
       })
     })

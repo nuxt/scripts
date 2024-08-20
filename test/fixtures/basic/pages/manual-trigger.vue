@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useScript } from '#imports'
 
-const { myScript, $script } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
+const { myScript, load } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
   trigger: 'manual',
   use() {
     return {
@@ -14,7 +14,7 @@ const { myScript, $script } = useScript<{ myScript: (arg: string) => void }>('/m
 myScript('test')
 
 function triggerLoad() {
-  $script.load()
+  load()
 }
 </script>
 
