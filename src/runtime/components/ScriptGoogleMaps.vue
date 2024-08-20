@@ -298,7 +298,7 @@ onMounted(() => {
     immediate: true,
     deep: true,
   })
-  onLoaded(async instance => {
+  onLoaded(async (instance) => {
     mapsApi.value = await instance.maps as any as typeof google.maps // some weird type issue here
     // may need to transform the center before we can init the map
     const center = options.value.center as string
