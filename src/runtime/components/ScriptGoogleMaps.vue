@@ -140,7 +140,7 @@ async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMark
   if (mapMarkers.value.has(key))
     return mapMarkers.value.get(key)
   // eslint-disable-next-line no-async-promise-executor
-  const p = new Promise<AdvancedMarkerElement>(async (resolve) => {
+  const p = new Promise<google.maps.marker.AdvancedMarkerElement>(async (resolve) => {
     const lib = await importLibrary('marker')
     const options = typeof _options === 'string'
       ? {
@@ -288,7 +288,6 @@ onMounted(() => {
     if (center) {
       if (isLocationQuery(center) && ready.value) {
         // need to resolve center from query
-        // @ts-expect-error broken
         center = await resolveQueryToLatLang(center as string)
       }
       map.value!.setCenter(center as google.maps.LatLng)
@@ -299,7 +298,6 @@ onMounted(() => {
           mapMarkers.value.get(prevCenterHash)?.setMap(null)
           mapMarkers.value.delete(prevCenterHash)
         }
-        // @ts-expect-error untyped
         createAdvancedMapMarker({ position: center })
       }
     }
