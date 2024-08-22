@@ -240,7 +240,7 @@ onMounted(() => {
   watch(options, () => {
     map.value?.setOptions(options.value)
   })
-  watch([() => props.markers, map], () => {
+  watch([() => props.markers, map], async () => {
     if (!map.value) {
       return
     }

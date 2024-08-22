@@ -38,7 +38,6 @@ function removeMarkers() {
         :map-options="mapOptions"
         :markers="markers"
         above-the-fold
-        @init="setupGoogleMaps"
       />
     </div>
     <div>
