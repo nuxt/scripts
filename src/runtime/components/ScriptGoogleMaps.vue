@@ -129,31 +129,36 @@ const options = computed(() => {
 const ready = ref(false)
 
 const map: Ref<google.maps.Map | undefined> = ref()
-const mapMarkers: Ref<Map<string, google.maps.marker.AdvancedMarkerElement>> = ref(new Map())
+const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement>>> = ref(new Map())
 
 function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
 }
 
 async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
-  const lib = await importLibrary('marker')
-  const options = typeof _options === 'string'
-    ? {
-        position: {
-          lat: Number.parseFloat(_options.split(',')[0] || '0'),
-          lng: Number.parseFloat(_options.split(',')[1] || '0'),
-        },
-      }
-    : _options
-  const mapMarkerOptions = defu(toRaw(options), {
-    map: toRaw(map.value!),
-    // @ts-expect-error unified API for maps and markers
-    position: options.location,
+  const key = hash(_options)
+  if (mapMarkers.value.has(key))
+    return mapMarkers.value.get(key)
+  // eslint-disable-next-line no-async-promise-executor
+  const p = new Promise<AdvancedMarkerElement>(async (resolve) => {
+    const lib = await importLibrary('marker')
+    const options = typeof _options === 'string'
+      ? {
+          position: {
+            lat: Number.parseFloat(_options.split(',')[0] || '0'),
+            lng: Number.parseFloat(_options.split(',')[1] || '0'),
+          },
+        }
+      : _options
+    const mapMarkerOptions = defu(toRaw(options), {
+      map: toRaw(map.value!),
+      // @ts-expect-error unified API for maps and markers
+      position: options.location,
+    })
+    resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
   })
-  const marker = new lib.AdvancedMarkerElement(mapMarkerOptions)
-  // create new marker
-  mapMarkers.value.set(hash(_options), marker)
-  return marker
+  mapMarkers.value.set(key, p)
+  return p
 }
 
 const queryToLatLngCache = new Map<string, google.maps.LatLng>()
@@ -255,14 +260,18 @@ onMounted(() => {
     const toAdd = new Set([...nextMap.keys()].filter(k => !mapMarkers.value.has(k)))
     // do a diff of next and prev
     const centerHash = hash({ position: options.value.center })
-    toRemove.forEach((key) => {
+    for (const key of toRemove) {
       if (key === centerHash) {
-        return
+        continue
       }
-      // @ts-expect-error broken type
-      mapMarkers.value.get(key)?.setMap(null)
-      mapMarkers.value.delete(key)
-    })
+      const marker = await mapMarkers.value.get(key)
+      if (marker) {
+        // @ts-expect-error broken type
+        marker.setMap(null)
+        // make sure it gets removed from map
+        mapMarkers.value.delete(key)
+      }
+    }
     for (const k of toAdd) {
       // @ts-expect-error broken
       createAdvancedMapMarker(nextMap.get(k))
@@ -271,7 +280,7 @@ onMounted(() => {
     immediate: true,
     deep: true,
   })
-  watch([() => props.center, ready], async (next, prev) => {
+  watch([() => options.value.center, ready, map], async (next, prev) => {
     if (!map.value) {
       return
     }
@@ -296,7 +305,6 @@ onMounted(() => {
     }
   }, {
     immediate: true,
-    deep: true,
   })
   onLoaded(async (instance) => {
     mapsApi.value = await instance.maps as any as typeof google.maps // some weird type issue here
@@ -398,8 +406,14 @@ const rootAttrs = computed(() => {
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
 
-onBeforeUnmount(() => {
-  mapMarkers.value.forEach(marker => marker.remove())
+onBeforeUnmount(async () => {
+  await Promise.all([...mapMarkers.value.entries()].map(async (_marker) => {
+    const marker = await _marker
+    if (marker) {
+      // @ts-expect-error broken type
+      marker.setMap(null)
+    }
+  }))
   mapMarkers.value.clear()
   map.value?.unbindAll()
   map.value = undefined
