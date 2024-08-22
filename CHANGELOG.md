@@ -1,6 +1,32 @@
 # Changelog
 
 
+## v0.7.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.0...v0.7.1)
+
+### 🩹 Fixes
+
+- Broken type generation ([8282d6e](https://github.com/nuxt/scripts/commit/8282d6e))
+- **GoogleMaps:** Ensure center marker is place when using mapOptions ([45e6f24](https://github.com/nuxt/scripts/commit/45e6f24))
+- **GoogleMaps:** Avoid losing marker reference ([406968a](https://github.com/nuxt/scripts/commit/406968a))
+
+### 📖 Documentation
+
+- Fix broken link ([#208](https://github.com/nuxt/scripts/pull/208))
+- Fix broken link ([#211](https://github.com/nuxt/scripts/pull/211))
+
+### 🏡 Chore
+
+- Bump deps ([9a2b44a](https://github.com/nuxt/scripts/commit/9a2b44a))
+- Type issues ([65c3ea4](https://github.com/nuxt/scripts/commit/65c3ea4))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Alfarish Fizikri <alfarishfizikri@gmail.com>
+- Daniel Roe <daniel@roe.dev>
+
 ## v0.7.0
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.8...v0.7.0)
