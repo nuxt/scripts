@@ -68,7 +68,7 @@ export default defineNuxtConfig({
 })
 ```
 
-:: 
+::
 
 ## useScriptPlausibleAnalytics
 
