@@ -140,8 +140,8 @@ async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMark
   const options = typeof _options === 'string'
     ? {
         position: {
-          lat: Number.parseFloat(_options.split(',')[0]),
-          lng: Number.parseFloat(_options.split(',')[1]),
+          lat: Number.parseFloat(_options.split(',')[0] || '0'),
+          lng: Number.parseFloat(_options.split(',')[1] || '0'),
         },
       }
     : _options
