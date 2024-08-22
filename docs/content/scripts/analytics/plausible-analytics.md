@@ -68,6 +68,8 @@ export default defineNuxtConfig({
 })
 ```
 
+::
+
 ## useScriptPlausibleAnalytics
 
 The `useScriptPlausibleAnalytics` composable lets you have fine-grain control over when and how Plausible Analytics is loaded on your site.
