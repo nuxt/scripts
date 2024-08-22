@@ -370,7 +370,7 @@ const contributors = useRuntimeConfig().public.contributors
             Cookie consent that's good enough to eat
           </h2>
           <p class="text-gray-500 dark:text-gray-400 mb-3">
-            Nuxt Scripts aims to improve end-user privacy by providing a <NuxtLink to="/docs/guide/consent" class="underline">
+            Nuxt Scripts aims to improve end-user privacy by providing a <NuxtLink to="/docs/guides/consent" class="underline">
               simple API for managing cookie consent
             </NuxtLink>.
           </p>
