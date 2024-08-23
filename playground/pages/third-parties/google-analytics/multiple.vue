@@ -5,13 +5,13 @@ useHead({
   title: 'Google Analytics',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { gtag: gtag1, $script: $script1 } = useScriptGoogleAnalytics({
+// composables return the underlying api as a proxy object and the script state
+const { gtag: gtag1, status: status1 } = useScriptGoogleAnalytics({
   key: 'gtag1',
   id: 'G-TR58L0EF8P',
 })
 
-const { gtag: gtag2, $script: $script2 } = useScriptGoogleAnalytics({
+const { gtag: gtag2, status: status2 } = useScriptGoogleAnalytics({
   key: 'gtag2',
   id: 'G-1234567890',
 })
@@ -32,12 +32,12 @@ function triggerConversion() {
   <div>
     <ClientOnly>
       <div>
-        1 status: {{ $script1.status.value }}
+        1 status: {{ status1 }}
       </div>
     </ClientOnly>
     <ClientOnly>
       <div>
-        2 status: {{ $script2.status.value }}
+        2 status: {{ status2 }}
       </div>
     </ClientOnly>
     <button @click="triggerConversion">

@@ -5,8 +5,8 @@ useHead({
   title: 'Clarity',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { $script } = useScriptClarity({
+// composables return the underlying api as a proxy object and the script state
+const { status } = useScriptClarity({
   id: 'mqk2m9dr2v',
 })
 </script>
@@ -15,7 +15,7 @@ const { $script } = useScriptClarity({
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>

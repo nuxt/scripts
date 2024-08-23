@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useScriptGoogleTagManager } from '#imports'
 
-const { $script } = useScriptGoogleTagManager({
+const { status } = useScriptGoogleTagManager({
   id: 'GTM-5ZQZJZ',
   scriptOptions: {
     trigger: 'onNuxtReady', // this is the default behavior
@@ -13,7 +13,7 @@ const { $script } = useScriptGoogleTagManager({
 <template>
   <div>
     <div>
-      {{ $script.status.value }}
+      {{ status }}
     </div>
   </div>
 </template>
