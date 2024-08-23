@@ -5,8 +5,8 @@ useHead({
   title: 'Matomo Analytics',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { $script, _paq } = useScriptMatomoAnalytics({
+// composables return the underlying api as a proxy object and the script state
+const { status, _paq } = useScriptMatomoAnalytics({
   matomoUrl: 'https://nuxt-scripts-demo.matomo.cloud',
   siteId: '1',
 })
@@ -18,7 +18,7 @@ _paq.push(['trackPageView'])
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>

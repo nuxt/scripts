@@ -5,8 +5,8 @@ useHead({
   title: 'Google Analytics',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { gtag, $script } = useScriptGoogleAnalytics({
+// composables return the underlying api as a proxy object and the script state
+const { gtag, status } = useScriptGoogleAnalytics({
   id: 'G-TR58L0EF8P',
 }) // id set via nuxt scripts module config
 gtag('event', 'page_view', {
@@ -24,7 +24,7 @@ function triggerConversion() {
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ status }}
       </div>
     </ClientOnly>
     <button @click="triggerConversion">

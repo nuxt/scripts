@@ -5,8 +5,8 @@ useHead({
   title: 'Meta Pixel',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { $script, fbq } = useScriptMetaPixel({ id: '3925006' })
+// composables return the underlying api as a proxy object and the script state
+const { status, fbq } = useScriptMetaPixel({ id: '3925006' })
 // this will be triggered once the script is ready async
 function triggerEvent() {
   fbq('track', 'ViewContent', {
@@ -20,7 +20,7 @@ function triggerEvent() {
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ status }}
       </div>
       <button @click="triggerEvent">
         Trigger Event

@@ -5,8 +5,8 @@ useHead({
   title: 'Google Analytics',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { dataLayer, $script } = useScriptGoogleTagManager({
+// composables return the underlying api as a proxy object and the script state
+const { dataLayer, then, status } = useScriptGoogleTagManager({
   id: 'GTM-MNJD4B',
 }) // id is set via runtime config
 dataLayer.push({
@@ -15,7 +15,7 @@ dataLayer.push({
   page_location: 'https://harlanzw.com/third-parties/google-analytics',
   page_path: '/third-parties/google-analytics',
 })
-$script.then(({ google_tag_manager, dataLayer }) => {
+then(({ google_tag_manager, dataLayer }) => {
   // eslint-disable-next-line no-console
   console.log('google_tag_manager is ready', google_tag_manager)
   // eslint-disable-next-line no-console
@@ -39,7 +39,7 @@ $script.then(({ google_tag_manager, dataLayer }) => {
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>
