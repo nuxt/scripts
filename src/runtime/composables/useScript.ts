@@ -31,8 +31,11 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   const nuxtApp = useNuxtApp()
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
-  // return early
+  // return early and update trigger if trigger is set
   if ((nuxtApp.$scripts as Record<string, any>)[id]) {
+    if (options.trigger && options.trigger !== onNuxtReady) {
+      (nuxtApp.$scripts as Record<string, any>)[id].updateTrigger(options.trigger)
+    }
     return (nuxtApp.$scripts as Record<string, any>)[id]
   }
   if (import.meta.client) {

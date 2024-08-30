@@ -1,0 +1,113 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 18a0d47e420a17c787c01fdb0967f7e78f372f17..e776d5269922c01629c28ce75dafb3157a63aeff 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -583,6 +583,7 @@ function useScript(_input, _options) {
+       }
+     });
+   });
++  const triggerAbortController = new AbortController();
+   const script = Object.assign(loadPromise, {
+     instance: !head.ssr && options?.use?.() || null,
+     proxy: null,
+@@ -622,6 +623,10 @@ function useScript(_input, _options) {
+     onError(cb) {
+       return _registerCb("error", cb);
+     },
++    updateTrigger(trigger2) {
++      triggerAbortController.abort();
++      handleTrigger(trigger2, triggerAbortController, script, head);
++    },
+     _cbs
+   });
+   loadPromise.then((api) => {
+@@ -635,12 +640,7 @@ function useScript(_input, _options) {
+     _cbs.error = null;
+   });
+   const hookCtx = { script };
+-  if (trigger === "client" && !head.ssr || trigger === "server")
+-    script.load();
+-  else if (trigger instanceof Promise)
+-    trigger.then(script.load);
+-  else if (typeof trigger === "function")
+-    trigger(async () => script.load());
++  handleTrigger(trigger, triggerAbortController, script, head);
+   script.$script = script;
+   const proxyChain = (instance, accessor, accessors) => {
+     return new Proxy((!accessor ? instance : instance?.[accessor]) || scriptProxy, {
+@@ -689,6 +689,19 @@ function useScript(_input, _options) {
+   head._scripts = Object.assign(head._scripts || {}, { [id]: res });
+   return res;
+ }
++function handleTrigger(trigger, abortController, script, head) {
++  if (trigger === "client" && !head.ssr || trigger === "server") {
++    script.load();
++  } else if (trigger instanceof Promise) {
++    new Promise((resolve, reject) => {
++      trigger.then(script.load).then(resolve);
++      abortController.signal.addEventListener("abort", reject);
++    }).catch(() => {
++    });
++  } else if (typeof trigger === "function") {
++    trigger(async () => script.load());
++  }
++}
+ 
+ exports.composableNames = shared.composableNames;
+ exports.CapoPlugin = CapoPlugin;
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 86cba0b0b708b6f38aa4616049ce821736ce967c..94593a3d9f92aee1804555ef178862fe1957ad2c 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -582,6 +582,7 @@ function useScript(_input, _options) {
+       }
+     });
+   });
++  const triggerAbortController = new AbortController();
+   const script = Object.assign(loadPromise, {
+     instance: !head.ssr && options?.use?.() || null,
+     proxy: null,
+@@ -621,6 +622,10 @@ function useScript(_input, _options) {
+     onError(cb) {
+       return _registerCb("error", cb);
+     },
++    updateTrigger(trigger2) {
++      triggerAbortController.abort();
++      handleTrigger(trigger2, triggerAbortController, script, head);
++    },
+     _cbs
+   });
+   loadPromise.then((api) => {
+@@ -634,12 +639,7 @@ function useScript(_input, _options) {
+     _cbs.error = null;
+   });
+   const hookCtx = { script };
+-  if (trigger === "client" && !head.ssr || trigger === "server")
+-    script.load();
+-  else if (trigger instanceof Promise)
+-    trigger.then(script.load);
+-  else if (typeof trigger === "function")
+-    trigger(async () => script.load());
++  handleTrigger(trigger, triggerAbortController, script, head);
+   script.$script = script;
+   const proxyChain = (instance, accessor, accessors) => {
+     return new Proxy((!accessor ? instance : instance?.[accessor]) || scriptProxy, {
+@@ -688,5 +688,18 @@ function useScript(_input, _options) {
+   head._scripts = Object.assign(head._scripts || {}, { [id]: res });
+   return res;
+ }
++function handleTrigger(trigger, abortController, script, head) {
++  if (trigger === "client" && !head.ssr || trigger === "server") {
++    script.load();
++  } else if (trigger instanceof Promise) {
++    new Promise((resolve, reject) => {
++      trigger.then(script.load).then(resolve);
++      abortController.signal.addEventListener("abort", reject);
++    }).catch(() => {
++    });
++  } else if (typeof trigger === "function") {
++    trigger(async () => script.load());
++  }
++}
+ 
+ export { CapoPlugin, HashHydrationPlugin, createHead, createHeadCore, createServerHead, getActiveHead, resolveScriptKey, unheadComposablesImports, useHead, useHeadSafe, useScript, useSeoMeta, useServerHead, useServerHeadSafe, useServerSeoMeta };
