@@ -119,7 +119,7 @@ const rootAttrs = computed(() => {
   }) as HTMLAttributes
 })
 
-const placeholder = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
+const placeholder = computed(() => `https://i.ytimg.com/vi/${props.videoId}/hqdefault.jpg`)
 
 if (import.meta.server) {
   // dns-prefetch https://i.vimeocdn.com
