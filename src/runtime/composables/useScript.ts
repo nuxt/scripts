@@ -31,13 +31,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   const nuxtApp = useNuxtApp()
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
-  // return early
-  if ((nuxtApp.$scripts as Record<string, any>)[id]) {
-    return (nuxtApp.$scripts as Record<string, any>)[id]
-  }
+  const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
   if (import.meta.client) {
     // only validate if we're initializing the script
-    if (!nuxtApp._scripts?.[id]) {
+    if (!exists) {
       performance?.mark?.('mark_feature_usage', {
         detail: {
           feature: options.performanceMarkFeature ?? `nuxt-scripts:${id}`,
@@ -50,6 +47,9 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
+    if (exists) {
+      return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+    }
     // sync scripts to nuxtApp with debug details
     const payload: NuxtDevToolsScriptInstance = {
       ...options.devtools,
