@@ -83,6 +83,23 @@ const matomoAnalytics = useScriptMatomoAnalytics({
 })
 ```
 
+or custom matomo whitelabel for example [Cookie3](https://docs.cookie3.co/cookie3-docs/integrations/website-integration/cookie3-script/nuxt): 
+
+```ts
+const cookie3Options = {
+  siteId: YOUR_SITE_ID,
+  additionalTracking: true,
+  cookielessEnabled: true,
+}
+
+const matomoAnalytics = useScriptMatomoAnalytics({
+  setTrackerUrl: 'https://c.staging.cookie3.co/lake',
+  scriptInput: {
+    src: 'https://cdn.cookie3.co/scripts/analytics/latest/cookie3.analytics.min.js',
+  },
+})
+```
+
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
 ### MatomoAnalyticsApi
@@ -100,10 +117,12 @@ You must provide the options when setting up the script for the first time.
 ```ts
 // matomoUrl and site are required
 export const MatomoAnalyticsOptions = object({
-  matomoUrl: string(), 
+  matomoUrl: string(),
   siteId: string(),
+  trackerUrl: optional(string()),
   trackPageView: optional(boolean()),
   enableLinkTracking: optional(boolean()),
+  disableCookies: optional(boolean()),
 })
 ```
 

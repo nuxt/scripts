@@ -4,10 +4,12 @@ import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const MatomoAnalyticsOptions = object({
-  matomoUrl: string(), // site is required
-  siteId: string(),
+  matomoUrl: optional(string()),
+  siteId: optional(string()),
+  trackerUrl: optional(string()),
   trackPageView: optional(boolean()),
   enableLinkTracking: optional(boolean()),
+  disableCookies: optional(boolean()),
 })
 
 export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false, false>
@@ -48,8 +50,18 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
           if (options?.enableLinkTracking) {
             _paq.push(['enableLinkTracking'])
           }
-          _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(options?.matomoUrl))])
-          _paq.push(['setSiteId', options?.siteId || '1'])
+
+          if (options?.disableCookies) {
+            _paq.push(['disableCookies'])
+          }
+
+          if(options?.trackerUrl || options?.matomoUrl) {
+            _paq.push(['setTrackerUrl', withHttps(options.trackerUrl) ?? withBase(`/matomo.php`, withHttps(options.matomoUrl))])
+          }
+
+          if(options?.siteId) {
+            _paq.push(['setSiteId', options?.siteId])
+          }
         },
   }), _options)
 }
