@@ -100,7 +100,7 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 
 ### Usage
 
-To interact with the Google Analytics API, it's recommended to use the [proxy](/docs/guides/key-concepts#understanding-proxied-functions).
+To interact with the Google Analytics API, it's recommended to use script [proxy](/docs/guides/key-concepts#understanding-proxied-functions).
 
 ```ts
 const { proxy } = useScriptGoogleAnalytics()
