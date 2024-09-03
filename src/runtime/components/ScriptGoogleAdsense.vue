@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
-import { callOnce, onMounted, ref, watch } from '#imports'
+import { callOnce, computed, onMounted, ref, watch } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -49,6 +49,12 @@ onMounted(() => {
     }
   })
 })
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
+})
 </script>
 
 <template>
@@ -60,7 +66,7 @@ onMounted(() => {
     :data-ad-slot="dataAdSlot"
     :data-ad-format="dataAdFormat"
     :data-full-width-responsive="dataFullWidthResponsive"
-    v-bind="{ ...$attrs }"
+    v-bind="rootAttrs"
   >
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'loading'" name="loading" />

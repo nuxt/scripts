@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptCrisp } from '../registry/crisp'
-import { ref, onMounted, onBeforeUnmount, watch } from '#imports'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -72,12 +72,19 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect()
 })
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
+})
 </script>
 
 <template>
   <div
     ref="rootEl"
     :style="{ display: isReady ? 'none' : 'block' }"
+    v-bind="rootAttrs"
   >
     <slot :ready="isReady" />
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />

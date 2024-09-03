@@ -237,6 +237,33 @@ onMounted(async () => {
 </template>
 ```
 
+#### Loading immediately
+
+If you want to load the Google Maps immediately, you can use the `trigger` prop.
+
+```vue
+<template>
+<ScriptGoogleMaps trigger="immediate">
+</ScriptGoogleMaps>
+</template>
+```
+
+#### Map Styling
+
+You can style the map by using the `mapOptions.styles` prop. You can find pre-made styles on [Snazzy Maps](https://snazzymaps.com/).
+
+This will automatically work for both the static map placeholder and the interactive map.
+
+```vue
+<script setup lang="ts">
+const mapOptions = {
+  styles: [{ elementType: 'labels', stylers: [{ visibility: 'off' }, { color: '#f49f53' }] }, { featureType: 'landscape', stylers: [{ color: '#f9ddc5' }, { lightness: -7 }] }, { featureType: 'road', stylers: [{ color: '#813033' }, { lightness: 43 }] }, { featureType: 'poi.business', stylers: [{ color: '#645c20' }, { lightness: 38 }] }, { featureType: 'water', stylers: [{ color: '#1994bf' }, { saturation: -69 }, { gamma: 0.99 }, { lightness: 43 }] }, { featureType: 'road.local', elementType: 'geometry.fill', stylers: [{ color: '#f19f53' }, { weight: 1.3 }, { visibility: 'on' }, { lightness: 16 }] }, { featureType: 'poi.business' }, { featureType: 'poi.park', stylers: [{ color: '#645c20' }, { lightness: 39 }] }, { featureType: 'poi.school', stylers: [{ color: '#a95521' }, { lightness: 35 }] }, {}, { featureType: 'poi.medical', elementType: 'geometry.fill', stylers: [{ color: '#813033' }, { lightness: 38 }, { visibility: 'off' }] },
+}
+</script>
+<template>
+<ScriptGoogleMaps :mapOptions="mapOptions" />
+</template>
+```
 
 ### Component API
 
@@ -325,7 +352,9 @@ override this component. Make sure you provide a loading indicator.
 
 **placeholder**
 
-The slot is used to display a placeholder image before the Google Maps is loaded. By default, this will show the Google Maps Static API image for the map. You can display it however you like.
+The slot is used to display a placeholder image before the Google Maps is loaded. By default, this will show the Google Maps Static API image for the map. 
+
+By providing your own placeholder slot you will disable the default placeholder image from being used and will not be charged for the Static Maps API usage.
 
 ```vue
 <template>

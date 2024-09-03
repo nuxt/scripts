@@ -89,7 +89,6 @@ const props = withDefaults(defineProps<{
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
   width: 640,
   height: 400,
-  centerMarker: true,
 })
 
 const emits = defineEmits<{
@@ -112,10 +111,11 @@ const mapEl = ref<HTMLElement>()
 
 const centerOverride = ref()
 
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const { load, status, onLoaded } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
-    trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
+    trigger,
   },
 })
 
@@ -123,7 +123,7 @@ const options = computed(() => {
   return defu({ center: centerOverride.value }, props.mapOptions, {
     center: props.center,
     zoom: 15,
-    mapId: 'map',
+    mapId: props.mapOptions?.styles ? undefined : 'map',
   })
 })
 const ready = ref(false)
@@ -291,7 +291,11 @@ onMounted(() => {
         center = await resolveQueryToLatLang(center as string)
       }
       map.value!.setCenter(center as google.maps.LatLng)
-      if (props.centerMarker) {
+      if (typeof props.centerMarker === 'undefined' || props.centerMarker) {
+        if (options.value.mapId) {
+          // not allowed to use advanced markers with styles
+          return
+        }
         if (prev[0]) {
           const prevCenterHash = hash({ position: prev[0] })
           // @ts-expect-error broken upstream type
@@ -334,6 +338,22 @@ if (import.meta.server) {
   })
 }
 
+function transformMapStyles(styles: google.maps.MapTypeStyle[]) {
+  return styles.map((style) => {
+    const feature = style.featureType ? `feature:${style.featureType}` : ''
+    const element = style.elementType ? `element:${style.elementType}` : ''
+    const rules = (style.stylers || []).map((styler) => {
+      return Object.entries(styler).map(([key, value]) => {
+        if (key === 'color' && typeof value === 'string') {
+          value = value.replace('#', '0x')
+        }
+        return `${key}:${value}`
+      }).join('|')
+    }).filter(Boolean).join('|')
+    return [feature, element, rules].filter(Boolean).join('|')
+  }).filter(Boolean)
+}
+
 const placeholder = computed(() => {
   let center = options.value.center
   if (center && typeof center === 'object') {
@@ -348,6 +368,7 @@ const placeholder = computed(() => {
     size: `${props.width}x${props.height}`,
     key: apiKey,
     scale: 2, // we assume a high DPI to avoid hydration issues
+    style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
     markers: [
       ...(props.markers || []),
       center,
@@ -399,6 +420,7 @@ const rootAttrs = computed(() => {
       height: `'auto'`,
       aspectRatio: `${props.width}/${props.height}`,
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 

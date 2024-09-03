@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { withQuery } from 'ufo'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { onBeforeUnmount, onMounted, ref } from '#imports'
+import { computed, onBeforeUnmount, onMounted, ref } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = defineProps<{
@@ -46,12 +46,19 @@ function loadCarbon() {
   carbonadsEl.value.appendChild(script)
 }
 
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: carbonadsEl })
 onMounted(() => {
-  if (!props.trigger) {
+  if (trigger === 'onNuxtReady') {
     loadCarbon()
   }
   else {
-    useScriptTriggerElement({ trigger: props.trigger, el: carbonadsEl })
+    trigger.then(loadCarbon)
+  }
+})
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }
 })
 
@@ -63,7 +70,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="carbonadsEl">
+  <div ref="carbonadsEl" v-bind="rootAttrs">
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'loading'" name="loading" />
     <slot v-else-if="status === 'error'" name="error" />

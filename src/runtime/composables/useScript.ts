@@ -3,7 +3,7 @@ import type { UseScriptOptions, UseFunctionType, AsAsyncFunctionValues } from '@
 import { resolveScriptKey } from 'unhead'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
-import { injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
+import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 function useNuxtScriptRuntimeConfig() {
@@ -25,11 +25,28 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
-
-  if (options.trigger === 'onNuxtReady')
-    options.trigger = onNuxtReady
-  const nuxtApp = useNuxtApp()
+  // browser hint optimizations
+  const rel = options.trigger === 'onNuxtReady' ? 'preload' : 'preconnect'
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
+  if (options.trigger !== 'server' && (rel === 'preload' || !input.src.startsWith('/'))) {
+    useHead({
+      link: [
+        {
+          rel,
+          as: rel === 'preload' ? 'script' : undefined,
+          href: input.src,
+          crossorigin: input.src.startsWith('/') ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
+          key: `nuxt-script-${id}`,
+          tagPriority: rel === 'preload' ? 'high' : 0,
+          fetchpriority: 'low',
+        },
+      ],
+    })
+  }
+  if (options.trigger === 'onNuxtReady') {
+    options.trigger = onNuxtReady
+  }
+  const nuxtApp = useNuxtApp()
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
   if (import.meta.client) {

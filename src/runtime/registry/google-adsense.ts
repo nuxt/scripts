@@ -1,6 +1,5 @@
-import { optional } from 'valibot'
 import { useRegistryScript } from '../utils'
-import { object, string } from '#nuxt-scripts-validator'
+import { object, string, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
 
@@ -40,21 +39,17 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
       use() {
         return { adsbygoogle: window.adsbygoogle }
       },
-      // allow dataLayer to be accessed on the server
-      stub: import.meta.client
-        ? undefined
-        : ({ fn }) => {
-            return fn === 'adsbygoogle' ? [] : undefined
-          },
       beforeInit() {
-        useHead({
-          meta: [
-            {
-              name: 'google-adsense-account',
-              content: options?.client,
-            },
-          ],
-        })
+        if (options?.client) {
+          useHead({
+            meta: [
+              {
+                name: 'google-adsense-account',
+                content: options?.client,
+              },
+            ],
+          })
+        }
       },
     },
   }), _options)
