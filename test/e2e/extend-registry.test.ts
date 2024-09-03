@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
+import { createPage, setup, url } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
 
 const { resolve } = createResolver(import.meta.url)
@@ -13,7 +13,7 @@ await setup({
 
 describe('basic', () => {
   it('extended registry script loads and executes function', async () => {
-    const page = await createPage('/')
+    const page = await createPage()
     const logs: { text: string, location: string }[] = []
     // visit and collect all logs, we need to do a snapshot on them
     page.addListener('console', (msg) => {
@@ -22,8 +22,9 @@ describe('basic', () => {
         location: `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`,
       })
     })
+    await page.goto(url('/'))
     await page.waitForTimeout(5000)
-    expect(logs).toMatchInlineSnapshot(`
+    expect(logs.filter(log => !log.location.startsWith('/_nuxt'))).toMatchInlineSnapshot(`
       [
         {
           "location": "/myScript.js:1",
