@@ -54,7 +54,7 @@ const links = computed(() => [toc?.bottom?.edit && {
         <template v-if="toc?.bottom" #bottom>
           <div class="hidden lg:block space-y-6" :class="{ '!mt-6': page.body?.toc?.links?.length }">
             <UDivider v-if="page.body?.toc?.links?.length" type="dashed" />
-
+            <Ads class="mb-5" />
             <UPageLinks :title="toc.bottom.title" :links="links" />
           </div>
         </template>
