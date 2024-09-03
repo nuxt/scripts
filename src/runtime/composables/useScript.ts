@@ -35,7 +35,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
           rel,
           as: rel === 'preload' ? 'script' : undefined,
           href: input.src,
-          crossorigin: typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous',
+          crossorigin: input.src.startsWith('/') ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
           key: `nuxt-script-${id}`,
           tagPriority: rel === 'preload' ? 'high' : 0,
           fetchpriority: 'low',
