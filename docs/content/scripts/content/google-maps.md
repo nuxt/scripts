@@ -237,6 +237,16 @@ onMounted(async () => {
 </template>
 ```
 
+#### Loading immediately
+
+If you want to load the Google Maps immediately, you can use the `trigger` prop.
+
+```vue
+<template>
+<ScriptGoogleMaps trigger="immediate">
+</ScriptGoogleMaps>
+</template>
+```
 
 ### Component API
 
@@ -325,7 +335,9 @@ override this component. Make sure you provide a loading indicator.
 
 **placeholder**
 
-The slot is used to display a placeholder image before the Google Maps is loaded. By default, this will show the Google Maps Static API image for the map. You can display it however you like.
+The slot is used to display a placeholder image before the Google Maps is loaded. By default, this will show the Google Maps Static API image for the map. 
+
+By providing your own placeholder slot you will disable the default placeholder image from being used and will not be charged for the Static Maps API usage.
 
 ```vue
 <template>
