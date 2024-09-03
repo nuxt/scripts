@@ -15,8 +15,39 @@ links:
 [Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.
 
 Nuxt Scripts provides two Stripe features:
-- `useScriptStripe` composable which gives loads in the Stripe SDK and provides a way to interact with it programmatically.
-- `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site.
+- `useScriptStripe` composable which loads the script `https://js.stripe.com/v3/`.
+- `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site using `https://js.stripe.com/v3/pricing-table.js`.
+
+## Loading Globally
+
+Stripe recommends loading their script globally on your app to improve fraud detection.
+
+::code-group
+
+```ts [Always enabled]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      stripe: true,
+    }
+  }
+})
+```
+
+```ts [Production only]
+export default defineNuxtConfig({
+  $production: {
+    scripts: {
+      registry: {
+        stripe: true,
+      }
+    }
+  }
+})
+```
+
+::
+
 
 ## ScriptStripePricingTable
 
