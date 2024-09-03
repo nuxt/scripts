@@ -52,31 +52,29 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
 /**
  * Create a trigger for an element to load a script based on specific element events.
  */
-export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<void> {
+export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<void> | 'onNuxtReady' {
   const { el, trigger } = options
+  const triggers = (Array.isArray(options.trigger) ? options.trigger : [options.trigger]).filter(Boolean) as string[]
+  if (!trigger || triggers.includes('immediate') || triggers.includes('onNuxtReady')) {
+    return 'onNuxtReady'
+  }
   if (import.meta.server || !el)
     return new Promise<void>(() => {})
-  const triggers = (Array.isArray(options.trigger) ? options.trigger : [options.trigger]).filter(Boolean) as string[]
-  if (el && triggers.some(t => ['visibility', 'visible'].includes(t)))
+  if (triggers.some(t => ['visibility', 'visible'].includes(t)))
     return useElementVisibilityPromise(el)
-  if (!trigger)
-    return Promise.resolve()
-  if (!triggers.includes('immediate')) {
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
-    return new Promise<void>((resolve, reject) => {
-      const _ = useEventListener(
-        typeof el !== 'undefined' ? (el as EventTarget) : document.body,
-        triggers,
-        () => {
-          _()
-          resolve()
-        },
-        { once: true, passive: true },
-      )
-      tryOnScopeDispose(reject)
-    }).catch(() => {
-      // it's okay
-    })
-  }
-  return Promise.resolve()
+  return new Promise<void>((resolve, reject) => {
+    const _ = useEventListener(
+      typeof el !== 'undefined' ? (el as EventTarget) : document.body,
+      triggers,
+      () => {
+        _()
+        resolve()
+      },
+      { once: true, passive: true },
+    )
+    tryOnScopeDispose(reject)
+  }).catch(() => {
+    // it's okay
+  })
 }
