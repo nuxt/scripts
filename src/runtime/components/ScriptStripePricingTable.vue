@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScript } from '../composables/useScript'
-import { onBeforeUnmount, onMounted, watch } from '#imports'
+import { computed, onBeforeUnmount, onMounted, watch } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
@@ -23,8 +23,9 @@ const emit = defineEmits<{
 
 const rootEl = ref<HTMLDivElement | undefined>()
 const containerEl = ref<HTMLDivElement | undefined>()
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const instance = useScript(`https://js.stripe.com/v3/pricing-table.js`, {
-  trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
+  trigger,
 })
 const { onLoaded, status } = instance
 
@@ -55,10 +56,16 @@ onMounted(() => {
 onBeforeUnmount(() => {
   pricingTable.value?.remove()
 })
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
+})
 </script>
 
 <template>
-  <div ref="rootEl">
+  <div ref="rootEl" v-bind="rootAttrs">
     <div ref="containerEl" />
     <slot v-if="status === 'loading'" name="loading" />
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />

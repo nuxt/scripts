@@ -116,6 +116,7 @@ const rootAttrs = computed(() => {
       height: `'auto'`,
       aspectRatio: `${props.width}/${props.height}`,
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 

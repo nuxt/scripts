@@ -112,10 +112,11 @@ const mapEl = ref<HTMLElement>()
 
 const centerOverride = ref()
 
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const { load, status, onLoaded } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
-    trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
+    trigger,
   },
 })
 
@@ -399,6 +400,7 @@ const rootAttrs = computed(() => {
       height: `'auto'`,
       aspectRatio: `${props.width}/${props.height}`,
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 
