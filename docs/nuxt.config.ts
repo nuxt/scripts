@@ -44,13 +44,13 @@ export default defineNuxtConfig({
   },
 
   app: {
-    seoMeta: {
-      themeColor: [
-        { content: '#18181b', media: '(prefers-color-scheme: dark)' },
-        { content: 'white', media: '(prefers-color-scheme: light)' },
-      ],
-    },
     head: {
+      seoMeta: {
+        themeColor: [
+          { content: '#18181b', media: '(prefers-color-scheme: dark)' },
+          { content: 'white', media: '(prefers-color-scheme: light)' },
+        ],
+      },
       templateParams: {
         separator: '·',
       },
