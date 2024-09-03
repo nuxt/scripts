@@ -85,6 +85,8 @@ const matomoAnalytics = useScriptMatomoAnalytics({
 
 ### Using Matomo Whitelabel
 
+For Matomo Whitelabel, set trackerUrl and scriptInput.src to customize tracking.
+
 ```ts
 const matomoAnalytics = useScriptMatomoAnalytics({
   trackerUrl: 'https://c.staging.cookie3.co/lake',
