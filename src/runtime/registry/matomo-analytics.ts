@@ -25,7 +25,7 @@ declare global {
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
   return useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', options => ({
     scriptInput: {
-      src: withBase(`/matomo.js`, withHttps(options?.matomoUrl)),
+      src: withBase(`/matomo.js`, withHttps(options?.matomoUrl || '')),
       crossorigin: false,
     },
     schema: import.meta.dev ? MatomoAnalyticsOptions : undefined,
@@ -55,10 +55,9 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
             _paq.push(['disableCookies'])
           }
 
-          if(options?.trackerUrl || options?.matomoUrl) {
-            _paq.push(['setTrackerUrl', withHttps(options.trackerUrl) ?? withBase(`/matomo.php`, withHttps(options.matomoUrl))])
+          if (options?.trackerUrl || options?.matomoUrl) {
+            _paq.push(['setTrackerUrl', options?.trackerUrl ? withHttps(options.trackerUrl) : withBase(`/matomo.php`, withHttps(options?.matomoUrl || ''))])
           }
-
           _paq.push(['setSiteId', options?.siteId || '1'])
         },
   }), _options)
