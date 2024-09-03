@@ -7,6 +7,7 @@ import {
   useEventListener,
   useIntersectionObserver,
 } from '@vueuse/core'
+import { tryOnScopeDispose } from '@vueuse/shared'
 import type { ElementScriptTrigger } from '../types'
 
 export interface ElementScriptTriggerOptions {
@@ -23,7 +24,7 @@ export interface ElementScriptTriggerOptions {
 
 function useElementVisibilityPromise(element: MaybeComputedElementRef) {
   let observer: UseIntersectionObserverReturn
-  return new Promise<void>((resolve) => {
+  return new Promise<void>((resolve, reject) => {
     observer = useIntersectionObserver(
       element,
       (intersectionObserverEntries) => {
@@ -38,9 +39,14 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
         threshold: 0,
       },
     )
-  }).finally(() => {
-    observer.stop()
+    tryOnScopeDispose(reject)
   })
+    .catch(() => {
+      // it's okay
+    })
+    .finally(() => {
+      observer.stop()
+    })
 }
 
 /**
@@ -57,16 +63,19 @@ export function useScriptTriggerElement(options: ElementScriptTriggerOptions): P
     return Promise.resolve()
   if (!triggers.includes('immediate')) {
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       const _ = useEventListener(
         typeof el !== 'undefined' ? (el as EventTarget) : document.body,
         triggers,
         () => {
-          resolve()
           _()
+          resolve()
         },
         { once: true, passive: true },
       )
+      tryOnScopeDispose(reject)
+    }).catch(() => {
+      // it's okay
     })
   }
   return Promise.resolve()
