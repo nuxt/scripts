@@ -72,6 +72,22 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
+### Site Ownership Verification
+
+When a `client` is provided, a meta tag will be inserted on the page so that Google can verify your site ownership.
+
+```ts
+const adsense = useScriptGoogleAdsense({
+  client: 'ca-pub-<your-id>',
+})
+```
+
+The generated meta tag will look like this:
+
+```html
+<meta name="google-adsense-account" content="ca-pub-<your-id>">
+```
+
 ### GoogleAdsenseApi
 
 ```ts
