@@ -240,6 +240,7 @@ const rootAttrs = computed(() => {
       position: 'relative',
       backgroundColor: 'black',
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 
