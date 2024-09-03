@@ -1,6 +1,68 @@
 # Changelog
 
 
+## v0.8.0
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.3...v0.8.0)
+
+## v0.7.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.2...v0.7.3)
+
+## v0.7.2
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.1...v0.7.2)
+
+### 🚀 Enhancements
+
+- Automatically `preload` and `preconnect` relevant scripts ([a65a5e0](https://github.com/nuxt/scripts/commit/a65a5e0))
+- **useScriptTriggerElement:** Pre-hydration event triggers ([#237](https://github.com/nuxt/scripts/pull/237))
+- **googleMaps:** Unified styling of static image and map ([c85d278](https://github.com/nuxt/scripts/commit/c85d278))
+
+### 🩹 Fixes
+
+- Soft-dependency on Unhead v1.10.1 ([4a9fc40](https://github.com/nuxt/scripts/commit/4a9fc40))
+- Allow `useScript` to re-register trigger ([9890124](https://github.com/nuxt/scripts/commit/9890124))
+- **useScriptTriggerElement:** Reject promises on scope dispose ([7297783](https://github.com/nuxt/scripts/commit/7297783))
+- **googleAdsense:** Broken validation input path ([f198a80](https://github.com/nuxt/scripts/commit/f198a80))
+
+### 💅 Refactors
+
+- **playground:** Avoid deprecated useScript api ([0f02696](https://github.com/nuxt/scripts/commit/0f02696))
+
+### 📖 Documentation
+
+- Add coding group end to plausible page ([#215](https://github.com/nuxt/scripts/pull/215))
+
+### 🏡 Chore
+
+- **release:** V0.7.1 ([48e4244](https://github.com/nuxt/scripts/commit/48e4244))
+- Bump nuxt version ([#224](https://github.com/nuxt/scripts/pull/224))
+- **docs:** Fix incorrect links ([#228](https://github.com/nuxt/scripts/pull/228))
+- Bump deps ([13184f8](https://github.com/nuxt/scripts/commit/13184f8))
+- Sync lock ([28346e2](https://github.com/nuxt/scripts/commit/28346e2))
+- Throw error if nuxt api is down ([d8b79f1](https://github.com/nuxt/scripts/commit/d8b79f1))
+- Bump unhead 1.10.2 ([83d6d18](https://github.com/nuxt/scripts/commit/83d6d18))
+- Unhead 1.10.3 ([af13a30](https://github.com/nuxt/scripts/commit/af13a30))
+- Bump deps ([50126bf](https://github.com/nuxt/scripts/commit/50126bf))
+- Avoid runtime valibot dependency ([2033f16](https://github.com/nuxt/scripts/commit/2033f16))
+- Soft dependency unhead 1.10.4 ([5b61da0](https://github.com/nuxt/scripts/commit/5b61da0))
+- Avoid adding `crossorigin` for same domain scripts ([dd75a31](https://github.com/nuxt/scripts/commit/dd75a31))
+- Fix test ([339162e](https://github.com/nuxt/scripts/commit/339162e))
+- Tests ([260eb52](https://github.com/nuxt/scripts/commit/260eb52))
+- Broken watcher clean up ([a0a8118](https://github.com/nuxt/scripts/commit/a0a8118))
+- **ci:** Skip linting ([12ba618](https://github.com/nuxt/scripts/commit/12ba618))
+- Fix flaky test ([35f0657](https://github.com/nuxt/scripts/commit/35f0657))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Harlan Wilton <harlan@harlanzw.com>
+- Aman Desai 
+- Daniel Roe <daniel@roe.dev>
+- Alfarish Fizikri <alfarish@evermos.com>
+- Alexander Lichter <github@lichter.io>
+
 ## v0.7.1
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.7.0...v0.7.1)

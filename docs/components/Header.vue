@@ -14,6 +14,11 @@ const links = [
     to: '/scripts',
     icon: 'i-ph-floppy-disk-duotone',
   },
+  {
+    label: 'Learn',
+    to: '/learn',
+    icon: 'i-ph-floppy-disk-duotone',
+  },
 ]
 </script>
 
