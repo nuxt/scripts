@@ -84,12 +84,11 @@ export function useScriptTriggerElement(options: ElementScriptTriggerOptions): P
     )
     tryOnMounted(() => {
       // check if target has any of the triggers active onthe data set
-      const _2 = watch(target, ($el) => {
+      watch(target, ($el) => {
         if ($el) {
           triggers.forEach((trigger) => {
             if (($el as HTMLElement).dataset[`script_${trigger}`]) {
               _()
-              _2()
               resolve()
             }
           })
