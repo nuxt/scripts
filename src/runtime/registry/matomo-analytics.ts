@@ -5,7 +5,7 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),
-  siteId: optional(string()),
+  siteId: string(),
   trackerUrl: optional(string()),
   trackPageView: optional(boolean()),
   enableLinkTracking: optional(boolean()),
@@ -59,9 +59,7 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
             _paq.push(['setTrackerUrl', withHttps(options.trackerUrl) ?? withBase(`/matomo.php`, withHttps(options.matomoUrl))])
           }
 
-          if(options?.siteId) {
-            _paq.push(['setSiteId', options?.siteId])
-          }
+          _paq.push(['setSiteId', options?.siteId || '1'])
         },
   }), _options)
 }

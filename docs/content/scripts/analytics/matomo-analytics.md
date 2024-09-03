@@ -83,17 +83,11 @@ const matomoAnalytics = useScriptMatomoAnalytics({
 })
 ```
 
-or custom matomo whitelabel for example [Cookie3](https://docs.cookie3.co/cookie3-docs/integrations/website-integration/cookie3-script/nuxt): 
+### Using Matomo Whitelabel
 
 ```ts
-const cookie3Options = {
-  siteId: YOUR_SITE_ID,
-  additionalTracking: true,
-  cookielessEnabled: true,
-}
-
 const matomoAnalytics = useScriptMatomoAnalytics({
-  setTrackerUrl: 'https://c.staging.cookie3.co/lake',
+  trackerUrl: 'https://c.staging.cookie3.co/lake',
   scriptInput: {
     src: 'https://cdn.cookie3.co/scripts/analytics/latest/cookie3.analytics.min.js',
   },
