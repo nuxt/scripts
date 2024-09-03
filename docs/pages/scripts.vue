@@ -100,7 +100,7 @@ const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
             <p>Looking for a missing integration?</p>
             <div class="mt-2">
               <UButton
-                to="https://github.com/nuxt/scripts/issues/new"
+                to="https://github.com/nuxt/scripts/discussions/177"
                 target="_blank"
                 icon="i-simple-icons-github"
                 color="white"
