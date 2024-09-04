@@ -120,7 +120,9 @@ const rootAttrs = computed(() => {
   }) as HTMLAttributes
 })
 
-const placeholder = computed(() => `https://i.ytimg.com/vi/${props.videoId}/hqdefault.jpg`)
+const fallbackPlaceHolder = computed(() => `https://i.ytimg.com/vi/${props.videoId}/hqdefault.jpg`)
+const placeholder = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
+const isFallbackPlaceHolder = ref(false)
 
 if (import.meta.server) {
   // dns-prefetch https://i.vimeocdn.com
@@ -146,13 +148,19 @@ if (import.meta.server) {
 
 const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
-    src: placeholder.value,
+    src: isFallbackPlaceHolder.value ? fallbackPlaceHolder.value : placeholder.value,
     alt: '',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       width: '100%',
       objectFit: 'contain',
       height: '100%',
+    },
+    onLoad(payload) {
+      const img = payload.target as HTMLImageElement
+      if (img.naturalWidth === 120 && img.naturalHeight === 90) {
+        isFallbackPlaceHolder.value = true
+      }
     },
   } satisfies ImgHTMLAttributes)
 })
