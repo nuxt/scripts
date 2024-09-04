@@ -1,6 +1,27 @@
 # Changelog
 
 
+## v0.8.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.0...v0.8.1)
+
+### 🩹 Fixes
+
+- Handle scripts missing `src` ([510d7b9](https://github.com/nuxt/scripts/commit/510d7b9))
+
+### 📖 Documentation
+
+- Add learn section and carbon ads ([f4de446](https://github.com/nuxt/scripts/commit/f4de446))
+
+### 🏡 Chore
+
+- Bump deps and lint ([03bd491](https://github.com/nuxt/scripts/commit/03bd491))
+- Fix test ([e3d78fd](https://github.com/nuxt/scripts/commit/e3d78fd))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+
 ## v0.8.0
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.7.3...v0.8.0)
