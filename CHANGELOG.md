@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.8.2
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.1...v0.8.2)
+
+### 🚀 Enhancements
+
+- **matomo:** Support custom tracker urls ([#236](https://github.com/nuxt/scripts/pull/236))
+
+### ❤️ Contributors
+
+- Reslear <reslear@gmail.com>
+
 ## v0.8.1
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.8.0...v0.8.1)
