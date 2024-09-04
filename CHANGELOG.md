@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v0.8.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.2...v0.8.3)
+
+### 🩹 Fixes
+
+- Do not omit `crossorigin` from link preload ([#241](https://github.com/nuxt/scripts/pull/241))
+
+### 🏡 Chore
+
+- Bump deps ([cdebb4a](https://github.com/nuxt/scripts/commit/cdebb4a))
+- Fix tests ([45b5dc0](https://github.com/nuxt/scripts/commit/45b5dc0))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Daniel Roe <daniel@roe.dev>
+
 ## v0.8.2
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.8.1...v0.8.2)
