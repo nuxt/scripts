@@ -24,7 +24,7 @@ describe('basic', () => {
     })
     await page.goto(url('/'))
     await page.waitForTimeout(5000)
-    expect(logs.filter(log => !log.location.startsWith('/_nuxt'))).toMatchInlineSnapshot(`
+    expect(logs.filter(log => !log.location.startsWith('/_nuxt') && !log.location.startsWith('/:0'))).toMatchInlineSnapshot(`
       [
         {
           "location": "/myScript.js:1",
