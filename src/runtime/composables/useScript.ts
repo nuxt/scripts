@@ -27,15 +27,16 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
   // browser hint optimizations
   const rel = options.trigger === 'onNuxtReady' ? 'preload' : 'preconnect'
+  const isCrossOrigin = input.src && !input.src.startsWith('/')
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
-  if (options.trigger !== 'server' && (rel === 'preload' || !input.src.startsWith('/'))) {
+  if (input.src && options.trigger !== 'server' && (rel === 'preload' || isCrossOrigin)) {
     useHead({
       link: [
         {
           rel,
           as: rel === 'preload' ? 'script' : undefined,
           href: input.src,
-          crossorigin: input.src.startsWith('/') ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
+          crossorigin: isCrossOrigin ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
           key: `nuxt-script-${id}`,
           tagPriority: rel === 'preload' ? 'high' : 0,
           fetchpriority: 'low',
