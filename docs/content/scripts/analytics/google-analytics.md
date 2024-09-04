@@ -80,13 +80,35 @@ export default defineNuxtConfig({
 
 The `useScriptGoogleAnalytics` composable lets you have fine-grain control over when and how Google Analytics is loaded on your site.
 
-```ts
+::code-group
+
+```ts [Default]
 const googleAnalytics = useScriptGoogleAnalytics({
   id: 'YOUR_ID'
 })
 ```
 
+```ts [Environment Variables]
+// 1. set .env NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID=<your-id>
+// 2. set runtimeConfig.public.scripts.googleAnalytics.id to an empty string or fallback
+const googleAnalytics = useScriptGoogleAnalytics()
+```
+
+::
+
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+### Usage
+
+To interact with the Google Analytics API, it's recommended to use script [proxy](/docs/guides/key-concepts#understanding-proxied-functions).
+
+```ts
+const { proxy } = useScriptGoogleAnalytics()
+
+proxy.gtag('event', 'page_view')
+```
+
+The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
 
 ### GoogleAnalyticsApi
 

@@ -140,7 +140,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   if (canBundle) {
                     const newSrc = options.resolveScript(src)
                     if (src === newSrc) {
-                      if (src.startsWith('/'))
+                      if (src && src.startsWith('/'))
                         console.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
                       else
                         console.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)

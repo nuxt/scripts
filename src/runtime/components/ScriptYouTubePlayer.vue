@@ -52,7 +52,7 @@ const { onLoaded, status } = useScriptYouTubePlayer({
 
 const player: Ref<YT.Player | undefined> = ref()
 let clickTriggered = false
-if (props.trigger === 'mousedown') {
+if (props.trigger === 'mousedown' && trigger instanceof Promise) {
   trigger.then(() => {
     clickTriggered = true
   })
@@ -116,6 +116,7 @@ const rootAttrs = computed(() => {
       height: `'auto'`,
       aspectRatio: `${props.width}/${props.height}`,
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 
@@ -126,12 +127,14 @@ if (import.meta.server) {
   useHead({
     link: [
       {
+        key: `nuxt-script-youtube-img`,
         rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
         href: 'https://i.ytimg.com',
       },
       props.aboveTheFold
         // we can preload the placeholder image
         ? {
+            key: `nuxt-script-youtube-img`,
             rel: 'preload',
             as: 'image',
             href: placeholder.value,

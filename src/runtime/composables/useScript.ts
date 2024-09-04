@@ -3,7 +3,7 @@ import type { UseScriptOptions, UseFunctionType, AsAsyncFunctionValues } from '@
 import { resolveScriptKey } from 'unhead'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
-import { injectHead, onNuxtReady, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
+import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions } from '#nuxt-scripts'
 
 function useNuxtScriptRuntimeConfig() {
@@ -25,19 +25,34 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
-
-  if (options.trigger === 'onNuxtReady')
-    options.trigger = onNuxtReady
-  const nuxtApp = useNuxtApp()
+  // browser hint optimizations
+  const rel = options.trigger === 'onNuxtReady' ? 'preload' : 'preconnect'
+  const isCrossOrigin = input.src && !input.src.startsWith('/')
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
-  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
-  // return early
-  if ((nuxtApp.$scripts as Record<string, any>)[id]) {
-    return (nuxtApp.$scripts as Record<string, any>)[id]
+  if (input.src && options.trigger !== 'server' && (rel === 'preload' || isCrossOrigin)) {
+    useHead({
+      link: [
+        {
+          rel,
+          as: rel === 'preload' ? 'script' : undefined,
+          href: input.src,
+          crossorigin: !isCrossOrigin ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
+          key: `nuxt-script-${id}`,
+          tagPriority: rel === 'preload' ? 'high' : 0,
+          fetchpriority: 'low',
+        },
+      ],
+    })
   }
+  if (options.trigger === 'onNuxtReady') {
+    options.trigger = onNuxtReady
+  }
+  const nuxtApp = useNuxtApp()
+  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+  const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
   if (import.meta.client) {
     // only validate if we're initializing the script
-    if (!nuxtApp._scripts?.[id]) {
+    if (!exists) {
       performance?.mark?.('mark_feature_usage', {
         detail: {
           feature: options.performanceMarkFeature ?? `nuxt-scripts:${id}`,
@@ -50,6 +65,9 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
+    if (exists) {
+      return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+    }
     // sync scripts to nuxtApp with debug details
     const payload: NuxtDevToolsScriptInstance = {
       ...options.devtools,

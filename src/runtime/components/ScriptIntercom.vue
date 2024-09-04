@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useScriptIntercom } from '../registry/intercom'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { ref, onMounted, watch, onBeforeUnmount } from '#imports'
+import { ref, onMounted, watch, onBeforeUnmount, computed } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -77,16 +77,23 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect()
 })
+
+const rootAttrs = computed(() => {
+  return {
+    style: {
+      display: isReady.value ? 'none' : 'block',
+      bottom: `${props.verticalPadding || 20}px`,
+      [props.alignment || 'right']: `${props.horizontalPadding || 20}px`,
+    },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
+})
 </script>
 
 <template>
   <div
     ref="rootEl"
-    :style="{
-      display: isReady ? 'none' : 'block',
-      bottom: `${verticalPadding || 20}px`,
-      [alignment || 'right']: `${horizontalPadding || 20}px`,
-    }"
+    v-bind="rootAttrs"
   >
     <slot :ready="isReady" />
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
