@@ -23,9 +23,11 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
   const renderedScriptSrc = new Map<string, string>()
 
   // TODO: refactor to use nitro storage when it can be cached between builds
-  const storage = createStorage(fsDriver({
-    base: 'node_modules/.cache/nuxt/scripts',
-  }))
+  const storage = createStorage({
+    driver: fsDriver({
+      base: 'node_modules/.cache/nuxt/scripts',
+    }),
+  })
 
   function normalizeScriptData(src: string): string {
     if (hasProtocol(src, { acceptRelative: true })) {
