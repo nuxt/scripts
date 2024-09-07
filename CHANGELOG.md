@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v0.8.4
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.3...v0.8.4)
+
+### 🩹 Fixes
+
+- **ScriptGoogleMaps:** Clean up map markers properly ([53bb530](https://github.com/nuxt/scripts/commit/53bb530))
+
+### 🏡 Chore
+
+- Bump deps and lint ([06c757c](https://github.com/nuxt/scripts/commit/06c757c))
+- Sync lock ([bdc5f98](https://github.com/nuxt/scripts/commit/bdc5f98))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+
 ## v0.8.3
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.8.2...v0.8.3)
