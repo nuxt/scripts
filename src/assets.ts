@@ -107,7 +107,7 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
           let size = 0
           res = await fetch(url).then((r) => {
             if (!r.ok) {
-              throw new Error(`Failed to download script: ${url}. ${r.statusText} (${r.status})`)
+              throw new Error(`@nuxt/scripts - Failed to download script: ${url}. ${r.statusText} (${r.status})`)
             }
             encoding = r.headers.get('content-encoding')
             const contentLength = r.headers.get('content-length')
