@@ -135,6 +135,18 @@ function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
 }
 
+function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | Promise<google.maps.marker.AdvancedMarkerElement>) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<void>(async (resolve) => {
+    const marker = _marker instanceof Promise ? await _marker : _marker
+    if (marker) {
+      // @ts-expect-error broken type
+      marker.setMap(null)
+    }
+    resolve()
+  })
+}
+
 async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
   const key = hash(_options)
   if (mapMarkers.value.has(key))
@@ -266,10 +278,10 @@ onMounted(() => {
       }
       const marker = await mapMarkers.value.get(key)
       if (marker) {
-        // @ts-expect-error broken type
-        marker.setMap(null)
-        // make sure it gets removed from map
-        mapMarkers.value.delete(key)
+        resetMapMarkerMap(marker)
+          .then(() => {
+            mapMarkers.value.delete(key)
+          })
       }
     }
     for (const k of toAdd) {
@@ -298,9 +310,12 @@ onMounted(() => {
         }
         if (prev[0]) {
           const prevCenterHash = hash({ position: prev[0] })
-          // @ts-expect-error broken upstream type
-          mapMarkers.value.get(prevCenterHash)?.setMap(null)
-          mapMarkers.value.delete(prevCenterHash)
+          if (mapMarkers.value.has(prevCenterHash)) {
+            resetMapMarkerMap(mapMarkers.value.get(prevCenterHash)!)
+              .then(() => {
+                mapMarkers.value.delete(prevCenterHash)
+              })
+          }
         }
         createAdvancedMapMarker({ position: center })
       }
@@ -427,13 +442,7 @@ const rootAttrs = computed(() => {
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
 
 onBeforeUnmount(async () => {
-  await Promise.all([...mapMarkers.value.entries()].map(async (_marker) => {
-    const marker = await _marker
-    if (marker) {
-      // @ts-expect-error broken type
-      marker.setMap(null)
-    }
-  }))
+  await Promise.all([...mapMarkers.value.entries()].map(([,marker]) => resetMapMarkerMap(marker)))
   mapMarkers.value.clear()
   map.value?.unbindAll()
   map.value = undefined
