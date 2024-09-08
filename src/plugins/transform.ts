@@ -3,7 +3,7 @@ import { createUnplugin } from 'unplugin'
 import MagicString from 'magic-string'
 import type { SourceMapInput } from 'rollup'
 import type { Node } from 'estree-walker'
-import { walk } from 'estree-walker'
+import { asyncWalk } from 'estree-walker'
 import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
 import type { InferInput } from 'valibot'
 import { hasProtocol, parseURL, joinURL } from 'ufo'
@@ -47,6 +47,50 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): 
   }
   return { url: src }
 }
+async function downloadScript(src: string, assetsBaseURL: string = '/_scripts') {
+  const { url, filename } = normalizeScriptData(src, assetsBaseURL)
+  if (src === url) {
+    return
+  }
+  const scriptContent = scriptContentMap.get(src)
+  let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
+  if (!res) {
+    // Use storage to cache the font data between builds
+    if (await storage.hasItem(`data:scripts:${filename}`)) {
+      const res = await storage.getItemRaw<Buffer>(`data:scripts:${filename}`)
+      scriptContentMap.set(src, {
+        content: res!,
+        size: res!.length / 1024,
+        encoding: 'utf-8',
+        url,
+        filename,
+      })
+
+      return
+    }
+    let encoding
+    let size = 0
+    res = await fetch(src).then((r) => {
+      if (!r.ok) {
+        throw new Error(`Failed to fetch ${src}`)
+      }
+      encoding = r.headers.get('content-encoding')
+      const contentLength = r.headers.get('content-length')
+      size = contentLength ? Number(contentLength) / 1024 : 0
+
+      return r.arrayBuffer()
+    }).then(r => Buffer.from(r))
+
+    storage.setItemRaw(`data:scripts:${filename}`, res)
+    scriptContentMap.set(src, {
+      content: res!,
+      size,
+      encoding,
+      url,
+      filename,
+    })
+  }
+}
 
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions, nuxt: Nuxt) {
   const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
@@ -63,65 +107,6 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     }))
   })
 
-  async function downloadScript(src: string) {
-    const { url, filename } = normalizeScriptData(src, options.assetsBaseURL)
-    if (src === url) {
-      return { src }
-    }
-    const scriptContent = scriptContentMap.get(src)
-    let res: Error | Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
-    if (!res) {
-      // Use storage to cache the font data between builds
-      if (await storage.hasItem(`data:scripts:${filename}`)) {
-        const res = await storage.getItemRaw<Buffer>(`data:scripts:${filename}`)
-        scriptContentMap.set(src, {
-          content: res!,
-          size: res!.length / 1024,
-          encoding: 'utf-8',
-          url,
-          filename,
-        })
-
-        return { src: url }
-      }
-      let encoding
-      let size = 0
-      res = await fetch(src).then((r) => {
-        if (!r.ok) {
-          throw new Error(`Failed to fetch ${src}`)
-        }
-        encoding = r.headers.get('content-encoding')
-        const contentLength = r.headers.get('content-length')
-        size = contentLength ? Number(contentLength) / 1024 : 0
-
-        return r.arrayBuffer()
-      }).then(r => Buffer.from(r))
-        .catch((err: Error) => {
-          if (options.fallbackOnSrcOnBundleFail) {
-            logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
-            return err
-          }
-          else throw err
-        })
-
-      if (res instanceof Error) {
-        return { src }
-      }
-      storage.setItemRaw(`data:scripts:${filename}`, res)
-      scriptContentMap.set(src, {
-        content: res!,
-        size,
-        encoding,
-        url,
-        filename,
-      })
-    }
-
-    return {
-      src: (res as any) instanceof Error ? src : url,
-    }
-  }
-
   return createUnplugin(() => {
     return {
       name: 'nuxt:scripts:bundler-transformer',
@@ -133,11 +118,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       async transform(code, id) {
         if (!code.includes('useScript')) // all integrations should start with useScriptX
           return
-        const scriptsToDownload = new Set<string>()
+
         const ast = this.parse(code)
         const s = new MagicString(code)
-        walk(ast as Node, {
-          enter(_node) {
+        await asyncWalk(ast as Node, {
+          async enter(_node) {
             // @ts-expect-error untyped
             const calleeName = (_node as SimpleCallExpression).callee?.name
             if (!calleeName)
@@ -244,8 +229,20 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   })
                   canBundle = bundleOption ? bundleOption.value.value : canBundle
                   if (canBundle) {
-                    const { url } = normalizeScriptData(src, options.assetsBaseURL)
-                    scriptsToDownload.add(src)
+                    let { url } = normalizeScriptData(src, options.assetsBaseURL)
+                    try {
+                      await downloadScript(src, options.assetsBaseURL)
+                    }
+                    catch (e) {
+                      if (options.fallbackOnSrcOnBundleFail) {
+                        console.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
+                        url = src
+                      }
+                      else {
+                        throw e
+                      }
+                    }
+
                     if (src === url) {
                       if (src && src.startsWith('/'))
                         console.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
@@ -287,9 +284,6 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
           },
         })
 
-        await Promise.all([...scriptsToDownload].map(async (src) => {
-          await downloadScript(src)
-        }))
         if (s.hasChanged()) {
           return {
             code: s.toString(),
