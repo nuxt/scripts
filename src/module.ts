@@ -54,6 +54,12 @@ export interface ModuleOptions {
      * TODO Make configurable in future.
      */
     strategy?: 'public'
+    /**
+     * Fallback to src if bundle fails to load.
+     * The default behavior is to stop the bundling process if a script fails to be downloaded.
+     * @default false
+     */
+    fallbackOnSrcOnBundleFail?: boolean
   }
   /**
    * Whether the module is enabled.
@@ -188,8 +194,7 @@ ${newScripts.map((i) => {
           },
         })
       }
-      const scriptMap = new Map<string, string>()
-      const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
+      setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
@@ -203,14 +208,10 @@ ${newScripts.map((i) => {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
-        resolveScript(src) {
-          if (scriptMap.has(src))
-            return scriptMap.get(src) as string
-          const url = normalizeScriptData(src)
-          scriptMap.set(src, url)
-          return url
-        },
-      }))
+        dev: nuxt.options.dev,
+        assetsBaseURL: config.assets?.prefix,
+        fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
+      }, nuxt))
 
       nuxt.hooks.hook('build:done', async () => {
         const initPromise = Array.from(moduleInstallPromises.values())
