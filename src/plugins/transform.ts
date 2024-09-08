@@ -53,9 +53,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
   nuxt.hooks.hook('build:done', async () => {
     logger.log('[nuxt:scripts:bundler-transformer] Bundling scripts...')
+    await fsp.rm(cacheDir, { recursive: true, force: true })
+    await fsp.mkdir(cacheDir, { recursive: true })
     await Promise.all([...scriptContentMap].map(async ([src, content]) => {
-      await fsp.rm(cacheDir, { recursive: true, force: true })
-      await fsp.mkdir(cacheDir, { recursive: true })
       if (content instanceof Error || !content.filename)
         return
       await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', `${content.filename}`), content.content)
