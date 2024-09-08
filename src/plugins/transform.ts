@@ -291,7 +291,6 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
           }
         }
       },
-
     }
   })
 }
