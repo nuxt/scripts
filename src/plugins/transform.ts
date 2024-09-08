@@ -58,7 +58,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     await Promise.all([...scriptContentMap].map(async ([src, content]) => {
       if (content instanceof Error || !content.filename)
         return
-      await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', `${content.filename}`), content.content)
+      await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
       logger.log(colors.gray(`  ├─ ${src} → ${joinURL(content.url)} (${content.size.toFixed(2)} kB ${content.encoding})`))
     }))
   })
