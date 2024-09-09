@@ -208,10 +208,9 @@ ${newScripts.map((i) => {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
-        dev: nuxt.options.dev,
         assetsBaseURL: config.assets?.prefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
-      }, nuxt))
+      }))
 
       nuxt.hooks.hook('build:done', async () => {
         const initPromise = Array.from(moduleInstallPromises.values())

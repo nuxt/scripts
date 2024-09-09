@@ -9,8 +9,8 @@ import type { InferInput } from 'valibot'
 import { hasProtocol, parseURL, joinURL } from 'ufo'
 import { hash as ohash } from 'ohash'
 import { join } from 'pathe'
-import type { Nuxt } from 'nuxt/schema'
 import { colors } from 'consola/utils'
+import { useNuxt } from '@nuxt/kit'
 import { logger } from '../logger'
 import { storage } from '../assets'
 import { isJS, isVue } from './util'
@@ -20,7 +20,6 @@ export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
   defaultBundle?: boolean
   assetsBaseURL?: string
-  dev: boolean
   scripts?: Required<RegistryScript>[]
   fallbackOnSrcOnBundleFail?: boolean
 }
@@ -92,9 +91,12 @@ async function downloadScript(src: string, assetsBaseURL: string = '/_scripts') 
   }
 }
 
-export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions, nuxt: Nuxt) {
+export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {}) {
+  const nuxt = useNuxt()
   const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
 
+  // done after all transformation is done
+  // copy all scripts to build
   nuxt.hooks.hook('build:done', async () => {
     logger.log('[nuxt:scripts:bundler-transformer] Bundling scripts...')
     await fsp.rm(cacheDir, { recursive: true, force: true })
@@ -235,7 +237,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     }
                     catch (e) {
                       if (options.fallbackOnSrcOnBundleFail) {
-                        console.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
+                        logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
                         url = src
                       }
                       else {

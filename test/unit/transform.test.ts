@@ -1,13 +1,56 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { parse } from 'acorn-loose'
-import { joinURL, parseURL, withBase } from 'ufo'
+import { joinURL, withBase, hasProtocol } from 'ufo'
 import { hash } from 'ohash'
 import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform'
 import { NuxtScriptBundleTransformer } from '../../src/plugins/transform'
 import type { IntercomInput } from '~/src/runtime/registry/intercom'
 import type { NpmInput } from '~/src/runtime/registry/npm'
 
-async function transform(code: string | string[], options: AssetBundlerTransformerOptions) {
+const ohash = (await vi.importActual<typeof import('ohash')>('ohash')).hash
+vi.mock('ohash', async (og) => {
+  const mod = (await og<typeof import('ohash')>())
+  const mock = vi.fn(mod.hash)
+  return {
+    ...mod,
+    hash: mock,
+  }
+})
+
+vi.mock('ufo', async (og) => {
+  const mod = (await og<typeof import('ufo')>())
+  const mock = vi.fn(mod.hasProtocol)
+  return {
+    ...mod,
+    hasProtocol: mock,
+  }
+})
+vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ arrayBuffer: vi.fn(() => Buffer.from('')), ok: true, headers: { get: vi.fn() } })))
+
+vi.mock('@nuxt/kit', async (og) => {
+  const mod = await og<typeof import('@nuxt/kit')>()
+
+  return {
+    ...mod,
+    useNuxt() {
+      return {
+        options: {
+          buildDir: '.nuxt',
+        },
+        hooks: {
+          hook: vi.fn(),
+        },
+      }
+    },
+  }
+})
+
+// we want to control normalizeScriptData() output
+vi.mocked(hasProtocol).mockImplementation(() => true)
+// hash receive a URL object, we want to mock it to return the pathname by default
+vi.mocked(hash).mockImplementation(src => src.pathname)
+
+async function transform(code: string | string[], options?: AssetBundlerTransformerOptions) {
   const plugin = NuxtScriptBundleTransformer(options).vite() as any
   const res = await plugin.transform.call(
     { parse: (code: string) => parse(code, { ecmaVersion: 2022, sourceType: 'module', allowImportExportEverywhere: true, allowAwaitOutsideFunction: true }) },
@@ -19,29 +62,23 @@ async function transform(code: string | string[], options: AssetBundlerTransform
 
 describe('nuxtScriptTransformer', () => {
   it('string arg', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
     const code = await transform(
       `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
       bundle: true,
     })`,
-      {
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}`
-        },
-      },
+
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
   })
 
   it('options arg', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
     const code = await transform(
       `const instance = useScript({ defer: true, src: 'https://static.cloudflareinsights.com/beacon.min.js' }, {
       bundle: true,
     })`,
-      {
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}`
-        },
-      },
+
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScript({ defer: true, src: '/_scripts/beacon.min.js' }, )"`)
   })
@@ -50,11 +87,6 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       // eslint-disable-next-line no-useless-escape
       `const instance = useScript({ key: 'cloudflareAnalytics', src: \`https://static.cloudflareinsights.com/$\{123\}beacon.min.js\` })`,
-      {
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}`
-        },
-      },
     )
     expect(code).toMatchInlineSnapshot(`undefined`)
   })
@@ -75,9 +107,6 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ src: '/_scripts/custom.js.js' }, )"`)
@@ -99,9 +128,6 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ scriptInput: { src: '/_scripts/script.js.js' },  site: '123' }, )"`)
@@ -123,15 +149,14 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
+
       },
     )
     expect(code).toMatchInlineSnapshot(`undefined`)
   })
 
   it('dynamic src integration is transformed - default', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => (src.pathname))
     const code = await transform(
       `const instance = useScriptIntercom({ app_id: '123' })`,
       {
@@ -147,9 +172,7 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
+
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' })"`)
@@ -171,15 +194,14 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
+
       },
     )
     expect(code).toMatchInlineSnapshot(`undefined`)
   })
 
   it('dynamic src integration can be opt-in explicit', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => src.pathname)
     const code = await transform(
       `const instance = useScriptIntercom({ app_id: '123' }, { bundle: true })`,
       {
@@ -195,9 +217,7 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
+
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' }, )"`)
@@ -219,9 +239,6 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts${parseURL(src).pathname}.js`
-        },
       },
     )
     expect(code).toMatchInlineSnapshot(`
@@ -231,6 +248,7 @@ describe('nuxtScriptTransformer', () => {
   })
 
   it('useScriptNpm', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => ohash(src.pathname))
     const code = await transform(
       `const instance = useScriptNpm({ packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })`,
       {
@@ -246,15 +264,15 @@ describe('nuxtScriptTransformer', () => {
             },
           },
         ],
-        resolveScript(src) {
-          return `/_scripts/${hash(parseURL(src).pathname)}.js`
-        },
+
       },
     )
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/soMXoYlUxl.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
   })
 
   it('useScript broken #1', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => ohash(src.pathname))
+
     const code = await transform(
       `import { defineComponent as _defineComponent } from "vue";
 import { useScript } from "#imports";
@@ -277,11 +295,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     return __returned__;
   }
 });`,
-      {
-        resolveScript(src) {
-          return `/_scripts/${hash(parseURL(src).pathname)}.js`
-        },
-      },
     )
     expect(code.includes('useScript(\'/_scripts/JvFMRwu6zQ.js\', {')).toBeTruthy()
   })
