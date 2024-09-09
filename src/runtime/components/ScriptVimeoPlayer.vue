@@ -184,6 +184,7 @@ const height = computed(() => {
 })
 
 onMounted(() => {
+  // @ts-ignore failing for end users
   onLoaded(async ({ Vimeo }) => {
     const vimeoOptions = props.vimeoOptions || {}
     if (!vimeoOptions.id && props.id) {
