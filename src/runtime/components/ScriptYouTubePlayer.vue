@@ -59,7 +59,7 @@ if (props.trigger === 'mousedown' && trigger instanceof Promise) {
 }
 onMounted(() => {
   onLoaded(async (instance) => {
-    const YouTube: typeof YT & { ready: (fn: () => void) => void } = await instance.YT
+    const YouTube = instance.YT instanceof Promise ? await instance.YT : instance.YT
     await new Promise<void>((resolve) => {
       if (typeof YT.Player === 'undefined')
         YouTube.ready(resolve)

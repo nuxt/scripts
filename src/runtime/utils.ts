@@ -11,6 +11,8 @@ import type {
   ScriptRegistry,
 } from '#nuxt-scripts'
 
+export type MaybePromise<T> = Promise<T> | T
+
 function validateScriptInputSchema<T extends GenericSchema>(key: string, schema: T, options?: InferInput<T>) {
   if (import.meta.dev) {
     try {
