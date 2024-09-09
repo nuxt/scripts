@@ -94,6 +94,7 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
       await fsp.rm(cacheDir, { recursive: true, force: true })
       await fsp.mkdir(cacheDir, { recursive: true })
       let banner = false
+      const failedScriptDownload = new Set<{ url: string, statusText: string, status: number }>()
       for (const [filename, url] of renderedScriptSrc) {
         const key = `data:scripts:${filename}`
         // Use storage to cache the font data between builds
@@ -107,7 +108,8 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
           let size = 0
           res = await fetch(url).then((r) => {
             if (!r.ok) {
-              throw new Error(`@nuxt/scripts - Failed to download script: ${url}. ${r.statusText} (${r.status})`)
+              failedScriptDownload.add({ url, statusText: r.statusText, status: r.status })
+              return Buffer.from('')
             }
             encoding = r.headers.get('content-encoding')
             const contentLength = r.headers.get('content-length')
@@ -118,6 +120,9 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
           await storage.setItemRaw(key, res)
         }
         await fsp.writeFile(join(cacheDir, filename), res)
+      }
+      if (failedScriptDownload.size) {
+        throw new Error(`@nuxt/script: Failed to download scripts:\n${[...failedScriptDownload].map(({ url, statusText, status }) => `  ├─ ${url} (${status} ${statusText})`).join('\n')}`)
       }
       if (banner)
         logger.success('Scripts downloaded and cached.')
