@@ -14,7 +14,6 @@ const props = withDefaults(defineProps<{
    */
   trigger?: ElementScriptTrigger
 }>(), {
-  dataAdFormat: 'auto',
   dataFullWidthResponsive: true,
 })
 
