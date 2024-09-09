@@ -18,7 +18,7 @@ export default createConfigForNuxt({
         'error',
         {
           'ts-expect-error': 'allow-with-description',
-          'ts-ignore': true,
+          'ts-ignore': 'allow-with-description',
         },
       ],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],

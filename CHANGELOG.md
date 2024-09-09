@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v0.8.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.4...v0.8.5)
+
+### 🩹 Fixes
+
+- **bundling:** Throw error if download fails ([#253](https://github.com/nuxt/scripts/pull/253))
+- Group failed scripts log ([#254](https://github.com/nuxt/scripts/pull/254))
+- **YouTube:** Broken api types ([a00f753](https://github.com/nuxt/scripts/commit/a00f753))
+
+### 🏡 Chore
+
+- Maybe fix vimeo types ([159fdcd](https://github.com/nuxt/scripts/commit/159fdcd))
+- Bump deps ([e0034fa](https://github.com/nuxt/scripts/commit/e0034fa))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Julien Huang <julien.h.dev@gmail.com>
+
 ## v0.8.4
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.8.3...v0.8.4)
