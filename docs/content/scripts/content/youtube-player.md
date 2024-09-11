@@ -218,7 +218,7 @@ Loading the YouTube Player SDK and interacting with it programmatically.
 const video = ref()
 const { onLoaded } = useScriptYouTubePlayer()
 
-let player
+const player = ref(null)
 onLoaded(async ({ YT }) => {
   // we need to wait for the internal YouTube APIs to be ready
   const YouTube = await YT
@@ -233,12 +233,15 @@ onLoaded(async ({ YT }) => {
     videoId: 'd_IFKP1Ofq0'
   })
 })
+function play() {
+  player.value?.playVideo()
+}
 </script>
 
 <template>
   <div>
     <div ref="video" />
-    <button @click="player.playVideo()">
+    <button @click="play">
       Play
     </button>
   </div>
