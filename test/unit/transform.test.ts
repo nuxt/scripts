@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { parse } from 'acorn-loose'
 import { joinURL, withBase, hasProtocol } from 'ufo'
 import { hash } from 'ohash'
@@ -297,5 +297,73 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 });`,
     )
     expect(code.includes('useScript(\'/_scripts/JvFMRwu6zQ.js\', {')).toBeTruthy()
+  })
+
+  describe('fallbackOnSrcOnBundleFail', () => {
+    beforeEach(() => {
+      vi.mocked(fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
+    })
+
+    const scripts =  [    {
+      label: 'NPM',
+      scriptBundling(options?: NpmInput) {
+        return 'bundle.js'
+      },
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#C12127" d="M0 256V0h256v256z"/><path fill="#FFF" d="M48 48h160v160h-32V80h-48v128H48z"/></svg>`,
+      category: 'utility',
+      import: {
+        name: 'useScriptNpm',
+        // key is based on package name
+        from: 'somewhere',
+      },
+    },]
+    it('should throw error if bundle fails and fallbackOnSrcOnBundleFail is false', async () => {
+      await expect(async () => await transform(`const { then } = useScriptNpm({
+  packageName: 'js-confetti',
+  file: 'dist/js-confetti.browser.js',
+  version: '0.12.0',
+  scriptOptions: {
+    trigger: useScriptTriggerElement({ trigger: 'mouseover', el: mouseOverEl }),
+    use() {
+      return { JSConfetti: window.JSConfetti }
+    },
+    bundle: true
+  },
+})`, { fallbackOnSrcOnBundleFail: false, scripts})).rejects.toThrow(`fetch error`)
+    })
+
+    it('should not throw error if bundle fails and fallbackOnSrcOnBundleFail is true', async () => {
+      vi.mocked(hash).mockImplementationOnce(src => ohash(src.pathname))
+
+      vi.mocked(fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
+ 
+      const code = await transform(`const instance = useScriptNpm({
+  packageName: 'js-confetti',
+  file: 'dist/js-confetti.browser.js',
+  version: '0.12.0',
+  scriptOptions: {
+    trigger: useScriptTriggerElement({ trigger: 'mouseover', el: mouseOverEl }),
+    use() {
+      return { JSConfetti: window.JSConfetti }
+    },
+    bundle: true
+  },
+})`, { fallbackOnSrcOnBundleFail: true,scripts })
+      expect(code).toMatchInlineSnapshot(`
+        "const instance = useScriptNpm({ scriptInput: { src: 'bundle.js' }, 
+          packageName: 'js-confetti',
+          file: 'dist/js-confetti.browser.js',
+          version: '0.12.0',
+          scriptOptions: {
+            trigger: useScriptTriggerElement({ trigger: 'mouseover', el: mouseOverEl }),
+            use() {
+              return { JSConfetti: window.JSConfetti }
+            },
+            bundle: true
+          },
+        })"
+      `)
+      expect(code).toContain('bundle.js')
+    })
   })
 })
