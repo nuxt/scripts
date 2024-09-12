@@ -10,6 +10,17 @@ import fsDriver from 'unstorage/drivers/fs-lite'
 
 import type { ModuleOptions } from './module'
 
+const renderedScript = new Map<string, {
+  content: Buffer
+  /**
+   * in kb
+   */
+  size: number
+  encoding?: string
+  src: string
+  filename?: string
+} | Error>()
+
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 // TODO: refactor to use nitro storage when it can be cached between builds
@@ -23,7 +34,6 @@ export const storage = createStorage({
 export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) {
   const assetsBaseURL = options.prefix || '/_scripts'
   const nuxt = useNuxt()
-  const renderedScriptSrc = new Map<string, string>()
 
   // Register font proxy URL for development
   addDevServerHandler({
@@ -31,14 +41,16 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
     handler: lazyEventHandler(async () => {
       return eventHandler(async (event) => {
         const filename = event.path.slice(1)
-        const url = renderedScriptSrc.get(event.path.slice(1))
-        if (!url)
+        const scriptDescriptor = renderedScript.get(join(assetsBaseURL, event.path.slice(1)))
+
+        if (!scriptDescriptor || scriptDescriptor instanceof Error)
           throw createError({ statusCode: 404 })
+        
         const key = `data:scripts:${filename}`
         // Use storage to cache the font data between requests
         let res = await storage.getItemRaw(key)
         if (!res) {
-          res = await fetch(url).then(r => r.arrayBuffer()).then(r => Buffer.from(r))
+          res = await fetch(scriptDescriptor.src).then(r => r.arrayBuffer()).then(r => Buffer.from(r))
           await storage.setItemRaw(key, res)
         }
         return res
@@ -68,4 +80,8 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
       ignore: [assetsBaseURL],
     },
   } satisfies NitroConfig)
+
+  return {
+    renderedScript
+  }
 }

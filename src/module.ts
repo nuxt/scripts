@@ -194,7 +194,7 @@ ${newScripts.map((i) => {
           },
         })
       }
-      setupPublicAssetStrategy(config.assets)
+      const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
@@ -210,6 +210,7 @@ ${newScripts.map((i) => {
         },
         assetsBaseURL: config.assets?.prefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
+        renderedScript
       }))
 
       nuxt.hooks.hook('build:done', async () => {

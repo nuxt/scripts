@@ -22,18 +22,17 @@ export interface AssetBundlerTransformerOptions {
   assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
   fallbackOnSrcOnBundleFail?: boolean
+  renderedScript?: Map<string, {
+    content: Buffer
+    /**
+     * in kb
+     */
+    size: number
+    encoding?: string
+    src: string
+    filename?: string
+  } | Error>
 }
-
-const scriptContentMap = new Map<string, {
-  content: Buffer
-  /**
-   * in kb
-   */
-  size: number
-  encoding?: string
-  url: string
-  filename?: string
-} | Error>()
 
 function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): { url: string, filename?: string } {
   if (hasProtocol(src, { acceptRelative: true })) {
@@ -46,22 +45,26 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): 
   }
   return { url: src }
 }
-async function downloadScript(src: string, assetsBaseURL: string = '/_scripts') {
-  const { url, filename } = normalizeScriptData(src, assetsBaseURL)
-  if (src === url) {
+async function downloadScript(opts: {
+  src: string,
+  url: string,
+  filename?: string
+}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>) {
+  const { src, url, filename } = opts
+  if (src === url || !filename) {
     return
   }
-  const scriptContent = scriptContentMap.get(src)
+  const scriptContent = renderedScript.get(src)
   let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
   if (!res) {
     // Use storage to cache the font data between builds
     if (await storage.hasItem(`data:scripts:${filename}`)) {
       const res = await storage.getItemRaw<Buffer>(`data:scripts:${filename}`)
-      scriptContentMap.set(src, {
+      renderedScript.set(url, {
         content: res!,
         size: res!.length / 1024,
         encoding: 'utf-8',
-        url,
+        src,
         filename,
       })
 
@@ -81,18 +84,21 @@ async function downloadScript(src: string, assetsBaseURL: string = '/_scripts') 
     }).then(r => Buffer.from(r))
 
     storage.setItemRaw(`data:scripts:${filename}`, res)
-    scriptContentMap.set(src, {
+    renderedScript.set(url, {
       content: res!,
       size,
       encoding,
-      url,
+      src,
       filename,
     })
   }
 }
 
-export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {}) {
+export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
+  renderedScript: new Map()
+}) {
   const nuxt = useNuxt()
+  const { renderedScript = new Map() } = options
   const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
 
   // done after all transformation is done
@@ -101,11 +107,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     logger.log('[nuxt:scripts:bundler-transformer] Bundling scripts...')
     await fsp.rm(cacheDir, { recursive: true, force: true })
     await fsp.mkdir(cacheDir, { recursive: true })
-    await Promise.all([...scriptContentMap].map(async ([src, content]) => {
+    await Promise.all([...renderedScript].map(async ([url, content]) => {
       if (content instanceof Error || !content.filename)
         return
       await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
-      logger.log(colors.gray(`  ├─ ${src} → ${joinURL(content.url)} (${content.size.toFixed(2)} kB ${content.encoding})`))
+      logger.log(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
     }))
   })
 
@@ -231,9 +237,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   })
                   canBundle = bundleOption ? bundleOption.value.value : canBundle
                   if (canBundle) {
-                    let { url } = normalizeScriptData(src, options.assetsBaseURL)
+                    let { url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     try {
-                      await downloadScript(src, options.assetsBaseURL)
+                      await downloadScript({src, url, filename }, renderedScript)
                     }
                     catch (e) {
                       if (options.fallbackOnSrcOnBundleFail) {
