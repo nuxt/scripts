@@ -147,7 +147,9 @@ function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | P
   })
 }
 
-async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+  if (!_options)
+    return
   const key = hash(_options)
   if (mapMarkers.value.has(key))
     return mapMarkers.value.get(key)
@@ -285,7 +287,6 @@ onMounted(() => {
       }
     }
     for (const k of toAdd) {
-      // @ts-expect-error broken
       createAdvancedMapMarker(nextMap.get(k))
     }
   }, {
