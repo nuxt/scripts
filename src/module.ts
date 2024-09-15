@@ -114,8 +114,8 @@ export default defineNuxtModule<ModuleOptions>({
       if (!unheadVersion || lt(unheadVersion, '1.10.0')) {
         logger.error(`Nuxt Scripts requires Unhead >= 1.10.0, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
-      else if (lt(unheadVersion, '1.10.4')) {
-        logger.warn(`Nuxt Scripts recommends Unhead >= 1.10.4, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
+      else if (lt(unheadVersion, '1.11.5')) {
+        logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
     }
     // allow augmenting the options
