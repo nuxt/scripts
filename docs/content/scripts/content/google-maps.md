@@ -29,15 +29,17 @@ By default, it will load on the `mouseover` and `mouseclick` events.
 ### Billing & Permissions
 
 ::callout
-You'll need an API key with permissions to access the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup), the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup) and [Places API](https://developers.google.com/maps/documentation/places/web-service/cloud-setup).
+You'll need an API key with permissions to access the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
+
+Optionally, you can provide permissions to the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) (required when lazy loading and using the placeholder map) and [Places API](https://developers.google.com/maps/documentation/places/web-service/cloud-setup) (required when searching using a query, i.e "New York").
 ::
 
 Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
 - $7 per 1000 loads for the Maps JavaScript API (default for using Google Maps)
-- $2 per 1000 loads for the Static Maps API - You can avoid providing a `placeholder` slot.
-- $5 per 1000 loads for the Geocoding API - You can avoid this by providing a `google.maps.LatLng` object instead of a string for the `center` prop
+- $2 per 1000 loads for the Static Maps API - Only used when you don't provide a `placeholder` slot.
+- $5 per 1000 loads for the Geocoding API - Only used when you don't provide a `google.maps.LatLng` object instead of a query string for the `center` prop
 
-However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged.
+However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged, assuming you're using it.
 
 Billing will be optimized in a [future update](https://github.com/nuxt/scripts/issues/83).
 
@@ -127,7 +129,10 @@ function handleReady({ map }) {
 
 ### Props
 
-The `ScriptGoogleMaps` component accepts the following props:
+The `ScriptGoogleMaps` component accepts the following props.
+
+You must provide a `center` prop for the map to load correctly, alternatively you should provide `mapOptions` and configure 
+the `center` option there.
 
 **Map**
 
