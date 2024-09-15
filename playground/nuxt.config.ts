@@ -10,4 +10,10 @@ export default defineNuxtConfig({
   scripts: {
     debug: true,
   },
+
+  nitro: {
+    prerender: {
+      failOnError: false,
+    },
+  },
 })
