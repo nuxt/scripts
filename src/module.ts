@@ -210,7 +210,7 @@ ${newScripts.map((i) => {
         },
         assetsBaseURL: config.assets?.prefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
-        renderedScript
+        renderedScript,
       }))
 
       nuxt.hooks.hook('build:done', async () => {

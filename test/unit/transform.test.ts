@@ -304,9 +304,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       vi.mocked(fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
     })
 
-    const scripts =  [    {
+    const scripts = [{
       label: 'NPM',
-      scriptBundling(options?: NpmInput) {
+      scriptBundling() {
         return 'bundle.js'
       },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#C12127" d="M0 256V0h256v256z"/><path fill="#FFF" d="M48 48h160v160h-32V80h-48v128H48z"/></svg>`,
@@ -316,7 +316,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         // key is based on package name
         from: 'somewhere',
       },
-    },]
+    }]
     it('should throw error if bundle fails and fallbackOnSrcOnBundleFail is false', async () => {
       await expect(async () => await transform(`const { then } = useScriptNpm({
   packageName: 'js-confetti',
@@ -329,14 +329,14 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     },
     bundle: true
   },
-})`, { fallbackOnSrcOnBundleFail: false, scripts})).rejects.toThrow(`fetch error`)
+})`, { fallbackOnSrcOnBundleFail: false, scripts })).rejects.toThrow(`fetch error`)
     })
 
     it('should not throw error if bundle fails and fallbackOnSrcOnBundleFail is true', async () => {
       vi.mocked(hash).mockImplementationOnce(src => ohash(src.pathname))
 
       vi.mocked(fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
- 
+
       const code = await transform(`const instance = useScriptNpm({
   packageName: 'js-confetti',
   file: 'dist/js-confetti.browser.js',
@@ -348,7 +348,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     },
     bundle: true
   },
-})`, { fallbackOnSrcOnBundleFail: true,scripts })
+})`, { fallbackOnSrcOnBundleFail: true, scripts })
       expect(code).toMatchInlineSnapshot(`
         "const instance = useScriptNpm({ scriptInput: { src: 'bundle.js' }, 
           packageName: 'js-confetti',

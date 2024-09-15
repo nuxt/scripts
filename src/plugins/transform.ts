@@ -46,8 +46,8 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): 
   return { url: src }
 }
 async function downloadScript(opts: {
-  src: string,
-  url: string,
+  src: string
+  url: string
   filename?: string
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>) {
   const { src, url, filename } = opts
@@ -95,7 +95,7 @@ async function downloadScript(opts: {
 }
 
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
-  renderedScript: new Map()
+  renderedScript: new Map(),
 }) {
   const nuxt = useNuxt()
   const { renderedScript = new Map() } = options
@@ -237,9 +237,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   })
                   canBundle = bundleOption ? bundleOption.value.value : canBundle
                   if (canBundle) {
-                    let { url, filename } = normalizeScriptData(src, options.assetsBaseURL)
+                    const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
+                    let url = _url
                     try {
-                      await downloadScript({src, url, filename }, renderedScript)
+                      await downloadScript({ src, url, filename }, renderedScript)
                     }
                     catch (e) {
                       if (options.fallbackOnSrcOnBundleFail) {

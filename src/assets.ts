@@ -45,7 +45,7 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
 
         if (!scriptDescriptor || scriptDescriptor instanceof Error)
           throw createError({ statusCode: 404 })
-        
+
         const key = `data:scripts:${filename}`
         // Use storage to cache the font data between requests
         let res = await storage.getItemRaw(key)
@@ -82,6 +82,6 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
   } satisfies NitroConfig)
 
   return {
-    renderedScript
+    renderedScript,
   }
 }

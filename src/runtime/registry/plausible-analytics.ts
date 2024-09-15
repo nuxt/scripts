@@ -23,10 +23,10 @@ export type PlausibleAnalyticsInput = RegistryScriptInput<typeof PlausibleAnalyt
 
 export interface PlausibleAnalyticsApi {
   plausible: ((event: '404', options: Record<string, any>) => void) &
-  ((event: 'event', options: Record<string, any>) => void) &
-  ((...params: any[]) => void) & {
-    q: any[]
-  }
+    ((event: 'event', options: Record<string, any>) => void) &
+    ((...params: any[]) => void) & {
+      q: any[]
+    }
 }
 
 declare global {

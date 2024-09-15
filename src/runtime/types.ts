@@ -145,15 +145,15 @@ export type RegistryScriptInput<
   CanBypassOptions extends boolean = true,
 > =
     (InferInput<T>
-    & {
+      & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-      key?: string
-      scriptInput?: ScriptInput
-      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-    })
-    | Partial<InferInput<T>> & (
+        key?: string
+        scriptInput?: ScriptInput
+        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+      })
+      | Partial<InferInput<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
