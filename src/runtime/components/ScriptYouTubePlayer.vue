@@ -44,17 +44,20 @@ const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
-const { onLoaded, status } = useScriptYouTubePlayer({
+const script = useScriptYouTubePlayer({
   scriptOptions: {
     trigger,
   },
 })
+const { onLoaded, status } = script
 
 const player: Ref<YT.Player | undefined> = ref()
 let clickTriggered = false
 if (props.trigger === 'mousedown' && trigger instanceof Promise) {
-  trigger.then(() => {
-    clickTriggered = true
+  trigger.then((triggered) => {
+    if (triggered) {
+      clickTriggered = true
+    }
   })
 }
 onMounted(() => {

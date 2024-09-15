@@ -119,8 +119,10 @@ const rootEl = ref()
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 let clickTriggered = false
 if (props.trigger === 'mousedown' && trigger instanceof Promise) {
-  trigger.then(() => {
-    clickTriggered = true
+  trigger.then((val) => {
+    if (val) {
+      clickTriggered = true
+    }
   })
 }
 const ready = ref(false)

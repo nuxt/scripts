@@ -25,14 +25,14 @@ export interface ElementScriptTriggerOptions {
 
 function useElementVisibilityPromise(element: MaybeComputedElementRef) {
   let observer: UseIntersectionObserverReturn
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<boolean>((resolve) => {
     observer = useIntersectionObserver(
       element,
       (intersectionObserverEntries) => {
         // Get the latest value of isIntersecting based on the entry time
         for (const entry of intersectionObserverEntries) {
           if (entry.isIntersecting)
-            resolve()
+            resolve(true)
         }
       },
       {
@@ -40,11 +40,8 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
         threshold: 0,
       },
     )
-    tryOnScopeDispose(reject)
+    tryOnScopeDispose(() => resolve(false))
   })
-    .catch(() => {
-      // it's okay
-    })
     .finally(() => {
       observer.stop()
     })
@@ -53,15 +50,16 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
 /**
  * Create a trigger for an element to load a script based on specific element events.
  */
-export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<void> & { ssrAttrs?: Record<string, string> } | 'onNuxtReady' {
+export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<boolean> & { ssrAttrs?: Record<string, string> } | 'onNuxtReady' {
   const { el, trigger } = options
   const triggers = (Array.isArray(options.trigger) ? options.trigger : [options.trigger]).filter(Boolean) as string[]
   if (!trigger || triggers.includes('immediate') || triggers.includes('onNuxtReady')) {
     return 'onNuxtReady'
   }
   if (triggers.some(t => ['visibility', 'visible'].includes(t))) {
-    if (import.meta.server || !el)
-      return new Promise<void>(() => {})
+    if (import.meta.server || !el) {
+      return new Promise(() => {})
+    }
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
     return useElementVisibilityPromise(el)
   }
@@ -71,25 +69,25 @@ export function useScriptTriggerElement(options: ElementScriptTriggerOptions): P
       ssrAttrs[`on${trigger}`] = `this.dataset.script_${trigger} = true`
     })
   }
-  const p = new Promise<void>((resolve, reject) => {
+  const p = new Promise<boolean>((resolve) => {
     const target = typeof el !== 'undefined' ? (el as EventTarget) : document.body
     const _ = useEventListener(
       target,
       triggers,
       () => {
         _()
-        resolve()
+        resolve(true)
       },
       { once: true, passive: true },
     )
     tryOnMounted(() => {
-      // check if target has any of the triggers active onthe data set
+      // check if target has any of the triggers active on the data set
       watch(target, ($el) => {
         if ($el) {
           triggers.forEach((trigger) => {
             if (($el as HTMLElement).dataset[`script_${trigger}`]) {
               _()
-              resolve()
+              resolve(true)
             }
           })
         }
@@ -97,9 +95,8 @@ export function useScriptTriggerElement(options: ElementScriptTriggerOptions): P
         immediate: true,
       })
     })
-    tryOnScopeDispose(reject)
-  }).catch(() => {
-    // it's okay
+    tryOnScopeDispose(() => resolve(false))
   })
+
   return Object.assign(p, { ssrAttrs })
 }
