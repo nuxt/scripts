@@ -1,6 +1,38 @@
 # Changelog
 
 
+## v0.9.0
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.5...v0.9.0)
+
+### 🚀 Enhancements
+
+- Allow fallback on bundle fail ([#255](https://github.com/nuxt/scripts/pull/255))
+
+### 🩹 Fixes
+
+- **adsense:** ⚠️  Remove default `data-ad-format` ([#248](https://github.com/nuxt/scripts/pull/248))
+- Improved `bundle: true` debug and cache clearing ([d269066](https://github.com/nuxt/scripts/commit/d269066))
+- **metaPixel:** Use meta logo instead of facebook logo ([#264](https://github.com/nuxt/scripts/pull/264))
+- Insert script src with `app.baseURL` ([52e1fcb](https://github.com/nuxt/scripts/commit/52e1fcb))
+
+### 🏡 Chore
+
+- Broken type checking ([97a5218](https://github.com/nuxt/scripts/commit/97a5218))
+- Bump deps and lint ([e73b4c6](https://github.com/nuxt/scripts/commit/e73b4c6))
+- Fix playground ([575c4dd](https://github.com/nuxt/scripts/commit/575c4dd))
+
+#### ⚠️ Breaking Changes
+
+- **adsense:** ⚠️  Remove default `data-ad-format` ([#248](https://github.com/nuxt/scripts/pull/248))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- 2nofa11 ([@2nofa11](http://github.com/2nofa11))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+- Asoka Wotulo ([@asokawotulo](http://github.com/asokawotulo))
+
 ## v0.8.5
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.8.4...v0.8.5)
