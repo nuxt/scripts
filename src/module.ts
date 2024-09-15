@@ -101,6 +101,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
     nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
     nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
+    logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')

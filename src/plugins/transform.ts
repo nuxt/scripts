@@ -104,14 +104,22 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
   // done after all transformation is done
   // copy all scripts to build
   nuxt.hooks.hook('build:done', async () => {
-    logger.log('[nuxt:scripts:bundler-transformer] Bundling scripts...')
-    await fsp.rm(cacheDir, { recursive: true, force: true })
-    await fsp.mkdir(cacheDir, { recursive: true })
-    await Promise.all([...renderedScript].map(async ([url, content]) => {
+    const scripts = [...renderedScript]
+    if (!scripts.length) {
+      logger.debug('[bundle-script-transformer] No scripts to bundle...')
+      return
+    }
+    logger.info('[bundle-script-transformer] Bundling scripts...')
+    // less aggressive cache clearing in dev
+    if (!nuxt.options.dev) {
+      await fsp.rm(cacheDir, { recursive: true, force: true })
+      await fsp.mkdir(cacheDir, { recursive: true })
+    }
+    await Promise.all(scripts.map(async ([url, content]) => {
       if (content instanceof Error || !content.filename)
         return
       await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
-      logger.log(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
+      logger.info(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
     }))
   })
 
