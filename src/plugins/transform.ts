@@ -10,7 +10,7 @@ import { hasProtocol, parseURL, joinURL } from 'ufo'
 import { hash as ohash } from 'ohash'
 import { join } from 'pathe'
 import { colors } from 'consola/utils'
-import { useNuxt } from '@nuxt/kit'
+import { tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { logger } from '../logger'
 import { storage } from '../assets'
 import { isJS, isVue } from './util'
@@ -41,7 +41,8 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): 
     const file = [
       `${ohash(url)}.js`, // force an extension
     ].filter(Boolean).join('-')
-    return { url: joinURL(assetsBaseURL, file), filename: file }
+    const nuxt = tryUseNuxt()
+    return { url: joinURL(joinURL(nuxt?.options.app.baseURL || '', assetsBaseURL), file), filename: file }
   }
   return { url: src }
 }
