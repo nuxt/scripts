@@ -114,8 +114,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     // less aggressive cache clearing in dev
     if (!nuxt.options.dev) {
       await fsp.rm(cacheDir, { recursive: true, force: true })
-      await fsp.mkdir(cacheDir, { recursive: true })
     }
+    // ensure dir
+    await fsp.mkdir(cacheDir, { recursive: true })
     await Promise.all(scripts.map(async ([url, content]) => {
       if (content instanceof Error || !content.filename)
         return
