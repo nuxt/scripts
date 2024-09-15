@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v0.9.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.0...v0.9.1)
+
+### 🩹 Fixes
+
+- Prefer ref triggers or promise booleans ([bacd3de](https://github.com/nuxt/scripts/commit/bacd3de))
+
+### 🏡 Chore
+
+- Ensure dir for script ([e4f140c](https://github.com/nuxt/scripts/commit/e4f140c))
+- Recommend 1.11.5 unhead ([9c1a3e3](https://github.com/nuxt/scripts/commit/9c1a3e3))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
 ## v0.9.0
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.8.5...v0.9.0)
