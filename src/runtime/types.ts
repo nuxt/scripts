@@ -1,5 +1,5 @@
-import type { UseScriptOptions, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
-import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
+import type { DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
+import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
