@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v0.9.2
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.1...v0.9.2)
+
+### 🩹 Fixes
+
+- Types for ref triggers ([7b3570d](https://github.com/nuxt/scripts/commit/7b3570d))
+- Cache bundled scripts relative to nuxt root ([cc5e01b](https://github.com/nuxt/scripts/commit/cc5e01b))
+
+### 🏡 Chore
+
+- Bump deps ([582d360](https://github.com/nuxt/scripts/commit/582d360))
+- Missing import ([9e33732](https://github.com/nuxt/scripts/commit/9e33732))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
 ## v0.9.1
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.9.0...v0.9.1)
