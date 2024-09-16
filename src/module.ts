@@ -189,7 +189,7 @@ ${newScripts.map((i) => {
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         addPluginTemplate({
-          filename: `modules/${name!.replace('/', '-')}.mjs`,
+          filename: `modules/${name!.replace('/', '-')}/plugin.mjs`,
           getContents() {
             return templatePlugin(config, registryScriptsWithImport)
           },
