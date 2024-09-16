@@ -12,7 +12,7 @@ import { join } from 'pathe'
 import { colors } from 'consola/utils'
 import { tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { logger } from '../logger'
-import { storage } from '../assets'
+import { bundleStorage } from '../assets'
 import { isJS, isVue } from './util'
 import type { RegistryScript } from '#nuxt-scripts'
 
@@ -55,12 +55,13 @@ async function downloadScript(opts: {
   if (src === url || !filename) {
     return
   }
+  const storage = bundleStorage()
   const scriptContent = renderedScript.get(src)
   let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
   if (!res) {
     // Use storage to cache the font data between builds
-    if (await storage.hasItem(`data:scripts:${filename}`)) {
-      const res = await storage.getItemRaw<Buffer>(`data:scripts:${filename}`)
+    if (await storage.hasItem(`bundle:${filename}`)) {
+      const res = await storage.getItemRaw<Buffer>(`bundle:${filename}`)
       renderedScript.set(url, {
         content: res!,
         size: res!.length / 1024,
@@ -80,11 +81,12 @@ async function downloadScript(opts: {
       encoding = r.headers.get('content-encoding')
       const contentLength = r.headers.get('content-length')
       size = contentLength ? Number(contentLength) / 1024 : 0
-
       return r.arrayBuffer()
     }).then(r => Buffer.from(r))
 
-    storage.setItemRaw(`data:scripts:${filename}`, res)
+    await storage.setItemRaw(`bundle:${filename}`, res)
+    size = size || res!.length / 1024
+    logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})`)}`)
     renderedScript.set(url, {
       content: res!,
       size,
@@ -110,7 +112,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       logger.debug('[bundle-script-transformer] No scripts to bundle...')
       return
     }
-    logger.info('[bundle-script-transformer] Bundling scripts...')
+    logger.debug('[bundle-script-transformer] Bundling scripts...')
     // less aggressive cache clearing in dev
     if (!nuxt.options.dev) {
       await fsp.rm(cacheDir, { recursive: true, force: true })
@@ -121,7 +123,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       if (content instanceof Error || !content.filename)
         return
       await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
-      logger.info(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
+      logger.debug(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
     }))
   })
 

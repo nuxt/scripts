@@ -24,16 +24,20 @@ const renderedScript = new Map<string, {
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 // TODO: refactor to use nitro storage when it can be cached between builds
-export const storage = createStorage({
-  driver: fsDriver({
-    base: 'node_modules/.cache/nuxt/scripts',
-  }),
-})
+export const bundleStorage = () => {
+  const nuxt = useNuxt()
+  return createStorage({
+    driver: fsDriver({
+      base: resolve(nuxt.options.rootDir, 'node_modules/.cache/nuxt/scripts'),
+    }),
+  })
+}
 
 // TODO: replace this with nuxt/assets when it is released
 export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) {
   const assetsBaseURL = options.prefix || '/_scripts'
   const nuxt = useNuxt()
+  const storage = bundleStorage()
 
   // Register font proxy URL for development
   addDevServerHandler({
@@ -46,7 +50,7 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
         if (!scriptDescriptor || scriptDescriptor instanceof Error)
           throw createError({ statusCode: 404 })
 
-        const key = `data:scripts:${filename}`
+        const key = `bundle:${filename}`
         // Use storage to cache the font data between requests
         let res = await storage.getItemRaw(key)
         if (!res) {
