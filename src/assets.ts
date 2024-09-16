@@ -4,7 +4,7 @@ import { fetch } from 'ofetch'
 import { defu } from 'defu'
 import type { NitroConfig } from 'nitropack'
 import { joinURL } from 'ufo'
-import { join } from 'pathe'
+import { join, resolve } from 'pathe'
 import { createStorage } from 'unstorage'
 import fsDriver from 'unstorage/drivers/fs-lite'
 
