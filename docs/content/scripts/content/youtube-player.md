@@ -88,7 +88,7 @@ export interface YouTubeProps {
 
 #### Eager Loading Placeholder
 
-The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+The YouTube Player placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
 or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::code-group
