@@ -116,7 +116,7 @@ const rootAttrs = computed(() => {
       backgroundColor: 'black',
       maxWidth: '100%',
       width: `${props.width}px`,
-      height: `'auto'`,
+      height: 'auto',
       aspectRatio: `${props.width}/${props.height}`,
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
