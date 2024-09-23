@@ -35,10 +35,18 @@ const instance = useScriptGoogleAdsense({
 
 const { status } = instance
 
+function pushAdSlot() {
+  (window.adsbygoogle = window.adsbygoogle || []).push({})
+}
+
 onMounted(() => {
-  callOnce(() => {
-    (window.adsbygoogle = window.adsbygoogle || []).push({})
-  })
+  if (import.meta.dev) {
+    callOnce(() => pushAdSlot())
+  }
+  else {
+    pushAdSlot()
+  }
+
   watch(status, (val) => {
     if (val === 'loaded') {
       emits('ready', instance)
