@@ -1,6 +1,32 @@
 # Changelog
 
 
+## v0.9.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.2...v0.9.3)
+
+### 🩹 Fixes
+
+- Use free path for virtual plugin template ([8624923](https://github.com/nuxt/scripts/commit/8624923))
+- 🐛  Fixed "height" css style property ([#275](https://github.com/nuxt/scripts/pull/275))
+- **adsense:** Push ad slot once only on dev ([#276](https://github.com/nuxt/scripts/pull/276))
+
+### 📖 Documentation
+
+- Update scripts:registry hook example ([#271](https://github.com/nuxt/scripts/pull/271))
+- ✏️  Updated definition for YouTube Player ([#273](https://github.com/nuxt/scripts/pull/273))
+
+### 🏡 Chore
+
+- Bump deps ([81f0923](https://github.com/nuxt/scripts/commit/81f0923))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Asoka Wotulo ([@asokawotulo](http://github.com/asokawotulo))
+- Arb85 ([@arb85](http://github.com/arb85))
+- Bernhard Berger ([@bernhardberger](http://github.com/bernhardberger))
+
 ## v0.9.2
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.9.1...v0.9.2)
