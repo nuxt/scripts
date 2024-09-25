@@ -6,11 +6,13 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 import { object, string, optional } from '#nuxt-scripts-validator'
 
 declare global {
-  interface Window extends GoogleTagManagerApi {}
+      type Window = GoogleTagManagerApi
 }
 export const GoogleTagManagerOptions = object({
   id: string(),
   l: optional(string()),
+  consentType: optional(string()),
+  consentValues: optional(string()),
 })
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
@@ -33,6 +35,6 @@ export function useScriptGoogleTagManager(_options?: GoogleTagManagerInput) {
     // eslint-disable-next-line
         // @ts-ignore
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window[(options?.l ?? "dataLayer")]=window[(options?.l ?? "dataLayer")]||[];window[(options?.l ?? "dataLayer")].push({'gtm.start':new Date().getTime(),event:'gtm.js'});},
+        clientInit: import.meta.server ? undefined : () => {window[(options?.l ?? "dataLayer")]=window[(options?.l ?? "dataLayer")]||[];if(options?.consentValues){(function () {window[(options?.l ?? "dataLayer")].push(arguments)})('consent', (options?.consentType ?? "default"), (options?.consentValues ));};window[(options?.l ?? "dataLayer")].push({'gtm.start':new Date().getTime(),event:'gtm.js'});},
   }), _options)
 }

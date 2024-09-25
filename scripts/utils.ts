@@ -131,7 +131,13 @@ ${functionBody.join('\n')}
 }
 
 function replaceTokenToRuntime(code: string, defaultValues?: Record<string, string | number | undefined>) {
-  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, token) => {
+  // replace all {{#token}}...{{/token}} with if(options?.token){...}
+  return code.replace(
+    /\{\{#([^{}]+)\}\}(.*)\{\{\/\1\}\}/g,
+    (_match, name, innerCode) => {
+      return `if(options?.${name}){${replaceTokenToRuntime(innerCode, defaultValues)}};`
+    },
+  ).split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, token) => {
     return `(options?.${token} ${defaultValues?.[token] ? `?? ${JSON.stringify(defaultValues?.[token])}` : ''})`
   })).join(';')
 }
