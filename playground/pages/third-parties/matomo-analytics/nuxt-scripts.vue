@@ -7,7 +7,7 @@ useHead({
 
 // composables return the underlying api as a proxy object and the script state
 const { status, proxy } = useScriptMatomoAnalytics({
-  matomoUrl: 'https://nuxt-scripts-demo.matomo.cloud',
+  cloudId: 'nuxt.matomo.cloud',
   siteId: '1',
 })
 
