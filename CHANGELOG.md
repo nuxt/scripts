@@ -1,6 +1,29 @@
 # Changelog
 
 
+## v0.9.4
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.3...v0.9.4)
+
+### 🩹 Fixes
+
+- **matomo:** Easier cloud config using `cloudId` ([d7e18c4](https://github.com/nuxt/scripts/commit/d7e18c4))
+- **matomo:** Support numeric `siteId` ([299516c](https://github.com/nuxt/scripts/commit/299516c))
+- Avoid overriding `<link rek="preload"` with invalid src ([25f1ade](https://github.com/nuxt/scripts/commit/25f1ade))
+
+### 📖 Documentation
+
+- Fix docs for disabling scripts in development ([#281](https://github.com/nuxt/scripts/pull/281))
+
+### 🏡 Chore
+
+- Bump deps ([931f4f6](https://github.com/nuxt/scripts/commit/931f4f6))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Paul ([@schnetzi](http://github.com/schnetzi))
+
 ## v0.9.3
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.9.2...v0.9.3)

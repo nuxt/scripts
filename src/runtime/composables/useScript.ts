@@ -29,7 +29,11 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   const rel = options.trigger === 'onNuxtReady' ? 'preload' : 'preconnect'
   const isCrossOrigin = input.src && !input.src.startsWith('/')
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
-  if (input.src && options.trigger !== 'server' && (rel === 'preload' || isCrossOrigin)) {
+  const nuxtApp = useNuxtApp()
+  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+  const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
+  // need to make sure it's not already registered
+  if (!exists && input.src && options.trigger !== 'server' && (rel === 'preload' || isCrossOrigin)) {
     useHead({
       link: [
         {
@@ -47,9 +51,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   if (options.trigger === 'onNuxtReady') {
     options.trigger = onNuxtReady
   }
-  const nuxtApp = useNuxtApp()
-  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
-  const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
   if (import.meta.client) {
     // only validate if we're initializing the script
     if (!exists) {
