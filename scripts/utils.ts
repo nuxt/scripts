@@ -58,12 +58,12 @@ export async function generateTpcContent(input: TpcDescriptor) {
   const optionalParams = [...new Set(input.tpcData.scripts?.map(s => Object.keys(s.optionalParams) || []).flat() || [])]
 
   if (params.length || optionalParams.length) {
-    const validatorImports = new Set<string>(['object', 'string'])
+    const validatorImports = new Set<string>(['object', 'any'])
     if (optionalParams.length) {
       validatorImports.add('optional')
     }
 
-    const properties = params.filter(p => !optionalParams.includes(p)).map(p => `${p}: string()`).concat(optionalParams.map(o => `${o}: optional(string())`))
+    const properties = params.filter(p => !optionalParams.includes(p)).map(p => `${p}: any()`).concat(optionalParams.map(o => `${o}: optional(any())`))
     // need schema validation from tpc
     chunks.push(`export const ${titleKey}Options = object({
 ${properties.join(',\n')}

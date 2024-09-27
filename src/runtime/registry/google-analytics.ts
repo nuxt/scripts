@@ -6,10 +6,10 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 import { object, string, optional } from '#nuxt-scripts-validator'
 
 export const GoogleAnalyticsOptions = object({
-  id: string(),
-  l: optional(string()),
-  consentType: optional(string()),
-  consentValues: optional(string()),
+  id: any(),
+  l: optional(any()),
+  consentType: optional(any()),
+  consentValues: optional(any()),
 })
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 

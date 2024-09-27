@@ -9,10 +9,10 @@ declare global {
   interface Window extends GoogleTagManagerApi {}
 }
 export const GoogleTagManagerOptions = object({
-  id: string(),
-  l: optional(string()),
-  consentType: optional(string()),
-  consentValues: optional(string()),
+  id: any(),
+  l: optional(any()),
+  consentType: optional(any()),
+  consentValues: optional(any()),
 })
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
