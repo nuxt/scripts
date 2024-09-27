@@ -1,11 +1,11 @@
 import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { boolean, object, optional, string } from '#nuxt-scripts-validator'
+import { boolean, object, optional, string, number, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),
-  siteId: string(),
+  siteId: optional(union([string(), number()])),
   cloudId: optional(string()),
   trackerUrl: optional(string()),
   trackPageView: optional(boolean()),
