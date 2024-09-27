@@ -3,7 +3,7 @@ import { withQuery } from 'ufo'
 import type { GoogleTagManagerApi, DataLayer } from 'third-party-capital'
 import { useRegistryScript } from '#nuxt-scripts-utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
-import { object, string, optional } from '#nuxt-scripts-validator'
+import { object, any, optional } from '#nuxt-scripts-validator'
 
 declare global {
   interface Window extends GoogleTagManagerApi {}
