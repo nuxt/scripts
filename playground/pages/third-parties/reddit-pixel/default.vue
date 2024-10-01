@@ -8,7 +8,7 @@ useHead({
 })
 
 function triggerEvent() {
-  window.rdt('init', 'a2_fr1pptiy8tay')
+  window.rdt('init', '')
   window.rdt('track', 'PageVisit')
 }
 </script>
