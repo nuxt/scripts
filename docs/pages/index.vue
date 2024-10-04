@@ -242,7 +242,7 @@ const contributors = useRuntimeConfig().public.contributors
       </template>
 
       <template #description>
-        Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes
+        Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes
         many popular third-parties out of the box.
       </template>
 
