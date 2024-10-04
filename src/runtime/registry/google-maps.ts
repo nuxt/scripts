@@ -18,6 +18,8 @@ declare namespace google {
 export const GoogleMapsOptions = object({
   apiKey: string(),
   libraries: optional(array(string())),
+  language: optional(string()),
+  region: optional(string()),
   v: optional(union([literal('weekly'), literal('beta'), literal('alpha')])),
 })
 
@@ -40,6 +42,8 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
   let readyPromise: Promise<void> = Promise.resolve()
   return useRegistryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
     const libraries = options?.libraries || ['places']
+    const language = options?.language ? { language: options.language } : undefined
+    const region = options?.region ? { region: options.region } : undefined
     return {
       scriptInput: {
         src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
@@ -47,6 +51,8 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
           key: options?.apiKey,
           loading: 'async',
           callback: 'google.maps.__ib__',
+          ...language,
+          ...region,
         }),
       },
       clientInit: import.meta.server
