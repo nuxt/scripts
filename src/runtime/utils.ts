@@ -6,6 +6,7 @@ import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig } from '#imports'
 import type {
   EmptyOptionsSchema,
+  InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
   ScriptRegistry,
@@ -27,7 +28,7 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
   }
 }
 
-type OptionsFn<O> = (options: O) => ({
+type OptionsFn<O> = (options: InferIfSchema<O>) => ({
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
   schema?: O extends ObjectSchema<any, any> ? O : undefined
