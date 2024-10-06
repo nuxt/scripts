@@ -42,7 +42,7 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema, U = {}>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
-  const options = optionsFn(userOptions)
+  const options = optionsFn(userOptions as InferIfSchema<O>)
 
   const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
