@@ -140,7 +140,7 @@ type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
 
 export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
-  T,
+  T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
