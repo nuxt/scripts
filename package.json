@@ -117,6 +117,7 @@
     "@nuxt/module-builder": "^1.0.2",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "3.19.2",
+    "@paypal/paypal-js": "^8.1.2",
     "@types/semver": "^7.7.0",
     "@typescript-eslint/typescript-estree": "^8.40.0",
     "acorn-loose": "^8.5.2",
