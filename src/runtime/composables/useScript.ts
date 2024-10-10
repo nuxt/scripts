@@ -21,6 +21,7 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
    */
     $script: Promise<T> & VueScriptInstance<T>
   }
+const ValidPreloadTriggers = ['onNuxtReady', 'client'] as const
 
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
   input = typeof input === 'string' ? { src: input } : input
@@ -33,7 +34,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
   // need to make sure it's not already registered
-  if (!exists && input.src && options.trigger !== 'server' && (rel === 'preload' || isCrossOrigin)) {
+  if (!exists && input.src && ValidPreloadTriggers.includes(options.trigger) && (rel === 'preload' || isCrossOrigin)) {
     useHead({
       link: [
         {
