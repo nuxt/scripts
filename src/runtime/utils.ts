@@ -6,6 +6,7 @@ import { parse } from '#nuxt-scripts-validator'
 import { useRuntimeConfig } from '#imports'
 import type {
   EmptyOptionsSchema,
+  InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
   ScriptRegistry,
@@ -27,10 +28,10 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
   }
 }
 
-type OptionsFn<O extends ObjectSchema<any, any>> = (options: InferInput<O>) => ({
+type OptionsFn<O> = (options: InferIfSchema<O>) => ({
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
-  schema?: O
+  schema?: O extends ObjectSchema<any, any> ? O : undefined
   clientInit?: () => void
 })
 
@@ -38,10 +39,10 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
-export function useRegistryScript<T extends Record<string | symbol, any>, O extends ObjectSchema<any, any> = EmptyOptionsSchema, U = {}>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
+export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema, U = {}>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
-  const options = optionsFn(userOptions)
+  const options = optionsFn(userOptions as InferIfSchema<O>)
 
   const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})

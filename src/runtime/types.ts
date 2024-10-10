@@ -138,13 +138,14 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
 
+export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
-  T extends ObjectSchema<any, any> = EmptyOptionsSchema,
+  T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
 > =
-    (InferInput<T>
+    (InferIfSchema<T>
       & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
@@ -153,7 +154,7 @@ export type RegistryScriptInput<
         scriptInput?: ScriptInput
         scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
       })
-      | Partial<InferInput<T>> & (
+      | Partial<InferIfSchema<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
