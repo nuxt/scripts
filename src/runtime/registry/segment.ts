@@ -6,6 +6,8 @@ import type { RegistryScriptInput } from '#nuxt-scripts'
 export const SegmentOptions = object({
   writeKey: string(),
   analyticsKey: optional(string()),
+  proxySrc: optional(string()),
+  fileName: optional(string()),
 })
 
 export type SegmentInput = RegistryScriptInput<typeof SegmentOptions>
@@ -45,7 +47,7 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
     return {
       scriptInput: {
         'data-global-segment-analytics-key': k,
-        'src': joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js'),
+        'src': joinURL(options?.proxySrc || 'https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', options?.fileName || 'analytics.min.js'),
       },
       clientInit: import.meta.server
         ? undefined
