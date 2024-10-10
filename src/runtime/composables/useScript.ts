@@ -34,7 +34,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
   // need to make sure it's not already registered
-  if (!exists && input.src && ValidPreloadTriggers.includes(options.trigger) && (rel === 'preload' || isCrossOrigin)) {
+  if (!exists && input.src && ValidPreloadTriggers.includes(String(options.trigger)) && (rel === 'preload' || isCrossOrigin)) {
     useHead({
       link: [
         {
