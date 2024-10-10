@@ -21,7 +21,7 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
    */
     $script: Promise<T> & VueScriptInstance<T>
   }
-const ValidPreloadTriggers = ['onNuxtReady', 'client'] as const
+const ValidPreloadTriggers = ['onNuxtReady', 'client']
 
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
   input = typeof input === 'string' ? { src: input } : input
