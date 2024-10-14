@@ -21,33 +21,57 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
    */
     $script: Promise<T> & VueScriptInstance<T>
   }
+
 const ValidPreloadTriggers = ['onNuxtReady', 'client']
+const PreconnectServerModes = ['preconnect', 'dns-prefetch']
+
+function warmup(_input: Omit<Required<Head>['link'][0], 'rel'> & { rel: WarmupStrategy }, head: any) {
+  const input = { ..._input }
+  delete input.src
+  const { rel } = input
+  const $url = new URL(input.href, 'http://localhost')
+  const isPreconnect = PreconnectServerModes.includes(rel)
+  const href = isPreconnect ? $url.origin : input.href
+  const isCrossOrigin = $url.origin !== 'http://localhost'
+  if (!rel || (isPreconnect && !isCrossOrigin)) {
+    return
+  }
+  const defaults: Required<Head>['link'][0] = {
+    fetchpriority: 'low',
+  }
+  if (rel === 'preload') {
+    defaults.as = 'script'
+  }
+  // is absolute, add privacy headers
+  if (isCrossOrigin) {
+    defaults.crossorigin = 'anonymous'
+    defaults.referrerpolicy = 'no-referrer'
+  }
+  return useHead({
+    link: [{
+      ...defaults,
+      ...input,
+      href,
+    }],
+  }, {
+    head,
+    tagPriority: 'high'
+  })
+}
 
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
   // browser hint optimizations
-  const rel = options.trigger === 'onNuxtReady' ? 'preload' : 'preconnect'
-  const isCrossOrigin = input.src && !input.src.startsWith('/')
   const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
   const nuxtApp = useNuxtApp()
+  const head = options.head || injectHead()
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
+
   // need to make sure it's not already registered
-  if (!exists && input.src && ValidPreloadTriggers.includes(String(options.trigger)) && (rel === 'preload' || isCrossOrigin)) {
-    useHead({
-      link: [
-        {
-          rel,
-          as: rel === 'preload' ? 'script' : undefined,
-          href: input.src,
-          crossorigin: !isCrossOrigin ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
-          key: `nuxt-script-${id}`,
-          tagPriority: rel === 'preload' ? 'high' : 0,
-          fetchpriority: 'low',
-        },
-      ],
-    })
+  if (!options.warmupStrategy && ValidPreloadTriggers.includes(options.trigger)) {
+    options.warmupStrategy = 'preload'
   }
   if (options.trigger === 'onNuxtReady') {
     options.trigger = onNuxtReady
@@ -63,6 +87,22 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
+  instance.warmup = (rel) => {
+    console.log('doing warmup', rel)
+    if (!instance._warmupEl) {
+      instance._warmupEl = warmup({ ...input, href: input.src, rel }, head)
+    }
+  }
+  if (options.warmupStrategy) {
+    instance.warmup(options.warmupStrategy)
+  }
+  const _remove = instance.remove
+  instance.remove = () => {
+    _remove()
+    console.log('removing el', instance._warmupEl)
+    instance._warmupEl?.dispose()
+    nuxtApp.$scripts[id] = undefined
+  }
   // @ts-expect-error untyped
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
@@ -85,7 +125,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
 
     if (!nuxtApp._scripts[instance.id]) {
-      const head = injectHead()
       head.hooks.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
           return

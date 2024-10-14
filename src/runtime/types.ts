@@ -25,6 +25,8 @@ import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import { object } from '#nuxt-scripts-validator'
 
+type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
+
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
   /**
    * The trigger to load the script:
@@ -46,6 +48,16 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U 
    * loading the actual script and not getting warnings.
    */
   skipValidation?: boolean
+  /**
+   * Specify a strategy for warming up the connection to the third-party script.
+   *
+   * The strategy to use for preloading the script.
+   *  - `false` - Disable preloading.
+   *  - `'preload'` - Preload the script.
+   *  - `'preconnect'` | `'dns-prefetch'` - Preconnect to the script. Only works when loading a script from a different origin, will fallback
+   *  to `false` if the origin is the same.
+   */
+  warmupStrategy?: WarmupStrategy
   /**
    * @internal
    */
