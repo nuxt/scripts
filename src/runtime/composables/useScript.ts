@@ -88,7 +88,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
   instance.warmup = (rel) => {
-    console.log('doing warmup', rel)
     if (!instance._warmupEl) {
       instance._warmupEl = warmup({ ...input, href: input.src, rel }, head)
     }
@@ -99,7 +98,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   const _remove = instance.remove
   instance.remove = () => {
     _remove()
-    console.log('removing el', instance._warmupEl)
     instance._warmupEl?.dispose()
     nuxtApp.$scripts[id] = undefined
   }
