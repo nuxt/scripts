@@ -4,7 +4,7 @@ import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// eslint-disable-next-line
 declare namespace google {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace maps {
@@ -18,6 +18,8 @@ declare namespace google {
 export const GoogleMapsOptions = object({
   apiKey: string(),
   libraries: optional(array(string())),
+  language: optional(string()),
+  region: optional(string()),
   v: optional(union([literal('weekly'), literal('beta'), literal('alpha')])),
 })
 
@@ -25,7 +27,7 @@ export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
 type MapsNamespace = typeof google.maps
 export interface GoogleMapsApi {
-  maps: MapsNamespace | Promise<MapsNamespace>
+  maps: Promise<MapsNamespace>
 }
 
 declare global {
@@ -38,8 +40,10 @@ declare global {
 
 export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return useRegistryScript<T, typeof GoogleMapsOptions>(_options?.key || 'googleMaps', (options) => {
+  return useRegistryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
     const libraries = options?.libraries || ['places']
+    const language = options?.language ? { language: options.language } : undefined
+    const region = options?.region ? { region: options.region } : undefined
     return {
       scriptInput: {
         src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
@@ -47,6 +51,8 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
           key: options?.apiKey,
           loading: 'async',
           callback: 'google.maps.__ib__',
+          ...language,
+          ...region,
         }),
       },
       clientInit: import.meta.server
@@ -62,9 +68,7 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
       scriptOptions: {
         use() {
           return {
-            maps: readyPromise.then(() => {
-              return window.google.maps
-            }),
+            maps: readyPromise!.then(() => window.google.maps),
           }
         },
       },

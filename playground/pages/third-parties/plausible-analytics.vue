@@ -5,8 +5,8 @@ useHead({
   title: 'Plausible',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { $script, plausible } = useScriptPlausibleAnalytics({
+// composables return the underlying api as a proxy object and the script state
+const { status, plausible } = useScriptPlausibleAnalytics({
   domain: 'scripts.nuxt.com',
   extension: 'local',
 })
@@ -27,7 +27,7 @@ async function clickHandler() {
     </UButton>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>

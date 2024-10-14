@@ -5,8 +5,8 @@ useHead({
   title: 'Fathom',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { $script, trackPageview, trackEvent } = useScriptFathomAnalytics({
+// composables return the underlying api as a proxy object and the script state
+const { status, trackPageview, trackEvent } = useScriptFathomAnalytics({
   site: 'BRDEJWKJ',
 })
 // this will be triggered once the script is ready async
@@ -26,7 +26,7 @@ async function clickHandler() {
     </UButton>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>

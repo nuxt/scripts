@@ -11,10 +11,10 @@ export interface JSConfettiApi {
 }
 
 declare global {
-  interface Window extends JSConfettiApi {}
+  type Window = JSConfettiApi
 }
 
-const { $script } = useScriptNpm<JSConfettiApi>({
+const { then } = useScriptNpm<JSConfettiApi>({
   packageName: 'js-confetti',
   file: 'dist/js-confetti.browser.js',
   version: '0.12.0',
@@ -27,7 +27,7 @@ const { $script } = useScriptNpm<JSConfettiApi>({
 })
 
 function addConfetti(options: { emojis: string[] }) {
-  $script.then(({ JSConfetti }) => {
+  then(({ JSConfetti }) => {
     const confetti = new JSConfetti()
     confetti.addConfetti(options)
   })

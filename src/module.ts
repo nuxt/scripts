@@ -54,6 +54,12 @@ export interface ModuleOptions {
      * TODO Make configurable in future.
      */
     strategy?: 'public'
+    /**
+     * Fallback to src if bundle fails to load.
+     * The default behavior is to stop the bundling process if a script fails to be downloaded.
+     * @default false
+     */
+    fallbackOnSrcOnBundleFail?: boolean
   }
   /**
    * Whether the module is enabled.
@@ -70,16 +76,7 @@ export interface ModuleOptions {
 }
 
 export interface ModuleHooks {
-  /**
-   * Transform a script before it's registered.
-   */
   'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
-}
-
-declare module '@nuxt/schema' {
-  interface NuxtHooks {
-    'scripts:registry': ModuleHooks['scripts:registry']
-  }
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -101,6 +98,10 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(config, nuxt) {
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
+    nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
+    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
+    nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
+    logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')
@@ -110,9 +111,11 @@ export default defineNuxtModule<ModuleOptions>({
     // couldn't be found for some reason, assume compatibility
     if (unheadPath) {
       const { version: unheadVersion } = await readPackageJSON(join(unheadPath, 'package.json'))
-      if (!unheadVersion || lt(unheadVersion, '1.9.0')) {
-        logger.warn('@nuxt/scripts requires @unhead/vue >= 1.9.0, please upgrade to use the module.')
-        return
+      if (!unheadVersion || lt(unheadVersion, '1.10.0')) {
+        logger.error(`Nuxt Scripts requires Unhead >= 1.10.0, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
+      }
+      else if (lt(unheadVersion, '1.11.5')) {
+        logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
     }
     // allow augmenting the options
@@ -140,6 +143,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
+      // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       addImports(registryScriptsWithImport.map((i) => {
@@ -171,10 +175,10 @@ declare module '#nuxt-scripts' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
 ${newScripts.map((i) => {
-            const key = i.import?.name.replace('useScript', '')
-            const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-            return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-          }).join('\n')}
+    const key = i.import?.name.replace('useScript', '')
+    const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+    return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
+  }).join('\n')}
     }
 }`
           return types
@@ -185,14 +189,13 @@ ${newScripts.map((i) => {
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         addPluginTemplate({
-          filename: `modules/${name!.replace('/', '-')}.mjs`,
+          filename: `modules/${name!.replace('/', '-')}/plugin.mjs`,
           getContents() {
             return templatePlugin(config, registryScriptsWithImport)
           },
         })
       }
-      const scriptMap = new Map<string, string>()
-      const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
+      const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
@@ -206,13 +209,9 @@ ${newScripts.map((i) => {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
-        resolveScript(src) {
-          if (scriptMap.has(src))
-            return scriptMap.get(src) as string
-          const url = normalizeScriptData(src)
-          scriptMap.set(src, url)
-          return url
-        },
+        assetsBaseURL: config.assets?.prefix,
+        fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
+        renderedScript,
       }))
 
       nuxt.hooks.hook('build:done', async () => {

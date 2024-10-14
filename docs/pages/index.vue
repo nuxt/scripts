@@ -6,8 +6,8 @@ const registry = useScriptsRegistry()
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
 useSeoMeta({
-  title: 'Third-Party Scripts Meets Nuxt DX.',
-  description: 'Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
+  title: 'Third-Party Scripts Meets Nuxt DX',
+  description: 'Better performance, privacy, security and DX for third-party scripts.',
 })
 
 defineOgImageComponent('Home')
@@ -53,22 +53,18 @@ onMounted(() => {
   })
 })
 
-interface JSConfettiApi {
-  // JSConfetti is a class
-  JSConfetti: {
-    new(): {
-      addConfetti: (options?: { emojis: string[] }) => void
-    }
-  }
-}
 declare global {
   interface Window {
-    JSConfetti: { new (): JSConfettiApi }
+    JSConfetti: {
+      new (): {
+        addConfetti: (options?: { emojis: string[] }) => void
+      }
+    }
   }
 }
 
 const confettiEl = ref()
-const { $script } = useScript<JSConfettiApi>({
+const { onLoaded } = useScript({
   key: 'confetti',
   src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js',
 }, {
@@ -81,11 +77,13 @@ const { $script } = useScript<JSConfettiApi>({
   },
 })
 onMounted(() => {
-  confettiEl.value && useEventListener(confettiEl.value, 'mouseenter', () => {
-    $script.then(({ JSConfetti }) => {
-      new JSConfetti().addConfetti({ emojis: ['🎉', '🎊'] })
+  if (confettiEl.value) {
+    useEventListener(confettiEl.value, 'mouseenter', () => {
+      onLoaded(({ JSConfetti }) => {
+        new JSConfetti().addConfetti({ emojis: ['🎉', '🎊'] })
+      })
     })
-  })
+  }
 })
 
 const links = [
@@ -232,34 +230,32 @@ const contributors = useRuntimeConfig().public.contributors
       :links="links"
       orientation="horizontal"
       :ui="{
-        container: 'flex flex-row justify-start items-center',
+        container: 'max-w-full overflow-hidden py-10 flex flex-row items-center justify-center gap-1 max-w-full',
         links: 'flex items-center gap-2',
         description: 'text-gray-500 dark:text-gray-400 text-xl max-w-2xl leading-normal mb-10',
       }"
     >
       <template #title>
         <div class="leading-tight">
-          <span class="text-primary">Third-Party Scripts </span><br> Meets Nuxt DX.
+          <span class="text-primary">Third-Party Scripts </span><br> Meets Nuxt DX
         </div>
       </template>
 
       <template #description>
-        Nuxt Scripts lets you load third-party scripts better performance, privacy, security and DX. It includes
+        Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes
         many popular third-parties out of the box.
       </template>
 
       <div class="relative hidden xl:block">
-        <div class="absolute -z-1 -right-[450px] -top-[200px]">
-          <div class="w-[450px] grid-transform justify-center items-center grid grid-cols-4 ">
-            <a v-for="(script, key) in registry.filter(s => s.label !== 'Carbon Ads').slice(0, 16)" :key="key" ref="card" :href="`/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`" class="card py-5 px-3 rounded block" :style="{ zIndex: key }">
-              <template v-if="typeof script.logo !== 'string'">
-                <div class="logo h-12 w-auto block dark:hidden" v-html="script.logo.light" />
-                <div class="logo h-12 w-auto hidden dark:block" v-html="script.logo.dark" />
-              </template>
-              <div v-else-if="script.logo.startsWith('<svg')" class="logo h-10 w-auto" v-html="script.logo" />
-              <img v-else class="h-10 w-auto mx-auto logo" :src="script.logo">
-            </a>
-          </div>
+        <div class=" w-full max-w-full w-full grid-transform justify-center items-center grid grid-cols-4 ">
+          <a v-for="(script, key) in registry.filter(s => s.label !== 'Carbon Ads').slice(0, 16)" :key="key" ref="card" :href="`/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`" class="card py-5 px-3 rounded block" :style="{ zIndex: key }">
+            <template v-if="typeof script.logo !== 'string'">
+              <div class="logo h-12 w-auto block dark:hidden" v-html="script.logo.light" />
+              <div class="logo h-12 w-auto hidden dark:block" v-html="script.logo.dark" />
+            </template>
+            <div v-else-if="script.logo.startsWith('<svg')" class="logo h-10 w-auto" v-html="script.logo" />
+            <img v-else class="h-10 w-auto mx-auto logo" :src="script.logo">
+          </a>
         </div>
       </div>
     </ULandingHero>
@@ -374,7 +370,7 @@ const contributors = useRuntimeConfig().public.contributors
             Cookie consent that's good enough to eat
           </h2>
           <p class="text-gray-500 dark:text-gray-400 mb-3">
-            Nuxt Scripts aims to improve end-user privacy by providing a <NuxtLink to="/docs/guide/consent" class="underline">
+            Nuxt Scripts aims to improve end-user privacy by providing a <NuxtLink to="/docs/guides/consent" class="underline">
               simple API for managing cookie consent
             </NuxtLink>.
           </p>
@@ -428,6 +424,32 @@ const contributors = useRuntimeConfig().public.contributors
         </div>
       </div>
     </ULandingSection>
+
+    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+      <div class="text-center">
+        <UIcon name="i-ph-book-bookmark-duotone" class="h-[50px] w-[50px] text-primary" />
+        <h2 class="text-xl xl:text-4xl font-bold mb-12 text-center">
+          Watch the intro videos from the pros.
+        </h2>
+        <div class="lg:flex justify-between gap-10 items-center">
+          <ScriptYouTubePlayer video-id="sjMqUUvH9AE" class="rounded-xl overflow-hidden group">
+            <template #awaitingLoad>
+              <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-[48px] w-[68px] group-hover:opacity-80 transition">
+                <svg height="100%" version="1.1" viewBox="0 0 68 48" width="100%"><path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="#f00" /><path d="M 45,24 27,14 27,34" fill="#fff" /></svg>
+              </div>
+            </template>
+          </ScriptYouTubePlayer>
+          <ScriptYouTubePlayer video-id="jDQtxlRUf54" class="rounded-xl overflow-hidden group">
+            <template #awaitingLoad>
+              <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-[48px] w-[68px] group-hover:opacity-80 transition">
+                <svg height="100%" version="1.1" viewBox="0 0 68 48" width="100%"><path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="#f00" /><path d="M 45,24 27,14 27,34" fill="#fff" /></svg>
+              </div>
+            </template>
+          </ScriptYouTubePlayer>
+        </div>
+      </div>
+    </ULandingSection>
+
     <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
       <ULandingCTA
         description="Learn all of the fundamentals of Nuxt Scripts in the fun interactive confetti tutorial."

@@ -1,7 +1,12 @@
 <script setup>
 import { ref } from 'vue'
+import { ScriptGoogleMaps } from '#components'
 
-const query = ref('Space+Needle,Seattle+WA')
+const mapOptions = ref({
+  center: { lat: -34.397, lng: 150.644 },
+})
+
+const googleMapsRef = ref()
 
 function changeQuery() {
   query.value = 'Brooklyn+Bride,New+York+NY'
@@ -12,10 +17,11 @@ function changeQuery() {
   <div>
     <div>
       <ScriptGoogleMaps
+        ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
-        :width="600"
-        :height="400"
-        :query="query"
+        :width="640"
+        :height="500"
+        :map-options="mapOptions"
         above-the-fold
       />
     </div>

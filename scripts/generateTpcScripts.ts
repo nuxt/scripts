@@ -6,15 +6,17 @@ import { registry } from '../src/registry'
 import { generateTpcContent } from './utils'
 
 export interface TpcDescriptor {
+  fileName: string
   label: string
   tpcKey: string
   tpcData: Output
-  tpcTypeImport: string
+  tpcTypeAugmentation?: string
+  tpcTypesImport?: string[]
   key: string
   registry?: any
   scriptInput?: UseScriptInput
   performanceMarkFeature?: string
-  returnUse?: string
+  useBody?: string
   returnStub?: string
   clientInit?: string
   defaultOptions?: Record<string, unknown>
@@ -23,39 +25,36 @@ export interface TpcDescriptor {
 const scripts: Array<TpcDescriptor> = [
   // GTM
   {
+    fileName: 'google-tag-manager',
     label: 'Google Tag Manager',
     tpcKey: 'gtm',
     tpcData: GoogleTagManagerData as Output,
-    tpcTypeImport: 'GoogleTagManagerApi',
-    key: 'google-tag-manager',
+    tpcTypeAugmentation: 'GoogleTagManagerApi',
+    tpcTypesImport: ['DataLayer'],
+    key: 'googleTagManager',
     performanceMarkFeature: 'nuxt-third-parties-gtm',
-    returnUse: '{ dataLayer: window.dataLayers[options.dataLayerName!], google_tag_manager: window.google_tag_manager }',
+    useBody: 'return { dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer, google_tag_manager: window.google_tag_manager }',
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
-    defaultOptions: {
-      dataLayerName: 'defaultGtm',
-    },
   },
   // GA
   {
+    fileName: 'google-analytics',
     label: 'Google Analytics',
     tpcKey: 'gtag',
     tpcData: GooglaAnalyticsData as Output,
-    key: 'google-analytics',
-    tpcTypeImport: 'GoogleAnalyticsApi',
+    key: 'googleAnalytics',
+    tpcTypesImport: ['DataLayer', 'GTag'],
     performanceMarkFeature: 'nuxt-third-parties-ga',
-    returnUse: '{ dataLayer: window.dataLayers[options.dataLayerName!], gtag: window.gtag }',
+    useBody: 'const gtag: GTag = function (...args:Parameters<GTag>) { \n((window as any)["gtag-"+(options.l ?? "dataLayer")] as GTag)(...args);} as GTag\nreturn { dataLayer: (window as any)[options.l ?? "dataLayer"] as DataLayer,\n gtag }',
     // allow dataLayer to be accessed on the server
     returnStub: 'fn === \'dataLayer\' ? [] : void 0',
-    defaultOptions: {
-      dataLayerName: 'defaultGa',
-    },
   }]
 
 export async function generate() {
   for (const script of scripts) {
     script.registry = registry().find(r => r.label === script.label)
     const content = await generateTpcContent(script)
-    await writeFile(resolve(`./src/runtime/registry/${script.key}.ts`), content)
+    await writeFile(resolve(`./src/runtime/registry/${script.fileName}.ts`), content)
   }
 }
 

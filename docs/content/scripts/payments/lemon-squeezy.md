@@ -174,9 +174,9 @@ Using the Lemon Squeezy SDK with a payment link.
 
 ```vue
 <script setup lang="ts">
-const { Setup } = useScriptLemonSqueezy()
+const { proxy } = useScriptLemonSqueezy()
 onMounted(() => {
-  Setup()
+  proxy.Setup()
 })
 </script>
 

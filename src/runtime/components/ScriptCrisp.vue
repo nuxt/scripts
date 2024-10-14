@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptCrisp } from '../registry/crisp'
-import { ref, onMounted, onBeforeUnmount, watch } from '#imports'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -40,9 +40,12 @@ const crisp = useScriptCrisp({
     trigger,
   },
 })
-if (props.trigger === 'click')
-  crisp.do('chat:open')
-const { $script } = crisp
+const { onLoaded, status } = crisp
+if (props.trigger === 'click') {
+  onLoaded((instance) => {
+    instance.do('chat:open')
+  })
+}
 
 defineExpose({
   crisp,
@@ -50,7 +53,7 @@ defineExpose({
 
 let observer: MutationObserver
 onMounted(() => {
-  watch($script.status, (status) => {
+  watch(status, (status) => {
     if (status === 'loaded') {
       observer = new MutationObserver(() => {
         if (document.getElementById('crisp-chatbox')) {
@@ -69,16 +72,23 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect()
 })
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
+})
 </script>
 
 <template>
   <div
     ref="rootEl"
     :style="{ display: isReady ? 'none' : 'block' }"
+    v-bind="rootAttrs"
   >
     <slot :ready="isReady" />
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'loading' || !isReady" name="loading" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'loading' || !isReady" name="loading" />
+    <slot v-else-if="status === 'error'" name="error" />
   </div>
 </template>

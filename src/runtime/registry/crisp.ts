@@ -64,7 +64,7 @@ declare global {
 
 export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {
   let readyPromise: Promise<void> = Promise.resolve()
-  return useRegistryScript<T, typeof CrispOptions>(_options?.key || 'crisp', options => ({
+  return useRegistryScript<T, typeof CrispOptions>('crisp', options => ({
     scriptInput: {
       src: 'https://client.crisp.chat/l.js', // can't be bundled
     },

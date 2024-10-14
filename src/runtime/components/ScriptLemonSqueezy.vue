@@ -3,7 +3,7 @@ import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptLemonSqueezy } from '../registry/lemon-squeezy'
 import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
-import { onMounted, ref } from '#imports'
+import { computed, onMounted, ref } from '#imports'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
@@ -17,16 +17,17 @@ const emits = defineEmits<{
 }>()
 
 const rootEl = ref<HTMLElement | null>(null)
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const instance = useScriptLemonSqueezy({
   scriptOptions: {
-    trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
+    trigger,
   },
 })
 onMounted(() => {
   rootEl.value?.querySelectorAll('a[href]').forEach((a) => {
     a.classList.add('lemonsqueezy-button')
   })
-  instance.$script.then(({ Setup, Refresh }) => {
+  instance.onLoaded(({ Setup, Refresh }) => {
     Setup({
       eventHandler(event) {
         emits('lemonSqueezyEvent', event)
@@ -36,10 +37,16 @@ onMounted(() => {
     emits('ready', instance)
   })
 })
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
+})
 </script>
 
 <template>
-  <div ref="rootEl">
+  <div ref="rootEl" v-bind="rootAttrs">
     <slot />
   </div>
 </template>

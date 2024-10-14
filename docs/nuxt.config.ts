@@ -1,5 +1,6 @@
 import { defineNuxtConfig } from 'nuxt/config'
 import { $fetch } from 'ofetch'
+import { isDevelopment } from 'std-env'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -16,8 +17,14 @@ export default defineNuxtConfig({
     '@nuxt/image',
     async (_, nuxt) => {
       // build time for caching
-      const { contributors } = await $fetch(`https://api.nuxt.com/modules/scripts`)
-        .catch(() => ({ contributors: [] }))
+      const { contributors } = await $fetch(`https://api.nuxt.com/modules/scripts`).catch(() => {
+        if (isDevelopment) {
+          return {
+            contributors: [],
+          }
+        }
+        throw new Error('Failed to fetch contributors')
+      })
       nuxt.options.runtimeConfig.public.contributors = contributors.map(m => m.id)
     },
   ],
@@ -45,13 +52,13 @@ export default defineNuxtConfig({
   },
 
   app: {
-    seoMeta: {
-      themeColor: [
-        { content: '#18181b', media: '(prefers-color-scheme: dark)' },
-        { content: 'white', media: '(prefers-color-scheme: light)' },
-      ],
-    },
     head: {
+      seoMeta: {
+        themeColor: [
+          { content: '#18181b', media: '(prefers-color-scheme: dark)' },
+          { content: 'white', media: '(prefers-color-scheme: light)' },
+        ],
+      },
       templateParams: {
         separator: '·',
       },

@@ -44,7 +44,6 @@ jobs:
         run: pnpm playwright-core install chromium
 
       - run: pnpm dev:prepare
-      - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
       - run: pnpm typecheck

@@ -44,22 +44,25 @@ const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
-const { $script } = useScriptYouTubePlayer({
+const script = useScriptYouTubePlayer({
   scriptOptions: {
     trigger,
   },
 })
+const { onLoaded, status } = script
 
 const player: Ref<YT.Player | undefined> = ref()
 let clickTriggered = false
-if (props.trigger === 'mousedown') {
-  trigger.then(() => {
-    clickTriggered = true
+if (props.trigger === 'mousedown' && trigger instanceof Promise) {
+  trigger.then((triggered) => {
+    if (triggered) {
+      clickTriggered = true
+    }
   })
 }
 onMounted(() => {
-  $script.then(async (instance) => {
-    const YouTube: typeof YT & { ready: (fn: () => void) => void } = await instance.YT
+  onLoaded(async (instance) => {
+    const YouTube = instance.YT instanceof Promise ? await instance.YT : instance.YT
     await new Promise<void>((resolve) => {
       if (typeof YT.Player === 'undefined')
         YouTube.ready(resolve)
@@ -85,7 +88,7 @@ onMounted(() => {
       }])),
     })
   })
-  watch($script.status, (status) => {
+  watch(status, (status) => {
     if (status === 'error') {
       // @ts-expect-error untyped
       emits('error')
@@ -99,10 +102,10 @@ defineExpose({
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
-    'aria-busy': $script.status.value === 'loading',
-    'aria-label': $script.status.value === 'awaitingLoad'
+    'aria-busy': status.value === 'loading',
+    'aria-label': status.value === 'awaitingLoad'
       ? 'YouTube Player - Placeholder'
-      : $script.status.value === 'loading'
+      : status.value === 'loading'
         ? 'YouTube Player - Loading'
         : 'YouTube Player - Loaded',
     'aria-live': 'polite',
@@ -113,9 +116,10 @@ const rootAttrs = computed(() => {
       backgroundColor: 'black',
       maxWidth: '100%',
       width: `${props.width}px`,
-      height: `'auto'`,
+      height: 'auto',
       aspectRatio: `${props.width}/${props.height}`,
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 
@@ -126,12 +130,14 @@ if (import.meta.server) {
   useHead({
     link: [
       {
+        key: `nuxt-script-youtube-img`,
         rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
         href: 'https://i.ytimg.com',
       },
       props.aboveTheFold
         // we can preload the placeholder image
         ? {
+            key: `nuxt-script-youtube-img`,
             rel: 'preload',
             as: 'image',
             href: placeholder.value,
@@ -161,10 +167,11 @@ const placeholderAttrs = computed(() => {
     <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
       <img v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value === 'loading'" name="loading">
+    <slot v-if="status === 'loading'" name="loading">
       <ScriptLoadingIndicator />
     </slot>
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'error'" name="error" />
+    <slot />
   </div>
 </template>

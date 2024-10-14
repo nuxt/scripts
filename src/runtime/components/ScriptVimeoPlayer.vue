@@ -8,12 +8,7 @@ import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
 import { useAsyncData, useHead } from '#imports'
 
-const props = withDefaults(defineProps<{
-  // custom
-  trigger?: ElementScriptTrigger
-  placeholderAttrs?: ImgHTMLAttributes
-  rootAttrs?: HTMLAttributes
-  aboveTheFold?: boolean
+interface VimeoOptions {
   // copied from @types/vimeo__player
   id?: number | undefined
   url?: string | undefined
@@ -25,7 +20,7 @@ const props = withDefaults(defineProps<{
   controls?: boolean | undefined
   dnt?: boolean | undefined
   height?: number | undefined
-  // eslint-disable-next-line vue/prop-name-casing
+
   interactive_params?: string | undefined
   keyboard?: boolean | undefined
   loop?: boolean | undefined
@@ -42,12 +37,19 @@ const props = withDefaults(defineProps<{
   title?: boolean | undefined
   transparent?: boolean | undefined
   width?: number | undefined
+}
+
+const props = withDefaults(defineProps<{
+  // custom
+  trigger?: ElementScriptTrigger
+  placeholderAttrs?: ImgHTMLAttributes
+  rootAttrs?: HTMLAttributes
+  aboveTheFold?: boolean
+  vimeoOptions?: VimeoOptions
+  id?: number | undefined
+  url?: string | undefined
 }>(), {
   trigger: 'mousedown',
-  width: 640,
-  height: 480,
-  loop: false,
-  controls: true,
 })
 
 const emits = defineEmits<TEmits>()
@@ -116,13 +118,15 @@ const rootEl = ref()
 
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 let clickTriggered = false
-if (props.trigger === 'mousedown') {
-  trigger.then(() => {
-    clickTriggered = true
+if (props.trigger === 'mousedown' && trigger instanceof Promise) {
+  trigger.then((val) => {
+    if (val) {
+      clickTriggered = true
+    }
   })
 }
 const ready = ref(false)
-const { $script } = useScriptVimeoPlayer({
+const { onLoaded, status } = useScriptVimeoPlayer({
   scriptOptions: {
     trigger,
   },
@@ -140,12 +144,16 @@ if (import.meta.server) {
   })
 }
 
+const id = computed(() => {
+  return props.vimeoOptions?.id || props.id
+})
+
 const { data: payload } = useAsyncData(
-  `vimeo-embed:${props.id}`,
+  `vimeo-embed:${id.value}`,
   // TODO ideally we cache this
-  () => $fetch(`https://vimeo.com/api/v2/video/${props.id}.json`).then(res => (res as any)[0]),
+  () => $fetch(`https://vimeo.com/api/v2/video/${id.value}.json`).then(res => (res as any)[0]),
   {
-    watch: [() => props.id],
+    watch: [id],
   },
 )
 
@@ -169,10 +177,27 @@ defineExpose({
   setPlaybackRate: (rate: number) => player?.setPlaybackRate(rate),
 })
 
+const width = computed(() => {
+  return props.vimeoOptions?.width || elVimeo.value?.parentNode?.offsetWidth || 640
+})
+
+const height = computed(() => {
+  return props.vimeoOptions?.height || elVimeo.value?.parentNode?.offsetHeight || 480
+})
+
 onMounted(() => {
-  $script.then(async ({ Vimeo }) => {
-    // filter props for false values
-    player = new Vimeo.Player(elVimeo.value, props)
+  // @ts-ignore failing for end users
+  onLoaded(async ({ Vimeo }) => {
+    const vimeoOptions = props.vimeoOptions || {}
+    if (!vimeoOptions.id && props.id) {
+      vimeoOptions.id = props.id
+    }
+    if (!vimeoOptions.url && props.url) {
+      vimeoOptions.url = props.url
+    }
+    vimeoOptions.width = width.value
+    vimeoOptions.height = height.value
+    player = new Vimeo.Player(elVimeo.value, vimeoOptions)
     if (clickTriggered) {
       player!.play()
       clickTriggered = false
@@ -186,36 +211,39 @@ onMounted(() => {
       })
     }
   })
+})
 
-  watch(() => props.id, (v) => {
-    v && player?.loadVideo(Number(v))
-  })
-  watch($script.status, (status) => {
-    if (status === 'error') {
-      // @ts-expect-error untyped
-      emits('error')
-    }
-  })
+watch(() => props.id, (v) => {
+  if (v) {
+    player?.loadVideo(Number(v))
+  }
+})
+watch(status, (status) => {
+  if (status === 'error') {
+    // @ts-expect-error untyped
+    emits('error')
+  }
 })
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
-    'aria-busy': $script.status.value === 'loading',
-    'aria-label': $script.status.value === 'awaitingLoad'
+    'aria-busy': status.value === 'loading',
+    'aria-label': status.value === 'awaitingLoad'
       ? 'Vimeo Player - Placeholder'
-      : $script.status.value === 'loading'
+      : status.value === 'loading'
         ? 'Vimeo Player - Loading'
         : 'Vimeo Player - Loaded',
     'aria-live': 'polite',
     'role': 'application',
     'style': {
       maxWidth: '100%',
-      width: `${props.width}px`,
-      height: `'auto'`,
-      aspectRatio: `${props.width}/${props.height}`,
+      width: `${width.value}px`,
+      height: 'auto',
+      aspectRatio: `16/9`,
       position: 'relative',
       backgroundColor: 'black',
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 
@@ -240,21 +268,24 @@ onBeforeUnmount(() => player?.unload())
 
 <template>
   <div ref="rootEl" v-bind="rootAttrs">
-    <div v-show="ready" ref="elVimeo" class="vimeo-player" style="width: 100%; height: 100%; max-width: 100%;" />
+    <div v-show="ready" ref="elVimeo" class="vimeo-player" />
     <slot v-if="!ready" v-bind="payload" :placeholder="placeholder" name="placeholder">
       <img v-if="placeholder" v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value === 'loading'" name="loading">
+    <slot v-if="status === 'loading'" name="loading">
       <ScriptLoadingIndicator color="white" />
     </slot>
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'error'" name="error" />
     <slot />
   </div>
 </template>
 
 <style>
 .vimeo-player iframe {
+  height: auto;
+  aspect-ratio: 16/9;
+  width: 100%;
   max-width: 100% !important;
 }
 </style>

@@ -1,21 +1,132 @@
+import fsp from 'node:fs/promises'
 import { createUnplugin } from 'unplugin'
 import MagicString from 'magic-string'
 import type { SourceMapInput } from 'rollup'
 import type { Node } from 'estree-walker'
-import { walk } from 'estree-walker'
+import { asyncWalk } from 'estree-walker'
 import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
 import type { InferInput } from 'valibot'
+import { hasProtocol, parseURL, joinURL } from 'ufo'
+import { hash as ohash } from 'ohash'
+import { join } from 'pathe'
+import { colors } from 'consola/utils'
+import { tryUseNuxt, useNuxt } from '@nuxt/kit'
+import { logger } from '../logger'
+import { bundleStorage } from '../assets'
 import { isJS, isVue } from './util'
 import type { RegistryScript } from '#nuxt-scripts'
 
 export interface AssetBundlerTransformerOptions {
-  resolveScript: (src: string) => string
   moduleDetected?: (module: string) => void
   defaultBundle?: boolean
+  assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
+  fallbackOnSrcOnBundleFail?: boolean
+  renderedScript?: Map<string, {
+    content: Buffer
+    /**
+     * in kb
+     */
+    size: number
+    encoding?: string
+    src: string
+    filename?: string
+  } | Error>
 }
 
-export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions) {
+function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): { url: string, filename?: string } {
+  if (hasProtocol(src, { acceptRelative: true })) {
+    src = src.replace(/^\/\//, 'https://')
+    const url = parseURL(src)
+    const file = [
+      `${ohash(url)}.js`, // force an extension
+    ].filter(Boolean).join('-')
+    const nuxt = tryUseNuxt()
+    return { url: joinURL(joinURL(nuxt?.options.app.baseURL || '', assetsBaseURL), file), filename: file }
+  }
+  return { url: src }
+}
+async function downloadScript(opts: {
+  src: string
+  url: string
+  filename?: string
+}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>) {
+  const { src, url, filename } = opts
+  if (src === url || !filename) {
+    return
+  }
+  const storage = bundleStorage()
+  const scriptContent = renderedScript.get(src)
+  let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
+  if (!res) {
+    // Use storage to cache the font data between builds
+    if (await storage.hasItem(`bundle:${filename}`)) {
+      const res = await storage.getItemRaw<Buffer>(`bundle:${filename}`)
+      renderedScript.set(url, {
+        content: res!,
+        size: res!.length / 1024,
+        encoding: 'utf-8',
+        src,
+        filename,
+      })
+
+      return
+    }
+    let encoding
+    let size = 0
+    res = await fetch(src).then((r) => {
+      if (!r.ok) {
+        throw new Error(`Failed to fetch ${src}`)
+      }
+      encoding = r.headers.get('content-encoding')
+      const contentLength = r.headers.get('content-length')
+      size = contentLength ? Number(contentLength) / 1024 : 0
+      return r.arrayBuffer()
+    }).then(r => Buffer.from(r))
+
+    await storage.setItemRaw(`bundle:${filename}`, res)
+    size = size || res!.length / 1024
+    logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})`)}`)
+    renderedScript.set(url, {
+      content: res!,
+      size,
+      encoding,
+      src,
+      filename,
+    })
+  }
+}
+
+export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
+  renderedScript: new Map(),
+}) {
+  const nuxt = useNuxt()
+  const { renderedScript = new Map() } = options
+  const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
+
+  // done after all transformation is done
+  // copy all scripts to build
+  nuxt.hooks.hook('build:done', async () => {
+    const scripts = [...renderedScript]
+    if (!scripts.length) {
+      logger.debug('[bundle-script-transformer] No scripts to bundle...')
+      return
+    }
+    logger.debug('[bundle-script-transformer] Bundling scripts...')
+    // less aggressive cache clearing in dev
+    if (!nuxt.options.dev) {
+      await fsp.rm(cacheDir, { recursive: true, force: true })
+    }
+    // ensure dir
+    await fsp.mkdir(cacheDir, { recursive: true })
+    await Promise.all(scripts.map(async ([url, content]) => {
+      if (content instanceof Error || !content.filename)
+        return
+      await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
+      logger.debug(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
+    }))
+  })
+
   return createUnplugin(() => {
     return {
       name: 'nuxt:scripts:bundler-transformer',
@@ -30,8 +141,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
         const ast = this.parse(code)
         const s = new MagicString(code)
-        walk(ast as Node, {
-          enter(_node) {
+        await asyncWalk(ast as Node, {
+          async enter(_node) {
             // @ts-expect-error untyped
             const calleeName = (_node as SimpleCallExpression).callee?.name
             if (!calleeName)
@@ -100,7 +211,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               if (scriptSrcNode || src) {
                 src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
                 if (src) {
-                  let canBundle = options.defaultBundle
+                  let canBundle = !!options.defaultBundle
+                  // useScript
                   if (node.arguments[1]?.type === 'ObjectExpression') {
                     const scriptOptionsArg = node.arguments[1] as ObjectExpression & { start: number, end: number }
                     // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
@@ -126,16 +238,40 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       canBundle = true
                     }
                   }
+                  // @ts-expect-error untyped
+                  const scriptOptions = node.arguments[0].properties?.find(
+                    (p: any) => (p.key?.name === 'scriptOptions'),
+                  ) as Property | undefined
+                  // we need to check if scriptOptions contains bundle: true, if it exists
+                  // @ts-expect-error untyped
+                  const bundleOption = scriptOptions?.value.properties?.find((prop) => {
+                    return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
+                  })
+                  canBundle = bundleOption ? bundleOption.value.value : canBundle
                   if (canBundle) {
-                    const newSrc = options.resolveScript(src)
-                    if (src === newSrc) {
-                      if (src.startsWith('/'))
+                    const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
+                    let url = _url
+                    try {
+                      await downloadScript({ src, url, filename }, renderedScript)
+                    }
+                    catch (e) {
+                      if (options.fallbackOnSrcOnBundleFail) {
+                        logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
+                        url = src
+                      }
+                      else {
+                        throw e
+                      }
+                    }
+
+                    if (src === url) {
+                      if (src && src.startsWith('/'))
                         console.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
                       else
                         console.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
                     }
                     if (scriptSrcNode) {
-                      s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${newSrc}'`)
+                      s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
                     }
                     else {
                       const optionsNode = node.arguments[0] as ObjectExpression
@@ -152,14 +288,14 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                             (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
                           )
                           if (srcProperty)
-                            s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${newSrc}'`)
+                            s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${url}'`)
                           else
-                            s.appendRight(scriptInput.end, `, src: '${newSrc}'`)
+                            s.appendRight(scriptInput.end, `, src: '${url}'`)
                         }
                       }
                       else {
                         // @ts-expect-error untyped
-                        s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${newSrc}' }, `)
+                        s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}' }, `)
                       }
                     }
                   }

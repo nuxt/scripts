@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
-import { callOnce, onMounted, ref, watch } from '#imports'
+import { callOnce, computed, onMounted, ref, watch } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const props = withDefaults(defineProps<{
@@ -14,7 +14,6 @@ const props = withDefaults(defineProps<{
    */
   trigger?: ElementScriptTrigger
 }>(), {
-  dataAdFormat: 'auto',
   dataFullWidthResponsive: true,
 })
 
@@ -34,20 +33,34 @@ const instance = useScriptGoogleAdsense({
   },
 })
 
-const { $script } = instance
+const { status } = instance
+
+function pushAdSlot() {
+  (window.adsbygoogle = window.adsbygoogle || []).push({})
+}
 
 onMounted(() => {
-  callOnce(() => {
-    (window.adsbygoogle = window.adsbygoogle || []).push({})
-  })
-  watch(instance.$script.status, () => {
-    if (instance.$script.status.value === 'loaded') {
+  if (import.meta.dev) {
+    callOnce(() => pushAdSlot())
+  }
+  else {
+    pushAdSlot()
+  }
+
+  watch(status, (val) => {
+    if (val === 'loaded') {
       emits('ready', instance)
     }
-    else if (instance.$script.status.value === 'error') {
+    else if (val === 'error') {
       emits('error')
     }
   })
+})
+
+const rootAttrs = computed(() => {
+  return {
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }
 })
 </script>
 
@@ -60,10 +73,10 @@ onMounted(() => {
     :data-ad-slot="dataAdSlot"
     :data-ad-format="dataAdFormat"
     :data-full-width-responsive="dataFullWidthResponsive"
-    v-bind="{ ...$attrs }"
+    v-bind="rootAttrs"
   >
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'loading'" name="loading" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'loading'" name="loading" />
+    <slot v-else-if="status === 'error'" name="error" />
   </ins>
 </template>

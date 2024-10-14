@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
 import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
+import { hash } from 'ohash'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
@@ -44,15 +45,19 @@ const props = withDefaults(defineProps<{
   /**
    * Defines the Google Maps API key. Must have access to the Static Maps API as well.
    */
-  apiKey: string
+  apiKey?: string
   /**
-   * Defines map marker location.
+   * A latitude / longitude of where to focus the map.
    */
-  query?: string
+  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`
+  /**
+   * Should a marker be displayed on the map where the centre is.
+   */
+  centerMarker?: boolean
   /**
    * Options for the map.
    */
-  options?: google.maps.MapOptions
+  mapOptions?: google.maps.MapOptions
   /**
    * Defines the width of the map.
    */
@@ -75,47 +80,124 @@ const props = withDefaults(defineProps<{
    * Customize the root element attributes.
    */
   rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
+  /**
+   * Extra Markers to add to the map.
+   */
+  markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]
 }>(), {
   // @ts-expect-error untyped
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
-  width: 600,
+  width: 640,
   height: 400,
 })
 
 const emits = defineEmits<{
   // our emit
-  ready: [e: Ref<google.maps.Map | undefined>]
+  ready: [e: typeof googleMaps]
   error: []
 }>()
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 
-if (!apiKey)
+const mapsApi = ref<typeof google.maps | undefined>()
+
+if (import.meta.dev && !apiKey)
   throw new Error('GoogleMaps requires an API key. Please provide `apiKey` on the <ScriptGoogleMaps> or globally via `runtimeConfig.public.scripts.googleMaps.apiKey`.')
-if (!props.query && !props.options?.center)
-  throw new Error('GoogleMaps requires either a query or center prop to be set.')
+
+// TODO allow a null center may need to be resolved via an API function
 
 const rootEl = ref<HTMLElement>()
 const mapEl = ref<HTMLElement>()
 
-const { $script } = useScriptGoogleMaps({
+const centerOverride = ref()
+
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
+const { load, status, onLoaded } = useScriptGoogleMaps({
   apiKey: props.apiKey,
   scriptOptions: {
-    trigger: useScriptTriggerElement({ trigger: props.trigger, el: rootEl }),
+    trigger,
   },
 })
 
 const options = computed(() => {
-  return defu(props.options, {
+  return defu({ center: centerOverride.value }, props.mapOptions, {
+    center: props.center,
     zoom: 15,
-    mapId: 'map',
+    mapId: props.mapOptions?.styles ? undefined : 'map',
   })
 })
 const ready = ref(false)
 
-function queryToLocation(service: google.maps.places.PlacesService, query: string) {
-  return new Promise<google.maps.LatLng>((resolve, reject) => {
-    service.findPlaceFromQuery({
+const map: Ref<google.maps.Map | undefined> = ref()
+const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement>>> = ref(new Map())
+
+function isLocationQuery(s: string | any) {
+  return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
+}
+
+function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | Promise<google.maps.marker.AdvancedMarkerElement>) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<void>(async (resolve) => {
+    const marker = _marker instanceof Promise ? await _marker : _marker
+    if (marker) {
+      // @ts-expect-error broken type
+      marker.setMap(null)
+    }
+    resolve()
+  })
+}
+
+async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+  if (!_options)
+    return
+  const key = hash(_options)
+  if (mapMarkers.value.has(key))
+    return mapMarkers.value.get(key)
+  // eslint-disable-next-line no-async-promise-executor
+  const p = new Promise<google.maps.marker.AdvancedMarkerElement>(async (resolve) => {
+    const lib = await importLibrary('marker')
+    const options = typeof _options === 'string'
+      ? {
+          position: {
+            lat: Number.parseFloat(_options.split(',')[0] || '0'),
+            lng: Number.parseFloat(_options.split(',')[1] || '0'),
+          },
+        }
+      : _options
+    const mapMarkerOptions = defu(toRaw(options), {
+      map: toRaw(map.value!),
+      // @ts-expect-error unified API for maps and markers
+      position: options.location,
+    })
+    resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
+  })
+  mapMarkers.value.set(key, p)
+  return p
+}
+
+const queryToLatLngCache = new Map<string, google.maps.LatLng>()
+
+async function resolveQueryToLatLang(query: string) {
+  if (query && typeof query === 'object')
+    return Promise.resolve(query)
+  if (queryToLatLngCache.has(query)) {
+    return Promise.resolve(queryToLatLngCache.get(query))
+  }
+  // only if the query is a string we need to do a lookup
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<google.maps.LatLng>(async (resolve, reject) => {
+    if (!mapsApi.value) {
+      await load()
+      // await new promise, watch until mapsApi is set
+      await new Promise<void>((resolve) => {
+        const _ = watch(mapsApi, () => {
+          _()
+          resolve()
+        })
+      })
+    }
+    const placesService = new mapsApi.value!.places.PlacesService(map.value!)
+    placesService.findPlaceFromQuery({
       query,
       fields: ['name', 'geometry'],
     }, (results, status) => {
@@ -123,58 +205,141 @@ function queryToLocation(service: google.maps.places.PlacesService, query: strin
         return resolve(results[0].geometry.location)
       return reject(new Error(`No location found for ${query}`))
     })
+  }).then((res) => {
+    queryToLatLngCache.set(query, res)
+    return res
   })
 }
 
-const map: Ref<google.maps.Map | undefined> = ref()
-const markers: Ref<google.maps.marker.AdvancedMarkerElement[]> = ref([])
-defineExpose({
+const libraries = new Map<string, any>()
+
+function importLibrary(key: 'marker'): Promise<google.maps.MarkerLibrary>
+function importLibrary(key: 'places'): Promise<google.maps.PlacesLibrary>
+function importLibrary(key: 'geometry'): Promise<google.maps.GeometryLibrary>
+function importLibrary(key: 'drawing'): Promise<google.maps.DrawingLibrary>
+function importLibrary(key: 'visualization'): Promise<google.maps.VisualizationLibrary>
+function importLibrary(key: string): Promise<any>
+function importLibrary<T>(key: string): Promise<T> {
+  if (libraries.has(key))
+    return libraries.get(key)
+  const p = mapsApi.value?.importLibrary(key) || new Promise((resolve) => {
+    const stop = watch(mapsApi, (api) => {
+      if (api) {
+        const p = api.importLibrary(key)
+        resolve(p)
+        stop()
+      }
+    }, { immediate: true })
+  })
+  libraries.set(key, p)
+  return p as any as Promise<T>
+}
+
+const googleMaps = {
+  googleMaps: mapsApi,
   map,
-  markers,
-})
+  createAdvancedMapMarker,
+  resolveQueryToLatLang,
+  importLibrary,
+} as const
+
+defineExpose(googleMaps)
 
 onMounted(() => {
   watch(ready, (v) => {
-    v && emits('ready', map)
+    if (v) {
+      emits('ready', googleMaps)
+    }
   })
-  watch($script.status, () => {
-    if ($script.status.value === 'error') {
+  watch(status, (v) => {
+    if (v === 'error') {
       emits('error')
     }
   })
-  // create the map
-  $script.then(async (instance) => {
-    const maps = await instance.maps as any as typeof google.maps // some weird type issue here
-    const _map = new maps.Map(mapEl.value!, options.value)
-    const placesService = new maps.places.PlacesService(_map)
-
-    watch(options, () => _map.setOptions(options.value))
-    watch(() => props.query, async (query) => {
-      // always clear old markers
-      markers.value.forEach(marker => marker.remove())
-      markers.value = []
-      if (query) {
-        const marker = await maps.importLibrary('marker') as google.maps.MarkerLibrary
-        const location = await queryToLocation(placesService, query).catch((err) => {
-          console.warn(err)
-          return {
-            lat: 0,
-            lng: 0,
-          }
-        })
-        _map.setCenter(location)
-        markers.value.push(new marker.AdvancedMarkerElement({
-          map: _map,
-          position: location,
-        }))
-        ready.value = true
+  watch(options, () => {
+    map.value?.setOptions(options.value)
+  })
+  watch([() => props.markers, map], async () => {
+    if (!map.value) {
+      return
+    }
+    // mapMarkers is a map where we hash the next array entry as the map key
+    // we need to do a diff to see what we remove or add
+    const nextMap = new Map((props.markers || []).map(m => [hash(m), m]))
+    // compare idsToMatch in nextMap, if we're missing an id, we need to remove it
+    const toRemove = new Set([
+      ...mapMarkers.value.keys(),
+    ].filter(k => !nextMap.has(k)))
+    // compare to existing
+    const toAdd = new Set([...nextMap.keys()].filter(k => !mapMarkers.value.has(k)))
+    // do a diff of next and prev
+    const centerHash = hash({ position: options.value.center })
+    for (const key of toRemove) {
+      if (key === centerHash) {
+        continue
       }
-    }, {
-      immediate: !!props.query,
-    })
-    if (!props.query)
-      ready.value = true
-    map.value = _map
+      const marker = await mapMarkers.value.get(key)
+      if (marker) {
+        resetMapMarkerMap(marker)
+          .then(() => {
+            mapMarkers.value.delete(key)
+          })
+      }
+    }
+    for (const k of toAdd) {
+      createAdvancedMapMarker(nextMap.get(k))
+    }
+  }, {
+    immediate: true,
+    deep: true,
+  })
+  watch([() => options.value.center, ready, map], async (next, prev) => {
+    if (!map.value) {
+      return
+    }
+    let center = toRaw(next[0])
+    if (center) {
+      if (isLocationQuery(center) && ready.value) {
+        // need to resolve center from query
+        center = await resolveQueryToLatLang(center as string)
+      }
+      map.value!.setCenter(center as google.maps.LatLng)
+      if (typeof props.centerMarker === 'undefined' || props.centerMarker) {
+        if (options.value.mapId) {
+          // not allowed to use advanced markers with styles
+          return
+        }
+        if (prev[0]) {
+          const prevCenterHash = hash({ position: prev[0] })
+          if (mapMarkers.value.has(prevCenterHash)) {
+            resetMapMarkerMap(mapMarkers.value.get(prevCenterHash)!)
+              .then(() => {
+                mapMarkers.value.delete(prevCenterHash)
+              })
+          }
+        }
+        createAdvancedMapMarker({ position: center })
+      }
+    }
+  }, {
+    immediate: true,
+  })
+  onLoaded(async (instance) => {
+    mapsApi.value = await instance.maps as any as typeof google.maps // some weird type issue here
+    // may need to transform the center before we can init the map
+    const center = options.value.center as string
+    const _options: google.maps.MapOptions = {
+      ...options.value,
+      // @ts-expect-error broken
+      center: !center || isLocationQuery(center) ? undefined : center,
+    }
+    map.value = new mapsApi.value!.Map(mapEl.value!, _options)
+    if (center && isLocationQuery(center)) {
+      // need to resolve center
+      centerOverride.value = await resolveQueryToLatLang(center)
+      map.value?.setCenter(centerOverride.value)
+    }
+    ready.value = true
   })
 })
 
@@ -189,16 +354,52 @@ if (import.meta.server) {
   })
 }
 
+function transformMapStyles(styles: google.maps.MapTypeStyle[]) {
+  return styles.map((style) => {
+    const feature = style.featureType ? `feature:${style.featureType}` : ''
+    const element = style.elementType ? `element:${style.elementType}` : ''
+    const rules = (style.stylers || []).map((styler) => {
+      return Object.entries(styler).map(([key, value]) => {
+        if (key === 'color' && typeof value === 'string') {
+          value = value.replace('#', '0x')
+        }
+        return `${key}:${value}`
+      }).join('|')
+    }).filter(Boolean).join('|')
+    return [feature, element, rules].filter(Boolean).join('|')
+  }).filter(Boolean)
+}
+
 const placeholder = computed(() => {
+  let center = options.value.center
+  if (center && typeof center === 'object') {
+    center = `${center.lat},${center.lng}`
+  }
+  // @ts-expect-error lazy type
   const placeholderOptions: PlaceholderOptions = defu(props.placeholderOptions, {
     // only map option values
     zoom: options.value.zoom,
-    center: options.value.center?.toString() || '',
+    center,
   }, {
     size: `${props.width}x${props.height}`,
     key: apiKey,
     scale: 2, // we assume a high DPI to avoid hydration issues
-    markers: `color:red|${props.query}`,
+    style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
+    markers: [
+      ...(props.markers || []),
+      center,
+    ]
+      .filter(Boolean)
+      .map((m) => {
+        if (typeof m === 'object' && m.location) {
+          m = m.location
+        }
+        if (typeof m === 'object' && m.lat) {
+          return `${m.lat},${m.lng}`
+        }
+        return m
+      })
+      .join('|'),
   })
   return withQuery('https://maps.googleapis.com/maps/api/staticmap', placeholderOptions as QueryObject)
 })
@@ -206,7 +407,7 @@ const placeholder = computed(() => {
 const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: placeholder.value,
-    alt: props.query || '',
+    alt: 'Google Maps Static Map',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       cursor: 'pointer',
@@ -219,10 +420,10 @@ const placeholderAttrs = computed(() => {
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
-    'aria-busy': $script.status.value === 'loading',
-    'aria-label': $script.status.value === 'awaitingLoad'
+    'aria-busy': status.value === 'loading',
+    'aria-label': status.value === 'awaitingLoad'
       ? 'Google Maps Static Map'
-      : $script.status.value === 'loading'
+      : status.value === 'loading'
         ? 'Google Maps Map Embed Loading'
         : 'Google Maps Embed',
     'aria-live': 'polite',
@@ -235,14 +436,15 @@ const rootAttrs = computed(() => {
       height: `'auto'`,
       aspectRatio: `${props.width}/${props.height}`,
     },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
 
-onBeforeUnmount(() => {
-  markers.value.forEach(marker => marker.remove())
-  markers.value = []
+onBeforeUnmount(async () => {
+  await Promise.all([...mapMarkers.value.entries()].map(([,marker]) => resetMapMarkerMap(marker)))
+  mapMarkers.value.clear()
   map.value?.unbindAll()
   map.value = undefined
   mapEl.value?.firstChild?.remove()
@@ -251,15 +453,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="rootEl" v-bind="rootAttrs">
-    <div v-show="ready" ref="mapEl" class="script-google-maps__map" :style="{ width: '100%', height: '100%', maxWidth: '100%' }" />
+    <div v-show="ready" ref="mapEl" :style="{ width: '100%', height: '100%', maxWidth: '100%' }" />
     <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
       <img v-bind="placeholderAttrs">
     </slot>
-    <slot v-if="$script.status.value === 'loading'" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
-    <slot v-if="$script.status.value === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="$script.status.value === 'error'" name="error" />
+    <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
+    <slot v-else-if="status === 'error'" name="error" />
     <slot />
   </div>
 </template>

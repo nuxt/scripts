@@ -1,6 +1,427 @@
 # Changelog
 
 
+## v0.9.4
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.3...v0.9.4)
+
+### 🩹 Fixes
+
+- **matomo:** Easier cloud config using `cloudId` ([d7e18c4](https://github.com/nuxt/scripts/commit/d7e18c4))
+- **matomo:** Support numeric `siteId` ([299516c](https://github.com/nuxt/scripts/commit/299516c))
+- Avoid overriding `<link rek="preload"` with invalid src ([25f1ade](https://github.com/nuxt/scripts/commit/25f1ade))
+
+### 📖 Documentation
+
+- Fix docs for disabling scripts in development ([#281](https://github.com/nuxt/scripts/pull/281))
+
+### 🏡 Chore
+
+- Bump deps ([931f4f6](https://github.com/nuxt/scripts/commit/931f4f6))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Paul ([@schnetzi](http://github.com/schnetzi))
+
+## v0.9.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.2...v0.9.3)
+
+### 🩹 Fixes
+
+- Use free path for virtual plugin template ([8624923](https://github.com/nuxt/scripts/commit/8624923))
+- 🐛  Fixed "height" css style property ([#275](https://github.com/nuxt/scripts/pull/275))
+- **adsense:** Push ad slot once only on dev ([#276](https://github.com/nuxt/scripts/pull/276))
+
+### 📖 Documentation
+
+- Update scripts:registry hook example ([#271](https://github.com/nuxt/scripts/pull/271))
+- ✏️  Updated definition for YouTube Player ([#273](https://github.com/nuxt/scripts/pull/273))
+
+### 🏡 Chore
+
+- Bump deps ([81f0923](https://github.com/nuxt/scripts/commit/81f0923))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Asoka Wotulo ([@asokawotulo](http://github.com/asokawotulo))
+- Arb85 ([@arb85](http://github.com/arb85))
+- Bernhard Berger ([@bernhardberger](http://github.com/bernhardberger))
+
+## v0.9.2
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.1...v0.9.2)
+
+### 🩹 Fixes
+
+- Types for ref triggers ([7b3570d](https://github.com/nuxt/scripts/commit/7b3570d))
+- Cache bundled scripts relative to nuxt root ([cc5e01b](https://github.com/nuxt/scripts/commit/cc5e01b))
+
+### 🏡 Chore
+
+- Bump deps ([582d360](https://github.com/nuxt/scripts/commit/582d360))
+- Missing import ([9e33732](https://github.com/nuxt/scripts/commit/9e33732))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
+## v0.9.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.0...v0.9.1)
+
+### 🩹 Fixes
+
+- Prefer ref triggers or promise booleans ([bacd3de](https://github.com/nuxt/scripts/commit/bacd3de))
+
+### 🏡 Chore
+
+- Ensure dir for script ([e4f140c](https://github.com/nuxt/scripts/commit/e4f140c))
+- Recommend 1.11.5 unhead ([9c1a3e3](https://github.com/nuxt/scripts/commit/9c1a3e3))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+
+## v0.9.0
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.5...v0.9.0)
+
+### 🚀 Enhancements
+
+- Allow fallback on bundle fail ([#255](https://github.com/nuxt/scripts/pull/255))
+
+### 🩹 Fixes
+
+- **adsense:** ⚠️  Remove default `data-ad-format` ([#248](https://github.com/nuxt/scripts/pull/248))
+- Improved `bundle: true` debug and cache clearing ([d269066](https://github.com/nuxt/scripts/commit/d269066))
+- **metaPixel:** Use meta logo instead of facebook logo ([#264](https://github.com/nuxt/scripts/pull/264))
+- Insert script src with `app.baseURL` ([52e1fcb](https://github.com/nuxt/scripts/commit/52e1fcb))
+
+### 🏡 Chore
+
+- Broken type checking ([97a5218](https://github.com/nuxt/scripts/commit/97a5218))
+- Bump deps and lint ([e73b4c6](https://github.com/nuxt/scripts/commit/e73b4c6))
+- Fix playground ([575c4dd](https://github.com/nuxt/scripts/commit/575c4dd))
+
+#### ⚠️ Breaking Changes
+
+- **adsense:** ⚠️  Remove default `data-ad-format` ([#248](https://github.com/nuxt/scripts/pull/248))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- 2nofa11 ([@2nofa11](http://github.com/2nofa11))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+- Asoka Wotulo ([@asokawotulo](http://github.com/asokawotulo))
+
+## v0.8.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.4...v0.8.5)
+
+### 🩹 Fixes
+
+- **bundling:** Throw error if download fails ([#253](https://github.com/nuxt/scripts/pull/253))
+- Group failed scripts log ([#254](https://github.com/nuxt/scripts/pull/254))
+- **YouTube:** Broken api types ([a00f753](https://github.com/nuxt/scripts/commit/a00f753))
+
+### 🏡 Chore
+
+- Maybe fix vimeo types ([159fdcd](https://github.com/nuxt/scripts/commit/159fdcd))
+- Bump deps ([e0034fa](https://github.com/nuxt/scripts/commit/e0034fa))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Julien Huang <julien.h.dev@gmail.com>
+
+## v0.8.4
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.3...v0.8.4)
+
+### 🩹 Fixes
+
+- **ScriptGoogleMaps:** Clean up map markers properly ([53bb530](https://github.com/nuxt/scripts/commit/53bb530))
+
+### 🏡 Chore
+
+- Bump deps and lint ([06c757c](https://github.com/nuxt/scripts/commit/06c757c))
+- Sync lock ([bdc5f98](https://github.com/nuxt/scripts/commit/bdc5f98))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+
+## v0.8.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.2...v0.8.3)
+
+### 🩹 Fixes
+
+- Do not omit `crossorigin` from link preload ([#241](https://github.com/nuxt/scripts/pull/241))
+
+### 🏡 Chore
+
+- Bump deps ([cdebb4a](https://github.com/nuxt/scripts/commit/cdebb4a))
+- Fix tests ([45b5dc0](https://github.com/nuxt/scripts/commit/45b5dc0))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Daniel Roe <daniel@roe.dev>
+
+## v0.8.2
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.1...v0.8.2)
+
+### 🚀 Enhancements
+
+- **matomo:** Support custom tracker urls ([#236](https://github.com/nuxt/scripts/pull/236))
+
+### ❤️ Contributors
+
+- Reslear <reslear@gmail.com>
+
+## v0.8.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.8.0...v0.8.1)
+
+### 🩹 Fixes
+
+- Handle scripts missing `src` ([510d7b9](https://github.com/nuxt/scripts/commit/510d7b9))
+
+### 📖 Documentation
+
+- Add learn section and carbon ads ([f4de446](https://github.com/nuxt/scripts/commit/f4de446))
+
+### 🏡 Chore
+
+- Bump deps and lint ([03bd491](https://github.com/nuxt/scripts/commit/03bd491))
+- Fix test ([e3d78fd](https://github.com/nuxt/scripts/commit/e3d78fd))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+
+## v0.8.0
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.3...v0.8.0)
+
+## v0.7.3
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.2...v0.7.3)
+
+## v0.7.2
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.1...v0.7.2)
+
+### 🚀 Enhancements
+
+- Automatically `preload` and `preconnect` relevant scripts ([a65a5e0](https://github.com/nuxt/scripts/commit/a65a5e0))
+- **useScriptTriggerElement:** Pre-hydration event triggers ([#237](https://github.com/nuxt/scripts/pull/237))
+- **googleMaps:** Unified styling of static image and map ([c85d278](https://github.com/nuxt/scripts/commit/c85d278))
+
+### 🩹 Fixes
+
+- Soft-dependency on Unhead v1.10.1 ([4a9fc40](https://github.com/nuxt/scripts/commit/4a9fc40))
+- Allow `useScript` to re-register trigger ([9890124](https://github.com/nuxt/scripts/commit/9890124))
+- **useScriptTriggerElement:** Reject promises on scope dispose ([7297783](https://github.com/nuxt/scripts/commit/7297783))
+- **googleAdsense:** Broken validation input path ([f198a80](https://github.com/nuxt/scripts/commit/f198a80))
+
+### 💅 Refactors
+
+- **playground:** Avoid deprecated useScript api ([0f02696](https://github.com/nuxt/scripts/commit/0f02696))
+
+### 📖 Documentation
+
+- Add coding group end to plausible page ([#215](https://github.com/nuxt/scripts/pull/215))
+
+### 🏡 Chore
+
+- **release:** V0.7.1 ([48e4244](https://github.com/nuxt/scripts/commit/48e4244))
+- Bump nuxt version ([#224](https://github.com/nuxt/scripts/pull/224))
+- **docs:** Fix incorrect links ([#228](https://github.com/nuxt/scripts/pull/228))
+- Bump deps ([13184f8](https://github.com/nuxt/scripts/commit/13184f8))
+- Sync lock ([28346e2](https://github.com/nuxt/scripts/commit/28346e2))
+- Throw error if nuxt api is down ([d8b79f1](https://github.com/nuxt/scripts/commit/d8b79f1))
+- Bump unhead 1.10.2 ([83d6d18](https://github.com/nuxt/scripts/commit/83d6d18))
+- Unhead 1.10.3 ([af13a30](https://github.com/nuxt/scripts/commit/af13a30))
+- Bump deps ([50126bf](https://github.com/nuxt/scripts/commit/50126bf))
+- Avoid runtime valibot dependency ([2033f16](https://github.com/nuxt/scripts/commit/2033f16))
+- Soft dependency unhead 1.10.4 ([5b61da0](https://github.com/nuxt/scripts/commit/5b61da0))
+- Avoid adding `crossorigin` for same domain scripts ([dd75a31](https://github.com/nuxt/scripts/commit/dd75a31))
+- Fix test ([339162e](https://github.com/nuxt/scripts/commit/339162e))
+- Tests ([260eb52](https://github.com/nuxt/scripts/commit/260eb52))
+- Broken watcher clean up ([a0a8118](https://github.com/nuxt/scripts/commit/a0a8118))
+- **ci:** Skip linting ([12ba618](https://github.com/nuxt/scripts/commit/12ba618))
+- Fix flaky test ([35f0657](https://github.com/nuxt/scripts/commit/35f0657))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Harlan Wilton <harlan@harlanzw.com>
+- Aman Desai 
+- Daniel Roe <daniel@roe.dev>
+- Alfarish Fizikri <alfarish@evermos.com>
+- Alexander Lichter <github@lichter.io>
+
+## v0.7.1
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.7.0...v0.7.1)
+
+### 🩹 Fixes
+
+- Broken type generation ([8282d6e](https://github.com/nuxt/scripts/commit/8282d6e))
+- **GoogleMaps:** Ensure center marker is place when using mapOptions ([45e6f24](https://github.com/nuxt/scripts/commit/45e6f24))
+- **GoogleMaps:** Avoid losing marker reference ([406968a](https://github.com/nuxt/scripts/commit/406968a))
+
+### 📖 Documentation
+
+- Fix broken link ([#208](https://github.com/nuxt/scripts/pull/208))
+- Fix broken link ([#211](https://github.com/nuxt/scripts/pull/211))
+
+### 🏡 Chore
+
+- Bump deps ([9a2b44a](https://github.com/nuxt/scripts/commit/9a2b44a))
+- Type issues ([65c3ea4](https://github.com/nuxt/scripts/commit/65c3ea4))
+
+### ❤️ Contributors
+
+- Harlan <harlan@harlanzw.com>
+- Alfarish Fizikri <alfarishfizikri@gmail.com>
+- Daniel Roe <daniel@roe.dev>
+
+## v0.7.0
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.8...v0.7.0)
+
+## v0.6.8
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.7...v0.6.8)
+
+## v0.6.7
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.6...v0.6.7)
+
+### 🚀 Enhancements
+
+- ⚠️  Improve google maps integration ([#191](https://github.com/nuxt/scripts/pull/191))
+- ⚠️  Unhead 1.10.0 integration ([#203](https://github.com/nuxt/scripts/pull/203))
+
+### 🩹 Fixes
+
+- Registry scripts bundling with `scriptOptions.bundle` ([0c7906e](https://github.com/nuxt/scripts/commit/0c7906e))
+- **vimeo:** ⚠️  Broken player, refactor props ([#204](https://github.com/nuxt/scripts/pull/204))
+
+### 📖 Documentation
+
+- Fix broken links ([#198](https://github.com/nuxt/scripts/pull/198))
+
+### 🏡 Chore
+
+- Lint ([328d92a](https://github.com/nuxt/scripts/commit/328d92a))
+- Maybe fix tests ([c947f8a](https://github.com/nuxt/scripts/commit/c947f8a))
+- Maybe fix tests ([263e10e](https://github.com/nuxt/scripts/commit/263e10e))
+- Broken types ([d83576a](https://github.com/nuxt/scripts/commit/d83576a))
+- Bump deps ([98f4325](https://github.com/nuxt/scripts/commit/98f4325))
+- Clean up ([41cd38f](https://github.com/nuxt/scripts/commit/41cd38f))
+- Bump unhead ([d1b97e2](https://github.com/nuxt/scripts/commit/d1b97e2))
+- Lint ([3602040](https://github.com/nuxt/scripts/commit/3602040))
+- Broken devtools ([b35eaba](https://github.com/nuxt/scripts/commit/b35eaba))
+- Unhead 1.10.0 ([f9c62c7](https://github.com/nuxt/scripts/commit/f9c62c7))
+- Bump deps ([4f7c7ae](https://github.com/nuxt/scripts/commit/4f7c7ae))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Improve google maps integration ([#191](https://github.com/nuxt/scripts/pull/191))
+- ⚠️  Unhead 1.10.0 integration ([#203](https://github.com/nuxt/scripts/pull/203))
+- **vimeo:** ⚠️  Broken player, refactor props ([#204](https://github.com/nuxt/scripts/pull/204))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Harlan Wilton ([@harlan-zw](http://github.com/harlan-zw))
+- Lars Salling ([@lsalling](http://github.com/lsalling))
+
+## v0.6.6
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.5...v0.6.6)
+
+### 🩹 Fixes
+
+- **tpc:** Update TPC and fix GA ([#186](https://github.com/nuxt/scripts/pull/186))
+
+### 💅 Refactors
+
+- Avoid module declaration augmentations ([b27d4ee](https://github.com/nuxt/scripts/commit/b27d4ee))
+
+### 🏡 Chore
+
+- Public release -> beta ([debf873](https://github.com/nuxt/scripts/commit/debf873))
+- Update import path for devtools port ([#190](https://github.com/nuxt/scripts/pull/190))
+- Bump deps ([05f085e](https://github.com/nuxt/scripts/commit/05f085e))
+- Broken linting ([3c46cff](https://github.com/nuxt/scripts/commit/3c46cff))
+- Broken typechecking and linting ([9285284](https://github.com/nuxt/scripts/commit/9285284))
+- Bump deps ([ea17d69](https://github.com/nuxt/scripts/commit/ea17d69))
+
+### ✅ Tests
+
+- E2e integration tests for ga and gtm ([#189](https://github.com/nuxt/scripts/pull/189))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+- Arash ([@arashsheyda](http://github.com/arashsheyda))
+
+## v0.6.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.6.4...v0.6.5)
+
+### 🚀 Enhancements
+
+- **GA,GTM:** Configurable dataLayer name ([#163](https://github.com/nuxt/scripts/pull/163))
+
+### 🩹 Fixes
+
+- Fix google analytics category ([#156](https://github.com/nuxt/scripts/pull/156))
+- Use correct google analytics logo ([#172](https://github.com/nuxt/scripts/pull/172))
+- **TPC:** Use proper script keys ([c607d72](https://github.com/nuxt/scripts/commit/c607d72))
+- **TPC:** Broken schema integration ([ed115d8](https://github.com/nuxt/scripts/commit/ed115d8))
+- Disallow overriding registry key name ([2eedd4a](https://github.com/nuxt/scripts/commit/2eedd4a))
+- **devtools:** Support multiple of the same registry scripts ([8794d74](https://github.com/nuxt/scripts/commit/8794d74))
+- **ScriptYouTubePlayer:** Missing default slot ([#180](https://github.com/nuxt/scripts/pull/180))
+- **tpc:** Support customizing dataLayer variable ([09e3c2f](https://github.com/nuxt/scripts/commit/09e3c2f))
+
+### 📖 Documentation
+
+- Broken tutorial, put some `use` into `scriptOptions` ([#155](https://github.com/nuxt/scripts/pull/155))
+- Fix typo in js-confetti guide ([#162](https://github.com/nuxt/scripts/pull/162))
+- Fix typo in plausible analytics env var example ([#161](https://github.com/nuxt/scripts/pull/161))
+- Mention third-party-capital and aurora for tpc composables ([#159](https://github.com/nuxt/scripts/pull/159))
+- **GoogleMaps:** Added Places API to requirements of API key ([#168](https://github.com/nuxt/scripts/pull/168))
+
+### 🏡 Chore
+
+- Add tsconfig to scripts and remove unused ts-expect-error ([#158](https://github.com/nuxt/scripts/pull/158))
+- Add issue template ([669ed2a](https://github.com/nuxt/scripts/commit/669ed2a))
+- Push to discussion ([3c88385](https://github.com/nuxt/scripts/commit/3c88385))
+- Broken devtools when no scripts ([c355da4](https://github.com/nuxt/scripts/commit/c355da4))
+- **ci:** Add docs link in Issue template ([#178](https://github.com/nuxt/scripts/pull/178))
+- **github:** Prefer no titles ([97437c0](https://github.com/nuxt/scripts/commit/97437c0))
+
+### ❤️ Contributors
+
+- Julien Huang <julien.h.dev@gmail.com>
+- Harlan <harlan@harlanzw.com>
+- Jules Hery 
+- Gangan 
+- Mick Lawitzke <info@lawitzke.de>
+- Jonty Brook <me@jontyb.co.uk>
+- Roman Nuritdinov <github@woof.slmail.me>
+
 ## v0.6.4
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.6.3...v0.6.4)

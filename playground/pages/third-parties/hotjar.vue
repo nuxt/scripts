@@ -5,8 +5,8 @@ useHead({
   title: 'Hotjar',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { $script, hj } = useScriptHotjar({ id: 3925006, sv: 6 })
+// composables return the underlying api as a proxy object and the script state
+const { status, hj } = useScriptHotjar({ id: 3925006, sv: 6 })
 // this will be triggered once the script is ready async
 hj('identify', '123456', { test: 'foo' })
 </script>
@@ -15,7 +15,7 @@ hj('identify', '123456', { test: 'foo' })
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>

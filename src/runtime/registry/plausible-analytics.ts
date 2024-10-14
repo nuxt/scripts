@@ -23,10 +23,10 @@ export type PlausibleAnalyticsInput = RegistryScriptInput<typeof PlausibleAnalyt
 
 export interface PlausibleAnalyticsApi {
   plausible: ((event: '404', options: Record<string, any>) => void) &
-  ((event: 'event', options: Record<string, any>) => void) &
-  ((...params: any[]) => void) & {
-    q: any[]
-  }
+    ((event: 'event', options: Record<string, any>) => void) &
+    ((...params: any[]) => void) & {
+      q: any[]
+    }
 }
 
 declare global {
@@ -36,7 +36,7 @@ declare global {
 }
 
 export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_options?: PlausibleAnalyticsInput) {
-  return useRegistryScript<T, typeof PlausibleAnalyticsOptions>(_options?.key || 'plausibleAnalytics', (options) => {
+  return useRegistryScript<T, typeof PlausibleAnalyticsOptions>('plausibleAnalytics', (options) => {
     const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
     return {
       scriptInput: {

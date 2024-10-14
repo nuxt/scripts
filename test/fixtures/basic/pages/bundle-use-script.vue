@@ -19,7 +19,7 @@ const scriptSrc = ref('https://code.jquery.com/jquery-3.6.0.min.js')
 $script.then(async () => {
   const head = injectHead()
   const tags = await head.resolveTags()
-  scriptSrc.value = tags[0].props.src
+  scriptSrc.value = tags.filter(s => s.tag === 'script')[0].props.src
 })
 
 myScript('test')

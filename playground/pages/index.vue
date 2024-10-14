@@ -48,7 +48,7 @@ const thirdParties = [
   },
   {
     name: 'Intercom',
-    path: '/third-parties/intercom',
+    path: '/third-parties/intercom/facade',
   },
   {
     name: 'Stripe',

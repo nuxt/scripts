@@ -10,6 +10,9 @@ function changeVideo() {
 
 <template>
   <div>
+    <NuxtLink to="/third-parties/youtube/multiple" class="block underline mb-5">
+      Multiple YouTube Players
+    </NuxtLink>
     <div>
       <ScriptYouTubePlayer :video-id="videoid" above-the-fold>
         <template #awaitingLoad>

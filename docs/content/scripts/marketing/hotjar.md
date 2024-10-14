@@ -10,12 +10,10 @@ links:
 
 [Hotjar](https://www.hotjar.com/) is a screen recorder and heatmap tool that helps you understand how users interact with your website.
 
-Nuxt Scripts provides a registry script composable `useScriptHotjar` to easily integrate Hotjar in your Nuxt app.
-
-### Nuxt Config Setup
-
 The simplest way to load Hotjar globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptHotjar](#useScriptHotjar) composable.
+
+## Loading Globally
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
 disable the script in development.
@@ -48,13 +46,8 @@ export default defineNuxtConfig({
 })
 ```
 
-::
 
-#### With Environment Variables
-
-If you prefer to configure your id using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -74,20 +67,18 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_HOTJAR_ID=<YOUR_ID>
-```
+::
 
 ## useScriptHotjar
 
 The `useScriptHotjar` composable lets you have fine-grain control over when and how Hotjar is loaded on your site.
 
 ```ts
-const { hj, $script } = useScriptHotjar({
+const { proxy } = useScriptHotjar({
   id: 123546,
 })
 // example
-hj('identify', 123456, {
+proxy.hj('identify', 123456, {
   name: 'John Doe',
   email: 'john@doe.com'
 })
@@ -146,20 +137,5 @@ function sendConversion() {
 </template>
 ```
 
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      hotjar: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            id: 123456 // your id
-          },
-    },
-  },
-})
-```
 
 ::

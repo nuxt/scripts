@@ -1,9 +1,8 @@
-import type { UseScriptOptions, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
-import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
+import type { DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
+import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
-import { object } from 'valibot'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
@@ -24,15 +23,16 @@ import type { ClarityInput } from './registry/clarity'
 import type { CrispInput } from './registry/crisp'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
+import { object } from '#nuxt-scripts-validator'
 
-export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'> & {
+export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
   /**
    * The trigger to load the script:
    * - `onNuxtReady` - Load the script when Nuxt is ready.
-   * - `manual` - Load the script manually by calling `$script.load()` or `$script.waitForLoad()`.
+   * - `manual` - Load the script manually by calling `load()`.
    * - `Promise` - Load the script when the promise resolves.
    */
-  trigger?: UseScriptOptions<T>['trigger'] | 'onNuxtReady'
+  trigger?: UseScriptOptions<T, U>['trigger'] | 'onNuxtReady'
   /**
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
@@ -50,6 +50,21 @@ export type NuxtUseScriptOptions<T = any> = Omit<UseScriptOptions<T>, 'trigger'>
    * @internal
    */
   performanceMarkFeature?: string
+  /**
+   * @internal
+   */
+  devtools?: {
+    /**
+     * Key used to map to the registry script for Nuxt DevTools.
+     * @internal
+     */
+    registryKey?: string
+    /**
+     * Extra metadata to show with the registry script
+     * @internal
+     */
+    registryMeta?: Record<string, string>
+  }
 }
 
 export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
@@ -74,8 +89,9 @@ export interface ConsentScriptTriggerOptions {
   postConsentTrigger?: NuxtUseScriptOptions['trigger']
 }
 
-export interface NuxtAppScript {
-  key: string
+export interface NuxtDevToolsScriptInstance {
+  registryKey?: string
+  registryMeta?: Record<string, string>
   src: string
   $script: VueScriptInstance<any>
   events: {
@@ -116,28 +132,29 @@ export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof Scri
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }>
 
-const emptyOptions = object({})
+const _emptyOptions = object({})
 
-export type EmptyOptionsSchema = typeof emptyOptions
+export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
 
+export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
-  T extends ObjectSchema<any, any> = EmptyOptionsSchema,
+  T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
 > =
-    (InferInput<T>
-    & {
+    (InferIfSchema<T>
+      & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-      key?: string
-      scriptInput?: ScriptInput
-      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-    })
-    | Partial<InferInput<T>> & (
+        key?: string
+        scriptInput?: ScriptInput
+        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+      })
+      | Partial<InferIfSchema<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

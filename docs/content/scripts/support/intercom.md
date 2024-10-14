@@ -174,13 +174,13 @@ Tip: You should use the `ScriptLoadingIndicator` by default for accessibility an
 The `useScriptIntercom` composable lets you have fine-grain control over when and how Intercom is loaded on your site.
 
 ```ts
-const { Intercom, $script } = useScriptIntercom({
+const { proxy } = useScriptIntercom({
   app_id: 'YOUR_APP_ID'
 })
 
 // examples
-Intercom('show')
-Intercom('update', { name: 'John Doe' })
+proxy.Intercom('show')
+proxy.Intercom('update', { name: 'John Doe' })
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
@@ -238,12 +238,12 @@ Using Intercom only in production.
 
 ```vue [IntercomButton.vue]
 <script setup lang="ts">
-const { Intercom } = useScriptIntercom()
+const { proxy } = useScriptIntercom()
 
 // noop in development, ssr
 // just works in production, client
 function showIntercom() {
-  Intercom('show')
+  proxy.Intercom('show')
 }
 </script>
 
@@ -256,20 +256,5 @@ function showIntercom() {
 </template>
 ```
 
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      intercom: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            app_id: 'YOUR_APP_ID',
-          },
-    },
-  },
-})
-```
 
 ::

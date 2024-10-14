@@ -31,17 +31,16 @@ interface AnalyticsApi {
   push: (args: any[]) => void
 }
 
-export interface SegmentApi extends Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'> {
-}
+export type SegmentApi = Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'>
 
 declare global {
-  interface Window extends SegmentApi { }
+  interface Window extends SegmentApi {}
 }
 
 const methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
 
 export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) {
-  return useRegistryScript<T, typeof SegmentOptions>(_options?.key || 'segment', (options) => {
+  return useRegistryScript<T, typeof SegmentOptions>('segment', (options) => {
     const k = (options?.analyticsKey ?? 'analytics') as keyof Window
     return {
       scriptInput: {

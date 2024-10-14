@@ -5,7 +5,6 @@ useHead({
   title: 'Google Adsense',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
 useHead({
   script: [
     {

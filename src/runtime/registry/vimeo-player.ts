@@ -1,5 +1,6 @@
 import { watch } from 'vue'
 import type Vimeo from '@vimeo/player'
+import type { UseScriptContext } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts'
 import { useHead } from '#imports'
@@ -18,8 +19,8 @@ declare global {
   interface Window extends VimeoPlayerApi {}
 }
 
-export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
-  const instance = useRegistryScript<T>(_options?.key || 'vimeoPlayer', () => ({
+export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput): UseScriptContext<T> {
+  const instance = useRegistryScript<T>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
     },
@@ -32,7 +33,7 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
     },
   }), _options)
   if (import.meta.client) {
-    const _ = watch(instance.$script.status, (status) => {
+    const _ = watch(instance.status, (status) => {
       if (status === 'loading') {
         useHead({
           link: [

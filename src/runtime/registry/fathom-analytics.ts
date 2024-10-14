@@ -47,7 +47,7 @@ declare global {
 }
 
 export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?: FathomAnalyticsInput) {
-  return useRegistryScript<T, typeof FathomAnalyticsOptions>(_options?.key || 'fathomAnalytics', options => ({
+  return useRegistryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
     scriptInput: {
       src: 'https://cdn.usefathom.com/script.js', // can't be bundled
       // append the data attr's

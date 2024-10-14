@@ -46,7 +46,7 @@ function stateChange(event) {
 <template>
   <div>
     <div class="flex items-center justify-center p-5">
-      <ScriptYouTubePlayer ref="video" video-id="d_IFKP1Ofq0" class="group" @ready="isLoaded = true" @state-change="stateChange">
+      <ScriptYouTubePlayer ref="video" video-id="d_IFKP1Ofq0" @ready="isLoaded = true" @state-change="stateChange">
         <template #awaitingLoad>
           <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-[48px] w-[68px]">
             <svg height="100%" version="1.1" viewBox="0 0 68 48" width="100%"><path d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="#f00" /><path d="M 45,24 27,14 27,34" fill="#fff" /></svg>
@@ -55,7 +55,7 @@ function stateChange(event) {
       </ScriptYouTubePlayer>
     </div>
     <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the Vimeo iframe and start the video." />
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the Youtube iframe and start the video." />
       <UButton v-if="isLoaded && !isPlaying" @click="play">
         Play Video
       </UButton>
@@ -88,7 +88,7 @@ export interface YouTubeProps {
 
 #### Eager Loading Placeholder
 
-The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+The YouTube Player placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
 or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::code-group
@@ -216,10 +216,10 @@ Loading the YouTube Player SDK and interacting with it programmatically.
 ```vue
 <script setup lang="ts">
 const video = ref()
-const { $script } = useScriptYouTubePlayer()
+const { onLoaded } = useScriptYouTubePlayer()
 
-let player
-$script.then(async ({ YT }) => {
+const player = ref(null)
+onLoaded(async ({ YT }) => {
   // we need to wait for the internal YouTube APIs to be ready
   const YouTube = await YT
   await new Promise<void>((resolve) => {
@@ -233,12 +233,15 @@ $script.then(async ({ YT }) => {
     videoId: 'd_IFKP1Ofq0'
   })
 })
+function play() {
+  player.value?.playVideo()
+}
 </script>
 
 <template>
   <div>
     <div ref="video" />
-    <button @click="player.playVideo()">
+    <button @click="play">
       Play
     </button>
   </div>

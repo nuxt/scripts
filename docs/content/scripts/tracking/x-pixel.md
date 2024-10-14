@@ -83,11 +83,11 @@ NUXT_PUBLIC_SCRIPTS_X_PIXEL_ID=<YOUR_ID>
 The `useScriptXPixel` composable lets you have fine-grain control over when and how X Pixel is loaded on your site.
 
 ```ts
-const { twq, $script } = useScriptXPixel({
+const { proxy } = useScriptXPixel({
   id: 'YOUR_ID'
 })
 // example
-twq('event', '<EventId>', {
+proxy.twq('event', '<EventId>', {
   value: 1,
 })
 ```
@@ -148,12 +148,12 @@ Using X Pixel only in production while using `twq` to send a conversion event.
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { twq } = useScriptXPixel()
+const { proxy } = useScriptXPixel()
 
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  twq('event', 'Purchase', {
+  proxy.twq('event', 'Purchase', {
     value: 1,
     currency: 'USD'
   })
@@ -169,20 +169,5 @@ function sendConversion() {
 </template>
 ```
 
-```ts [nuxt.config.ts Mock development]
-import { isDevelopment } from 'std-env'
-
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      xPixel: isDevelopment
-        ? 'mock' // script won't load unless manually calling load()
-        : {
-            id: 'YOUR_ID',
-          },
-    },
-  },
-})
-```
 
 ::

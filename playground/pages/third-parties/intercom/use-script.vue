@@ -5,16 +5,16 @@ useHead({
   title: 'Intercom',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
+// composables return the underlying api as a proxy object and the script state
 const instance = useScriptIntercom({ app_id: 'nu034r2a' })
-const { $script, Intercom } = instance
+const { status, Intercom } = instance
 </script>
 
 <template>
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status }}
+        status: {{ status }}
       </div>
       <div>
         <button @click="Intercom('show')">

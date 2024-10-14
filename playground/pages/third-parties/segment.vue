@@ -5,8 +5,8 @@ useHead({
   title: 'Segment',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { page, $script } = useScriptSegment({ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' })
+// composables return the underlying api as a proxy object and the script state
+const { page, status } = useScriptSegment({ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' })
 
 page('Segment')
 </script>
@@ -15,7 +15,7 @@ page('Segment')
   <div>
     <ClientOnly>
       <div>
-        status: {{ $script.status.value }}
+        status: {{ status }}
       </div>
     </ClientOnly>
   </div>

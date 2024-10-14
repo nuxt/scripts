@@ -7,6 +7,8 @@ import {
   useEventListener,
   useIntersectionObserver,
 } from '@vueuse/core'
+import { tryOnScopeDispose, tryOnMounted } from '@vueuse/shared'
+import { watch } from 'vue'
 import type { ElementScriptTrigger } from '../types'
 
 export interface ElementScriptTriggerOptions {
@@ -23,14 +25,14 @@ export interface ElementScriptTriggerOptions {
 
 function useElementVisibilityPromise(element: MaybeComputedElementRef) {
   let observer: UseIntersectionObserverReturn
-  return new Promise<void>((resolve) => {
+  return new Promise<boolean>((resolve) => {
     observer = useIntersectionObserver(
       element,
       (intersectionObserverEntries) => {
         // Get the latest value of isIntersecting based on the entry time
         for (const entry of intersectionObserverEntries) {
           if (entry.isIntersecting)
-            resolve()
+            resolve(true)
         }
       },
       {
@@ -38,36 +40,63 @@ function useElementVisibilityPromise(element: MaybeComputedElementRef) {
         threshold: 0,
       },
     )
-  }).finally(() => {
-    observer.stop()
+    tryOnScopeDispose(() => resolve(false))
   })
+    .finally(() => {
+      observer.stop()
+    })
 }
 
 /**
  * Create a trigger for an element to load a script based on specific element events.
  */
-export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<void> {
+export function useScriptTriggerElement(options: ElementScriptTriggerOptions): Promise<boolean> & { ssrAttrs?: Record<string, string> } | 'onNuxtReady' {
   const { el, trigger } = options
-  if (import.meta.server || !el)
-    return new Promise<void>(() => {})
   const triggers = (Array.isArray(options.trigger) ? options.trigger : [options.trigger]).filter(Boolean) as string[]
-  if (el && triggers.some(t => ['visibility', 'visible'].includes(t)))
-    return useElementVisibilityPromise(el)
-  if (!trigger)
-    return Promise.resolve()
-  if (!triggers.includes('immediate')) {
+  if (!trigger || triggers.includes('immediate') || triggers.includes('onNuxtReady')) {
+    return 'onNuxtReady'
+  }
+  if (triggers.some(t => ['visibility', 'visible'].includes(t))) {
+    if (import.meta.server || !el) {
+      return new Promise(() => {})
+    }
     // TODO optimize this, only have 1 instance of intersection observer, stop on find
-    return new Promise<void>((resolve) => {
-      const _ = useEventListener(
-        typeof el !== 'undefined' ? (el as EventTarget) : document.body,
-        triggers,
-        () => {
-          resolve()
-          _()
-        },
-        { once: true, passive: true },
-      )
+    return useElementVisibilityPromise(el)
+  }
+  const ssrAttrs: Record<string, string> = {}
+  if (import.meta.server) {
+    triggers.forEach((trigger) => {
+      ssrAttrs[`on${trigger}`] = `this.dataset.script_${trigger} = true`
     })
   }
-  return Promise.resolve()
+  const p = new Promise<boolean>((resolve) => {
+    const target = typeof el !== 'undefined' ? (el as EventTarget) : document.body
+    const _ = useEventListener(
+      target,
+      triggers,
+      () => {
+        _()
+        resolve(true)
+      },
+      { once: true, passive: true },
+    )
+    tryOnMounted(() => {
+      // check if target has any of the triggers active on the data set
+      watch(target, ($el) => {
+        if ($el) {
+          triggers.forEach((trigger) => {
+            if (($el as HTMLElement).dataset[`script_${trigger}`]) {
+              _()
+              resolve(true)
+            }
+          })
+        }
+      }, {
+        immediate: true,
+      })
+    })
+    tryOnScopeDispose(() => resolve(false))
+  })
+
+  return Object.assign(p, { ssrAttrs })
 }

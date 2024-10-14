@@ -3,25 +3,42 @@ import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import { registry } from '../src/registry'
 import { devtools, getScriptSize, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
 import { loadShiki } from '~/composables/shiki'
+import { msToHumanReadable } from '~/utils/formatting'
 
 const scriptRegistry = registry(s => s)
 await loadShiki()
 
 const scripts = ref({})
-const scriptSizes = reactive({})
+const scriptSizes = reactive<Record<string, string>>({})
 
 function syncScripts(_scripts: any[]) {
-  scripts.value = { ..._scripts }
-  // check if the script size has been set, if not set it
-  for (const key in _scripts) {
-    if (!scriptSizes[key]) {
-      getScriptSize(_scripts[key].src).then((size) => {
-        scriptSizes[key] = size
-      }).catch(() => {
-        scriptSizes[key] = 0
-      })
-    }
-  }
+  // augment the scripts with registry
+  scripts.value = Object.fromEntries(
+    Object.entries({ ..._scripts })
+      .map(([key, script]) => {
+        script.registry = scriptRegistry.find(s => titleToCamelCase(s.label) === script.registryKey)
+        if (script.registry) {
+          const kebabCaseLabel = script.registry.label.toLowerCase().replace(/ /g, '-')
+          script.docs = `https://scripts.nuxt.com/scripts/${script.registry.category}/${kebabCaseLabel}`
+        }
+        const loadingAt = script.events.find(e => e.status === 'loading')?.at || 0
+        const loadedAt = script.events.find(e => e.status === 'loaded')?.at || 0
+        if (loadingAt && loadedAt) {
+          script.loadTime = msToHumanReadable(loadedAt - loadingAt)
+        }
+        const scriptSizeKey = script.src
+        if (!scriptSizes[scriptSizeKey]) {
+          getScriptSize(script.src).then((size) => {
+            scriptSizes[scriptSizeKey] = size
+            script.size = size
+          }).catch(() => {
+            script.size = ''
+            scriptSizes[scriptSizeKey] = ''
+          })
+        }
+        return [key, script]
+      }),
+  )
 }
 
 function titleToCamelCase(s: string) {
@@ -31,9 +48,7 @@ function titleToCamelCase(s: string) {
     return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
   }).join('')
 }
-function resolveScriptRegistry(id: string) {
-  return scriptRegistry.find(s => titleToCamelCase(s.label) === id)
-}
+
 const version = ref(null)
 onDevtoolsClientConnected(async (client) => {
   devtools.value = client.devtools
@@ -44,6 +59,16 @@ onDevtoolsClientConnected(async (client) => {
   syncScripts(client.host.nuxt._scripts)
 })
 const tab = ref('scripts')
+
+function viewDocs(docs: string) {
+  tab.value = 'docs'
+  setTimeout(() => {
+    const iframe = document.querySelector('iframe')
+    if (iframe) {
+      iframe.src = docs
+    }
+  }, 100)
+}
 </script>
 
 <template>
@@ -116,14 +141,6 @@ const tab = ref('scripts')
               >
             </label>
           </fieldset>
-          <!--          <VTooltip> -->
-          <!--            <button text-lg="" type="button" class="n-icon-button n-button n-transition n-disabled:n-disabled"> -->
-          <!--              <NIcon icon="carbon:reset" class="group-hover:text-green-500" /> -->
-          <!--            </button> -->
-          <!--            <template #popper> -->
-          <!--              Refresh -->
-          <!--            </template> -->
-          <!--          </VTooltip> -->
         </div>
         <div class="items-center space-x-3 hidden lg:flex">
           <div class="opacity-80 text-sm">
@@ -141,31 +158,61 @@ const tab = ref('scripts')
     <div class="flex-row flex p4 h-full" style="min-height: calc(100vh - 64px);">
       <main class="mx-auto flex flex-col w-full bg-white dark:bg-black dark:bg-dark-700 bg-light-200 ">
         <div v-if="tab === 'scripts'" class="h-full relative max-h-full">
-          <div v-if="!Object.keys(scripts).length">
+          <div v-if="!Object.keys(scripts || {}).length">
             <div>No scripts loaded.</div>
           </div>
           <div class="space-y-3">
             <OSectionBlock v-for="(script, id) in scripts" :key="id" class="w-full">
               <template #text>
-                <div class="flex items-center justify-between w-full">
-                  <div class="flex items-center gap-4">
-                    <a class="text-lg font-bold flex gap-2  items-center font-mono" :title="script.src" target="_blank" :href="script.src">
-                      <div v-if="resolveScriptRegistry(id)" class="flex items-center max-w-10 h-6" v-html="resolveScriptRegistry(id).logo" />
+                <div class="flex items-center justify-between w-full  gap-7">
+                  <div class="flex items-center gap-7">
+                    <div class="flex items-center gap-1">
+                      <div v-if="script.registry" class="flex items-center max-w-6 h-6" v-html="script.registry.logo?.dark || script.registry.logo" />
                       <img v-else-if="!script.src.startsWith('/')" :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`" class="w-4 h-4 rounded-lg">
-                      <div>{{ resolveScriptRegistry(id)?.label || script.key }}</div>
-                    </a>
-                    <div class="opacity-70">
-                      {{ script.$script.status.value }}
-                    </div>
-                    <div v-if="scriptSizes[script.key]">
-                      {{ scriptSizes[script.key] }}
+                      <div>
+                        <a title="View script source" class="text-base hover:bg-gray-800/50 px-2 transition py-1 rounded-xl font-semibold flex gap-2  items-center" target="_blank" :href="script.src">
+                          <div>
+                            {{ script.registry?.label || script.key }}
+                          </div>
+                        </a>
+                        <div class="flex flex-items-center gap-3">
+                          <template v-if="script.docs">
+                            <button type="button" class="ml-2 opacity-50 hover:opacity-70 transition ml-1 text-xs underline" @click="viewDocs(script.docs)">
+                              View docs
+                            </button>
+                          </template>
+                          <div v-for="k in Object.keys(script.registryMeta)" :key="k" class="text-xs text-gray-500">
+                            <span class="capitalize">{{ k }}</span>: {{ script.registryMeta[k] }}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div>
-                    <NButton v-if="script.$script.status === 'awaitingLoad'" @click="script.$script.load()">
+                    <div class="opacity-70 text-xs">
+                      Status
+                    </div>
+                    <div class="capitalize">
+                      {{ script.$script.status.value }}
+                    </div>
+                  </div>
+                  <div v-if="scriptSizes[script.src]">
+                    <div class="opacity-70 text-xs">
+                      Size
+                    </div>
+                    <div>{{ scriptSizes[script.src] }}</div>
+                  </div>
+                  <div v-if="script.loadTime">
+                    <div class="opacity-70 text-xs">
+                      Time to loaded
+                    </div>
+                    <div>{{ script.loadTime }}</div>
+                  </div>
+                  <div>
+                    <NButton v-if="script.status === 'awaitingLoad'" @click="script.load()">
                       Load
                     </NButton>
-                    <NButton v-else-if="script.$script.status === 'loaded'" @click="script.$script.remove()">
+                    <NButton v-else-if="script.status === 'loaded'" @click="script.remove()">
                       Remove
                     </NButton>
                   </div>
