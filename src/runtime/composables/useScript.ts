@@ -25,13 +25,11 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
 const ValidPreloadTriggers = ['onNuxtReady', 'client']
 const PreconnectServerModes = ['preconnect', 'dns-prefetch']
 
-function warmup(_input: Omit<Required<Head>['link'][0], 'rel'> & { rel: WarmupStrategy }, head: any) {
-  const input = { ..._input }
-  delete input.src
-  const { rel } = input
-  const $url = new URL(input.href, 'http://localhost')
+function warmup(_: Omit<Required<Head>['link'][0], 'rel'> & { rel: WarmupStrategy }, head: any) {
+  const { rel, src } = _
+  const $url = new URL(_.href, 'http://localhost')
   const isPreconnect = PreconnectServerModes.includes(rel)
-  const href = isPreconnect ? $url.origin : input.href
+  const href = isPreconnect ? $url.origin : src
   const isCrossOrigin = $url.origin !== 'http://localhost'
   if (!rel || (isPreconnect && !isCrossOrigin)) {
     return
@@ -50,7 +48,11 @@ function warmup(_input: Omit<Required<Head>['link'][0], 'rel'> & { rel: WarmupSt
   return useHead({
     link: [{
       ...defaults,
-      ...input,
+      ...{
+        rel,
+        crossorigin: _.crossorigin,
+        referrerpolicy: _.referrerpolicy,
+      },
       href,
     }],
   }, {

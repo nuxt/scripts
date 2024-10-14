@@ -12,7 +12,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" href="/preload.js" rel="preload">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" rel="preload" href="/preload.js">"`)
     script.remove()
   })
   it('preload relative', async () => {
@@ -25,7 +25,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" href="/preload.js" rel="preload">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" rel="preload" href="/preload.js">"`)
     script.remove()
   })
   it('preconnect relative', async () => {
@@ -51,7 +51,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" crossorigin="anonymous" referrerpolicy="no-referrer" href="https://example.com" rel="preconnect">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" rel="preconnect" href="https://example.com">"`)
     script.remove()
   })
   it('preload abs', async () => {
@@ -64,7 +64,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" crossorigin="anonymous" referrerpolicy="no-referrer" href="https://example.com/preload.js" rel="preload">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" rel="preload" href="https://example.com/preload.js">"`)
     script.remove()
   })
 })
