@@ -47,8 +47,7 @@
     "release:minor": "npm run lint && npm run test && npm run prepack && changelogen --minor --release",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "pnpm dev:prepare && vitest --run --exclude **/__runtime__ && pnpm test:runtime",
-    "test:runtime": "cd test/fixtures/basic && vitest --run",
+    "test": "vitest",
     "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck",
     "script:generate-tpc": "bun ./scripts/generateTpcScripts.ts && pnpm lint:fix"
   },
