@@ -2,9 +2,8 @@ import type {
   ActiveHeadEntry,
   AsAsyncFunctionValues,
   DataKeys,
-  HeadEntry,
   SchemaAugmentations,
-  ScriptBase
+  ScriptBase,
 } from '@unhead/schema'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'

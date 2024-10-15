@@ -3,11 +3,10 @@ import type { UseScriptOptions, UseFunctionType, Head, DataKeys, SchemaAugmentat
 import { resolveScriptKey } from 'unhead'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
+import { parseURL } from 'ufo'
 import { pick } from '../utils'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext, WarmupStrategy } from '#nuxt-scripts'
-import {LinkBase} from "zhead";
-import {parseURL} from "ufo";
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
