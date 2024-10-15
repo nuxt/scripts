@@ -4,12 +4,12 @@ import { createResolver } from '@nuxt/kit'
 const { resolve } = createResolver(import.meta.url)
 
 export default defineNuxtConfig({
-  devtools: {
-    enabled: true,
-  },
   modules: [
     '@nuxt/scripts',
   ],
+  devtools: {
+    enabled: true,
+  },
   hooks: {
     'scripts:registry': function (registry) {
       registry.push({
