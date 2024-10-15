@@ -86,7 +86,7 @@
     "pkg-types": "^1.2.0",
     "semver": "^7.6.3",
     "shiki": "1.20.0",
-    "sirv": "^2.0.4",
+    "sirv": "^3.0.0",
     "std-env": "^3.7.0",
     "third-party-capital": "2.3.0",
     "ufo": "^1.5.4",
