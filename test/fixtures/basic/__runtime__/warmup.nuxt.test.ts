@@ -1,7 +1,7 @@
 import { it, expect, describe } from 'vitest'
-import { useScript } from '#imports'
 import { createHead } from '@unhead/vue'
 import { renderSSRHead } from '@unhead/ssr'
+import { useScript } from '#imports'
 
 describe('script warmup', () => {
   it('default', async () => {
@@ -12,7 +12,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" rel="preload" href="/preload.js">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" href="/preload.js" rel="preload">"`)
     script.remove()
   })
   it('preload relative', async () => {
@@ -25,7 +25,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" rel="preload" href="/preload.js">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" href="/preload.js" rel="preload">"`)
     script.remove()
   })
   it('preconnect relative', async () => {
@@ -51,7 +51,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" rel="preconnect" href="https://example.com">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" crossorigin="anonymous" referrerpolicy="no-referrer" href="https:example.com" rel="preconnect">"`)
     script.remove()
   })
   it('preload abs', async () => {
@@ -64,7 +64,33 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" rel="preload" href="https://example.com/preload.js">"`)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" crossorigin="anonymous" referrerpolicy="no-referrer" href="https://example.com/preload.js" rel="preload">"`)
+    script.remove()
+  })
+  it('respects useScript privacy controls', async () => {
+    const head = createHead()
+    const script = useScript({
+      src: 'https://s.kk-resources.com/leadtag.js',
+      crossorigin: 'use-credentials',
+      referrerpolicy: 'no-referrer-when-downgrade',
+    }, {
+      head,
+    })
+    const ssr = await renderSSRHead(head)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" crossorigin="use-credentials" referrerpolicy="no-referrer-when-downgrade" href="https://s.kk-resources.com/leadtag.js" rel="preload">"`)
+    script.remove()
+  })
+  it('respects useScript privacy controls - #293', async () => {
+    const head = createHead()
+    const script = useScript({
+      src: 'https://s.kk-resources.com/leadtag.js',
+      async: true,
+      crossorigin: false,
+    }, {
+      head,
+    })
+    const ssr = await renderSSRHead(head)
+    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" referrerpolicy="no-referrer" href="https://s.kk-resources.com/leadtag.js" rel="preload">"`)
     script.remove()
   })
 })

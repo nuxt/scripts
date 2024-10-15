@@ -76,3 +76,13 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   }
   return useScript<T, U>(scriptInput, scriptOptions as NuxtUseScriptOptions<T, U>)
 }
+
+export function pick(obj: Record<string, any>, keys: string[]) {
+  const res: Record<string, any> = {}
+  for (const k of keys) {
+    if (k in obj) {
+      res[k] = obj[k]
+    }
+  }
+  return res
+}

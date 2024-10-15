@@ -3,8 +3,11 @@ import type { UseScriptOptions, UseFunctionType, Head, DataKeys, SchemaAugmentat
 import { resolveScriptKey } from 'unhead'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
+import { pick } from '../utils'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext, WarmupStrategy } from '#nuxt-scripts'
+import {LinkBase} from "zhead";
+import {parseURL} from "ufo";
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -18,16 +21,26 @@ const PreconnectServerModes = ['preconnect', 'dns-prefetch']
 type ResolvedScriptInput = (MaybeComputedRefEntriesOnly<Omit<ScriptBase & DataKeys & SchemaAugmentations['script'], 'src'>> & { src: string })
 function warmup(_: ResolvedScriptInput, rel: WarmupStrategy, head: any) {
   const { src } = _
-  const $url = new URL(src || '/', 'http://localhost')
+  const $url = parseURL(src)
   const isPreconnect = rel && PreconnectServerModes.includes(rel)
-  const href = isPreconnect ? $url.origin : src
-  const isCrossOrigin = $url.origin !== 'http://localhost'
+  const href = isPreconnect ? `${$url.protocol}${$url.host}` : src
+  const isCrossOrigin = !!$url.host
   if (!rel || (isPreconnect && !isCrossOrigin)) {
     return
   }
-  const defaults: Required<Head>['link'][0] = {
-    fetchpriority: 'low',
+  const link = {
+    href,
+    rel,
+    ...pick(_, [
+      // shared keys between script and link
+      'crossorigin',
+      'referrerpolicy',
+      'fetchpriority',
+      'integrity',
+      // ignore id
+    ]),
   }
+  const defaults: Required<Head>['link'][0] = { fetchpriority: 'low' }
   if (rel === 'preload') {
     defaults.as = 'script'
   }
@@ -36,20 +49,7 @@ function warmup(_: ResolvedScriptInput, rel: WarmupStrategy, head: any) {
     defaults.crossorigin = 'anonymous'
     defaults.referrerpolicy = 'no-referrer'
   }
-  return useHead({
-    link: [{
-      ...defaults,
-      ...{
-        rel,
-        crossorigin: _.crossorigin,
-        referrerpolicy: _.referrerpolicy,
-      },
-      href,
-    }],
-  }, {
-    head,
-    tagPriority: 'high',
-  })
+  return useHead({ link: [defu(link, defaults)] }, { head, tagPriority: 'high' })
 }
 
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
