@@ -1,4 +1,4 @@
-import { addDevServerHandler, useNuxt } from '@nuxt/kit'
+import { addDevServerHandler, useNuxt, tryUseNuxt } from '@nuxt/kit'
 import { createError, eventHandler, lazyEventHandler } from 'h3'
 import { fetch } from 'ofetch'
 import { defu } from 'defu'
@@ -25,10 +25,10 @@ const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 // TODO: refactor to use nitro storage when it can be cached between builds
 export const bundleStorage = () => {
-  const nuxt = useNuxt()
+  const nuxt = tryUseNuxt()
   return createStorage({
     driver: fsDriver({
-      base: resolve(nuxt.options.rootDir, 'node_modules/.cache/nuxt/scripts'),
+      base: resolve(nuxt?.options.rootDir || '', 'node_modules/.cache/nuxt/scripts'),
     }),
   })
 }
