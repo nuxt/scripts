@@ -1,4 +1,11 @@
-import type { DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
+import type {
+  ActiveHeadEntry,
+  AsAsyncFunctionValues,
+  DataKeys,
+  HeadEntry,
+  SchemaAugmentations,
+  ScriptBase
+} from '@unhead/schema'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
@@ -25,7 +32,19 @@ import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import { object } from '#nuxt-scripts-validator'
 
-type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
+export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
+
+export type UseScriptContext<T extends Record<symbol | string, any>> =
+  (Promise<T> & VueScriptInstance<T>)
+  & AsAsyncFunctionValues<T>
+  & {
+  /**
+   * @deprecated Use top-level functions instead.
+   */
+    $script: Promise<T> & VueScriptInstance<T>
+    warmup: (rel: WarmupStrategy) => void
+    _warmupEl?: void | ActiveHeadEntry<any>
+  }
 
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
   /**

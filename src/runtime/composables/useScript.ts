@@ -1,10 +1,10 @@
-import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
-import type { UseScriptOptions, UseFunctionType, AsAsyncFunctionValues } from '@unhead/schema'
+import type { UseScriptInput, VueScriptInstance, MaybeComputedRefEntriesOnly } from '@unhead/vue'
+import type { UseScriptOptions, UseFunctionType, Head, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
 import { resolveScriptKey } from 'unhead'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
-import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext, WarmupStrategy } from '#nuxt-scripts'
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -12,23 +12,14 @@ function useNuxtScriptRuntimeConfig() {
   }
 }
 
-export type UseScriptContext<T extends Record<symbol | string, any>> =
-  (Promise<T> & VueScriptInstance<T>)
-  & AsAsyncFunctionValues<T>
-  & {
-  /**
-   * @deprecated Use top-level functions instead.
-   */
-    $script: Promise<T> & VueScriptInstance<T>
-  }
-
 const ValidPreloadTriggers = ['onNuxtReady', 'client']
 const PreconnectServerModes = ['preconnect', 'dns-prefetch']
 
-function warmup(_: Omit<Required<Head>['link'][0], 'rel'> & { rel: WarmupStrategy }, head: any) {
-  const { rel, src } = _
-  const $url = new URL(_.href, 'http://localhost')
-  const isPreconnect = PreconnectServerModes.includes(rel)
+type ResolvedScriptInput = (MaybeComputedRefEntriesOnly<Omit<ScriptBase & DataKeys & SchemaAugmentations['script'], 'src'>> & { src: string })
+function warmup(_: ResolvedScriptInput, rel: WarmupStrategy, head: any) {
+  const { src } = _
+  const $url = new URL(src || '/', 'http://localhost')
+  const isPreconnect = rel && PreconnectServerModes.includes(rel)
   const href = isPreconnect ? $url.origin : src
   const isCrossOrigin = $url.origin !== 'http://localhost'
   if (!rel || (isPreconnect && !isCrossOrigin)) {
@@ -57,7 +48,7 @@ function warmup(_: Omit<Required<Head>['link'][0], 'rel'> & { rel: WarmupStrateg
     }],
   }, {
     head,
-    tagPriority: 'high'
+    tagPriority: 'high',
   })
 }
 
@@ -65,14 +56,14 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
   // browser hint optimizations
-  const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
+  const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
   const nuxtApp = useNuxtApp()
   const head = options.head || injectHead()
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
   // need to make sure it's not already registered
-  if (!options.warmupStrategy && ValidPreloadTriggers.includes(options.trigger)) {
+  if (!options.warmupStrategy && ValidPreloadTriggers.includes(String(options.trigger))) {
     options.warmupStrategy = 'preload'
   }
   if (options.trigger === 'onNuxtReady') {
@@ -88,10 +79,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       })
     }
   }
-  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
   instance.warmup = (rel) => {
     if (!instance._warmupEl) {
-      instance._warmupEl = warmup({ ...input, href: input.src, rel }, head)
+      instance._warmupEl = warmup(input, rel, head)
     }
   }
   if (options.warmupStrategy) {
@@ -99,11 +90,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
   const _remove = instance.remove
   instance.remove = () => {
-    _remove()
     instance._warmupEl?.dispose()
     nuxtApp.$scripts[id] = undefined
+    return _remove()
   }
-  // @ts-expect-error untyped
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {

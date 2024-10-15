@@ -28,7 +28,7 @@ export const bundleStorage = () => {
   const nuxt = tryUseNuxt()
   return createStorage({
     driver: fsDriver({
-      base: resolve(nuxt?.options.rootDir, 'node_modules/.cache/nuxt/scripts'),
+      base: resolve(nuxt?.options.rootDir || '', 'node_modules/.cache/nuxt/scripts'),
     }),
   })
 }
