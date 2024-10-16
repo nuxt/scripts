@@ -161,11 +161,11 @@ export default defineNuxtModule<ModuleOptions>({
         let types = `
 declare module '#app' {
   interface NuxtApp {
-    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, Pick<(import('#nuxt-scripts').NuxtAppScript), '$script'> & Record<string, any>>
-    _scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)>
+    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts').UseScriptContext<any>)>
+    _scripts: Record<string, (import('#nuxt-scripts').UseScriptContext<any>)>
   }
   interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)> }) => void | Promise<void>
+    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').UseScriptContext<any>)> }) => void | Promise<void>
   }
 }
 `
