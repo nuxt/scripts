@@ -36,6 +36,7 @@ export default createConfigForNuxt({
       'vue/no-multiple-template-root': 'off',
       // NOTE: Disable this style rules if stylistic is not enabled
       'vue/max-attributes-per-line': 'off',
+      'vue/valid-template-root': 'off',
     },
   })
   .append({

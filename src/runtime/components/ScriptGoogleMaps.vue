@@ -1,7 +1,7 @@
-<script lang="ts" setup>
+<script lang="ts">
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
-import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, provide } from 'vue'
+import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps } from 'vue'
 import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
@@ -12,6 +12,13 @@ import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
 import { resolveComponent, useHead } from '#imports'
 
+export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
+  map: Ref<google.maps.Map | undefined>
+  mapsApi: Ref<typeof google.maps | undefined>
+}>
+</script>
+
+<script lang="ts" setup>
 interface PlaceholderOptions {
   width?: string | number
   height?: string | number
@@ -244,6 +251,8 @@ const googleMaps = {
 } as const
 
 defineExpose(googleMaps)
+
+provide(MAP_INJECTION_KEY, { map, mapsApi })
 
 onMounted(() => {
   watch(ready, (v) => {
