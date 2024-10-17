@@ -148,7 +148,7 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       addImports(registryScriptsWithImport.map((i) => {
         return {
-          priority: -1,
+          priority: 0,
           ...i.import,
         }
       }))
