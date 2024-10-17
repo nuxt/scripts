@@ -60,6 +60,12 @@ whenever(() => mapContext?.map.value, (map) => {
 
   markerEventListeners.push(...setupMarkerEventListeners(marker))
 
+  whenever(() => props.options, (options) => {
+    marker?.setOptions(options)
+  }, {
+    deep: true,
+  })
+
   if (markerClustererContext?.markerClusterer.value) {
     markerClustererContext.markerClusterer.value.addMarker(marker)
   }

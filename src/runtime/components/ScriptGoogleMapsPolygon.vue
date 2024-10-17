@@ -42,6 +42,12 @@ whenever(() => mapContext?.map.value, (map) => {
     ...props.options,
   })
 
+  whenever(() => props.options, (options) => {
+    polygon?.setOptions(options)
+  }, {
+    deep: true,
+  })
+
   polygonEventListeners.push(...setupPolygonEventListeners(polygon))
 }, {
   immediate: true,

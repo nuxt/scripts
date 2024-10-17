@@ -43,6 +43,12 @@ whenever(() => mapContext?.map.value, (map) => {
     ...props.options,
   })
 
+  whenever(() => props.options, (options) => {
+    circle?.setOptions(options)
+  }, {
+    deep: true,
+  })
+
   circleEventListeners.push(...setupCircleEventListeners(circle))
 }, {
   immediate: true,

@@ -43,6 +43,12 @@ whenever(() => mapContext?.map.value, (map) => {
   })
 
   rectangleEventListeners.push(...setupRectangleEventListeners(rectangle))
+
+  whenever(() => props.options, (options) => {
+    rectangle?.setOptions(options)
+  }, {
+    deep: true,
+  })
 }, {
   immediate: true,
   once: true,

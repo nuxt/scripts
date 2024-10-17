@@ -21,6 +21,12 @@ whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
     map: mapContext!.map.value!,
     ...props.options,
   })
+
+  whenever(() => props.options, (options) => {
+    heatmapLayer?.setOptions(options)
+  }, {
+    deep: true,
+  })
 }, {
   immediate: true,
   once: true,

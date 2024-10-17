@@ -42,6 +42,12 @@ whenever(() => mapContext?.map.value, (map) => {
     ...props.options,
   })
 
+  whenever(() => props.options, (options) => {
+    polyline?.setOptions(options)
+  }, {
+    deep: true,
+  })
+
   polylineEventListeners.push(...setupPolylineEventListeners(polyline))
 }, {
   immediate: true,

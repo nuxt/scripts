@@ -50,6 +50,12 @@ whenever(
       ...props.options,
     })
 
+    whenever(() => props.options, (options) => {
+      infoWindow?.setOptions(options)
+    }, {
+      deep: true,
+    })
+
     infoWindowContainer.value!.parentElement?.removeChild(infoWindowContainer.value!)
 
     infoWindowListeners.push(...setupInfoWindowEventListeners(infoWindow))
