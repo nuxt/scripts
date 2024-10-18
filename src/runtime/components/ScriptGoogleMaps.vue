@@ -1,7 +1,7 @@
 <script lang="ts">
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, provide } from 'vue'
-import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, provide, shallowRef } from 'vue'
+import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps, ShallowRef } from 'vue'
 import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
@@ -13,7 +13,7 @@ import { useScriptGoogleMaps } from '../registry/google-maps'
 import { resolveComponent, useHead } from '#imports'
 
 export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
-  map: Ref<google.maps.Map | undefined>
+  map: ShallowRef<google.maps.Map | undefined>
   mapsApi: Ref<typeof google.maps | undefined>
 }>
 </script>
@@ -135,7 +135,7 @@ const options = computed(() => {
 })
 const ready = ref(false)
 
-const map: Ref<google.maps.Map | undefined> = ref()
+const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
 const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement>>> = ref(new Map())
 
 function isLocationQuery(s: string | any) {

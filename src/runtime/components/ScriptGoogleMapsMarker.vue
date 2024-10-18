@@ -1,16 +1,16 @@
 <template>
-  <slot />
+  <slot v-if="marker" />
 </template>
 
 <script lang="ts">
-import type { InjectionKey, Ref } from 'vue'
-import { inject, onUnmounted, provide, ref } from 'vue'
+import type { InjectionKey, ShallowRef } from 'vue'
+import { inject, onUnmounted, provide, shallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 
 export const MARKER_INJECTION_KEY = Symbol('marker') as InjectionKey<{
-  marker: Ref<google.maps.Marker | undefined>
+  marker: ShallowRef<google.maps.Marker | undefined>
 }>
 </script>
 
@@ -51,26 +51,26 @@ const emit = defineEmits<{
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
-let marker: google.maps.Marker | undefined = undefined
+const marker = shallowRef<google.maps.Marker | undefined>(undefined)
 
 const markerEventListeners: google.maps.MapsEventListener[] = []
 
 whenever(() => mapContext?.map.value, (map) => {
-  marker = new google.maps.Marker(props.options)
+  marker.value = new google.maps.Marker(props.options)
 
-  markerEventListeners.push(...setupMarkerEventListeners(marker))
+  markerEventListeners.push(...setupMarkerEventListeners(marker.value))
 
   whenever(() => props.options, (options) => {
-    marker?.setOptions(options)
+    marker.value?.setOptions(options)
   }, {
     deep: true,
   })
 
   if (markerClustererContext?.markerClusterer.value) {
-    markerClustererContext.markerClusterer.value.addMarker(marker)
+    markerClustererContext.markerClusterer.value.addMarker(marker.value)
   }
   else {
-    marker.setMap(map)
+    marker.value.setMap(map)
   }
 }, {
   immediate: true,
@@ -78,21 +78,21 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!marker) {
+  if (!marker.value) {
     return
   }
 
   markerEventListeners.forEach(listener => listener.remove())
 
   if (markerClustererContext) {
-    markerClustererContext.markerClusterer.value?.removeMarker(marker)
+    markerClustererContext.markerClusterer.value?.removeMarker(marker.value)
   }
   else {
-    marker.setMap(null)
+    marker.value.setMap(null)
   }
 })
 
-provide(MARKER_INJECTION_KEY, { marker: ref(marker) })
+provide(MARKER_INJECTION_KEY, { marker })
 
 function setupMarkerEventListeners(marker: google.maps.Marker): google.maps.MapsEventListener[] {
   const listeners: google.maps.MapsEventListener[] = []
