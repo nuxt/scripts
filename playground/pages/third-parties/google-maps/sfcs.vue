@@ -10,6 +10,8 @@ const markerOptions = ref({
   position: { lat: -33.8688, lng: 151.2093 },
 })
 
+const isAdvancedMarkerElementShown = ref(false)
+
 const isMarkerClustererShown = ref(false)
 
 const markers = [
@@ -65,13 +67,16 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
       :map-options="{
         center: { lat: -34.397, lng: 150.644 },
         zoom: 8,
+        mapId: 'DEMO_MAP_ID',
       }"
     >
       <ScriptGoogleMapsInfoWindow
         v-if="isInfoWindowShown"
         :options="{ position: { lat: -33.8688, lng: 151.2093 } }"
       >
-        info window content
+        <div>
+          info window content
+        </div>
       </ScriptGoogleMapsInfoWindow>
 
       <ScriptGoogleMapsMarker
@@ -82,6 +87,17 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
           info window content
         </ScriptGoogleMapsInfoWindow>
       </ScriptGoogleMapsMarker>
+
+      <ScriptGoogleMapsAdvancedMarkerElement
+        v-if="isAdvancedMarkerElementShown"
+        :options="{
+          position: { lat: -33.8688, lng: 151.2093 },
+        }"
+      >
+        <ScriptGoogleMapsInfoWindow>
+          info window content
+        </ScriptGoogleMapsInfoWindow>
+      </ScriptGoogleMapsAdvancedMarkerElement>
 
       <ScriptGoogleMapsMarkerClusterer v-if="isMarkerClustererShown">
         <ScriptGoogleMapsMarker
@@ -183,6 +199,13 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         @click="isMarkerShown = !isMarkerShown"
       >
         {{ `${isMarkerShown ? 'Hide' : 'Show'} marker` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isAdvancedMarkerElementShown = !isAdvancedMarkerElementShown"
+      >
+        {{ `${isAdvancedMarkerElementShown ? 'Hide' : 'Show'} advanced marker element` }}
       </button>
 
       <button

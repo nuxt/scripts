@@ -1,10 +1,8 @@
 <template>
-  <div
-    v-show="false"
-    ref="info-window-container"
-    aria-hidden="true"
-  >
-    <slot />
+  <div class="info-window-container">
+    <div ref="info-window-container">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -13,6 +11,7 @@ import { inject, onUnmounted, useTemplateRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { MARKER_INJECTION_KEY } from './ScriptGoogleMapsMarker.vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './ScriptGoogleMapsAdvancedMarkerElement.vue'
 
 const props = defineProps<{
   options?: google.maps.InfoWindowOptions
@@ -36,6 +35,7 @@ const emit = defineEmits<{
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
+const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
 
 const infoWindowContainer = useTemplateRef('info-window-container')
 
@@ -46,11 +46,9 @@ whenever(
     && infoWindowContainer.value,
   () => {
     infoWindow = new google.maps.InfoWindow({
-      content: infoWindowContainer.value!.firstElementChild || infoWindowContainer.value!.textContent,
+      content: infoWindowContainer.value,
       ...props.options,
     })
-
-    infoWindowContainer.value!.parentElement?.removeChild(infoWindowContainer.value!)
 
     setupInfoWindowEventListeners(infoWindow)
 
@@ -58,6 +56,14 @@ whenever(
       markerContext.marker.value.addListener('click', () => {
         infoWindow!.open({
           anchor: markerContext.marker.value,
+          map: mapContext!.map.value,
+        })
+      })
+    }
+    else if (advancedMarkerElementContext?.advancedMarkerElement.value) {
+      advancedMarkerElementContext.advancedMarkerElement.value.addListener('click', () => {
+        infoWindow!.open({
+          anchor: advancedMarkerElementContext.advancedMarkerElement.value,
           map: mapContext!.map.value,
         })
       })
@@ -94,3 +100,9 @@ function setupInfoWindowEventListeners(infoWindow: google.maps.InfoWindow) {
   })
 }
 </script>
+
+<style scoped>
+.info-window-container {
+    display: none;
+}
+</style>
