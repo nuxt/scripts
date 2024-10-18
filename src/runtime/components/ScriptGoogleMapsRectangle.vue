@@ -10,24 +10,27 @@ const props = defineProps<{
   options?: Omit<google.maps.RectangleOptions, 'map'>
 }>()
 
+const eventsWithoutPayload = [
+  'bounds_changed',
+] as const
+
+const eventsWithMapMouseEventPayload = [
+  'click',
+  'contextmenu',
+  'dblclick',
+  'drag',
+  'dragend',
+  'dragstart',
+  'mousedown',
+  'mousemove',
+  'mouseout',
+  'mouseover',
+  'mouseup',
+] as const
+
 const emit = defineEmits<{
-  (event:
-    | 'bounds_changed'
-  ): void
-  (event:
-    | 'click'
-    | 'contextmenu'
-    | 'dblclick'
-    | 'drag'
-    | 'dragend'
-    | 'dragstart'
-    | 'mousedown'
-    | 'mousemove'
-    | 'mouseout'
-    | 'mouseover'
-    | 'mouseup',
-    payload: google.maps.MapMouseEvent
-  ): void
+  (event: typeof eventsWithoutPayload[number]): void
+  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
@@ -63,18 +66,12 @@ onUnmounted(() => {
 })
 
 function setupRectangleEventListeners(rectangle: google.maps.Rectangle) {
-  rectangle.addListener('bounds_changed', () => emit('bounds_changed'))
+  eventsWithoutPayload.forEach((event) => {
+    rectangle.addListener(event, () => emit(event))
+  })
 
-  rectangle.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event))
-  rectangle.addListener('contextmenu', (event: google.maps.MapMouseEvent) => emit('contextmenu', event))
-  rectangle.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event))
-  rectangle.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event))
-  rectangle.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event))
-  rectangle.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event))
-  rectangle.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event))
-  rectangle.addListener('mousemove', (event: google.maps.MapMouseEvent) => emit('mousemove', event))
-  rectangle.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event))
-  rectangle.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event))
-  rectangle.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event))
+  eventsWithMapMouseEventPayload.forEach((event) => {
+    rectangle.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+  })
 }
 </script>

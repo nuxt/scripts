@@ -10,25 +10,28 @@ const props = defineProps<{
   options?: Omit<google.maps.CircleOptions, 'map'>
 }>()
 
+const eventsWithoutPayload = [
+  'center_changed',
+  'radius_changed',
+] as const
+
+const eventsWithMapMouseEventPayload = [
+  'click',
+  'dblclick',
+  'drag',
+  'dragend',
+  'dragstart',
+  'mousedown',
+  'mousemove',
+  'mouseout',
+  'mouseover',
+  'mouseup',
+  'rightclick',
+] as const
+
 const emit = defineEmits<{
-  (event:
-    | 'center_changed'
-    | 'radius_changed'
-  ): void
-  (event:
-    | 'click'
-    | 'dblclick'
-    | 'drag'
-    | 'dragend'
-    | 'dragstart'
-    | 'mousedown'
-    | 'mousemove'
-    | 'mouseout'
-    | 'mouseover'
-    | 'mouseup'
-    | 'rightclick',
-    payload: google.maps.MapMouseEvent
-  ): void
+  (event: typeof eventsWithoutPayload[number]): void
+  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
@@ -64,19 +67,12 @@ onUnmounted(() => {
 })
 
 function setupCircleEventListeners(circle: google.maps.Circle) {
-  circle.addListener('center_changed', () => emit('center_changed'))
-  circle.addListener('radius_changed', () => emit('radius_changed'))
+  eventsWithoutPayload.forEach((event) => {
+    circle.addListener(event, () => emit(event))
+  })
 
-  circle.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event))
-  circle.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event))
-  circle.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event))
-  circle.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event))
-  circle.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event))
-  circle.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event))
-  circle.addListener('mousemove', (event: google.maps.MapMouseEvent) => emit('mousemove', event))
-  circle.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event))
-  circle.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event))
-  circle.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event))
-  circle.addListener('rightclick', (event: google.maps.MapMouseEvent) => emit('rightclick', event))
+  eventsWithMapMouseEventPayload.forEach((event) => {
+    circle.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+  })
 }
 </script>

@@ -18,18 +18,20 @@ const props = defineProps<{
   options?: google.maps.InfoWindowOptions
 }>()
 
+const infoWindowEvents = [
+  'close',
+  'closeclick',
+  'content_changed',
+  'domready',
+  'headercontent_changed',
+  'headerdisabled_changed',
+  'position_changed',
+  'visible',
+  'zindex_changed',
+] as const
+
 const emit = defineEmits<{
-  (event:
-    | 'close'
-    | 'closeclick'
-    | 'content_changed'
-    | 'domready'
-    | 'headercontent_changed'
-    | 'headerdisabled_changed'
-    | 'position_changed'
-    | 'visible'
-    | 'zindex_changed'
-  ): void
+  (event: typeof infoWindowEvents[number]): void
 }>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
@@ -87,14 +89,8 @@ onUnmounted(() => {
 })
 
 function setupInfoWindowEventListeners(infoWindow: google.maps.InfoWindow) {
-  infoWindow.addListener('close', () => emit('close'))
-  infoWindow.addListener('closeclick', () => emit('closeclick'))
-  infoWindow.addListener('content_changed', () => emit('content_changed'))
-  infoWindow.addListener('domready', () => emit('domready'))
-  infoWindow.addListener('headercontent_changed', () => emit('headercontent_changed'))
-  infoWindow.addListener('headerdisabled_changed', () => emit('headerdisabled_changed'))
-  infoWindow.addListener('position_changed', () => emit('position_changed'))
-  infoWindow.addListener('visible', () => emit('visible'))
-  infoWindow.addListener('zindex_changed', () => emit('zindex_changed'))
+  infoWindowEvents.forEach((event) => {
+    infoWindow.addListener(event, () => emit(event))
+  })
 }
 </script>

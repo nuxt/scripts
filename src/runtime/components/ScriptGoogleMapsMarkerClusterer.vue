@@ -18,11 +18,14 @@ const props = defineProps<{
   options?: Omit<MarkerClustererOptions, 'map'>
 }>()
 
+const markerClustererEvents = [
+  'click',
+  'clusteringbegin',
+  'clusteringend',
+] as const
+
 const emit = defineEmits<{
-  (
-    event: 'click' | 'clusteringbegin' | 'clusteringend',
-    payload: MarkerClusterer
-  ): void
+  (event: typeof markerClustererEvents[number], payload: MarkerClusterer): void
 }>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
@@ -54,8 +57,8 @@ onUnmounted(() => {
 provide(MARKER_CLUSTERER_INJECTION_KEY, { markerClusterer })
 
 function setupMarkerClustererEventListeners(markerClusterer: MarkerClusterer) {
-  markerClusterer.addListener('click', () => emit('click', markerClusterer))
-  markerClusterer.addListener('clusteringbegin', () => emit('clusteringbegin', markerClusterer))
-  markerClusterer.addListener('clusteringend', () => emit('clusteringend', markerClusterer))
+  markerClustererEvents.forEach((event) => {
+    markerClusterer.addListener(event, () => emit(event, markerClusterer))
+  })
 }
 </script>
