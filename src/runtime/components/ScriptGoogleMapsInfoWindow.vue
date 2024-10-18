@@ -68,6 +68,11 @@ whenever(
         })
       })
     }
+    else {
+      infoWindow.setPosition(props.options?.position)
+
+      infoWindow.open(mapContext?.map.value)
+    }
   }, {
     immediate: true,
     once: true,

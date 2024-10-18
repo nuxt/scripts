@@ -2,6 +2,8 @@
 import { whenever } from '@vueuse/core'
 import { ref, useTemplateRef } from 'vue'
 
+const isInfoWindowShown = ref(false)
+
 const isMarkerShown = ref(false)
 
 const markerOptions = ref({
@@ -65,6 +67,13 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         zoom: 8,
       }"
     >
+      <ScriptGoogleMapsInfoWindow
+        v-if="isInfoWindowShown"
+        :options="{ position: { lat: -33.8688, lng: 151.2093 } }"
+      >
+        info window content
+      </ScriptGoogleMapsInfoWindow>
+
       <ScriptGoogleMapsMarker
         v-if="isMarkerShown"
         :options="markerOptions"
@@ -162,6 +171,13 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
     </ScriptGoogleMaps>
 
     <div class="my-5 flex gap-5 flex-wrap">
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isInfoWindowShown = !isInfoWindowShown"
+      >
+        {{ `${isInfoWindowShown ? 'Hide' : 'Show'} info window` }}
+      </button>
+
       <button
         class="bg-[#ffa500] rounded-lg px-2 py-1"
         @click="isMarkerShown = !isMarkerShown"
