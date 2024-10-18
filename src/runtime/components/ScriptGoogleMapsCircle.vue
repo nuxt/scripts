@@ -35,50 +35,48 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 let circle: google.maps.Circle | undefined = undefined
 
-const circleEventListeners: google.maps.MapsEventListener[] = []
-
 whenever(() => mapContext?.map.value, (map) => {
   circle = new google.maps.Circle({
     map,
     ...props.options,
   })
 
+  setupCircleEventListeners(circle)
+
   whenever(() => props.options, (options) => {
     circle?.setOptions(options)
   }, {
     deep: true,
   })
-
-  circleEventListeners.push(...setupCircleEventListeners(circle))
 }, {
   immediate: true,
   once: true,
 })
 
 onUnmounted(() => {
-  circleEventListeners.forEach(listener => listener.remove())
+  if (!circle) {
+    return
+  }
 
-  circle?.setMap(null)
+  google.maps.event.clearInstanceListeners(circle)
+
+  circle.setMap(null)
 })
 
-function setupCircleEventListeners(circle: google.maps.Circle): google.maps.MapsEventListener[] {
-  const listeners: google.maps.MapsEventListener[] = []
+function setupCircleEventListeners(circle: google.maps.Circle) {
+  circle.addListener('center_changed', () => emit('center_changed'))
+  circle.addListener('radius_changed', () => emit('radius_changed'))
 
-  listeners.push(circle.addListener('center_changed', () => emit('center_changed')))
-  listeners.push(circle.addListener('radius_changed', () => emit('radius_changed')))
-
-  listeners.push(circle.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event)))
-  listeners.push(circle.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event)))
-  listeners.push(circle.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event)))
-  listeners.push(circle.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event)))
-  listeners.push(circle.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event)))
-  listeners.push(circle.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event)))
-  listeners.push(circle.addListener('mousemove', (event: google.maps.MapMouseEvent) => emit('mousemove', event)))
-  listeners.push(circle.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event)))
-  listeners.push(circle.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event)))
-  listeners.push(circle.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event)))
-  listeners.push(circle.addListener('rightclick', (event: google.maps.MapMouseEvent) => emit('rightclick', event)))
-
-  return listeners
+  circle.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event))
+  circle.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event))
+  circle.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event))
+  circle.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event))
+  circle.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event))
+  circle.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event))
+  circle.addListener('mousemove', (event: google.maps.MapMouseEvent) => emit('mousemove', event))
+  circle.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event))
+  circle.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event))
+  circle.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event))
+  circle.addListener('rightclick', (event: google.maps.MapMouseEvent) => emit('rightclick', event))
 }
 </script>

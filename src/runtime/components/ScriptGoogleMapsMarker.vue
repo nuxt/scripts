@@ -53,18 +53,10 @@ const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 const marker = shallowRef<google.maps.Marker | undefined>(undefined)
 
-const markerEventListeners: google.maps.MapsEventListener[] = []
-
 whenever(() => mapContext?.map.value, (map) => {
   marker.value = new google.maps.Marker(props.options)
 
-  markerEventListeners.push(...setupMarkerEventListeners(marker.value))
-
-  whenever(() => props.options, (options) => {
-    marker.value?.setOptions(options)
-  }, {
-    deep: true,
-  })
+  setupMarkerEventListeners(marker.value)
 
   if (markerClustererContext?.markerClusterer.value) {
     markerClustererContext.markerClusterer.value.addMarker(marker.value)
@@ -72,6 +64,12 @@ whenever(() => mapContext?.map.value, (map) => {
   else {
     marker.value.setMap(map)
   }
+
+  whenever(() => props.options, (options) => {
+    marker.value?.setOptions(options)
+  }, {
+    deep: true,
+  })
 }, {
   immediate: true,
   once: true,
@@ -82,7 +80,7 @@ onUnmounted(() => {
     return
   }
 
-  markerEventListeners.forEach(listener => listener.remove())
+  google.maps.event.clearInstanceListeners(marker.value)
 
   if (markerClustererContext) {
     markerClustererContext.markerClusterer.value?.removeMarker(marker.value)
@@ -94,32 +92,28 @@ onUnmounted(() => {
 
 provide(MARKER_INJECTION_KEY, { marker })
 
-function setupMarkerEventListeners(marker: google.maps.Marker): google.maps.MapsEventListener[] {
-  const listeners: google.maps.MapsEventListener[] = []
+function setupMarkerEventListeners(marker: google.maps.Marker) {
+  marker.addListener('animation_changed', () => emit('animation_changed'))
+  marker.addListener('clickable_changed', () => emit('clickable_changed'))
+  marker.addListener('cursor_changed', () => emit('cursor_changed'))
+  marker.addListener('draggable_changed', () => emit('draggable_changed'))
+  marker.addListener('flat_changed', () => emit('flat_changed'))
+  marker.addListener('icon_changed', () => emit('icon_changed'))
+  marker.addListener('position_changed', () => emit('position_changed'))
+  marker.addListener('shape_changed', () => emit('shape_changed'))
+  marker.addListener('title_changed', () => emit('title_changed'))
+  marker.addListener('visible_changed', () => emit('visible_changed'))
+  marker.addListener('zindex_changed', () => emit('zindex_changed'))
 
-  listeners.push(marker.addListener('animation_changed', () => emit('animation_changed')))
-  listeners.push(marker.addListener('clickable_changed', () => emit('clickable_changed')))
-  listeners.push(marker.addListener('cursor_changed', () => emit('cursor_changed')))
-  listeners.push(marker.addListener('draggable_changed', () => emit('draggable_changed')))
-  listeners.push(marker.addListener('flat_changed', () => emit('flat_changed')))
-  listeners.push(marker.addListener('icon_changed', () => emit('icon_changed')))
-  listeners.push(marker.addListener('position_changed', () => emit('position_changed')))
-  listeners.push(marker.addListener('shape_changed', () => emit('shape_changed')))
-  listeners.push(marker.addListener('title_changed', () => emit('title_changed')))
-  listeners.push(marker.addListener('visible_changed', () => emit('visible_changed')))
-  listeners.push(marker.addListener('zindex_changed', () => emit('zindex_changed')))
-
-  listeners.push(marker.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event)))
-  listeners.push(marker.addListener('contextmenu', (event: google.maps.MapMouseEvent) => emit('contextmenu', event)))
-  listeners.push(marker.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event)))
-  listeners.push(marker.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event)))
-  listeners.push(marker.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event)))
-  listeners.push(marker.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event)))
-  listeners.push(marker.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event)))
-  listeners.push(marker.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event)))
-  listeners.push(marker.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event)))
-  listeners.push(marker.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event)))
-
-  return listeners
+  marker.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event))
+  marker.addListener('contextmenu', (event: google.maps.MapMouseEvent) => emit('contextmenu', event))
+  marker.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event))
+  marker.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event))
+  marker.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event))
+  marker.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event))
+  marker.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event))
+  marker.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event))
+  marker.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event))
+  marker.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event))
 }
 </script>

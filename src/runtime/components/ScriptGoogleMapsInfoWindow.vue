@@ -39,8 +39,6 @@ const infoWindowContainer = useTemplateRef('info-window-container')
 
 let infoWindow: google.maps.InfoWindow | undefined = undefined
 
-const infoWindowListeners: google.maps.MapsEventListener[] = []
-
 whenever(
   () => mapContext?.map.value
     && infoWindowContainer.value,
@@ -50,15 +48,9 @@ whenever(
       ...props.options,
     })
 
-    whenever(() => props.options, (options) => {
-      infoWindow?.setOptions(options)
-    }, {
-      deep: true,
-    })
-
     infoWindowContainer.value!.parentElement?.removeChild(infoWindowContainer.value!)
 
-    infoWindowListeners.push(...setupInfoWindowEventListeners(infoWindow))
+    setupInfoWindowEventListeners(infoWindow)
 
     if (markerContext?.marker.value) {
       markerContext.marker.value.addListener('click', () => {
@@ -73,30 +65,36 @@ whenever(
 
       infoWindow.open(mapContext?.map.value)
     }
+
+    whenever(() => props.options, (options) => {
+      infoWindow?.setOptions(options)
+    }, {
+      deep: true,
+    })
   }, {
     immediate: true,
     once: true,
   })
 
 onUnmounted(() => {
-  infoWindowListeners.forEach(listener => listener.remove())
+  if (!infoWindow) {
+    return
+  }
 
-  infoWindow?.close()
+  google.maps.event.clearInstanceListeners(infoWindow)
+
+  infoWindow.close()
 })
 
-function setupInfoWindowEventListeners(infoWindow: google.maps.InfoWindow): google.maps.MapsEventListener[] {
-  const listeners: google.maps.MapsEventListener[] = []
-
-  listeners.push(infoWindow.addListener('close', () => emit('close')))
-  listeners.push(infoWindow.addListener('closeclick', () => emit('closeclick')))
-  listeners.push(infoWindow.addListener('content_changed', () => emit('content_changed')))
-  listeners.push(infoWindow.addListener('domready', () => emit('domready')))
-  listeners.push(infoWindow.addListener('headercontent_changed', () => emit('headercontent_changed')))
-  listeners.push(infoWindow.addListener('headerdisabled_changed', () => emit('headerdisabled_changed')))
-  listeners.push(infoWindow.addListener('position_changed', () => emit('position_changed')))
-  listeners.push(infoWindow.addListener('visible', () => emit('visible')))
-  listeners.push(infoWindow.addListener('zindex_changed', () => emit('zindex_changed')))
-
-  return listeners
+function setupInfoWindowEventListeners(infoWindow: google.maps.InfoWindow) {
+  infoWindow.addListener('close', () => emit('close'))
+  infoWindow.addListener('closeclick', () => emit('closeclick'))
+  infoWindow.addListener('content_changed', () => emit('content_changed'))
+  infoWindow.addListener('domready', () => emit('domready'))
+  infoWindow.addListener('headercontent_changed', () => emit('headercontent_changed'))
+  infoWindow.addListener('headerdisabled_changed', () => emit('headerdisabled_changed'))
+  infoWindow.addListener('position_changed', () => emit('position_changed'))
+  infoWindow.addListener('visible', () => emit('visible'))
+  infoWindow.addListener('zindex_changed', () => emit('zindex_changed'))
 }
 </script>

@@ -29,35 +29,33 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 const markerClusterer = shallowRef<MarkerClusterer | undefined>(undefined)
 
-const markerClustererEventListeners: google.maps.MapsEventListener[] = []
-
 whenever(() => mapContext?.map.value, (map) => {
   markerClusterer.value = new MarkerClusterer({
     map,
     ...props.options,
   })
 
-  markerClustererEventListeners.push(...setupMarkerClustererEventListeners(markerClusterer.value))
+  setupMarkerClustererEventListeners(markerClusterer.value)
 }, {
   immediate: true,
   once: true,
 })
 
 onUnmounted(() => {
-  markerClustererEventListeners.forEach(listener => listener.remove())
+  if (!markerClusterer.value) {
+    return
+  }
 
-  markerClusterer.value?.setMap(null)
+  google.maps.event.clearInstanceListeners(markerClusterer.value)
+
+  markerClusterer.value.setMap(null)
 })
 
 provide(MARKER_CLUSTERER_INJECTION_KEY, { markerClusterer })
 
-function setupMarkerClustererEventListeners(markerClusterer: MarkerClusterer): google.maps.MapsEventListener[] {
-  const listeners: google.maps.MapsEventListener[] = []
-
-  listeners.push(markerClusterer.addListener('click', () => emit('click', markerClusterer)))
-  listeners.push(markerClusterer.addListener('clusteringbegin', () => emit('clusteringbegin', markerClusterer)))
-  listeners.push(markerClusterer.addListener('clusteringend', () => emit('clusteringend', markerClusterer)))
-
-  return listeners
+function setupMarkerClustererEventListeners(markerClusterer: MarkerClusterer) {
+  markerClusterer.addListener('click', () => emit('click', markerClusterer))
+  markerClusterer.addListener('clusteringbegin', () => emit('clusteringbegin', markerClusterer))
+  markerClusterer.addListener('clusteringend', () => emit('clusteringend', markerClusterer))
 }
 </script>
