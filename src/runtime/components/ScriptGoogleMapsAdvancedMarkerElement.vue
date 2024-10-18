@@ -66,6 +66,14 @@ whenever(() => mapContext?.map.value, async (map) => {
   else {
     advancedMarkerElement.value.map = map
   }
+
+  whenever(() => props.options, (options) => {
+    for (const option in options) {
+      advancedMarkerElement.value![option as keyof typeof props.options] = options[option as keyof typeof props.options]
+    }
+  }, {
+    deep: true,
+  })
 }, {
   immediate: true,
   once: true,
