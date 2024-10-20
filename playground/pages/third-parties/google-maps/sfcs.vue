@@ -12,6 +12,8 @@ const markerOptions = ref({
 
 const isAdvancedMarkerElementShown = ref(false)
 
+const isAdvancedMarkerElementWithPinElementShown = ref(false)
+
 const isMarkerClustererShown = ref(false)
 
 const markers = [
@@ -94,6 +96,23 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
           position: { lat: -33.8688, lng: 151.2093 },
         }"
       >
+        <ScriptGoogleMapsInfoWindow>
+          info window content
+        </ScriptGoogleMapsInfoWindow>
+      </ScriptGoogleMapsAdvancedMarkerElement>
+
+      <ScriptGoogleMapsAdvancedMarkerElement
+        v-if="isAdvancedMarkerElementWithPinElementShown"
+        :options="{
+          position: { lat: -33.8688, lng: 151.2093 },
+        }"
+      >
+        <ScriptGoogleMapsPinElement
+          :options="{
+            scale: 1.5,
+          }"
+        />
+
         <ScriptGoogleMapsInfoWindow>
           info window content
         </ScriptGoogleMapsInfoWindow>
@@ -206,6 +225,13 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         @click="isAdvancedMarkerElementShown = !isAdvancedMarkerElementShown"
       >
         {{ `${isAdvancedMarkerElementShown ? 'Hide' : 'Show'} advanced marker element` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isAdvancedMarkerElementWithPinElementShown = !isAdvancedMarkerElementWithPinElementShown"
+      >
+        {{ `${isAdvancedMarkerElementWithPinElementShown ? 'Hide' : 'Show'} advanced marker element with pin element` }}
       </button>
 
       <button
