@@ -19,33 +19,36 @@ const props = defineProps<{
   options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>
 }>()
 
+const eventsWithoutPayload = [
+  'animation_changed',
+  'clickable_changed',
+  'cursor_changed',
+  'draggable_changed',
+  'flat_changed',
+  'icon_changed',
+  'position_changed',
+  'shape_changed',
+  'title_changed',
+  'visible_changed',
+  'zindex_changed',
+] as const
+
+const eventsWithMapMouseEventPayload = [
+  'click',
+  'contextmenu',
+  'dblclick',
+  'drag',
+  'dragend',
+  'dragstart',
+  'mousedown',
+  'mouseout',
+  'mouseover',
+  'mouseup',
+] as const
+
 const emit = defineEmits<{
-  (event:
-    | 'animation_changed'
-    | 'clickable_changed'
-    | 'cursor_changed'
-    | 'draggable_changed'
-    | 'flat_changed'
-    | 'icon_changed'
-    | 'position_changed'
-    | 'shape_changed'
-    | 'title_changed'
-    | 'visible_changed'
-    | 'zindex_changed'
-  ): void
-  (event:
-    | 'click'
-    | 'contextmenu'
-    | 'dblclick'
-    | 'drag'
-    | 'dragend'
-    | 'dragstart'
-    | 'mousedown'
-    | 'mouseout'
-    | 'mouseover'
-    | 'mouseup',
-    payload: google.maps.MapMouseEvent
-  ): void
+  (event: typeof eventsWithoutPayload[number]): void
+  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
@@ -97,27 +100,12 @@ onUnmounted(() => {
 provide(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, { advancedMarkerElement })
 
 function setupAdvancedMarkerElementEventListeners(advancedMarkerElement: google.maps.marker.AdvancedMarkerElement) {
-  advancedMarkerElement.addListener('animation_changed', () => emit('animation_changed'))
-  advancedMarkerElement.addListener('clickable_changed', () => emit('clickable_changed'))
-  advancedMarkerElement.addListener('cursor_changed', () => emit('cursor_changed'))
-  advancedMarkerElement.addListener('draggable_changed', () => emit('draggable_changed'))
-  advancedMarkerElement.addListener('flat_changed', () => emit('flat_changed'))
-  advancedMarkerElement.addListener('icon_changed', () => emit('icon_changed'))
-  advancedMarkerElement.addListener('position_changed', () => emit('position_changed'))
-  advancedMarkerElement.addListener('shape_changed', () => emit('shape_changed'))
-  advancedMarkerElement.addListener('title_changed', () => emit('title_changed'))
-  advancedMarkerElement.addListener('visible_changed', () => emit('visible_changed'))
-  advancedMarkerElement.addListener('zindex_changed', () => emit('zindex_changed'))
+  eventsWithoutPayload.forEach((event) => {
+    advancedMarkerElement.addListener(event, () => emit(event))
+  })
 
-  advancedMarkerElement.addListener('click', (event: google.maps.MapMouseEvent) => emit('click', event))
-  advancedMarkerElement.addListener('contextmenu', (event: google.maps.MapMouseEvent) => emit('contextmenu', event))
-  advancedMarkerElement.addListener('dblclick', (event: google.maps.MapMouseEvent) => emit('dblclick', event))
-  advancedMarkerElement.addListener('drag', (event: google.maps.MapMouseEvent) => emit('drag', event))
-  advancedMarkerElement.addListener('dragend', (event: google.maps.MapMouseEvent) => emit('dragend', event))
-  advancedMarkerElement.addListener('dragstart', (event: google.maps.MapMouseEvent) => emit('dragstart', event))
-  advancedMarkerElement.addListener('mousedown', (event: google.maps.MapMouseEvent) => emit('mousedown', event))
-  advancedMarkerElement.addListener('mouseout', (event: google.maps.MapMouseEvent) => emit('mouseout', event))
-  advancedMarkerElement.addListener('mouseover', (event: google.maps.MapMouseEvent) => emit('mouseover', event))
-  advancedMarkerElement.addListener('mouseup', (event: google.maps.MapMouseEvent) => emit('mouseup', event))
+  eventsWithMapMouseEventPayload.forEach((event) => {
+    advancedMarkerElement.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+  })
 }
 </script>
