@@ -67,8 +67,8 @@
   },
   "dependencies": {
     "@googlemaps/markerclusterer": "^2.5.3",
-    "@nuxt/devtools-kit": "^1.5.1",
-    "@nuxt/devtools-ui-kit": "^1.5.1",
+    "@nuxt/devtools-kit": "^1.6.0",
+    "@nuxt/devtools-ui-kit": "^1.6.0",
     "@nuxt/kit": "^3.13.2",
     "@stripe/stripe-js": "^4.8.0",
     "@types/google.maps": "^3.58.1",
