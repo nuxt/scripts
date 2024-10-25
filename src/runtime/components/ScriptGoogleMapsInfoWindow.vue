@@ -43,9 +43,10 @@ let infoWindow: google.maps.InfoWindow | undefined = undefined
 
 whenever(
   () => mapContext?.map.value
+    && mapContext.mapsApi.value
     && infoWindowContainer.value,
   () => {
-    infoWindow = new google.maps.InfoWindow({
+    infoWindow = new mapContext!.mapsApi.value!.InfoWindow({
       content: infoWindowContainer.value,
       ...props.options,
     })
@@ -71,7 +72,7 @@ whenever(
     else {
       infoWindow.setPosition(props.options?.position)
 
-      infoWindow.open(mapContext?.map.value)
+      infoWindow.open(mapContext!.map.value)
     }
 
     whenever(() => props.options, (options) => {
@@ -85,11 +86,11 @@ whenever(
   })
 
 onUnmounted(() => {
-  if (!infoWindow) {
+  if (!infoWindow || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(infoWindow)
+  mapContext.mapsApi.value.event.clearInstanceListeners(infoWindow)
 
   infoWindow.close()
 })

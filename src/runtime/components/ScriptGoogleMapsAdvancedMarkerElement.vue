@@ -56,10 +56,10 @@ const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 const advancedMarkerElement = shallowRef<google.maps.marker.AdvancedMarkerElement | undefined>(undefined)
 
-whenever(() => mapContext?.map.value, async (map) => {
+whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
   await mapContext!.mapsApi.value!.importLibrary('marker')
 
-  advancedMarkerElement.value = new google.maps.marker.AdvancedMarkerElement(props.options)
+  advancedMarkerElement.value = new mapContext!.mapsApi.value!.marker.AdvancedMarkerElement(props.options)
 
   setupAdvancedMarkerElementEventListeners(advancedMarkerElement.value)
 
@@ -67,7 +67,7 @@ whenever(() => mapContext?.map.value, async (map) => {
     markerClustererContext.markerClusterer.value.addMarker(advancedMarkerElement.value)
   }
   else {
-    advancedMarkerElement.value.map = map
+    advancedMarkerElement.value.map = mapContext!.map.value
   }
 
   whenever(() => props.options, (options) => {
@@ -83,11 +83,11 @@ whenever(() => mapContext?.map.value, async (map) => {
 })
 
 onUnmounted(() => {
-  if (!advancedMarkerElement.value) {
+  if (!advancedMarkerElement.value || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(advancedMarkerElement.value)
+  mapContext.mapsApi.value.event.clearInstanceListeners(advancedMarkerElement.value)
 
   if (markerClustererContext) {
     markerClustererContext.markerClusterer.value?.removeMarker(advancedMarkerElement.value)

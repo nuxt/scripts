@@ -37,9 +37,9 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 let rectangle: google.maps.Rectangle | undefined = undefined
 
-whenever(() => mapContext?.map.value, (map) => {
-  rectangle = new google.maps.Rectangle({
-    map,
+whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
+  rectangle = new mapContext!.mapsApi.value!.Rectangle({
+    map: mapContext!.map.value,
     ...props.options,
   })
 
@@ -56,11 +56,11 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!rectangle) {
+  if (!rectangle || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(rectangle)
+  mapContext.mapsApi.value.event.clearInstanceListeners(rectangle)
 
   rectangle.setMap(null)
 })

@@ -45,11 +45,11 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!markerClusterer.value) {
+  if (!markerClusterer.value || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(markerClusterer.value)
+  mapContext.mapsApi.value.event.clearInstanceListeners(markerClusterer.value)
 
   markerClusterer.value.setMap(null)
 })

@@ -56,8 +56,8 @@ const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 const marker = shallowRef<google.maps.Marker | undefined>(undefined)
 
-whenever(() => mapContext?.map.value, (map) => {
-  marker.value = new google.maps.Marker(props.options)
+whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
+  marker.value = new mapContext!.mapsApi.value!.Marker(props.options)
 
   setupMarkerEventListeners(marker.value)
 
@@ -65,7 +65,7 @@ whenever(() => mapContext?.map.value, (map) => {
     markerClustererContext.markerClusterer.value.addMarker(marker.value)
   }
   else {
-    marker.value.setMap(map)
+    marker.value.setMap(mapContext!.map.value!)
   }
 
   whenever(() => props.options, (options) => {
@@ -79,14 +79,14 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!marker.value) {
+  if (!marker.value || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(marker.value)
+  mapContext.mapsApi.value.event.clearInstanceListeners(marker.value)
 
-  if (markerClustererContext) {
-    markerClustererContext.markerClusterer.value?.removeMarker(marker.value)
+  if (markerClustererContext?.markerClusterer.value) {
+    markerClustererContext.markerClusterer.value.removeMarker(marker.value)
   }
   else {
     marker.value.setMap(null)

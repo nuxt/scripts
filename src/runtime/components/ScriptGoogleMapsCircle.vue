@@ -38,9 +38,9 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 let circle: google.maps.Circle | undefined = undefined
 
-whenever(() => mapContext?.map.value, (map) => {
-  circle = new google.maps.Circle({
-    map,
+whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
+  circle = new mapContext!.mapsApi.value!.Circle({
+    map: mapContext!.map.value,
     ...props.options,
   })
 
@@ -57,11 +57,11 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!circle) {
+  if (!circle || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(circle)
+  mapContext.mapsApi.value.event.clearInstanceListeners(circle)
 
   circle.setMap(null)
 })

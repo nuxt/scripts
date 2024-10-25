@@ -36,9 +36,9 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 let polyline: google.maps.Polyline | undefined = undefined
 
-whenever(() => mapContext?.map.value, (map) => {
-  polyline = new google.maps.Polyline({
-    map,
+whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
+  polyline = new mapContext!.mapsApi.value!.Polyline({
+    map: mapContext!.map.value,
     ...props.options,
   })
 
@@ -55,11 +55,11 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!polyline) {
+  if (!polyline || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(polyline)
+  mapContext.mapsApi.value.event.clearInstanceListeners(polyline)
 
   polyline.setMap(null)
 })

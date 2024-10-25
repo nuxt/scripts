@@ -36,9 +36,9 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 let polygon: google.maps.Polygon | undefined = undefined
 
-whenever(() => mapContext?.map.value, (map) => {
-  polygon = new google.maps.Polygon({
-    map,
+whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
+  polygon = new mapContext!.mapsApi.value!.Polygon({
+    map: mapContext!.map.value,
     ...props.options,
   })
 
@@ -55,11 +55,11 @@ whenever(() => mapContext?.map.value, (map) => {
 })
 
 onUnmounted(() => {
-  if (!polygon) {
+  if (!polygon || !mapContext?.mapsApi.value) {
     return
   }
 
-  google.maps.event.clearInstanceListeners(polygon)
+  mapContext.mapsApi.value.event.clearInstanceListeners(polygon)
 
   polygon.setMap(null)
 })

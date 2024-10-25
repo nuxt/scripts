@@ -17,7 +17,7 @@ let heatmapLayer: google.maps.visualization.HeatmapLayer | undefined = undefined
 whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
   await mapContext!.mapsApi.value!.importLibrary('visualization')
 
-  heatmapLayer = new google.maps.visualization.HeatmapLayer({
+  heatmapLayer = new mapContext!.mapsApi.value!.visualization.HeatmapLayer({
     map: mapContext!.map.value!,
     ...props.options,
   })

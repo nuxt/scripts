@@ -16,24 +16,30 @@ const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KE
 
 const pinElement = shallowRef<google.maps.marker.PinElement | undefined>(undefined)
 
-whenever(() => mapContext?.map.value && advancedMarkerElementContext?.advancedMarkerElement.value, async () => {
-  await mapContext!.mapsApi.value!.importLibrary('marker')
+whenever(
+  () =>
+    mapContext?.map.value
+    && mapContext.mapsApi.value
+    && advancedMarkerElementContext?.advancedMarkerElement.value,
+  async () => {
+    await mapContext!.mapsApi.value!.importLibrary('marker')
 
-  pinElement.value = new google.maps.marker.PinElement(props.options)
+    pinElement.value = new mapContext!.mapsApi.value!.marker.PinElement(props.options)
 
-  if (advancedMarkerElementContext?.advancedMarkerElement.value) {
-    advancedMarkerElementContext.advancedMarkerElement.value.content = pinElement.value.element
-  }
-
-  whenever(() => props.options, (options) => {
-    for (const option in options) {
-      pinElement.value![option as keyof typeof props.options] = options[option as keyof typeof props.options]
+    if (advancedMarkerElementContext?.advancedMarkerElement.value) {
+      advancedMarkerElementContext.advancedMarkerElement.value.content = pinElement.value.element
     }
+
+    whenever(() => props.options, (options) => {
+      for (const option in options) {
+        pinElement.value![option as keyof typeof props.options] = options[option as keyof typeof props.options]
+      }
+    }, {
+      deep: true,
+    })
   }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
-})
+    immediate: true,
+    once: true,
+  },
+)
 </script>
