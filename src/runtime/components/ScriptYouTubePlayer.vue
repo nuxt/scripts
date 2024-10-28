@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<{
   // @ts-expect-error untyped
   playerVars: { autoplay: 0, playsinline: 1 },
   width: 640,
-  height: 480,
+  height: 360,
 })
 
 const emits = defineEmits<{
@@ -139,7 +139,7 @@ const placeholderAttrs = computed(() => {
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       width: '100%',
-      objectFit: 'contain',
+      objectFit: 'cover',
       height: '100%',
     },
   } satisfies ImgHTMLAttributes)
