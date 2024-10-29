@@ -42,6 +42,7 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
       scriptInput: {
         'src': options?.extension ? `https://plausible.io/js/script.${extensions}.js` : 'https://plausible.io/js/script.js',
         'data-domain': options?.domain,
+        'data-api' : options?.api,
       },
       schema: import.meta.dev ? PlausibleAnalyticsOptions : undefined,
       scriptOptions: {
