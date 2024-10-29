@@ -16,6 +16,7 @@ const extensions = [
 
 export const PlausibleAnalyticsOptions = object({
   domain: string(), // required
+  api: optional(string()),
   extension: optional(union([union(extensions), array(union(extensions))])),
 })
 
