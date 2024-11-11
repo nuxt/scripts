@@ -29,7 +29,6 @@ function loadCarbon() {
   }
   status.value = 'loading'
   const script = document.createElement('script')
-  script.setAttribute('type', 'text/javascript')
   script.setAttribute('src', withQuery('https://cdn.carbonads.com/carbon.js', {
     serve: props.serve,
     placement: props.placement,
