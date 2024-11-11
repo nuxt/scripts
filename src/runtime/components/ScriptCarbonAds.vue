@@ -36,12 +36,16 @@ function loadCarbon() {
   }))
   script.setAttribute('id', attrId)
   script.onerror = (err) => {
-    status.value = 'error'
-    emit('error', err)
+    if (status.value !== 'error') {
+      status.value = 'error'
+      emit('error', err)
+    }
   }
   script.onload = () => {
-    status.value = 'loaded'
-    emit('ready', script)
+    if (status.value !== 'loaded') {
+      status.value = 'loaded'
+      emit('ready', script)
+    }
   }
   carbonadsEl.value.appendChild(script)
 }
