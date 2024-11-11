@@ -7,6 +7,7 @@ import type { ElementScriptTrigger } from '#nuxt-scripts'
 const props = defineProps<{
   serve: string
   placement: string
+  format: string
   /**
    * Defines the trigger event to load the script.
    */
@@ -32,6 +33,7 @@ function loadCarbon() {
   script.setAttribute('src', withQuery('https://cdn.carbonads.com/carbon.js', {
     serve: props.serve,
     placement: props.placement,
+    format: props.format,
   }))
   script.setAttribute('id', attrId)
   script.onerror = (err) => {
