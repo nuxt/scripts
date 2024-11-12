@@ -132,6 +132,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     addComponentsDir({
       path: resolve('./runtime/components'),
+      pathPrefix: false,
     })
 
     const scripts = registry(resolve)
