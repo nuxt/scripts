@@ -10,7 +10,7 @@ import type {
   NuxtUseScriptOptions,
   RegistryScriptInput,
   ScriptRegistry,
-} from '#nuxt-scripts'
+} from '#nuxt-scripts/types'
 
 export type MaybePromise<T> = Promise<T> | T
 

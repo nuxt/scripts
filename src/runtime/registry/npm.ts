@@ -1,7 +1,7 @@
 import { withBase } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { object, optional, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const NpmOptions = object({
   packageName: string(),

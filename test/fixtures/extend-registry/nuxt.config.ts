@@ -7,9 +7,13 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/scripts',
   ],
+
   devtools: {
     enabled: true,
   },
+
+  compatibilityDate: '2024-11-12',
+
   hooks: {
     'scripts:registry': function (registry) {
       registry.push({
