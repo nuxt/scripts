@@ -2,7 +2,7 @@
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
 import { callOnce, computed, onMounted, ref, watch } from '#imports'
-import type { ElementScriptTrigger } from '#nuxt-scripts'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{
   dataAdClient: string

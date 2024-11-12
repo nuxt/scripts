@@ -1,7 +1,7 @@
 import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { boolean, object, optional, string, number, union } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),

@@ -2,7 +2,7 @@
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 // eslint-disable-next-line
 declare namespace google {

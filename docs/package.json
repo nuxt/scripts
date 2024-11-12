@@ -22,9 +22,7 @@
     "@vueuse/core": "^11.1.0",
     "@vueuse/nuxt": "^11.1.0",
     "nuxt-scripts-devtools": "workspace:*",
-    "shiki": "^1.22.0"
-  },
-  "devDependencies": {
+    "shiki": "^1.22.0",
     "@iconify-json/noto": "^1.2.1"
   }
 }

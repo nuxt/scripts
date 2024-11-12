@@ -22,8 +22,8 @@ export async function generateTpcContent(input: TpcDescriptor) {
 
   const imports = new Set<string>([
     'import { withQuery } from \'ufo\'',
-    'import { useRegistryScript } from \'#nuxt-scripts-utils\'',
-    'import type { RegistryScriptInput } from \'#nuxt-scripts\'',
+    'import { useRegistryScript } from \'#nuxt-scripts/utils\'',
+    'import type { RegistryScriptInput } from \'#nuxt-scripts/types\'',
   ])
   const tpcTypes = new Set<string>()
 
@@ -96,8 +96,8 @@ ${properties.join(',\n')}
 
   if (input.useBody) {
     chunks.push(`
-function use(options: ${titleKey}Input) { 
-  ${input.useBody} 
+function use(options: ${titleKey}Input) {
+  ${input.useBody}
 }
     `)
   }

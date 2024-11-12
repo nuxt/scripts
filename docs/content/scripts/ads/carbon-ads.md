@@ -25,6 +25,7 @@ want to load the ads on a specific event.
   <ScriptCarbonAds
     serve="..."
     placement="..."
+    format="..."
   />
 </template>
 ```
@@ -38,6 +39,7 @@ You can use these hooks to add a fallback when CarbonAds is blocked.
   <ScriptCarbonAds
     serve="..."
     placement="..."
+    format="..."
   >
     <template #error>
       <!-- Fallback ad -->
@@ -58,6 +60,7 @@ use this example from nuxt.com.
     class="Carbon border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-white/5"
     serve="..."
     placement="..."
+    format="..."
   />
 </template>
 
@@ -169,4 +172,5 @@ The `ScriptCarbonAds` component accepts the following props:
 
 - `serve`: The serve URL provided by Carbon Ads.
 - `placement`: The placement ID provided by Carbon Ads.
+- `format`: Format provided by Carbon Ads.
 

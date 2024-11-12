@@ -2,11 +2,12 @@
 import { withQuery } from 'ufo'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { computed, onBeforeUnmount, onMounted, ref } from '#imports'
-import type { ElementScriptTrigger } from '#nuxt-scripts'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = defineProps<{
   serve: string
   placement: string
+  format: string
   /**
    * Defines the trigger event to load the script.
    */
@@ -29,19 +30,23 @@ function loadCarbon() {
   }
   status.value = 'loading'
   const script = document.createElement('script')
-  script.setAttribute('type', 'text/javascript')
   script.setAttribute('src', withQuery('https://cdn.carbonads.com/carbon.js', {
     serve: props.serve,
     placement: props.placement,
+    format: props.format,
   }))
   script.setAttribute('id', attrId)
   script.onerror = (err) => {
-    status.value = 'error'
-    emit('error', err)
+    if (status.value !== 'error') {
+      status.value = 'error'
+      emit('error', err)
+    }
   }
   script.onload = () => {
-    status.value = 'loaded'
-    emit('ready', script)
+    if (status.value !== 'loaded') {
+      status.value = 'loaded'
+      emit('ready', script)
+    }
   }
   carbonadsEl.value.appendChild(script)
 }
