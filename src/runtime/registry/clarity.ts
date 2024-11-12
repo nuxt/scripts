@@ -1,6 +1,6 @@
 import { useRegistryScript } from '../utils'
 import { minLength, object, string, pipe } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)
   & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{

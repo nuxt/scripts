@@ -14,7 +14,7 @@ import { tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { logger } from '../logger'
 import { bundleStorage } from '../assets'
 import { isJS, isVue } from './util'
-import type { RegistryScript } from '#nuxt-scripts'
+import type { RegistryScript } from '#nuxt-scripts/types'
 
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void

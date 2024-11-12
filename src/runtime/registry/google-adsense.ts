@@ -1,6 +1,6 @@
 import { useRegistryScript } from '../utils'
 import { object, string, optional } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useHead } from '#imports'
 
 export const GoogleAdsenseOptions = object({

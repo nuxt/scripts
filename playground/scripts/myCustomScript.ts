@@ -1,7 +1,7 @@
 import { object, string } from 'valibot'
 import type { Input } from 'valibot'
 import { useScript } from '#imports'
-import type { NuxtUseScriptOptions } from '#nuxt-scripts'
+import type { NuxtUseScriptOptions } from '#nuxt-scripts/types'
 
 export type MyCustomScriptApi = Record<string, any>
 

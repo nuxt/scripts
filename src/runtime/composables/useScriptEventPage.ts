@@ -1,5 +1,5 @@
 import { injectHead, ref, useNuxtApp, useRoute } from '#imports'
-import type { TrackedPage } from '#nuxt-scripts'
+import type { TrackedPage } from '#nuxt-scripts/types'
 
 export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
   const nuxt = useNuxtApp()

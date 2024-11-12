@@ -2,7 +2,7 @@
 import { withQuery } from 'ufo'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { computed, onBeforeUnmount, onMounted, ref } from '#imports'
-import type { ElementScriptTrigger } from '#nuxt-scripts'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = defineProps<{
   serve: string
