@@ -32,6 +32,7 @@ export const PaypalOptions = object({
    * merchantId to "*" and moves the actual values to dataMerchantId
    */
   merchantId: optional(union([string(), array(string())])),
+  dataPartnerAttributionId: optional(string()),
   vault: optional(union([string(), boolean()])),
   // own props
   sandbox: optional(boolean()),
@@ -65,11 +66,20 @@ export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
       options.sandbox = import.meta.env.DEV
     }
 
-    const components = (options.components?.length ? options.components : ['buttons', 'messages', 'marks', 'card-fields', 'funding-eligibility']).join(',')
+    let components = ['buttons', 'messages', 'marks', 'card-fields', 'funding-eligibility'].join(',')
+
+    if (options.components) {
+      if (Array.isArray(options.components)) {
+        components = options.components.join(',')
+      }
+      else {
+        components = options.components
+      }
+    }
 
     return {
       scriptInput: {
-        src: withQuery(options.sandbox ? 'https://www.sandbox.paypal.com/sdk/js' : 'https://www.paypal.com/sdk/js', {
+        'src': withQuery(options.sandbox ? 'https://www.sandbox.paypal.com/sdk/js' : 'https://www.paypal.com/sdk/js', {
           'client-id': options.clientId,
           'buyer-country': options.buyerCountry,
           'commit': options.commit,
@@ -81,10 +91,10 @@ export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
           'integration-date': options.integrationDate,
           'intent': options.intent,
           'locale': options.locale,
-          'merchant-id': options.merchantId,
           'vault': options.vault,
         }),
-        dataMerchantId,
+        'data-merchant-id': dataMerchantId,
+        'data-partner-attribution-id': options.dataPartnerAttributionId, // TODO: maybe nuxt specific default
       },
       schema: import.meta.dev ? PaypalOptions : undefined,
       // trigger: 'client',
