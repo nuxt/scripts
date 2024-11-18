@@ -13,7 +13,7 @@
     <h2>Marks</h2>
     <ScriptPaypalMarks />
     <h2>Messages</h2>
-    <ScriptPaypalMessages />
+    <ScriptPaypalMessages :messages-options="{ style: { color: 'white-no-border', layout: 'flex' } }" />
   </div>
 </template>
 

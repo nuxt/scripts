@@ -88,7 +88,7 @@ onMounted(() => {
 
     watch(() => options.value, async (_options) => {
       if (!el.value) return
-      destroy()
+      // don't destroy the element
       messageInst.value = paypal?.Messages?.(_options)
       await messageInst.value?.render(el.value)
     })
