@@ -62,8 +62,7 @@ export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
     }
 
     if (options?.sandbox === undefined) {
-      // TODO: get dev from nuxt (?)
-      options.sandbox = import.meta.env.DEV
+      options.sandbox = import.meta.dev
     }
 
     let components = ['buttons', 'messages', 'marks', 'card-fields', 'funding-eligibility'].join(',')
