@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h2>Buttons</h2>
     <ScriptPaypalButtons
       class="border border-gray-200 dark:border-gray-800 rounded-lg"
       :button-options="buttonOptions"
@@ -9,6 +10,8 @@
       Disabled
       <input v-model="disabled" type="checkbox">
     </label>
+    <h2>Marks</h2>
+    <ScriptPaypalMarks />
   </div>
 </template>
 
