@@ -60,14 +60,20 @@ export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
       options.enableFunding = options.enableFunding.join(',')
     }
 
+    if (options?.sandbox === undefined) {
+      // TODO: get dev from nuxt (?)
+      options.sandbox = import.meta.env.DEV
+    }
+
+    const components = (options.components?.length ? options.components : ['buttons', 'messages', 'marks', 'card-fields', 'funding-eligibility']).join(',')
+
     return {
       scriptInput: {
-        // todo: default to sandbox if dev mode
         src: withQuery(options.sandbox ? 'https://www.sandbox.paypal.com/sdk/js' : 'https://www.paypal.com/sdk/js', {
           'client-id': options.clientId,
           'buyer-country': options.buyerCountry,
           'commit': options.commit,
-          'components': options.components,
+          'components': components,
           'currency': options.currency,
           'debug': options.debug,
           'disable-funding': options.disableFunding,
