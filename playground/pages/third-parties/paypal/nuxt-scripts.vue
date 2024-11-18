@@ -12,6 +12,8 @@
     </label>
     <h2>Marks</h2>
     <ScriptPaypalMarks />
+    <h2>Messages</h2>
+    <ScriptPaypalMessages />
   </div>
 </template>
 

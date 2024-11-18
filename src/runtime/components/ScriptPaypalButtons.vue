@@ -14,7 +14,7 @@ import type {
   PayPalButtonsComponentOptions,
 } from '@paypal/paypal-js'
 import type { OnInitActions } from '@paypal/paypal-js/types/components/buttons'
-import { onBeforeUnmount, resolveComponent, useScriptPaypal, useScriptTriggerElement } from '#imports'
+import { onBeforeUnmount, type PaypalInput, resolveComponent, useScriptPaypal, useScriptTriggerElement } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const el = ref<HTMLDivElement | null>(null)
@@ -38,6 +38,10 @@ const props = withDefaults(defineProps<{
    */
   buttonOptions?: PayPalButtonsComponentOptions
   /**
+   * The paypal script options.
+   */
+  paypalScriptOptions?: Partial<PaypalInput>
+  /**
    * Disables the paypal buttons.
    */
   disabled?: boolean
@@ -45,12 +49,15 @@ const props = withDefaults(defineProps<{
   trigger: 'visible',
   clientId: 'test',
   disabled: false,
+  buttonOptions: () => ({}),
+  paypalScriptOptions: () => ({}),
 })
 
 const ready = ref(false)
 
 const { onLoaded, status } = useScriptPaypal({
   clientId: props.clientId,
+  ...props.paypalScriptOptions,
 })
 
 const emit = defineEmits<{

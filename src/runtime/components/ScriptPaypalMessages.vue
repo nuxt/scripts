@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
 import { defu } from 'defu'
-import type { PayPalMarksComponent, PayPalMarksComponentOptions } from '@paypal/paypal-js'
+import type { PayPalMessagesComponent, PayPalMessagesComponentOptions } from '@paypal/paypal-js'
 import { onBeforeUnmount, type PaypalInput, resolveComponent, useScriptPaypal, useScriptTriggerElement } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts'
 
@@ -22,41 +22,75 @@ const props = withDefaults(defineProps<{
    */
   clientId?: string
   /**
-   * The options for the paypal marks.
+   * The options for the paypal buttons.
    */
-  marksOptions?: PayPalMarksComponentOptions
+  messagesOptions?: PayPalMessagesComponentOptions
   /**
-   * The paypal script options.
+   * The merchant id for the paypal script.
+   */
+  merchantId?: string
+  /**
+   * The partner attribution id for the paypal script.
+   */
+  partnerAttributionId?: string
+  /**
+   * The options for the paypal scipt.
    */
   paypalScriptOptions?: Partial<PaypalInput>
 }>(), {
   trigger: 'visible',
   clientId: 'test',
-  marksOptions: () => ({}),
   paypalScriptOptions: () => ({}),
+  messagesOptions: () => ({}),
 })
 
 const ready = ref(false)
 
 const { onLoaded, status } = useScriptPaypal({
   clientId: props.clientId,
+  merchantId: props.merchantId,
+  partnerAttributionId: props.partnerAttributionId,
   ...props.paypalScriptOptions,
 })
 
-const marksInst = shallowRef<PayPalMarksComponent>()
+const emit = defineEmits<{
+  apply: [data: Record<string, unknown>]
+  clickMessages: [data: Record<string, unknown>]
+  render: [data: Record<string, unknown>]
+}>()
+
+const options = computed(() => {
+  const _options: PayPalMessagesComponentOptions = {
+    onApply: (data) => {
+      emit('apply', data)
+      return props.messagesOptions?.onApply?.(data)
+    },
+    onClick: (data) => {
+      emit('clickMessages', data)
+      return props.messagesOptions?.onClick?.(data)
+    },
+    onRender: (data) => {
+      emit('render', data)
+      return props.messagesOptions?.onRender?.(data)
+    },
+  }
+  return defu(_options, props.messagesOptions)
+})
+
+const messageInst = shallowRef<PayPalMessagesComponent>()
 
 onMounted(() => {
   onLoaded(async ({ paypal }) => {
     if (!el.value) return
-    marksInst.value = paypal?.Marks?.(props.marksOptions)
-    await marksInst.value?.render(el.value)
+    messageInst.value = paypal?.Messages?.(options.value)
+    await messageInst.value?.render(el.value)
     ready.value = true
 
-    watch(() => props.marksOptions, async (_options) => {
+    watch(() => options.value, async (_options) => {
       if (!el.value) return
       destroy()
-      marksInst.value = paypal?.Marks?.(_options)
-      await marksInst.value?.render(el.value)
+      messageInst.value = paypal?.Messages?.(_options)
+      await messageInst.value?.render(el.value)
     })
   })
 })
@@ -80,8 +114,8 @@ const rootAttrs = computed(() => {
     'aria-label': status.value === 'awaitingLoad'
       ? 'Paypal Script Placeholder'
       : status.value === 'loading'
-        ? 'Paypal Marks Loading'
-        : 'Paypal Marks',
+        ? 'Paypal Buttons Loading'
+        : 'Paypal Buttons',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),

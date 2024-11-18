@@ -32,7 +32,7 @@ export const PaypalOptions = object({
    * merchantId to "*" and moves the actual values to dataMerchantId
    */
   merchantId: optional(union([string(), array(string())])),
-  dataPartnerAttributionId: optional(string()),
+  partnerAttributionId: optional(string()),
   vault: optional(union([string(), boolean()])),
   // own props
   sandbox: optional(boolean()),
@@ -94,7 +94,7 @@ export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
           'vault': options.vault,
         }),
         'data-merchant-id': dataMerchantId,
-        'data-partner-attribution-id': options.dataPartnerAttributionId, // TODO: maybe nuxt specific default
+        'data-partner-attribution-id': options.partnerAttributionId, // TODO: maybe nuxt specific default
       },
       schema: import.meta.dev ? PaypalOptions : undefined,
       // trigger: 'client',
