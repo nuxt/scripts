@@ -2,7 +2,6 @@
 import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
 import { defu } from 'defu'
 import type {
-  PayPalButtonsComponentOptions,
   OnApproveActions,
   OnApproveData,
   OnCancelledActions,
@@ -11,6 +10,8 @@ import type {
   OnShippingAddressChangeData,
   OnShippingOptionsChangeActions,
   OnShippingOptionsChangeData,
+  PayPalButtonsComponent,
+  PayPalButtonsComponentOptions,
 } from '@paypal/paypal-js'
 import type { OnInitActions } from '@paypal/paypal-js/types/components/buttons'
 import { onBeforeUnmount, resolveComponent, useScriptPaypal, useScriptTriggerElement } from '#imports'
@@ -119,27 +120,30 @@ const options = computed(() => {
 
 watch(() => props.disabled, handleDisabled)
 
+const buttonInst = shallowRef<PayPalButtonsComponent>()
+
 onMounted(() => {
   onLoaded(async ({ paypal }) => {
     if (!el.value) return
-    await paypal?.Buttons?.(options.value).render(el.value)
+    buttonInst.value = paypal?.Buttons?.(options.value)
+    await buttonInst.value?.render(el.value)
     ready.value = true
 
-    watch(() => options, () => {
+    watch(() => options.value, async (_options) => {
       if (!el.value) return
-      destroy()
-      paypal?.Buttons?.(options.value).render(el.value)
+      await buttonInst.value?.updateProps(_options)
     })
   })
 })
 
-function destroy() {
-  if (!el.value) return
-  el.value?.replaceChildren()
+async function destroy() {
+  if (buttonInst.value) {
+    await buttonInst.value?.close()
+  }
 }
 
-onBeforeUnmount(() => {
-  destroy()
+onBeforeUnmount(async () => {
+  await destroy()
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
