@@ -156,8 +156,8 @@ const rootAttrs = computed(() => {
     'aria-label': status.value === 'awaitingLoad'
       ? 'Paypal Script Placeholder'
       : status.value === 'loading'
-        ? 'Paypal Embed Loading'
-        : 'Paypal Embed',
+        ? 'Paypal Buttons Loading'
+        : 'Paypal Buttons',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
