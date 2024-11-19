@@ -69,7 +69,7 @@
     "@nuxt/devtools-kit": "^1.6.0",
     "@nuxt/devtools-ui-kit": "^1.6.0",
     "@nuxt/kit": "^3.14.159",
-    "@stripe/stripe-js": "^4.9.0",
+    "@stripe/stripe-js": "^5.2.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
