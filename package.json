@@ -91,7 +91,7 @@
     "third-party-capital": "2.3.0",
     "ufo": "^1.5.4",
     "unimport": "^3.13.3",
-    "unplugin": "^1.16.0",
+    "unplugin": "^2.0.0",
     "unstorage": "^1.13.1",
     "valibot": "1.0.0-beta.3"
   },
