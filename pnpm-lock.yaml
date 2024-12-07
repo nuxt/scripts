@@ -172,16 +172,16 @@ importers:
   client:
     devDependencies:
       '@iconify-json/carbon':
-        specifier: ^1.2.4
+        specifier: ^1.2.3
         version: 1.2.4
       '@nuxt/devtools-kit':
-        specifier: ^1.6.1
+        specifier: ^1.6.0
         version: 1.6.1(magicast@0.3.5)(rollup@4.25.0)(vite@5.4.11(@types/node@22.9.3)(terser@5.36.0))
       '@nuxt/devtools-ui-kit':
-        specifier: ^1.6.1
+        specifier: ^1.6.0
         version: 1.6.1(@nuxt/devtools@1.6.0(rollup@4.25.0)(vite@5.4.11(@types/node@22.9.3)(terser@5.36.0))(vue@3.5.13(typescript@5.7.2)))(@unocss/webpack@0.62.4(rollup@4.25.0)(webpack@5.96.1(esbuild@0.23.1)))(@vue/compiler-core@3.5.13)(change-case@5.4.4)(fuse.js@7.0.0)(magicast@0.3.5)(nuxt@3.14.1592(@parcel/watcher@2.5.0)(@types/node@22.9.3)(eslint@9.15.0(jiti@2.4.0))(ioredis@5.4.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.25.0)(terser@5.36.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.9.3)(terser@5.36.0)))(postcss@8.4.49)(rollup@4.25.0)(vite@5.4.11(@types/node@22.9.3)(terser@5.36.0))(vue@3.5.13(typescript@5.7.2))(webpack@5.96.1(esbuild@0.23.1))
       '@nuxt/kit':
-        specifier: ^3.14.1592
+        specifier: ^3.13.2
         version: 3.14.1592(magicast@0.3.5)(rollup@4.25.0)
       nuxt:
         specifier: ^3.14.1592
@@ -247,7 +247,7 @@ importers:
         specifier: workspace:*
         version: link:..
       '@nuxt/ui':
-        specifier: ^2.19.2
+        specifier: ^2.18.7
         version: 2.19.2(change-case@5.4.4)(focus-trap@7.6.1)(magicast@0.3.5)(rollup@3.29.5)(vite@5.4.11(@types/node@22.9.3)(terser@5.36.0))(vue@3.5.13(typescript@5.6.3))
       nuxt-scripts-devtools:
         specifier: workspace:*
