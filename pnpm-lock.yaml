@@ -232,11 +232,11 @@ importers:
         specifier: ^2.0.0
         version: 2.0.2(h3@1.13.0)(magicast@0.3.5)(rollup@4.28.1)(vite@5.4.11(@types/node@22.10.1)(terser@5.37.0))(vue@3.5.13(typescript@5.6.3))
       '@vueuse/core':
-        specifier: ^11.3.0
-        version: 11.3.0(vue@3.5.13(typescript@5.6.3))
+        specifier: ^12.0.0
+        version: 12.0.0(typescript@5.6.3)
       '@vueuse/nuxt':
-        specifier: ^11.3.0
-        version: 11.3.0(magicast@0.3.5)(nuxt@3.14.1592(@parcel/watcher@2.5.0)(@types/node@22.10.1)(eslint@9.16.0(jiti@2.4.1))(ioredis@5.4.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.28.1)(terser@5.37.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.10.1)(terser@5.37.0))(vue-tsc@2.1.10(typescript@5.6.3)))(rollup@4.28.1)(vue@3.5.13(typescript@5.6.3))
+        specifier: ^12.0.0
+        version: 12.0.0(magicast@0.3.5)(nuxt@3.14.1592(@parcel/watcher@2.5.0)(@types/node@22.10.1)(eslint@9.16.0(jiti@2.4.1))(ioredis@5.4.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.28.1)(terser@5.37.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.10.1)(terser@5.37.0))(vue-tsc@2.1.10(typescript@5.6.3)))(rollup@4.28.1)(typescript@5.6.3)
       nuxt-scripts-devtools:
         specifier: workspace:*
         version: link:../client
@@ -10167,6 +10167,20 @@ snapshots:
       local-pkg: 0.5.1
       nuxt: 3.14.1592(@parcel/watcher@2.5.0)(@types/node@22.10.1)(eslint@9.16.0(jiti@2.4.1))(ioredis@5.4.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.25.0)(terser@5.37.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.10.1)(terser@5.37.0))(vue-tsc@2.1.10(typescript@5.7.2))
       vue: 3.5.13(typescript@5.7.2)
+    transitivePeerDependencies:
+      - magicast
+      - rollup
+      - supports-color
+      - typescript
+
+  '@vueuse/nuxt@12.0.0(magicast@0.3.5)(nuxt@3.14.1592(@parcel/watcher@2.5.0)(@types/node@22.10.1)(eslint@9.16.0(jiti@2.4.1))(ioredis@5.4.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.28.1)(terser@5.37.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.10.1)(terser@5.37.0))(vue-tsc@2.1.10(typescript@5.6.3)))(rollup@4.28.1)(typescript@5.6.3)':
+    dependencies:
+      '@nuxt/kit': 3.14.1592(magicast@0.3.5)(rollup@4.28.1)
+      '@vueuse/core': 12.0.0(typescript@5.6.3)
+      '@vueuse/metadata': 12.0.0
+      local-pkg: 0.5.1
+      nuxt: 3.14.1592(@parcel/watcher@2.5.0)(@types/node@22.10.1)(eslint@9.16.0(jiti@2.4.1))(ioredis@5.4.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.28.1)(terser@5.37.0)(typescript@5.6.3)(vite@5.4.11(@types/node@22.10.1)(terser@5.37.0))(vue-tsc@2.1.10(typescript@5.6.3))
+      vue: 3.5.13(typescript@5.6.3)
     transitivePeerDependencies:
       - magicast
       - rollup
