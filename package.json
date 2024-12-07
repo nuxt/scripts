@@ -120,7 +120,7 @@
     "vue-tsc": "^2.1.10"
   },
   "resolutions": {
-    "typescript": "5.6.3",
+    "typescript": "5.7.2",
     "@nuxt/schema": "3.14.1592",
     "@nuxt/scripts": "workspace:*",
     "@unhead/dom": "1.11.11",
