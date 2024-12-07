@@ -1,7 +1,7 @@
 import { createUnplugin } from 'unplugin'
-import { type Node, walk } from 'estree-walker'
 import type { AssignmentExpression, CallExpression, ObjectPattern, ArrowFunctionExpression, Identifier, MemberExpression } from 'estree'
 import { isVue } from './util'
+import { parseAndWalk } from 'oxc-walker'
 
 export function NuxtScriptsCheckScripts() {
   return createUnplugin(() => {
@@ -11,19 +11,18 @@ export function NuxtScriptsCheckScripts() {
         return isVue(id, { type: ['script'] })
       },
 
-      async transform(code) {
+      async transform(code, id) {
         if (!code.includes('useScript')) // all integrations should start with useScript*
           return
 
-        const ast = this.parse(code)
         let nameNode: Node | undefined
         let errorNode: Node | undefined
-        walk(ast as Node, {
+        parseAndWalk(code, id, {
           enter(_node) {
             if (_node.type === 'VariableDeclaration' && _node.declarations?.[0]?.id?.type === 'ObjectPattern') {
               const objPattern = _node.declarations[0]?.id as ObjectPattern
               for (const property of objPattern.properties) {
-                if (property.type === 'Property' && property.key.type === 'Identifier' && property.key.name === '$script' && property.value.type === 'Identifier') {
+                if (property.type === 'ObjectProperty' && property.key.type === 'Identifier' && property.key.name === '$script' && property.value.type === 'Identifier') {
                   nameNode = _node
                 }
               }

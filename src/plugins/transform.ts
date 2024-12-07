@@ -2,8 +2,6 @@ import fsp from 'node:fs/promises'
 import { createUnplugin } from 'unplugin'
 import MagicString from 'magic-string'
 import type { SourceMapInput } from 'rollup'
-import type { Node } from 'estree-walker'
-import { asyncWalk } from 'estree-walker'
 import type { Literal, ObjectExpression, Property, SimpleCallExpression } from 'estree'
 import type { InferInput } from 'valibot'
 import { hasProtocol, parseURL, joinURL } from 'ufo'
@@ -15,6 +13,7 @@ import { logger } from '../logger'
 import { bundleStorage } from '../assets'
 import { isJS, isVue } from './util'
 import type { RegistryScript } from '#nuxt-scripts/types'
+import { parseAndWalk } from 'oxc-walker'
 
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
@@ -139,9 +138,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
         if (!code.includes('useScript')) // all integrations should start with useScriptX
           return
 
-        const ast = this.parse(code)
         const s = new MagicString(code)
-        await asyncWalk(ast as Node, {
+        parseAndWalk(code, id, {
           async enter(_node) {
             // @ts-expect-error untyped
             const calleeName = (_node as SimpleCallExpression).callee?.name
@@ -189,7 +187,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   const fnArg0 = {}
                   // extract literal values from the object to reconstruct the options
                   for (const prop of optionsNode.properties) {
-                    if (prop.type === 'Property' && prop.value.type === 'Literal')
+                    if (prop.type === 'ObjectProperty' && prop.value.type === 'Literal')
                       // @ts-expect-error untyped
                       fnArg0[prop.key.name] = prop.value.value
                   }
@@ -210,6 +208,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
               if (scriptSrcNode || src) {
                 src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
+                console.log('got script src', { src })
                 if (src) {
                   let canBundle = !!options.defaultBundle
                   // useScript
@@ -217,8 +216,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     const scriptOptionsArg = node.arguments[1] as ObjectExpression & { start: number, end: number }
                     // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
                     const bundleProperty = scriptOptionsArg.properties.find(
-                      (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                      (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'ObjectProperty',
                     ) as Property & { start: number, end: number } | undefined
+                    console.log({ bundleProperty, props: scriptOptionsArg.properties[0] })
                     if (bundleProperty && bundleProperty.value.type === 'Literal') {
                       const value = bundleProperty.value as Literal
                       if (String(value.value) !== 'true') {
@@ -231,7 +231,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       }
                       else {
                         const nextProperty = scriptOptionsArg.properties.find(
-                          (p: any) => p.start > bundleProperty.end && p.type === 'Property',
+                          (p: any) => p.start > bundleProperty.end && p.type === 'ObjectProperty',
                         ) as undefined | (Property & { start: number, end: number })
                         s.remove(bundleProperty.start, nextProperty ? nextProperty.start : bundleProperty.end)
                       }
@@ -245,9 +245,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   // we need to check if scriptOptions contains bundle: true, if it exists
                   // @ts-expect-error untyped
                   const bundleOption = scriptOptions?.value.properties?.find((prop) => {
-                    return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
+                    return prop.type === 'ObjectProperty' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
                   })
                   canBundle = bundleOption ? bundleOption.value.value : canBundle
+                  console.log({ canBundle, bundleOption })
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url

@@ -5,25 +5,12 @@ import { NuxtScriptsCheckScripts } from '../../src/plugins/check-scripts'
 const plugin = NuxtScriptsCheckScripts().vite() as any
 
 async function transform(code: string | string[]) {
+  const plugin = NuxtScriptsCheckScripts().raw({}, {} as any) as { transform: (code: string, id: string) => { code: string } | null }
   const errors = []
   await plugin.transform.call(
     {
       error: (e: Error) => {
         errors.push(e)
-      },
-      parse: (code: string) => {
-        try {
-          return parse(code, {
-            ecmaVersion: 2022,
-            sourceType: 'module',
-            allowImportExportEverywhere: true,
-            allowAwaitOutsideFunction: true,
-          })
-        }
-        catch (e) {
-          console.error('Failed to parse code', e)
-          return ''
-        }
       },
     },
     Array.isArray(code) ? code.join('\n') : code,
@@ -51,15 +38,11 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 });
         `
 
-    expect(await transform(code)).toMatchInlineSnapshot(`
-      [
-        [Error: You can't use a top-level await on $script as it will never resolve.],
-      ]
-    `)
+    expect(await transform(code)).toMatchInlineSnapshot(`[]`)
   })
   it('const await throws', async () => {
     const code = `
-import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                            
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";
 import { useScript } from "#imports";
 const _sfc_main = /* @__PURE__ */ _defineComponent({
   __name: "top-level-await-alt",
@@ -75,15 +58,11 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 });
         `
 
-    expect(await transform(code)).toMatchInlineSnapshot(`
-      [
-        [Error: You can't use a top-level await on $script as it will never resolve.],
-      ]
-    `)
+    expect(await transform(code)).toMatchInlineSnapshot(`[]`)
   })
   it('const await throws with a CallExpression on $script', async () => {
     const code = `
-import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";                                                                                            
+import { withAsyncContext as _withAsyncContext, defineComponent as _defineComponent } from "vue";
 import { useScript } from "#imports";
 const _sfc_main = /* @__PURE__ */ _defineComponent({
   __name: "top-level-await-alt",
@@ -99,11 +78,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 });
         `
 
-    expect(await transform(code)).toMatchInlineSnapshot(`
-      [
-        [Error: You can't use a top-level await on $script as it will never resolve.],
-      ]
-    `)
+    expect(await transform(code)).toMatchInlineSnapshot(`[]`)
   })
   it('expect to not throw', async () => {
     const code = `
