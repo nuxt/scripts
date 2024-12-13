@@ -237,7 +237,7 @@ const rootAttrs = computed(() => {
     'role': 'application',
     'style': {
       maxWidth: '100%',
-      width: `${width.value}px`,
+      width: `auto`,
       height: 'auto',
       aspectRatio: `16/9`,
       position: 'relative',

@@ -115,7 +115,7 @@ const rootAttrs = computed(() => {
       position: 'relative',
       backgroundColor: 'black',
       maxWidth: '100%',
-      width: `${props.width}px`,
+      width: `auto`,
       height: 'auto',
       aspectRatio: `${props.width}/${props.height}`,
     },
