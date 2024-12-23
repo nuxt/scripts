@@ -17,7 +17,7 @@ This composable is generated with [GoogleChromeLabs/third-party-capital](https:/
 ::callout
 You may not need Google Tag Manager with Nuxt Scripts. GTM is 82kb and will slow down your site.
 Nuxt Scripts provides many features you can easily
-implement within your Nuxt app. If you're using GTM for Google Tag Manager, you can use the `useScriptGoogleAnalytics` composable instead.
+implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the `useScriptGoogleAnalytics` composable instead.
 ::
 
 ## Loading Globally

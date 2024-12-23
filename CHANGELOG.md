@@ -1,6 +1,43 @@
 # Changelog
 
 
+## v0.9.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.4...v0.9.5)
+
+### 🚀 Enhancements
+
+- **googleMaps:** Language & region params ([#286](https://github.com/nuxt/scripts/pull/286))
+- Improved script warmup ([#302](https://github.com/nuxt/scripts/pull/302))
+
+### 🩹 Fixes
+
+- Avoid warming delayed script src ([357d02a](https://github.com/nuxt/scripts/commit/357d02a))
+- **stripe:** Prefer `@stripe/stripe-js` over `@types/stripe-v3` ([#300](https://github.com/nuxt/scripts/pull/300))
+- Optional Valibot schema ([#287](https://github.com/nuxt/scripts/pull/287))
+
+### 📖 Documentation
+
+- Fix typo/incomplete sentence ([#285](https://github.com/nuxt/scripts/pull/285))
+
+### 🏡 Chore
+
+- Type issue ([6490ce3](https://github.com/nuxt/scripts/commit/6490ce3))
+- Type issue ([0c5135c](https://github.com/nuxt/scripts/commit/0c5135c))
+- Playground for multi datalayers ([#173](https://github.com/nuxt/scripts/pull/173))
+- Test scripts ([1f7df13](https://github.com/nuxt/scripts/commit/1f7df13))
+- Broken ci ([c89380f](https://github.com/nuxt/scripts/commit/c89380f))
+- **devtools:** Fix deprecation ([29864f1](https://github.com/nuxt/scripts/commit/29864f1))
+- Bump deps & lint ([c54412f](https://github.com/nuxt/scripts/commit/c54412f))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Harlan Wilton ([@harlan-zw](http://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+- Morgan-retex ([@morgan-retex](http://github.com/morgan-retex))
+- Stefano Bartoletti ([@stefanobartoletti](http://github.com/stefanobartoletti))
+
 ## v0.9.4
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.9.3...v0.9.4)

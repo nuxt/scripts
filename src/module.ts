@@ -99,8 +99,7 @@ export default defineNuxtModule<ModuleOptions>({
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
     nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
-    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
-    nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
+    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime')
     logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
@@ -118,10 +117,6 @@ export default defineNuxtModule<ModuleOptions>({
         logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
     }
-    // allow augmenting the options
-    nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
-    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
-    nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
@@ -161,24 +156,24 @@ export default defineNuxtModule<ModuleOptions>({
         let types = `
 declare module '#app' {
   interface NuxtApp {
-    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, Pick<(import('#nuxt-scripts').NuxtAppScript), '$script'> & Record<string, any>>
-    _scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)>
+    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts/types').UseScriptContext<any>)>
+    _scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)>
   }
   interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)> }) => void | Promise<void>
+    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)> }) => void | Promise<void>
   }
 }
 `
         if (newScripts.length) {
           types = `${types}
-declare module '#nuxt-scripts' {
+declare module '#nuxt-scripts/types' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
 ${newScripts.map((i) => {
-    const key = i.import?.name.replace('useScript', '')
-    const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-    return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-  }).join('\n')}
+  const key = i.import?.name.replace('useScript', '')
+  const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+  return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
+}).join('\n')}
     }
 }`
           return types

@@ -29,18 +29,6 @@ export default defineNuxtConfig({
     },
   ],
 
-  future: {
-    compatibilityVersion: 4,
-  },
-
-  hooks: {
-    // Define `@nuxt/ui` components as global to use them in `.md` (feel free to add those you need)
-    'components:extend': (components) => {
-      const globals = components.filter(c => ['UButton', 'UIcon', 'UAlert'].includes(c.pascalName))
-      globals.forEach(c => c.global = true)
-    },
-  },
-
   $production: {
     scripts: {
       registry: {
@@ -49,6 +37,10 @@ export default defineNuxtConfig({
         },
       },
     },
+  },
+
+  devtools: {
+    enabled: true,
   },
 
   app: {
@@ -65,22 +57,28 @@ export default defineNuxtConfig({
     },
   },
 
+  site: {
+    name: 'Nuxt Scripts',
+    url: 'scripts.nuxt.com',
+  },
+
   ui: {
     icons: ['heroicons', 'ph', 'simple-icons'],
+  },
+
+  build: {
+    transpile: ['shiki'],
   },
 
   routeRules: {
     '/api/search.json': { prerender: true },
   },
 
-  site: {
-    name: 'Nuxt Scripts',
-    url: 'scripts.nuxt.com',
+  future: {
+    compatibilityVersion: 4,
   },
 
-  sitemap: {
-    strictNuxtContentPaths: true,
-  },
+  compatibilityDate: '2024-07-03',
 
   nitro: {
     prerender: {
@@ -89,17 +87,19 @@ export default defineNuxtConfig({
     },
   },
 
-  build: {
-    transpile: ['shiki'],
-  },
-
-  devtools: {
-    enabled: true,
-  },
-
   typescript: {
     strict: false,
   },
 
-  compatibilityDate: '2024-07-03',
+  hooks: {
+    // Define `@nuxt/ui` components as global to use them in `.md` (feel free to add those you need)
+    'components:extend': (components) => {
+      const globals = components.filter(c => ['UButton', 'UIcon', 'UAlert'].includes(c.pascalName))
+      globals.forEach(c => c.global = true)
+    },
+  },
+
+  sitemap: {
+    strictNuxtContentPaths: true,
+  },
 })

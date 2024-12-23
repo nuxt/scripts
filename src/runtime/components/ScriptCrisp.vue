@@ -2,7 +2,7 @@
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptCrisp } from '../registry/crisp'
 import { ref, onMounted, onBeforeUnmount, watch, computed } from '#imports'
-import type { ElementScriptTrigger } from '#nuxt-scripts'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{
   /**
