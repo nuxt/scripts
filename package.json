@@ -108,7 +108,7 @@
     "changelogen": "^0.5.7",
     "eslint": "9.16.0",
     "eslint-plugin-n": "^17.14.0",
-    "happy-dom": "^15.11.7",
+    "happy-dom": "^16.3.0",
     "knitwork": "^1.1.0",
     "nuxt": "^3.15.0",
     "nuxt-scripts-devtools": "workspace:*",
