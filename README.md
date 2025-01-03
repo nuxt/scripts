@@ -1,7 +1,7 @@
 [![nuxt-scripts-social-card](https://github.com/nuxt/scripts/blob/main/.github/banner.png)](https://scripts.nuxt.com)
 
-[![npm version][npm-version-src]][npm-version-href]
-[![npm downloads][npm-downloads-src]][npm-downloads-href]
+[![npm version][npm-version-src]][npm-href]
+[![npm downloads][npm-downloads-src]][npm-href]
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 [![Volta][volta-src]][volta-href]
@@ -58,13 +58,11 @@ Licensed under the [MIT license](https://github.com/nuxt/scripts/blob/main/LICEN
 
 <!-- Badges -->
 [npm-version-src]: https://img.shields.io/npm/v/@nuxt/scripts/latest.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-version-href]: https://npmjs.com/package/@nuxt/scripts/v/rc
-
 [npm-downloads-src]: https://img.shields.io/npm/dm/@nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-downloads-href]: https://npmjs.com/package/@nuxt/scripts/v/rc
+[npm-href]: https://npmjs.com/package/@nuxt/scripts
 
 [license-src]: https://img.shields.io/npm/l/@nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
-[license-href]: https://npmjs.com/package/@nuxt/scripts/v/rc
+[license-href]: https://github.com/nuxt/scripts/blob/main/LICENSE.md
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt.js
 [nuxt-href]: https://nuxt.com
