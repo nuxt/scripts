@@ -35,7 +35,7 @@ export async function generateTpcContent(input: TpcDescriptor) {
 
     chunks.push(`
     declare global {
-      type Window = ${input.tpcTypeAugmentation}
+      interface Window extends ${input.tpcTypeAugmentation} {}
     }`)
   }
 
@@ -58,12 +58,12 @@ export async function generateTpcContent(input: TpcDescriptor) {
   const optionalParams = [...new Set(input.tpcData.scripts?.map(s => Object.keys(s.optionalParams) || []).flat() || [])]
 
   if (params.length || optionalParams.length) {
-    const validatorImports = new Set<string>(['object', 'string'])
+    const validatorImports = new Set<string>(['object', 'any'])
     if (optionalParams.length) {
       validatorImports.add('optional')
     }
 
-    const properties = params.filter(p => !optionalParams.includes(p)).map(p => `${p}: string()`).concat(optionalParams.map(o => `${o}: optional(string())`))
+    const properties = params.filter(p => !optionalParams.includes(p)).map(p => `${p}: any()`).concat(optionalParams.map(o => `${o}: optional(any())`))
     // need schema validation from tpc
     chunks.push(`export const ${titleKey}Options = object({
 ${properties.join(',\n')}
@@ -131,7 +131,13 @@ ${functionBody.join('\n')}
 }
 
 function replaceTokenToRuntime(code: string, defaultValues?: Record<string, string | number | undefined>) {
-  return code.split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, token) => {
+  // replace all {{#token}}...{{/token}} with if(options?.token){...}
+  return code.replace(
+    /\{\{#([^{}]+)\}\}(.*)\{\{\/\1\}\}/g,
+    (_match, name, innerCode) => {
+      return `if(options?.${name}){${replaceTokenToRuntime(innerCode, defaultValues)}};`
+    },
+  ).split(';').map(c => c.replaceAll(/'?\{\{(.*?)\}\}'?/g, (_, token) => {
     return `(options?.${token} ${defaultValues?.[token] ? `?? ${JSON.stringify(defaultValues?.[token])}` : ''})`
   })).join(';')
 }
