@@ -115,6 +115,8 @@ You must provide the options when setting up the script for the first time.
 export const SegmentOptions = object({
   writeKey: string(),
   analyticsKey: optional(string()),
+  proxySrc: optional(string()),
+  fileName: optional(string()),
 })
 ```
 
