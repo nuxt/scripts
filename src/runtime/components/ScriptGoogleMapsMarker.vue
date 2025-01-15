@@ -86,7 +86,9 @@ onUnmounted(() => {
   mapContext.mapsApi.value.event.clearInstanceListeners(marker.value)
 
   if (markerClustererContext?.markerClusterer.value) {
-    markerClustererContext.markerClusterer.value.removeMarker(marker.value)
+    markerClustererContext.markerClusterer.value.removeMarker(marker.value, true)
+
+    markerClustererContext.reportMarkerRemoval()
   }
   else {
     marker.value.setMap(null)
