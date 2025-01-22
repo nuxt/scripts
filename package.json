@@ -90,7 +90,7 @@
     "std-env": "^3.8.0",
     "third-party-capital": "2.3.0",
     "ufo": "^1.5.4",
-    "unimport": "^3.14.5",
+    "unimport": "^4.0.0",
     "unplugin": "^2.1.2",
     "unstorage": "^1.14.4",
     "valibot": "1.0.0-beta.9"
