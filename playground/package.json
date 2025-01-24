@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@nuxt/scripts": "workspace:*",
-    "@nuxt/ui": "^2.20.0",
+    "@nuxt/ui": "^2.21.0",
     "nuxt-scripts-devtools": "workspace:*"
   }
 }
