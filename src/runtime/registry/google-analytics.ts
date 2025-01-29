@@ -3,11 +3,13 @@ import { withQuery } from 'ufo'
 import type { DataLayer, GTag } from 'third-party-capital'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, string, optional } from '#nuxt-scripts-validator'
+import { object, any, optional } from '#nuxt-scripts-validator'
 
 export const GoogleAnalyticsOptions = object({
-  id: string(),
-  l: optional(string()),
+  id: any(),
+  l: optional(any()),
+  consentType: optional(any()),
+  consentValues: optional(any()),
 })
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
@@ -34,6 +36,6 @@ export function useScriptGoogleAnalytics(_options?: GoogleAnalyticsInput) {
     // eslint-disable-next-line
         // @ts-ignore
     // eslint-disable-next-line
-        clientInit: import.meta.server ? undefined : () => {window[(options?.l ?? "dataLayer")]=window[(options?.l ?? "dataLayer")]||[];window['gtag-'+(options?.l ?? "dataLayer")]=function (){window[(options?.l ?? "dataLayer")].push(arguments);};window['gtag-'+(options?.l ?? "dataLayer")]('js',new Date());window['gtag-'+(options?.l ?? "dataLayer")]('config',(options?.id ))},
+        clientInit: import.meta.server ? undefined : () => {window[(options?.l ?? "dataLayer")]=window[(options?.l ?? "dataLayer")]||[];window['gtag-'+(options?.l ?? "dataLayer")]=function (){window[(options?.l ?? "dataLayer")].push(arguments);};if(options?.consentValues){window['gtag-'+(options?.l ?? "dataLayer")]('consent', (options?.consentType ?? "default"), (options?.consentValues ));};window['gtag-'+(options?.l ?? "dataLayer")]('js',new Date());window['gtag-'+(options?.l ?? "dataLayer")]('config',(options?.id ))},
   }), _options)
 }
