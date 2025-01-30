@@ -18,6 +18,7 @@ overrides:
   unhead: 1.11.11
   vue: ^3.5.13
   vue-router: ^4.5.0
+  consola: ^3.3.3
 
 importers:
 
@@ -3094,10 +3095,6 @@ packages:
 
   confbox@0.1.8:
     resolution: {integrity: sha512-RMtmw0iFkeR4YV+fUOSucriAQNb9g8zFR52MWCtl+cCZOFRNL6zeB395vPzFhEjjn4fMxXudmELnl/KF/WrK6w==}
-
-  consola@3.3.1:
-    resolution: {integrity: sha512-GyKnPG3/I+a4RtJxgHquJXWr70g9I3c4NT3dvqh0LPHQP2nZFQBOBszb7a5u/pGzqr40AKplQA6UxM1BSynSXg==}
-    engines: {node: ^14.18.0 || >=16.10.0}
 
   consola@3.3.3:
     resolution: {integrity: sha512-Qil5KwghMzlqd51UXM0b6fyaGHtOC22scxrwrz4A2882LyUMwQjnvaedN1HAeXzphspQ6CpHkzMAWxBTUruDLg==}
@@ -8301,7 +8298,7 @@ snapshots:
     dependencies:
       '@nuxt/schema': 3.15.0(magicast@0.3.5)(rollup@3.29.5)
       c12: 2.0.1(magicast@0.3.5)
-      consola: 3.3.1
+      consola: 3.3.3
       defu: 6.1.4
       destr: 2.0.3
       globby: 14.0.2
@@ -8328,7 +8325,7 @@ snapshots:
     dependencies:
       '@nuxt/schema': 3.15.0(magicast@0.3.5)(rollup@4.28.1)
       c12: 2.0.1(magicast@0.3.5)
-      consola: 3.3.1
+      consola: 3.3.3
       defu: 6.1.4
       destr: 2.0.3
       globby: 14.0.2
@@ -11115,8 +11112,6 @@ snapshots:
 
   confbox@0.1.8: {}
 
-  consola@3.3.1: {}
-
   consola@3.3.3: {}
 
   console-control-strings@1.1.0: {}
@@ -13706,7 +13701,7 @@ snapshots:
       c12: 2.0.1(magicast@0.3.5)
       chokidar: 4.0.3
       compatx: 0.1.8
-      consola: 3.3.1
+      consola: 3.3.3
       cookie-es: 1.2.2
       defu: 6.1.4
       destr: 2.0.3
@@ -13826,7 +13821,7 @@ snapshots:
       c12: 2.0.1(magicast@0.3.5)
       chokidar: 4.0.3
       compatx: 0.1.8
-      consola: 3.3.1
+      consola: 3.3.3
       cookie-es: 1.2.2
       defu: 6.1.4
       destr: 2.0.3
@@ -13946,7 +13941,7 @@ snapshots:
       c12: 2.0.1(magicast@0.3.5)
       chokidar: 4.0.3
       compatx: 0.1.8
-      consola: 3.3.1
+      consola: 3.3.3
       cookie-es: 1.2.2
       defu: 6.1.4
       destr: 2.0.3
