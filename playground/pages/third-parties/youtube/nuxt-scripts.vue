@@ -6,6 +6,10 @@ const videoid = ref('d_IFKP1Ofq0')
 function changeVideo() {
   videoid.value = 'N8siuNjyV7A'
 }
+
+function changeVideoFallback() {
+  videoid.value = 'jNQXAC9IVRw'
+}
 </script>
 
 <template>
@@ -30,6 +34,13 @@ function changeVideo() {
       @click="changeVideo"
     >
       change video
+    </UButton>
+
+    <UButton
+      class="ml-5"
+      @click="changeVideoFallback"
+    >
+      change video needs fallback
     </UButton>
   </div>
 </template>
