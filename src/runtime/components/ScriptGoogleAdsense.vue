@@ -8,6 +8,7 @@ const props = withDefaults(defineProps<{
   dataAdClient: string
   dataAdSlot: string
   dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'
+  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'
   dataFullWidthResponsive?: boolean
   /**
    * Defines the trigger event to load the script.
@@ -73,6 +74,7 @@ const rootAttrs = computed(() => {
     :data-ad-client="dataAdClient"
     :data-ad-slot="dataAdSlot"
     :data-ad-format="dataAdFormat"
+    :data-ad-layout="dataAdLayout"
     :data-full-width-responsive="dataFullWidthResponsive"
     v-bind="rootAttrs"
   >
