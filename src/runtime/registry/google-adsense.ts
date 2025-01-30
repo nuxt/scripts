@@ -1,5 +1,5 @@
 import { useRegistryScript } from '../utils'
-import { object, string, optional } from '#nuxt-scripts-validator'
+import { object, string, optional, boolean } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useHead } from '#imports'
 
@@ -8,6 +8,10 @@ export const GoogleAdsenseOptions = object({
    * The Google Adsense ID.
    */
   client: optional(string()),
+  /**
+   * Enable or disable Auto Ads.
+   */
+  autoAds: optional(boolean()),
 })
 
 export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions, true, false, false>
@@ -32,7 +36,7 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
   // Note: inputs.useScriptInput is not usable, needs to be normalized
   return useRegistryScript<T, typeof GoogleAdsenseOptions>('googleAdsense', options => ({
     scriptInput: {
-      src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
+      src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js${options?.client ? `?client=${options.client}` : ''}`,
     },
     schema: import.meta.dev ? GoogleAdsenseOptions : undefined,
     scriptOptions: {
@@ -48,6 +52,20 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
                 content: options?.client,
               },
             ],
+            // Inject Auto Ads script dynamically
+            script: options.autoAds
+              ? [
+                  {
+                    innerHTML: `
+                        (adsbygoogle = window.adsbygoogle || []).push({
+                          google_ad_client: "${options.client}",
+                          enable_page_level_ads: true
+                        });
+                      `,
+                    type: 'text/javascript',
+                  },
+                ]
+              : [],
           })
         }
       },
