@@ -12,13 +12,30 @@ links:
     size: xs
 ---
 
-:UAlert{title="Experimental" description="The Google Adsense integration has not been fully tested, use with caution." color="yellow" variant="soft" class="not-prose"}
-
-[Google Adsense](https://www.google.com/adsense/start/) allows you to monetize your website by displaying ads.
+[Google Adsense](https://www.google.com/adsense/start/) allows you to monetize your website by displaying relevant ads from Google.
 
 Nuxt Scripts provides a `useScriptGoogleAdsense` composable and a headless `ScriptGoogleAdsense` component to interact with the Google Adsense.
 
-## ScriptGoogleAdsense
+## Global Setup
+
+You can configure Google Adsense globally in your `nuxt.config.ts` file, so the script is automatically loaded on all pages.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleAdsense: {
+        client: 'ca-pub-<your-id>', // Your Google AdSense ID
+        autoAds: true, // Enable Auto Ads
+      }
+    }
+  }
+})
+```
+
+> **Note**: You can also manage Auto Ads settings directly from [Google Adsense](https://adsense.google.com/start/), where you can control ad types, placements, and optimization for higher revenue.
+
+## `ScriptGoogleAdsense` Component
 
 The `ScriptGoogleAdsense` component is a wrapper around the `useScriptGoogleAdsense` composable. It provides a simple way to embed ads in your Nuxt app.
 
@@ -54,15 +71,34 @@ You can use these hooks to add a fallback when the Google Adsense script is bloc
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-### Props
+### Component Props
 
-The `ScriptGoogleAdsense` component supports all props that Google Adsense supports on the `<ins>` tag. See the [Ad tags documentation](https://developers.google.com/adsense/platforms/transparent/ad-tags) for more information.
+The `ScriptGoogleAdsense` component supports all Google Adsense attributes for the `<ins>` tag. You can find more detailed information in the [Ad Tags Documentation](https://developers.google.com/adsense/platforms/transparent/ad-tags).
 
-At a minimum you must provide the following tags:
-- `data-ad-client`: The Google Adsense ID.
-- `data-ad-slot`: The slot ID.
+At a minimum, you must provide the following attributes:
 
-## useScriptGoogleAdsense
+- `data-ad-client`: Your Google Adsense ID.
+- `data-ad-slot`: Your ad slot ID.
+- `data-ad-format`: The format of the ad (e.g., `auto`, `rectangle`, `horizontal`, `vertical`, `fluid`, and `autorelaxed`).
+- `data-ad-layout`: The layout type (e.g., `in-article`, `in-feed` and `fixed`).
+- `data-full-width-responsive`: Set to `true` to make the ad responsive.
+
+### Example Usage with `data-ad-layout`
+
+To specify a layout for your ads (such as "in-article"), you can use the `data-ad-layout` attribute:
+
+```vue
+<template>
+  <ScriptGoogleAdsense
+    data-ad-client="ca-pub-..."
+    data-ad-slot="..."
+    data-ad-format="fluid"
+    data-ad-layout="in-article"
+  />
+</template>
+```
+
+## `useScriptGoogleAdsense` Composable
 
 The `useScriptGoogleAdsense` composable lets you have fine-grain control over the Google Adsense script.
 
@@ -88,7 +124,15 @@ The generated meta tag will look like this:
 <meta name="google-adsense-account" content="ca-pub-<your-id>">
 ```
 
+Alternatively, add an `ads.txt` file to your `public` directory:
+
+```plaintext
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+```
+
 ### GoogleAdsenseApi
+
+This interface defines the structure of the Google Adsense API for better TypeScript support.
 
 ```ts
 export interface GoogleAdsenseApi {
@@ -98,11 +142,17 @@ export interface GoogleAdsenseApi {
 
 ### GoogleAdsenseInput
 
+You can define the input options for the `useScriptGoogleAdsense` composable using the following structure:
+
 ```ts
 export const GoogleAdsenseOptions = object({
   /**
    * The Google Adsense ID.
    */
   client: optional(string()),
+  /**
+   * Enable or disable Auto Ads.
+   */
+  autoAds: optional(boolean()),
 })
 ```
