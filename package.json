@@ -49,8 +49,7 @@
     "lint:fix": "eslint . --fix",
     "test": "pnpm dev:prepare && vitest --run --exclude **/__runtime__ && pnpm test:runtime",
     "test:runtime": "cd test/fixtures/basic && vitest --run",
-    "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck",
-    "script:generate-tpc": "bun ./scripts/generateTpcScripts.ts && pnpm lint:fix"
+    "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck"
   },
   "build": {
     "externals": [
