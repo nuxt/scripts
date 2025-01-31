@@ -7,7 +7,8 @@ import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 const props = withDefaults(defineProps<{
   dataAdClient: string
   dataAdSlot: string
-  dataAdFormat?: 'auto'
+  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'
+  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'
   dataFullWidthResponsive?: boolean
   /**
    * Defines the trigger event to load the script.
@@ -15,6 +16,7 @@ const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
 }>(), {
   dataFullWidthResponsive: true,
+  dataAdFormat: undefined, // Preserve previous behavior
 })
 
 const emits = defineEmits<{
@@ -72,6 +74,7 @@ const rootAttrs = computed(() => {
     :data-ad-client="dataAdClient"
     :data-ad-slot="dataAdSlot"
     :data-ad-format="dataAdFormat"
+    :data-ad-layout="dataAdLayout"
     :data-full-width-responsive="dataFullWidthResponsive"
     v-bind="rootAttrs"
   >
