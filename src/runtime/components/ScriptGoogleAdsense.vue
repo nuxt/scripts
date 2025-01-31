@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger
 }>(), {
   dataFullWidthResponsive: true,
-  dataAdFormat: 'auto', // Default to Auto Ads
+  dataAdFormat: undefined, // Preserve previous behavior
 })
 
 const emits = defineEmits<{
