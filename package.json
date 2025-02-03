@@ -114,7 +114,7 @@
     "nuxt-scripts-devtools": "workspace:*",
     "playwright-core": "^1.49.1",
     "typescript": "5.7.2",
-    "vitest": "^2.1.8",
+    "vitest": "^3.0.5",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vue-tsc": "^2.2.0"
