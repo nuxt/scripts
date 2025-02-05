@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
+      - run: pnpm install
       # https://github.com/vitejs/vite/blob/main/.github/workflows/ci.yml#L62
       # Install playwright's binary under custom directory to cache
       - name: Set Playwright path (non-windows)
