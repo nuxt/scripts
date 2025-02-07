@@ -1,5 +1,5 @@
 <template>
-<div class="sr-only" aria-label="Loading..." role="status" />
+  <div class="sr-only" aria-label="Loading..." role="status" />
 </template>
 
 <style scoped>

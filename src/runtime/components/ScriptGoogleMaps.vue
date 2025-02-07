@@ -441,8 +441,6 @@ const rootAttrs = computed(() => {
   }) as HTMLAttributes
 })
 
-const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
-
 onBeforeUnmount(async () => {
   await Promise.all([...mapMarkers.value.entries()].map(([,marker]) => resetMapMarkerMap(marker)))
   mapMarkers.value.clear()
