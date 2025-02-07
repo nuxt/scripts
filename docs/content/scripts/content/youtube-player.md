@@ -95,6 +95,16 @@ export interface YouTubeProps {
 }
 ```
 
+### Privacy
+
+The `<YoutubePlayer>` component is privacy-friendly by default and sets the video host to `https://www.youtube-nocookie.com`. 
+
+To modify this behavior, you can set the `host` prop to `https://www.youtube.com`.
+
+```vue
+<ScriptYouTubePlayer video-id="d_IFKP1Ofq0" :player-options="{ host: 'https://www.youtube.com' }" />
+```
+
 #### Eager Loading Placeholder
 
 The YouTube Player placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
