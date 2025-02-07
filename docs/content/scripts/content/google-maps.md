@@ -16,6 +16,15 @@ links:
 
 Nuxt Scripts provides a `useScriptGoogleMaps` composable and a headless `ScriptGoogleMaps` component to interact with the Google Maps.
 
+## Types
+
+To use Google Maps with full TypeScript support, you will need
+to install the `@types/google.map` dependency.
+
+```bash
+pnpm add -D @types/google.map
+```
+
 ## ScriptGoogleMaps
 
 The `ScriptGoogleMaps` component is a wrapper around the `useScriptGoogleMaps` composable. It provides a simple way to embed Google Maps in your Nuxt app.

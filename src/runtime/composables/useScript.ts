@@ -2,10 +2,11 @@ import type { UseScriptInput, VueScriptInstance, MaybeComputedRefEntriesOnly } f
 import type { UseScriptOptions, UseFunctionType, Head, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
 import { resolveScriptKey } from 'unhead'
 import { defu } from 'defu'
-import { useScript as _useScript } from '@unhead/vue'
+import { useScript as _useScript, injectHead } from '@unhead/vue'
 import { parseURL } from 'ufo'
+import { onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
+import { reactive } from 'vue'
 import { pick } from '../utils'
-import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext, WarmupStrategy } from '#nuxt-scripts/types'
 
 function useNuxtScriptRuntimeConfig() {

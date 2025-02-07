@@ -7,11 +7,12 @@ import {
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
+  resolvePath,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
-import { resolvePath } from 'mlly'
 import { join } from 'pathe'
+import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -60,6 +61,10 @@ export interface ModuleOptions {
      * @default false
      */
     fallbackOnSrcOnBundleFail?: boolean
+    /**
+     * Configure the fetch options used for downloading scripts.
+     */
+    fetchOptions?: FetchOptions
   }
   /**
    * Whether the module is enabled.
@@ -91,6 +96,13 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     defaultScriptOptions: {
       trigger: 'onNuxtReady',
+    },
+    assets: {
+      fetchOptions: {
+        retry: 3, // Specifies the number of retry attempts for failed fetches.
+        retryDelay: 2000, // Specifies the delay (in milliseconds) between retry attempts.
+        timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
+      },
     },
     enabled: true,
     debug: false,
@@ -206,6 +218,7 @@ ${newScripts.map((i) => {
         },
         assetsBaseURL: config.assets?.prefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
+        fetchOptions: config.assets?.fetchOptions,
         renderedScript,
       }))
 

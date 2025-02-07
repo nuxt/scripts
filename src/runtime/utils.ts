@@ -1,9 +1,9 @@
 import { defu } from 'defu'
 import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
+import { useRuntimeConfig } from 'nuxt/app'
 import { useScript } from './composables/useScript'
 import { parse } from '#nuxt-scripts-validator'
-import { useRuntimeConfig } from '#imports'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,

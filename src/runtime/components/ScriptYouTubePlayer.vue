@@ -3,10 +3,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
 import { defu } from 'defu'
+import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
-import { useHead } from '#imports'
 
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes
