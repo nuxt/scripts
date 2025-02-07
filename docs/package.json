@@ -23,6 +23,6 @@
     "@vueuse/core": "^12.2.0",
     "@vueuse/nuxt": "^12.2.0",
     "nuxt-scripts-devtools": "workspace:*",
-    "shiki": "^1.24.4"
+    "shiki": "^2.3.2"
   }
 }
