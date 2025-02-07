@@ -3,6 +3,7 @@
     class="Carbon border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-white/5"
     serve="CW7DTKJL"
     placement="unlighthousedev"
+    format="cover"
   >
     <template #awaitingLoad>
       <div>waiting for carbon</div>

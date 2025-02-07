@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, resolveComponent } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
 import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import { hash } from 'ohash'
+import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
-import { resolveComponent, useHead } from '#imports'
 
 interface PlaceholderOptions {
   width?: string | number
@@ -135,7 +135,21 @@ function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
 }
 
-async function createAdvancedMapMarker(_options: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | Promise<google.maps.marker.AdvancedMarkerElement>) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise<void>(async (resolve) => {
+    const marker = _marker instanceof Promise ? await _marker : _marker
+    if (marker) {
+      // @ts-expect-error broken type
+      marker.setMap(null)
+    }
+    resolve()
+  })
+}
+
+async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+  if (!_options)
+    return
   const key = hash(_options)
   if (mapMarkers.value.has(key))
     return mapMarkers.value.get(key)
@@ -266,14 +280,13 @@ onMounted(() => {
       }
       const marker = await mapMarkers.value.get(key)
       if (marker) {
-        // @ts-expect-error broken type
-        marker.setMap(null)
-        // make sure it gets removed from map
-        mapMarkers.value.delete(key)
+        resetMapMarkerMap(marker)
+          .then(() => {
+            mapMarkers.value.delete(key)
+          })
       }
     }
     for (const k of toAdd) {
-      // @ts-expect-error broken
       createAdvancedMapMarker(nextMap.get(k))
     }
   }, {
@@ -298,9 +311,12 @@ onMounted(() => {
         }
         if (prev[0]) {
           const prevCenterHash = hash({ position: prev[0] })
-          // @ts-expect-error broken upstream type
-          mapMarkers.value.get(prevCenterHash)?.setMap(null)
-          mapMarkers.value.delete(prevCenterHash)
+          if (mapMarkers.value.has(prevCenterHash)) {
+            resetMapMarkerMap(mapMarkers.value.get(prevCenterHash)!)
+              .then(() => {
+                mapMarkers.value.delete(prevCenterHash)
+              })
+          }
         }
         createAdvancedMapMarker({ position: center })
       }
@@ -427,13 +443,7 @@ const rootAttrs = computed(() => {
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
 
 onBeforeUnmount(async () => {
-  await Promise.all([...mapMarkers.value.entries()].map(async (_marker) => {
-    const marker = await _marker
-    if (marker) {
-      // @ts-expect-error broken type
-      marker.setMap(null)
-    }
-  }))
+  await Promise.all([...mapMarkers.value.entries()].map(([,marker]) => resetMapMarkerMap(marker)))
   mapMarkers.value.clear()
   map.value?.unbindAll()
   map.value = undefined

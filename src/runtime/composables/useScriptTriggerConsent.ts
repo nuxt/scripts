@@ -1,5 +1,6 @@
+import { isRef, ref, toValue, watch } from 'vue'
+import { tryUseNuxtApp, onNuxtReady, requestIdleCallback } from 'nuxt/app'
 import type { ConsentScriptTriggerOptions } from '../types'
-import { isRef, onNuxtReady, ref, requestIdleCallback, toValue, tryUseNuxtApp, watch } from '#imports'
 
 interface UseConsentScriptTriggerApi extends Promise<void> {
   /**

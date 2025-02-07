@@ -1,5 +1,11 @@
-import type { UseScriptOptions, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
-import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
+import type {
+  ActiveHeadEntry,
+  AsAsyncFunctionValues,
+  DataKeys,
+  SchemaAugmentations,
+  ScriptBase,
+} from '@unhead/schema'
+import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
@@ -25,6 +31,20 @@ import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import { object } from '#nuxt-scripts-validator'
 
+export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
+
+export type UseScriptContext<T extends Record<symbol | string, any>> =
+  (Promise<T> & VueScriptInstance<T>)
+  & AsAsyncFunctionValues<T>
+  & {
+  /**
+   * @deprecated Use top-level functions instead.
+   */
+    $script: Promise<T> & VueScriptInstance<T>
+    warmup: (rel: WarmupStrategy) => void
+    _warmupEl?: void | ActiveHeadEntry<any>
+  }
+
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
   /**
    * The trigger to load the script:
@@ -46,6 +66,16 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U 
    * loading the actual script and not getting warnings.
    */
   skipValidation?: boolean
+  /**
+   * Specify a strategy for warming up the connection to the third-party script.
+   *
+   * The strategy to use for preloading the script.
+   *  - `false` - Disable preloading.
+   *  - `'preload'` - Preload the script.
+   *  - `'preconnect'` | `'dns-prefetch'` - Preconnect to the script. Only works when loading a script from a different origin, will fallback
+   *  to `false` if the origin is the same.
+   */
+  warmupStrategy?: WarmupStrategy
   /**
    * @internal
    */
@@ -138,22 +168,23 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
 
+export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
-  T extends ObjectSchema<any, any> = EmptyOptionsSchema,
+  T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
 > =
-    (InferInput<T>
-    & {
+    (InferIfSchema<T>
+      & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-      key?: string
-      scriptInput?: ScriptInput
-      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-    })
-    | Partial<InferInput<T>> & (
+        key?: string
+        scriptInput?: ScriptInput
+        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+      })
+      | Partial<InferIfSchema<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

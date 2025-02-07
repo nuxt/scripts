@@ -1,7 +1,7 @@
 import { hash } from 'ohash'
 import type { ModuleOptions } from './module'
 import { logger } from './logger'
-import type { RegistryScript } from '#nuxt-scripts'
+import type { RegistryScript } from '#nuxt-scripts/types'
 
 export function templatePlugin(config: Partial<ModuleOptions>, registry: Required<RegistryScript>[]) {
   if (Array.isArray(config.globals)) {

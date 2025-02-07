@@ -8,10 +8,6 @@ links:
     size: xs
 ---
 
-::tip
-This composable is generated with [GoogleChromeLabs/third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital) in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
-::
-
 [Google Analytics](https://marketingplatform.google.com/about/analytics/) is an analytics solution for Nuxt Apps.
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.

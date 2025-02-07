@@ -3,10 +3,11 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
 import { defu } from 'defu'
+import { useAsyncData } from 'nuxt/app'
+import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
-import { useAsyncData, useHead } from '#imports'
 
 interface VimeoOptions {
   // copied from @types/vimeo__player
@@ -119,8 +120,10 @@ const rootEl = ref()
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 let clickTriggered = false
 if (props.trigger === 'mousedown' && trigger instanceof Promise) {
-  trigger.then(() => {
-    clickTriggered = true
+  trigger.then((val) => {
+    if (val) {
+      clickTriggered = true
+    }
   })
 }
 const ready = ref(false)
@@ -184,6 +187,7 @@ const height = computed(() => {
 })
 
 onMounted(() => {
+  // @ts-ignore failing for end users
   onLoaded(async ({ Vimeo }) => {
     const vimeoOptions = props.vimeoOptions || {}
     if (!vimeoOptions.id && props.id) {
@@ -234,7 +238,7 @@ const rootAttrs = computed(() => {
     'role': 'application',
     'style': {
       maxWidth: '100%',
-      width: `${width.value}px`,
+      width: `auto`,
       height: 'auto',
       aspectRatio: `16/9`,
       position: 'relative',

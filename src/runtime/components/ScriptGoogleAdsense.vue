@@ -1,21 +1,23 @@
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { callOnce } from 'nuxt/app'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
-import { callOnce, computed, onMounted, ref, watch } from '#imports'
-import type { ElementScriptTrigger } from '#nuxt-scripts'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{
   dataAdClient: string
   dataAdSlot: string
-  dataAdFormat?: 'auto'
+  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'
+  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'
   dataFullWidthResponsive?: boolean
   /**
    * Defines the trigger event to load the script.
    */
   trigger?: ElementScriptTrigger
 }>(), {
-  dataAdFormat: 'auto',
   dataFullWidthResponsive: true,
+  dataAdFormat: undefined, // Preserve previous behavior
 })
 
 const emits = defineEmits<{
@@ -36,10 +38,18 @@ const instance = useScriptGoogleAdsense({
 
 const { status } = instance
 
+function pushAdSlot() {
+  (window.adsbygoogle = window.adsbygoogle || []).push({})
+}
+
 onMounted(() => {
-  callOnce(() => {
-    (window.adsbygoogle = window.adsbygoogle || []).push({})
-  })
+  if (import.meta.dev) {
+    callOnce(() => pushAdSlot())
+  }
+  else {
+    pushAdSlot()
+  }
+
   watch(status, (val) => {
     if (val === 'loaded') {
       emits('ready', instance)
@@ -65,6 +75,7 @@ const rootAttrs = computed(() => {
     :data-ad-client="dataAdClient"
     :data-ad-slot="dataAdSlot"
     :data-ad-format="dataAdFormat"
+    :data-ad-layout="dataAdLayout"
     :data-full-width-responsive="dataFullWidthResponsive"
     v-bind="rootAttrs"
   >

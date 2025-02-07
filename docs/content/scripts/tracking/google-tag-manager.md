@@ -8,25 +8,17 @@ links:
   size: xs
 ---
 
-::tip
-This composable is generated with [GoogleChromeLabs/third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital) in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
-::
-
 [Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.
 
 ::callout
 You may not need Google Tag Manager with Nuxt Scripts. GTM is 82kb and will slow down your site.
 Nuxt Scripts provides many features you can easily
-implement within your Nuxt app. If you're using GTM for Google Tag Manager, you can use the `useScriptGoogleAnalytics` composable instead.
+implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the `useScriptGoogleAnalytics` composable instead.
 ::
 
-### Nuxt Config Setup
+## Loading Globally
 
-The simplest way to load Google Tag Manager globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
-use the [useScriptGoogleTagManager](#useScriptGoogleTagManager) composable.
-
-If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
-disable the script in development.
+If you'd like to avoid loading the analytics in development, you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) in your Nuxt config.
 
 ::code-group
 
@@ -35,7 +27,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       googleTagManager: {
-        id: 'YOUR_ID'
+        id: '<YOUR_ID>'
       }
     }
   }
@@ -48,7 +40,7 @@ export default defineNuxtConfig({
     scripts: {
       registry: {
         googleTagManager: {
-          token: 'YOUR_TOKEN_ID',
+          id: '<YOUR_ID>',
         }
       }
     }
@@ -56,13 +48,7 @@ export default defineNuxtConfig({
 })
 ```
 
-::
-
-#### With Environment Variables
-
-If you prefer to configure your id using environment variables.
-
-```ts [nuxt.config.ts]
+```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
     registry: {
@@ -74,7 +60,9 @@ export default defineNuxtConfig({
     public: {
       scripts: {
         googleTagManager: {
-          id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<your-id>
+          id: '', 
         },
       },
     },
@@ -82,23 +70,42 @@ export default defineNuxtConfig({
 })
 ```
 
-```text [.env]
-NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<YOUR_ID>
-```
+::
 
 ## useScriptGoogleTagManager
 
 The `useScriptGoogleTagManager` composable lets you have fine-grain control over when and how Google Tag Manager is loaded on your site.
 
+
 ```ts
 const { proxy } = useScriptGoogleTagManager({
-  id: 'YOUR_ID'
+  id: 'YOUR_ID' // id is only needed if you haven't configured globally
 })
 // example
 proxy.dataLayer.push({ event: 'conversion', value: 1 })
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about `proxy`.
+
+### Guide: Sending Page Events
+
+If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [useScriptEventPage](/docs/api/use-script-event-tag) composable.
+This composable will trigger the provided function on route change after the page title has been updated.
+
+```ts
+const { proxy } = useScriptGoogleTagManager({
+  id: 'YOUR_ID' // id is only needed if you haven't configured globally
+}) 
+
+useScriptEventPage((title, path) => {
+  // triggered on route change after title is updated
+  proxy.dataLayer.push({ 
+    event: 'pageview',
+    title, 
+    path 
+  })
+})
+```
 
 ### GoogleTagManagerApi
 

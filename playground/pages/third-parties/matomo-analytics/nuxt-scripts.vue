@@ -6,12 +6,12 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { status, _paq } = useScriptMatomoAnalytics({
-  matomoUrl: 'https://nuxt-scripts-demo.matomo.cloud',
+const { status, proxy } = useScriptMatomoAnalytics({
+  cloudId: 'nuxt.matomo.cloud',
   siteId: '1',
 })
 
-_paq.push(['trackPageView'])
+proxy._paq.push(['trackPageView'])
 </script>
 
 <template>

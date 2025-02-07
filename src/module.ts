@@ -7,11 +7,12 @@ import {
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
+  resolvePath,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
-import { resolvePath } from 'mlly'
 import { join } from 'pathe'
+import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
@@ -54,6 +55,16 @@ export interface ModuleOptions {
      * TODO Make configurable in future.
      */
     strategy?: 'public'
+    /**
+     * Fallback to src if bundle fails to load.
+     * The default behavior is to stop the bundling process if a script fails to be downloaded.
+     * @default false
+     */
+    fallbackOnSrcOnBundleFail?: boolean
+    /**
+     * Configure the fetch options used for downloading scripts.
+     */
+    fetchOptions?: FetchOptions
   }
   /**
    * Whether the module is enabled.
@@ -86,6 +97,13 @@ export default defineNuxtModule<ModuleOptions>({
     defaultScriptOptions: {
       trigger: 'onNuxtReady',
     },
+    assets: {
+      fetchOptions: {
+        retry: 3, // Specifies the number of retry attempts for failed fetches.
+        retryDelay: 2000, // Specifies the delay (in milliseconds) between retry attempts.
+        timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
+      },
+    },
     enabled: true,
     debug: false,
   },
@@ -93,8 +111,8 @@ export default defineNuxtModule<ModuleOptions>({
     const { resolve } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(resolve('../package.json'))
     nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
-    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
-    nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
+    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime')
+    logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')
@@ -107,14 +125,10 @@ export default defineNuxtModule<ModuleOptions>({
       if (!unheadVersion || lt(unheadVersion, '1.10.0')) {
         logger.error(`Nuxt Scripts requires Unhead >= 1.10.0, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
-      else if (lt(unheadVersion, '1.10.4')) {
-        logger.warn(`Nuxt Scripts recommends Unhead >= 1.10.4, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
+      else if (lt(unheadVersion, '1.11.5')) {
+        logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
     }
-    // allow augmenting the options
-    nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
-    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime/types')
-    nuxt.options.alias['#nuxt-scripts-utils'] = resolve('./runtime/utils')
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
@@ -154,24 +168,24 @@ export default defineNuxtModule<ModuleOptions>({
         let types = `
 declare module '#app' {
   interface NuxtApp {
-    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, Pick<(import('#nuxt-scripts').NuxtAppScript), '$script'> & Record<string, any>>
-    _scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)>
+    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts/types').UseScriptContext<any>)>
+    _scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)>
   }
   interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts').NuxtAppScript)> }) => void | Promise<void>
+    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)> }) => void | Promise<void>
   }
 }
 `
         if (newScripts.length) {
           types = `${types}
-declare module '#nuxt-scripts' {
+declare module '#nuxt-scripts/types' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
 ${newScripts.map((i) => {
-    const key = i.import?.name.replace('useScript', '')
-    const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-    return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-  }).join('\n')}
+  const key = i.import?.name.replace('useScript', '')
+  const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+  return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
+}).join('\n')}
     }
 }`
           return types
@@ -182,14 +196,13 @@ ${newScripts.map((i) => {
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
         addPluginTemplate({
-          filename: `modules/${name!.replace('/', '-')}.mjs`,
+          filename: `modules/${name!.replace('/', '-')}/plugin.mjs`,
           getContents() {
             return templatePlugin(config, registryScriptsWithImport)
           },
         })
       }
-      const scriptMap = new Map<string, string>()
-      const { normalizeScriptData } = setupPublicAssetStrategy(config.assets)
+      const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
@@ -203,13 +216,10 @@ ${newScripts.map((i) => {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
-        resolveScript(src) {
-          if (scriptMap.has(src))
-            return scriptMap.get(src) as string
-          const url = normalizeScriptData(src)
-          scriptMap.set(src, url)
-          return url
-        },
+        assetsBaseURL: config.assets?.prefix,
+        fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
+        fetchOptions: config.assets?.fetchOptions,
+        renderedScript,
       }))
 
       nuxt.hooks.hook('build:done', async () => {

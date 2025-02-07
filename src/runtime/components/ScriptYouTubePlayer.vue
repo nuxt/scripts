@@ -3,10 +3,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
 import { defu } from 'defu'
+import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
-import { useHead } from '#imports'
 
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes
@@ -17,12 +17,20 @@ const props = withDefaults(defineProps<{
   playerVars?: YT.PlayerVars
   width?: number
   height?: number
+  /**
+   * Whether to use youtube-nocookie.com for embedding.
+   *
+   * @default false
+   */
+  cookies?: boolean
+  playerOptions?: YT.PlayerOptions
 }>(), {
+  cookies: false,
   trigger: 'mousedown',
   // @ts-expect-error untyped
   playerVars: { autoplay: 0, playsinline: 1 },
   width: 640,
-  height: 480,
+  height: 360,
 })
 
 const emits = defineEmits<{
@@ -44,22 +52,25 @@ const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
-const { onLoaded, status } = useScriptYouTubePlayer({
+const script = useScriptYouTubePlayer({
   scriptOptions: {
     trigger,
   },
 })
+const { onLoaded, status } = script
 
 const player: Ref<YT.Player | undefined> = ref()
 let clickTriggered = false
 if (props.trigger === 'mousedown' && trigger instanceof Promise) {
-  trigger.then(() => {
-    clickTriggered = true
+  trigger.then((triggered) => {
+    if (triggered) {
+      clickTriggered = true
+    }
   })
 }
 onMounted(() => {
   onLoaded(async (instance) => {
-    const YouTube: typeof YT & { ready: (fn: () => void) => void } = await instance.YT
+    const YouTube = instance.YT instanceof Promise ? await instance.YT : instance.YT
     await new Promise<void>((resolve) => {
       if (typeof YT.Player === 'undefined')
         YouTube.ready(resolve)
@@ -67,7 +78,9 @@ onMounted(() => {
         resolve()
     })
     player.value = new YT.Player(youtubeEl.value, {
+      host: !props.cookies ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com',
       ...props,
+      ...props.playerOptions,
       events: Object.fromEntries(events.map(event => [event, (e: any) => {
         const emitEventName = event.replace(/([A-Z])/g, '-$1').replace('on-', '').toLowerCase()
         // @ts-expect-error untyped
@@ -112,8 +125,8 @@ const rootAttrs = computed(() => {
       position: 'relative',
       backgroundColor: 'black',
       maxWidth: '100%',
-      width: `${props.width}px`,
-      height: `'auto'`,
+      width: `auto`,
+      height: 'auto',
       aspectRatio: `${props.width}/${props.height}`,
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
@@ -153,7 +166,7 @@ const placeholderAttrs = computed(() => {
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       width: '100%',
-      objectFit: 'contain',
+      objectFit: 'cover',
       height: '100%',
     },
     onLoad(payload) {

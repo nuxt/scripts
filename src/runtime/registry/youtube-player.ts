@@ -1,11 +1,32 @@
 /// <reference types="youtube" />
 import { watch } from 'vue'
+import type { UseScriptContext } from '@unhead/vue'
+import { useHead } from '@unhead/vue'
+import type { MaybePromise } from '../utils'
 import { useRegistryScript } from '../utils'
-import { useHead } from '#imports'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export interface YouTubePlayerApi {
-  YT: typeof YT & { ready: (fn: () => void) => void }
+  YT: MaybePromise<{
+    Player: YT.Player
+    PlayerState: YT.PlayerState
+    get(k: string): any
+    loaded: 0 | 1
+    loading: 0 | 1
+    ready(f: () => void): void
+    scan(): void
+    setConfig(config: YT.PlayerOptions): void
+    subscribe<EventName extends keyof YT.Events>(
+      event: EventName,
+      listener: YT.Events[EventName],
+      context?: any
+    ): void
+    unsubscribe<EventName extends keyof YT.Events>(
+      event: EventName,
+      listener: YT.Events[EventName],
+      context?: any
+    ): void
+  }>
 }
 
 declare global {
@@ -16,7 +37,7 @@ declare global {
 
 export type YouTubePlayerInput = RegistryScriptInput
 
-export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput) {
+export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
   let readyPromise: Promise<void> = Promise.resolve()
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
@@ -26,7 +47,7 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     scriptOptions: {
       use() {
         return {
-          YT: readyPromise.then(() => {
+          YT: window.YT || readyPromise.then(() => {
             return window.YT
           }),
         }

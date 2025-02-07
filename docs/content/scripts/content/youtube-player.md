@@ -16,6 +16,15 @@ links:
 
 Nuxt Scripts provides a `useScriptYouTubePlayer` composable and a headless `ScriptYouTubePlayer` component to interact with the YouTube Player.
 
+## Types
+
+To use YouTube with full TypeScript support, you will need
+to install the `@types/youtube` dependency.
+
+```bash
+pnpm add -D @types/youtube
+```
+
 ## ScriptYouTubePlayer
 
 The `ScriptYouTubePlayer` component is a wrapper around the `useScriptYouTubePlayer` composable. It provides a simple way to embed YouTube videos in your Nuxt app.
@@ -55,7 +64,7 @@ function stateChange(event) {
       </ScriptYouTubePlayer>
     </div>
     <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the Vimeo iframe and start the video." />
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the Youtube iframe and start the video." />
       <UButton v-if="isLoaded && !isPlaying" @click="play">
         Play Video
       </UButton>
@@ -88,7 +97,7 @@ export interface YouTubeProps {
 
 #### Eager Loading Placeholder
 
-The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+The YouTube Player placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
 or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::code-group
@@ -218,7 +227,7 @@ Loading the YouTube Player SDK and interacting with it programmatically.
 const video = ref()
 const { onLoaded } = useScriptYouTubePlayer()
 
-let player
+const player = ref(null)
 onLoaded(async ({ YT }) => {
   // we need to wait for the internal YouTube APIs to be ready
   const YouTube = await YT
@@ -233,12 +242,15 @@ onLoaded(async ({ YT }) => {
     videoId: 'd_IFKP1Ofq0'
   })
 })
+function play() {
+  player.value?.playVideo()
+}
 </script>
 
 <template>
   <div>
     <div ref="video" />
-    <button @click="player.playVideo()">
+    <button @click="play">
       Play
     </button>
   </div>

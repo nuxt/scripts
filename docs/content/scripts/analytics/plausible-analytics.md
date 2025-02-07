@@ -88,7 +88,7 @@ If you are using a self-hosted version of Plausible, you will need to provide an
 the API events are sent to the correct endpoint.
 
 ```ts
-useScriptPlausible({
+useScriptPlausibleAnalytics({
   scriptInput: {
     src: 'https://my-self-hosted-plausible.io/js/script.js'
   }

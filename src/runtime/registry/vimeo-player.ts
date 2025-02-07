@@ -1,8 +1,9 @@
 import { watch } from 'vue'
 import type Vimeo from '@vimeo/player'
+import type { UseScriptContext } from '@unhead/vue'
+import { useHead } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
-import type { RegistryScriptInput } from '#nuxt-scripts'
-import { useHead } from '#imports'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 type Constructor<T extends new (...args: any) => any> = T extends new (...args: infer A) => infer R ? new (...args: A) => R : never
 
@@ -18,7 +19,7 @@ declare global {
   interface Window extends VimeoPlayerApi {}
 }
 
-export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {
+export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput): UseScriptContext<T> {
   const instance = useRegistryScript<T>('vimeoPlayer', () => ({
     scriptInput: {
       src: 'https://player.vimeo.com/api/player.js',
