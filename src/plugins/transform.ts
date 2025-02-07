@@ -77,15 +77,15 @@ async function downloadScript(opts: {
     }
     let encoding
     let size = 0
-    res = await $fetch.raw(src, fetchOptions).then((r) => {
+    res = await $fetch.raw(src, fetchOptions).then(async (r) => {
       if (!r.ok) {
         throw new Error(`Failed to fetch ${src}`)
       }
       encoding = r.headers.get('content-encoding')
       const contentLength = r.headers.get('content-length')
       size = contentLength ? Number(contentLength) / 1024 : 0
-      return r._data || r.arrayBuffer()
-    }).then(r => Buffer.from(r))
+      return r._data || Buffer.from(await r.arrayBuffer())
+    })
 
     await storage.setItemRaw(`bundle:${filename}`, res)
     size = size || res!.length / 1024
