@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.5",
-    "@nuxt/devtools-kit": "^1.7.0",
+    "@nuxt/devtools-kit": "^2.0.0",
     "@nuxt/devtools-ui-kit": "^1.7.0",
     "@nuxt/kit": "^3.15.0",
     "nuxt": "latest",
