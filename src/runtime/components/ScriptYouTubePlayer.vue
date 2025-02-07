@@ -9,6 +9,20 @@ import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
 import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
+export type YoutubeThumbnailSize =
+// 120x90
+  '1' | '2' | '3' | 'default' |
+  // 320x180
+  'mq1' | 'mq2' | 'mq3' | 'mqdefault' |
+  // 480x360
+  '0' | 'hq1' | 'hq2' | 'hq3' | 'hqdefault' |
+  // 640x480
+  'sd1' | 'sd2' | 'sd3' | 'sddefault' |
+  // 1280x720
+  'hq720' |
+  // 1920x1080
+  'maxresdefault'
+
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes
   rootAttrs?: HTMLAttributes
@@ -25,9 +39,13 @@ const props = withDefaults(defineProps<{
    */
   cookies?: boolean
   playerOptions?: YT.PlayerOptions
+  thumbnailSize?: YoutubeThumbnailSize
+  webp?: boolean
 }>(), {
   cookies: false,
   trigger: 'mousedown',
+  thumbnailSize: 'hq720',
+  webp: true,
   // @ts-expect-error untyped
   playerVars: { autoplay: 0, playsinline: 1 },
   width: 640,
@@ -126,8 +144,6 @@ const rootAttrs = computed(() => {
       position: 'relative',
       backgroundColor: 'black',
       maxWidth: '100%',
-      width: `auto`,
-      height: 'auto',
       aspectRatio: `${props.width}/${props.height}`,
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
@@ -135,7 +151,7 @@ const rootAttrs = computed(() => {
 })
 
 const fallbackPlaceHolder = computed(() => `https://i.ytimg.com/vi/${props.videoId}/hqdefault.jpg`)
-const placeholder = computed(() => `https://i.ytimg.com/vi_webp/${props.videoId}/sddefault.webp`)
+const placeholder = computed(() => `https://i.ytimg.com/${props.webp ? 'vi_webp' : 'vi'}/${props.videoId}/${props.thumbnailSize}.${props.webp ? 'webp' : 'jpg'}`)
 const isFallbackPlaceHolder = ref(false)
 
 if (import.meta.server) {
@@ -167,7 +183,7 @@ const placeholderAttrs = computed(() => {
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       width: '100%',
-      objectFit: 'cover',
+      objectFit: 'contain',
       height: '100%',
     },
     onLoad(payload) {

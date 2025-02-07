@@ -18,7 +18,7 @@ function changeVideoFallback() {
       Multiple YouTube Players
     </NuxtLink>
     <div>
-      <ScriptYouTubePlayer :video-id="videoid" above-the-fold>
+      <ScriptYouTubePlayer :video-id="videoid" above-the-fold class="w-[640px] h-[360px]">
         <template #awaitingLoad>
           <div class="text-lg top-5 absolute left-10">
             Nuxt Nation 2023: Daniel Roe - A New Nuxt - Release of Nuxt v3.8
