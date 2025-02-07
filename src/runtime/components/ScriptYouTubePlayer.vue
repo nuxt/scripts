@@ -17,7 +17,15 @@ const props = withDefaults(defineProps<{
   playerVars?: YT.PlayerVars
   width?: number
   height?: number
+  /**
+   * Whether to use youtube-nocookie.com for embedding.
+   *
+   * @default false
+   */
+  cookies?: boolean
+  playerOptions?: YT.PlayerOptions
 }>(), {
+  cookies: false,
   trigger: 'mousedown',
   // @ts-expect-error untyped
   playerVars: { autoplay: 0, playsinline: 1 },
@@ -70,7 +78,9 @@ onMounted(() => {
         resolve()
     })
     player.value = new YT.Player(youtubeEl.value, {
+      host: !props.cookies ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com',
       ...props,
+      ...props.playerOptions,
       events: Object.fromEntries(events.map(event => [event, (e: any) => {
         const emitEventName = event.replace(/([A-Z])/g, '-$1').replace('on-', '').toLowerCase()
         // @ts-expect-error untyped
