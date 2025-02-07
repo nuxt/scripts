@@ -1,8 +1,18 @@
 import { withQuery } from 'ufo'
-import type { DataLayer, GTag } from 'third-party-capital'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { object, string, optional } from '#nuxt-scripts-validator'
+
+type ConsentOptions = 'default' | 'update'
+
+export interface GTag {
+  (fn: 'js', opt: Date): void
+  (fn: 'config' | 'get', opt: string): void
+  (fn: 'event', opt: string, opt2?: Record<string, any>): void
+  (fn: 'set', opt: Record<string, string>): void
+  (fn: 'consent', opt: ConsentOptions, opt2: Record<string, string>): void
+}
+type DataLayer = Array<Parameters<GTag> | Record<string, unknown>>
 
 export const GoogleAnalyticsOptions = object({
   id: string(),

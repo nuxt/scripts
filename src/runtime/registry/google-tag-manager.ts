@@ -1,8 +1,34 @@
 import { withQuery } from 'ufo'
-import type { GoogleTagManagerApi, DataLayer } from 'third-party-capital'
+import type { GTag } from './google-analytics'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { object, string, optional } from '#nuxt-scripts-validator'
+
+type DataLayer = Array<Parameters<GTag> | Record<string, unknown>>
+interface GoogleTagManagerDataLayerApi {
+  name: 'dataLayer'
+  set: (opt: {
+    [key: string]: string
+  }) => void
+  get: (key: string) => void
+  reset: () => void
+}
+interface GoogleTagManagerDataLayerStatus {
+  dataLayer: {
+    gtmDom: boolean
+    gtmLoad: boolean
+    subscribers: number
+  }
+}
+type GoogleTagManagerInstance = GoogleTagManagerDataLayerStatus & {
+  [key: string]: {
+    callback: () => void
+    dataLayer: GoogleTagManagerDataLayerApi
+  }
+}
+interface GoogleTagManagerApi {
+  google_tag_manager: GoogleTagManagerInstance
+}
 
 declare global {
   interface Window extends GoogleTagManagerApi {}
