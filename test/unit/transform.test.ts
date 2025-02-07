@@ -329,7 +329,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     },
     bundle: true
   },
-})`, { fallbackOnSrcOnBundleFail: false, scripts })).rejects.toThrow(`fetch error`)
+})`, { fallbackOnSrcOnBundleFail: false, scripts })).rejects.toThrow(`Failed to fetch`)
     })
 
     it('should not throw error if bundle fails and fallbackOnSrcOnBundleFail is true', async () => {
@@ -350,7 +350,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   },
 })`, { fallbackOnSrcOnBundleFail: true, scripts })
       expect(code).toMatchInlineSnapshot(`
-        "const instance = useScriptNpm({ scriptInput: { src: 'bundle.js' }, 
+        "const instance = useScriptNpm({ scriptInput: { src: 'bundle.js' },
           packageName: 'js-confetti',
           file: 'dist/js-confetti.browser.js',
           version: '0.12.0',
