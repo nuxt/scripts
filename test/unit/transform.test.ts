@@ -18,14 +18,15 @@ vi.mock('ohash', async (og) => {
   }
 })
 
-vi.mock('ofetch', async (og) => {
-  const mod = (await og<typeof import('ofetch')>())
-  const mock = vi.fn(mod.$fetch)
-  return {
-    ...mod,
-    $fetch: mock,
-  }
-})
+// TODO re-enable
+// vi.mock('ofetch', async (og) => {
+//   const mod = (await og<typeof import('ofetch')>())
+//   const mock = vi.fn(mod.$fetch)
+//   return {
+//     ...mod,
+//     $fetch: mock,
+//   }
+// })
 
 vi.mock('ufo', async (og) => {
   const mod = (await og<typeof import('ufo')>())
