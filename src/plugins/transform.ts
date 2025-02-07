@@ -77,15 +77,15 @@ async function downloadScript(opts: {
     }
     let encoding
     let size = 0
-    res = await $fetch.raw(src, fetchOptions).then((r) => {
+    res = await $fetch.raw(src, { ...fetchOptions, responseType: 'arrayBuffer' }).then(async (r) => {
       if (!r.ok) {
         throw new Error(`Failed to fetch ${src}`)
       }
       encoding = r.headers.get('content-encoding')
       const contentLength = r.headers.get('content-length')
       size = contentLength ? Number(contentLength) / 1024 : 0
-      return r._data || r.arrayBuffer()
-    }).then(r => Buffer.from(r))
+      return Buffer.from(r._data || await r.arrayBuffer())
+    })
 
     await storage.setItemRaw(`bundle:${filename}`, res)
     size = size || res!.length / 1024
@@ -269,9 +269,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
                     if (src === url) {
                       if (src && src.startsWith('/'))
-                        console.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
+                        logger.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
                       else
-                        console.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
+                        logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
                     }
                     if (scriptSrcNode) {
                       s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
