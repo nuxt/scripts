@@ -16,6 +16,15 @@ links:
 
 Nuxt Scripts provides a `useScriptYouTubePlayer` composable and a headless `ScriptYouTubePlayer` component to interact with the YouTube Player.
 
+## Types
+
+To use YouTube with full TypeScript support, you will need
+to install the `@types/youtube` dependency.
+
+```bash
+pnpm add -D @types/youtube
+```
+
 ## ScriptYouTubePlayer
 
 The `ScriptYouTubePlayer` component is a wrapper around the `useScriptYouTubePlayer` composable. It provides a simple way to embed YouTube videos in your Nuxt app.

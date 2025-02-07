@@ -7,10 +7,10 @@ import {
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
+  resolvePath,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import { lt } from 'semver'
-import { resolvePath } from 'mlly'
 import { join } from 'pathe'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'

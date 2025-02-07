@@ -16,6 +16,15 @@ links:
 
 Nuxt Scripts provides a `useScriptVimeoPlayer` composable and a headless `ScriptVimeoPlayer` a component to interact with the Vimeo Player.
 
+## Types
+
+To use Video Player with full TypeScript support, you will need
+to install the `@types/vimeo__player` dependency.
+
+```bash
+pnpm add -D @types/vimeo__player
+```
+
 ## ScriptVimeoPlayer
 
 The `ScriptVimeoPlayer` component is a wrapper around the `useScriptVimeoPlayer` composable. It provides a simple way to embed Vimeo videos in your Nuxt app.
