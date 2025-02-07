@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { callOnce } from 'nuxt/app'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
+import { scriptRuntimeConfig } from '../utils'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{
@@ -29,8 +30,13 @@ const emits = defineEmits<{
 const rootEl = ref(null)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
+const scriptConfig = scriptRuntimeConfig('googleAdsense')
+const addClient = computed(() => {
+  return props.dataAdClient || scriptConfig?.client
+})
+
 const instance = useScriptGoogleAdsense({
-  client: props.dataAdClient,
+  client: addClient.value,
   scriptOptions: {
     trigger,
   },
@@ -72,7 +78,7 @@ const rootAttrs = computed(() => {
     ref="rootEl"
     class="adsbygoogle"
     style="display: block;"
-    :data-ad-client="dataAdClient"
+    :data-ad-client="addClient"
     :data-ad-slot="dataAdSlot"
     :data-ad-format="dataAdFormat"
     :data-ad-layout="dataAdLayout"
