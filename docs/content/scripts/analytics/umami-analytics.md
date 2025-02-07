@@ -75,7 +75,7 @@ export default defineNuxtConfig({
 The `useScriptUmamiAnalytics` composable lets you have fine-grain control over when and how Umami Analytics is loaded on your site.
 
 ```ts
-const plausible = useScriptUmamiAnalytics({
+const umami = useScriptUmamiAnalytics({
   websiteId: 'YOUR_WEBSITE_ID'
 })
 ```
