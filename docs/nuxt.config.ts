@@ -1,6 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config'
 import { $fetch } from 'ofetch'
 import { isDevelopment } from 'std-env'
+import NuxtScripts from '../src/module'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -10,7 +11,7 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxt/content',
     '@vueuse/nuxt',
-    '@nuxt/scripts',
+    NuxtScripts,
     '@nuxt/ui',
     // '@nuxthq/studio',
     '@nuxtjs/seo',

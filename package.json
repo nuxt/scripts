@@ -2,7 +2,7 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.9.5",
-  "packageManager": "pnpm@9.15.2",
+  "packageManager": "pnpm@10.2.1",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "website": "https://harlanzw.com",
@@ -105,7 +105,6 @@
     "valibot": "^1.0.0-beta.15"
   },
   "devDependencies": {
-    "shiki": "2.3.2",
     "@nuxt/devtools-kit": "^2.0.0",
     "@nuxt/devtools-ui-kit": "^2.0.0",
     "@nuxt/eslint-config": "^1.0.0",
@@ -124,6 +123,7 @@
     "nuxt": "catalog:",
     "nuxt-scripts-devtools": "workspace:*",
     "playwright-core": "^1.50.1",
+    "shiki": "2.3.2",
     "typescript": "5.7.3",
     "vitest": "^3.0.5",
     "vue": "^3.5.13",
@@ -143,7 +143,6 @@
     "typescript": "5.6.3",
     "unhead": "1.11.18",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0",
-    "consola": "^3.3.3"
+    "vue-router": "^4.5.0"
   }
 }
