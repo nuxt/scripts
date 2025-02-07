@@ -84,11 +84,7 @@ async function downloadScript(opts: {
       encoding = r.headers.get('content-encoding')
       const contentLength = r.headers.get('content-length')
       size = contentLength ? Number(contentLength) / 1024 : 0
-      const res = Buffer.from(r._data || await r.arrayBuffer())
-      if (!res.toString('utf-8')?.length) {
-        throw new Error(`Failed to fetch ${src}`)
-      }
-      return res
+      return Buffer.from(r._data || await r.arrayBuffer())
     })
 
     await storage.setItemRaw(`bundle:${filename}`, res)

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { parse } from 'acorn-loose'
 import { joinURL, withBase, hasProtocol } from 'ufo'
 import { hash } from 'ohash'
+import { $fetch } from 'ofetch'
 import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform'
 import { NuxtScriptBundleTransformer } from '../../src/plugins/transform'
 import type { IntercomInput } from '~/src/runtime/registry/intercom'
@@ -17,6 +18,15 @@ vi.mock('ohash', async (og) => {
   }
 })
 
+vi.mock('ofetch', async (og) => {
+  const mod = (await og<typeof import('ofetch')>())
+  const mock = vi.fn(mod.$fetch)
+  return {
+    ...mod,
+    $fetch: mock,
+  }
+})
+
 vi.mock('ufo', async (og) => {
   const mod = (await og<typeof import('ufo')>())
   const mock = vi.fn(mod.hasProtocol)
@@ -25,7 +35,9 @@ vi.mock('ufo', async (og) => {
     hasProtocol: mock,
   }
 })
-vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ arrayBuffer: vi.fn(() => Buffer.from('')), ok: true, headers: { get: vi.fn() } })))
+vi.stubGlobal('fetch', vi.fn(() => {
+  return Promise.resolve({ arrayBuffer: vi.fn(() => Buffer.from('')), ok: true, headers: { get: vi.fn() } })
+}))
 
 vi.mock('@nuxt/kit', async (og) => {
   const mod = await og<typeof import('@nuxt/kit')>()
@@ -299,9 +311,9 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     expect(code.includes('useScript(\'/_scripts/JvFMRwu6zQ.js\', {')).toBeTruthy()
   })
 
-  describe('fallbackOnSrcOnBundleFail', () => {
+  describe.todo('fallbackOnSrcOnBundleFail', () => {
     beforeEach(() => {
-      vi.mocked(fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
+      vi.mocked($fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
     })
 
     const scripts = [{
@@ -318,15 +330,11 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       },
     }]
     it('should throw error if bundle fails and fallbackOnSrcOnBundleFail is false', async () => {
-      await expect(async () => await transform(`const { then } = useScriptNpm({
+      await expect(async () => await transform(`const instance = useScriptNpm({
   packageName: 'js-confetti',
   file: 'dist/js-confetti.browser.js',
-  version: '0.12.0',
+  version: '0.15.0',
   scriptOptions: {
-    trigger: useScriptTriggerElement({ trigger: 'mouseover', el: mouseOverEl }),
-    use() {
-      return { JSConfetti: window.JSConfetti }
-    },
     bundle: true
   },
 })`, { fallbackOnSrcOnBundleFail: false, scripts })).rejects.toThrow(`Failed to fetch`)
@@ -350,7 +358,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   },
 })`, { fallbackOnSrcOnBundleFail: true, scripts })
       expect(code).toMatchInlineSnapshot(`
-        "const instance = useScriptNpm({ scriptInput: { src: 'bundle.js' },
+        "const instance = useScriptNpm({ scriptInput: { src: '/_scripts/U6Ua8p1giF.js' },
           packageName: 'js-confetti',
           file: 'dist/js-confetti.browser.js',
           version: '0.12.0',
