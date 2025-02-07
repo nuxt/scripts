@@ -29,6 +29,7 @@ import type { ClarityInput } from './registry/clarity'
 import type { CrispInput } from './registry/crisp'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
+import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -154,6 +155,7 @@ export interface ScriptRegistry {
   xPixel?: XPixelInput
   youtubePlayer?: YouTubePlayerInput
   vimeoPlayer?: VimeoPlayerInput
+  umamiAnalytics?: UmamiAnalyticsInput
   [key: `${string}-npm`]: NpmInput
 }
 
