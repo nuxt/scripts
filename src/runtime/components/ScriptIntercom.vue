@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { ref, onMounted, watch, onBeforeUnmount, computed } from 'vue'
 import { useScriptIntercom } from '../registry/intercom'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { ref, onMounted, watch, onBeforeUnmount, computed } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{

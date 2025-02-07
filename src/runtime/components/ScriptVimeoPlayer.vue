@@ -3,10 +3,11 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
 import { defu } from 'defu'
+import { useAsyncData } from 'nuxt/app'
+import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
-import { useAsyncData, useHead } from '#imports'
 
 interface VimeoOptions {
   // copied from @types/vimeo__player

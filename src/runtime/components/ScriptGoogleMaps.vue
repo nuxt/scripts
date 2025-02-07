@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, resolveComponent } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
 import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import { hash } from 'ohash'
+import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
-import { resolveComponent, useHead } from '#imports'
 
 interface PlaceholderOptions {
   width?: string | number

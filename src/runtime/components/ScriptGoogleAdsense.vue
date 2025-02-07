@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { callOnce } from 'nuxt/app'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
-import { callOnce, computed, onMounted, ref, watch } from '#imports'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{

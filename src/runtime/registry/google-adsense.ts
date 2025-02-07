@@ -1,7 +1,7 @@
+import { useHead } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import { object, string, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { useHead } from '#imports'
 
 export const GoogleAdsenseOptions = object({
   /**
