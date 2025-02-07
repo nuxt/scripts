@@ -20,6 +20,7 @@ import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { StripeInput } from './registry/stripe'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XPixelInput } from './registry/x-pixel'
+import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
@@ -153,6 +154,7 @@ export interface ScriptRegistry {
   segment?: SegmentInput
   stripe?: StripeInput
   xPixel?: XPixelInput
+  snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput

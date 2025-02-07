@@ -58,6 +58,10 @@ const thirdParties = [
     name: 'Segment',
     path: '/third-parties/segment',
   },
+  {
+    name: 'Snapchat',
+    path: '/third-parties/snapchat/nuxt-scripts',
+  },
 ]
 
 const thirdPartyComponents = [
