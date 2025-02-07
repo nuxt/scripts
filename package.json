@@ -43,6 +43,7 @@
     "dev:ssl": "nuxi dev playground --https",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
     "typecheck": "vue-tsc --noEmit",
+    "bump": "bumpp package.json --commit --push --tag",
     "release": "pnpm build && pnpm bump && pnpm publish --tag latest -r --no-git-checks",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
