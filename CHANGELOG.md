@@ -1,6 +1,101 @@
 # Changelog
 
 
+## v0.9.6
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.9.5...v0.9.6)
+
+### 🚀 Enhancements
+
+- **YouTubePlayer:** Adjust thumbnail ratio to 640x360 ([#310](https://github.com/nuxt/scripts/pull/310))
+- **google-adsense:** Add Auto Ads support and improve script injection ([#366](https://github.com/nuxt/scripts/pull/366))
+- **useScriptNpm:** Support multiple providers with validation ([#353](https://github.com/nuxt/scripts/pull/353))
+- **youtube:** `thumbnailSize` prop with fallback support ([#376](https://github.com/nuxt/scripts/pull/376))
+- Add umami analytics to registry ([#348](https://github.com/nuxt/scripts/pull/348))
+- Add Snapchat pixel to registry ([#337](https://github.com/nuxt/scripts/pull/337))
+
+### 🩹 Fixes
+
+- `nuxtApp.$scripts` types ([#303](https://github.com/nuxt/scripts/pull/303))
+- **CarbonAds:** Avoid duplicate emits ([c93bd22](https://github.com/nuxt/scripts/commit/c93bd22))
+- **CarbonAds:** Unnecessary script type ([325cde1](https://github.com/nuxt/scripts/commit/325cde1))
+- **CarbonAds:** Missing `format` prop ([#315](https://github.com/nuxt/scripts/pull/315))
+- Move `#nuxt-scripts` alias path ([2a1ab47](https://github.com/nuxt/scripts/commit/2a1ab47))
+- **YoutubePlayer,VimeoPlayer:** ⚠️  Auto width for responsive design on mobile devices ([#341](https://github.com/nuxt/scripts/pull/341))
+- ⚠️  Drop type dependencies ([f545526](https://github.com/nuxt/scripts/commit/f545526))
+- Download scripts using `$fetch` with retries ([39c931e](https://github.com/nuxt/scripts/commit/39c931e))
+- Prefer explicit imports over `#imports` ([a9af35a](https://github.com/nuxt/scripts/commit/a9af35a))
+- Drop `third-party-capital` ([63e78d2](https://github.com/nuxt/scripts/commit/63e78d2))
+- **youtube:** Default host `youtube-nocookie.com` ([d814c7e](https://github.com/nuxt/scripts/commit/d814c7e))
+- Prefer invisible screen reader loading indicator ([ddc88a4](https://github.com/nuxt/scripts/commit/ddc88a4))
+- **adsense:** Use globally configured `client` in component ([3f7e408](https://github.com/nuxt/scripts/commit/3f7e408))
+
+### 💅 Refactors
+
+- Remove TPC composable generation ([#368](https://github.com/nuxt/scripts/pull/368))
+
+### 📖 Documentation
+
+- Fix typo for google analytics ([#317](https://github.com/nuxt/scripts/pull/317))
+- Fix inconsistent example env keys ([#331](https://github.com/nuxt/scripts/pull/331))
+- Improve incorrect example of using useScriptTriggerElement ([#362](https://github.com/nuxt/scripts/pull/362))
+
+### 📦 Build
+
+- Set a resolution for consola ([#369](https://github.com/nuxt/scripts/pull/369))
+
+### 🏡 Chore
+
+- Bump deps ([c6831d7](https://github.com/nuxt/scripts/commit/c6831d7))
+- Bump deps ([7a7a8e6](https://github.com/nuxt/scripts/commit/7a7a8e6))
+- Bump deps ([a68b5dc](https://github.com/nuxt/scripts/commit/a68b5dc))
+- Maybe fix tests ([70de7c8](https://github.com/nuxt/scripts/commit/70de7c8))
+- Bump deps ([e83499e](https://github.com/nuxt/scripts/commit/e83499e))
+- Lock broken ([181ab24](https://github.com/nuxt/scripts/commit/181ab24))
+- Avoid ts 5.7 bug ([e9698ae](https://github.com/nuxt/scripts/commit/e9698ae))
+- Bump deps ([2d2f96a](https://github.com/nuxt/scripts/commit/2d2f96a))
+- Sync lock ([7e1477c](https://github.com/nuxt/scripts/commit/7e1477c))
+- Bump deps ([e8e2a7b](https://github.com/nuxt/scripts/commit/e8e2a7b))
+- Fix release ([c335e61](https://github.com/nuxt/scripts/commit/c335e61))
+- Broken tests ([443aad5](https://github.com/nuxt/scripts/commit/443aad5))
+- Sync lock ([0ad28bc](https://github.com/nuxt/scripts/commit/0ad28bc))
+- **ci:** Broken install ([609ab91](https://github.com/nuxt/scripts/commit/609ab91))
+- Maybe fix tests ([4513ded](https://github.com/nuxt/scripts/commit/4513ded))
+- Maybe fix tests ([f2511a6](https://github.com/nuxt/scripts/commit/f2511a6))
+- Temp disable broken tests ([3b0c0fe](https://github.com/nuxt/scripts/commit/3b0c0fe))
+- Maybe fix release ([d5c8c70](https://github.com/nuxt/scripts/commit/d5c8c70))
+- Tests ([8d94549](https://github.com/nuxt/scripts/commit/8d94549))
+- Bump deps ([7e742de](https://github.com/nuxt/scripts/commit/7e742de))
+- Missing doc ([d7e1eae](https://github.com/nuxt/scripts/commit/d7e1eae))
+- Clean up ([f13bd26](https://github.com/nuxt/scripts/commit/f13bd26))
+- Clean up ([5ad0080](https://github.com/nuxt/scripts/commit/5ad0080))
+
+### 🤖 CI
+
+- Remove corepack ([#372](https://github.com/nuxt/scripts/pull/372))
+
+#### ⚠️ Breaking Changes
+
+- **YoutubePlayer,VimeoPlayer:** ⚠️  Auto width for responsive design on mobile devices ([#341](https://github.com/nuxt/scripts/pull/341))
+- ⚠️  Drop type dependencies ([f545526](https://github.com/nuxt/scripts/commit/f545526))
+
+### ❤️ Contributors
+
+- Harlan ([@harlan-zw](http://github.com/harlan-zw))
+- Mod08 <maege.daetwyler@hispeed.ch>
+- Mark1 ([@0ahz](http://github.com/0ahz))
+- Harlan Wilton ([@harlan-zw](http://github.com/harlan-zw))
+- Alfarish Fizikri <alfarish@evermos.com>
+- Nexos Creator ([@nexoscreator](http://github.com/nexoscreator))
+- Julien Huang ([@huang-julien](http://github.com/huang-julien))
+- Jelmer ([@jelmerdemaat](http://github.com/jelmerdemaat))
+- Michael Brevard <yonshi29@gmail.com>
+- William Chong ([@williamchong](http://github.com/williamchong))
+- Daniel Roe ([@danielroe](http://github.com/danielroe))
+- Maxime Pauvert ([@maximepvrt](http://github.com/maximepvrt))
+- Rahul Vashishtha ([@rahul-vashishtha](http://github.com/rahul-vashishtha))
+- Mounir Bouaiche ([@b-mounir-dev](http://github.com/b-mounir-dev))
+
 ## v0.9.5
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.9.4...v0.9.5)
