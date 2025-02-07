@@ -11,6 +11,8 @@ import { hash as ohash } from 'ohash'
 import { join } from 'pathe'
 import { colors } from 'consola/utils'
 import { tryUseNuxt, useNuxt } from '@nuxt/kit'
+import type { FetchOptions } from 'ofetch'
+import { $fetch } from 'ofetch'
 import { logger } from '../logger'
 import { bundleStorage } from '../assets'
 import { isJS, isVue } from './util'
@@ -22,6 +24,7 @@ export interface AssetBundlerTransformerOptions {
   assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
   fallbackOnSrcOnBundleFail?: boolean
+  fetchOptions?: FetchOptions
   renderedScript?: Map<string, {
     content: Buffer
     /**
@@ -50,7 +53,7 @@ async function downloadScript(opts: {
   src: string
   url: string
   filename?: string
-}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>) {
+}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions) {
   const { src, url, filename } = opts
   if (src === url || !filename) {
     return
@@ -74,7 +77,7 @@ async function downloadScript(opts: {
     }
     let encoding
     let size = 0
-    res = await fetch(src).then((r) => {
+    res = await $fetch.raw(src, fetchOptions).then((r) => {
       if (!r.ok) {
         throw new Error(`Failed to fetch ${src}`)
       }
@@ -252,7 +255,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url
                     try {
-                      await downloadScript({ src, url, filename }, renderedScript)
+                      await downloadScript({ src, url, filename }, renderedScript, options.fetchOptions)
                     }
                     catch (e) {
                       if (options.fallbackOnSrcOnBundleFail) {
