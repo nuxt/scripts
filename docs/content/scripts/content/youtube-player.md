@@ -105,9 +105,23 @@ To modify this behavior, you can set the `host` prop to `https://www.youtube.com
 <ScriptYouTubePlayer video-id="d_IFKP1Ofq0" :player-options="{ host: 'https://www.youtube.com' }" />
 ```
 
-#### Eager Loading Placeholder
+### Placeholder
 
-The YouTube Player placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+The YouTube Player placeholder image is 1280x720 webp that is lazy-loaded by default.
+
+To modify the placeholder size you can set the `thumbnailSize` prop, if you'd prefer
+to use a `jpg` you can pass the `webp` prop as `false`.
+
+```vue
+<ScriptYouTubePlayer video-id="d_IFKP1Ofq0" thumbnail-size="maxresdefault" />
+```
+
+If you need fine control over the placeholder you can set `placeholderAttrs` prop or completely override it using
+the `#placeholder` slot.
+
+#### Eager Loading
+
+You should change this behavior if your video is above the fold
 or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::code-group
