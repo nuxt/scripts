@@ -11,6 +11,7 @@ import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
+import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
 interface PlaceholderOptions {
   width?: string | number
@@ -458,7 +459,7 @@ onBeforeUnmount(async () => {
       <img v-bind="placeholderAttrs">
     </slot>
     <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
-      <ScriptLoadingIndicator color="black" />
+      <ScriptAriaLoadingIndicator />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'error'" name="error" />

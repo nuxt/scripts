@@ -7,6 +7,7 @@ import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
+import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes
@@ -178,7 +179,7 @@ const placeholderAttrs = computed(() => {
       <img v-bind="placeholderAttrs">
     </slot>
     <slot v-if="status === 'loading'" name="loading">
-      <ScriptLoadingIndicator />
+      <ScriptAriaLoadingIndicator />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'error'" name="error" />

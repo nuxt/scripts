@@ -8,6 +8,7 @@ import { useHead } from '@unhead/vue'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
+import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
 interface VimeoOptions {
   // copied from @types/vimeo__player
@@ -274,7 +275,7 @@ onBeforeUnmount(() => player?.unload())
       <img v-if="placeholder" v-bind="placeholderAttrs">
     </slot>
     <slot v-if="status === 'loading'" name="loading">
-      <ScriptLoadingIndicator color="white" />
+      <ScriptAriaLoadingIndicator color="white" />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'error'" name="error" />
