@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 /// <reference types="vimeo__player" />
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'

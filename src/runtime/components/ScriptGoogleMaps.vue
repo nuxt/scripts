@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 /// <reference types="google.maps" />
 import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
