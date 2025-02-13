@@ -40,7 +40,7 @@ const thirdParties = [
   },
   {
     name: 'Matomo Analytics',
-    path: '/third-parties/matomo-analytics',
+    path: '/third-parties/matomo-analytics/default',
   },
   {
     name: 'Hotjar',
