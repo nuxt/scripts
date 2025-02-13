@@ -36,7 +36,7 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
   // Note: inputs.useScriptInput is not usable, needs to be normalized
   return useRegistryScript<T, typeof GoogleAdsenseOptions>('googleAdsense', options => ({
     scriptInput: {
-      src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js${options?.client ? `?client=${options.client}` : ''}`,
+      src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
     },
     schema: import.meta.dev ? GoogleAdsenseOptions : undefined,
     scriptOptions: {
@@ -46,26 +46,25 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
       beforeInit() {
         if (options?.client) {
           useHead({
+            // Add meta tag for Google Adsense account
             meta: [
               {
                 name: 'google-adsense-account',
-                content: options?.client,
+                content: options.client,
               },
             ],
             // Inject Auto Ads script dynamically
-            script: options.autoAds
-              ? [
-                  {
-                    innerHTML: `
-                        (adsbygoogle = window.adsbygoogle || []).push({
-                          google_ad_client: "${options.client}",
-                          enable_page_level_ads: true
-                        });
-                      `,
-                    type: 'text/javascript',
-                  },
-                ]
-              : [],
+            script: [
+              {
+                innerHTML: `
+                (adsbygoogle = window.adsbygoogle || []).push({
+                  google_ad_client: "${options.client}",
+                  enable_page_level_ads: ${options.autoAds ?? false}
+                });
+                `,
+                type: 'text/javascript',
+              },
+            ],
           })
         }
       },
