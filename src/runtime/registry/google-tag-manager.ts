@@ -28,6 +28,7 @@ type GoogleTagManagerInstance = GoogleTagManagerDataLayerStatus & {
 }
 interface GoogleTagManagerApi {
   google_tag_manager: GoogleTagManagerInstance
+  dataLayer: DataLayer
 }
 
 declare global {
