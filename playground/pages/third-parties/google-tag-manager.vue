@@ -7,7 +7,7 @@ useHead({
 
 // composables return the underlying api as a proxy object and the script state
 const { dataLayer, then, status } = useScriptGoogleTagManager({
-  id: 'GTM-P5KM6KK6',
+  id: 'GTM-MNJD4B',
   onBeforeGtmStart(gtag) {
     gtag('consent', 'default', {
       ad_user_data: 'denied',
