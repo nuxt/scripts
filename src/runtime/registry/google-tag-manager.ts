@@ -41,7 +41,7 @@ export const GoogleTagManagerOptions = object({
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
-export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput & { onBeforeGtmStart?: (dataLayer: DataLayer) => void }) {
+export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput & { onBeforeGtmStart?: (gtag: GTag) => void }) {
   return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'googleTagManager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id, l: options?.l }),
@@ -60,7 +60,11 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_option
       : () => {
           const dataLayerName = options?.l ?? 'dataLayer';
           (window as any)[dataLayerName] = (window as any)[(options?.l ?? 'dataLayer')] || []
-          _options?.onBeforeGtmStart?.((window as any)[dataLayerName])
+          function gtag() {
+            // eslint-disable-next-line prefer-rest-params
+            (window as any)[dataLayerName].push(arguments)
+          }
+          _options?.onBeforeGtmStart?.(gtag)
           ;(window as any)[dataLayerName].push({ 'gtm.start': new Date().getTime(), 'event': 'gtm.js' })
         },
   }), _options)

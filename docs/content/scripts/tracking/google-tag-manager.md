@@ -128,10 +128,16 @@ export const GoogleTagManagerOptions = object({
   id: string(),
   /**
    * The name of the dataLayer you want to use
-   * @default 'defaultGtm'
+   * @default 'dataLayer'
    */
   dataLayerName: optional(string())
 })
+```
+
+### Options types
+
+```ts
+type GoogleTagManagerInput = typeof GoogleTagManagerOptions & { onBeforeGtmStart?: ((gtag: Gtag) => void) => void }
 ```
 
 ## Example
@@ -163,3 +169,9 @@ function sendConversion() {
 
 
 ::
+
+## Configuring GTM before it starts
+
+`useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
+
+If you need to configure GTM before it starts. For example, (setting the consent mode)[https://developers.google.com/tag-platform/security/guides/consent?hl=fr&consentmode=basic]. You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.
