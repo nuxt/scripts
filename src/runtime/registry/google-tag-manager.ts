@@ -41,7 +41,7 @@ export const GoogleTagManagerOptions = object({
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
-export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput) {
+export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput & { onBeforeGtmStart?: (gtag: GTag) => void }) {
   return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'googleTagManager', options => ({
     scriptInput: {
       src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id, l: options?.l }),
@@ -53,13 +53,18 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_option
       },
       stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-gtm',
-      ...({ tagPriority: 1 }),
+      tagPriority: 1,
     },
     clientInit: import.meta.server
       ? undefined
       : () => {
           const dataLayerName = options?.l ?? 'dataLayer';
           (window as any)[dataLayerName] = (window as any)[(options?.l ?? 'dataLayer')] || []
+          function gtag() {
+            // eslint-disable-next-line prefer-rest-params
+            (window as any)[dataLayerName].push(arguments)
+          }
+          _options?.onBeforeGtmStart?.(gtag)
           ;(window as any)[dataLayerName].push({ 'gtm.start': new Date().getTime(), 'event': 'gtm.js' })
         },
   }), _options)

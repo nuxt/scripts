@@ -10,7 +10,7 @@ export interface GTag {
   (fn: 'config' | 'get', opt: string): void
   (fn: 'event', opt: string, opt2?: Record<string, any>): void
   (fn: 'set', opt: Record<string, string>): void
-  (fn: 'consent', opt: ConsentOptions, opt2: Record<string, string>): void
+  (fn: 'consent', opt: ConsentOptions, opt2: Record<string, string | number>): void
 }
 type DataLayer = Array<Parameters<GTag> | Record<string, unknown>>
 
