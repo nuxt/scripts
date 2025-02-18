@@ -146,7 +146,7 @@ const rootAttrs = computed(() => {
       cursor: 'pointer',
       position: 'relative',
       backgroundColor: 'black',
-      maxWidth: '100%',
+      width: '100%',
       aspectRatio: `${props.width}/${props.height}`,
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
