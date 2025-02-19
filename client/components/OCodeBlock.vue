@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { BundledLanguage } from 'shiki'
 import { computed } from 'vue'
 import { renderCodeHighlight } from '../composables/shiki'
 
 const props = withDefaults(
   defineProps<{
     code: string
-    lang?: BundledLanguage
+    lang: 'javascript'
     lines?: boolean
     transformRendered?: (code: string) => string
   }>(),
