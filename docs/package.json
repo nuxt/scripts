@@ -12,16 +12,16 @@
     "@iconify-json/heroicons": "^1.2.2",
     "@iconify-json/noto": "^1.2.2",
     "@iconify-json/ph": "^1.2.2",
-    "@iconify-json/simple-icons": "^1.2.24",
+    "@iconify-json/simple-icons": "^1.2.25",
     "@nuxt/content": "^3.1.1",
     "@nuxt/fonts": "^0.10.3",
     "@nuxt/image": "^1.9.0",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/ui-pro": "^1.7.0",
     "@nuxthq/studio": "^2.2.1",
-    "@nuxtjs/seo": "^2.1.1",
-    "@vueuse/core": "^12.5.0",
-    "@vueuse/nuxt": "^12.5.0",
+    "@nuxtjs/seo": "^2.2.0",
+    "@vueuse/core": "^12.7.0",
+    "@vueuse/nuxt": "^12.7.0",
     "shiki": "^2.3.2"
   }
 }
