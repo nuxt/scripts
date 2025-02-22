@@ -67,12 +67,17 @@ watch(() => route.query.format, (newFormat) => {
         >
           <template #awaitingLoad>
             <div class="text-white text-xl">
-              ...waiting
+              ...waiting to Ads
             </div>
           </template>
           <template #loading>
             <div class="text-white text-xl">
-              ...loading
+              ...Loading Ads
+            </div>
+          </template>
+          <template #error>
+            <div class="text-white text-xl">
+              ...Ad-Blocker detected
             </div>
           </template>
         </ScriptGoogleAdsense>

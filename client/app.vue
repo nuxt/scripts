@@ -2,11 +2,9 @@
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import { registry } from '../src/registry'
 import { devtools, getScriptSize, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
-import { loadShiki } from '~/composables/shiki'
 import { msToHumanReadable } from '~/utils/formatting'
 
 const scriptRegistry = registry(s => s)
-await loadShiki()
 
 const scripts = ref({})
 const scriptSizes = reactive<Record<string, string>>({})
@@ -73,7 +71,7 @@ function viewDocs(docs: string) {
 
 <template>
   <div class="relative n-bg-base flex flex-col">
-    <header class="sticky top-0 z-2 px-4 pt-4">
+    <header class="sticky top-0 z-2 px-4 pt-4 bg-background/80 backdrop-blur-lg">
       <div class="flex justify-between items-start" mb2>
         <div class="flex space-x-5">
           <h1 text-xl flex items-center gap-2>
@@ -155,9 +153,9 @@ function viewDocs(docs: string) {
         </div>
       </div>
     </header>
-    <div class="flex-row flex p4 h-full" style="min-height: calc(100vh - 64px);">
+    <div class="flex-row flex h-full" style="min-height: calc(100vh - 64px);">
       <main class="mx-auto flex flex-col w-full bg-white dark:bg-black dark:bg-dark-700 bg-light-200 ">
-        <div v-if="tab === 'scripts'" class="h-full relative max-h-full">
+        <div v-if="tab === 'scripts'" class="h-full relative max-h-full p-4">
           <div v-if="!Object.keys(scripts || {}).length">
             <div>No scripts loaded.</div>
           </div>
@@ -237,12 +235,12 @@ function viewDocs(docs: string) {
                       {{ event.status }}
                     </div>
                   </template>
-                  <template v-else-if="event.type === 'fn-call' && event.args">
-                    <OCodeBlock :code="`${event.fn}(${event.args?.map(a => JSON.stringify(a, null, 2)).join(', ') || ''})`" lang="javascript" />
-                  </template>
-                  <template v-else-if="event.type === 'fn-call' && !event.args">
-                    <OCodeBlock :code="`QUEUED ${event.fn}`" lang="javascript" />
-                  </template>
+                  <div v-else-if="event.type === 'fn-call' && event.args" class="px-2 py-[2px] bg-gray-100 text-gray-700 rounded-lg font-mono">
+                    {{ `${event.fn}(${event.args?.map((a: any) => JSON.stringify(a, null, 2)).join(', ') || ''})` }}
+                  </div>
+                  <div v-else-if="event.type === 'fn-call' && !event.args" class="px-2 py-[2px] bg-gray-100 text-gray-700 rounded-lg font-mono">
+                    QUEUED {{ event.fn }}
+                  </div>
                 </div>
               </div>
             </OSectionBlock>
