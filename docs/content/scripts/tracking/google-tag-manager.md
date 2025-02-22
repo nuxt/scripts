@@ -89,7 +89,7 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 
 ### Guide: Sending Page Events
 
-If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [useScriptEventPage](/docs/api/use-script-event-tag) composable.
+If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [useScriptEventPage](/docs/api/use-script-event-page) composable.
 This composable will trigger the provided function on route change after the page title has been updated.
 
 ```ts
