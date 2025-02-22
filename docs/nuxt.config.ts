@@ -9,13 +9,13 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/fonts',
-    '@nuxt/content',
     '@vueuse/nuxt',
     NuxtScripts,
     '@nuxt/ui',
-    // '@nuxthq/studio',
     '@nuxtjs/seo',
     '@nuxt/image',
+    '@nuxt/content',
+    'nuxt-llms',
     async (_, nuxt) => {
       // build time for caching
       const { contributors } = await $fetch(`https://api.nuxt.com/modules/scripts`).catch(() => {
@@ -31,6 +31,11 @@ export default defineNuxtConfig({
   ],
 
   $production: {
+    routeRules: {
+      '/api/_mdc/highlight': { cache: { group: 'mdc', name: 'highlight', maxAge: 60 * 60 } },
+      '/api/_content/query/**': { cache: { group: 'content', name: 'query', maxAge: 60 * 60 } },
+      '/api/_nuxt_icon': { cache: { group: 'icon', name: 'icon', maxAge: 60 * 60 * 24 * 7 } },
+    },
     scripts: {
       registry: {
         plausibleAnalytics: {
@@ -46,12 +51,6 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      seoMeta: {
-        themeColor: [
-          { content: '#18181b', media: '(prefers-color-scheme: dark)' },
-          { content: 'white', media: '(prefers-color-scheme: light)' },
-        ],
-      },
       templateParams: {
         separator: '·',
       },
@@ -61,6 +60,47 @@ export default defineNuxtConfig({
   site: {
     name: 'Nuxt Scripts',
     url: 'scripts.nuxt.com',
+    description: 'Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
+  },
+
+  llms: {
+    domain: 'https://scripts.nuxt.com',
+    title: 'Nuxt Scripts',
+    description: 'Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
+    notes: [
+      'The documentation only includes Nuxt Content v3 docs.',
+      'The content is automatically generated from the same source as the official documentation.',
+    ],
+    full: {
+      title: 'Complete Documentation',
+      description: 'The complete documentation including all content',
+    },
+  },
+
+  content: {
+    build: {
+      markdown: {
+        highlight: {
+          theme: {
+            light: 'github-light',
+            default: 'github-light',
+            dark: 'material-theme-palenight',
+          },
+          langs: [
+            'ts',
+            'tsx',
+            'vue',
+            'json',
+            'html',
+            'bash',
+            'xml',
+            'diff',
+            'md',
+            'dotenv',
+          ],
+        },
+      },
+    },
   },
 
   ui: {
@@ -69,10 +109,6 @@ export default defineNuxtConfig({
 
   build: {
     transpile: ['shiki'],
-  },
-
-  routeRules: {
-    '/api/search.json': { prerender: true },
   },
 
   future: {
@@ -95,12 +131,29 @@ export default defineNuxtConfig({
   hooks: {
     // Define `@nuxt/ui` components as global to use them in `.md` (feel free to add those you need)
     'components:extend': (components) => {
-      const globals = components.filter(c => ['UButton', 'UIcon', 'UAlert'].includes(c.pascalName))
+      const globals = components.filter(c => ['UButton', 'UIcon', 'UAlert'].includes(c.pascalName) || c.pascalName.includes('Prose'))
       globals.forEach(c => c.global = true)
     },
   },
 
-  sitemap: {
-    strictNuxtContentPaths: true,
+  icon: {
+    clientBundle: {
+      scan: true,
+      includeCustomCollections: true,
+    },
+    provider: 'iconify',
+  },
+
+  ogImage: {
+    zeroRuntime: true,
+  },
+
+  seo: {
+    meta: {
+      themeColor: [
+        { content: '#18181b', media: '(prefers-color-scheme: dark)' },
+        { content: 'white', media: '(prefers-color-scheme: light)' },
+      ],
+    },
   },
 })

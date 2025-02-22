@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { withoutTrailingSlash } from 'ufo'
-
 definePageMeta({
   layout: 'docs',
 })
@@ -8,14 +6,23 @@ definePageMeta({
 const route = useRoute()
 const { toc } = useAppConfig()
 
-const { data: page } = await useAsyncData(route.path, () => queryContent(route.path).findOne())
+const [{ data: page }, { data: surround }] = await Promise.all([
+  useAsyncData(`docs-${route.path}`, () => queryCollection('docs').path(route.path).first()),
+  useAsyncData(`docs-${route.path}-surround`, () => queryCollectionItemSurroundings('docs', route.path, {
+    fields: ['title', 'description', 'path'],
+  }), {
+    transform(items) {
+      return items.map((m) => {
+        return {
+          ...m,
+          _path: m.path,
+        }
+      })
+    },
+  }),
+])
 if (!page.value)
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
-
-const { data: surround } = await useAsyncData(`${route.path}-surround`, () => queryContent()
-  .where({ _extension: 'md', navigation: { $ne: false } })
-  .only(['title', 'description', '_path'])
-  .findSurround(withoutTrailingSlash(route.path)))
 
 useSeoMeta({
   title: page.value.title,
@@ -32,7 +39,7 @@ const headline = computed(() => findPageHeadline(page.value))
 const links = computed(() => [toc?.bottom?.edit && {
   icon: 'i-heroicons-pencil-square',
   label: 'Edit this page',
-  to: `${toc.bottom.edit}/${page?.value?._file}`,
+  to: `${toc.bottom.edit}/${page?.value?.id}`,
   target: '_blank',
 }, ...(toc?.bottom?.links || [])].filter(Boolean))
 </script>

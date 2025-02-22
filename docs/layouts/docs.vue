@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { NavItem } from '@nuxt/content/dist/runtime/types'
+import type { NavItem } from '@nuxt/content'
 
 const navigation = inject<Ref<NavItem[]>>('navigation')
+const scriptsNavigation = inject<Ref<NavItem[]>>('scripts-navigation')
 </script>
 
 <template>
@@ -9,7 +10,7 @@ const navigation = inject<Ref<NavItem[]>>('navigation')
     <UPage>
       <template #left>
         <UAside>
-          <UNavigationTree :links="mapContentNavigation(navigation)" />
+          <UNavigationTree :links="mapContentNavigation(($route.path.startsWith('/docs') ? navigation : scriptsNavigation) || [])" />
         </UAside>
       </template>
 

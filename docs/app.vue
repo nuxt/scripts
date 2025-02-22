@@ -1,18 +1,51 @@
 <script setup lang="ts">
-import type { ParsedContent } from '@nuxt/content/dist/runtime/types'
+const { data: navigation } = await useAsyncData('navigation', () => queryCollectionNavigation('docs'), {
+  transform(data) {
+    return data?.[0]?.children.map((nav) => {
+      return {
+        ...nav,
+        children: nav.children.map((item) => {
+          return {
+            ...item,
+            to: item.path,
+          }
+        }),
+      }
+    })
+  },
+})
+const { data: scriptsNavigation } = await useAsyncData('script-navigation', () => queryCollectionNavigation('scripts'), {
+  transform(data) {
+    return data?.[0]?.children.map((nav) => {
+      return {
+        ...nav,
+        children: nav.children.map((item) => {
+          return {
+            ...item,
+            to: item.path,
+          }
+        }),
+      }
+    })
+  },
+})
 
-const { data: navigation } = await useAsyncData('navigation', () => fetchContentNavigation())
-const { data: files } = useLazyFetch<ParsedContent[]>('/api/search.json', {
-  default: () => [],
+const { data: files } = useLazyAsyncData('search', () => queryCollectionSearchSections('docs'), {
+  server: false,
+})
+const { data: scriptFiles } = useLazyAsyncData('search-scripts', () => queryCollectionSearchSections('scripts'), {
   server: false,
 })
 
-const route = useRoute()
 provide('navigation', computed(() => {
-  return route.path.startsWith('/docs') ? navigation.value?.[0]?.children : navigation.value?.[1]?.children || []
+  return navigation.value || []
 }))
 provide('topGuides', computed(() => {
-  return navigation.value?.[0]?.children.find(nav => nav.title === 'Guides')?.children || []
+  return (navigation.value || []).find(nav => nav.title === 'Guides')?.children || []
+}))
+
+provide('scripts-navigation', computed(() => {
+  return scriptsNavigation.value || []
 }))
 </script>
 
@@ -29,7 +62,11 @@ provide('topGuides', computed(() => {
     <Footer />
 
     <ClientOnly>
-      <LazyUContentSearch :files="files" :navigation="navigation" />
+      <LazyUContentSearch
+        :files="[files, scriptFiles].flat()"
+        :navigation="[navigation, scriptsNavigation].flat()"
+        :fuse="{ resultLimit: 42 }"
+      />
     </ClientOnly>
 
     <UNotifications />

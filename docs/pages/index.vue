@@ -218,8 +218,7 @@ function timesFaster(nuxt: number, iframe: number) {
   // should display as 2.5 for 2500%
   return (iframe / nuxt).toFixed(1)
 }
-const { data } = await useAsyncData('code-example', () => queryContent('/_magic-api').findOne())
-const { data: data2 } = await useAsyncData('code-example2', () => queryContent('/_cookie-api').findOne())
+const { data: snippets } = await useAsyncData('code-snippets', () => queryCollection('snippets').all())
 
 const contributors = useRuntimeConfig().public.contributors
 </script>
@@ -284,7 +283,7 @@ const contributors = useRuntimeConfig().public.contributors
           <div class="padded-code xl:col-span-7 hidden sm:block">
             <div class="flex justify-center xl:justify-end">
               <div class="flex relative items-center bg-gradient-to-br to-green-200/50 from-blue-100/50 dark:from-green-500/10 dark:to-blue-500/20 rounded">
-                <ContentRenderer :value="data" class="xl:col-span-6 max-w-full" />
+                <ContentRenderer v-if="snippets" :value="(snippets || []).find(d => d.id.endsWith('_magic-api.md'))" class="xl:col-span-6 max-w-full" />
               </div>
             </div>
           </div>
@@ -382,7 +381,7 @@ const contributors = useRuntimeConfig().public.contributors
           <div class="padded-code xl:col-span-7 hidden sm:block">
             <div class="flex justify-center xl:justify-end">
               <div class="flex relative items-center bg-gradient-to-br to-green-200/50 from-blue-100/50 dark:from-green-500/10 dark:to-blue-500/20 rounded">
-                <ContentRenderer :value="data2" class="xl:col-span-6 max-w-full" />
+                <ContentRenderer v-if="snippets" :value="(snippets || []).find(d => d.id.endsWith('_cookie-api.md'))" class="xl:col-span-6 max-w-full" />
               </div>
             </div>
           </div>
