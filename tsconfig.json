@@ -12,5 +12,8 @@
     "test/fixtures",
     "test/unit",
     "test/benchmark.skip.ts"
-  ]
+  ],
+  "compilerOptions": {
+    "types": ["vitest/globals"]
+  }
 }
