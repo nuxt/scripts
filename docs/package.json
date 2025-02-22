@@ -23,6 +23,6 @@
     "@vueuse/core": "^12.7.0",
     "@vueuse/nuxt": "^12.7.0",
     "nuxt-llms": "^0.0.2",
-    "shiki": "^2.3.2"
+    "shiki": "^2.5.0"
   }
 }
