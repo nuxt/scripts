@@ -24,8 +24,22 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
     watch(consented, (ready) => {
       if (ready) {
         const runner = nuxtApp?.runWithContext || ((cb: () => void) => cb())
+        // TODO drop support in v1
         if (options?.postConsentTrigger instanceof Promise) {
           options.postConsentTrigger.then(() => runner(resolve))
+          return
+        }
+        if (typeof options?.postConsentTrigger === 'function') {
+          // check if function has an argument
+          if (options?.postConsentTrigger.length === 1) {
+            options.postConsentTrigger(resolve)
+            return
+          }
+          // else it's returning a promise to await
+          const val = options.postConsentTrigger()
+          if (val instanceof Promise) {
+            return val.then(() => runner(resolve))
+          }
           return
         }
         if (options?.postConsentTrigger === 'onNuxtReady') {
@@ -38,22 +52,21 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
       }
     })
     if (options?.consent) {
+      if (isRef(options?.consent)) {
+        watch(options.consent, (_val) => {
+          const val = toValue(_val)
+          consented.value = Boolean(val)
+        }, { immediate: true })
+      }
       // check for boolean primitive
-      if (typeof options?.consent === 'boolean') {
-        consented.value = true
+      else if (typeof options?.consent === 'boolean') {
+        consented.value = options?.consent
       }
       // consent is a promise
       else if (options?.consent instanceof Promise) {
         options?.consent.then((res) => {
           consented.value = typeof res === 'boolean' ? res : true
         })
-      }
-      else if (isRef(options?.consent)) {
-        watch(options.consent, (_val) => {
-          const val = toValue(_val)
-          if (typeof val === 'boolean')
-            consented.value = val
-        }, { immediate: true })
       }
     }
   }) as UseConsentScriptTriggerApi

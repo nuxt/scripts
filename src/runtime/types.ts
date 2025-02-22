@@ -108,6 +108,8 @@ export interface TrackedPage {
   path: string
 }
 
+type ExcludePromises<T> = T extends Promise<any> ? never : T
+
 export interface ConsentScriptTriggerOptions {
   /**
    * An optional reactive (or promise) reference to the consent state. You can use this to accept the consent for scripts
@@ -118,7 +120,7 @@ export interface ConsentScriptTriggerOptions {
    * Should the script be loaded on the `requestIdleCallback` callback. This is useful for non-essential scripts that
    * have already been consented to be loaded.
    */
-  postConsentTrigger?: NuxtUseScriptOptions['trigger']
+  postConsentTrigger?: ExcludePromises<NuxtUseScriptOptions['trigger']> | (() => Promise<any>)
 }
 
 export interface NuxtDevToolsScriptInstance {
