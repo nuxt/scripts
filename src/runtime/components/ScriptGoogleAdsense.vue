@@ -74,19 +74,20 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <ins
-    ref="rootEl"
-    class="adsbygoogle"
-    style="display: block;"
-    :data-ad-client="addClient"
-    :data-ad-slot="dataAdSlot"
-    :data-ad-format="dataAdFormat"
-    :data-ad-layout="dataAdLayout"
-    :data-full-width-responsive="dataFullWidthResponsive"
-    v-bind="rootAttrs"
-  >
+  <div>
+    <ins
+      ref="rootEl"
+      class="adsbygoogle"
+      style="display: block;"
+      :data-ad-client="addClient"
+      :data-ad-slot="dataAdSlot"
+      :data-ad-format="dataAdFormat"
+      :data-ad-layout="dataAdLayout"
+      :data-full-width-responsive="dataFullWidthResponsive"
+      v-bind="rootAttrs"
+    />
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'loading'" name="loading" />
     <slot v-else-if="status === 'error'" name="error" />
-  </ins>
+  </div>
 </template>
