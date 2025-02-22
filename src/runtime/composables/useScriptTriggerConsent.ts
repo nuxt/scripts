@@ -36,7 +36,7 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
             return
           }
           // else it's returning a promise to await
-          const val = options.postConsentTrigger()
+          const val = (options.postConsentTrigger as (() => Promise<any>))()
           if (val instanceof Promise) {
             return val.then(() => runner(resolve))
           }
