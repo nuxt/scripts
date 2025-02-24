@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxtjs/seo',
     '@nuxt/image',
+    'nuxt-content-twoslash',
     '@nuxt/content',
     'nuxt-llms',
     async (_, nuxt) => {
@@ -61,20 +62,6 @@ export default defineNuxtConfig({
     name: 'Nuxt Scripts',
     url: 'scripts.nuxt.com',
     description: 'Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
-  },
-
-  llms: {
-    domain: 'https://scripts.nuxt.com',
-    title: 'Nuxt Scripts',
-    description: 'Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
-    notes: [
-      'The documentation only includes Nuxt Content v3 docs.',
-      'The content is automatically generated from the same source as the official documentation.',
-    ],
-    full: {
-      title: 'Complete Documentation',
-      description: 'The complete documentation including all content',
-    },
   },
 
   content: {
@@ -138,6 +125,20 @@ export default defineNuxtConfig({
       includeCustomCollections: true,
     },
     provider: 'iconify',
+  },
+
+  llms: {
+    domain: 'https://scripts.nuxt.com',
+    title: 'Nuxt Scripts',
+    description: 'Nuxt Scripts lets you load third-party scripts with better performance, privacy, security and DX. It includes many popular third-parties out of the box.',
+    notes: [
+      'The documentation only includes Nuxt Content v3 docs.',
+      'The content is automatically generated from the same source as the official documentation.',
+    ],
+    full: {
+      title: 'Complete Documentation',
+      description: 'The complete documentation including all content',
+    },
   },
 
   ogImage: {

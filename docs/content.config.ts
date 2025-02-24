@@ -5,26 +5,17 @@ import { resolve } from 'pathe'
 export default defineContentConfig({
   collections: {
     docs: defineCollection(asSeoCollection({
-      type: 'page', // partial
+      type: 'page',
       source: {
         include: '**/*.md',
-        cwd: resolve('./content/docs'),
-        prefix: `/docs`,
-      },
-    })),
-    scripts: defineCollection(asSeoCollection({
-      type: 'page', // partial
-      source: {
-        include: '**/*.md',
-        cwd: resolve('./content/scripts'),
-        prefix: `/scripts`,
+        cwd: resolve('./content'),
       },
     })),
     snippets: defineCollection({
       type: 'page', // partial
       source: {
         include: '**/*.md',
-        cwd: resolve('./content/snippets'),
+        cwd: resolve('./snippets'),
       },
     }),
   },
