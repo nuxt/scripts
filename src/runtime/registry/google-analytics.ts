@@ -29,7 +29,7 @@ export interface GoogleAnalyticsApi {
 export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput) {
   return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', options => ({
     scriptInput: {
-      src: withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id, l: options?.l }),
+      src: withQuery(options.src || 'https://www.googletagmanager.com/gtag/js', { id: options?.id, l: options?.l }),
     },
     schema: import.meta.dev ? GoogleAnalyticsOptions : undefined,
     scriptOptions: {

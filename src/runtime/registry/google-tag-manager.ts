@@ -44,7 +44,7 @@ export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerO
 export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_options?: GoogleTagManagerInput & { onBeforeGtmStart?: (gtag: GTag) => void }) {
   return useRegistryScript<T, typeof GoogleTagManagerOptions>(_options?.key || 'googleTagManager', options => ({
     scriptInput: {
-      src: withQuery('https://www.googletagmanager.com/gtm.js', { id: options?.id, l: options?.l }),
+      src: withQuery(options.src || 'https://www.googletagmanager.com/gtm.js', { id: options?.id, l: options?.l }),
     },
     schema: import.meta.dev ? GoogleTagManagerOptions : undefined,
     scriptOptions: {
