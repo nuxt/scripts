@@ -128,7 +128,7 @@ export const GoogleTagManagerOptions = object({
   id: string(),
   /**
    * The script src.
-   * @default 'https://www.googletagmanager.com/gtag/js'
+   * @default 'https://www.googletagmanager.com/gtm.js'
    */
   src: optional(string()),
   /**
