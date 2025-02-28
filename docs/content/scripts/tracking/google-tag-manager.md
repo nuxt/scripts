@@ -127,6 +127,11 @@ export const GoogleTagManagerOptions = object({
    */
   id: string(),
   /**
+   * The script src.
+   * @default 'https://www.googletagmanager.com/gtag/js'
+   */
+  src: optional(string()),
+  /**
    * The name of the dataLayer you want to use
    * @default 'dataLayer'
    */
