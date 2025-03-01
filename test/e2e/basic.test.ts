@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
+import { getBrowser, url, waitForHydration, setup } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
 
 const { resolve } = createResolver(import.meta.url)
@@ -11,22 +11,43 @@ await setup({
   browser: true,
 })
 
+async function createPage(path: string, options?: any) {
+  const logs: { text: string, location: string }[] = []
+  const browser = await getBrowser()
+  const page = await browser.newPage(options)
+  page.addListener('console', (msg) => {
+    const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
+    if (!location.startsWith('/_nuxt')) {
+      logs.push({
+        text: msg.text(),
+        location,
+      })
+    }
+  })
+  const _goto = page.goto.bind(page)
+  page.goto = async (url2, options2) => {
+    const waitUntil = options2?.waitUntil
+    if (waitUntil && ['hydration', 'route'].includes(waitUntil)) {
+      delete options2.waitUntil
+    }
+    const res = await _goto(url2, options2)
+    await waitForHydration(page, url2, waitUntil)
+    return res
+  }
+  if (path) {
+    // @ts-expect-error untyped
+    await page.goto(url(path), options?.javaScriptEnabled === false ? {} : { waitUntil: 'hydration' })
+  }
+  // @ts-expect-error untyped
+  return { page, logs() { return logs } }
+}
+
 describe('basic', () => {
   it('relative onNuxtReady', async () => {
-    const page = await createPage('/')
-    const logs: { text: string, location: string }[] = []
+    const { page, logs } = await createPage('/')
     // visit and collect all logs, we need to do a snapshot on them
-    page.addListener('console', (msg) => {
-      const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
-      if (!location.startsWith('/_nuxt')) {
-        logs.push({
-          text: msg.text(),
-          location,
-        })
-      }
-    })
-    await page.waitForTimeout(5000)
-    expect(logs).toMatchInlineSnapshot(`
+    await page.waitForTimeout(500)
+    expect(logs()).toMatchInlineSnapshot(`
       [
         {
           "location": "/myScript.js:1",
@@ -44,21 +65,13 @@ describe('basic', () => {
     `)
   })
   it('relative manual', async () => {
-    const page = await createPage('/manual-trigger')
-    const logs: { text: string, location: string }[] = []
-    // visit and collect all logs, we need to do a snapshot on them
-    page.addListener('console', (msg) => {
-      logs.push({
-        text: msg.text(),
-        location: `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`,
-      })
-    })
+    const { page, logs } = await createPage('/manual-trigger')
     await page.waitForTimeout(500)
-    expect(logs.length).toBe(0)
+    expect(logs().length).toBe(0)
     // click button
     await page.click('#load-script')
-    await page.waitForTimeout(5000)
-    expect(logs).toMatchInlineSnapshot(`
+    await page.waitForTimeout(500)
+    expect(logs()).toMatchInlineSnapshot(`
       [
         {
           "location": "/myScript.js:1",
@@ -76,24 +89,16 @@ describe('basic', () => {
     `)
   })
   it('relative visibility', async () => {
-    const page = await createPage('/visibility-trigger')
-    const logs: { text: string, location: string }[] = []
-    // visit and collect all logs, we need to do a snapshot on them
-    page.addListener('console', (msg) => {
-      logs.push({
-        text: msg.text(),
-        location: `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`,
-      })
-    })
+    const { page, logs } = await createPage('/visibility-trigger')
     await page.waitForTimeout(500)
-    expect(logs.length).toBe(0)
+    expect(logs().length).toBe(0)
     // scroll to element
     await page.evaluate(() => {
       const el = document.querySelector('#el-trigger') as HTMLElement
       el.scrollIntoView()
     })
-    await page.waitForTimeout(5000)
-    expect(logs).toMatchInlineSnapshot(`
+    await page.waitForTimeout(500)
+    expect(logs()).toMatchInlineSnapshot(`
       [
         {
           "location": "/myScript.js:1",
@@ -111,20 +116,12 @@ describe('basic', () => {
     `)
   })
   it('relative mouseover', async () => {
-    const page = await createPage('/mouseover-trigger')
-    const logs: { text: string, location: string }[] = []
-    // visit and collect all logs, we need to do a snapshot on them
-    page.addListener('console', (msg) => {
-      logs.push({
-        text: msg.text(),
-        location: `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`,
-      })
-    })
+    const { page, logs } = await createPage('/mouseover-trigger')
     await page.waitForTimeout(500)
-    expect(logs.length).toBe(0)
+    expect(logs().length).toBe(0)
     await page.hover('#el-trigger')
-    await page.waitForTimeout(5000)
-    expect(logs).toMatchInlineSnapshot(`
+    await page.waitForTimeout(500)
+    expect(logs()).toMatchInlineSnapshot(`
       [
         {
           "location": "/myScript.js:1",
@@ -142,11 +139,10 @@ describe('basic', () => {
     `)
   })
   it('bundle', async () => {
-    const page = await createPage('/bundle-use-script')
-    await page.waitForTimeout(500)
+    const { page } = await createPage('/bundle-use-script')
     // get content of #script-src
     const text = await page.$eval('#script-src', el => el.textContent)
-    expect(text).toMatchInlineSnapshot(`"/_scripts/6nd5bD9YCW.js"`)
+    expect(text).toMatchInlineSnapshot(`"/_scripts/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
   })
 })
 
@@ -154,7 +150,7 @@ describe('third-party-capital', () => {
   it('expect GA to collect data', {
     timeout: 10000,
   }, async () => {
-    const page = await createPage('/tpc/ga')
+    const { page } = await createPage('/tpc/ga')
     await page.waitForTimeout(500)
 
     // wait for the collect request or timeout
@@ -169,7 +165,7 @@ describe('third-party-capital', () => {
   it('expect GTM to work collect data', {
     timeout: 10000,
   }, async () => {
-    const page = await createPage('/tpc/gtm')
+    const { page } = await createPage('/tpc/gtm')
     await page.waitForTimeout(500)
 
     // wait for the collect request

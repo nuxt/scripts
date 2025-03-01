@@ -280,7 +280,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/soMXoYlUxl.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/jKysJQD_rnWtMaRpo62kJcIJ4PsW_O2f1NXNqksJbMk.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
   })
 
   it('useScript broken #1', async () => {
@@ -309,7 +309,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });`,
     )
-    expect(code.includes('useScript(\'/_scripts/JvFMRwu6zQ.js\', {')).toBeTruthy()
+    expect(code.includes('useScript(\'/_scripts/vFJ41_fzYQOTRPr3v6G1PkI0hc5tMy0HGrgFjhaJhOI.js\', {')).toBeTruthy()
   })
 
   describe.todo('fallbackOnSrcOnBundleFail', () => {
