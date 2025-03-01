@@ -11,7 +11,7 @@ import {
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
 import { lt, gte } from 'semver'
-import { join } from 'pathe'
+import { dirname, join } from 'pathe'
 import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -119,7 +119,10 @@ export default defineNuxtModule<ModuleOptions>({
       return
     }
     let isUnheadV2 = false
-    const unheadPath = await resolvePath('@unhead/vue').catch(() => undefined)
+    const unheadPath = await resolvePath('@unhead/vue')
+      .catch(() => undefined)
+      // compatibility
+      .then(p => p?.endsWith('index.mjs') ? dirname(p) : p)
     // couldn't be found for some reason, assume compatibility
     if (unheadPath) {
       const { version: unheadVersion } = await readPackageJSON(join(unheadPath, 'package.json'))
@@ -129,7 +132,7 @@ export default defineNuxtModule<ModuleOptions>({
       else if (lt(unheadVersion, '1.11.5')) {
         logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
-      else if (gte(unheadVersion, '^2')) {
+      else if (gte(unheadVersion, '2.0.0-beta.1')) {
         isUnheadV2 = true
       }
     }
