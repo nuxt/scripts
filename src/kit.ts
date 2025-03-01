@@ -34,7 +34,7 @@ interface EnsurePackageInstalledOptions {
 }
 
 async function promptToInstall(name: string, installCommand: () => Promise<void>, options: EnsurePackageInstalledOptions) {
-  if (await resolvePackageJSON(name, { url: options.searchPaths }).catch(() => null))
+  if (await resolvePackageJSON(name).catch(() => null))
     return true
 
   logger.info(`Package ${name} is missing`)

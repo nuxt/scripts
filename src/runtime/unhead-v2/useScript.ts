@@ -1,5 +1,7 @@
+// @ts-expect-error untyped
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
+// @ts-expect-error untyped
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext } from '../types'
@@ -41,9 +43,11 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
   const _remove = instance.remove
   instance.remove = () => {
+    // @ts-expect-error untyped
     nuxtApp.$scripts[id] = undefined
     return _remove()
   }
+  // @ts-expect-error untyped
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
@@ -60,10 +64,13 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     nuxtApp._scripts = nuxtApp._scripts! || {}
 
     function syncScripts() {
+      // @ts-expect-error untyped
       nuxtApp._scripts[instance.id] = payload
+      // @ts-expect-error untyped
       nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtDevToolsScriptInstance> })
     }
 
+    // @ts-expect-error untyped
     if (!nuxtApp._scripts[instance.id]) {
       head.hooks.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
