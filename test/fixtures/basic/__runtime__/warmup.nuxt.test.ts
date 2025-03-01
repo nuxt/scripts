@@ -12,7 +12,15 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" href="/preload.js" rel="preload">"`)
+    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+      [
+        "<link",
+        "as="script"",
+        "fetchpriority="low"",
+        "href="/preload.js"",
+        "rel="preload">",
+      ]
+    `)
     script.remove()
   })
   it('preload relative', async () => {
@@ -25,7 +33,15 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" href="/preload.js" rel="preload">"`)
+    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+      [
+        "<link",
+        "as="script"",
+        "fetchpriority="low"",
+        "href="/preload.js"",
+        "rel="preload">",
+      ]
+    `)
     script.remove()
   })
   it('preconnect relative', async () => {
@@ -51,7 +67,16 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" crossorigin="anonymous" referrerpolicy="no-referrer" href="https:example.com" rel="preconnect">"`)
+    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+      [
+        "<link",
+        "crossorigin="anonymous"",
+        "fetchpriority="low"",
+        "href="https:example.com"",
+        "referrerpolicy="no-referrer"",
+        "rel="preconnect">",
+      ]
+    `)
     script.remove()
   })
   it('preload abs', async () => {
@@ -64,7 +89,17 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" crossorigin="anonymous" referrerpolicy="no-referrer" href="https://example.com/preload.js" rel="preload">"`)
+    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+      [
+        "<link",
+        "as="script"",
+        "crossorigin="anonymous"",
+        "fetchpriority="low"",
+        "href="https://example.com/preload.js"",
+        "referrerpolicy="no-referrer"",
+        "rel="preload">",
+      ]
+    `)
     script.remove()
   })
   it('respects useScript privacy controls', async () => {
@@ -77,7 +112,17 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" crossorigin="use-credentials" referrerpolicy="no-referrer-when-downgrade" href="https://s.kk-resources.com/leadtag.js" rel="preload">"`)
+    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+      [
+        "<link",
+        "as="script"",
+        "crossorigin="use-credentials"",
+        "fetchpriority="low"",
+        "href="https://s.kk-resources.com/leadtag.js"",
+        "referrerpolicy="no-referrer-when-downgrade"",
+        "rel="preload">",
+      ]
+    `)
     script.remove()
   })
   it('respects useScript privacy controls - #293', async () => {
@@ -90,7 +135,16 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags).toMatchInlineSnapshot(`"<link fetchpriority="low" as="script" referrerpolicy="no-referrer" href="https://s.kk-resources.com/leadtag.js" rel="preload">"`)
+    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+      [
+        "<link",
+        "as="script"",
+        "fetchpriority="low"",
+        "href="https://s.kk-resources.com/leadtag.js"",
+        "referrerpolicy="no-referrer"",
+        "rel="preload">",
+      ]
+    `)
     script.remove()
   })
 })
