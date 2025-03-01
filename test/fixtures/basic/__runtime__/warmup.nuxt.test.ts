@@ -12,13 +12,13 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+    expect(ssr.headTags.replace('>', '').split(' ').sort()).toMatchInlineSnapshot(`
       [
         "<link",
         "as="script"",
         "fetchpriority="low"",
         "href="/preload.js"",
-        "rel="preload">",
+        "rel="preload"",
       ]
     `)
     script.remove()
@@ -33,13 +33,13 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+    expect(ssr.headTags.replace('>', '').split(' ').sort()).toMatchInlineSnapshot(`
       [
         "<link",
         "as="script"",
         "fetchpriority="low"",
         "href="/preload.js"",
-        "rel="preload">",
+        "rel="preload"",
       ]
     `)
     script.remove()
@@ -67,14 +67,14 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+    expect(ssr.headTags.replace('>', '').split(' ').sort()).toMatchInlineSnapshot(`
       [
         "<link",
         "crossorigin="anonymous"",
         "fetchpriority="low"",
         "href="https:example.com"",
         "referrerpolicy="no-referrer"",
-        "rel="preconnect">",
+        "rel="preconnect"",
       ]
     `)
     script.remove()
@@ -89,7 +89,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+    expect(ssr.headTags.replace('>', '').split(' ').sort()).toMatchInlineSnapshot(`
       [
         "<link",
         "as="script"",
@@ -97,7 +97,7 @@ describe('script warmup', () => {
         "fetchpriority="low"",
         "href="https://example.com/preload.js"",
         "referrerpolicy="no-referrer"",
-        "rel="preload">",
+        "rel="preload"",
       ]
     `)
     script.remove()
@@ -112,7 +112,7 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+    expect(ssr.headTags.replace('>', '').split(' ').sort()).toMatchInlineSnapshot(`
       [
         "<link",
         "as="script"",
@@ -120,7 +120,7 @@ describe('script warmup', () => {
         "fetchpriority="low"",
         "href="https://s.kk-resources.com/leadtag.js"",
         "referrerpolicy="no-referrer-when-downgrade"",
-        "rel="preload">",
+        "rel="preload"",
       ]
     `)
     script.remove()
@@ -135,14 +135,14 @@ describe('script warmup', () => {
       head,
     })
     const ssr = await renderSSRHead(head)
-    expect(ssr.headTags.split(' ').sort()).toMatchInlineSnapshot(`
+    expect(ssr.headTags.replace('>', '').split(' ').sort()).toMatchInlineSnapshot(`
       [
         "<link",
         "as="script"",
         "fetchpriority="low"",
         "href="https://s.kk-resources.com/leadtag.js"",
         "referrerpolicy="no-referrer"",
-        "rel="preload">",
+        "rel="preload"",
       ]
     `)
     script.remove()
