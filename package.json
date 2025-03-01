@@ -121,7 +121,7 @@
     "knitwork": "^1.2.0",
     "nuxt": "catalog:",
     "playwright-core": "^1.50.1",
-    "shiki": "2.3.2",
+    "shiki": "3.1.0",
     "typescript": "5.7.3",
     "vitest": "^3.0.7",
     "vue": "^3.5.13",
