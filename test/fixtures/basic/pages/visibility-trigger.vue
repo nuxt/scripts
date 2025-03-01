@@ -2,7 +2,7 @@
 import { ref, useScriptTriggerElement, useScript } from '#imports'
 
 const trigger = ref()
-const { myScript } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
+const { proxy } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
   trigger: useScriptTriggerElement({
     trigger: 'visible',
     el: trigger,
@@ -15,7 +15,7 @@ const { myScript } = useScript<{ myScript: (arg: string) => void }>('/myScript.j
   },
 })
 
-myScript('test')
+proxy.myScript('test')
 </script>
 
 <template>

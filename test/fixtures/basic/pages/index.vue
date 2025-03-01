@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onNuxtReady, useScript } from '#imports'
 
-const { myScript } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
+const { proxy } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
   trigger: onNuxtReady,
   use() {
     return {
@@ -11,7 +11,7 @@ const { myScript } = useScript<{ myScript: (arg: string) => void }>('/myScript.j
   },
 })
 
-myScript('test')
+proxy.myScript('test')
 </script>
 
 <template>

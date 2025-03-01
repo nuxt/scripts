@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useScript } from '#imports'
 
-const { myScript, load } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
+const { proxy, load } = useScript<{ myScript: (arg: string) => void }>('/myScript.js', {
   trigger: 'manual',
   use() {
     return {
@@ -11,7 +11,7 @@ const { myScript, load } = useScript<{ myScript: (arg: string) => void }>('/mySc
   },
 })
 
-myScript('test')
+proxy.myScript('test')
 
 function triggerLoad() {
   load()
