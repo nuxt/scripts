@@ -2,7 +2,7 @@ import { defu } from 'defu'
 import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { useRuntimeConfig } from 'nuxt/app'
-import { useScript } from './composables/useScript'
+import { useScript } from '#imports'
 import { parse } from '#nuxt-scripts-validator'
 import type {
   EmptyOptionsSchema,

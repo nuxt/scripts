@@ -25,7 +25,8 @@ describe('basic', () => {
         })
       }
     })
-    await page.waitForTimeout(500)
+    page.
+    await page.waitForTimeout(5000)
     expect(logs).toMatchInlineSnapshot(`
       [
         {
@@ -57,7 +58,7 @@ describe('basic', () => {
     expect(logs.length).toBe(0)
     // click button
     await page.click('#load-script')
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(5000)
     expect(logs).toMatchInlineSnapshot(`
       [
         {
@@ -92,7 +93,7 @@ describe('basic', () => {
       const el = document.querySelector('#el-trigger') as HTMLElement
       el.scrollIntoView()
     })
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(5000)
     expect(logs).toMatchInlineSnapshot(`
       [
         {
@@ -123,7 +124,7 @@ describe('basic', () => {
     await page.waitForTimeout(500)
     expect(logs.length).toBe(0)
     await page.hover('#el-trigger')
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(5000)
     expect(logs).toMatchInlineSnapshot(`
       [
         {

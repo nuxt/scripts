@@ -31,10 +31,6 @@ export default defineNuxtConfig({
     },
   ],
 
-  uiPro: {
-    license: process.env.NUXT_UI_PRO_LICENSE,
-  },
-
   $production: {
     routeRules: {
       '/api/_mdc/highlight': { cache: { group: 'mdc', name: 'highlight', maxAge: 60 * 60 } },
@@ -156,5 +152,9 @@ export default defineNuxtConfig({
         { content: 'white', media: '(prefers-color-scheme: light)' },
       ],
     },
+  },
+
+  uiPro: {
+    license: process.env.NUXT_UI_PRO_LICENSE,
   },
 })

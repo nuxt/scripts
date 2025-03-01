@@ -10,7 +10,7 @@ import {
   resolvePath,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import { lt } from 'semver'
+import { lt, gte } from 'semver'
 import { join } from 'pathe'
 import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
@@ -118,6 +118,7 @@ export default defineNuxtModule<ModuleOptions>({
       logger.debug('The module is disabled, skipping setup.')
       return
     }
+    let isUnheadV2 = false
     const unheadPath = await resolvePath('@unhead/vue').catch(() => undefined)
     // couldn't be found for some reason, assume compatibility
     if (unheadPath) {
@@ -128,6 +129,9 @@ export default defineNuxtModule<ModuleOptions>({
       else if (lt(unheadVersion, '1.11.5')) {
         logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
+      else if (gte(unheadVersion, '2.0.0')) {
+        isUnheadV2 = true
+      }
     }
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
@@ -136,6 +140,7 @@ export default defineNuxtModule<ModuleOptions>({
       defaultScriptOptions: config.defaultScriptOptions,
     }
     addImportsDir([
+      resolve(`./runtime/unhead-${isUnheadV2 ? 'v2' : 'v1'}`),
       resolve('./runtime/composables'),
       // auto-imports aren't working without this for some reason
       // TODO find solution as we're double-registering

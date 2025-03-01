@@ -1,13 +1,13 @@
-import type { UseScriptInput, VueScriptInstance, MaybeComputedRefEntriesOnly } from '@unhead/vue'
-import type { UseScriptOptions, UseFunctionType, Head, DataKeys, SchemaAugmentations, ScriptBase } from '@unhead/schema'
-import { resolveScriptKey } from 'unhead'
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
-import { useScript as _useScript, injectHead } from '@unhead/vue'
-import { parseURL } from 'ufo'
-import { onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
+import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
-import { pick } from '../utils'
-import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext, WarmupStrategy } from '#nuxt-scripts/types'
+import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext } from '../types'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from '#imports'
+
+type UseFunctionType<T, U> = T extends {
+  use: infer V
+} ? V extends (...args: any) => any ? ReturnType<V> : U : U
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -15,41 +15,8 @@ function useNuxtScriptRuntimeConfig() {
   }
 }
 
-const ValidPreloadTriggers = ['onNuxtReady', 'client']
-const PreconnectServerModes = ['preconnect', 'dns-prefetch']
-
-type ResolvedScriptInput = (MaybeComputedRefEntriesOnly<Omit<ScriptBase & DataKeys & SchemaAugmentations['script'], 'src'>> & { src: string })
-function warmup(_: ResolvedScriptInput, rel: WarmupStrategy, head: any) {
-  const { src } = _
-  const $url = parseURL(src)
-  const isPreconnect = rel && PreconnectServerModes.includes(rel)
-  const href = isPreconnect ? `${$url.protocol}${$url.host}` : src
-  const isCrossOrigin = !!$url.host
-  if (!rel || (isPreconnect && !isCrossOrigin)) {
-    return
-  }
-  const link = {
-    href,
-    rel,
-    ...pick(_, [
-      // shared keys between script and link
-      'crossorigin',
-      'referrerpolicy',
-      'fetchpriority',
-      'integrity',
-      // ignore id
-    ]),
-  }
-  const defaults: Required<Head>['link'][0] = { fetchpriority: 'low' }
-  if (rel === 'preload') {
-    defaults.as = 'script'
-  }
-  // is absolute, add privacy headers
-  if (isCrossOrigin) {
-    defaults.crossorigin = 'anonymous'
-    defaults.referrerpolicy = 'no-referrer'
-  }
-  return useHead({ link: [defu(link, defaults)] }, { head, tagPriority: 'high' })
+export function resolveScriptKey(input: any): string {
+  return input.key || input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : '')
 }
 
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
@@ -62,35 +29,18 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
-  // need to make sure it's not already registered
-  if (!options.warmupStrategy && ValidPreloadTriggers.includes(String(options.trigger))) {
-    options.warmupStrategy = 'preload'
-  }
-  if (options.trigger === 'onNuxtReady') {
-    options.trigger = onNuxtReady
-  }
-  if (import.meta.client) {
-    // only validate if we're initializing the script
-    if (!exists) {
-      performance?.mark?.('mark_feature_usage', {
-        detail: {
-          feature: options.performanceMarkFeature ?? `nuxt-scripts:${id}`,
-        },
-      })
+  if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
+    if (!options.warmupStrategy) {
+      options.warmupStrategy = 'preload'
+    }
+    if (options.trigger === 'onNuxtReady') {
+      options.trigger = onNuxtReady
     }
   }
+
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
-  instance.warmup = (rel) => {
-    if (!instance._warmupEl) {
-      instance._warmupEl = warmup(input, rel, head)
-    }
-  }
-  if (options.warmupStrategy) {
-    instance.warmup(options.warmupStrategy)
-  }
   const _remove = instance.remove
   instance.remove = () => {
-    instance._warmupEl?.dispose()
     nuxtApp.$scripts[id] = undefined
     return _remove()
   }
