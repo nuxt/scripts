@@ -25,7 +25,7 @@ export const GoogleMapsOptions = object({
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
-type MapsNamespace = typeof google.maps
+type MapsNamespace = typeof window.google.maps
 export interface GoogleMapsApi {
   maps: Promise<MapsNamespace>
 }
@@ -33,7 +33,9 @@ export interface GoogleMapsApi {
 declare global {
   interface Window {
     google: {
-      maps: MapsNamespace
+      maps: {
+        __ib__(): void
+      }
     }
   }
 }
