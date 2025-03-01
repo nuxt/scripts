@@ -110,6 +110,9 @@ importers:
       '@typescript-eslint/typescript-estree':
         specifier: ^8.25.0
         version: 8.25.0(typescript@5.6.3)
+      '@unhead/ssr':
+        specifier: ^1.11.20
+        version: 1.11.20
       acorn-loose:
         specifier: ^8.4.0
         version: 8.4.0
@@ -1767,6 +1770,9 @@ packages:
 
   '@unhead/ssr@1.11.19':
     resolution: {integrity: sha512-OH+rj6xBTdYyLsSntk4lEQyR+z57aEUZIiR2UpPl1zWGtBZPIr5zs3GY5+EyJ8t8e0zLemPR/Pu7VembTJ8o1w==}
+
+  '@unhead/ssr@1.11.20':
+    resolution: {integrity: sha512-j6ehzmdWGAvv0TEZyLE3WBnG1ULnsbKQcLqBDh3fvKS6b3xutcVZB7mjvrVE7ckSZt6WwOtG0ED3NJDS7IjzBA==}
 
   '@unhead/vue@1.11.20':
     resolution: {integrity: sha512-sqQaLbwqY9TvLEGeq8Fd7+F2TIuV3nZ5ihVISHjWpAM3y7DwNWRU7NmT9+yYT+2/jw1Vjwdkv5/HvDnvCLrgmg==}
@@ -8751,6 +8757,11 @@ snapshots:
     dependencies:
       '@unhead/schema': 1.11.19
       '@unhead/shared': 1.11.19
+
+  '@unhead/ssr@1.11.20':
+    dependencies:
+      '@unhead/schema': 1.11.20
+      '@unhead/shared': 1.11.20
 
   '@unhead/vue@1.11.20(vue@3.5.13(typescript@5.6.3))':
     dependencies:

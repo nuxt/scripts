@@ -114,6 +114,7 @@
     "@typescript-eslint/typescript-estree": "^8.25.0",
     "acorn-loose": "^8.4.0",
     "bumpp": "^10.0.3",
+    "@unhead/ssr": "^1.11.20",
     "changelogen": "^0.6.0",
     "eslint": "9.21.0",
     "eslint-plugin-n": "^17.15.1",

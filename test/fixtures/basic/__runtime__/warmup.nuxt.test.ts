@@ -1,11 +1,11 @@
 import { it, expect, describe } from 'vitest'
-import { createHead } from '@unhead/vue'
 import { renderSSRHead } from '@unhead/ssr'
+import { createHeadCore } from '@unhead/vue'
 import { useScript } from '#imports'
 
 describe('script warmup', () => {
   it('default', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: '/preload.js',
     }, {
@@ -16,7 +16,7 @@ describe('script warmup', () => {
     script.remove()
   })
   it('preload relative', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: '/preload.js',
     }, {
@@ -29,7 +29,7 @@ describe('script warmup', () => {
     script.remove()
   })
   it('preconnect relative', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: '/preconnect.js',
     }, {
@@ -42,7 +42,7 @@ describe('script warmup', () => {
     script.remove()
   })
   it('preconnect abs', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: 'https://example.com/preconnect.js',
     }, {
@@ -55,7 +55,7 @@ describe('script warmup', () => {
     script.remove()
   })
   it('preload abs', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: 'https://example.com/preload.js',
     }, {
@@ -68,7 +68,7 @@ describe('script warmup', () => {
     script.remove()
   })
   it('respects useScript privacy controls', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: 'https://s.kk-resources.com/leadtag.js',
       crossorigin: 'use-credentials',
@@ -81,7 +81,7 @@ describe('script warmup', () => {
     script.remove()
   })
   it('respects useScript privacy controls - #293', async () => {
-    const head = createHead()
+    const head = createHeadCore()
     const script = useScript({
       src: 'https://s.kk-resources.com/leadtag.js',
       async: true,
