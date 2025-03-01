@@ -129,7 +129,7 @@ export default defineNuxtModule<ModuleOptions>({
       else if (lt(unheadVersion, '1.11.5')) {
         logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
       }
-      else if (gte(unheadVersion, '2.0.0')) {
+      else if (gte(unheadVersion, '^2')) {
         isUnheadV2 = true
       }
     }
