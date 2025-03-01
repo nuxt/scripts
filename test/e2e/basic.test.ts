@@ -140,6 +140,8 @@ describe('basic', () => {
   })
   it('bundle', async () => {
     const { page } = await createPage('/bundle-use-script')
+    // wait for the script to be loaded
+    await page.waitForTimeout(500)
     // get content of #script-src
     const text = await page.$eval('#script-src', el => el.textContent)
     expect(text).toMatchInlineSnapshot(`"/_scripts/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
