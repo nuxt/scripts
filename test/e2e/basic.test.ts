@@ -25,7 +25,6 @@ describe('basic', () => {
         })
       }
     })
-    page.
     await page.waitForTimeout(5000)
     expect(logs).toMatchInlineSnapshot(`
       [
