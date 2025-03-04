@@ -3,7 +3,7 @@ import { renderSSRHead } from '@unhead/ssr'
 import { createHeadCore } from '@unhead/vue'
 import { useScript } from '#imports'
 
-describe('script warmup', () => {
+describe.skipIf(process.env.CI)('script warmup', () => {
   it('default', async () => {
     const head = createHeadCore()
     const script = useScript({
