@@ -101,6 +101,9 @@ importers:
       '@nuxt/module-builder':
         specifier: ^0.8.4
         version: 0.8.4(@nuxt/kit@3.15.4(magicast@0.3.5))(nuxi@3.22.2)(typescript@5.6.3)(vue-tsc@2.2.6(typescript@5.6.3))
+      '@nuxt/scripts':
+        specifier: workspace:*
+        version: 'link:'
       '@nuxt/test-utils':
         specifier: 3.17.0
         version: 3.17.0(@types/node@22.13.5)(happy-dom@17.1.8)(jiti@2.4.2)(lightningcss@1.29.1)(magicast@0.3.5)(playwright-core@1.50.1)(terser@5.39.0)(typescript@5.6.3)(vitest@3.0.7(@types/debug@4.1.12)(@types/node@22.13.5)(happy-dom@17.1.8)(jiti@2.4.2)(lightningcss@1.29.1)(terser@5.39.0)(yaml@2.7.0))(yaml@2.7.0)

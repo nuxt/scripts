@@ -127,7 +127,8 @@
     "vitest": "^3.0.7",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
-    "vue-tsc": "^2.2.6"
+    "vue-tsc": "^2.2.6",
+    "@nuxt/scripts": "workspace:*"
   },
   "resolutions": {
     "@nuxt/schema": "catalog:",
