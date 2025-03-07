@@ -4,6 +4,6 @@ packages:
   - docs
 
 catalog:
-  nuxt: ^3.15.4
-  '@nuxt/kit': ^3.15.4
-  '@nuxt/schema': ^3.15.4
+  nuxt: ^3.16.0
+  '@nuxt/kit': ^3.16.0
+  '@nuxt/schema': ^3.16.0
