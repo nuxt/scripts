@@ -100,6 +100,7 @@
     "sirv": "^3.0.1",
     "std-env": "^3.8.1",
     "ufo": "^1.5.4",
+    "unenv": "^2.0.0-rc.12",
     "unplugin": "^2.2.0",
     "unstorage": "^1.15.0",
     "valibot": "^1.0.0-rc.3"
@@ -109,12 +110,13 @@
     "@nuxt/devtools-ui-kit": "^2.2.1",
     "@nuxt/eslint-config": "^1.1.0",
     "@nuxt/module-builder": "^0.8.4",
+    "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "3.17.1",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/typescript-estree": "^8.26.0",
+    "@unhead/ssr": "^1.11.20",
     "acorn-loose": "^8.4.0",
     "bumpp": "^10.0.3",
-    "@unhead/ssr": "^1.11.20",
     "changelogen": "^0.6.1",
     "eslint": "9.21.0",
     "eslint-plugin-n": "^17.16.2",
@@ -127,8 +129,7 @@
     "vitest": "^3.0.8",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
-    "vue-tsc": "^2.2.8",
-    "@nuxt/scripts": "workspace:*"
+    "vue-tsc": "^2.2.8"
   },
   "resolutions": {
     "@nuxt/schema": "catalog:",
