@@ -102,6 +102,7 @@
     "sirv": "^3.0.1",
     "std-env": "^3.8.1",
     "ufo": "^1.5.4",
+    "unenv": "^2.0.0-rc.12",
     "unplugin": "^2.2.0",
     "unstorage": "^1.15.0",
     "valibot": "^1.0.0-rc.3"
@@ -115,6 +116,7 @@
     "@nuxt/test-utils": "3.17.1",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/typescript-estree": "^8.26.0",
+    "@unhead/ssr": "^1.11.20",
     "acorn-loose": "^8.4.0",
     "bumpp": "^10.0.3",
     "changelogen": "^0.6.1",

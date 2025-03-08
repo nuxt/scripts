@@ -1,4 +1,4 @@
-import noop from 'unenv/runtime/mock/noop'
+import noop from 'unenv/mock/noop'
 
 export const parse = noop
 export const object = noop
