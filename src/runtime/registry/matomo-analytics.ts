@@ -38,12 +38,6 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
         use() {
           return { _paq: window._paq }
         },
-        // allow _paq to be accessed on the server
-        stub: import.meta.client
-          ? undefined
-          : ({ fn }) => {
-              return fn === '_paq' ? [] : undefined
-            },
       },
       clientInit: import.meta.server
         ? undefined

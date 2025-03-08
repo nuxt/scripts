@@ -1,7 +1,5 @@
-// @ts-expect-error untyped
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
-// @ts-expect-error untyped
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext } from '../types'
@@ -21,9 +19,9 @@ export function resolveScriptKey(input: any): string {
   return input.key || input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : '')
 }
 
-export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
+export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
-  options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
+  options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
   // browser hint optimizations
   const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
   const nuxtApp = useNuxtApp()
@@ -40,7 +38,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
-  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
   const _remove = instance.remove
   instance.remove = () => {
     nuxtApp.$scripts[id] = undefined
@@ -50,7 +48,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     if (exists) {
-      return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+      return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
     }
     // sync scripts to nuxtApp with debug details
     const payload: NuxtDevToolsScriptInstance = {
@@ -79,6 +77,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         payload.$script = instance
         syncScripts()
       })
+      // @ts-expect-error untyped
       head.hooks.hook('script:instance-fn', (ctx) => {
         if (ctx.script.id !== instance.id || String(ctx.fn).startsWith('__v_'))
           return
@@ -100,5 +99,5 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       syncScripts()
     }
   }
-  return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+  return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 }

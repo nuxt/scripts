@@ -47,14 +47,14 @@ export type UseScriptContext<T extends Record<symbol | string, any>> =
     _warmupEl?: void | ActiveHeadEntry<any>
   }
 
-export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
+export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
    * The trigger to load the script:
    * - `onNuxtReady` - Load the script when Nuxt is ready.
    * - `manual` - Load the script manually by calling `load()`.
    * - `Promise` - Load the script when the promise resolves.
    */
-  trigger?: UseScriptOptions<T, U>['trigger'] | 'onNuxtReady'
+  trigger?: UseScriptOptions<T>['trigger'] | 'onNuxtReady'
   /**
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also

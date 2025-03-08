@@ -7,11 +7,8 @@ import {
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
-  resolvePath,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import { lt, gte } from 'semver'
-import { dirname, join } from 'pathe'
 import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -89,7 +86,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '>=3',
+      nuxt: '>=3.16',
       bridge: false,
     },
   },
@@ -118,23 +115,10 @@ export default defineNuxtModule<ModuleOptions>({
       logger.debug('The module is disabled, skipping setup.')
       return
     }
-    let isUnheadV2 = false
-    const unheadPath = await resolvePath('@unhead/vue')
-      .catch(() => undefined)
-      // compatibility
-      .then(p => p?.endsWith('index.mjs') ? dirname(p) : p)
     // couldn't be found for some reason, assume compatibility
-    if (unheadPath) {
-      const { version: unheadVersion } = await readPackageJSON(join(unheadPath, 'package.json'))
-      if (!unheadVersion || lt(unheadVersion, '1.10.0')) {
-        logger.error(`Nuxt Scripts requires Unhead >= 1.10.0, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
-      }
-      else if (lt(unheadVersion, '1.11.5')) {
-        logger.warn(`Nuxt Scripts recommends Unhead >= 1.11.5, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
-      }
-      else if (gte(unheadVersion, '2.0.0-beta.1')) {
-        isUnheadV2 = true
-      }
+    const { version: unheadVersion } = await readPackageJSON('@unhead/vue')
+    if (unheadVersion?.startsWith('1')) {
+      logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
@@ -143,7 +127,6 @@ export default defineNuxtModule<ModuleOptions>({
       defaultScriptOptions: config.defaultScriptOptions,
     }
     addImportsDir([
-      resolve(`./runtime/unhead-${isUnheadV2 ? 'v2' : 'v1'}`),
       resolve('./runtime/composables'),
       // auto-imports aren't working without this for some reason
       // TODO find solution as we're double-registering

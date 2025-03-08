@@ -69,21 +69,6 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
           },
       schema: import.meta.dev ? SegmentOptions : undefined,
       scriptOptions: {
-        stub: import.meta.server
-          // ensure ssr works
-          ? ({ fn }) => {
-              if (fn === 'analytics') {
-                return {
-                  track: () => {},
-                  page: () => {},
-                  identify: () => {},
-                  group: () => {},
-                  alias: () => {},
-                  reset: () => {},
-                }
-              }
-            }
-          : undefined,
         use() {
           return methods.reduce((acc, key) => {
             // @ts-expect-error untyped

@@ -51,7 +51,6 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(_option
       use: () => {
         return { dataLayer: (window as any)[options.l ?? 'dataLayer'] as DataLayer, google_tag_manager: window.google_tag_manager }
       },
-      stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-gtm',
       tagPriority: 1,
     },

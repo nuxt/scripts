@@ -1,7 +1,7 @@
 {
   "name": "@nuxt/scripts",
   "type": "module",
-  "version": "0.10.5",
+  "version": "0.11.0",
   "packageManager": "pnpm@10.6.1",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
@@ -61,7 +61,9 @@
       "#build/modules/nuxt-scripts-ga",
       "@vimeo/player",
       "esbuild",
-      "unimport"
+      "unimport",
+      "#nuxt-scripts/types",
+      "#nuxt-scripts-validator"
     ]
   },
   "peerDependencies": {
@@ -69,7 +71,8 @@
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^1 || ^2"
+    "@unhead/vue": "^2.0.0-rc.8",
+    "nuxt": "^3.16.0"
   },
   "peerDependenciesMeta": {
     "@stripe/stripe-js": {
@@ -96,7 +99,6 @@
     "ohash": "^2.0.11",
     "pathe": "^2.0.3",
     "pkg-types": "^2.1.0",
-    "semver": "^7.7.1",
     "sirv": "^3.0.1",
     "std-env": "^3.8.1",
     "ufo": "^1.5.4",
@@ -120,7 +122,7 @@
     "changelogen": "^0.6.1",
     "eslint": "9.21.0",
     "eslint-plugin-n": "^17.16.2",
-    "happy-dom": "^17.3.0",
+    "happy-dom": "^17.4.0",
     "knitwork": "^1.2.0",
     "nuxt": "catalog:",
     "playwright-core": "^1.51.0",
@@ -134,6 +136,7 @@
   "resolutions": {
     "@nuxt/schema": "catalog:",
     "@nuxt/scripts": "workspace:*",
+    "@unhead/vue": "2.0.0-rc.8",
     "nuxt": "catalog:",
     "typescript": "5.8.2",
     "vue": "^3.5.13",
