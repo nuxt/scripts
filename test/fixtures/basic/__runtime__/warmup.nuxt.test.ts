@@ -1,5 +1,5 @@
 import { it, expect, describe } from 'vitest'
-import { renderSSRHead } from '@unhead/ssr'
+import { renderSSRHead } from '@unhead/vue/server'
 import { createHeadCore } from '@unhead/vue'
 import { useScript } from '#imports'
 
@@ -72,7 +72,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
         "<link",
         "crossorigin="anonymous"",
         "fetchpriority="low"",
-        "href="https:example.com"",
+        "href="https://example.com"",
         "referrerpolicy="no-referrer"",
         "rel="preconnect"",
       ]

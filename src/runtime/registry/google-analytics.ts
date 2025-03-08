@@ -42,7 +42,6 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
           gtag,
         }
       },
-      stub: import.meta.client ? undefined : ({ fn }) => { return fn === 'dataLayer' ? [] : void 0 },
       performanceMarkFeature: 'nuxt-third-parties-ga',
       tagPriority: 1,
     },

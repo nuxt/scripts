@@ -24,6 +24,6 @@
     "@vueuse/nuxt": "^12.8.2",
     "nuxt-content-twoslash": "^0.1.2",
     "nuxt-llms": "^0.1.0",
-    "shiki": "^2.5.0"
+    "shiki": "^3.1.0"
   }
 }
