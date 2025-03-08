@@ -61,7 +61,9 @@
       "#build/modules/nuxt-scripts-ga",
       "@vimeo/player",
       "esbuild",
-      "unimport"
+      "unimport",
+      "#nuxt-scripts/types",
+      "#nuxt-scripts-validator"
     ]
   },
   "peerDependencies": {
