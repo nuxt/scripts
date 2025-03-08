@@ -1,4 +1,5 @@
-import noop from 'unenv/mock/noop'
+// @ts-expect-error no types for this package yet
+import noop from 'mocked-exports/noop'
 
 export const parse = noop
 export const object = noop
