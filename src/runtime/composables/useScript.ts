@@ -65,7 +65,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
 
     if (!nuxtApp._scripts[instance.id]) {
-      // @ts-expect-error untyped
       head.hooks.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
           return

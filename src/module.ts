@@ -9,7 +9,6 @@ import {
   hasNuxtModule,
 } from '@nuxt/kit'
 import { readPackageJSON } from 'pkg-types'
-import { gte } from 'semver'
 import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -118,7 +117,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
     // couldn't be found for some reason, assume compatibility
     const { version: unheadVersion } = await readPackageJSON('@unhead/vue')
-    if (unheadVersion && gte(unheadVersion, '2.0.0-rc.8')) {
+    if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
     nuxt.options.runtimeConfig['nuxt-scripts'] = { version }

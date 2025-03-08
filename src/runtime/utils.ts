@@ -74,7 +74,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       options.clientInit?.()
     }
   }
-  return useScript<T, U>(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
+  return useScript<T>(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
 }
 
 export function pick(obj: Record<string, any>, keys: string[]) {
