@@ -77,6 +77,9 @@ importers:
       ufo:
         specifier: ^1.5.4
         version: 1.5.4
+      unenv:
+        specifier: ^2.0.0-rc.12
+        version: 2.0.0-rc.12
       unplugin:
         specifier: ^2.2.0
         version: 2.2.0
@@ -111,6 +114,9 @@ importers:
       '@typescript-eslint/typescript-estree':
         specifier: ^8.26.0
         version: 8.26.0(typescript@5.8.2)
+      '@unhead/ssr':
+        specifier: ^1.11.20
+        version: 1.11.20
       acorn-loose:
         specifier: ^8.4.0
         version: 8.4.0
