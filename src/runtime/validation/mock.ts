@@ -1,4 +1,11 @@
-import noop from 'unenv/mock/noop'
+const noop = Object.freeze(
+  Object.assign(
+    () => {
+      /** noop */
+    },
+    { __mock__: true },
+  ),
+)
 
 export const parse = noop
 export const object = noop
