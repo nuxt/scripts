@@ -2,12 +2,8 @@ import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhea
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
-import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseScriptContext } from '../types'
+import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from '#imports'
-
-type UseFunctionType<T, U> = T extends {
-  use: infer V
-} ? V extends (...args: any) => any ? ReturnType<V> : U : U
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {

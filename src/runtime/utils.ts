@@ -2,14 +2,15 @@ import { defu } from 'defu'
 import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { useRuntimeConfig } from 'nuxt/app'
-import { useScript } from '#imports'
+import { useScript } from './composables/useScript'
 import { parse } from '#nuxt-scripts-validator'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
-  ScriptRegistry,
+  UseFunctionType,
+  ScriptRegistry, UseScriptContext,
 } from '#nuxt-scripts/types'
 
 export type MaybePromise<T> = Promise<T> | T
@@ -39,7 +40,7 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
-export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema, U = {}>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>) {
+export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema, U = {}>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>  {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>)

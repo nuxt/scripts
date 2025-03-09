@@ -168,6 +168,11 @@ export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof Scri
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }>
 
+export type UseFunctionType<T, U> = T extends {
+  use: infer V
+} ? V extends (...args: any) => any ? ReturnType<V> : U : U
+
+
 const _emptyOptions = object({})
 
 export type EmptyOptionsSchema = typeof _emptyOptions
