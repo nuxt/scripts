@@ -116,7 +116,9 @@ export default defineNuxtModule<ModuleOptions>({
       return
     }
     // couldn't be found for some reason, assume compatibility
-    const { version: unheadVersion } = await readPackageJSON('@unhead/vue')
+    const { version: unheadVersion } = await readPackageJSON('@unhead/vue', {
+      from: nuxt.options.modulesDir,
+    }).catch(() => ({ version: null }))
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
