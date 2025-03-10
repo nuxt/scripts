@@ -90,7 +90,7 @@
   },
   "dependencies": {
     "@nuxt/kit": "catalog:",
-    "@vueuse/core": "^12.8.2",
+    "@vueuse/core": "^13.0.0",
     "consola": "^3.4.0",
     "defu": "^6.1.4",
     "h3": "^1.15.1",
