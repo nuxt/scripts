@@ -20,7 +20,7 @@ export const GoogleMapsOptions = object({
   libraries: optional(array(string())),
   language: optional(string()),
   region: optional(string()),
-  v: optional(union([literal('weekly'), literal('beta'), literal('alpha')])),
+  v: optional(union([literal('weekly'), literal('quarterly'), literal('beta'), literal('alpha'), string()])),
 })
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
@@ -46,6 +46,7 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
     const libraries = options?.libraries || ['places']
     const language = options?.language ? { language: options.language } : undefined
     const region = options?.region ? { region: options.region } : undefined
+    const version = options?.v ? { v: options.v } : undefined
     return {
       scriptInput: {
         src: withQuery(`https://maps.googleapis.com/maps/api/js`, {
@@ -55,6 +56,7 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
           callback: 'google.maps.__ib__',
           ...language,
           ...region,
+          ...version
         }),
       },
       clientInit: import.meta.server
