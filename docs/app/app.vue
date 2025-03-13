@@ -25,6 +25,12 @@ const { data: files } = await useAsyncData('search', () => queryCollectionSearch
   },
 })
 
+useHead({
+  templateParams: {
+    separator: '·',
+  },
+})
+
 provide('navigation', computed(() => {
   return navigation.value || []
 }))

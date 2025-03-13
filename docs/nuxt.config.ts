@@ -50,14 +50,6 @@ export default defineNuxtConfig({
     enabled: true,
   },
 
-  app: {
-    head: {
-      templateParams: {
-        separator: '·',
-      },
-    },
-  },
-
   site: {
     name: 'Nuxt Scripts',
     url: 'scripts.nuxt.com',
