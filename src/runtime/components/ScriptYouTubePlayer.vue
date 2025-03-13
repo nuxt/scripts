@@ -6,7 +6,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
 import { defu } from 'defu'
-import { useHead } from '@unhead/vue'
+import { useHead } from 'nuxt/app'
 import type { ElementScriptTrigger } from '../types'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'

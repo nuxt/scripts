@@ -1,8 +1,6 @@
 import type {
-  DataKeys,
-  SchemaAugmentations,
-  ScriptWithoutEvents,
-} from 'unhead/types'
+  Script,
+} from '@unhead/vue/types'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
@@ -164,7 +162,7 @@ const _emptyOptions = object({})
 
 export type EmptyOptionsSchema = typeof _emptyOptions
 
-type ScriptInput = ScriptWithoutEvents & DataKeys & SchemaAugmentations['script']
+type ScriptInput = Script
 
 export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<

@@ -1,4 +1,4 @@
-import { useHead } from '@unhead/vue'
+import { useHead } from 'nuxt/app'
 import { useRegistryScript } from '../utils'
 import { object, string, optional, boolean } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'

@@ -1,5 +1,4 @@
-import { injectHead } from '@unhead/vue'
-import { useNuxtApp, useRoute } from 'nuxt/app'
+import { useNuxtApp, useRoute, injectHead } from 'nuxt/app'
 import { ref } from 'vue'
 import type { TrackedPage } from '#nuxt-scripts/types'
 
