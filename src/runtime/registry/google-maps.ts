@@ -56,7 +56,7 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
           callback: 'google.maps.__ib__',
           ...language,
           ...region,
-          ...version
+          ...version,
         }),
       },
       clientInit: import.meta.server

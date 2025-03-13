@@ -121,7 +121,7 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
   scriptOptions: {
     trigger,
   },
-  ...props.mapOptions
+  ...props.mapOptions,
 })
 
 const options = computed(() => {
