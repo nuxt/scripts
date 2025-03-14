@@ -144,6 +144,11 @@ export const GoogleAnalyticsOptions = object({
    */
   id: string(),
   /**
+   * The script src.
+   * @default 'https://www.googletagmanager.com/gtag/js'
+   */
+  src: optional(string()),
+  /**
    * The datalayer's name you want it to be associated with
    */
   dataLayerName: optional(string())
