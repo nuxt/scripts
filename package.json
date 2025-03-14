@@ -2,7 +2,7 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.11.2",
-  "packageManager": "pnpm@10.6.2",
+  "packageManager": "pnpm@10.6.3",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "website": "https://harlanzw.com",
@@ -71,7 +71,7 @@
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.0-rc.8",
+    "@unhead/vue": "^2.0.0-rc.13",
     "nuxt": "^3.16.0"
   },
   "peerDependenciesMeta": {
@@ -112,13 +112,13 @@
     "@nuxt/eslint-config": "^1.2.0",
     "@nuxt/module-builder": "^0.8.4",
     "@nuxt/scripts": "workspace:*",
-    "@nuxt/test-utils": "3.17.1",
+    "@nuxt/test-utils": "3.17.2",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/typescript-estree": "^8.26.1",
     "acorn-loose": "^8.4.0",
     "bumpp": "^10.1.0",
     "changelogen": "^0.6.1",
-    "eslint": "9.21.0",
+    "eslint": "9.22.0",
     "eslint-plugin-n": "^17.16.2",
     "happy-dom": "^17.4.4",
     "knitwork": "^1.2.0",
@@ -134,7 +134,7 @@
   "resolutions": {
     "@nuxt/schema": "catalog:",
     "@nuxt/scripts": "workspace:*",
-    "@unhead/vue": "2.0.0-rc.12",
+    "@unhead/vue": "^2.0.0-rc.13",
     "nuxt": "catalog:",
     "typescript": "5.8.2",
     "vue": "^3.5.13",
