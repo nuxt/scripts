@@ -139,6 +139,7 @@ export default defineNuxtConfig({
 
   seo: {
     meta: {
+      googleSiteVerification: 'y3acjlg66w6e8QRmX-asCZv9EBpyLHdrhIKzdXJvqDg',
       themeColor: [
         { content: '#18181b', media: '(prefers-color-scheme: dark)' },
         { content: 'white', media: '(prefers-color-scheme: light)' },
