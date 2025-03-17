@@ -63,6 +63,18 @@ const props = withDefaults(defineProps<{
    */
   mapOptions?: google.maps.MapOptions
   /**
+   * Defines the region of the map.
+   */
+  region?: string
+  /**
+   * Defines the language of the map
+   */
+  language?: string
+  /**
+   * Defines the version of google maps js API
+   */
+  version?: string
+  /**
    * Defines the width of the map.
    */
   width?: number | string
@@ -121,7 +133,9 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
   scriptOptions: {
     trigger,
   },
-  ...props.mapOptions,
+  region: props.region,
+  language: props.language,
+  v: props.version,
 })
 
 const options = computed(() => {
