@@ -1,31 +1,27 @@
-name: release
-
-on:
-  push:
-    branches:
-      - main
+name: Release
 
 permissions:
   contents: write
 
+on:
+  push:
+    tags:
+      - 'v*'
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'nuxt' && github.event_name == 'push' }}
-    permissions:
-      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - name: Install Node.js
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install
-
-      - name: Prepare build environment
-        run: pnpm dev:prepare
+          node-version-file: 'package.json'
 
       - run: npx changelogithub
         env:
