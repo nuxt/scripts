@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { useHead, useScriptGoogleTagManager } from '#imports'
+import { useScriptGoogleTagManager } from '#nuxt-scripts/registry/google-tag-manager'
+import { useHead } from '#imports'
 
 useHead({
   title: 'Google Analytics',
@@ -7,16 +8,7 @@ useHead({
 
 // composables return the underlying api as a proxy object and the script state
 const { proxy, onLoaded, status } = useScriptGoogleTagManager({
-  id: 'GTM-MNJD4B',
-  onBeforeGtmStart(gtag) {
-    gtag('consent', 'default', {
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      ad_storage: 'denied',
-      analytics_storage: 'denied',
-      wait_for_update: 500,
-    })
-  },
+  id: 'GTM-MWW974PF',
 }) // id is set via runtime config
 proxy.dataLayer.push({
   event: 'page_view',
