@@ -134,7 +134,8 @@
   "resolutions": {
     "@nuxt/schema": "catalog:",
     "@nuxt/scripts": "workspace:*",
-    "@unhead/vue": "2.0.0-rc.12",
+    "@unhead/vue": "2.0.1",
+    "unhead": "2.0.1",
     "nuxt": "catalog:",
     "typescript": "5.8.2",
     "vue": "^3.5.13",
