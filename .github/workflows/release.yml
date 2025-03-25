@@ -5,7 +5,8 @@ on:
     branches:
       - main
 
-permissions: {}
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -26,8 +27,6 @@ jobs:
       - name: Prepare build environment
         run: pnpm dev:prepare
 
-      - name: nightly release
-        run: pnpm changelogen --canary nightly --publish
+      - run: npx changelogithub
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
