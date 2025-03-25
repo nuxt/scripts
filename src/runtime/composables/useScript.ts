@@ -21,7 +21,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   // browser hint optimizations
   const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
   const nuxtApp = useNuxtApp()
-  const head = options.head || injectHead()
+  options.head = options.head || injectHead()
+  if (!options.head) {
+    throw new Error('useScript() has been called without Nuxt context.')
+  }
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
@@ -61,7 +64,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
 
     if (!nuxtApp._scripts[instance.id]) {
-      head.hooks.hook('script:updated', (ctx) => {
+      options.head.hooks.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
           return
         // convert the status to a timestamp
@@ -74,7 +77,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         syncScripts()
       })
       // @ts-expect-error untyped
-      head.hooks.hook('script:instance-fn', (ctx) => {
+      options.head.hooks.hook('script:instance-fn', (ctx) => {
         if (ctx.script.id !== instance.id || String(ctx.fn).startsWith('__v_'))
           return
         // log all events
