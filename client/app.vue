@@ -4,7 +4,7 @@ import { registry } from '../src/registry'
 import { devtools, getScriptSize, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
 import { msToHumanReadable } from '~/utils/formatting'
 
-const scriptRegistry = registry(s => s)
+const scriptRegistry = await registry()
 
 const scripts = ref({})
 const scriptSizes = reactive<Record<string, string>>({})

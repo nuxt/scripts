@@ -2,7 +2,6 @@
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { useScriptsRegistry } from '~/composables/useScriptsRegistry'
 
-const registry = useScriptsRegistry()
 const breakpoints = useBreakpoints(breakpointsTailwind)
 
 useSeoMeta({
@@ -62,6 +61,7 @@ declare global {
     }
   }
 }
+const registry = await useScriptsRegistry()
 
 const confettiEl = ref()
 const { onLoaded } = useScript({

@@ -44,7 +44,7 @@ useSeoMeta({
 })
 
 // group by category
-const scriptsCategories = useScriptsRegistry().reduce((acc, script) => {
+const scriptsCategories = (await useScriptsRegistry()).reduce((acc, script) => {
   if (!acc[script.category])
     acc[script.category] = []
   acc[script.category].push({

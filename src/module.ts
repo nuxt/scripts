@@ -105,10 +105,10 @@ export default defineNuxtModule<ModuleOptions>({
     debug: false,
   },
   async setup(config, nuxt) {
-    const { resolve } = createResolver(import.meta.url)
-    const { version, name } = await readPackageJSON(resolve('../package.json'))
-    nuxt.options.alias['#nuxt-scripts-validator'] = resolve(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
-    nuxt.options.alias['#nuxt-scripts'] = resolve('./runtime')
+    const { resolvePath } = createResolver(import.meta.url)
+    const { version, name } = await readPackageJSON(await resolvePath('../package.json'))
+    nuxt.options.alias['#nuxt-scripts-validator'] = await resolvePath(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
+    nuxt.options.alias['#nuxt-scripts'] = await resolvePath('./runtime')
     logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
@@ -129,23 +129,36 @@ export default defineNuxtModule<ModuleOptions>({
       defaultScriptOptions: config.defaultScriptOptions,
     }
     addImportsDir([
-      resolve('./runtime/composables'),
+      await resolvePath('./runtime/composables'),
     ])
 
     addComponentsDir({
-      path: resolve('./runtime/components'),
+      path: await resolvePath('./runtime/components'),
     })
 
-    const scripts = registry(resolve)
+    const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
+
+    for (const script of scripts) {
+      if (script.import?.name) {
+        addImports({ priority: 2, ...script.import })
+        script._importRegistered = true
+      }
+    }
+
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
       // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
-      const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
-      addImports(registryScriptsWithImport.map(i => i.import))
+
+      for (const script of registryScripts) {
+        if (script.import?.name && !script._importRegistered) {
+          addImports({ priority: 3, ...script.import })
+        }
+      }
 
       // compare the registryScripts to the original registry to find new scripts
+      const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
       // augment types to support the integrations registry
@@ -215,6 +228,6 @@ ${newScripts.map((i) => {
     })
 
     if (nuxt.options.dev)
-      setupDevToolsUI(config, resolve)
+      setupDevToolsUI(config, resolvePath)
   },
 })
