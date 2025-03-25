@@ -130,9 +130,6 @@ export default defineNuxtModule<ModuleOptions>({
     }
     addImportsDir([
       resolve('./runtime/composables'),
-      // auto-imports aren't working without this for some reason
-      // TODO find solution as we're double-registering
-      resolve('./runtime/registry'),
     ])
 
     addComponentsDir({
@@ -146,12 +143,7 @@ export default defineNuxtModule<ModuleOptions>({
       // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
-      addImports(registryScriptsWithImport.map((i) => {
-        return {
-          priority: -1,
-          ...i.import,
-        }
-      }))
+      addImports(registryScriptsWithImport.map(i => i.import))
 
       // compare the registryScripts to the original registry to find new scripts
       const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
