@@ -166,27 +166,38 @@ function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | P
   })
 }
 
+function normalizeAdvancedMapMarkerOptions(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+  const opts = typeof _options === 'string'
+    ? {
+        position: {
+          lat: Number.parseFloat(_options.split(',')[0] || '0'),
+          lng: Number.parseFloat(_options.split(',')[1] || '0'),
+        },
+      }
+    : _options
+  if (!opts.position) {
+    // set default
+    opts.position = {
+      lat: 0,
+      lng: 0,
+    }
+  }
+}
+
 async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
   if (!_options)
     return
-  const key = hash(_options)
+  const normalizedOptions = normalizeAdvancedMapMarkerOptions(_options)
+  const key = hash({ position: normalizedOptions.position })
   if (mapMarkers.value.has(key))
     return mapMarkers.value.get(key)
   // eslint-disable-next-line no-async-promise-executor
   const p = new Promise<google.maps.marker.AdvancedMarkerElement>(async (resolve) => {
     const lib = await importLibrary('marker')
-    const options = typeof _options === 'string'
-      ? {
-          position: {
-            lat: Number.parseFloat(_options.split(',')[0] || '0'),
-            lng: Number.parseFloat(_options.split(',')[1] || '0'),
-          },
-        }
-      : _options
-    const mapMarkerOptions = defu(toRaw(options), {
+    const mapMarkerOptions = defu(toRaw(normalizedOptions), {
       map: toRaw(map.value!),
       // @ts-expect-error unified API for maps and markers
-      position: options.location,
+      position: normalizedOptions.location,
     })
     resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
   })
@@ -284,7 +295,7 @@ onMounted(() => {
     }
     // mapMarkers is a map where we hash the next array entry as the map key
     // we need to do a diff to see what we remove or add
-    const nextMap = new Map((props.markers || []).map(m => [hash(m), m]))
+    const nextMap = new Map((props.markers || []).map(m => [hash({ position: normalizeAdvancedMapMarkerOptions(m).position }), m]))
     // compare idsToMatch in nextMap, if we're missing an id, we need to remove it
     const toRemove = new Set([
       ...mapMarkers.value.keys(),
