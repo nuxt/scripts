@@ -2,7 +2,6 @@ import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
-  addImportsDir,
   addPluginTemplate,
   createResolver,
   defineNuxtModule,
@@ -128,9 +127,21 @@ export default defineNuxtModule<ModuleOptions>({
       version: nuxt.options.dev ? version : undefined,
       defaultScriptOptions: config.defaultScriptOptions,
     }
-    addImportsDir([
-      await resolvePath('./runtime/composables'),
-    ])
+
+    const composables = [
+      'useScript',
+      'useScriptEventPage',
+      'useScriptTriggerConsent',
+      'useScriptTriggerElement',
+    ]
+    for (const composable of composables) {
+      addImports({
+        priority: 2,
+        name: composable,
+        as: composable,
+        from: await resolvePath(`./runtime/composables/${composable}`),
+      })
+    }
 
     addComponentsDir({
       path: await resolvePath('./runtime/components'),
