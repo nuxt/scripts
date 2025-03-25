@@ -39,7 +39,12 @@ async function createPage(path: string, options?: any) {
     await page.goto(url(path), options?.javaScriptEnabled === false ? {} : { waitUntil: 'hydration' })
   }
   // @ts-expect-error untyped
-  return { page, logs() { return logs } }
+  return {
+    page,
+    logs() {
+      return logs
+    },
+  }
 }
 
 describe('basic', () => {

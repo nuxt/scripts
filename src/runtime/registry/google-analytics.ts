@@ -144,15 +144,9 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             // eslint-disable-next-line
           // @ts-ignore
             _options?.onBeforeGtagStart?.(w.gtag)
-            gtag('js', new Date())
-            gtag('config', (options?.id))
+            w.gtag('js', new Date())
+            w.gtag('config', (options?.id))
           },
     }
   }, _options)
 }
-
-useScriptGoogleAnalytics({
-  scriptOptions: {
-    trigger: 'manual',
-  },
-})
