@@ -171,13 +171,13 @@ Using Google Tag Manager only in production while using `dataLayer` to send a co
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { dataLayer } = useScriptGoogleTagManager()
+const { proxy } = useScriptGoogleTagManager()
 
 // noop in development, ssr
 // just works in production, client
-dataLayer.push({ event: 'conversion-step', value: 1 })
+proxy.dataLayer.push({ event: 'conversion-step', value: 1 })
 function sendConversion() {
-  dataLayer.push({ event: 'conversion', value: 1 })
+  proxy.dataLayer.push({ event: 'conversion', value: 1 })
 }
 </script>
 

@@ -144,14 +144,14 @@ Using Umami Analytics only in production while using `track` to send a conversio
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { track } = useScriptUmamiAnalytics()
+const { proxy } = useScriptUmamiAnalytics()
 
 // noop in development, ssr
 // just works in production, client
-track('event', { name: 'conversion-step' })
+proxy.track('event', { name: 'conversion-step' })
 
 function sendConversion() {
-  track('event', { name: 'conversion' })
+  proxy.track('event', { name: 'conversion' })
 }
 </script>
 
