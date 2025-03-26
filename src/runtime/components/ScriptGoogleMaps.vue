@@ -182,6 +182,7 @@ function normalizeAdvancedMapMarkerOptions(_options?: google.maps.marker.Advance
       lng: 0,
     }
   }
+  return opts
 }
 
 async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
