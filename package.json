@@ -67,7 +67,7 @@
     ]
   },
   "peerDependencies": {
-    "@stripe/stripe-js": "^6.1.0",
+    "@stripe/stripe-js": "^7.0.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
