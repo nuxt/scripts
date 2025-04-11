@@ -2,7 +2,7 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.11.5",
-  "packageManager": "pnpm@10.7.1",
+  "packageManager": "pnpm@10.8.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "website": "https://harlanzw.com",
@@ -71,7 +71,7 @@
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3",
+    "@unhead/vue": "^2.0.5",
     "nuxt": "^3.16.2"
   },
   "peerDependenciesMeta": {
@@ -90,7 +90,7 @@
   },
   "dependencies": {
     "@nuxt/kit": "catalog:",
-    "@vueuse/core": "^13.0.0",
+    "@vueuse/core": "^13.1.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "h3": "^1.15.1",
@@ -101,8 +101,8 @@
     "pkg-types": "^2.1.0",
     "sirv": "^3.0.1",
     "std-env": "^3.9.0",
-    "ufo": "^1.5.4",
-    "unplugin": "^2.2.2",
+    "ufo": "^1.6.1",
+    "unplugin": "^2.3.1",
     "unstorage": "^1.15.0",
     "valibot": "^1.0.0"
   },
@@ -114,7 +114,7 @@
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "3.17.2",
     "@types/semver": "^7.7.0",
-    "@typescript-eslint/typescript-estree": "^8.29.0",
+    "@typescript-eslint/typescript-estree": "^8.29.1",
     "acorn-loose": "^8.4.0",
     "bumpp": "^10.1.0",
     "changelogen": "^0.6.1",
@@ -125,7 +125,7 @@
     "nuxt": "catalog:",
     "playwright-core": "^1.51.1",
     "shiki": "2.5.0",
-    "typescript": "5.8.2",
+    "typescript": "5.8.3",
     "vitest": "^3.1.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
@@ -134,10 +134,10 @@
   "resolutions": {
     "@nuxt/schema": "catalog:",
     "@nuxt/scripts": "workspace:*",
-    "@unhead/vue": "^2.0.3",
-    "unhead": "2.0.3",
+    "@unhead/vue": "^2.0.5",
+    "unhead": "2.0.5",
     "nuxt": "^3.16.2",
-    "typescript": "5.8.2",
+    "typescript": "5.8.3",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
