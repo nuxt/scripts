@@ -107,6 +107,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       label: 'Google Adsense',
       scriptBundling: (options?: GoogleAdsenseInput) => {
+        if (!options?.client) {
+          return false
+        }
         return withQuery('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
           client: options?.client,
         })
@@ -128,6 +131,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       label: 'Intercom',
       scriptBundling(options?: IntercomInput) {
+        if (!options?.app_id) {
+          return false
+        }
         return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
       },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8.968 8.972"><path d="M7.853 0h-6.73C.496 0-.002.498-.002 1.117v6.73a1.12 1.12 0 0 0 1.126 1.126h6.73c.618 0 1.117-.498 1.117-1.117v-6.73A1.119 1.119 0 0 0 7.853 0zM5.68 1.645c0-.17.13-.3.3-.3s.3.13.3.3v3.998c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm-1.495-.15c0-.17.13-.3.3-.3s.3.13.3.3v4.336c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm-1.495.15c0-.17.13-.3.3-.3s.3.13.3.3v3.998c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm-1.495.598c0-.17.13-.3.3-.3s.3.13.3.3v2.692c0 .17-.13.3-.3.3s-.3-.13-.3-.3zm6.48 4.566c-.05.04-1.156.967-3.2.967s-3.14-.927-3.2-.967a.29.29 0 0 1-.03-.419.29.29 0 0 1 .419-.03c.02 0 1.007.817 2.8.817 1.814 0 2.79-.817 2.79-.827.13-.1.32-.1.42.03a.3.3 0 0 1-.02.429zm.1-1.874c0 .17-.13.3-.3.3s-.3-.13-.3-.3V2.243c0-.17.13-.3.3-.3s.3.13.3.3z" fill="#1f8ded"/></svg>`,
@@ -140,6 +146,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       label: 'Hotjar',
       scriptBundling(options?: HotjarInput) {
+        if (!options?.id) {
+          return false
+        }
         return withQuery(`https://static.hotjar.com/c/hotjar-${options?.id || ''}.js`, {
           sv: options?.sv || '6',
         })
@@ -154,6 +163,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       label: 'Clarity',
       scriptBundling(options?: ClarityInput) {
+        if (!options?.id) {
+          return false
+        }
         return `https://www.clarity.ms/tag/${options?.id}`
       },
       logo: `https://store-images.s-microsoft.com/image/apps.29332.512b1d3d-80ec-4aec-83bb-411008d2f7cd.76371b6f-9386-463f-bfb0-b75cffb86a4f.bd99f4b1-b18e-4380-aa79-93768763c90d.png`,
@@ -248,6 +260,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#8AB4F8" d="m150.262 245.516l-44.437-43.331l95.433-97.454l46.007 45.091z"/><path fill="#4285F4" d="M150.45 53.938L106.176 8.731L9.36 104.629c-12.48 12.48-12.48 32.713 0 45.207l95.36 95.986l45.09-42.182l-72.654-76.407z"/><path fill="#8AB4F8" d="m246.625 105.37l-96-96c-12.494-12.494-32.756-12.494-45.25 0c-12.495 12.495-12.495 32.757 0 45.252l96 96c12.494 12.494 32.756 12.494 45.25 0c12.495-12.495 12.495-32.757 0-45.251"/><circle cx="127.265" cy="224.731" r="31.273" fill="#246FDB"/></svg>`,
       scriptBundling(options) {
+        if (!options?.id) {
+          return false
+        }
         return withQuery('https://www.googletagmanager.com/gtm.js', {
           id: options.id,
           l: options.l,
@@ -271,6 +286,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="192px" height="192px" viewBox="0 0 192 192" enable-background="new 0 0 192 192" xml:space="preserve"><rect x="0" y="0" fill="none" width="192" height="192"/><g><g><path fill="#F9AB00" d="M130,29v132c0,14.77,10.19,23,21,23c10,0,21-7,21-23V30c0-13.54-10-22-21-22S130,17.33,130,29z"/></g><g><path fill="#E37400" d="M75,96v65c0,14.77,10.19,23,21,23c10,0,21-7,21-23V97c0-13.54-10-22-21-22S75,84.33,75,96z"/></g><g><circle fill="#E37400" cx="41" cy="163" r="21"/></g></g></svg>`,
       scriptBundling(options) {
+        if (!options?.id) {
+          return false
+        }
         return withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id, l: options?.l })
       },
     },
