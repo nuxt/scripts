@@ -49,7 +49,7 @@
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
     "typecheck": "vue-tsc --noEmit",
     "bump": "bumpp package.json --commit --push --tag",
-    "release": "pnpm build && bumpp -x \"npx changelogen --output=CHANGELOG.log\" && pnpm publish",
+    "release": "pnpm build && bumpp -x \"npx changelogen --output=CHANGELOG.md\" && pnpm publish",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "pnpm dev:prepare && vitest --run --exclude **/__runtime__ && pnpm test:runtime",

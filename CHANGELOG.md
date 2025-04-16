@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.11.5
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.5...main)
+
+### 🩹 Fixes
+
+- **snapchatPixel:** Broken option merging when mocked ([49f7dff](https://github.com/nuxt/scripts/commit/49f7dff))
+- **bundling:** Avoid bundling scripts that are missing options ([e4b4032](https://github.com/nuxt/scripts/commit/e4b4032))
+- **clarity:** Proxying broken once clarity loads ([8469df9](https://github.com/nuxt/scripts/commit/8469df9))
+
+### 🏡 Chore
+
+- Bump deps ([213619e](https://github.com/nuxt/scripts/commit/213619e))
+- Maybe fix typecheck ([d4d8f31](https://github.com/nuxt/scripts/commit/d4d8f31))
+- Update release script ([e75bdaf](https://github.com/nuxt/scripts/commit/e75bdaf))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
 
 ## v0.9.7
 
