@@ -66,7 +66,7 @@ declare global {
 export const SnapTrPixelOptions = object({
   id: string(),
   trackPageView: optional(boolean()),
-  ...InitObjectPropertiesSchema.entries,
+  ...(InitObjectPropertiesSchema?.entries || {}),
 })
 export type SnapTrPixelInput = RegistryScriptInput<typeof SnapTrPixelOptions, true, false, false>
 
