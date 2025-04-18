@@ -19,7 +19,7 @@
     "@nuxt/scripts": "workspace:*",
     "@nuxt/ui-pro": "^3.0.2",
     "@nuxthq/studio": "^2.2.1",
-    "@nuxtjs/seo": "^3.0.2",
+    "@nuxtjs/seo": "^3.0.3",
     "@vueuse/core": "^13.1.0",
     "@vueuse/nuxt": "^13.1.0",
     "nuxt-content-twoslash": "^0.1.2",
