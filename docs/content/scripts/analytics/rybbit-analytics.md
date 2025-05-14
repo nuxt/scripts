@@ -1,0 +1,164 @@
+---
+title: Rybbit Analytics
+description: Use Rybbit Analytics in your Nuxt app.
+links:
+  - label: Source
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/rybbit.ts
+    size: xs
+---
+
+[Rybbit Analytics](https://www.rybbit.io/) is a privacy-focused analytics solution for tracking user activity on your website without compromising your users' privacy.
+
+The simplest way to load Rybbit Analytics globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+use the [useScriptRybbitAnalytics](#useScriptRybbitAnalytics) composable.
+
+## Loading Globally
+
+If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
+disable the script in development.
+
+::code-group
+
+```ts [Always enabled]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      rybbitAnalytics: {
+        siteId: 'YOUR_SITE_ID'
+      }
+    }
+  }
+})
+```
+
+```ts [Production only]
+export default defineNuxtConfig({
+  $production: {
+    scripts: {
+      registry: {
+        rybbitAnalytics: {
+          siteId: 'YOUR_SITE_ID',
+        }
+      }
+    }
+  }
+})
+```
+
+```ts [Environment Variables]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      rybbitAnalytics: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        rybbitAnalytics: {
+          // .env
+          // NUXT_PUBLIC_SCRIPTS_RYBBIT_ANALYTICS_SITE_ID=<your-site-id>
+          siteId: ''
+        },
+      },
+    },
+  },
+})
+```
+
+::
+
+## useScriptRybbitAnalytics
+
+The `useScriptRybbitAnalytics` composable lets you have fine-grain control over when and how Rybbit Analytics is loaded on your site.
+
+```ts
+const rybbit = useScriptRybbitAnalytics({
+  siteId: 'YOUR_SITE_ID'
+})
+```
+
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+### Self-hosted Rybbit Analytics
+
+If you are using a self-hosted version of Rybbit Analytics, you can provide a custom script source:
+
+```ts
+useScriptRybbitAnalytics({
+  scriptInput: {
+    src: 'https://your-rybbit-instance.com/api/script.js'
+  }
+  siteId: 'YOUR_SITE_ID'
+})
+```
+
+### RybbitAnalyticsApi
+
+```ts
+export interface RybbitAnalyticsApi {
+  pageview: () => void
+  event: (eventName: string, properties?: Record<string, any>) => void
+}
+```
+
+### Config Schema
+
+You must provide the options when setting up the script for the first time.
+
+```ts
+export const RybbitAnalyticsOptions = object({
+  siteId: string(), // required
+  trackSpa: optional(boolean()),
+  trackQuery: optional(boolean()),
+  skipPatterns: optional(array(string())),
+  maskPatterns: optional(array(string())),
+  debounce: optional(number())
+})
+```
+
+#### Configuration Options
+
+- `siteId` (required): Your Rybbit Analytics site ID
+- `trackSpa`: Set to `false` to disable automatic pageview tracking for single page applications
+- `trackQuery`: Set to `false` to disable tracking of URL query strings
+- `skipPatterns`: Array of URL path patterns to ignore
+- `maskPatterns`: Array of URL path patterns to mask for privacy
+- `debounce`: Delay in milliseconds before tracking a pageview after URL changes
+
+## Example
+
+Using Rybbit Analytics only in production while tracking custom events.
+
+::code-group
+
+```vue [EventTracking.vue]
+<script setup lang="ts">
+const { proxy } = useScriptRybbitAnalytics()
+
+// Track a pageview manually
+function trackPage() {
+  proxy.rybbit.pageview()
+}
+
+// Track a custom event
+function trackEvent() {
+  proxy.rybbit.event('button_click', { buttonId: 'signup' })
+}
+</script>
+
+<template>
+  <div>
+    <button @click="trackPage">
+      Track Custom Page
+    </button>
+    <button @click="trackEvent">
+      Track Custom Event
+    </button>
+  </div>
+</template>
+```
+
+::

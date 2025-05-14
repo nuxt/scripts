@@ -27,6 +27,7 @@ import type { CrispInput } from './registry/crisp'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
+import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -139,6 +140,7 @@ export interface ScriptRegistry {
   hotjar?: HotjarInput
   intercom?: IntercomInput
   matomoAnalytics?: MatomoAnalyticsInput
+  rybbitAnalytics?: RybbitAnalyticsInput
   segment?: SegmentInput
   stripe?: StripeInput
   xPixel?: XPixelInput
