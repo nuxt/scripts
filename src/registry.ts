@@ -59,6 +59,15 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      label: 'Rybbit Analytics',
+      category: 'analytics',
+      logo: `https://www.rybbit.io/rybbit.png`,
+      import: {
+        name: 'useScriptRybbitAnalytics',
+        from: await resolve('./runtime/registry/rybbit-analytics'),
+      },
+    },
+    {
       label: 'Segment',
       scriptBundling: (options?: SegmentInput) => {
         return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
