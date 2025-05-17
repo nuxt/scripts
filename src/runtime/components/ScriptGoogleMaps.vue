@@ -418,7 +418,7 @@ const placeholder = computed(() => {
     style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
     markers: [
       ...(props.markers || []),
-      center,
+      (typeof props.centerMarker === 'undefined' || props.centerMarker) && center,
     ]
       .filter(Boolean)
       .map((m) => {
