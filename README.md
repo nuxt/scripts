@@ -17,7 +17,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 ## Features
 
-- 🪨 Built on top of [Unhead](https://unhead.unjs.io/usage/composables/use-script)
+- 🪨 Built on top of [Unhead Script Loading](https://unhead.unjs.io/docs/typescript/head/guides/core-concepts/loading-scripts)
 - 🎁 20+ third-party scripts integrations with fine-grained performance optimizations
 - 🏎️ Performance: Self hosting, advanced script loading triggers, best-practice defaults.
 - 🕵️ Privacy: Defaults to protect end users identity, script consent management APIs.
