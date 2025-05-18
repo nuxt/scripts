@@ -226,12 +226,13 @@ const contributors = useRuntimeConfig().public.contributors
 <template>
   <div>
     <UPageHero
+      class="max-w-full overflow-hidden"
       :links="links"
       orientation="horizontal"
     >
       <template #title>
         <div class="leading-tight">
-          <span class="text-primary">Third-Party Scripts </span><br> Meets Nuxt DX
+          <span class="text-primary text-6xl">Third-Party Scripts </span><br> Meets Nuxt DX
         </div>
       </template>
 
