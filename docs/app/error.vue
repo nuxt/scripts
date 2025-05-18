@@ -12,6 +12,7 @@ useSeoMeta({
 </script>
 
 <template>
+<UApp>
   <div>
     <Header />
 
@@ -31,4 +32,5 @@ useSeoMeta({
       </UMain>
     </UContainer>
   </div>
+</UApp>
 </template>

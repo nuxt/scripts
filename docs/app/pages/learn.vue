@@ -9,7 +9,7 @@ defineOgImageComponent('Home')
 
 <template>
   <div>
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+    <UPageSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
       <div class="text-center">
         <UIcon name="i-ph-book-bookmark-duotone" class="h-[50px] w-[50px] text-primary" />
         <h2 class="text-xl xl:text-4xl font-bold mb-12 text-center">
@@ -32,10 +32,10 @@ defineOgImageComponent('Home')
           </ScriptYouTubePlayer>
         </div>
       </div>
-    </ULandingSection>
+    </UPageSection>
 
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
-      <ULandingCTA
+    <UPageSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+      <UPageCTA
         description="Learn all of the fundamentals of Nuxt Scripts in the fun interactive confetti tutorial."
         card
       >
@@ -49,7 +49,7 @@ defineOgImageComponent('Home')
             </UButton>
           </div>
         </template>
-      </ULandingCTA>
-    </ULandingSection>
+      </UPageCTA>
+    </UPageSection>
   </div>
 </template>

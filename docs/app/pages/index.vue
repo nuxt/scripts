@@ -225,14 +225,9 @@ const contributors = useRuntimeConfig().public.contributors
 
 <template>
   <div>
-    <ULandingHero
+    <UPageHero
       :links="links"
       orientation="horizontal"
-      :ui="{
-        container: 'max-w-full overflow-hidden py-10 flex flex-row items-center justify-center gap-1 max-w-full',
-        links: 'flex items-center gap-2',
-        description: 'text-gray-500 dark:text-gray-400 text-xl max-w-2xl leading-normal mb-10',
-      }"
     >
       <template #title>
         <div class="leading-tight">
@@ -257,17 +252,17 @@ const contributors = useRuntimeConfig().public.contributors
           </a>
         </div>
       </div>
-    </ULandingHero>
+    </UPageHero>
 
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+    <UPageSection :ui="{ container: 'pt-0 py-6 sm:py-14 lg:py-14' }">
       <ul class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-16">
         <ShowcaseCard v-for="feature in features" :key="feature.name" :label="feature.name" :description="feature.description">
           <UIcon :name="feature.icon" class="h-20 w-20 shrink-0 text-primary" />
         </ShowcaseCard>
       </ul>
-    </ULandingSection>
+    </UPageSection>
 
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+    <UPageSection :ui="{ container: 'pt-0 py-6 sm:py-14' }">
       <div class="xl:flex items-center justify-between gap-12">
         <div class="max-w-lg">
           <UIcon name="i-ph-magic-wand-duotone" class="h-[100px] w-[100px] text-primary" />
@@ -289,7 +284,7 @@ const contributors = useRuntimeConfig().public.contributors
           </div>
         </UCard>
       </div>
-    </ULandingSection>
+    </UPageSection>
 
     <UContainer class="py-6 sm:py-20 gap-8 lg:gap-20 flex flex-col xl:flex-row ">
       <div class="max-w-lg">
@@ -325,7 +320,7 @@ const contributors = useRuntimeConfig().public.contributors
                 </UBadge>
               </div>
               <div class="flex items-center gap-3 max-w-full">
-                <UProgress :value="benchmark.nuxt[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="flex flex-grow" />
+                <UProgress :model-value="benchmark.nuxt[webVital]" :max="benchmark.iframe[webVital]" color="info" class="flex flex-grow" />
                 <div class="w-14 flex-grow text-right">
                   {{ humanizeMs(benchmark.nuxt[webVital]) }}
                 </div>
@@ -336,7 +331,7 @@ const contributors = useRuntimeConfig().public.contributors
                 Iframe
               </NuxtLink>
               <div class="flex items-center gap-3">
-                <UProgress :value="benchmark.iframe[webVital]" :max="benchmark.iframe[webVital]" color="purple" class="" />
+                <UProgress :model-value="benchmark.iframe[webVital]" :max="benchmark.iframe[webVital]" color="info" class="" />
                 <div class="w-14 flex-grow text-right">
                   {{ humanizeMs(benchmark.iframe[webVital]) }}
                 </div>
@@ -361,7 +356,7 @@ const contributors = useRuntimeConfig().public.contributors
       </div>
     </UContainer>
 
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+    <UPageSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
       <div class="xl:flex items-center justify-between gap-12">
         <div class="max-w-lg">
           <UIcon name="i-ph-cookie-duotone" class="h-[100px] w-[100px] text-primary" />
@@ -387,9 +382,9 @@ const contributors = useRuntimeConfig().public.contributors
           </div>
         </UCard>
       </div>
-    </ULandingSection>
+    </UPageSection>
 
-    <ULandingSection :ui="{ wrapper: 'py-6 sm:py-12' }">
+    <UPageSection :ui="{ wrapper: 'py-6 sm:py-12' }">
       <div class="xl:flex items-center gap-12">
         <div>
           <div class="max-w-lg">
@@ -422,9 +417,9 @@ const contributors = useRuntimeConfig().public.contributors
           </div>
         </div>
       </div>
-    </ULandingSection>
+    </UPageSection>
 
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+    <UPageSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
       <div class="text-center">
         <UIcon name="i-ph-book-bookmark-duotone" class="h-[50px] w-[50px] text-primary" />
         <h2 class="text-xl xl:text-4xl font-bold mb-12 text-center">
@@ -447,10 +442,10 @@ const contributors = useRuntimeConfig().public.contributors
           </ScriptYouTubePlayer>
         </div>
       </div>
-    </ULandingSection>
+    </UPageSection>
 
-    <ULandingSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
-      <ULandingCTA
+    <UPageSection :ui="{ wrapper: 'pt-0 py-6 sm:py-14' }">
+      <UPageCTA
         description="Learn all of the fundamentals of Nuxt Scripts in the fun interactive confetti tutorial."
         card
       >
@@ -464,8 +459,8 @@ const contributors = useRuntimeConfig().public.contributors
             </UButton>
           </div>
         </template>
-      </ULandingCTA>
-    </ULandingSection>
+      </UPageCTA>
+    </UPageSection>
   </div>
 </template>
 
