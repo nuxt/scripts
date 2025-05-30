@@ -105,6 +105,7 @@ const props = withDefaults(defineProps<{
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
   width: 640,
   height: 400,
+  centerMarker: true
 })
 
 const emits = defineEmits<{
@@ -306,7 +307,7 @@ onMounted(() => {
     // do a diff of next and prev
     const centerHash = hash({ position: options.value.center })
     for (const key of toRemove) {
-      if (key === centerHash) {
+      if (props.centerMarker && key === centerHash) {
         continue
       }
       const marker = await mapMarkers.value.get(key)
@@ -335,7 +336,7 @@ onMounted(() => {
         center = await resolveQueryToLatLang(center as string)
       }
       map.value!.setCenter(center as google.maps.LatLng)
-      if (typeof props.centerMarker === 'undefined' || props.centerMarker) {
+      if (props.centerMarker) {
         if (options.value.mapId) {
           // not allowed to use advanced markers with styles
           return
@@ -418,7 +419,7 @@ const placeholder = computed(() => {
     style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
     markers: [
       ...(props.markers || []),
-      (typeof props.centerMarker === 'undefined' || props.centerMarker) && center,
+      props.centerMarker && center,
     ]
       .filter(Boolean)
       .map((m) => {
