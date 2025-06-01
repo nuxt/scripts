@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.11.6...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.6...main)
+
+### 🚀 Enhancements
+
+- Add rybbit analytics to registry ([#453](https://github.com/nuxt/scripts/pull/453))
+
+### 🩹 Fixes
+
+- **GoogleMaps:** Center marker always shown on maps placeholder image #402 ([#454](https://github.com/nuxt/scripts/pull/454), [#402](https://github.com/nuxt/scripts/issues/402))
+
+### 🏡 Chore
+
+- Bump changelog ([5d1403e](https://github.com/nuxt/scripts/commit/5d1403e))
+- Bump deps ([756705a](https://github.com/nuxt/scripts/commit/756705a))
+- Fix tests ([cc6f7cf](https://github.com/nuxt/scripts/commit/cc6f7cf))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Dan <danker.twist@gmail.com>
+- Ilya Shaplyko ([@Shaglock](https://github.com/Shaglock))
+
 ## v0.11.5
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.5...main)

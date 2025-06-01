@@ -5,13 +5,11 @@ import NuxtScripts from '../src/module'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  extends: ['@nuxt/ui-pro'],
-
   modules: [
+    '@nuxt/ui-pro',
     '@nuxt/fonts',
     '@vueuse/nuxt',
     NuxtScripts,
-    '@nuxt/ui',
     '@nuxtjs/seo',
     '@nuxt/image',
     'nuxt-content-twoslash',
@@ -45,6 +43,8 @@ export default defineNuxtConfig({
       },
     },
   },
+
+  css: ['~/assets/css/main.css'],
 
   devtools: {
     enabled: true,

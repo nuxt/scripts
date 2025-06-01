@@ -21,6 +21,16 @@ const surroundData = useAsyncData(`docs-${route.path}-surround`, () => queryColl
 await Promise.all([docData, surroundData])
 const page = docData.data
 const surround = surroundData.data
+const surroundIntroduction = [
+  undefined,
+  {
+    description: 'Learn how to create a Nuxt Scripts project or add it to your current Nuxt project.',
+    path: '/docs/getting-started/installation',
+    stem: 'docs/1.getting-started/2.installation',
+    title: 'Installation',
+    _path: '/docs/getting-started/installation',
+  },
+]
 
 if (!page.value)
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
@@ -43,9 +53,10 @@ defineOgImageComponent('Docs', {
     <UPageBody prose class="dark:text-gray-300 dark:prose-pre:!bg-gray-800/60">
       <ContentRenderer v-if="page.body" :value="page" />
 
-      <hr v-if="surround?.length">
+      <hr v-if="surround?.length || page.path === '/docs/getting-started'">
 
       <UContentSurround :surround="surround" />
+	  <UContentSurround v-if="page.path === '/docs/getting-started'" :surround="surroundIntroduction" />
     </UPageBody>
 
     <!--    <template v-if="page.toc !== false" #right> -->

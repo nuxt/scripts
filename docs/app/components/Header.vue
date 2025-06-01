@@ -2,7 +2,7 @@
 import type { NavItem } from '@nuxt/contents'
 
 const navigation = inject<NavItem[]>('navigation', [])
-const { metaSymbol } = useShortcuts()
+// const { metaSymbol } = useShortcuts()
 const { header } = useAppConfig()
 const links = [
   {
@@ -12,29 +12,31 @@ const links = [
   {
     label: 'Script Registry',
     to: '/scripts',
-    icon: 'i-ph-floppy-disk-duotone',
   },
   {
     label: 'Learn',
     to: '/learn',
-    icon: 'i-ph-floppy-disk-duotone',
   },
 ]
 </script>
 
 <template>
   <UHeader :ui="{}" :links="links">
-    <template #logo>
+    <UNavigationMenu :items="links" />
+
+    <template #title>
+    <div class="flex items-center gap-3">
       <Logo />
-      <UBadge class="ml-5 hidden md:block" size="xs" color="yellow" variant="subtle">
+      <UBadge class="hidden md:block" size="sm" color="warning" variant="subtle">
         Beta
       </UBadge>
+    </div>
     </template>
 
     <template #right>
-      <UTooltip text="Search" :shortcuts="[metaSymbol, 'K']" :popper="{ strategy: 'absolute' }">
-        <UContentSearchButton :label="null" />
-      </UTooltip>
+<!--      <UTooltip text="Search" :shortcuts="[metaSymbol, 'K']" :popper="{ strategy: 'absolute' }">-->
+<!--        <UContentSearchButton :label="null" />-->
+<!--      </UTooltip>-->
       <UColorModeButton />
       <template v-if="header?.links">
         <UButton
@@ -44,10 +46,6 @@ const links = [
           v-bind="{ color: 'gray', variant: 'ghost', ...link }"
         />
       </template>
-    </template>
-
-    <template #panel>
-      <UNavigationTree :links="mapContentNavigation(navigation)" />
     </template>
   </UHeader>
 </template>

@@ -40,6 +40,7 @@ provide('topGuides', computed(() => {
 </script>
 
 <template>
+<UApp>
   <div class="bg-white dark:bg-gray-950">
     <NuxtLoadingIndicator color="#FFF" />
 
@@ -58,8 +59,8 @@ provide('topGuides', computed(() => {
         :fuse="{ resultLimit: 42 }"
       />
     </ClientOnly>
-    <UNotifications />
   </div>
+</UApp>
 </template>
 
 <style>
