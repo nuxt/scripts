@@ -1,9 +1,9 @@
 import { useRegistryScript } from '../utils'
-import { array, boolean, number, object, optional, string } from '#nuxt-scripts-validator'
+import { array, boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const RybbitAnalyticsOptions = object({
-  siteId: string(), // required
+  siteId: union([string(), number()]), // required
   trackSpa: optional(boolean()),
   trackQuery: optional(boolean()),
   skipPatterns: optional(array(string())),
@@ -55,7 +55,7 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
     return {
       scriptInput: {
         'src': 'https://app.rybbit.io/api/script.js',
-        'data-site-id': options?.siteId,
+        'data-site-id': String(options?.siteId),
         'data-track-spa': options?.trackSpa,
         'data-track-query': options?.trackQuery,
         'data-skip-patterns': options?.skipPatterns ? JSON.stringify(options.skipPatterns) : undefined,
