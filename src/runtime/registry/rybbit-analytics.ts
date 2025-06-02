@@ -14,8 +14,34 @@ export const RybbitAnalyticsOptions = object({
 export type RybbitAnalyticsInput = RegistryScriptInput<typeof RybbitAnalyticsOptions, false>
 
 export interface RybbitAnalyticsApi {
+  /**
+   * Tracks a page view
+   */
   pageview: () => void
-  event: (eventName: string, properties?: Record<string, any>) => void
+
+  /**
+   * Tracks a custom event
+   * @param name Name of the event
+   * @param properties Optional properties for the event
+   */
+  event: (name: string, properties?: Record<string, any>) => void
+
+  /**
+   * Sets a custom user ID for tracking logged-in users
+   * @param userId The user ID to set (will be stored in localStorage)
+   */
+  identify: (userId: string) => void
+
+  /**
+   * Clears the stored user ID
+   */
+  clearUserId: () => void
+
+  /**
+   * Gets the currently set user ID
+   * @returns The current user ID or null if not set
+   */
+  getUserId: () => string | null
 }
 
 declare global {
