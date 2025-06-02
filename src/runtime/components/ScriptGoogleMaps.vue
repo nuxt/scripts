@@ -105,7 +105,7 @@ const props = withDefaults(defineProps<{
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
   width: 640,
   height: 400,
-  centerMarker: true
+  centerMarker: true,
 })
 
 const emits = defineEmits<{

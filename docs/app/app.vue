@@ -40,27 +40,27 @@ provide('topGuides', computed(() => {
 </script>
 
 <template>
-<UApp>
-  <div class="bg-white dark:bg-gray-950">
-    <NuxtLoadingIndicator color="#FFF" />
+  <UApp>
+    <div class="bg-white dark:bg-gray-950">
+      <NuxtLoadingIndicator color="#FFF" />
 
-    <Header />
+      <Header />
 
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
 
-    <Footer />
+      <Footer />
 
-    <ClientOnly>
-      <LazyContentSearch
-        :files="files"
-        :navigation="navigation"
-        :fuse="{ resultLimit: 42 }"
-      />
-    </ClientOnly>
-  </div>
-</UApp>
+      <ClientOnly>
+        <LazyContentSearch
+          :files="files"
+          :navigation="navigation"
+          :fuse="{ resultLimit: 42 }"
+        />
+      </ClientOnly>
+    </div>
+  </UApp>
 </template>
 
 <style>
