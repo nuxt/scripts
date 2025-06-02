@@ -152,16 +152,24 @@ const id = computed(() => {
   return props.vimeoOptions?.id || props.id
 })
 
+const videoId = computed(() => `vimeo-embed:${id.value}`)
 const { data: payload } = useAsyncData(
-  `vimeo-embed:${id.value}`,
+  videoId,
   // TODO ideally we cache this
-  () => $fetch(`https://vimeo.com/api/v2/video/${id.value}.json`).then(res => (res as any)[0]),
+  () => $fetch(`https://vimeo.com/api/oembed.json`, {
+    params: {
+      url: `https://vimeo.com/${id.value}`,
+      format: 'json',
+    }
+  }),
   {
-    watch: [id],
-  },
+    lazy: true,
+  }
 )
 
-const placeholder = computed(() => payload.value?.thumbnail_large)
+const placeholder = computed(() => {
+  return payload.value?.thumbnail_url
+})
 
 let player: Vimeo | undefined
 // we can't directly expose the player as vue will break the proxy
