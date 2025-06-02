@@ -90,7 +90,7 @@ If you are using a self-hosted version of Rybbit Analytics, you can provide a cu
 useScriptRybbitAnalytics({
   scriptInput: {
     src: 'https://your-rybbit-instance.com/api/script.js'
-  }
+  },
   siteId: 'YOUR_SITE_ID'
 })
 ```
@@ -99,8 +99,38 @@ useScriptRybbitAnalytics({
 
 ```ts
 export interface RybbitAnalyticsApi {
+  /**
+   * Tracks a page view
+   */
   pageview: () => void
-  event: (eventName: string, properties?: Record<string, any>) => void
+
+  /**
+   * Tracks a custom event
+   * @param name Name of the event
+   * @param properties Optional properties for the event
+   */
+  event: (name: string, properties?: Record<string, any>) => void
+
+  /**
+   * Sets a custom user ID for tracking logged-in users
+   * @param userId The user ID to set (will be stored in localStorage)
+   */
+  identify: (userId: string) => void
+
+  /**
+   * Clears the stored user ID
+   */
+  clearUserId: () => void
+
+  /**
+   * Gets the currently set user ID
+   * @returns The current user ID or null if not set
+   */
+  getUserId: () => string | null
+  /**
+   * @deprecated use top level functions instead
+   */
+  rybbit: RybbitAnalyticsApi
 }
 ```
 
@@ -110,7 +140,7 @@ You must provide the options when setting up the script for the first time.
 
 ```ts
 export const RybbitAnalyticsOptions = object({
-  siteId: string(), // required
+  siteId: union([string(), number()]), // required
   trackSpa: optional(boolean()),
   trackQuery: optional(boolean()),
   skipPatterns: optional(array(string())),
@@ -140,12 +170,12 @@ const { proxy } = useScriptRybbitAnalytics()
 
 // Track a pageview manually
 function trackPage() {
-  proxy.rybbit.pageview()
+  proxy.pageview()
 }
 
 // Track a custom event
 function trackEvent() {
-  proxy.rybbit.event('button_click', { buttonId: 'signup' })
+  proxy.event('button_click', { buttonId: 'signup' })
 }
 </script>
 

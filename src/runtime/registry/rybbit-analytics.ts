@@ -42,6 +42,10 @@ export interface RybbitAnalyticsApi {
    * @returns The current user ID or null if not set
    */
   getUserId: () => string | null
+  /**
+   * @deprecated use top level functions instead
+   */
+  rybbit: RybbitAnalyticsApi
 }
 
 declare global {
@@ -65,7 +69,17 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
       schema: import.meta.dev ? RybbitAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          return { rybbit: window.rybbit }
+          if (typeof window.rybbit === 'undefined') {
+            return null
+          }
+          return {
+            pageview: window.rybbit.pageview,
+            event: window.rybbit.event,
+            identify: window.rybbit.identify,
+            clearUserId: window.rybbit.clearUserId,
+            getUserId: window.rybbit.getUserId,
+            rybbit: window.rybbit,
+          } satisfies RybbitAnalyticsApi
         },
       },
     }
