@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.11.7...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.7...main)
+
+### 🩹 Fixes
+
+- **GoogleMaps:** Properly handle centerMarker removal logic ([#460](https://github.com/nuxt/scripts/pull/460))
+- **rybbit:** Support number `siteId` ([ab89f42](https://github.com/nuxt/scripts/commit/ab89f42))
+- **rybbit:** Prefer top level functions ([8853333](https://github.com/nuxt/scripts/commit/8853333))
+- **UmamiAnalytics:** V2.18 compatibility ([7671c80](https://github.com/nuxt/scripts/commit/7671c80))
+- **VimeoPlayer:** Switch to new oembed API for thumbnails ([09fa69f](https://github.com/nuxt/scripts/commit/09fa69f))
+
+### 📖 Documentation
+
+- Add manual ContentSurround for the introduction step ([#456](https://github.com/nuxt/scripts/pull/456))
+
+### 🏡 Chore
+
+- Fix doc build ([8889c58](https://github.com/nuxt/scripts/commit/8889c58))
+- Missing lock file ([7f4da53](https://github.com/nuxt/scripts/commit/7f4da53))
+- Broken components ([1d72679](https://github.com/nuxt/scripts/commit/1d72679))
+- Docs overflow bug ([ab52c85](https://github.com/nuxt/scripts/commit/ab52c85))
+- **rybbit:** Improve types ([93e2971](https://github.com/nuxt/scripts/commit/93e2971))
+- Bump deps ([f9d9cc9](https://github.com/nuxt/scripts/commit/f9d9cc9))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Ilya Shaplyko ([@Shaglock](https://github.com/Shaglock))
+- Faudel HADROUG ([@Faudelhadroug](https://github.com/Faudelhadroug))
+
 ## v0.11.6...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.6...main)
