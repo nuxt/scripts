@@ -108,6 +108,14 @@ type TwqFns =
   ((event: 'event', eventId: string, data?: EventObjectProperties) => void)
   & ((event: 'config', id: string) => void)
   & ((event: string, ...params: any[]) => void)
+interface ContentProperties {
+  content_type?: string | null
+  content_id?: string | number | null
+  content_name?: string | null
+  content_price?: string | number | null
+  num_items?: string | number | null
+  content_group_id?: string | number | null
+}
 interface EventObjectProperties {
   value?: string | number | null
   currency?: string | null
