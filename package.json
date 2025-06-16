@@ -125,7 +125,7 @@
     "changelogen": "^0.6.1",
     "eslint": "9.28.0",
     "eslint-plugin-n": "^17.19.0",
-    "happy-dom": "^17.6.1",
+    "happy-dom": "^18.0.1",
     "knitwork": "^1.2.0",
     "nuxt": "catalog:",
     "playwright-core": "^1.52.0",
