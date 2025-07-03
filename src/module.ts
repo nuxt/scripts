@@ -86,7 +86,6 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'scripts',
     compatibility: {
       nuxt: '>=3.16',
-      bridge: false,
     },
   },
   defaults: {
