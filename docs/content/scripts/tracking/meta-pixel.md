@@ -107,18 +107,23 @@ export interface MetaPixelApi {
   }
   _fbq: MetaPixelApi['fbq']
 }
-type FbqFns = ((event: 'track', eventName: StandardEvents, data?: EventObjectProperties) => void)
-  & ((event: 'trackCustom', eventName: string, data?: EventObjectProperties) => void)
-  & ((event: 'init', id: number, data?: Record<string, any>) => void)
-  & ((event: 'init', id: string) => void)
-  & ((event: string, ...params: any[]) => void)
+type FbqArgs =
+  | ['track', StandardEvents, EventObjectProperties?]
+  | ['trackCustom', string, EventObjectProperties?]
+  | ['trackSingle', string, StandardEvents, EventObjectProperties?]
+  | ['trackSingleCustom', string, string, EventObjectProperties?]
+  | ['init', string]
+  | ['init', number, Record<string, any>?]
+  | ['consent', ConsentAction]
+  | [string, ...any[]]
+type FbqFns = (...args: FbqArgs) => void
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
   content_category?: string
   content_ids?: string[]
   content_name?: string
   content_type?: string
-  contents: { id: string, quantity: number }[]
+  contents?: { id: string, quantity: number }[]
   currency?: string
   delivery_category?: 'in_store' | 'curbside' | 'home_delivery'
   num_items?: number
@@ -128,6 +133,7 @@ interface EventObjectProperties {
   value?: number
   [key: string]: any
 }
+type ConsentAction = 'grant' | 'revoke'
 ```
 
 ### Config Schema

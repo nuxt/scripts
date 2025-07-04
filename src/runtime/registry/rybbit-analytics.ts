@@ -1,9 +1,9 @@
 import { useRegistryScript } from '../utils'
-import { array, boolean, number, object, optional, string } from '#nuxt-scripts-validator'
+import { array, boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const RybbitAnalyticsOptions = object({
-  siteId: string(), // required
+  siteId: union([string(), number()]), // required
   trackSpa: optional(boolean()),
   trackQuery: optional(boolean()),
   skipPatterns: optional(array(string())),
@@ -14,8 +14,38 @@ export const RybbitAnalyticsOptions = object({
 export type RybbitAnalyticsInput = RegistryScriptInput<typeof RybbitAnalyticsOptions, false>
 
 export interface RybbitAnalyticsApi {
+  /**
+   * Tracks a page view
+   */
   pageview: () => void
-  event: (eventName: string, properties?: Record<string, any>) => void
+
+  /**
+   * Tracks a custom event
+   * @param name Name of the event
+   * @param properties Optional properties for the event
+   */
+  event: (name: string, properties?: Record<string, any>) => void
+
+  /**
+   * Sets a custom user ID for tracking logged-in users
+   * @param userId The user ID to set (will be stored in localStorage)
+   */
+  identify: (userId: string) => void
+
+  /**
+   * Clears the stored user ID
+   */
+  clearUserId: () => void
+
+  /**
+   * Gets the currently set user ID
+   * @returns The current user ID or null if not set
+   */
+  getUserId: () => string | null
+  /**
+   * @deprecated use top level functions instead
+   */
+  rybbit: RybbitAnalyticsApi
 }
 
 declare global {
@@ -29,7 +59,7 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
     return {
       scriptInput: {
         'src': 'https://app.rybbit.io/api/script.js',
-        'data-site-id': options?.siteId,
+        'data-site-id': String(options?.siteId),
         'data-track-spa': options?.trackSpa,
         'data-track-query': options?.trackQuery,
         'data-skip-patterns': options?.skipPatterns ? JSON.stringify(options.skipPatterns) : undefined,
@@ -39,7 +69,17 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
       schema: import.meta.dev ? RybbitAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          return { rybbit: window.rybbit }
+          if (typeof window.rybbit === 'undefined') {
+            return null
+          }
+          return {
+            pageview: window.rybbit.pageview,
+            event: window.rybbit.event,
+            identify: window.rybbit.identify,
+            clearUserId: window.rybbit.clearUserId,
+            getUserId: window.rybbit.getUserId,
+            rybbit: window.rybbit,
+          } satisfies RybbitAnalyticsApi
         },
       },
     }

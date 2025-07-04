@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NavItem } from '@nuxt/contents'
 
-const navigation = inject<NavItem[]>('navigation', [])
+inject<NavItem[]>('navigation', [])
 // const { metaSymbol } = useShortcuts()
 const { header } = useAppConfig()
 const links = [
@@ -25,18 +25,18 @@ const links = [
     <UNavigationMenu :items="links" />
 
     <template #title>
-    <div class="flex items-center gap-3">
-      <Logo />
-      <UBadge class="hidden md:block" size="sm" color="warning" variant="subtle">
-        Beta
-      </UBadge>
-    </div>
+      <div class="flex items-center gap-3">
+        <Logo />
+        <UBadge class="hidden md:block" size="sm" color="warning" variant="subtle">
+          Beta
+        </UBadge>
+      </div>
     </template>
 
     <template #right>
-<!--      <UTooltip text="Search" :shortcuts="[metaSymbol, 'K']" :popper="{ strategy: 'absolute' }">-->
-<!--        <UContentSearchButton :label="null" />-->
-<!--      </UTooltip>-->
+      <!--      <UTooltip text="Search" :shortcuts="[metaSymbol, 'K']" :popper="{ strategy: 'absolute' }"> -->
+      <!--        <UContentSearchButton :label="null" /> -->
+      <!--      </UTooltip> -->
       <UColorModeButton />
       <template v-if="header?.links">
         <UButton

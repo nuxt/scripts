@@ -56,7 +56,7 @@ defineOgImageComponent('Docs', {
       <hr v-if="surround?.length || page.path === '/docs/getting-started'">
 
       <UContentSurround :surround="surround" />
-	  <UContentSurround v-if="page.path === '/docs/getting-started'" :surround="surroundIntroduction" />
+      <UContentSurround v-if="page.path === '/docs/getting-started'" :surround="surroundIntroduction" />
     </UPageBody>
 
     <!--    <template v-if="page.toc !== false" #right> -->

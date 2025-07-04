@@ -21,3 +21,4 @@ export const any = noop
 export const minLength = noop
 
 export const pipe = noop
+export const custom = noop
