@@ -4,11 +4,17 @@ import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const RybbitAnalyticsOptions = object({
   siteId: union([string(), number()]), // required
+  autoTrackPageview: optional(boolean()),
   trackSpa: optional(boolean()),
   trackQuery: optional(boolean()),
+  trackOutbound: optional(boolean()),
+  trackErrors: optional(boolean()),
+  sessionReplay: optional(boolean()),
+  webVitals: optional(boolean()),
   skipPatterns: optional(array(string())),
   maskPatterns: optional(array(string())),
   debounce: optional(number()),
+  apiKey: optional(string()),
 })
 
 export type RybbitAnalyticsInput = RegistryScriptInput<typeof RybbitAnalyticsOptions, false>
@@ -60,11 +66,17 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
       scriptInput: {
         'src': 'https://app.rybbit.io/api/script.js',
         'data-site-id': String(options?.siteId),
+        'data-auto-track-pageview': options?.autoTrackPageview,
         'data-track-spa': options?.trackSpa,
         'data-track-query': options?.trackQuery,
+        'data-track-outbound': options?.trackOutbound,
+        'data-track-errors': options?.trackErrors,
+        'data-session-replay': options?.sessionReplay,
+        'data-web-vitals': options?.webVitals,
         'data-skip-patterns': options?.skipPatterns ? JSON.stringify(options.skipPatterns) : undefined,
         'data-mask-patterns': options?.maskPatterns ? JSON.stringify(options.maskPatterns) : undefined,
         'data-debounce': options?.debounce ? options.debounce.toString() : undefined,
+        'data-api-key': options?.apiKey,
       },
       schema: import.meta.dev ? RybbitAnalyticsOptions : undefined,
       scriptOptions: {
