@@ -167,10 +167,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               let src: false | string | undefined
               if (fnName === 'useScript') {
                 // do easy case first where first argument is a literal
-                if (node.arguments[0].type === 'Literal') {
+                if (node.arguments[0]?.type === 'Literal') {
                   scriptSrcNode = node.arguments[0] as Literal & { start: number, end: number }
                 }
-                else if (node.arguments[0].type === 'ObjectExpression') {
+                else if (node.arguments[0]?.type === 'ObjectExpression') {
                   const srcProperty = node.arguments[0].properties.find(
                     (p: any) => (p.key?.name === 'src' || p.key?.value === 'src') && p?.value.type === 'Literal',
                   )

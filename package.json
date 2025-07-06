@@ -53,8 +53,7 @@
     "release": "pnpm build && bumpp -x \"npx changelogen --output=CHANGELOG.md\" && pnpm publish",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "pnpm dev:prepare && vitest --run --exclude **/__runtime__ && pnpm test:runtime",
-    "test:runtime": "cd test/fixtures/basic && vitest --run",
+    "test": "pnpm dev:prepare && vitest --run",
     "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck"
   },
   "build": {
