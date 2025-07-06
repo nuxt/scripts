@@ -2,7 +2,7 @@ import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
-  addPluginTemplate,
+  addPluginTemplate, addTypeTemplate,
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
@@ -13,7 +13,7 @@ import { setupDevToolsUI } from './devtools'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
 import { logger } from './logger'
-import { extendTypes, installNuxtModule } from './kit'
+import { installNuxtModule } from './kit'
 import { registry } from './registry'
 import type {
   NuxtConfigScriptRegistry,
@@ -24,6 +24,7 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { templatePlugin } from './templates'
+import { relative, resolve } from 'pathe'
 
 export interface ModuleOptions {
   /**
@@ -171,9 +172,11 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
-      // augment types to support the integrations registry
-      extendTypes(name!, async ({ typesPath }) => {
-        let types = `
+      addTypeTemplate({
+        filename: 'module/nuxt-scripts.d.ts',
+        getContents: (data) => {
+          const typesPath = relative(resolve(data.nuxt!.options.rootDir, data.nuxt!.options.buildDir, 'module'), resolve('runtime/types'))
+          let types = `
 declare module '#app' {
   interface NuxtApp {
     $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts/types').UseScriptContext<any>)>
@@ -184,8 +187,8 @@ declare module '#app' {
   }
 }
 `
-        if (newScripts.length) {
-          types = `${types}
+          if (newScripts.length) {
+            types = `${types}
 declare module '#nuxt-scripts/types' {
     type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
     interface ScriptRegistry {
@@ -196,9 +199,13 @@ ${newScripts.map((i) => {
 }).join('\n')}
     }
 }`
-          return types
-        }
-        return types
+            return types
+          }
+          return `${types}
+export {}`
+        },
+      }, {
+        nuxt: true,
       })
 
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
