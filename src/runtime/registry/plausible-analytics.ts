@@ -22,9 +22,9 @@ export const PlausibleAnalyticsOptions = object({
 export type PlausibleAnalyticsInput = RegistryScriptInput<typeof PlausibleAnalyticsOptions, false>
 
 export interface PlausibleAnalyticsApi {
-  plausible: ((event: '404', options: Record<string, any>) => void) &
-    ((event: 'event', options: Record<string, any>) => void) &
-    ((...params: any[]) => void) & {
+  plausible: ((event: '404', options: Record<string, any>) => void)
+    & ((event: 'event', options: Record<string, any>) => void)
+    & ((...params: any[]) => void) & {
       q: any[]
     }
 }

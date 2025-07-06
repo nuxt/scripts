@@ -42,11 +42,11 @@ export const InitObjectPropertiesSchema = object({
 
 type InitObjectProperties = InferInput<typeof InitObjectPropertiesSchema>
 
-type SnapTrFns =
-  ((event: 'track', eventName: StandardEvents | '', data?: EventObjectProperties) => void) &
-  ((event: 'init', id: string, data?: Record<string, any>) => void) &
-  ((event: 'init', id: string, data?: InitObjectProperties) => void) &
-  ((event: string, ...params: any[]) => void)
+type SnapTrFns
+  = ((event: 'track', eventName: StandardEvents | '', data?: EventObjectProperties) => void)
+    & ((event: 'init', id: string, data?: Record<string, any>) => void)
+    & ((event: 'init', id: string, data?: InitObjectProperties) => void)
+    & ((event: string, ...params: any[]) => void)
 
 export interface SnapPixelApi {
   snaptr: SnapTrFns & {

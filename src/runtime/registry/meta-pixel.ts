@@ -20,16 +20,16 @@ interface EventObjectProperties {
 }
 type ConsentAction = 'grant' | 'revoke'
 
-type FbqArgs =
-  | ['track', StandardEvents, EventObjectProperties?]
-  | ['trackCustom', string, EventObjectProperties?]
-  | ['trackSingle', string, StandardEvents, EventObjectProperties?]
-  | ['trackSingleCustom', string, string, EventObjectProperties?]
-  | ['init', string]
-  | ['init', number, Record<string, any>?]
-  | ['consent', ConsentAction]
+type FbqArgs
+  = | ['track', StandardEvents, EventObjectProperties?]
+    | ['trackCustom', string, EventObjectProperties?]
+    | ['trackSingle', string, StandardEvents, EventObjectProperties?]
+    | ['trackSingleCustom', string, string, EventObjectProperties?]
+    | ['init', string]
+    | ['init', number, Record<string, any>?]
+    | ['consent', ConsentAction]
   // fallback: allow any fbq call signature not covered above
-  | [string, ...any[]]
+    | [string, ...any[]]
 type FbqFns = (...args: FbqArgs) => void
 
 export interface MetaPixelApi {

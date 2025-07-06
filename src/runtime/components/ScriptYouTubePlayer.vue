@@ -12,19 +12,19 @@ import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
 import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
-export type YoutubeThumbnailSize =
+export type YoutubeThumbnailSize
 // 120x90
-  '1' | '2' | '3' | 'default' |
+  = '1' | '2' | '3' | 'default'
   // 320x180
-  'mq1' | 'mq2' | 'mq3' | 'mqdefault' |
+    | 'mq1' | 'mq2' | 'mq3' | 'mqdefault'
   // 480x360
-  '0' | 'hq1' | 'hq2' | 'hq3' | 'hqdefault' |
+    | '0' | 'hq1' | 'hq2' | 'hq3' | 'hqdefault'
   // 640x480
-  'sd1' | 'sd2' | 'sd3' | 'sddefault' |
+    | 'sd1' | 'sd2' | 'sd3' | 'sddefault'
   // 1280x720
-  'hq720' |
+    | 'hq720'
   // 1920x1080
-  'maxresdefault'
+    | 'maxresdefault'
 
 const props = withDefaults(defineProps<{
   placeholderAttrs?: ImgHTMLAttributes

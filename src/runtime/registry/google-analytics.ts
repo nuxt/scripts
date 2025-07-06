@@ -50,27 +50,27 @@ export interface EventParameters extends GtagCustomParams {
 }
 
 // Default events in GA4
-export type DefaultEventName =
-  | 'add_payment_info'
-  | 'add_shipping_info'
-  | 'add_to_cart'
-  | 'add_to_wishlist'
-  | 'begin_checkout'
-  | 'purchase'
-  | 'refund'
-  | 'remove_from_cart'
-  | 'select_item'
-  | 'select_promotion'
-  | 'view_cart'
-  | 'view_item'
-  | 'view_item_list'
-  | 'view_promotion'
-  | 'login'
-  | 'sign_up'
-  | 'search'
-  | 'page_view'
-  | 'screen_view'
-  | string // Allow custom event names
+export type DefaultEventName
+  = | 'add_payment_info'
+    | 'add_shipping_info'
+    | 'add_to_cart'
+    | 'add_to_wishlist'
+    | 'begin_checkout'
+    | 'purchase'
+    | 'refund'
+    | 'remove_from_cart'
+    | 'select_item'
+    | 'select_promotion'
+    | 'view_cart'
+    | 'view_item'
+    | 'view_item_list'
+    | 'view_promotion'
+    | 'login'
+    | 'sign_up'
+    | 'search'
+    | 'page_view'
+    | 'screen_view'
+    | string // Allow custom event names
 
 // Define the GTag function interface with proper overloads
 export interface GTag {

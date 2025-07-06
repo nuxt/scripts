@@ -22,10 +22,10 @@ interface EventObjectProperties {
   contents: ContentProperties[]
 }
 
-type TwqFns =
-  ((event: 'event', eventId: string, data?: EventObjectProperties) => void)
-  & ((event: 'config', id: string) => void)
-  & ((event: string, ...params: any[]) => void)
+type TwqFns
+  = ((event: 'event', eventId: string, data?: EventObjectProperties) => void)
+    & ((event: 'config', id: string) => void)
+    & ((event: string, ...params: any[]) => void)
 
 export interface XPixelApi {
   twq: TwqFns & {

@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
 import { $fetch, setup } from '@nuxt/test-utils/e2e'

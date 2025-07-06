@@ -172,8 +172,8 @@ export type RegistryScriptInput<
   Bundelable extends boolean = true,
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
-> =
-    (InferIfSchema<T>
+>
+    = (InferIfSchema<T>
       & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
