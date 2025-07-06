@@ -160,11 +160,11 @@ const { data: payload } = useAsyncData(
     params: {
       url: `https://vimeo.com/${id.value}`,
       format: 'json',
-    }
+    },
   }),
   {
     lazy: true,
-  }
+  },
 )
 
 const placeholder = computed(() => {

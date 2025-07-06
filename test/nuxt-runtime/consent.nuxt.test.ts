@@ -1,7 +1,6 @@
-// @vitest-environment happy-dom
 import { ref } from 'vue'
 import { it, expect, describe } from 'vitest'
-import { useScriptTriggerConsent } from '../../../../src/runtime/composables/useScriptTriggerConsent'
+import { useScriptTriggerConsent } from '#imports'
 
 function getPromiseState(promise: Promise<any>) {
   const temp = {}

@@ -4,18 +4,17 @@ import { createPage, setup } from '@nuxt/test-utils/e2e'
 
 const { resolve } = createResolver(import.meta.url)
 
-await setup({
-  rootDir: resolve('../fixtures/basic'),
-  // dev: true,
-  browser: true,
-  nuxtConfig: {
-    app: {
-      baseURL: '/foo',
+describe('base', async () => {
+  await setup({
+    rootDir: resolve('../fixtures/basic'),
+    // dev: true,
+    browser: true,
+    nuxtConfig: {
+      app: {
+        baseURL: '/foo',
+      },
     },
-  },
-})
-
-describe('base', () => {
+  })
   it('bundle', async () => {
     const page = await createPage('/foo/bundle-use-script')
     await page.waitForTimeout(500)

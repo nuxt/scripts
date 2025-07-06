@@ -1,13 +1,13 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-// import { createResolver } from '@nuxt/kit'
+import { createResolver } from '@nuxt/kit'
 import { $fetch, setup } from '@nuxt/test-utils/e2e'
 
-// const { resolve } = createResolver(import.meta.url)
+const { resolve } = createResolver(import.meta.url)
 
 describe('cdnURL', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('../fixtures/cdn', import.meta.url)),
+    rootDir: resolve('../fixtures/cdn'),
     nuxtConfig: {
       nitro: {
         prerender: {
@@ -16,7 +16,6 @@ describe('cdnURL', async () => {
       },
     },
   })
-
   it('should use cdnURL for bundled scripts', async () => {
     const html = await $fetch('/')
 

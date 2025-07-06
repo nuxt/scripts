@@ -25,7 +25,7 @@ function loadScript() {
     },
   })
 
-  $script.then((script) => {
+  $script.then(() => {
     scriptStatus.value = 'loaded'
     // Script loaded successfully
   }).catch(() => {
