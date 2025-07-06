@@ -9,6 +9,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
     const script = useScript({
       src: '/preload.js',
     }, {
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
@@ -30,6 +31,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
     }, {
       trigger: 'manual',
       warmupStrategy: 'preload',
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
@@ -51,6 +53,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
     }, {
       trigger: 'manual',
       warmupStrategy: 'preconnect',
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
@@ -64,6 +67,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
     }, {
       trigger: 'manual',
       warmupStrategy: 'preconnect',
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
@@ -86,6 +90,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
     }, {
       trigger: 'manual',
       warmupStrategy: 'preload',
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
@@ -109,6 +114,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
       crossorigin: 'use-credentials',
       referrerpolicy: 'no-referrer-when-downgrade',
     }, {
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
@@ -132,6 +138,7 @@ describe.skipIf(process.env.CI)('script warmup', () => {
       async: true,
       crossorigin: false,
     }, {
+      // @ts-expect-error untyped
       head,
     })
     const ssr = await renderSSRHead(head)
