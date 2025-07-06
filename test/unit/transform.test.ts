@@ -49,6 +49,28 @@ vi.mock('@nuxt/kit', async (og) => {
       return {
         options: {
           buildDir: '.nuxt',
+          app: {
+            baseURL: '/',
+          },
+          runtimeConfig: {
+            app: {},
+          },
+        },
+        hooks: {
+          hook: vi.fn(),
+        },
+      }
+    },
+    tryUseNuxt() {
+      return {
+        options: {
+          buildDir: '.nuxt',
+          app: {
+            baseURL: '/',
+          },
+          runtimeConfig: {
+            app: {},
+          },
         },
         hooks: {
           hook: vi.fn(),
@@ -310,6 +332,22 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 });`,
     )
     expect(code.includes('useScript(\'/_scripts/vFJ41_fzYQOTRPr3v6G1PkI0hc5tMy0HGrgFjhaJhOI.js\', {')).toBeTruthy()
+  })
+
+  it('uses baseURL without cdnURL', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+
+    const code = await transform(
+      `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+      bundle: true,
+    })`,
+      {
+        assetsBaseURL: '/_scripts',
+      },
+    )
+
+    // Without cdnURL configured, it should use baseURL
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
   })
 
   describe.todo('fallbackOnSrcOnBundleFail', () => {

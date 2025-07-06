@@ -45,7 +45,10 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): 
       `${ohash(url)}.js`, // force an extension
     ].filter(Boolean).join('-')
     const nuxt = tryUseNuxt()
-    return { url: joinURL(joinURL(nuxt?.options.app.baseURL || '', assetsBaseURL), file), filename: file }
+    // Use cdnURL if available, otherwise fall back to baseURL
+    const cdnURL = nuxt?.options.runtimeConfig?.app?.cdnURL || nuxt?.options.app?.cdnURL || ''
+    const baseURL = cdnURL || nuxt?.options.app.baseURL || ''
+    return { url: joinURL(joinURL(baseURL, assetsBaseURL), file), filename: file }
   }
   return { url: src }
 }
