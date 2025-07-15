@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.11.8...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.8...main)
+
+### 🚀 Enhancements
+
+- **rybbit:** Add new tracking configuration options ([#471](https://github.com/nuxt/scripts/pull/471))
+
+### 🩹 Fixes
+
+- **meta-pixel:** Refine fbq type definitions ([#464](https://github.com/nuxt/scripts/pull/464))
+- Support cdnURL for bundled scripts ([#472](https://github.com/nuxt/scripts/pull/472))
+
+### 📖 Documentation
+
+- Correct contents of XPixelAPI ([#465](https://github.com/nuxt/scripts/pull/465))
+
+### 🏡 Chore
+
+- Bump deps & changelog ([19c74b2](https://github.com/nuxt/scripts/commit/19c74b2))
+- Bump lock ([fb2d62b](https://github.com/nuxt/scripts/commit/fb2d62b))
+- Remove `bridge: false` from module compatibility ([#470](https://github.com/nuxt/scripts/pull/470))
+- Fix tests ([e14cd1b](https://github.com/nuxt/scripts/commit/e14cd1b))
+- Fix tests ([2b7002c](https://github.com/nuxt/scripts/commit/2b7002c))
+- Fix tests ([9f486ae](https://github.com/nuxt/scripts/commit/9f486ae))
+- Type issues ([243d8d6](https://github.com/nuxt/scripts/commit/243d8d6))
+- Sync lock ([0198225](https://github.com/nuxt/scripts/commit/0198225))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Dan <danker.twist@gmail.com>
+- Daniel Roe ([@danielroe](https://github.com/danielroe))
+- Nagaakihoshi <nagaaki.hoshi@yourmystar.jp>
+- Kohei Tsukiyama ([@tsukiyama-3](https://github.com/tsukiyama-3))
+
 ## v0.11.7...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.7...main)
