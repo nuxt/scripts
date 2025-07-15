@@ -1,4 +1,11 @@
-import noop from 'unenv/runtime/mock/noop'
+const noop = Object.freeze(
+  Object.assign(
+    () => {
+      /** noop */
+    },
+    { __mock__: true },
+  ),
+)
 
 export const parse = noop
 export const object = noop
@@ -14,3 +21,4 @@ export const any = noop
 export const minLength = noop
 
 export const pipe = noop
+export const custom = noop

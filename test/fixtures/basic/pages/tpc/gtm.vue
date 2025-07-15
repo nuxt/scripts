@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { useScriptGoogleTagManager } from '#imports'
 
-const { dataLayer, status } = useScriptGoogleTagManager({
+const { proxy, status } = useScriptGoogleTagManager({
   id: 'GTM-MNJD4B',
 })
 
 function pushEvent() {
-  dataLayer.push({
+  proxy.dataLayer.push({
     event: 'page_view',
     page_title: 'GTM',
   })

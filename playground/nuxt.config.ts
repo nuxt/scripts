@@ -1,19 +1,21 @@
+import NuxtScripts from '../src/module'
+
 export default defineNuxtConfig({
   modules: [
-    '@nuxt/scripts',
+    NuxtScripts,
     '@nuxt/ui',
   ],
 
   devtools: { enabled: true },
   compatibilityDate: '2024-07-14',
 
-  scripts: {
-    debug: true,
-  },
-
   nitro: {
     prerender: {
       failOnError: false,
     },
+  },
+
+  scripts: {
+    debug: true,
   },
 })

@@ -1,35 +1,28 @@
-name: release
+name: Release
+
+permissions:
+  contents: write
 
 on:
   push:
-    branches:
-      - main
-
-permissions: {}
-
+    tags:
+      - 'v*'
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'nuxt' && github.event_name == 'push' }}
-    permissions:
-      id-token: write
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - run: corepack enable
-      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+      - uses: actions/checkout@v4
         with:
-          node-version: 20
-          registry-url: 'https://registry.npmjs.org/'
-          cache: pnpm
+          fetch-depth: 0
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
-      - name: Prepare build environment
-        run: pnpm dev:prepare
+      - name: Set node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
 
-      - name: nightly release
-        run: pnpm changelogen --canary nightly --publish
+      - run: npx changelogithub
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

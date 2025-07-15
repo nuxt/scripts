@@ -40,7 +40,7 @@ const thirdParties = [
   },
   {
     name: 'Matomo Analytics',
-    path: '/third-parties/matomo-analytics',
+    path: '/third-parties/matomo-analytics/default',
   },
   {
     name: 'Hotjar',
@@ -57,6 +57,10 @@ const thirdParties = [
   {
     name: 'Segment',
     path: '/third-parties/segment',
+  },
+  {
+    name: 'Snapchat',
+    path: '/third-parties/snapchat/nuxt-scripts',
   },
 ]
 

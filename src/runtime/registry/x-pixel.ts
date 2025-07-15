@@ -1,7 +1,7 @@
 import type { UseScriptInput } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import { object, optional, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 interface ContentProperties {
   content_type?: string | null
@@ -22,10 +22,10 @@ interface EventObjectProperties {
   contents: ContentProperties[]
 }
 
-type TwqFns =
-  ((event: 'event', eventId: string, data?: EventObjectProperties) => void)
-  & ((event: 'config', id: string) => void)
-  & ((event: string, ...params: any[]) => void)
+type TwqFns
+  = ((event: 'event', eventId: string, data?: EventObjectProperties) => void)
+    & ((event: 'config', id: string) => void)
+    & ((event: string, ...params: any[]) => void)
 
 export interface XPixelApi {
   twq: TwqFns & {

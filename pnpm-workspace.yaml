@@ -2,3 +2,8 @@ packages:
   - playground
   - client
   - docs
+
+catalog:
+  nuxt: ^3.17.6
+  '@nuxt/kit': ^3.17.6
+  '@nuxt/schema': ^3.17.6

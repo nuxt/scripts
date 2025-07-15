@@ -1,21 +1,22 @@
 <script lang="ts" setup>
-import { useHead, useScriptGoogleTagManager } from '#imports'
+import { useScriptGoogleTagManager } from '#nuxt-scripts/registry/google-tag-manager'
+import { useHead } from '#imports'
 
 useHead({
   title: 'Google Analytics',
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { dataLayer, then, status } = useScriptGoogleTagManager({
-  id: 'GTM-MNJD4B',
+const { proxy, onLoaded, status } = useScriptGoogleTagManager({
+  id: 'GTM-MWW974PF',
 }) // id is set via runtime config
-dataLayer.push({
+proxy.dataLayer.push({
   event: 'page_view',
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',
   page_path: '/third-parties/google-analytics',
 })
-then(({ google_tag_manager, dataLayer }) => {
+onLoaded(({ google_tag_manager, dataLayer }) => {
   // eslint-disable-next-line no-console
   console.log('google_tag_manager is ready', google_tag_manager)
   // eslint-disable-next-line no-console

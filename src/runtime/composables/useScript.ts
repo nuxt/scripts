@@ -1,10 +1,9 @@
-import type { UseScriptInput, VueScriptInstance } from '@unhead/vue'
-import type { UseScriptOptions, UseFunctionType, AsAsyncFunctionValues } from '@unhead/schema'
-import { resolveScriptKey } from 'unhead'
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
-import { useScript as _useScript } from '@unhead/vue'
-import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig, reactive } from '#imports'
-import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions } from '#nuxt-scripts'
+import { useScript as _useScript } from '@unhead/vue/scripts'
+import { reactive } from 'vue'
+import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from '#imports'
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -12,62 +11,43 @@ function useNuxtScriptRuntimeConfig() {
   }
 }
 
-export type UseScriptContext<T extends Record<symbol | string, any>> =
-  (Promise<T> & VueScriptInstance<T>)
-  & AsAsyncFunctionValues<T>
-  & {
-  /**
-   * @deprecated Use top-level functions instead.
-   */
-    $script: Promise<T> & VueScriptInstance<T>
-  }
+export function resolveScriptKey(input: any): string {
+  return input.key || input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : '')
+}
 
-export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>, U = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T, U>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>> {
+export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
-  options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T, U>
+  options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
   // browser hint optimizations
-  const rel = options.trigger === 'onNuxtReady' ? 'preload' : 'preconnect'
-  const isCrossOrigin = input.src && !input.src.startsWith('/')
-  const id = resolveScriptKey(input) as keyof typeof nuxtApp._scripts
+  const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
   const nuxtApp = useNuxtApp()
+  options.head = options.head || injectHead()
+  if (!options.head) {
+    throw new Error('useScript() has been called without Nuxt context.')
+  }
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
-  // need to make sure it's not already registered
-  if (!exists && input.src && options.trigger !== 'server' && (rel === 'preload' || isCrossOrigin)) {
-    useHead({
-      link: [
-        {
-          rel,
-          as: rel === 'preload' ? 'script' : undefined,
-          href: input.src,
-          crossorigin: !isCrossOrigin ? undefined : (typeof input.crossorigin !== 'undefined' ? input.crossorigin : 'anonymous'),
-          key: `nuxt-script-${id}`,
-          tagPriority: rel === 'preload' ? 'high' : 0,
-          fetchpriority: 'low',
-        },
-      ],
-    })
-  }
-  if (options.trigger === 'onNuxtReady') {
-    options.trigger = onNuxtReady
-  }
-  if (import.meta.client) {
-    // only validate if we're initializing the script
-    if (!exists) {
-      performance?.mark?.('mark_feature_usage', {
-        detail: {
-          feature: options.performanceMarkFeature ?? `nuxt-scripts:${id}`,
-        },
-      })
+
+  if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
+    if (!options.warmupStrategy) {
+      options.warmupStrategy = 'preload'
+    }
+    if (options.trigger === 'onNuxtReady') {
+      options.trigger = onNuxtReady
     }
   }
-  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>)
-  // @ts-expect-error untyped
+
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  const _remove = instance.remove
+  instance.remove = () => {
+    nuxtApp.$scripts[id] = undefined
+    return _remove()
+  }
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     if (exists) {
-      return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+      return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
     }
     // sync scripts to nuxtApp with debug details
     const payload: NuxtDevToolsScriptInstance = {
@@ -84,8 +64,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
 
     if (!nuxtApp._scripts[instance.id]) {
-      const head = injectHead()
-      head.hooks.hook('script:updated', (ctx) => {
+      options.head.hooks.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
           return
         // convert the status to a timestamp
@@ -97,7 +76,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         payload.$script = instance
         syncScripts()
       })
-      head.hooks.hook('script:instance-fn', (ctx) => {
+      // @ts-expect-error untyped
+      options.head.hooks.hook('script:instance-fn', (ctx) => {
         if (ctx.script.id !== instance.id || String(ctx.fn).startsWith('__v_'))
           return
         // log all events
@@ -118,5 +98,5 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       syncScripts()
     }
   }
-  return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T, U>, T>>
+  return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 }

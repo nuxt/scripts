@@ -5,13 +5,10 @@ import { parseURL } from 'ufo'
 
 const { resolve } = createResolver(import.meta.url)
 
-await setup({
-  rootDir: resolve('../fixtures/extend-registry'),
-  dev: true,
-  browser: true,
-})
-
-describe('basic', () => {
+describe('basic', async () => {
+  await setup({
+    rootDir: resolve('../fixtures/extend-registry'),
+  })
   it('extended registry script loads and executes function', async () => {
     const page = await createPage()
     const logs: { text: string, location: string }[] = []

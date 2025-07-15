@@ -1,6 +1,5 @@
 import { field, group } from '@nuxthq/studio/theme'
 
-// @ts-expect-error untyped
 export default defineNuxtSchema({
   appConfig: {
     ui: group({

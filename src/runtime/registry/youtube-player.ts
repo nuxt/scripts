@@ -1,10 +1,10 @@
 /// <reference types="youtube" />
 import { watch } from 'vue'
 import type { UseScriptContext } from '@unhead/vue'
+import { useHead } from '@unhead/vue'
 import type { MaybePromise } from '../utils'
 import { useRegistryScript } from '../utils'
-import { useHead } from '#imports'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export interface YouTubePlayerApi {
   YT: MaybePromise<{

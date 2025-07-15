@@ -98,34 +98,31 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 
 ```ts
 export interface XPixelApi {
-  fbq: FbqFns & {
-    push: FbqFns
+  twq: TwqFns & {
     loaded: boolean
     version: string
     queue: any[]
   }
-  _fbq: XPixelApi['fbq']
 }
-type FbqFns = ((event: 'track', eventName: StandardEvents, data?: EventObjectProperties) => void)
-  & ((event: 'trackCustom', eventName: string, data?: EventObjectProperties) => void)
-  & ((event: 'init', id: number, data?: Record<string, any>) => void)
-  & ((event: 'init', id: string) => void)
+type TwqFns =
+  ((event: 'event', eventId: string, data?: EventObjectProperties) => void)
+  & ((event: 'config', id: string) => void)
   & ((event: string, ...params: any[]) => void)
-type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
+interface ContentProperties {
+  content_type?: string | null
+  content_id?: string | number | null
+  content_name?: string | null
+  content_price?: string | number | null
+  num_items?: string | number | null
+  content_group_id?: string | number | null
+}
 interface EventObjectProperties {
-  content_category?: string
-  content_ids?: string[]
-  content_name?: string
-  content_type?: string
-  contents: { id: string, quantity: number }[]
-  currency?: string
-  delivery_category?: 'in_store' | 'curbside' | 'home_delivery'
-  num_items?: number
-  predicted_ltv?: number
-  search_string?: string
-  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | string
-  value?: number
-  [key: string]: any
+  value?: string | number | null
+  currency?: string | null
+  conversion_id?: string | number | null
+  email_address?: string | null
+  phone_number?: string | null
+  contents: ContentProperties[]
 }
 ```
 

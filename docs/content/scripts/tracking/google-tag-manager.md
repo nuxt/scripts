@@ -8,16 +8,12 @@ links:
   size: xs
 ---
 
-::tip
-This composable is generated with [GoogleChromeLabs/third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital) in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
-::
-
 [Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.
 
 ::callout
 You may not need Google Tag Manager with Nuxt Scripts. GTM is 82kb and will slow down your site.
 Nuxt Scripts provides many features you can easily
-implement within your Nuxt app. If you're using GTM for Google Tag Manager, you can use the `useScriptGoogleAnalytics` composable instead.
+implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the `useScriptGoogleAnalytics` composable instead.
 ::
 
 ## Loading Globally
@@ -93,7 +89,7 @@ Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to lea
 
 ### Guide: Sending Page Events
 
-If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [useScriptEventPage](/docs/api/use-script-event-tag) composable.
+If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [useScriptEventPage](/docs/api/use-script-event-page) composable.
 This composable will trigger the provided function on route change after the page title has been updated.
 
 ```ts
@@ -125,17 +121,46 @@ interface GoogleTagManagerApi {
 You must provide the options when setting up the script for the first time.
 
 ```ts
+/**
+ * GTM configuration options with improved documentation
+ */
 export const GoogleTagManagerOptions = object({
-  /**
-   * The Google Tag Manager ID.
-   */
-  id: string(),
-  /**
-   * The name of the dataLayer you want to use
-   * @default 'defaultGtm'
-   */
-  dataLayerName: optional(string())
-})
+    /** GTM container ID (format: GTM-XXXXXX) */
+    id: string(),
+
+    /** Optional dataLayer variable name */
+    l: optional(string()),
+
+    /** Authentication token for environment-specific container versions */
+    auth: optional(string()),
+
+    /** Preview environment name */
+    preview: optional(string()),
+
+    /** Forces GTM cookies to take precedence when true */
+    cookiesWin: optional(union([boolean(), literal('x')])),
+
+    /** Enables debug mode when true */
+    debug: optional(union([boolean(), literal('x')])),
+
+    /** No Personal Advertising - disables advertising features when true */
+    npa: optional(union([boolean(), literal('1')])),
+
+    /** Custom dataLayer name (alternative to "l" property) */
+    dataLayer: optional(string()),
+
+    /** Environment name for environment-specific container */
+    envName: optional(string()),
+
+    /** Referrer policy for analytics requests */
+    authReferrerPolicy: optional(string()),
+  })
+```
+
+### Options types
+
+```ts
+type GoogleTagManagerInput = typeof GoogleTagManagerOptions & { onBeforeGtmStart?: (gtag: Gtag) => void }
 ```
 
 ## Example
@@ -146,13 +171,13 @@ Using Google Tag Manager only in production while using `dataLayer` to send a co
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { dataLayer } = useScriptGoogleTagManager()
+const { proxy } = useScriptGoogleTagManager()
 
 // noop in development, ssr
 // just works in production, client
-dataLayer.push({ event: 'conversion-step', value: 1 })
+proxy.dataLayer.push({ event: 'conversion-step', value: 1 })
 function sendConversion() {
-  dataLayer.push({ event: 'conversion', value: 1 })
+  proxy.dataLayer.push({ event: 'conversion', value: 1 })
 }
 </script>
 
@@ -167,3 +192,9 @@ function sendConversion() {
 
 
 ::
+
+## Configuring GTM before it starts
+
+`useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
+
+If you need to configure GTM before it starts. For example, [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.

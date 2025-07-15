@@ -16,6 +16,15 @@ links:
 
 Nuxt Scripts provides a `useScriptYouTubePlayer` composable and a headless `ScriptYouTubePlayer` component to interact with the YouTube Player.
 
+## Types
+
+To use YouTube with full TypeScript support, you will need
+to install the `@types/youtube` dependency.
+
+```bash
+pnpm add -D @types/youtube
+```
+
 ## ScriptYouTubePlayer
 
 The `ScriptYouTubePlayer` component is a wrapper around the `useScriptYouTubePlayer` composable. It provides a simple way to embed YouTube videos in your Nuxt app.
@@ -86,9 +95,33 @@ export interface YouTubeProps {
 }
 ```
 
-#### Eager Loading Placeholder
+### Privacy
 
-The YouTube Player placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
+The `<YoutubePlayer>` component is privacy-friendly by default and sets the video host to `https://www.youtube-nocookie.com`. 
+
+To modify this behavior, you can set the `host` prop to `https://www.youtube.com`.
+
+```vue
+<ScriptYouTubePlayer video-id="d_IFKP1Ofq0" :player-options="{ host: 'https://www.youtube.com' }" />
+```
+
+### Placeholder
+
+The YouTube Player placeholder image is 1280x720 webp that is lazy-loaded by default.
+
+To modify the placeholder size you can set the `thumbnailSize` prop, if you'd prefer
+to use a `jpg` you can pass the `webp` prop as `false`.
+
+```vue
+<ScriptYouTubePlayer video-id="d_IFKP1Ofq0" thumbnail-size="maxresdefault" />
+```
+
+If you need fine control over the placeholder you can set `placeholderAttrs` prop or completely override it using
+the `#placeholder` slot.
+
+#### Eager Loading
+
+You should change this behavior if your video is above the fold
 or consider using the `#placeholder` slot to customize the placeholder image.
 
 ::code-group
