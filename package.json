@@ -77,7 +77,7 @@
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
     "@unhead/vue": "^2.0.3",
-    "nuxt": "^3.16.2"
+    "nuxt": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "@stripe/stripe-js": {
@@ -140,7 +140,7 @@
     "@nuxt/scripts": "workspace:*",
     "@unhead/vue": "^2.0.11",
     "@nuxt/kit": "npm:@nuxt/kit-nightly@4.0.0-29191554.69345c32",
-    "nuxt": "npm:nuxt-nightly@4.0.0-29191554.69345c32",
+    "nuxt": "^4.0.0",
     "@nuxt/schema": "npm:@nuxt/schema-nightly@4.0.0-29191554.69345c32",
     "typescript": "^5.8.3",
     "unhead": "^2.0.11",
