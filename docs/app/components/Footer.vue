@@ -39,7 +39,7 @@ const topGuides = inject<Ref<NavItem[]>>('topGuides')
               <nav>
                 <ul class="grid grid-cols-2 gap-6">
                   <li v-for="(module, key) in topGuides" :key="key">
-                    <NuxtLink :to="module._path">
+                    <NuxtLink :to="module.path">
                       {{ module.title }}
                     </NuxtLink>
                   </li>
