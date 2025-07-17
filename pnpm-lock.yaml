@@ -37,7 +37,7 @@ importers:
         version: 0.1.2
       '@unhead/vue':
         specifier: ^2.0.3
-        version: 2.0.12(vue@3.5.17(typescript@5.8.2))
+        version: 2.0.12(vue@3.5.17(typescript@5.8.3))
       '@vueuse/core':
         specifier: ^13.5.0
         version: 13.5.0(vue@3.5.17(typescript@5.8.3))
@@ -6703,11 +6703,6 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@5.8.2:
-    resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
@@ -10393,12 +10388,6 @@ snapshots:
       unhead: 2.0.12
       vue: 3.5.17(typescript@5.6.3)
 
-  '@unhead/vue@2.0.12(vue@3.5.17(typescript@5.8.2))':
-    dependencies:
-      hookable: 5.5.3
-      unhead: 2.0.12
-      vue: 3.5.17(typescript@5.8.2)
-
   '@unhead/vue@2.0.12(vue@3.5.17(typescript@5.8.3))':
     dependencies:
       hookable: 5.5.3
@@ -10904,12 +10893,6 @@ snapshots:
       '@vue/compiler-ssr': 3.5.17
       '@vue/shared': 3.5.17
       vue: 3.5.17(typescript@5.6.3)
-
-  '@vue/server-renderer@3.5.17(vue@3.5.17(typescript@5.8.2))':
-    dependencies:
-      '@vue/compiler-ssr': 3.5.17
-      '@vue/shared': 3.5.17
-      vue: 3.5.17(typescript@5.8.2)
 
   '@vue/server-renderer@3.5.17(vue@3.5.17(typescript@5.8.3))':
     dependencies:
@@ -16130,9 +16113,6 @@ snapshots:
 
   typescript@5.6.3: {}
 
-  typescript@5.8.2:
-    optional: true
-
   typescript@5.8.3: {}
 
   ufo@1.6.1: {}
@@ -16824,16 +16804,6 @@ snapshots:
       '@vue/shared': 3.5.17
     optionalDependencies:
       typescript: 5.6.3
-
-  vue@3.5.17(typescript@5.8.2):
-    dependencies:
-      '@vue/compiler-dom': 3.5.17
-      '@vue/compiler-sfc': 3.5.17
-      '@vue/runtime-dom': 3.5.17
-      '@vue/server-renderer': 3.5.17(vue@3.5.17(typescript@5.8.2))
-      '@vue/shared': 3.5.17
-    optionalDependencies:
-      typescript: 5.8.2
 
   vue@3.5.17(typescript@5.8.3):
     dependencies:
