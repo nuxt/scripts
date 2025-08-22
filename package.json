@@ -1,7 +1,7 @@
 {
   "name": "@nuxt/scripts",
   "type": "module",
-  "version": "0.11.10",
+  "version": "0.11.11",
   "packageManager": "pnpm@10.15.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
@@ -50,7 +50,7 @@
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground && pnpm run prepare:fixtures",
     "typecheck": "vue-tsc --noEmit",
     "bump": "bumpp package.json --commit --push --tag",
-    "release": "pnpm build && pnpm test && bumpp -r -x \"pnpm run changelog\" --all",
+    "release": "pnpm build && bumpp -x \"npx changelogen --output=CHANGELOG.md\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "pnpm dev:prepare && vitest --run",
