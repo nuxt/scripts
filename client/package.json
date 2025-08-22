@@ -11,12 +11,12 @@
     "generate": "nuxi generate"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.2.10",
-    "@nuxt/devtools-kit": "^2.6.2",
-    "@nuxt/devtools-ui-kit": "^2.6.2",
-    "@nuxt/kit": "npm:@nuxt/kit-nightly@4.0.0-29191554.69345c32",
-    "nuxt": "npm:nuxt-nightly@4.0.0-29191554.69345c32",
-    "vue": "^3.5.17",
+    "@iconify-json/carbon": "^1.2.13",
+    "@nuxt/devtools-kit": "^2.6.3",
+    "@nuxt/devtools-ui-kit": "^2.6.3",
+    "@nuxt/kit": "catalog:",
+    "nuxt": "catalog:",
+    "vue": "^3.5.19",
     "vue-router": "latest"
   }
 }
