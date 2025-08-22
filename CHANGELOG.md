@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.11.12...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.12...main)
+
+### 🏡 Chore
+
+- Broken release script ([3e6fc59](https://github.com/nuxt/scripts/commit/3e6fc59))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
 ## v0.11.10...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.10...main)
