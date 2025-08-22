@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.11.10...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.10...main)
+
+### 🏡 Chore
+
+- NPM trusted publishing ([b785b61](https://github.com/nuxt/scripts/commit/b785b61))
+- Sync changelog ([032f73c](https://github.com/nuxt/scripts/commit/032f73c))
+- Bump deps ([abfa89e](https://github.com/nuxt/scripts/commit/abfa89e))
+- Sync lock ([f26b0a2](https://github.com/nuxt/scripts/commit/f26b0a2))
+- Broken release script ([c79c45a](https://github.com/nuxt/scripts/commit/c79c45a))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
 ## v0.11.9...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.9...main)
