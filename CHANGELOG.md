@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.9...main)
+
+### 🏡 Chore
+
+- Migrate to `addTypeTemplate` ([399e0c2](https://github.com/nuxt/scripts/commit/399e0c2))
+- Add nightly releases ([e49434e](https://github.com/nuxt/scripts/commit/e49434e))
+- Drop nuxt peer dependency ([dc4e84a](https://github.com/nuxt/scripts/commit/dc4e84a))
+- Missing sqlite dep ([922467c](https://github.com/nuxt/scripts/commit/922467c))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
 ## v0.11.8...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.8...main)
