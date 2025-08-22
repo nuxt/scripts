@@ -50,7 +50,7 @@
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground && pnpm run prepare:fixtures",
     "typecheck": "vue-tsc --noEmit",
     "bump": "bumpp package.json --commit --push --tag",
-    "release": "pnpm build && bumpp -x \"npx changelogen --output=CHANGELOG.md\" && pnpm publish",
+    "release": "pnpm build && pnpm test && bumpp -r -x \"pnpm run changelog\" --all",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "pnpm dev:prepare && vitest --run",
