@@ -4,16 +4,16 @@ import { useRegistryScript } from '../utils'
 import { object, string, optional, array, union, boolean } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
-export interface PaypalApi {
+export interface PayPalApi {
   paypal: PayPalNamespace
 }
 
 declare global {
-  interface Window extends PaypalApi {
+  interface Window extends PayPalApi {
   }
 }
 
-export const PaypalOptions = object({
+export const PayPalOptions = object({
   clientId: string(),
   buyerCountry: optional(string()),
   commit: optional(string()),
@@ -38,10 +38,10 @@ export const PaypalOptions = object({
   sandbox: optional(boolean()),
 })
 
-export type PaypalInput = RegistryScriptInput<typeof PaypalOptions>
+export type PayPalInput = RegistryScriptInput<typeof PayPalOptions>
 
-export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
-  return useRegistryScript<T, typeof PaypalOptions>('paypal', (options) => {
+export function useScriptPayPal<T extends PayPalApi>(_options?: PayPalInput) {
+  return useRegistryScript<T, typeof PayPalOptions>('paypal', (options) => {
     let dataMerchantId = undefined
 
     if (Array.isArray(options?.merchantId) && options?.merchantId.length > 1) {
@@ -95,7 +95,7 @@ export function useScriptPaypal<T extends PaypalApi>(_options?: PaypalInput) {
         'data-merchant-id': dataMerchantId,
         'data-partner-attribution-id': options.partnerAttributionId, // TODO: maybe nuxt specific default
       },
-      schema: import.meta.dev ? PaypalOptions : undefined,
+      schema: import.meta.dev ? PayPalOptions : undefined,
       // trigger: 'client',
       scriptOptions: {
         use() {

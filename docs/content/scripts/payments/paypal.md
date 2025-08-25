@@ -6,27 +6,27 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/paypal.ts
     size: xs
-  - label: "<ScriptPaypalButtons>"
+  - label: "<ScriptPayPalButtons>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPaypalButtons.vue
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPayPalButtons.vue
     size: xs
-  - label: "<ScriptPaypalMarks>"
+  - label: "<ScriptPayPalMarks>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPaypalMarks.vue
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPayPalMarks.vue
     size: xs
-  - label: "<ScriptPaypalMessages>"
+  - label: "<ScriptPayPalMessages>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPaypalMessages.vue
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPayPalMessages.vue
     size: xs
 ---
 
 [PayPal](https://www.paypal.com) is a popular payment gateway that allows you to accept payments online.
 
 Nuxt Scripts provides multiple PayPal features:
-- `useScriptPaypal` composable which loads the script `https://www.paypal.com/sdk/js`.
-- `ScriptPaypalButtons` component that allows you to embed [PayPal Buttons](https://developer.paypal.com/sdk/js/reference/#buttons) on your site.
-- `ScriptPaypalMarks` component that allows you to embed [PayPal Marks](https://developer.paypal.com/sdk/js/reference/#marks) on your site.
-- `ScriptPaypalMessages` component that allows you to embed [PayPal Messages](https://developer.paypal.com/studio/checkout/pay-later/us/customize/reference) on your site.
+- `useScriptPayPal` composable which loads the script `https://www.paypal.com/sdk/js`.
+- `ScriptPayPalButtons` component that allows you to embed [PayPal Buttons](https://developer.paypal.com/sdk/js/reference/#buttons) on your site.
+- `ScriptPayPalMarks` component that allows you to embed [PayPal Marks](https://developer.paypal.com/sdk/js/reference/#marks) on your site.
+- `ScriptPayPalMessages` component that allows you to embed [PayPal Messages](https://developer.paypal.com/studio/checkout/pay-later/us/customize/reference) on your site.
 
 ## Types
 
@@ -45,7 +45,7 @@ pnpm add -D @paypal/paypal-js
 ```vue [Input]
 <template>
   <div>
-    <ScriptPaypalButtons
+    <ScriptPayPalButtons
       class="border border-gray-200 dark:border-gray-800 rounded-lg"
       :button-options="buttonOptions"
       :disabled="disabled"
@@ -54,8 +54,8 @@ pnpm add -D @paypal/paypal-js
       Disabled
       <input v-model="disabled" type="checkbox">
     </label>
-    <ScriptPaypalMarks />
-    <ScriptPaypalMessages :messages-options="{ style: { color: 'white-no-border', layout: 'flex' } }" />
+    <ScriptPayPalMarks />
+    <ScriptPayPalMessages :messages-options="{ style: { color: 'white-no-border', layout: 'flex' } }" />
   </div>
 </template>
 

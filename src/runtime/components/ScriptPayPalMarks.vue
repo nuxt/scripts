@@ -3,7 +3,7 @@ import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shal
 import { defu } from 'defu'
 import type { PayPalMarksComponent, PayPalMarksComponentOptions } from '@paypal/paypal-js'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { type PaypalInput, useScriptPaypal } from '../registry/paypal'
+import { type PayPalInput, useScriptPayPal } from '../registry/paypal'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 
 const el = ref<HTMLDivElement | null>(null)
@@ -33,19 +33,19 @@ const props = withDefaults(defineProps<{
   /**
    * The paypal script options.
    */
-  paypalScriptOptions?: Partial<PaypalInput>
+  payPalScriptOptions?: Partial<PayPalInput>
 }>(), {
   trigger: 'visible',
   clientId: 'test',
   marksOptions: () => ({}),
-  paypalScriptOptions: () => ({}),
+  payPalScriptOptions: () => ({}),
 })
 
 const ready = ref(false)
 
-const { onLoaded, status } = useScriptPaypal({
+const { onLoaded, status } = useScriptPayPal({
   clientId: props.clientId,
-  ...props.paypalScriptOptions,
+  ...props.payPalScriptOptions,
 })
 
 const marksInst = shallowRef<PayPalMarksComponent>()
@@ -81,10 +81,10 @@ const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
     'aria-busy': status.value === 'loading',
     'aria-label': status.value === 'awaitingLoad'
-      ? 'Paypal Script Placeholder'
+      ? 'PayPal Script Placeholder'
       : status.value === 'loading'
-        ? 'Paypal Marks Loading'
-        : 'Paypal Marks',
+        ? 'PayPal Marks Loading'
+        : 'PayPal Marks',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),

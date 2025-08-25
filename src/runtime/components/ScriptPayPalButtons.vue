@@ -15,7 +15,7 @@ import type {
 } from '@paypal/paypal-js'
 import type { OnInitActions } from '@paypal/paypal-js/types/components/buttons'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { type PaypalInput, useScriptPaypal } from '../registry/paypal'
+import { type PayPalInput, useScriptPayPal } from '../registry/paypal'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 
 const el = ref<HTMLDivElement | null>(null)
@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<{
   /**
    * The paypal script options.
    */
-  paypalScriptOptions?: Partial<PaypalInput>
+  payPalScriptOptions?: Partial<PayPalInput>
   /**
    * Disables the paypal buttons.
    *
@@ -57,14 +57,14 @@ const props = withDefaults(defineProps<{
   clientId: 'test',
   disabled: false,
   buttonOptions: () => ({}),
-  paypalScriptOptions: () => ({}),
+  payPalScriptOptions: () => ({}),
 })
 
 const ready = ref(false)
 
-const { onLoaded, status } = useScriptPaypal({
+const { onLoaded, status } = useScriptPayPal({
   clientId: props.clientId,
-  ...props.paypalScriptOptions,
+  ...props.payPalScriptOptions,
 })
 
 const emit = defineEmits<{
@@ -166,10 +166,10 @@ const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
     'aria-busy': status.value === 'loading',
     'aria-label': status.value === 'awaitingLoad'
-      ? 'Paypal Script Placeholder'
+      ? 'PayPal Script Placeholder'
       : status.value === 'loading'
-        ? 'Paypal Buttons Loading'
-        : 'Paypal Buttons',
+        ? 'PayPal Buttons Loading'
+        : 'PayPal Buttons',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),

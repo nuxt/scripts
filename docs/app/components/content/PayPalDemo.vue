@@ -1,6 +1,6 @@
 <template>
   <div>
-    <ScriptPaypalButtons
+    <ScriptPayPalButtons
       class="border border-gray-200 dark:border-gray-800 rounded-lg"
       :button-options="buttonOptions"
       :disabled="disabled"
@@ -9,8 +9,8 @@
       Disabled
       <input v-model="disabled" type="checkbox">
     </label>
-    <ScriptPaypalMarks />
-    <ScriptPaypalMessages :messages-options="{ style: { color: 'white-no-border', layout: 'flex' } }" />
+    <ScriptPayPalMarks />
+    <ScriptPayPalMessages :messages-options="{ style: { color: 'white-no-border', layout: 'flex' } }" />
   </div>
 </template>
 
