@@ -55,6 +55,10 @@ const thirdParties = [
     path: '/third-parties/stripe/nuxt-scripts',
   },
   {
+    name: 'PayPal',
+    path: '/third-parties/paypal/nuxt-scripts',
+  },
+  {
     name: 'Segment',
     path: '/third-parties/segment',
   },

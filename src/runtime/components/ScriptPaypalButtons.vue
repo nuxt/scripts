@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<{
   /**
    * The paypal script options.
    */
-  paypalScriptOptions?: Partial<PaypalInput>
+  payppalScriptOptions?: Partial<PaypalInput>
   /**
    * Disables the paypal buttons.
    *
