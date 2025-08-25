@@ -2,7 +2,7 @@ import { withQuery } from 'ufo'
 import type { PayPalNamespace } from '@paypal/paypal-js'
 import { useRegistryScript } from '../utils'
 import { object, string, optional, array, union, boolean } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export interface PaypalApi {
   paypal: PayPalNamespace
