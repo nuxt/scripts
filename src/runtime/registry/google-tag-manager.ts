@@ -159,11 +159,12 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
         clientInit: import.meta.server
           ? undefined
           : () => {
-            // Initialize dataLayer if it doesn't exist
-              (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
-
               // Create gtag function
               function gtag(...args: any[]) {
+                // Initialize dataLayer if it doesn't exist
+                (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
+
+                // Push arguments to dataLayer
                 (window as any)[dataLayerName].push(args)
               }
 

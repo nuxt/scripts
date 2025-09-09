@@ -198,3 +198,37 @@ function sendConversion() {
 `useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
 
 If you need to configure GTM before it starts. For example, [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.
+
+```vue
+const { proxy } = useScriptGoogleTagManager({
+  onBeforeGtmStart: () => {
+    // set default consent state to denied
+    gtag('consent', 'default', {
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'ad_storage': 'denied',
+      'analytics_storage': 'denied',
+      'wait_for_update': 500,
+    })
+
+    // if consent was already given, update gtag accordingly
+    if (consent.value === 'granted') {
+      gtag('consent', 'update', {
+        ad_user_data: consent.value,
+        ad_personalization: consent.value,
+        ad_storage: consent.value,
+        analytics_storage: consent.value
+      })
+    }
+  }
+})
+
+// push pageview events to dataLayer
+useScriptEventPage(({ title, path }) => {
+  proxy.dataLayer.push({
+    event: 'pageview',
+    title,
+    path
+  })
+})
+```
