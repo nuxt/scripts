@@ -201,7 +201,7 @@ If you need to configure GTM before it starts. For example, [setting the consent
 
 ```vue
 const { proxy } = useScriptGoogleTagManager({
-  onBeforeGtmStart: () => {
+  onBeforeGtmStart: (gtag) => {
     // set default consent state to denied
     gtag('consent', 'default', {
       'ad_user_data': 'denied',
