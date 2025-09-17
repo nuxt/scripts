@@ -51,6 +51,15 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    */
   bundle?: boolean
   /**
+   * Force download of the script even if it exists in cache. Useful for development workflows
+   * where you want to ensure the latest version is always downloaded.
+   * - `true` - Force download, bypass cache.
+   * - `false` - Use cached version if available. (default)
+   *
+   * Note: This may significantly increase build time as scripts will be re-downloaded on every build.
+   */
+  forceDownload?: boolean
+  /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
    */
@@ -173,16 +182,16 @@ export type RegistryScriptInput<
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
 >
-    = (InferIfSchema<T>
-      & {
+  = (InferIfSchema<T>
+    & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-        key?: string
-        scriptInput?: ScriptInput
-        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-      })
-      | Partial<InferIfSchema<T>> & (
+      key?: string
+      scriptInput?: ScriptInput
+      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+    })
+    | Partial<InferIfSchema<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
