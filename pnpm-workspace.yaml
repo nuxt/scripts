@@ -5,5 +5,5 @@ packages:
 
 catalog:
   nuxt: ^4.0.3
-  '@nuxt/kit': ^4.0.3
-  '@nuxt/schema': ^4.0.3
+  '@nuxt/kit': ^4.1.2
+  '@nuxt/schema': ^4.1.2
