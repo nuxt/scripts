@@ -215,7 +215,7 @@ if (!forceDownload && await storage.hasItem(`bundle:${filename}`)) {
 ## Success Metrics
 
 ### Quick Wins (Week 1)
-- [ ] Issue #482: GTM source option working
+- [x] Issue #482: GTM source option working ✅ **COMPLETED**
 - [ ] Issue #490: Multi-domain documentation published
 - [ ] Issue #481: DevTools error fixed
 
