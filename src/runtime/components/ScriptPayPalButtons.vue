@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch, onBeforeUnmount } from 'vue'
+import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
 import { defu } from 'defu'
 import type {
   OnApproveActions,
@@ -14,9 +14,8 @@ import type {
   PayPalButtonsComponentOptions,
 } from '@paypal/paypal-js'
 import type { OnInitActions } from '@paypal/paypal-js/types/components/buttons'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { type PayPalInput, useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { onBeforeUnmount, type PayPalInput, resolveComponent, useScriptPayPal, useScriptTriggerElement } from '#imports'
+import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const el = ref<HTMLDivElement | null>(null)
 const rootEl = ref<HTMLDivElement | null>(null)
@@ -28,14 +27,10 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
   /**
    * Defines the trigger event to load the script.
-   *
-   * @default 'visible'
    */
   trigger?: ElementScriptTrigger
   /**
    * The client id for the paypal script.
-   *
-   * @default 'test'
    */
   clientId?: string
   /**
@@ -45,11 +40,9 @@ const props = withDefaults(defineProps<{
   /**
    * The paypal script options.
    */
-  payPalScriptOptions?: Partial<PayPalInput>
+  paypalScriptOptions?: Partial<PayPalInput>
   /**
    * Disables the paypal buttons.
-   *
-   * @default false
    */
   disabled?: boolean
 }>(), {
@@ -57,21 +50,19 @@ const props = withDefaults(defineProps<{
   clientId: 'test',
   disabled: false,
   buttonOptions: () => ({}),
-  payPalScriptOptions: () => ({}),
+  paypalScriptOptions: () => ({}),
 })
 
 const ready = ref(false)
 
-const instance = useScriptPayPal({
+const { onLoaded, status } = useScriptPayPal({
   clientId: props.clientId,
-  ...props.payPalScriptOptions,
+  ...props.paypalScriptOptions,
 })
-const { onLoaded, status } = instance
 
 const emit = defineEmits<{
-  ready: [ReturnType<typeof useScriptPayPal>]
-  error: [error: Record<string, unknown>]
   approve: [data: OnApproveData, actions: OnApproveActions]
+  error: [error: Record<string, unknown>]
   cancel: [data: Record<string, unknown>, actions: OnCancelledActions]
   clickButtons: [data: Record<string, unknown>, actions: OnClickActions]
   shippingOptionsChange: [
@@ -144,7 +135,6 @@ onMounted(() => {
     buttonInst.value = paypal?.Buttons?.(options.value)
     await buttonInst.value?.render(el.value)
     ready.value = true
-    emit('ready', instance)
 
     watch(() => options.value, async (_options) => {
       if (!el.value) return
@@ -163,11 +153,9 @@ onBeforeUnmount(async () => {
   await destroy()
 })
 
-const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
+const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
 
-defineExpose({
-  instance,
-})
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
@@ -185,10 +173,16 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <div v-bind="rootAttrs">
+  <div v-bind="rootAttrs" id="test">
     <div v-show="ready" ref="el" />
+    <slot v-if="!ready" name="placeholder">
+      placeholder
+    </slot>
+    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+      <ScriptLoadingIndicator color="black" />
+    </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'loading'" name="loading" />
     <slot v-else-if="status === 'error'" name="error" />
+    <slot />
   </div>
 </template>

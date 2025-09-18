@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch, onBeforeUnmount } from 'vue'
+import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
 import { defu } from 'defu'
 import type { PayPalMessagesComponent, PayPalMessagesComponentOptions } from '@paypal/paypal-js'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { type PayPalInput, useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { onBeforeUnmount, type PayPalInput, resolveComponent, useScriptPayPal, useScriptTriggerElement } from '#imports'
+import type { ElementScriptTrigger } from '#nuxt-scripts'
 
 const el = ref<HTMLDivElement | null>(null)
 const rootEl = ref<HTMLDivElement | null>(null)
@@ -16,18 +15,14 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
   /**
    * Defines the trigger event to load the script.
-   *
-   * @default 'visible'
    */
   trigger?: ElementScriptTrigger
   /**
    * The client id for the paypal script.
-   *
-   * @default 'test'
    */
   clientId?: string
   /**
-   * The options for the paypal messages.
+   * The options for the paypal buttons.
    */
   messagesOptions?: PayPalMessagesComponentOptions
   /**
@@ -39,28 +34,26 @@ const props = withDefaults(defineProps<{
    */
   partnerAttributionId?: string
   /**
-   * The options for the paypal script.
+   * The options for the paypal scipt.
    */
-  payPalScriptOptions?: Partial<PayPalInput>
+  paypalScriptOptions?: Partial<PayPalInput>
 }>(), {
   trigger: 'visible',
   clientId: 'test',
-  payPalScriptOptions: () => ({}),
+  paypalScriptOptions: () => ({}),
   messagesOptions: () => ({}),
 })
 
 const ready = ref(false)
 
-const instance = useScriptPayPal({
+const { onLoaded, status } = useScriptPayPal({
   clientId: props.clientId,
   merchantId: props.merchantId,
   partnerAttributionId: props.partnerAttributionId,
-  ...props.payPalScriptOptions,
+  ...props.paypalScriptOptions,
 })
-const { onLoaded, status } = instance
 
 const emit = defineEmits<{
-  ready: [ReturnType<typeof useScriptPayPal>]
   apply: [data: Record<string, unknown>]
   clickMessages: [data: Record<string, unknown>]
   render: [data: Record<string, unknown>]
@@ -92,7 +85,6 @@ onMounted(() => {
     messageInst.value = paypal?.Messages?.(options.value)
     await messageInst.value?.render(el.value)
     ready.value = true
-    emit('ready', instance)
 
     watch(() => options.value, async (_options) => {
       if (!el.value) return
@@ -112,11 +104,9 @@ onBeforeUnmount(() => {
   destroy()
 })
 
-const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
+const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
 
-defineExpose({
-  instance,
-})
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
@@ -124,8 +114,8 @@ const rootAttrs = computed(() => {
     'aria-label': status.value === 'awaitingLoad'
       ? 'PayPal Script Placeholder'
       : status.value === 'loading'
-        ? 'PayPal Messages Loading'
-        : 'PayPal Messages',
+        ? 'PayPal Buttons Loading'
+        : 'PayPal Buttons',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
@@ -134,10 +124,16 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <div v-bind="rootAttrs">
+  <div v-bind="rootAttrs" id="test">
     <div v-show="ready" ref="el" />
+    <slot v-if="!ready" name="placeholder">
+      placeholder
+    </slot>
+    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+      <ScriptLoadingIndicator color="black" />
+    </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'loading'" name="loading" />
     <slot v-else-if="status === 'error'" name="error" />
+    <slot />
   </div>
 </template>
