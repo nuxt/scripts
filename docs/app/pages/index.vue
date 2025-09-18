@@ -340,7 +340,7 @@ const contributors = useRuntimeConfig().public.contributors
             </div>
           </div>
         </div>
-        <UButtonGroup class="mb-4 flex" :orientation="btnGroupOrientation">
+        <UFieldGroup class="mb-4 flex" :orientation="btnGroupOrientation">
           <UButton :variant="webVital === 'fcp' ? 'solid' : 'soft'" :active="webVital === 'fcp'" @click="webVital = 'fcp'">
             First Contentful Paint
           </UButton>
@@ -350,7 +350,7 @@ const contributors = useRuntimeConfig().public.contributors
           <UButton :variant="webVital === 'si' ? 'solid' : 'soft'" :active="webVital === 'si'" @click="webVital = 'si'">
             Speed Index
           </UButton>
-        </UButtonGroup>
+        </UFieldGroup>
         <p class="text-gray-500 dark:text-gray-400">
           <span class="opacity-50 text-sm">*Note that PageSpeed Insights lab data is a snapshot from a particular day, which tends to be variable. We will be updating this section with aggregated results and/or field data from production usage as soon as it's available.</span>
         </p>
