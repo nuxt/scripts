@@ -68,6 +68,15 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      label: 'Databuddy Analytics',
+      category: 'analytics',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="56.5" height="32" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 0h8v8H0z"/><path fill="#fff" d="M1 1h1v6H1zm1 0h4v1H2zm4 1h1v1H6zm0 1h1v1H6zm0 1h1v1H6zm0 1h1v1H6zM2 6h4v1H2zm1-3h1v1H3zm1 1h1v1H4z"/></svg>`,
+      import: {
+        name: 'useScriptDatabuddyAnalytics',
+        from: await resolve('./runtime/registry/databuddy-analytics'),
+      },
+    },
+    {
       label: 'Segment',
       scriptBundling: (options?: SegmentInput) => {
         return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
