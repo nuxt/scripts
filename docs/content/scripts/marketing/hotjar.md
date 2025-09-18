@@ -119,12 +119,12 @@ Using Hotjar only in production while using `hj` to send a conversion event.
 
 ```vue [ConversionButton.vue]
 <script setup lang="ts">
-const { hj } = useScriptHotjar()
+const { proxy } = useScriptHotjar()
 
 // noop in development, ssr
 // just works in production, client
 function sendConversion() {
-  hj('event', 'conversion')
+  proxy.hj('event', 'conversion')
 }
 </script>
 

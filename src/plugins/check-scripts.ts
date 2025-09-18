@@ -1,5 +1,6 @@
 import { createUnplugin } from 'unplugin'
-import { type Node, walk } from 'estree-walker'
+import { walk } from 'estree-walker'
+import type { Node } from 'estree-walker'
 import type { AssignmentExpression, CallExpression, ObjectPattern, ArrowFunctionExpression, Identifier, MemberExpression } from 'estree'
 import { isVue } from './util'
 

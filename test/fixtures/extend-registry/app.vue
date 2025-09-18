@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { useScriptMyCustomScript } from '#imports'
 
-const { myScript } = useScriptMyCustomScript()
+const { proxy } = useScriptMyCustomScript()
 
-myScript('test')
+proxy.myScript('test')
 </script>
 
 <template>

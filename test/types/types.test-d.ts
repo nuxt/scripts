@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import type { ModuleOptions } from '../../dist/module'
+import type { ModuleOptions } from '../../src/module'
 import type { ScriptRegistry } from '../../src/runtime/types'
 
 describe('module options registry', async () => {

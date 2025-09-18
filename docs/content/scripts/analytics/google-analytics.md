@@ -8,10 +8,6 @@ links:
     size: xs
 ---
 
-::tip
-This composable is generated with [GoogleChromeLabs/third-party-capital](https://github.com/GoogleChromeLabs/third-party-capital) in collaboration with the [Chrome Aurora team](https://developer.chrome.com/docs/aurora).
-::
-
 [Google Analytics](https://marketingplatform.google.com/about/analytics/) is an analytics solution for Nuxt Apps.
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
@@ -113,24 +109,26 @@ The proxy exposes the `gtag` and `dataLayer` properties, and you should use them
 ### GoogleAnalyticsApi
 
 ```ts
-interface GTag {
-  (fn: 'js', opt: Date): void
-  (fn: 'config', opt: string): void
-  (fn: 'event', opt: string, opt2?: {
-    [key: string]: any
-  }): void
-  (fn: 'set', opt: {
-    [key: string]: string
-  }): void
-  (fn: 'get', opt: string): void
-  (fn: 'consent', opt: 'default', opt2: {
-    [key: string]: string
-  }): void
-  (fn: 'consent', opt: 'update', opt2: {
-    [key: string]: string
-  }): void
-  (fn: 'config', opt: 'reset'): void
+export interface GTag {
+  // Initialize gtag.js with timestamp
+  (command: 'js', value: Date): void
+
+  // Configure a GA4 property
+  (command: 'config', targetId: string, configParams?: ConfigParams): void
+
+  // Get a value from gtag
+  (command: 'get', targetId: string, fieldName: string, callback?: (field: any) => void): void
+
+  // Send an event to GA4
+  (command: 'event', eventName: DefaultEventName, eventParams?: EventParameters): void
+
+  // Set default parameters for all subsequent events
+  (command: 'set', params: GtagCustomParams): void
+
+  // Update consent state
+  (command: 'consent', consentArg: 'default' | 'update', consentParams: ConsentOptions): void
 }
+
 interface GoogleAnalyticsApi {
   dataLayer: Record<string, any>[]
   gtag: GTag
@@ -150,7 +148,7 @@ export const GoogleAnalyticsOptions = object({
   /**
    * The datalayer's name you want it to be associated with
    */
-  dataLayerName: optional(string())
+  l: optional(string())
 })
 ```
 

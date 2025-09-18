@@ -5,8 +5,8 @@ import { useNuxt } from '@nuxt/kit'
 import type { ModuleOptions } from './module'
 import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
-export function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolve'], nuxt: Nuxt = useNuxt()) {
-  const clientPath = resolve('./client')
+export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolvePath'], nuxt: Nuxt = useNuxt()) {
+  const clientPath = await resolve('./client')
   const isProductionBuild = existsSync(clientPath)
 
   // Serve production-built client (used when package is published)
@@ -33,6 +33,7 @@ export function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resol
     })
   }
 
+  // @ts-expect-error untyped
   nuxt.hook('devtools:customTabs', (tabs) => {
     tabs.push({
       // unique identifier

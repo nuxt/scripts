@@ -6,6 +6,10 @@ const videoid = ref('d_IFKP1Ofq0')
 function changeVideo() {
   videoid.value = 'N8siuNjyV7A'
 }
+
+function changeVideoFallback() {
+  videoid.value = 'jNQXAC9IVRw'
+}
 </script>
 
 <template>
@@ -14,7 +18,7 @@ function changeVideo() {
       Multiple YouTube Players
     </NuxtLink>
     <div>
-      <ScriptYouTubePlayer :video-id="videoid" above-the-fold>
+      <ScriptYouTubePlayer :video-id="videoid" above-the-fold class="w-[640px] h-[360px]">
         <template #awaitingLoad>
           <div class="text-lg top-5 absolute left-10">
             Nuxt Nation 2023: Daniel Roe - A New Nuxt - Release of Nuxt v3.8
@@ -30,6 +34,13 @@ function changeVideo() {
       @click="changeVideo"
     >
       change video
+    </UButton>
+
+    <UButton
+      class="ml-5"
+      @click="changeVideoFallback"
+    >
+      change video needs fallback
     </UButton>
   </div>
 </template>

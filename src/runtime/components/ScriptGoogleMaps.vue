@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 /// <reference types="google.maps" />
 import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
@@ -6,11 +9,12 @@ import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import { hash } from 'ohash'
+import { useHead } from 'nuxt/app'
 import type { ElementScriptTrigger } from '../types'
 import { scriptRuntimeConfig } from '../utils'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '../registry/google-maps'
-import { resolveComponent, useHead } from '#imports'
+import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
 interface PlaceholderOptions {
   width?: string | number
@@ -59,6 +63,18 @@ const props = withDefaults(defineProps<{
    */
   mapOptions?: google.maps.MapOptions
   /**
+   * Defines the region of the map.
+   */
+  region?: string
+  /**
+   * Defines the language of the map
+   */
+  language?: string
+  /**
+   * Defines the version of google maps js API
+   */
+  version?: string
+  /**
    * Defines the width of the map.
    */
   width?: number | string
@@ -89,6 +105,7 @@ const props = withDefaults(defineProps<{
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
   width: 640,
   height: 400,
+  centerMarker: true,
 })
 
 const emits = defineEmits<{
@@ -117,6 +134,9 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
   scriptOptions: {
     trigger,
   },
+  region: props.region,
+  language: props.language,
+  v: props.version,
 })
 
 const options = computed(() => {
@@ -147,27 +167,39 @@ function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | P
   })
 }
 
+function normalizeAdvancedMapMarkerOptions(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
+  const opts = typeof _options === 'string'
+    ? {
+        position: {
+          lat: Number.parseFloat(_options.split(',')[0] || '0'),
+          lng: Number.parseFloat(_options.split(',')[1] || '0'),
+        },
+      }
+    : _options
+  if (!opts.position) {
+    // set default
+    opts.position = {
+      lat: 0,
+      lng: 0,
+    }
+  }
+  return opts
+}
+
 async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
   if (!_options)
     return
-  const key = hash(_options)
+  const normalizedOptions = normalizeAdvancedMapMarkerOptions(_options)
+  const key = hash({ position: normalizedOptions.position })
   if (mapMarkers.value.has(key))
     return mapMarkers.value.get(key)
   // eslint-disable-next-line no-async-promise-executor
   const p = new Promise<google.maps.marker.AdvancedMarkerElement>(async (resolve) => {
     const lib = await importLibrary('marker')
-    const options = typeof _options === 'string'
-      ? {
-          position: {
-            lat: Number.parseFloat(_options.split(',')[0] || '0'),
-            lng: Number.parseFloat(_options.split(',')[1] || '0'),
-          },
-        }
-      : _options
-    const mapMarkerOptions = defu(toRaw(options), {
+    const mapMarkerOptions = defu(toRaw(normalizedOptions), {
       map: toRaw(map.value!),
       // @ts-expect-error unified API for maps and markers
-      position: options.location,
+      position: normalizedOptions.location,
     })
     resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
   })
@@ -265,7 +297,7 @@ onMounted(() => {
     }
     // mapMarkers is a map where we hash the next array entry as the map key
     // we need to do a diff to see what we remove or add
-    const nextMap = new Map((props.markers || []).map(m => [hash(m), m]))
+    const nextMap = new Map((props.markers || []).map(m => [hash({ position: normalizeAdvancedMapMarkerOptions(m).position }), m]))
     // compare idsToMatch in nextMap, if we're missing an id, we need to remove it
     const toRemove = new Set([
       ...mapMarkers.value.keys(),
@@ -275,7 +307,7 @@ onMounted(() => {
     // do a diff of next and prev
     const centerHash = hash({ position: options.value.center })
     for (const key of toRemove) {
-      if (key === centerHash) {
+      if (props.centerMarker && key === centerHash) {
         continue
       }
       const marker = await mapMarkers.value.get(key)
@@ -304,7 +336,7 @@ onMounted(() => {
         center = await resolveQueryToLatLang(center as string)
       }
       map.value!.setCenter(center as google.maps.LatLng)
-      if (typeof props.centerMarker === 'undefined' || props.centerMarker) {
+      if (props.centerMarker) {
         if (options.value.mapId) {
           // not allowed to use advanced markers with styles
           return
@@ -325,7 +357,7 @@ onMounted(() => {
     immediate: true,
   })
   onLoaded(async (instance) => {
-    mapsApi.value = await instance.maps as any as typeof google.maps // some weird type issue here
+    mapsApi.value = await instance.maps
     // may need to transform the center before we can init the map
     const center = options.value.center as string
     const _options: google.maps.MapOptions = {
@@ -387,7 +419,7 @@ const placeholder = computed(() => {
     style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
     markers: [
       ...(props.markers || []),
-      center,
+      props.centerMarker && center,
     ]
       .filter(Boolean)
       .map((m) => {
@@ -440,8 +472,6 @@ const rootAttrs = computed(() => {
   }) as HTMLAttributes
 })
 
-const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
-
 onBeforeUnmount(async () => {
   await Promise.all([...mapMarkers.value.entries()].map(([,marker]) => resetMapMarkerMap(marker)))
   mapMarkers.value.clear()
@@ -458,7 +488,7 @@ onBeforeUnmount(async () => {
       <img v-bind="placeholderAttrs">
     </slot>
     <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
-      <ScriptLoadingIndicator color="black" />
+      <ScriptAriaLoadingIndicator />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'error'" name="error" />

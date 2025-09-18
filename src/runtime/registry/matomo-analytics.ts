@@ -1,7 +1,7 @@
 import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { boolean, object, optional, string, number, union } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),
@@ -38,12 +38,6 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
         use() {
           return { _paq: window._paq }
         },
-        // allow _paq to be accessed on the server
-        stub: import.meta.client
-          ? undefined
-          : ({ fn }) => {
-              return fn === '_paq' ? [] : undefined
-            },
       },
       clientInit: import.meta.server
         ? undefined

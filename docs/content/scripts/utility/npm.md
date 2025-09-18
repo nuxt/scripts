@@ -39,7 +39,7 @@ useScript('https://cdn.jsdelivr.net/npm/js-confetti@0.12.0/dist/js-confetti.brow
 
 ```ts [useHead]
 useHead({
-  scripts: [
+  script: [
     { src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js' }
   ]
 })
