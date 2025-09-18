@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { NavItem } from '@nuxt/contents'
 
-inject<NavItem[]>('navigation', [])
+const navigation = inject<Ref<NavItem[]>>('navigation')
 // const { metaSymbol } = useShortcuts()
 const { header } = useAppConfig()
+const route = useRoute()
 const links = [
   {
     label: 'Guides',
@@ -18,6 +19,11 @@ const links = [
     to: '/learn',
   },
 ]
+
+const navItems = computed(() => {
+  const v = route.path.startsWith('/docs') ? navigation?.value?.[0] : navigation?.value?.[1]
+  return v?.children || []
+})
 </script>
 
 <template>
@@ -54,6 +60,14 @@ const links = [
         orientation="vertical"
         class="-mx-2.5"
       />
+      <template v-if="route.path.startsWith('/docs/')">
+        <UContentNavigation
+          :key="route.path"
+          :collapsible="false"
+          :navigation="navItems"
+          highlight
+        />
+      </template>
     </template>
   </UHeader>
 </template>
