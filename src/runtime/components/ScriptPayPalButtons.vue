@@ -62,14 +62,16 @@ const props = withDefaults(defineProps<{
 
 const ready = ref(false)
 
-const { onLoaded, status } = useScriptPayPal({
+const instance = useScriptPayPal({
   clientId: props.clientId,
   ...props.payPalScriptOptions,
 })
+const { onLoaded, status } = instance
 
 const emit = defineEmits<{
-  approve: [data: OnApproveData, actions: OnApproveActions]
+  ready: [ReturnType<typeof useScriptPayPal>]
   error: [error: Record<string, unknown>]
+  approve: [data: OnApproveData, actions: OnApproveActions]
   cancel: [data: Record<string, unknown>, actions: OnCancelledActions]
   clickButtons: [data: Record<string, unknown>, actions: OnClickActions]
   shippingOptionsChange: [
@@ -142,6 +144,7 @@ onMounted(() => {
     buttonInst.value = paypal?.Buttons?.(options.value)
     await buttonInst.value?.render(el.value)
     ready.value = true
+    emit('ready', instance)
 
     watch(() => options.value, async (_options) => {
       if (!el.value) return
@@ -161,6 +164,10 @@ onBeforeUnmount(async () => {
 })
 
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
+
+defineExpose({
+  instance,
+})
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {

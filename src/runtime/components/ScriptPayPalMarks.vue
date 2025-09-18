@@ -43,10 +43,15 @@ const props = withDefaults(defineProps<{
 
 const ready = ref(false)
 
-const { onLoaded, status } = useScriptPayPal({
+const instance = useScriptPayPal({
   clientId: props.clientId,
   ...props.payPalScriptOptions,
 })
+const { onLoaded, status } = instance
+
+const emit = defineEmits<{
+  ready: [ReturnType<typeof useScriptPayPal>]
+}>()
 
 const marksInst = shallowRef<PayPalMarksComponent>()
 
@@ -56,6 +61,7 @@ onMounted(() => {
     marksInst.value = paypal?.Marks?.(props.marksOptions)
     await marksInst.value?.render(el.value)
     ready.value = true
+    emit('ready', instance)
 
     watch(() => props.marksOptions, async (_options) => {
       if (!el.value) return
@@ -76,6 +82,10 @@ onBeforeUnmount(() => {
 })
 
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
+
+defineExpose({
+  instance,
+})
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {

@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
    */
   clientId?: string
   /**
-   * The options for the paypal buttons.
+   * The options for the paypal messages.
    */
   messagesOptions?: PayPalMessagesComponentOptions
   /**
@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<{
    */
   partnerAttributionId?: string
   /**
-   * The options for the paypal scipt.
+   * The options for the paypal script.
    */
   payPalScriptOptions?: Partial<PayPalInput>
 }>(), {
@@ -51,14 +51,16 @@ const props = withDefaults(defineProps<{
 
 const ready = ref(false)
 
-const { onLoaded, status } = useScriptPayPal({
+const instance = useScriptPayPal({
   clientId: props.clientId,
   merchantId: props.merchantId,
   partnerAttributionId: props.partnerAttributionId,
   ...props.payPalScriptOptions,
 })
+const { onLoaded, status } = instance
 
 const emit = defineEmits<{
+  ready: [ReturnType<typeof useScriptPayPal>]
   apply: [data: Record<string, unknown>]
   clickMessages: [data: Record<string, unknown>]
   render: [data: Record<string, unknown>]
@@ -90,6 +92,7 @@ onMounted(() => {
     messageInst.value = paypal?.Messages?.(options.value)
     await messageInst.value?.render(el.value)
     ready.value = true
+    emit('ready', instance)
 
     watch(() => options.value, async (_options) => {
       if (!el.value) return
@@ -111,14 +114,18 @@ onBeforeUnmount(() => {
 
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
+defineExpose({
+  instance,
+})
+
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {
     'aria-busy': status.value === 'loading',
     'aria-label': status.value === 'awaitingLoad'
       ? 'PayPal Script Placeholder'
       : status.value === 'loading'
-        ? 'PayPal Buttons Loading'
-        : 'PayPal Buttons',
+        ? 'PayPal Messages Loading'
+        : 'PayPal Messages',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
