@@ -12,10 +12,11 @@ import type {
   OnShippingOptionsChangeData,
   PayPalButtonsComponent,
   PayPalButtonsComponentOptions,
+  OnInitActions,
 } from '@paypal/paypal-js'
-import type { OnInitActions } from '@paypal/paypal-js/types/components/buttons'
-import { onBeforeUnmount, type PayPalInput, resolveComponent, useScriptPayPal, useScriptTriggerElement } from '#imports'
-import type { ElementScriptTrigger } from '#nuxt-scripts'
+import { onBeforeUnmount, resolveComponent, useScriptPayPal, useScriptTriggerElement } from '#imports'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import type { PayPalInput } from '../registry/paypal'
 
 const el = ref<HTMLDivElement | null>(null)
 const rootEl = ref<HTMLDivElement | null>(null)
