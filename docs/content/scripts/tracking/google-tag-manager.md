@@ -154,6 +154,9 @@ export const GoogleTagManagerOptions = object({
 
     /** Referrer policy for analytics requests */
     authReferrerPolicy: optional(string()),
+
+    /** The URL of the script; useful for server-side GTM */
+    source: optional(string()),
   })
 ```
 
@@ -163,7 +166,37 @@ export const GoogleTagManagerOptions = object({
 type GoogleTagManagerInput = typeof GoogleTagManagerOptions & { onBeforeGtmStart?: (gtag: Gtag) => void }
 ```
 
-## Example
+## Examples
+
+### Server-Side GTM Setup
+
+Using a custom GTM script source for server-side implementations:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: 'GTM-XXXXXX',
+        source: 'https://your-domain.com/gtm.js'
+      }
+    }
+  }
+})
+```
+
+```vue
+<!-- Component usage -->
+<script setup lang="ts">
+const { proxy } = useScriptGoogleTagManager({
+  id: 'GTM-XXXXXX',
+  source: 'https://your-domain.com/gtm.js'
+})
+</script>
+```
+
+### Basic Usage
 
 Using Google Tag Manager only in production while using `dataLayer` to send a conversion event.
 
