@@ -108,6 +108,17 @@ export default defineNuxtModule<ModuleOptions>({
     const { version, name } = await readPackageJSON(await resolvePath('../package.json'))
     nuxt.options.alias['#nuxt-scripts-validator'] = await resolvePath(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
     nuxt.options.alias['#nuxt-scripts'] = await resolvePath('./runtime')
+
+    // Ensure TypeScript path mapping for Nuxt 4 compatibility
+    nuxt.hooks.hook('prepare:types', async (options) => {
+      // Ensure paths are configured in TypeScript
+      if (options.tsConfig?.compilerOptions?.paths) {
+        options.tsConfig.compilerOptions.paths['#nuxt-scripts/*'] = [
+          await resolvePath('./runtime/*'),
+        ]
+      }
+    })
+
     logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
