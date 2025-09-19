@@ -6,7 +6,7 @@ import NuxtScripts from '../src/module'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
-    '@nuxt/ui-pro',
+    '@nuxt/ui',
     '@nuxt/fonts',
     '@vueuse/nuxt',
     NuxtScripts,

@@ -29,6 +29,7 @@ import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import type { RedditPixelInput } from './registry/reddit-pixel'
+import type { PayPalInput } from './registry/paypal'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -140,6 +141,7 @@ export interface ScriptRegistry {
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
   intercom?: IntercomInput
+  paypal?: PayPalInput
   matomoAnalytics?: MatomoAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
   redditPixel?: RedditPixelInput
