@@ -21,6 +21,7 @@ import type { RegistryScript } from '#nuxt-scripts/types'
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
   defaultBundle?: boolean
+  defaultForceDownload?: boolean
   assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
   fallbackOnSrcOnBundleFail?: boolean
@@ -56,8 +57,9 @@ async function downloadScript(opts: {
   src: string
   url: string
   filename?: string
+  forceDownload?: boolean
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions) {
-  const { src, url, filename } = opts
+  const { src, url, filename, forceDownload } = opts
   if (src === url || !filename) {
     return
   }
@@ -66,7 +68,7 @@ async function downloadScript(opts: {
   let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
   if (!res) {
     // Use storage to cache the font data between builds
-    if (await storage.hasItem(`bundle:${filename}`)) {
+    if (!forceDownload && await storage.hasItem(`bundle:${filename}`)) {
       const res = await storage.getItemRaw<Buffer>(`bundle:${filename}`)
       renderedScript.set(url, {
         content: res!,
@@ -254,11 +256,18 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
                   })
                   canBundle = bundleOption ? bundleOption.value.value : canBundle
+
+                  // check if scriptOptions contains forceDownload: true
+                  // @ts-expect-error untyped
+                  const forceDownloadOption = scriptOptions?.value.properties?.find((prop) => {
+                    return prop.type === 'Property' && prop.key?.name === 'forceDownload' && prop.value.type === 'Literal'
+                  })
+                  const forceDownload = forceDownloadOption ? forceDownloadOption.value.value : (options.defaultForceDownload || false)
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url
                     try {
-                      await downloadScript({ src, url, filename }, renderedScript, options.fetchOptions)
+                      await downloadScript({ src, url, filename, forceDownload }, renderedScript, options.fetchOptions)
                     }
                     catch (e) {
                       if (options.fallbackOnSrcOnBundleFail) {

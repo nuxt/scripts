@@ -53,6 +53,15 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    */
   bundle?: boolean
   /**
+   * Force download of the script even if it exists in cache. Useful for development workflows
+   * where you want to ensure the latest version is always downloaded.
+   * - `true` - Force download, bypass cache.
+   * - `false` - Use cached version if available. (default)
+   *
+   * Note: This may significantly increase build time as scripts will be re-downloaded on every build.
+   */
+  forceDownload?: boolean
+  /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
    */
