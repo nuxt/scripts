@@ -1,16 +1,16 @@
 import type { UseScriptInput } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import { object, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
-type RdtFns =
-    & ((event: 'init', id: string) => void)
+type RdtFns
+  = & ((event: 'init', id: string) => void)
     & ((event: 'track', eventName: string) => void)
 
 export interface RedditPixelApi {
   rdt: RdtFns & {
-    sendEvent: any
-    callQueue: any
+    sendEvent: (rdt: RedditPixelApi['rdt'], args: unknown[]) => void
+    callQueue: unknown[]
   }
 }
 
@@ -33,20 +33,22 @@ export function useScriptRedditPixel<T extends RedditPixelApi>(_options?: Reddit
       clientInit: import.meta.server
         ? undefined
         : () => {
-            // @ts-expect-error untyped
-            const rdt: RedditPixelApi['rdt'] = window.rdt = function (...args) {
-              if (rdt.sendEvent) {
-                rdt.sendEvent(rdt, args)
+            const rdt = function (...args: unknown[]) {
+              if ((rdt as any).sendEvent) {
+                (rdt as any).sendEvent(rdt, args)
               }
               else {
-                rdt.callQueue.push(args)
+                (rdt as any).callQueue.push(args)
               }
+            } as RedditPixelApi['rdt']
+            ;(rdt as any).callQueue = []
+            window.rdt = rdt
+            if (options?.id) {
+              rdt('init', options.id)
+              rdt('track', 'PageVisit')
             }
-            rdt.callQueue = []
-            rdt('init', options?.id)
-            rdt('track', 'PageVisit')
           },
-      // No schema needed as script doesn't require specific configuration
+      schema: import.meta.dev ? RedditPixelOptions : undefined,
       scriptOptions: {
         use() {
           return { rdt: window.rdt }

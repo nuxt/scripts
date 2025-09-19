@@ -28,6 +28,7 @@ import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
+import type { RedditPixelInput } from './registry/reddit-pixel'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -141,6 +142,7 @@ export interface ScriptRegistry {
   intercom?: IntercomInput
   matomoAnalytics?: MatomoAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
+  redditPixel?: RedditPixelInput
   segment?: SegmentInput
   stripe?: StripeInput
   xPixel?: XPixelInput

@@ -6,7 +6,7 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { status, rdt } = useScriptRedditPixel({ id: '' })
+const { status, rdt } = useScriptRedditPixel({ id: 'YOUR_PIXEL_ID' })
 // this will be triggered once the script is ready async
 function triggerEvent() {
   rdt('track', 'PageVisit')
