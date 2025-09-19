@@ -11,7 +11,7 @@ export const StripeOptions = object({
 export type StripeInput = RegistryScriptInput<typeof StripeOptions, false>
 
 export interface StripeApi {
-  Stripe: Stripe
+  Stripe: StripeConstructor
 }
 
 export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
