@@ -1,5 +1,5 @@
 import { withQuery } from 'ufo'
-import type { Stripe } from '@stripe/stripe-js'
+import type { StripeConstructor } from '@stripe/stripe-js'
 import { useRegistryScript } from '../utils'
 import { boolean, object, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
