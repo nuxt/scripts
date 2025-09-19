@@ -8,8 +8,6 @@
     "generate": "nuxi generate"
   },
   "dependencies": {
-    "@nuxt/scripts": "workspace:*",
-    "@nuxt/ui": "^2.18.7",
-    "nuxt-scripts-devtools": "workspace:*"
+    "@nuxt/scripts": "workspace:*"
   }
 }

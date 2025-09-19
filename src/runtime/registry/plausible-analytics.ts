@@ -1,6 +1,6 @@
 import { useRegistryScript } from '../utils'
 import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 const extensions = [
   literal('hash'),
@@ -22,9 +22,9 @@ export const PlausibleAnalyticsOptions = object({
 export type PlausibleAnalyticsInput = RegistryScriptInput<typeof PlausibleAnalyticsOptions, false>
 
 export interface PlausibleAnalyticsApi {
-  plausible: ((event: '404', options: Record<string, any>) => void) &
-    ((event: 'event', options: Record<string, any>) => void) &
-    ((...params: any[]) => void) & {
+  plausible: ((event: '404', options: Record<string, any>) => void)
+    & ((event: 'event', options: Record<string, any>) => void)
+    & ((...params: any[]) => void) & {
       q: any[]
     }
 }

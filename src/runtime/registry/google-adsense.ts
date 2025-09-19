@@ -1,13 +1,17 @@
+import { useHead } from 'nuxt/app'
 import { useRegistryScript } from '../utils'
-import { object, string, optional } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
-import { useHead } from '#imports'
+import { object, string, optional, boolean } from '#nuxt-scripts-validator'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const GoogleAdsenseOptions = object({
   /**
    * The Google Adsense ID.
    */
   client: optional(string()),
+  /**
+   * Enable or disable Auto Ads.
+   */
+  autoAds: optional(boolean()),
 })
 
 export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions, true, false, false>
@@ -42,10 +46,23 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(_options?: Go
       beforeInit() {
         if (options?.client) {
           useHead({
+            // Add meta tag for Google Adsense account
             meta: [
               {
                 name: 'google-adsense-account',
-                content: options?.client,
+                content: options.client,
+              },
+            ],
+            // Inject Auto Ads script dynamically
+            script: [
+              {
+                innerHTML: `
+                (adsbygoogle = window.adsbygoogle || []).push({
+                  google_ad_client: "${options.client}",
+                  enable_page_level_ads: ${options.autoAds ?? false}
+                });
+                `,
+                type: 'text/javascript',
               },
             ],
           })

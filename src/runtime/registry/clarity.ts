@@ -1,6 +1,6 @@
 import { useRegistryScript } from '../utils'
 import { minLength, object, string, pipe } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)
   & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{
@@ -9,7 +9,7 @@ type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: str
     page: string
     userHint: string
   }>)
-  & ((fn: 'consent') => void)
+  & ((fn: 'consent', enabled?: boolean) => void)
   & ((fn: 'set', key: any, value: any) => void)
   & ((fn: 'event', value: any) => void)
   & ((fn: 'upgrade', upgradeReason: any) => void)
@@ -46,7 +46,14 @@ export function useScriptClarity<T extends ClarityApi>(
       schema: import.meta.dev ? ClarityOptions : undefined,
       scriptOptions: {
         use() {
-          return { clarity: window.clarity }
+          return {
+            // @ts-expect-error untyped
+            clarity: Object.assign(function (...params) {
+              const clarity = window.clarity
+              // @ts-expect-error untyped
+              return clarity.apply(this, params)
+            }, window.clarity),
+          }
         },
       },
       clientInit: import.meta.server

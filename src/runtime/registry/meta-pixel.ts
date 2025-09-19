@@ -1,6 +1,6 @@
 import { useRegistryScript } from '../utils'
 import { number, object, string, union } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
@@ -8,7 +8,7 @@ interface EventObjectProperties {
   content_ids?: string[]
   content_name?: string
   content_type?: string
-  contents: { id: string, quantity: number }[]
+  contents?: { id: string, quantity: number }[]
   currency?: string
   delivery_category?: 'in_store' | 'curbside' | 'home_delivery'
   num_items?: number
@@ -18,8 +18,19 @@ interface EventObjectProperties {
   value?: number
   [key: string]: any
 }
+type ConsentAction = 'grant' | 'revoke'
 
-type FbqFns = ((event: 'track', eventName: StandardEvents, data?: EventObjectProperties) => void) & ((event: 'trackCustom', eventName: string, data?: EventObjectProperties) => void) & ((event: 'init', id: number, data?: Record<string, any>) => void) & ((event: 'init', id: string) => void) & ((event: string, ...params: any[]) => void)
+type FbqArgs
+  = | ['track', StandardEvents, EventObjectProperties?]
+    | ['trackCustom', string, EventObjectProperties?]
+    | ['trackSingle', string, StandardEvents, EventObjectProperties?]
+    | ['trackSingleCustom', string, string, EventObjectProperties?]
+    | ['init', string]
+    | ['init', number, Record<string, any>?]
+    | ['consent', ConsentAction]
+  // fallback: allow any fbq call signature not covered above
+    | [string, ...any[]]
+type FbqFns = (...args: FbqArgs) => void
 
 export interface MetaPixelApi {
   fbq: FbqFns & {

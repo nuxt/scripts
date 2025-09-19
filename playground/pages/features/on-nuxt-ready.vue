@@ -2,7 +2,7 @@
 import { useScriptGoogleTagManager } from '#imports'
 
 const { status } = useScriptGoogleTagManager({
-  id: 'GTM-5ZQZJZ',
+  id: 'GTM-MWW974PF',
   scriptOptions: {
     trigger: 'onNuxtReady', // this is the default behavior
     bundle: true,

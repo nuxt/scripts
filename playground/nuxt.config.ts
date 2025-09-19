@@ -1,6 +1,8 @@
+import NuxtScripts from '../src/module'
+
 export default defineNuxtConfig({
   modules: [
-    '@nuxt/scripts',
+    NuxtScripts,
     '@nuxt/ui',
   ],
 

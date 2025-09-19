@@ -1,10 +1,6 @@
 import type {
-  ActiveHeadEntry,
-  AsAsyncFunctionValues,
-  DataKeys,
-  SchemaAugmentations,
-  ScriptBase,
-} from '@unhead/schema'
+  Script,
+} from '@unhead/vue/types'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { InferInput, ObjectSchema } from 'valibot'
@@ -20,6 +16,7 @@ import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { StripeInput } from './registry/stripe'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XPixelInput } from './registry/x-pixel'
+import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { NpmInput } from './registry/npm'
@@ -29,30 +26,24 @@ import type { ClarityInput } from './registry/clarity'
 import type { CrispInput } from './registry/crisp'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
+import type { UmamiAnalyticsInput } from './registry/umami-analytics'
+import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
+import type { RedditPixelInput } from './registry/reddit-pixel'
+import type { PayPalInput } from './registry/paypal'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-export type UseScriptContext<T extends Record<symbol | string, any>> =
-  (Promise<T> & VueScriptInstance<T>)
-  & AsAsyncFunctionValues<T>
-  & {
-  /**
-   * @deprecated Use top-level functions instead.
-   */
-    $script: Promise<T> & VueScriptInstance<T>
-    warmup: (rel: WarmupStrategy) => void
-    _warmupEl?: void | ActiveHeadEntry<any>
-  }
+export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T>
 
-export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}, U = {}> = Omit<UseScriptOptions<T, U>, 'trigger'> & {
+export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
    * The trigger to load the script:
    * - `onNuxtReady` - Load the script when Nuxt is ready.
    * - `manual` - Load the script manually by calling `load()`.
    * - `Promise` - Load the script when the promise resolves.
    */
-  trigger?: UseScriptOptions<T, U>['trigger'] | 'onNuxtReady'
+  trigger?: UseScriptOptions<T>['trigger'] | 'onNuxtReady'
   /**
    * Should the script be bundled as an asset and loaded from your server. This is useful for improving the
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
@@ -106,6 +97,8 @@ export interface TrackedPage {
   path: string
 }
 
+type ExcludePromises<T> = T extends Promise<any> ? never : T
+
 export interface ConsentScriptTriggerOptions {
   /**
    * An optional reactive (or promise) reference to the consent state. You can use this to accept the consent for scripts
@@ -116,7 +109,7 @@ export interface ConsentScriptTriggerOptions {
    * Should the script be loaded on the `requestIdleCallback` callback. This is useful for non-essential scripts that
    * have already been consented to be loaded.
    */
-  postConsentTrigger?: NuxtUseScriptOptions['trigger']
+  postConsentTrigger?: ExcludePromises<NuxtUseScriptOptions['trigger']> | (() => Promise<any>)
 }
 
 export interface NuxtDevToolsScriptInstance {
@@ -148,12 +141,17 @@ export interface ScriptRegistry {
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
   intercom?: IntercomInput
+  paypal?: PayPalInput
   matomoAnalytics?: MatomoAnalyticsInput
+  rybbitAnalytics?: RybbitAnalyticsInput
+  redditPixel?: RedditPixelInput
   segment?: SegmentInput
   stripe?: StripeInput
   xPixel?: XPixelInput
+  snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
   vimeoPlayer?: VimeoPlayerInput
+  umamiAnalytics?: UmamiAnalyticsInput
   [key: `${string}-npm`]: NpmInput
 }
 
@@ -162,11 +160,15 @@ export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof Scri
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }>
 
+export type UseFunctionType<T, U> = T extends {
+  use: infer V
+} ? V extends (...args: any) => any ? ReturnType<V> : U : U
+
 const _emptyOptions = object({})
 
 export type EmptyOptionsSchema = typeof _emptyOptions
 
-type ScriptInput = ScriptBase & DataKeys & SchemaAugmentations['script']
+type ScriptInput = Script
 
 export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
@@ -174,17 +176,17 @@ export type RegistryScriptInput<
   Bundelable extends boolean = true,
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
-> =
-    (InferIfSchema<T>
-      & {
+>
+  = (InferIfSchema<T>
+    & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-        key?: string
-        scriptInput?: ScriptInput
-        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-      })
-      | Partial<InferIfSchema<T>> & (
+      key?: string
+      scriptInput?: ScriptInput
+      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+    })
+    | Partial<InferIfSchema<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

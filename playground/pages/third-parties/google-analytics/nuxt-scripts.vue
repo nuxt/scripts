@@ -1,22 +1,32 @@
 <script lang="ts" setup>
-import { useHead, useScriptGoogleAnalytics } from '#imports'
+import { useHead } from '#imports'
+import { useScriptGoogleAnalytics } from '#nuxt-scripts/registry/google-analytics'
 
 useHead({
   title: 'Google Analytics',
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { gtag, status } = useScriptGoogleAnalytics({
+const { proxy, status } = useScriptGoogleAnalytics({
   id: 'G-TR58L0EF8P',
+  onBeforeGtagStart(gtag) {
+    gtag('consent', 'default', {
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      ad_storage: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500,
+    })
+  },
 }) // id set via nuxt scripts module config
-gtag('event', 'page_view', {
+proxy.gtag('event', 'page_view', {
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',
   page_path: '/third-parties/google-analytics',
 })
 
 function triggerConversion() {
-  gtag('event', 'conversion')
+  proxy.gtag('event', 'conversion')
 }
 </script>
 

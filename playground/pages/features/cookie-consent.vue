@@ -9,7 +9,7 @@ function acceptCookies() {
   showCookieBanner.value = false
 }
 useScriptGoogleTagManager({
-  id: 'GTM-5ZQZJZ',
+  id: 'GTM-MWW974PF',
   scriptOptions: {
     trigger: scriptConsent,
     bundle: true,

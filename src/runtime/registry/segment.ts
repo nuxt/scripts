@@ -1,7 +1,7 @@
 import { joinURL } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { object, optional, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export const SegmentOptions = object({
   writeKey: string(),
@@ -69,21 +69,6 @@ export function useScriptSegment<T extends SegmentApi>(_options?: SegmentInput) 
           },
       schema: import.meta.dev ? SegmentOptions : undefined,
       scriptOptions: {
-        stub: import.meta.server
-          // ensure ssr works
-          ? ({ fn }) => {
-              if (fn === 'analytics') {
-                return {
-                  track: () => {},
-                  page: () => {},
-                  identify: () => {},
-                  group: () => {},
-                  alias: () => {},
-                  reset: () => {},
-                }
-              }
-            }
-          : undefined,
         use() {
           return methods.reduce((acc, key) => {
             // @ts-expect-error untyped

@@ -1,4 +1,4 @@
-import { useRegistryScript } from '#nuxt-scripts-utils'
+import { useRegistryScript } from '#nuxt-scripts/utils'
 
 export interface CustomApi {
   myScript: () => void
