@@ -18,7 +18,7 @@ export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
   return useRegistryScript<T, typeof StripeOptions>('stripe', options => ({
     scriptInput: {
       src: withQuery(
-        `https://js.stripe.com/v3/`,
+        `https://js.stripe.com/basil/stripe.js`,
         (typeof options?.advancedFraudSignals === 'boolean' && !options?.advancedFraudSignals) ? { advancedFraudSignals: false } : {},
       ),
       // opt-out of privacy defaults
