@@ -159,12 +159,14 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
         clientInit: import.meta.server
           ? undefined
           : () => {
-            // Initialize dataLayer if it doesn't exist
+              // Initialize dataLayer if it doesn't exist
               (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
 
               // Create gtag function
-              function gtag(...args: any[]) {
-                (window as any)[dataLayerName].push(args)
+              function gtag() {
+                // Pushing arguments to dataLayer is necessary for GTM to process events
+                // eslint-disable-next-line prefer-rest-params
+                (window as any)[dataLayerName].push(arguments)
               }
 
               // Allow custom initialization
