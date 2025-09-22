@@ -22,11 +22,11 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
     }
     catch (_e) {
       const e = _e as ValiError<any>
-      // TODO nicer error handling
-      // @ts-expect-error untyped?
       console.error(e.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n'))
+      return e
     }
   }
+  return null
 }
 
 type OptionsFn<O> = (options: InferIfSchema<O>) => ({
@@ -60,14 +60,18 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     }
   }
   const init = scriptOptions.beforeInit
-  scriptOptions.beforeInit = () => {
-    // a manual trigger also means it was disabled by nuxt.config
-    if (import.meta.dev && !scriptOptions.skipValidation && options.schema) {
+
+  if (import.meta.dev) {
+    scriptOptions._validate = () => {
+      // a manual trigger also means it was disabled by nuxt.config
       // overriding the src will skip validation
-      if (!userOptions.scriptInput?.src) {
-        validateScriptInputSchema(registryKey, options.schema, userOptions)
+      if (!userOptions.scriptInput?.src && !scriptOptions.skipValidation && options.schema) {
+        return validateScriptInputSchema(registryKey, options.schema, userOptions)
       }
     }
+  }
+  // wrap beforeInit to add validation
+  scriptOptions.beforeInit = () => {
     // avoid clearing the user beforeInit
     init?.()
     if (import.meta.client) {

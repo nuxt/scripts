@@ -3,7 +3,7 @@ import type {
 } from '@unhead/vue/types'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
-import type { InferInput, ObjectSchema } from 'valibot'
+import type {InferInput, ObjectSchema, ValiError} from 'valibot'
 import type { Import } from 'unimport'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
@@ -28,6 +28,8 @@ import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
+import type { RedditPixelInput } from './registry/reddit-pixel'
+import type { PayPalInput } from './registry/paypal'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -84,6 +86,10 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
      */
     registryMeta?: Record<string, string>
   }
+  /**
+   * @internal Used to run custom validation logic in dev mode.
+   */
+  _validate?: () => ValiError<any> | null | undefined
 }
 
 export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
@@ -139,8 +145,10 @@ export interface ScriptRegistry {
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
   intercom?: IntercomInput
+  paypal?: PayPalInput
   matomoAnalytics?: MatomoAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
+  redditPixel?: RedditPixelInput
   segment?: SegmentInput
   stripe?: StripeInput
   xPixel?: XPixelInput
@@ -173,16 +181,16 @@ export type RegistryScriptInput<
   Usable extends boolean = false,
   CanBypassOptions extends boolean = true,
 >
-    = (InferIfSchema<T>
-      & {
+  = (InferIfSchema<T>
+    & {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-        key?: string
-        scriptInput?: ScriptInput
-        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-      })
-      | Partial<InferIfSchema<T>> & (
+      key?: string
+      scriptInput?: ScriptInput
+      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+    })
+    | Partial<InferIfSchema<T>> & (
       CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

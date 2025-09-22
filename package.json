@@ -73,6 +73,7 @@
   },
   "peerDependencies": {
     "@stripe/stripe-js": "^7.0.0",
+    "@paypal/paypal-js": "^8.1.2",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
@@ -80,6 +81,9 @@
   },
   "peerDependenciesMeta": {
     "@stripe/stripe-js": {
+      "optional": true
+    },
+    "@paypal/paypal-js": {
       "optional": true
     },
     "@types/google.maps": {
@@ -111,24 +115,25 @@
     "valibot": "^1.1.0"
   },
   "devDependencies": {
-    "@nuxt/devtools-kit": "^2.6.3",
-    "@nuxt/devtools-ui-kit": "^2.6.3",
+    "@nuxt/devtools-kit": "^2.6.5",
+    "@nuxt/devtools-ui-kit": "^2.6.5",
     "@nuxt/eslint-config": "^1.9.0",
     "@nuxt/module-builder": "^1.0.2",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "3.19.2",
+    "@paypal/paypal-js": "^8.4.2",
     "@types/semver": "^7.7.1",
     "@typescript-eslint/typescript-estree": "^8.44.0",
     "acorn-loose": "^8.5.2",
     "bumpp": "^10.2.3",
     "changelogen": "^0.6.2",
-    "eslint": "^9.35.0",
-    "eslint-plugin-n": "^17.23.0",
+    "eslint": "^9.36.0",
+    "eslint-plugin-n": "^17.23.1",
     "happy-dom": "^18.0.1",
     "knitwork": "^1.2.0",
     "nuxt": "catalog:",
     "playwright-core": "^1.55.0",
-    "shiki": "^3.12.2",
+    "shiki": "^3.13.0",
     "typescript": "5.9.2",
     "vitest": "^3.2.4",
     "vue": "^3.5.21",
