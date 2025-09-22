@@ -89,6 +89,15 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         syncScripts()
       })
       payload.$script = instance
+      const err = options._validate?.()
+      if (err) {
+        payload.events.push({
+          type: 'status',
+          status: 'validation-failed',
+          args: err,
+          at: Date.now(),
+        })
+      }
       payload.events.push({
         type: 'status',
         status: 'awaitingLoad',

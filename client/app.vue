@@ -1,15 +1,20 @@
 <script lang="ts" setup>
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import { registry } from '../src/registry'
-import { devtools, getScriptSize, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
+import { devtools, fetchScript, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
 import { msToHumanReadable } from '~/utils/formatting'
 
 const scriptRegistry = await registry()
 
 const scripts = ref({})
 const scriptSizes = reactive<Record<string, string>>({})
+const scriptErrors = reactive<Record<string, string>>({})
 
 function syncScripts(_scripts: any[]) {
+  if (!_scripts || typeof _scripts !== 'object') {
+    scripts.value = {}
+    return
+  }
   // augment the scripts with registry
   scripts.value = Object.fromEntries(
     Object.entries({ ..._scripts })
@@ -26,13 +31,17 @@ function syncScripts(_scripts: any[]) {
         }
         const scriptSizeKey = script.src
         if (!scriptSizes[scriptSizeKey]) {
-          getScriptSize(script.src).then((size) => {
-            scriptSizes[scriptSizeKey] = size
-            script.size = size
-          }).catch(() => {
-            script.size = ''
-            scriptSizes[scriptSizeKey] = ''
-          })
+          fetchScript(script.src)
+            .then((res) => {
+              if (res.size) {
+                scriptSizes[scriptSizeKey] = res.size
+                script.size = res.size
+              }
+              if (res.error) {
+                scriptErrors[scriptSizeKey] = res.error
+                script.error = res.error
+              }
+            })
         }
         return [key, script]
       }),
@@ -54,7 +63,7 @@ onDevtoolsClientConnected(async (client) => {
     syncScripts(ctx.scripts)
   })
   version.value = client.host.nuxt.$config.public['nuxt-scripts'].version
-  syncScripts(client.host.nuxt._scripts)
+  syncScripts(client.host.nuxt._scripts || {})
 })
 const tab = ref('scripts')
 
@@ -165,7 +174,8 @@ function viewDocs(docs: string) {
                 <div class="flex items-center justify-between w-full  gap-7">
                   <div class="flex items-center gap-7">
                     <div class="flex items-center gap-1">
-                      <div v-if="script.registry" class="flex items-center max-w-6 h-6" v-html="script.registry.logo?.dark || script.registry.logo" />
+                      <img v-if="script.registry.logo?.startsWith('http')" class="flex items-center max-w-6 h-6" :src="script.registry.logo?.dark || script.registry.logo">
+                      <div v-else-if="script.registry" class="flex items-center max-w-6 h-6" v-html="script.registry.logo?.dark || script.registry.logo" />
                       <img v-else-if="!script.src.startsWith('/')" :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`" class="w-4 h-4 rounded-lg">
                       <div>
                         <a title="View script source" class="text-base hover:bg-gray-800/50 px-2 transition py-1 rounded-xl font-semibold flex gap-2  items-center" target="_blank" :href="script.src">
@@ -191,7 +201,12 @@ function viewDocs(docs: string) {
                       Status
                     </div>
                     <div class="capitalize">
-                      {{ script.$script.status.value }}
+                      <div v-if="scriptErrors[script.src]">
+                        {{ scriptErrors[script.src] === 'TypeError: Failed to fetch' ? 'CORS Error' : scriptErrors[script.src] }}
+                      </div>
+                      <div v-else>
+                        {{ script.$script.status }}
+                      </div>
                     </div>
                   </div>
                   <div v-if="scriptSizes[script.src]">
@@ -233,6 +248,12 @@ function viewDocs(docs: string) {
                     </div>
                     <div v-else-if="event.status === 'loading'" class="font-bold px-2 py-[2px] bg-yellow-100 text-yellow-700 rounded-lg">
                       {{ event.status }}
+                    </div>
+                    <div v-else-if="event.status === 'validation-failed'" class="flex items-center gap-2">
+                      <div class="font-bold px-2 py-[2px] bg-purple-100 text-purple-700 rounded-lg">
+                        {{ event.status }}
+                      </div>
+                      {{ event.args.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join(',') }}
                     </div>
                   </template>
                   <div v-else-if="event.type === 'fn-call' && event.args" class="px-2 py-[2px] bg-gray-100 text-gray-700 rounded-lg font-mono">
