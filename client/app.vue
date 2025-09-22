@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import { registry } from '../src/registry'
-import { devtools, getScriptSize, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
+import { devtools, fetchScript, humanFriendlyTimestamp, reactive, ref, urlToOrigin } from '#imports'
 import { msToHumanReadable } from '~/utils/formatting'
 
 const scriptRegistry = await registry()
 
 const scripts = ref({})
 const scriptSizes = reactive<Record<string, string>>({})
+const scriptErrors = reactive<Record<string, string>>({})
 
 function syncScripts(_scripts: any[]) {
   // augment the scripts with registry
@@ -26,13 +27,17 @@ function syncScripts(_scripts: any[]) {
         }
         const scriptSizeKey = script.src
         if (!scriptSizes[scriptSizeKey]) {
-          getScriptSize(script.src).then((size) => {
-            scriptSizes[scriptSizeKey] = size
-            script.size = size
-          }).catch(() => {
-            script.size = ''
-            scriptSizes[scriptSizeKey] = ''
-          })
+          fetchScript(script.src)
+            .then((res) => {
+              if (res.size) {
+                scriptSizes[scriptSizeKey] = res.size
+                script.size = res.size
+              }
+              if (res.error) {
+                scriptErrors[scriptSizeKey] = res.error
+                script.error = res.error
+              }
+            })
         }
         return [key, script]
       }),
@@ -192,7 +197,12 @@ function viewDocs(docs: string) {
                       Status
                     </div>
                     <div class="capitalize">
-                      {{ script.$script.status.value }}
+                      <div v-if="scriptErrors[script.src]">
+                        {{ scriptErrors[script.src] === 'TypeError: Failed to fetch' ? 'CORS Error' : scriptErrors[script.src] }}
+                      </div>
+                      <div v-else>
+                        {{ script.$script.status }}
+                      </div>
                     </div>
                   </div>
                   <div v-if="scriptSizes[script.src]">
