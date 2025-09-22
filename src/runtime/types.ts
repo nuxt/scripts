@@ -49,9 +49,12 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
    * improves privacy by not sharing the user's IP address with third-party servers.
    * - `true` - Bundle the script as an asset.
+   * - `'force'` - Bundle the script and force download, bypassing cache. Useful for development.
    * - `false` - Do not bundle the script. (default)
+   *
+   * Note: Using 'force' may significantly increase build time as scripts will be re-downloaded on every build.
    */
-  bundle?: boolean
+  bundle?: boolean | 'force'
   /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.

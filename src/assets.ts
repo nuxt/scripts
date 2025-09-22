@@ -21,6 +21,10 @@ const renderedScript = new Map<string, {
   filename?: string
 } | Error>()
 
+/**
+ * Cache duration for bundled scripts in production (1 year).
+ * Scripts are cached with long expiration since they are content-addressed by hash.
+ */
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 // TODO: refactor to use nitro storage when it can be cached between builds

@@ -18,6 +18,14 @@ export function resolveScriptKey(input: any): string {
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
+
+  // Warn about unsupported bundling for dynamic sources (internal value set by transform)
+  if (import.meta.dev && (options.bundle as any) === 'unsupported') {
+    console.warn('[Nuxt Scripts] Bundling is not supported for dynamic script sources. Static URLs are required for bundling.')
+    // Reset to false to prevent any unexpected behavior
+    options.bundle = false
+  }
+
   // browser hint optimizations
   const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
   const nuxtApp = useNuxtApp()

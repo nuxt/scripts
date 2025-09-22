@@ -62,6 +62,12 @@ export interface ModuleOptions {
      * Configure the fetch options used for downloading scripts.
      */
     fetchOptions?: FetchOptions
+    /**
+     * Cache duration for bundled scripts in milliseconds.
+     * Scripts older than this will be re-downloaded during builds.
+     * @default 604800000 (7 days)
+     */
+    cacheMaxAge?: number
   }
   /**
    * Whether the module is enabled.
@@ -236,6 +242,7 @@ export {}`
         assetsBaseURL: config.assets?.prefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
         fetchOptions: config.assets?.fetchOptions,
+        cacheMaxAge: config.assets?.cacheMaxAge,
         renderedScript,
       }))
 
