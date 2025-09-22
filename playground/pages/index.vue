@@ -27,6 +27,10 @@ const thirdParties = [
     path: '/third-parties/x-pixel/nuxt-scripts',
   },
   {
+    name: 'Reddit Pixel',
+    path: '/third-parties/reddit-pixel/nuxt-scripts',
+  },
+  {
     name: 'Google Adsense',
     path: '/third-parties/google-adsense/nuxt-scripts',
   },
@@ -53,6 +57,10 @@ const thirdParties = [
   {
     name: 'Stripe',
     path: '/third-parties/stripe/nuxt-scripts',
+  },
+  {
+    name: 'PayPal',
+    path: '/third-parties/paypal/nuxt-scripts',
   },
   {
     name: 'Segment',

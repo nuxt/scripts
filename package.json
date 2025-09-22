@@ -2,7 +2,7 @@
   "name": "@nuxt/scripts",
   "type": "module",
   "version": "0.11.13",
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.17.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "website": "https://harlanzw.com",
@@ -73,6 +73,7 @@
   },
   "peerDependencies": {
     "@stripe/stripe-js": "^7.0.0",
+    "@paypal/paypal-js": "^8.1.2",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
@@ -80,6 +81,9 @@
   },
   "peerDependenciesMeta": {
     "@stripe/stripe-js": {
+      "optional": true
+    },
+    "@paypal/paypal-js": {
       "optional": true
     },
     "@types/google.maps": {
@@ -94,46 +98,47 @@
   },
   "dependencies": {
     "@nuxt/kit": "catalog:",
-    "@vueuse/core": "^13.7.0",
+    "@vueuse/core": "^13.9.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "h3": "^1.15.4",
-    "magic-string": "^0.30.18",
+    "magic-string": "^0.30.19",
     "ofetch": "^1.4.1",
     "ohash": "^2.0.11",
     "pathe": "^2.0.3",
     "pkg-types": "^2.3.0",
-    "sirv": "^3.0.1",
+    "sirv": "^3.0.2",
     "std-env": "^3.9.0",
     "ufo": "^1.6.1",
-    "unplugin": "^2.3.8",
-    "unstorage": "^1.16.1",
+    "unplugin": "^2.3.10",
+    "unstorage": "^1.17.1",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
-    "@nuxt/devtools-kit": "^2.6.3",
-    "@nuxt/devtools-ui-kit": "^2.6.3",
+    "@nuxt/devtools-kit": "^2.6.5",
+    "@nuxt/devtools-ui-kit": "^2.6.5",
     "@nuxt/eslint-config": "^1.9.0",
     "@nuxt/module-builder": "^1.0.2",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "3.19.2",
-    "@types/semver": "^7.7.0",
-    "@typescript-eslint/typescript-estree": "^8.40.0",
+    "@paypal/paypal-js": "^8.4.2",
+    "@types/semver": "^7.7.1",
+    "@typescript-eslint/typescript-estree": "^8.44.0",
     "acorn-loose": "^8.5.2",
     "bumpp": "^10.2.3",
     "changelogen": "^0.6.2",
-    "eslint": "9.33.0",
-    "eslint-plugin-n": "^17.21.3",
+    "eslint": "^9.36.0",
+    "eslint-plugin-n": "^17.23.1",
     "happy-dom": "^18.0.1",
     "knitwork": "^1.2.0",
     "nuxt": "catalog:",
     "playwright-core": "^1.55.0",
-    "shiki": "3.11.0",
+    "shiki": "^3.13.0",
     "typescript": "5.9.2",
     "vitest": "^3.2.4",
-    "vue": "^3.5.19",
+    "vue": "^3.5.21",
     "vue-router": "^4.5.1",
-    "vue-tsc": "^3.0.6"
+    "vue-tsc": "^3.0.7"
   },
   "resolutions": {
     "@nuxt/scripts": "workspace:*"
