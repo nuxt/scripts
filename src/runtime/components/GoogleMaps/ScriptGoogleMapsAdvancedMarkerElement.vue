@@ -71,8 +71,8 @@ whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
   }
 
   whenever(() => props.options, (options) => {
-    for (const option in options) {
-      advancedMarkerElement.value![option as keyof typeof props.options] = options[option as keyof typeof props.options]
+    if (advancedMarkerElement.value && options) {
+      Object.assign(advancedMarkerElement.value, options)
     }
   }, {
     deep: true,

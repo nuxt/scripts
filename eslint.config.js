@@ -36,6 +36,7 @@ export default createConfigForNuxt({
       'vue/no-multiple-template-root': 'off',
       // NOTE: Disable this style rules if stylistic is not enabled
       'vue/max-attributes-per-line': 'off',
+      // Disabled for Google Maps SFC components that use conditional rendering without root elements
       'vue/valid-template-root': 'off',
     },
   })

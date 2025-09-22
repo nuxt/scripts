@@ -31,8 +31,8 @@ whenever(
     }
 
     whenever(() => props.options, (options) => {
-      for (const option in options) {
-        pinElement.value![option as keyof typeof props.options] = options[option as keyof typeof props.options]
+      if (pinElement.value && options) {
+        Object.assign(pinElement.value, options)
       }
     }, {
       deep: true,

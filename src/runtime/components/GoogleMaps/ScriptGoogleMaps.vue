@@ -1,6 +1,4 @@
 <script lang="ts">
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /// <reference types="google.maps" />
 import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, provide, shallowRef } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps, ShallowRef } from 'vue'
@@ -13,7 +11,7 @@ import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
-import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
+import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 
 export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
   map: ShallowRef<google.maps.Map | undefined>
@@ -181,7 +179,7 @@ function normalizeAdvancedMapMarkerOptions(_options?: google.maps.marker.Advance
           lng: Number.parseFloat(_options.split(',')[1] || '0'),
         },
       }
-    : _options
+    : _options || {}
   if (!opts.position) {
     // set default
     opts.position = {
@@ -202,11 +200,10 @@ async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMar
   // eslint-disable-next-line no-async-promise-executor
   const p = new Promise<google.maps.marker.AdvancedMarkerElement>(async (resolve) => {
     const lib = await importLibrary('marker')
-    const mapMarkerOptions = defu(toRaw(normalizedOptions), {
+    const mapMarkerOptions = {
+      ...toRaw(normalizedOptions),
       map: toRaw(map.value!),
-      // @ts-expect-error unified API for maps and markers
-      position: normalizedOptions.location,
-    })
+    }
     resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
   })
   mapMarkers.value.set(key, p)
