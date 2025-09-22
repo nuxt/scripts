@@ -11,6 +11,10 @@ const scriptSizes = reactive<Record<string, string>>({})
 const scriptErrors = reactive<Record<string, string>>({})
 
 function syncScripts(_scripts: any[]) {
+  if (!_scripts || typeof _scripts !== 'object') {
+    scripts.value = {}
+    return
+  }
   // augment the scripts with registry
   scripts.value = Object.fromEntries(
     Object.entries({ ..._scripts })
@@ -59,7 +63,7 @@ onDevtoolsClientConnected(async (client) => {
     syncScripts(ctx.scripts)
   })
   version.value = client.host.nuxt.$config.public['nuxt-scripts'].version
-  syncScripts(client.host.nuxt._scripts)
+  syncScripts(client.host.nuxt._scripts || {})
 })
 const tab = ref('scripts')
 
