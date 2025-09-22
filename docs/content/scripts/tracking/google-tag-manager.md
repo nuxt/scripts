@@ -190,7 +190,6 @@ export default defineNuxtConfig({
 <script setup lang="ts">
 const { proxy } = useScriptGoogleTagManager({
   id: 'GTM-XXXXXX',
-}, {
   scriptInput: {
     src: 'https://your-domain.com/gtm.js'
   }

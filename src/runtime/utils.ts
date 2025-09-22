@@ -23,14 +23,14 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
     }
     catch (_e) {
       const e = _e as ValiError<any>
-      console.error(e.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n'))
+      console.error(e.issues.map((i: any) => `${key}.${i.path?.map((i: any) => i.key).join(',')}: ${i.message}`).join('\n'))
       return e
     }
   }
   return null
 }
 
-type OptionsFn<O> = (options: InferIfSchema<O>) => ({
+type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptInput & { src?: string } }) => ({
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
   schema?: O extends ObjectSchema<any, any> ? O : undefined
@@ -44,7 +44,7 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
-  const options = optionsFn(userOptions as InferIfSchema<O>)
+  const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
   let finalScriptInput = options.scriptInput
 

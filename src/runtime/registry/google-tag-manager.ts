@@ -109,9 +109,6 @@ export const GoogleTagManagerOptions = object({
 
   /** Referrer policy for analytics requests */
   authReferrerPolicy: optional(string()),
-
-  /** The URL of the script; useful for server-side GTM */
-  source: optional(string()),
 })
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
@@ -135,7 +132,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
 
       return {
         scriptInput: {
-          src: withQuery(opts.source || 'https://www.googletagmanager.com/gtm.js', {
+          src: withQuery('https://www.googletagmanager.com/gtm.js', {
             id: opts.id,
             l: opts.l,
             gtm_auth: opts.auth,
