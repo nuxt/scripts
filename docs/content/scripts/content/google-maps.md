@@ -384,6 +384,18 @@ By providing your own placeholder slot you will disable the default placeholder 
 
 Nuxt Scripts provides individual Single File Components (SFCs) for different Google Maps elements. These components allow you to declaratively compose complex maps using Vue's template syntax.
 
+### Installation
+
+To use marker clustering functionality, you'll need to install the required peer dependency:
+
+```bash
+npm install @googlemaps/markerclusterer
+# or
+yarn add @googlemaps/markerclusterer
+# or
+pnpm add @googlemaps/markerclusterer
+```
+
 ### Available Components
 
 All Google Maps SFC components must be used within a `<ScriptGoogleMaps>` component:
