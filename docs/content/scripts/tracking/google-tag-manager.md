@@ -2,10 +2,10 @@
 title: Google Tag Manager
 description: Use Google Tag Manager in your Nuxt app.
 links:
-- label: Source
-  icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-tag-manager.ts
-  size: xs
+  - label: Source
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-tag-manager.ts
+    size: xs
 ---
 
 [Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.
@@ -62,7 +62,7 @@ export default defineNuxtConfig({
         googleTagManager: {
           // .env
           // NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=<your-id>
-          id: '', 
+          id: '',
         },
       },
     },
@@ -95,14 +95,14 @@ This composable will trigger the provided function on route change after the pag
 ```ts
 const { proxy } = useScriptGoogleTagManager({
   id: 'YOUR_ID' // id is only needed if you haven't configured globally
-}) 
+})
 
 useScriptEventPage((title, path) => {
   // triggered on route change after title is updated
-  proxy.dataLayer.push({ 
+  proxy.dataLayer.push({
     event: 'pageview',
-    title, 
-    path 
+    title,
+    path
   })
 })
 ```
@@ -163,7 +163,41 @@ export const GoogleTagManagerOptions = object({
 type GoogleTagManagerInput = typeof GoogleTagManagerOptions & { onBeforeGtmStart?: (gtag: Gtag) => void }
 ```
 
-## Example
+## Examples
+
+### Server-Side GTM Setup
+
+We can add custom GTM script source for server-side implementation. You can override the script src, this will merge in any of the computed query params. 
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: 'GTM-XXXXXX',
+        scriptInput: {
+          src: 'https://your-domain.com/gtm.js'
+        }
+      }
+    }
+  }
+})
+```
+
+```vue
+<!-- Component usage -->
+<script setup lang="ts">
+const { proxy } = useScriptGoogleTagManager({
+  id: 'GTM-XXXXXX',
+  scriptInput: {
+    src: 'https://your-domain.com/gtm.js'
+  }
+})
+</script>
+```
+
+### Basic Usage
 
 Using Google Tag Manager only in production while using `dataLayer` to send a conversion event.
 
