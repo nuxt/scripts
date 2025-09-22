@@ -20,13 +20,13 @@ import type { RegistryScript } from '#nuxt-scripts/types'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
-async function isCacheExpired(storage: any, filename: string): Promise<boolean> {
+async function isCacheExpired(storage: any, filename: string, cacheMaxAge: number = SEVEN_DAYS_IN_MS): Promise<boolean> {
   const metaKey = `bundle-meta:${filename}`
   const meta = await storage.getItem(metaKey)
   if (!meta || !meta.timestamp) {
     return true // No metadata means expired/invalid cache
   }
-  return Date.now() - meta.timestamp > SEVEN_DAYS_IN_MS
+  return Date.now() - meta.timestamp > cacheMaxAge
 }
 
 export interface AssetBundlerTransformerOptions {
@@ -36,6 +36,7 @@ export interface AssetBundlerTransformerOptions {
   scripts?: Required<RegistryScript>[]
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
+  cacheMaxAge?: number
   renderedScript?: Map<string, {
     content: Buffer
     /**
@@ -68,7 +69,7 @@ async function downloadScript(opts: {
   url: string
   filename?: string
   forceDownload?: boolean
-}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions) {
+}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
   const { src, url, filename, forceDownload } = opts
   if (src === url || !filename) {
     return
@@ -79,7 +80,7 @@ async function downloadScript(opts: {
   if (!res) {
     // Use storage to cache the font data between builds
     const cacheKey = `bundle:${filename}`
-    const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename))
+    const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
     if (shouldUseCache) {
       const res = await storage.getItemRaw<Buffer>(cacheKey)
@@ -312,7 +313,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url
                     try {
-                      await downloadScript({ src, url, filename, forceDownload }, renderedScript, options.fetchOptions)
+                      await downloadScript({ src, url, filename, forceDownload }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                     }
                     catch (e) {
                       if (options.fallbackOnSrcOnBundleFail) {

@@ -497,6 +497,23 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     `)
   })
 
+  it('custom cache max age is passed through', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+    const customCacheMaxAge = 3600000 // 1 hour
+
+    const code = await transform(
+      `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+        bundle: true,
+      })`,
+      {
+        cacheMaxAge: customCacheMaxAge,
+      },
+    )
+
+    // Verify transformation still works with custom cache duration
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+  })
+
   describe.todo('fallbackOnSrcOnBundleFail', () => {
     beforeEach(() => {
       vi.mocked($fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
