@@ -147,6 +147,70 @@ describe('nuxtScriptTransformer', () => {
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ src: '/_scripts/custom.js.js' }, )"`)
   })
 
+  it('registry script with scriptOptions.bundle - correct usage', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'analytics')
+    const code = await transform(
+      `const instance = useScriptGoogleAnalytics({
+        id: 'GA_MEASUREMENT_ID',
+        scriptOptions: {
+          bundle: true
+        }
+      })`,
+      {
+        defaultBundle: false,
+        scripts: [
+          {
+            scriptBundling() {
+              return 'https://www.googletagmanager.com/gtag/js'
+            },
+            import: {
+              name: 'useScriptGoogleAnalytics',
+              from: '',
+            },
+          },
+        ],
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/analytics.js' }, 
+              id: 'GA_MEASUREMENT_ID',
+              scriptOptions: {
+                bundle: true
+              }
+            })"
+    `)
+  })
+
+  it('registry script with top-level bundle also transforms', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'gtag/js')
+    const code = await transform(
+      `const instance = useScriptGoogleAnalytics({
+        id: 'GA_MEASUREMENT_ID'
+      }, {
+        bundle: true
+      })`,
+      {
+        defaultBundle: false,
+        scripts: [
+          {
+            scriptBundling() {
+              return 'https://www.googletagmanager.com/gtag/js'
+            },
+            import: {
+              name: 'useScriptGoogleAnalytics',
+              from: '',
+            },
+          },
+        ],
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' }, 
+              id: 'GA_MEASUREMENT_ID'
+            }, )"
+    `)
+  })
+
   it('static src integration is transformed - opt-in', async () => {
     const code = await transform(
       `const instance = useScriptFathomAnalytics({ site: '123' }, { bundle: true, })`,
