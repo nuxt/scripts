@@ -207,6 +207,7 @@ export {}`
         },
       }, {
         nuxt: true,
+        node: true,
       })
 
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
