@@ -12,6 +12,7 @@ import type {
   UseFunctionType,
   ScriptRegistry, UseScriptContext,
 } from '#nuxt-scripts/types'
+import { parseQuery, parseURL, withQuery } from 'ufo'
 
 export type MaybePromise<T> = Promise<T> | T
 
@@ -43,9 +44,34 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
-  const options = optionsFn(userOptions as InferIfSchema<O>)
+  const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
-  const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key: registryKey }) as any as UseScriptInput
+  let finalScriptInput = options.scriptInput
+
+  // If user provided a custom src and the options function returned a src with query params,
+  // extract those query params and apply them to the user's custom src
+  const userSrc = (userOptions.scriptInput as any)?.src
+  const optionsSrc = (options.scriptInput as any)?.src
+
+  if (userSrc && optionsSrc && typeof optionsSrc === 'string' && typeof userSrc === 'string') {
+    const defaultUrl = parseURL(optionsSrc)
+    const customUrl = parseURL(userSrc)
+
+    // Merge query params: user params override default params
+    const defaultQuery = parseQuery(defaultUrl.search || '')
+    const customQuery = parseQuery(customUrl.search || '')
+    const mergedQuery = { ...defaultQuery, ...customQuery }
+
+    // Build the final URL with the custom base and merged query params
+    const baseUrl = customUrl.href?.split('?')[0] || userSrc
+
+    finalScriptInput = {
+      ...((options.scriptInput as object) || {}),
+      src: withQuery(baseUrl, mergedQuery),
+    }
+  }
+
+  const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
   if (import.meta.dev) {
     scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey })
