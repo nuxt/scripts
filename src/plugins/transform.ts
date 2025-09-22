@@ -18,10 +18,20 @@ import { bundleStorage } from '../assets'
 import { isJS, isVue } from './util'
 import type { RegistryScript } from '#nuxt-scripts/types'
 
+const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
+
+async function isCacheExpired(storage: any, filename: string): Promise<boolean> {
+  const metaKey = `bundle-meta:${filename}`
+  const meta = await storage.getItem(metaKey)
+  if (!meta || !meta.timestamp) {
+    return true // No metadata means expired/invalid cache
+  }
+  return Date.now() - meta.timestamp > SEVEN_DAYS_IN_MS
+}
+
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
-  defaultBundle?: boolean
-  defaultForceDownload?: boolean
+  defaultBundle?: boolean | 'force'
   assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
   fallbackOnSrcOnBundleFail?: boolean
@@ -68,8 +78,11 @@ async function downloadScript(opts: {
   let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
   if (!res) {
     // Use storage to cache the font data between builds
-    if (!forceDownload && await storage.hasItem(`bundle:${filename}`)) {
-      const res = await storage.getItemRaw<Buffer>(`bundle:${filename}`)
+    const cacheKey = `bundle:${filename}`
+    const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename))
+
+    if (shouldUseCache) {
+      const res = await storage.getItemRaw<Buffer>(cacheKey)
       renderedScript.set(url, {
         content: res!,
         size: res!.length / 1024,
@@ -93,6 +106,12 @@ async function downloadScript(opts: {
     })
 
     await storage.setItemRaw(`bundle:${filename}`, res)
+    // Save metadata with timestamp for cache expiration
+    await storage.setItem(`bundle-meta:${filename}`, {
+      timestamp: Date.now(),
+      src,
+      filename,
+    })
     size = size || res!.length / 1024
     logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})`)}`)
     renderedScript.set(url, {
@@ -216,10 +235,37 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                 }
               }
 
+              // Check for dynamic src with bundle option - warn user and replace with 'unsupported'
+              if (!scriptSrcNode && !src) {
+                // This is a dynamic src case, check if bundle option is specified
+                const hasBundleOption = node.arguments[1]?.type === 'ObjectExpression'
+                  && (node.arguments[1] as ObjectExpression).properties.some(
+                    (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                  )
+
+                if (hasBundleOption) {
+                  const scriptOptionsArg = node.arguments[1] as ObjectExpression & { start: number, end: number }
+                  const bundleProperty = scriptOptionsArg.properties.find(
+                    (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                  ) as Property & { start: number, end: number } | undefined
+
+                  if (bundleProperty && bundleProperty.value.type === 'Literal') {
+                    const bundleValue = bundleProperty.value.value
+                    if (bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true') {
+                      // Replace bundle value with 'unsupported' - runtime will handle the warning
+                      const valueNode = bundleProperty.value as any
+                      s.overwrite(valueNode.start, valueNode.end, `'unsupported'`)
+                    }
+                  }
+                }
+                return
+              }
+
               if (scriptSrcNode || src) {
                 src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
                 if (src) {
-                  let canBundle = !!options.defaultBundle
+                  let canBundle = options.defaultBundle === true || options.defaultBundle === 'force'
+                  let forceDownload = options.defaultBundle === 'force'
                   // useScript
                   if (node.arguments[1]?.type === 'ObjectExpression') {
                     const scriptOptionsArg = node.arguments[1] as ObjectExpression & { start: number, end: number }
@@ -229,7 +275,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     ) as Property & { start: number, end: number } | undefined
                     if (bundleProperty && bundleProperty.value.type === 'Literal') {
                       const value = bundleProperty.value as Literal
-                      if (String(value.value) !== 'true') {
+                      const bundleValue = value.value
+                      if (bundleValue !== true && bundleValue !== 'force' && String(bundleValue) !== 'true') {
                         canBundle = false
                         return
                       }
@@ -244,25 +291,23 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                         s.remove(bundleProperty.start, nextProperty ? nextProperty.start : bundleProperty.end)
                       }
                       canBundle = true
+                      forceDownload = bundleValue === 'force'
                     }
                   }
                   // @ts-expect-error untyped
                   const scriptOptions = node.arguments[0].properties?.find(
                     (p: any) => (p.key?.name === 'scriptOptions'),
                   ) as Property | undefined
-                  // we need to check if scriptOptions contains bundle: true, if it exists
+                  // we need to check if scriptOptions contains bundle: true/false/'force', if it exists
                   // @ts-expect-error untyped
                   const bundleOption = scriptOptions?.value.properties?.find((prop) => {
                     return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
                   })
-                  canBundle = bundleOption ? bundleOption.value.value : canBundle
-
-                  // check if scriptOptions contains forceDownload: true
-                  // @ts-expect-error untyped
-                  const forceDownloadOption = scriptOptions?.value.properties?.find((prop) => {
-                    return prop.type === 'Property' && prop.key?.name === 'forceDownload' && prop.value.type === 'Literal'
-                  })
-                  const forceDownload = forceDownloadOption ? forceDownloadOption.value.value : (options.defaultForceDownload || false)
+                  if (bundleOption) {
+                    const bundleValue = bundleOption.value.value
+                    canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
+                    forceDownload = bundleValue === 'force'
+                  }
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url

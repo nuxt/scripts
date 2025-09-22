@@ -3,7 +3,7 @@ import type {
 } from '@unhead/vue/types'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
-import type {InferInput, ObjectSchema, ValiError} from 'valibot'
+import type { InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { Import } from 'unimport'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
@@ -49,18 +49,12 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
    * improves privacy by not sharing the user's IP address with third-party servers.
    * - `true` - Bundle the script as an asset.
+   * - `'force'` - Bundle the script and force download, bypassing cache. Useful for development.
    * - `false` - Do not bundle the script. (default)
-   */
-  bundle?: boolean
-  /**
-   * Force download of the script even if it exists in cache. Useful for development workflows
-   * where you want to ensure the latest version is always downloaded.
-   * - `true` - Force download, bypass cache.
-   * - `false` - Use cached version if available. (default)
    *
-   * Note: This may significantly increase build time as scripts will be re-downloaded on every build.
+   * Note: Using 'force' may significantly increase build time as scripts will be re-downloaded on every build.
    */
-  forceDownload?: boolean
+  bundle?: boolean | 'force'
   /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
@@ -96,7 +90,8 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
     registryMeta?: Record<string, string>
   }
   /**
-   * @internal Used to run custom validation logic in dev mode.
+   * Used to run custom validation logic in dev mode.
+   * @internal
    */
   _validate?: () => ValiError<any> | null | undefined
 }

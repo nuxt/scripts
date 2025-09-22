@@ -126,6 +126,14 @@ describe('nuxtScriptTransformer', () => {
     expect(code).toMatchInlineSnapshot(`undefined`)
   })
 
+  it('dynamic src with bundle option becomes unsupported', async () => {
+    const code = await transform(
+
+      `const instance = useScript(\`https://example.com/$\{version}.js\`, { bundle: true })`,
+    )
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript(\`https://example.com/$\{version}.js\`, { bundle: 'unsupported' })"`)
+  })
+
   it('supplied src integration is transformed - opt-in', async () => {
     const code = await transform(
       `const instance = useScriptFathomAnalytics({ src: 'https://cdn.fathom/custom.js' }, { bundle: true, })`,
@@ -412,6 +420,81 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 
     // Without cdnURL configured, it should use baseURL
     expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+  })
+
+  it('bundle: "force" works the same as bundle: true', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+    const code = await transform(
+      `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+      bundle: 'force',
+    })`,
+
+    )
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+  })
+
+  it('registry script with scriptOptions.bundle: "force"', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'analytics')
+    const code = await transform(
+      `const instance = useScriptGoogleAnalytics({
+        id: 'GA_MEASUREMENT_ID',
+        scriptOptions: {
+          bundle: 'force'
+        }
+      })`,
+      {
+        defaultBundle: false,
+        scripts: [
+          {
+            scriptBundling() {
+              return 'https://www.googletagmanager.com/gtag/js'
+            },
+            import: {
+              name: 'useScriptGoogleAnalytics',
+              from: '',
+            },
+          },
+        ],
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/analytics.js' }, 
+              id: 'GA_MEASUREMENT_ID',
+              scriptOptions: {
+                bundle: 'force'
+              }
+            })"
+    `)
+  })
+
+  it('top-level bundle: "force"', async () => {
+    vi.mocked(hash).mockImplementationOnce(() => 'gtag/js')
+    const code = await transform(
+      `const instance = useScriptGoogleAnalytics({
+        id: 'GA_MEASUREMENT_ID'
+      }, {
+        bundle: 'force'
+      })`,
+      {
+        defaultBundle: false,
+        scripts: [
+          {
+            scriptBundling() {
+              return 'https://www.googletagmanager.com/gtag/js'
+            },
+            import: {
+              name: 'useScriptGoogleAnalytics',
+              from: '',
+            },
+          },
+        ],
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' }, 
+              id: 'GA_MEASUREMENT_ID'
+            }, )"
+    `)
   })
 
   describe.todo('fallbackOnSrcOnBundleFail', () => {

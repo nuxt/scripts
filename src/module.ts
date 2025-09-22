@@ -227,7 +227,6 @@ export {}`
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
         defaultBundle: config.defaultScriptOptions?.bundle,
-        defaultForceDownload: config.defaultScriptOptions?.forceDownload,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
