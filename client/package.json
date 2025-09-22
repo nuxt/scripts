@@ -12,8 +12,8 @@
   },
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.13",
-    "@nuxt/devtools-kit": "^2.6.3",
-    "@nuxt/devtools-ui-kit": "^2.6.3",
+    "@nuxt/devtools-kit": "^2.6.5",
+    "@nuxt/devtools-ui-kit": "^2.6.5",
     "@nuxt/kit": "catalog:",
     "nuxt": "catalog:",
     "vue": "^3.5.21",
