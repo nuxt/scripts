@@ -1,21 +1,25 @@
-<script lang="ts" setup>
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-
+<script lang="ts">
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw } from 'vue'
-import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, provide, shallowRef } from 'vue'
+import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps, ShallowRef } from 'vue'
 import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import { hash } from 'ohash'
 import { useHead } from 'nuxt/app'
-import type { ElementScriptTrigger } from '../types'
-import { scriptRuntimeConfig } from '../utils'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { useScriptGoogleMaps } from '../registry/google-maps'
-import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
+import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
+import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
+import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 
+export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
+  map: ShallowRef<google.maps.Map | undefined>
+  mapsApi: Ref<typeof google.maps | undefined>
+}>
+</script>
+
+<script lang="ts" setup>
 interface PlaceholderOptions {
   width?: string | number
   height?: string | number
@@ -148,7 +152,7 @@ const options = computed(() => {
 })
 const ready = ref(false)
 
-const map: Ref<google.maps.Map | undefined> = ref()
+const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
 const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement>>> = ref(new Map())
 
 function isLocationQuery(s: string | any) {
@@ -175,7 +179,7 @@ function normalizeAdvancedMapMarkerOptions(_options?: google.maps.marker.Advance
           lng: Number.parseFloat(_options.split(',')[1] || '0'),
         },
       }
-    : _options
+    : _options || {}
   if (!opts.position) {
     // set default
     opts.position = {
@@ -196,11 +200,10 @@ async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMar
   // eslint-disable-next-line no-async-promise-executor
   const p = new Promise<google.maps.marker.AdvancedMarkerElement>(async (resolve) => {
     const lib = await importLibrary('marker')
-    const mapMarkerOptions = defu(toRaw(normalizedOptions), {
+    const mapMarkerOptions = {
+      ...toRaw(normalizedOptions),
       map: toRaw(map.value!),
-      // @ts-expect-error unified API for maps and markers
-      position: normalizedOptions.location,
-    })
+    }
     resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
   })
   mapMarkers.value.set(key, p)
@@ -276,6 +279,8 @@ const googleMaps = {
 } as const
 
 defineExpose(googleMaps)
+
+provide(MAP_INJECTION_KEY, { map, mapsApi })
 
 onMounted(() => {
   watch(ready, (v) => {

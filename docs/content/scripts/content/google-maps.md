@@ -380,6 +380,278 @@ By providing your own placeholder slot you will disable the default placeholder 
 </template>
 ```
 
+## Google Maps SFC Components
+
+Nuxt Scripts provides individual Single File Components (SFCs) for different Google Maps elements. These components allow you to declaratively compose complex maps using Vue's template syntax.
+
+### Installation
+
+To use marker clustering functionality, you'll need to install the required peer dependency:
+
+```bash
+npm install @googlemaps/markerclusterer
+# or
+yarn add @googlemaps/markerclusterer
+# or
+pnpm add @googlemaps/markerclusterer
+```
+
+### Available Components
+
+All Google Maps SFC components must be used within a `<ScriptGoogleMaps>` component:
+
+- `<ScriptGoogleMapsMarker>` - Classic markers with icon support
+- `<ScriptGoogleMapsAdvancedMarkerElement>` - Modern advanced markers with HTML content
+- `<ScriptGoogleMapsPinElement>` - Customizable pin markers (use within AdvancedMarkerElement)
+- `<ScriptGoogleMapsInfoWindow>` - Information windows that appear on click
+- `<ScriptGoogleMapsMarkerClusterer>` - Groups nearby markers into clusters
+- `<ScriptGoogleMapsCircle>` - Circular overlays
+- `<ScriptGoogleMapsPolygon>` - Polygon shapes
+- `<ScriptGoogleMapsPolyline>` - Line paths
+- `<ScriptGoogleMapsRectangle>` - Rectangular overlays
+- `<ScriptGoogleMapsHeatmapLayer>` - Heatmap visualization
+
+### Basic Usage
+
+```vue
+<template>
+  <ScriptGoogleMaps
+    :center="{ lat: -34.397, lng: 150.644 }"
+    :zoom="8"
+    api-key="your-api-key"
+  >
+    <!-- Add markers -->
+    <ScriptGoogleMapsMarker
+      :options="{ position: { lat: -34.397, lng: 150.644 } }"
+    >
+      <!-- Info window appears on marker click -->
+      <ScriptGoogleMapsInfoWindow>
+        <div>
+          <h3>Sydney, Australia</h3>
+          <p>A great city!</p>
+        </div>
+      </ScriptGoogleMapsInfoWindow>
+    </ScriptGoogleMapsMarker>
+
+    <!-- Advanced marker with custom pin -->
+    <ScriptGoogleMapsAdvancedMarkerElement
+      :options="{ position: { lat: -34.407, lng: 150.654 } }"
+    >
+      <ScriptGoogleMapsPinElement
+        :options="{ scale: 1.5, background: '#FF0000' }"
+      />
+    </ScriptGoogleMapsAdvancedMarkerElement>
+
+    <!-- Circle overlay -->
+    <ScriptGoogleMapsCircle
+      :options="{
+        center: { lat: -34.397, lng: 150.644 },
+        radius: 1000,
+        fillColor: '#FF0000',
+        fillOpacity: 0.35
+      }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
+### Component Composition Patterns
+
+**Marker Clustering**
+
+```vue
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <ScriptGoogleMapsMarkerClusterer>
+      <ScriptGoogleMapsMarker
+        v-for="location in locations"
+        :key="location.id"
+        :options="{ position: location.position }"
+      >
+        <ScriptGoogleMapsInfoWindow>
+          <div>{{ location.name }}</div>
+        </ScriptGoogleMapsInfoWindow>
+      </ScriptGoogleMapsMarker>
+    </ScriptGoogleMapsMarkerClusterer>
+  </ScriptGoogleMaps>
+</template>
+```
+
+**Heatmap with Data Points**
+
+```vue
+<script setup>
+const heatmapData = ref([])
+
+onMounted(() => {
+  // Populate heatmap data with google.maps.LatLng objects
+})
+</script>
+
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <ScriptGoogleMapsHeatmapLayer
+      :options="{ data: heatmapData }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
+**See the [SFC Playground Example](https://nuxt-scripts-playground.stackblitz.io/third-parties/google-maps/sfcs) for a comprehensive demonstration.**
+
+### Component Details
+
+#### ScriptGoogleMapsMarker
+
+Classic Google Maps marker with icon support.
+
+**Props:**
+- `options` - `google.maps.MarkerOptions` (excluding `map`)
+
+**Events:**
+- Standard marker events: `click`, `mousedown`, `mouseover`, etc.
+
+#### ScriptGoogleMapsAdvancedMarkerElement
+
+Modern advanced markers that support HTML content and better customization.
+
+**Props:**
+- `options` - `google.maps.marker.AdvancedMarkerElementOptions` (excluding `map`)
+
+**Events:**
+- Standard marker events: `click`, `drag`, `position_changed`, etc.
+
+#### ScriptGoogleMapsInfoWindow
+
+Information windows that display content when triggered.
+
+**Props:**
+- `options` - `google.maps.InfoWindowOptions`
+
+**Behavior:**
+- Automatically opens on parent marker click
+- Can be used standalone with explicit position
+- Supports custom HTML content via default slot
+
+#### ScriptGoogleMapsMarkerClusterer
+
+Groups nearby markers into clusters for better performance and UX.
+
+**Props:**
+- `options` - `MarkerClustererOptions` (excluding `map`)
+
+**Dependencies:**
+- Requires `@googlemaps/markerclusterer` peer dependency
+
+#### Other Components
+
+- **ScriptGoogleMapsPinElement**: Use within AdvancedMarkerElement for customizable pins
+- **ScriptGoogleMapsCircle**: Circular overlays with radius and styling
+- **ScriptGoogleMapsPolygon/Polyline**: Shape and line overlays
+- **ScriptGoogleMapsRectangle**: Rectangular overlays
+- **ScriptGoogleMapsHeatmapLayer**: Data visualization with heatmaps
+
+All components support:
+- Reactive `options` prop that updates the underlying Google Maps object
+- Automatic cleanup on component unmount
+- TypeScript support with Google Maps types
+
+### Best Practices
+
+#### Performance Considerations
+
+**Use MarkerClusterer for Many Markers**
+```vue
+<!-- ✅ Good: Use clusterer for >10 markers -->
+<ScriptGoogleMapsMarkerClusterer>
+  <ScriptGoogleMapsMarker v-for="marker in manyMarkers" />
+</ScriptGoogleMapsMarkerClusterer>
+
+<!-- ❌ Avoid: Many individual markers -->
+<ScriptGoogleMapsMarker v-for="marker in manyMarkers" />
+```
+
+**Prefer AdvancedMarkerElement for Modern Apps**
+```vue
+<!-- ✅ Recommended: Better performance and styling -->
+<ScriptGoogleMapsAdvancedMarkerElement :options="options">
+  <ScriptGoogleMapsPinElement :options="{ background: '#FF0000' }" />
+</ScriptGoogleMapsAdvancedMarkerElement>
+
+<!-- ⚠️ Legacy: Use only when advanced markers aren't supported -->
+<ScriptGoogleMapsMarker :options="options" />
+```
+
+#### Component Hierarchy
+
+Components must follow this nesting structure:
+
+```
+ScriptGoogleMaps (root)
+├── ScriptGoogleMapsMarkerClusterer (optional)
+│   └── ScriptGoogleMapsMarker/AdvancedMarkerElement
+│       └── ScriptGoogleMapsInfoWindow (optional)
+├── ScriptGoogleMapsAdvancedMarkerElement
+│   ├── ScriptGoogleMapsPinElement (optional)
+│   └── ScriptGoogleMapsInfoWindow (optional)
+└── Other overlays (Circle, Polygon, etc.)
+```
+
+#### Reactive Data Patterns
+
+**Reactive Marker Updates**
+```vue
+<script setup>
+const markers = ref([
+  { id: 1, position: { lat: -34.397, lng: 150.644 }, title: 'Sydney' }
+])
+
+// Markers automatically update when data changes
+function addMarker() {
+  markers.value.push({
+    id: Date.now(),
+    position: getRandomPosition(),
+    title: 'New Location'
+  })
+}
+</script>
+
+<template>
+  <ScriptGoogleMaps>
+    <ScriptGoogleMapsMarker
+      v-for="marker in markers"
+      :key="marker.id"
+      :options="{ position: marker.position, title: marker.title }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
+#### Error Handling
+
+Always provide error fallbacks and loading states:
+
+```vue
+<script setup>
+const mapError = ref(false)
+</script>
+
+<template>
+  <ScriptGoogleMaps
+    @error="mapError = true"
+    api-key="your-api-key"
+  >
+    <template #error>
+      <div class="p-4 bg-red-100">
+        Failed to load Google Maps
+      </div>
+    </template>
+
+    <!-- Your components -->
+  </ScriptGoogleMaps>
+</template>
+```
+
 ## useScriptGoogleMaps
 
 The `useScriptGoogleMaps` composable lets you have fine-grain control over the Google Maps SDK. It provides a way to load the Google Maps SDK and interact with it programmatically.
