@@ -3,7 +3,7 @@ import type {
 } from '@unhead/vue/types'
 import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
 import type { ComputedRef, Ref } from 'vue'
-import type { InferInput, ObjectSchema } from 'valibot'
+import type {InferInput, ObjectSchema, ValiError} from 'valibot'
 import type { Import } from 'unimport'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
@@ -86,6 +86,10 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
      */
     registryMeta?: Record<string, string>
   }
+  /**
+   * @internal Used to run custom validation logic in dev mode.
+   */
+  _validate?: () => ValiError<any> | null | undefined
 }
 
 export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }

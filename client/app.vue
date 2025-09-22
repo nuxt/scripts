@@ -245,6 +245,12 @@ function viewDocs(docs: string) {
                     <div v-else-if="event.status === 'loading'" class="font-bold px-2 py-[2px] bg-yellow-100 text-yellow-700 rounded-lg">
                       {{ event.status }}
                     </div>
+                    <div v-else-if="event.status === 'validation-failed'" class="flex items-center gap-2">
+                      <div class="font-bold px-2 py-[2px] bg-purple-100 text-purple-700 rounded-lg">
+                        {{ event.status }}
+                      </div>
+                      {{ event.args.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join(',') }}
+                    </div>
                   </template>
                   <div v-else-if="event.type === 'fn-call' && event.args" class="px-2 py-[2px] bg-gray-100 text-gray-700 rounded-lg font-mono">
                     {{ `${event.fn}(${event.args?.map((a: any) => JSON.stringify(a, null, 2)).join(', ') || ''})` }}
