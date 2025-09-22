@@ -13,7 +13,6 @@ import type {
   UseFunctionType,
   ScriptRegistry, UseScriptContext,
 } from '#nuxt-scripts/types'
-import { parseQuery, parseURL, withQuery } from 'ufo'
 
 export type MaybePromise<T> = Promise<T> | T
 

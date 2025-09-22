@@ -20,7 +20,7 @@ import type { RegistryScript } from '#nuxt-scripts/types'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
-async function isCacheExpired(storage: any, filename: string, cacheMaxAge: number = SEVEN_DAYS_IN_MS): Promise<boolean> {
+export async function isCacheExpired(storage: any, filename: string, cacheMaxAge: number = SEVEN_DAYS_IN_MS): Promise<boolean> {
   const metaKey = `bundle-meta:${filename}`
   const meta = await storage.getItem(metaKey)
   if (!meta || !meta.timestamp) {

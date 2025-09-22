@@ -36,6 +36,18 @@ vi.mock('ufo', async (og) => {
     hasProtocol: mock,
   }
 })
+
+// Mock bundleStorage for cache invalidation tests
+const mockBundleStorage: any = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  getItemRaw: vi.fn(),
+  setItemRaw: vi.fn(),
+  hasItem: vi.fn(),
+}
+vi.mock('../../src/assets', () => ({
+  bundleStorage: vi.fn(() => mockBundleStorage),
+}))
 vi.stubGlobal('fetch', vi.fn(() => {
   return Promise.resolve({ arrayBuffer: vi.fn(() => Buffer.from('')), ok: true, headers: { get: vi.fn() } })
 }))
@@ -512,6 +524,189 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 
     // Verify transformation still works with custom cache duration
     expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+  })
+
+  describe('cache invalidation', () => {
+    beforeEach(() => {
+      // Reset all mocks for bundleStorage
+      mockBundleStorage.getItem.mockReset()
+      mockBundleStorage.setItem.mockReset()
+      mockBundleStorage.getItemRaw.mockReset()
+      mockBundleStorage.setItemRaw.mockReset()
+      mockBundleStorage.hasItem.mockReset()
+      vi.clearAllMocks()
+    })
+
+    it('should detect expired cache when metadata is missing', async () => {
+      // Mock storage to not have metadata
+      mockBundleStorage.getItem.mockResolvedValue(null)
+
+      // Import the isCacheExpired function - we need to access it for testing
+      const { isCacheExpired } = await import('../../src/plugins/transform')
+
+      const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js')
+      expect(isExpired).toBe(true)
+      expect(mockBundleStorage.getItem).toHaveBeenCalledWith('bundle-meta:test-file.js')
+    })
+
+    it('should detect expired cache when timestamp is missing', async () => {
+      // Mock storage to have metadata without timestamp
+      mockBundleStorage.getItem.mockResolvedValue({})
+
+      const { isCacheExpired } = await import('../../src/plugins/transform')
+
+      const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js')
+      expect(isExpired).toBe(true)
+    })
+
+    it('should detect expired cache when cache is older than maxAge', async () => {
+      const now = Date.now()
+      const twoDaysAgo = now - (2 * 24 * 60 * 60 * 1000)
+      const oneDayInMs = 24 * 60 * 60 * 1000
+
+      // Mock storage to have old timestamp
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: twoDaysAgo })
+
+      const { isCacheExpired } = await import('../../src/plugins/transform')
+
+      const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js', oneDayInMs)
+      expect(isExpired).toBe(true)
+    })
+
+    it('should detect fresh cache when within maxAge', async () => {
+      const now = Date.now()
+      const oneHourAgo = now - (60 * 60 * 1000)
+      const oneDayInMs = 24 * 60 * 60 * 1000
+
+      // Mock storage to have recent timestamp
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: oneHourAgo })
+
+      const { isCacheExpired } = await import('../../src/plugins/transform')
+
+      const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js', oneDayInMs)
+      expect(isExpired).toBe(false)
+    })
+
+    it('should use custom cacheMaxAge when provided', async () => {
+      const now = Date.now()
+      const twoHoursAgo = now - (2 * 60 * 60 * 1000)
+      const oneHourInMs = 60 * 60 * 1000
+
+      // Mock storage to have timestamp older than custom maxAge
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: twoHoursAgo })
+
+      const { isCacheExpired } = await import('../../src/plugins/transform')
+
+      const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js', oneHourInMs)
+      expect(isExpired).toBe(true)
+    })
+
+    it('should bypass cache when forceDownload is true', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+
+      // Mock that cache exists and is fresh
+      mockBundleStorage.hasItem.mockResolvedValue(true)
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: Date.now() })
+      mockBundleStorage.getItemRaw.mockResolvedValue(Buffer.from('cached content'))
+
+      // Mock successful fetch for force download
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        headers: { get: () => null },
+      } as any)
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: 'force',
+        })`,
+        {
+          renderedScript: new Map(),
+        },
+      )
+
+      // Verify the script was fetched (not just cached)
+      expect(fetch).toHaveBeenCalled()
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+    })
+
+    it('should store bundle metadata with timestamp on download', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+
+      // Mock that cache doesn't exist
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      // Mock successful fetch
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        headers: { get: () => null },
+      } as any)
+
+      const renderedScript = new Map()
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          renderedScript,
+        },
+      )
+
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+
+      // Verify metadata was stored
+      const metadataCall = mockBundleStorage.setItem.mock.calls.find(call =>
+        call[0].startsWith('bundle-meta:'),
+      )
+      expect(metadataCall).toBeDefined()
+      expect(metadataCall[1]).toMatchObject({
+        timestamp: expect.any(Number),
+        src: 'https://static.cloudflareinsights.com/beacon.min.js',
+        filename: expect.stringContaining('beacon.min'),
+      })
+    })
+
+    it('should use cached content when cache is fresh', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+
+      const cachedContent = Buffer.from('cached script content')
+
+      // Mock that cache exists and is fresh
+      mockBundleStorage.hasItem.mockResolvedValue(true)
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: Date.now() })
+      mockBundleStorage.getItemRaw.mockResolvedValue(cachedContent)
+
+      const renderedScript = new Map()
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          renderedScript,
+          cacheMaxAge: 24 * 60 * 60 * 1000, // 1 day
+        },
+      )
+
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+
+      // Verify fetch was not called (used cache)
+      expect(fetch).not.toHaveBeenCalled()
+
+      // Verify cache methods were called correctly
+      expect(mockBundleStorage.hasItem).toHaveBeenCalledWith('bundle:beacon.min.js')
+      expect(mockBundleStorage.getItem).toHaveBeenCalledWith('bundle-meta:beacon.min.js')
+      expect(mockBundleStorage.getItemRaw).toHaveBeenCalledWith('bundle:beacon.min.js')
+
+      // Verify the cached content was used (check both possible keys)
+      const scriptEntry = renderedScript.get('https://static.cloudflareinsights.com/beacon.min.js')
+        || renderedScript.get('/_scripts/beacon.min.js')
+      expect(scriptEntry).toBeDefined()
+      expect(scriptEntry?.content).toBe(cachedContent)
+      expect(scriptEntry?.size).toBe(cachedContent.length / 1024)
+    })
   })
 
   describe.todo('fallbackOnSrcOnBundleFail', () => {
