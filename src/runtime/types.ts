@@ -90,7 +90,6 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
     registryMeta?: Record<string, string>
   }
   /**
-   * Used to run custom validation logic in dev mode.
    * @internal
    */
   _validate?: () => ValiError<any> | null | undefined

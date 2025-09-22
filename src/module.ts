@@ -151,6 +151,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     addComponentsDir({
       path: await resolvePath('./runtime/components'),
+      pathPrefix: false,
     })
 
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]

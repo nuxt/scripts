@@ -72,8 +72,9 @@
     ]
   },
   "peerDependencies": {
-    "@stripe/stripe-js": "^7.0.0",
+    "@googlemaps/markerclusterer": "^2.6.2",
     "@paypal/paypal-js": "^8.1.2",
+    "@stripe/stripe-js": "^7.0.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
@@ -124,6 +125,7 @@
     "@paypal/paypal-js": "^8.4.2",
     "@types/semver": "^7.7.1",
     "@typescript-eslint/typescript-estree": "^8.44.0",
+    "@vue/test-utils": "^2.4.6",
     "acorn-loose": "^8.5.2",
     "bumpp": "^10.2.3",
     "changelogen": "^0.6.2",
