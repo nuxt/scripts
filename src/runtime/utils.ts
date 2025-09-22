@@ -4,6 +4,7 @@ import type { UseScriptInput } from '@unhead/vue'
 import { useRuntimeConfig } from 'nuxt/app'
 import { useScript } from './composables/useScript'
 import { parse } from '#nuxt-scripts-validator'
+import { parseURL, withQuery, parseQuery } from 'ufo'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
@@ -22,7 +23,7 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
     }
     catch (_e) {
       const e = _e as ValiError<any>
-      console.error(e.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n'))
+      console.error(e.issues.map((i: any) => `${key}.${i.path?.map((i: any) => i.key).join(',')}: ${i.message}`).join('\n'))
       return e
     }
   }
