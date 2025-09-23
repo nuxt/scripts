@@ -43,16 +43,16 @@ function testDirectPaq() {
         <p>Script status: {{ status }}</p>
 
         <div style="margin: 20px 0;">
-          <UButton @click="trackCustomEvent" style="margin-right: 10px; padding: 10px;">
+          <UButton style="margin-right: 10px; padding: 10px;" @click="trackCustomEvent">
             Track Custom Event (proxy._paq)
           </UButton>
-          <UButton @click="trackGoal" style="padding: 10px;">
+          <UButton style="padding: 10px;" @click="trackGoal">
             Track Goal (proxy._paq)
           </UButton>
         </div>
 
         <div style="margin: 20px 0;">
-          <UButton @click="testDirectPaq" style="margin-right: 10px; padding: 10px;">
+          <UButton style="margin-right: 10px; padding: 10px;" @click="testDirectPaq">
             Track Event (direct window._paq)
           </UButton>
         </div>
