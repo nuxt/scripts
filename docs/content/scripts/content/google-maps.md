@@ -178,6 +178,34 @@ You can add markers to the static and interactive map by providing an array of `
 
 See the [markers](https://github.com/nuxt/scripts/blob/main/playground/pages/third-parties/google-maps/markers.vue) example for more information.
 
+#### With Environment Variables
+
+If you prefer to configure your API key using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleMaps: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        googleMaps: {
+          apiKey: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY
+        },
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY=<YOUR_API_KEY>
+```
+
 ### Guides
 
 #### Eager Loading Placeholder

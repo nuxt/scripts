@@ -87,6 +87,34 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 See the [Config Schema](#config-schema) for full details.
 
+#### With Environment Variables
+
+If you prefer to configure your app ID using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      intercom: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        intercom: {
+          app_id: '', // NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID
+        },
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID=<YOUR_APP_ID>
+```
+
 ### Events
 
 The `ScriptIntercom` component emits a single `ready` event when Intercom is loaded.

@@ -78,3 +78,31 @@ pnpm add -D @paypal/paypal-js
 ```
 
 ::
+
+#### With Environment Variables
+
+If you prefer to configure your client ID using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      paypal: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        paypal: {
+          clientId: '', // NUXT_PUBLIC_SCRIPTS_PAYPAL_CLIENT_ID
+        },
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_PAYPAL_CLIENT_ID=<YOUR_CLIENT_ID>
+```
