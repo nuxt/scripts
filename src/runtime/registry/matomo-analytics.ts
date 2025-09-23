@@ -36,7 +36,19 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
       schema: import.meta.dev ? MatomoAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          return { _paq: window._paq }
+          // Ensure _paq is always available as a queue, even before script loads
+          const _paqProxy = {
+            push: (...args: any[]) => {
+              // If _paq exists and has push method, use it directly
+              if (window._paq && typeof window._paq.push === 'function') {
+                return window._paq.push(...args)
+              }
+              // Otherwise, ensure _paq is initialized as an array and push to it
+              window._paq = window._paq || []
+              return window._paq.push(...args)
+            },
+          }
+          return { _paq: _paqProxy }
         },
       },
       clientInit: import.meta.server
