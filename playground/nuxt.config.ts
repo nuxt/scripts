@@ -9,18 +9,14 @@ export default defineNuxtConfig({
     '@nuxt/ui',
   ],
 
-  css: ['~/assets/css/main.css'],
-
   devtools: { enabled: true },
+
+  css: ['~/assets/css/main.css'],
 
   nitro: {
     prerender: {
       failOnError: false,
     },
-  },
-
-  scripts: {
-    debug: true,
   },
 
   hooks: {
@@ -35,5 +31,9 @@ export default defineNuxtConfig({
         },
       })
     },
+  },
+
+  scripts: {
+    debug: true,
   },
 })

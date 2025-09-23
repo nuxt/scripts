@@ -30,11 +30,6 @@ function identifyUser() {
     proxy.identify('user-123')
   }
 }
-
-// Watch for status changes
-watch(status, (newStatus) => {
-  console.log('Script status changed:', newStatus)
-}, { immediate: true })
 </script>
 
 <template>

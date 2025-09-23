@@ -236,7 +236,7 @@ const canToggleModal = computed(() => isOpen.value || !usingInput.value)
 // Methods
 
 function mapFile(file: ParsedContent, link?: NavItem): Command[] {
-  // @ts-ignore
+  // @ts-ignore - link.children type mismatch with findPageBreadcrumb parameter
   const prefix = findPageBreadcrumb(link?.children || [], file)?.map(({ title }) => title).join(' > ')
 
   return [{
@@ -285,11 +285,11 @@ function concatChildren(children: MarkdownNode[]): any[] {
     let grandChildren = [...(child.children || [])]
 
     if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'td', 'th'].includes(child.tag as string) && grandChildren.length) {
-      // @ts-ignore
+      // @ts-ignore - grandChildren type not matching reduce callback expectations
       grandChildren = remapChildren(grandChildren).reduce((acc: MarkdownNode[], grandChild) => {
-        // @ts-ignore
+        // @ts-ignore - accessing type property on unknown array element
         if (acc.length && acc[acc.length - 1].type === 'text') {
-          // @ts-ignore
+          // @ts-ignore - accessing value property on unknown types
           acc[acc.length - 1].value += grandChild.value || ''
         }
         else {
@@ -346,11 +346,11 @@ function groupByHeading(children: MarkdownNode[]) {
     }
     // push to existing/new group based on path
     if (groups[hash]) {
-      // @ts-ignore
+      // @ts-ignore - groups[hash] type mismatch with expected interface
       groups[hash].children.push(node)
     }
     else {
-      // @ts-ignore
+      // @ts-ignore - assigning to groups with dynamic key type
       groups[hash] = { children: [node], title }
     }
   }

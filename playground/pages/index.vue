@@ -269,7 +269,6 @@ const benchmark = [
     path: '/third-parties/snapchat/default',
   },
 ]
-
 </script>
 
 <template>
@@ -515,6 +514,5 @@ const benchmark = [
         </div>
       </div>
     </div>
-
   </div>
 </template>
