@@ -21,7 +21,6 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     if (importDefinition) {
       // title case
       imports.unshift(`import { ${importDefinition.import.name} } from '${relative(buildDir, importDefinition.import.from)}'`)
-      console.log(`import { ${importDefinition.import.name} } from '${relative(buildDir, importDefinition.import.from)}'`)
       const args = (typeof c !== 'object' ? {} : c) || {}
       if (c === 'mock')
         args.scriptOptions = { trigger: 'manual', skipValidation: true }
