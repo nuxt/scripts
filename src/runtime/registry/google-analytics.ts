@@ -108,7 +108,7 @@ export interface GoogleAnalyticsApi {
 }
 
 export const GoogleAnalyticsOptions = object({
-  id: string(), // The GA4 measurement ID (format: G-XXXXXXXX)
+  id: optional(string()), // The GA4 measurement ID (format: G-XXXXXXXX)
   l: optional(string()), // Optional global name for dataLayer (defaults to 'dataLayer')
 })
 
@@ -143,7 +143,9 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
           // @ts-ignore
             _options?.onBeforeGtagStart?.(w.gtag)
             w.gtag('js', new Date())
-            w.gtag('config', (options?.id))
+            if (options?.id) {
+              w.gtag('config', (options?.id))
+            }
           },
     }
   }, _options)

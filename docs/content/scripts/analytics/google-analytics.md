@@ -142,14 +142,47 @@ You must provide the options when setting up the script for the first time.
 ```ts
 export const GoogleAnalyticsOptions = object({
   /**
-   * The Google Analytics ID.
+   * The Google Analytics ID. Optional - allows loading gtag.js without initial configuration.
    */
-  id: string(),
+  id: optional(string()),
   /**
    * The datalayer's name you want it to be associated with
    */
   l: optional(string())
 })
+```
+
+### Customer/Consumer ID Tracking
+
+For e-commerce or multi-tenant applications where you need to track customer-specific analytics alongside your main tracking:
+
+```vue [ProductPage.vue]
+<script setup lang="ts">
+// Product page with customer-specific tracking
+const route = useRoute()
+const pageData = await $fetch(`/api/product/${route.params.id}`)
+
+// Load gtag with a custom dataLayer name for customer tracking
+const { proxy: customerGtag, load } = useScriptGoogleAnalytics({
+  key: 'gtag-customer',
+  l: 'customerDataLayer', // Custom dataLayer name
+})
+
+// Configure customer's tracking ID when available
+const consumerGtagId = computed(() => pageData?.gtag)
+
+if (consumerGtagId.value) {
+  // Configure the customer's GA4 property
+  customerGtag.gtag('config', consumerGtagId.value)
+
+  // Send customer-specific events
+  customerGtag.gtag('event', 'product_view', {
+    item_id: pageData.id,
+    customer_id: pageData.customerId,
+    value: pageData.price
+  })
+}
+</script>
 ```
 
 ## Example

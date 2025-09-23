@@ -7,8 +7,6 @@ const { proxy, status } = useScriptMyCustomScript({
   apiKey: 'demo-api-key-123',
   scriptOptions: {
     trigger: 'onNuxtReady',
-    // Add some DevTools metadata for demonstration
-    performanceMarkFeature: 'custom-registry-demo',
   },
 })
 
