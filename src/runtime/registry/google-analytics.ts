@@ -130,8 +130,6 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             gtag: w.gtag as DataLayer,
           }
         },
-        performanceMarkFeature: 'nuxt-third-parties-ga',
-        tagPriority: 1,
       },
       clientInit: import.meta.server
         ? undefined

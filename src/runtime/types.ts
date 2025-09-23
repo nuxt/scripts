@@ -73,10 +73,6 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
   /**
    * @internal
    */
-  performanceMarkFeature?: string
-  /**
-   * @internal
-   */
   devtools?: {
     /**
      * Key used to map to the registry script for Nuxt DevTools.

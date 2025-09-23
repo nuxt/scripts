@@ -153,8 +153,6 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               google_tag_manager: window.google_tag_manager,
             }
           },
-          performanceMarkFeature: 'nuxt-third-parties-gtm',
-          tagPriority: 1,
         },
         clientInit: import.meta.server
           ? undefined
