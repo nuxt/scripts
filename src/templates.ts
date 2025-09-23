@@ -2,6 +2,8 @@ import { hash } from 'ohash'
 import type { ModuleOptions } from './module'
 import { logger } from './logger'
 import type { RegistryScript } from '#nuxt-scripts/types'
+import {useNuxt} from "@nuxt/kit";
+import {relative} from "pathe";
 
 export function templatePlugin(config: Partial<ModuleOptions>, registry: Required<RegistryScript>[]) {
   if (Array.isArray(config.globals)) {
@@ -9,14 +11,17 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
     logger.warn('The `globals` array option is deprecated, please convert to an object.')
   }
-  const imports = ['useScript', 'defineNuxtPlugin']
+  const nuxt = useNuxt()
+  const buildDir = nuxt.options.buildDir
+  const imports = []
   const inits = []
   // for global scripts, we can initialise them script away
   for (const [k, c] of Object.entries(config.registry || {})) {
     const importDefinition = registry.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
     if (importDefinition) {
       // title case
-      imports.unshift(importDefinition.import.name)
+      imports.unshift(`import { ${importDefinition.import.name} } from '${relative(buildDir, importDefinition.import.from)}'`)
+      console.log(`import { ${importDefinition.import.name} } from '${relative(buildDir, importDefinition.import.from)}'`)
       const args = (typeof c !== 'object' ? {} : c) || {}
       if (c === 'mock')
         args.scriptOptions = { trigger: 'manual', skipValidation: true }
@@ -35,7 +40,9 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     }
   }
   return [
-    `import { ${imports.join(', ')} } from '#imports'`,
+    `import { useScript } from '#nuxt-scripts/composables/useScript'`,
+    `import { defineNuxtPlugin } from 'nuxt/app'`,
+    ...imports,
     '',
     `export default defineNuxtPlugin({`,
     `  name: "scripts:init",`,

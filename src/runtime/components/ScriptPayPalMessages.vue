@@ -2,7 +2,9 @@
 import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
 import { defu } from 'defu'
 import type { PayPalMessagesComponent, PayPalMessagesComponentOptions } from '@paypal/paypal-js'
-import { onBeforeUnmount, resolveComponent, useScriptPayPal, useScriptTriggerElement } from '#imports'
+import { useScriptPayPal } from '../registry/paypal'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { onBeforeUnmount, resolveComponent } from 'vue'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type { PayPalInput } from '../registry/paypal'
 

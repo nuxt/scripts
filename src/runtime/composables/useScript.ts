@@ -3,7 +3,7 @@ import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from '#imports'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from 'nuxt/app'
 import { logger } from '../logger'
 
 function useNuxtScriptRuntimeConfig() {

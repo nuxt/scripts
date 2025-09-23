@@ -14,7 +14,9 @@ import type {
   PayPalButtonsComponentOptions,
   OnInitActions,
 } from '@paypal/paypal-js'
-import { onBeforeUnmount, resolveComponent, useScriptPayPal, useScriptTriggerElement } from '#imports'
+import { useScriptPayPal } from '../registry/paypal'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { onBeforeUnmount, resolveComponent } from 'vue'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type { PayPalInput } from '../registry/paypal'
 
