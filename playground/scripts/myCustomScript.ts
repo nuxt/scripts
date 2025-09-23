@@ -1,29 +1,42 @@
-import { object, string } from 'valibot'
-import type { Input } from 'valibot'
-import { useScript } from '#imports'
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { object, string } from '#nuxt-scripts-validator'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts/types'
 
-export type MyCustomScriptApi = Record<string, any>
-
-export const MyCustomScriptOptions = object({
-  id: string(),
-})
-
-export type MyCustomScriptInput = Input<typeof MyCustomScriptOptions>
+export interface MyCustomScriptApi {
+  track: (event: string, data?: Record<string, any>) => void
+  identify: (userId: string) => void
+  init: (apiKey: string) => void
+}
 
 declare global {
   interface Window {
-    customScript: MyCustomScriptApi
+    MyCustomScript: MyCustomScriptApi
   }
 }
 
-export function useScriptMyCustomScript<T extends MyCustomScriptApi>(options?: MyCustomScriptInput, _scriptOptions?: Omit<NuxtUseScriptOptions<T>, 'beforeInit' | 'use'>) {
-  const scriptOptions: NuxtUseScriptOptions<T> = _scriptOptions || {}
-  return useScript<MyCustomScriptApi>({
-    key: 'myCustomScript',
-    src: `https://example.com/script.js?id=${options?.id}`,
-  }, {
-    ...scriptOptions,
-    use: () => window.fathom,
-  })
+// Schema for validation and DevTools metadata
+const MyCustomScriptSchema = object({
+  apiKey: string(),
+})
+
+export function useScriptMyCustomScript<T extends MyCustomScriptApi>(options?: {
+  apiKey: string
+  scriptOptions?: NuxtUseScriptOptions
+}) {
+  return useRegistryScript<T, typeof MyCustomScriptSchema>('myCustomScript', () => ({
+    scriptInput: {
+      src: '/mock-custom-script.js',
+    },
+    scriptOptions: {
+      ...options?.scriptOptions,
+      use() {
+        // Initialize the mock script
+        if (window.MyCustomScript) {
+          window.MyCustomScript.init(options?.apiKey || 'demo-key')
+          return window.MyCustomScript as T
+        }
+        return {} as T
+      },
+    },
+  }), options, { schema: MyCustomScriptSchema })
 }

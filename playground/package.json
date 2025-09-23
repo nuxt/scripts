@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@nuxt/scripts": "latest",
-    "nuxt": "latest",
-    "@nuxt/ui": "latest"
+    "@nuxt/ui": "latest",
+    "nuxt": "latest"
   }
 }

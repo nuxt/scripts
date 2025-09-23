@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { useHead } from '#imports'
-import { useScriptGoogleAnalytics } from '#nuxt-scripts/registry/google-analytics'
 
 useHead({
   title: 'Google Analytics',
@@ -9,16 +8,12 @@ useHead({
 // composables return the underlying api as a proxy object and the script state
 const { proxy, status } = useScriptGoogleAnalytics({
   id: 'G-TR58L0EF8P',
-  onBeforeGtagStart(gtag) {
-    gtag('consent', 'default', {
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      ad_storage: 'denied',
-      analytics_storage: 'denied',
-      wait_for_update: 500,
-    })
+  scriptOptions: {
+    trigger: 'onNuxtReady',
   },
-}) // id set via nuxt scripts module config
+})
+
+// Use proxy to send events - proxy automatically handles script loading
 proxy.gtag('event', 'page_view', {
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',

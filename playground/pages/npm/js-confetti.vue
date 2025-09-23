@@ -14,7 +14,7 @@ declare global {
   type Window = JSConfettiApi
 }
 
-const { then } = useScriptNpm<JSConfettiApi>({
+const { onLoaded } = useScriptNpm<JSConfettiApi>({
   packageName: 'js-confetti',
   file: 'dist/js-confetti.browser.js',
   version: '0.12.0',
@@ -27,7 +27,7 @@ const { then } = useScriptNpm<JSConfettiApi>({
 })
 
 function addConfetti(options: { emojis: string[] }) {
-  then(({ JSConfetti }) => {
+  onLoaded(({ JSConfetti }) => {
     const confetti = new JSConfetti()
     confetti.addConfetti(options)
   })
