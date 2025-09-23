@@ -4,6 +4,7 @@ import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from '#imports'
+import { logger } from '../logger'
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -36,7 +37,19 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
-  if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
+  const err = options._validate?.()
+  if (import.meta.dev && import.meta.client && err) {
+    // never resolves
+    options.trigger = new Promise(() => {})
+    if (!exists) {
+      let out = `Skipping script \`${id}\` due to invalid options:\n`
+      for (const e of err.issues) {
+        out += (`  ${e.message}\n`)
+      }
+      logger.info(out)
+    }
+  }
+  else if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
     if (!options.warmupStrategy) {
       options.warmupStrategy = 'preload'
     }
@@ -50,6 +63,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   instance.remove = () => {
     nuxtApp.$scripts[id] = undefined
     return _remove()
+  }
+  instance.load = async () => {
+    if (err) {
+      return Promise.reject(err)
+    }
+    return instance.load()
   }
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
@@ -97,7 +116,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         syncScripts()
       })
       payload.$script = instance
-      const err = options._validate?.()
       if (err) {
         payload.events.push({
           type: 'status',

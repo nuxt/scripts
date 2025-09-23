@@ -22,9 +22,7 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
       parse(schema, options)
     }
     catch (_e) {
-      const e = _e as ValiError<any>
-      console.error(e.issues.map((i: any) => `${key}.${i.path?.map((i: any) => i.key).join(',')}: ${i.message}`).join('\n'))
-      return e
+      return _e as ValiError<any>
     }
   }
   return null
