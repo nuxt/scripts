@@ -2,8 +2,8 @@ import { hash } from 'ohash'
 import type { ModuleOptions } from './module'
 import { logger } from './logger'
 import type { RegistryScript } from '#nuxt-scripts/types'
-import {useNuxt} from "@nuxt/kit";
-import {relative} from "pathe";
+import { useNuxt } from '@nuxt/kit'
+import { relative } from 'pathe'
 
 export function templatePlugin(config: Partial<ModuleOptions>, registry: Required<RegistryScript>[]) {
   if (Array.isArray(config.globals)) {
