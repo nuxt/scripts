@@ -74,7 +74,41 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
   if (import.meta.dev) {
-    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey })
+    // Capture where the component was loaded from
+    const error = new Error('Stack trace for component location')
+    const stack = error.stack?.split('\n')
+    const callerLine = stack?.find(line =>
+      line.includes('.vue')
+      && !line.includes('useRegistryScript')
+      && !line.includes('node_modules'),
+    )
+
+    let loadedFrom = 'unknown'
+    if (callerLine) {
+      // Extract URL pattern like "https://localhost:3000/_nuxt/pages/features/custom-registry.vue?t=1758609859248:14:31"
+      // Handle both with and without query parameters
+      const urlMatch = callerLine.match(/https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/)
+        || callerLine.match(/\(https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)\)/)
+
+      if (urlMatch) {
+        const [, filePath, line, column] = urlMatch
+        loadedFrom = `./${filePath}:${line}:${column}`
+      }
+      else {
+        // Try to extract any .vue file path with line:column
+        const vueMatch = callerLine.match(/([^/\s]+\.vue):(\d+):(\d+)/)
+        if (vueMatch) {
+          const [, fileName, line, column] = vueMatch
+          loadedFrom = `./${fileName}:${line}:${column}`
+        }
+        else {
+          // Fallback to original cleaning
+          loadedFrom = callerLine.trim().replace(/^\s*at\s+/, '')
+        }
+      }
+    }
+
+    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom })
     if (options.schema) {
       const registryMeta: Record<string, string> = {}
       for (const k in options.schema.entries) {
@@ -106,14 +140,4 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     }
   }
   return useScript<T>(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
-}
-
-export function pick(obj: Record<string, any>, keys: string[]) {
-  const res: Record<string, any> = {}
-  for (const k of keys) {
-    if (k in obj) {
-      res[k] = obj[k]
-    }
-  }
-  return res
 }
