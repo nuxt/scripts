@@ -52,16 +52,6 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
             },
           }
 
-          // Set up automatic page view tracking if watch is enabled (default: true)
-          // Skip if trackPageView is explicitly set to avoid double tracking
-          if (options?.watch !== false && options?.trackPageView === undefined) {
-            useScriptEventPage((payload) => {
-              _paqProxy.push(['setDocumentTitle', payload.title])
-              _paqProxy.push(['setCustomUrl', payload.path])
-              _paqProxy.push(['trackPageView'])
-            })
-          }
-
           return { _paq: _paqProxy }
         },
       },
@@ -89,6 +79,13 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
               if (options.trackPageView) {
                 _paq.push(['trackPageView'])
               }
+            }
+            else if (options?.watch !== false) {
+              useScriptEventPage((payload) => {
+                window._paq.push(['setDocumentTitle', payload.title])
+                window._paq.push(['setCustomUrl', payload.path])
+                window._paq.push(['trackPageView'])
+              })
             }
           },
     }

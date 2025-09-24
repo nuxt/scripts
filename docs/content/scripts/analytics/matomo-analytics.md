@@ -114,16 +114,28 @@ Please see the [Config Schema](#config-schema) for all available options.
 By default, all pages are tracked automatically, to disable the automatic tracking you can provide `watch: false`.
 
 ```ts
-// Manual tracking only
+import { useScriptEventPage } from '#nuxt-scripts'
+
 const { proxy } = useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID',
   watch: false, // disable automatic tracking
 })
 
-// Manually track page views
-proxy._paq.push(['setDocumentTitle', document.title])
-proxy._paq.push(['setCustomUrl', window.location.pathname])
-proxy._paq.push(['trackPageView'])
+// Custom page tracking with additional logic
+useScriptEventPage((payload) => {
+  // Set custom dimensions based on route
+  if (payload.path.startsWith('/products')) {
+    proxy._paq.push(['setCustomDimension', 1, 'Product Page'])
+  }
+
+  // Standard Matomo tracking calls (same as built-in watch behavior)
+  proxy._paq.push(['setDocumentTitle', payload.title])
+  proxy._paq.push(['setCustomUrl', payload.path])
+  proxy._paq.push(['trackPageView'])
+
+  // Track additional custom events
+  proxy._paq.push(['trackEvent', 'Navigation', 'PageView', payload.path])
+})
 ```
 
 ### Using Matomo Self-Hosted
