@@ -17,7 +17,7 @@ use the [useScriptMatomoAnalytics](#useScriptMatomoAnalytics) composable.
 
 ## Loading Globally
 
-The following config assumes you're using Matomo Cloud with the default `siteId` of `1`. 
+The following config assumes you're using Matomo Cloud with the default `siteId` of `1`. Page views are **automatically tracked** on navigation by default.
 
 If you're self-hosting, you'll need to provide the `matomoUrl` instead. If you have other sites you want to track, you can add them using `siteId`.
 
@@ -84,13 +84,13 @@ const matomoAnalytics = useScriptMatomoAnalytics({
 })
 ```
 
-By default, a `siteId` of `1` is used and the page is not tracked. You can enable tracking by setting `trackPageView` to `true`.
+By default, a `siteId` of `1` is used and page tracking is **automatically enabled** via the `watch` option.
 
 ```ts
 const matomoAnalytics = useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID', // e.g. nuxt.matomo.cloud
-  trackPageView: true,
   siteId: 2,
+  // watch: true, // enabled by default - automatic page tracking!
 })
 ```
 
@@ -108,6 +108,23 @@ proxy._paq.push(['trackPageView'])
 ```
 
 Please see the [Config Schema](#config-schema) for all available options.
+
+## Custom Page Tracking
+
+By default, all pages are tracked automatically, to disable the automatic tracking you can provide `watch: false`.
+
+```ts
+// Manual tracking only
+const { proxy } = useScriptMatomoAnalytics({
+  cloudId: 'YOUR_CLOUD_ID',
+  watch: false, // disable automatic tracking
+})
+
+// Manually track page views
+proxy._paq.push(['setDocumentTitle', document.title])
+proxy._paq.push(['setCustomUrl', window.location.pathname])
+proxy._paq.push(['trackPageView'])
+```
 
 ### Using Matomo Self-Hosted
 
@@ -151,11 +168,13 @@ You must provide the options when setting up the script for the first time.
 // matomoUrl and site are required
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),
-  siteId: optional(string()),
+  siteId: optional(union([string(), number()])),
+  cloudId: optional(string()),
   trackerUrl: optional(string()),
-  trackPageView: optional(boolean()),
+  trackPageView: optional(boolean()), // deprecated - use watch instead
   enableLinkTracking: optional(boolean()),
   disableCookies: optional(boolean()),
+  watch: optional(boolean()), // default: true
 })
 ```
 
