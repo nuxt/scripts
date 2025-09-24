@@ -12,7 +12,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     logger.warn('The `globals` array option is deprecated, please convert to an object.')
   }
   // handles tests
-  const nuxt = tryUseNuxt() || { options: { buildDir: import.meta.dirname }}
+  const nuxt = tryUseNuxt() || { options: { buildDir: import.meta.dirname } }
   const buildDir = nuxt.options.buildDir
   const imports = []
   const inits = []
