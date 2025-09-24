@@ -3,6 +3,7 @@ import {
   addComponentsDir,
   addImports,
   addPluginTemplate, addTypeTemplate,
+  addServerHandler,
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
@@ -71,6 +72,21 @@ export interface ModuleOptions {
     cacheMaxAge?: number
   }
   /**
+   * Google Static Maps proxy configuration.
+   */
+  googleStaticMapsProxy?: {
+    /**
+     * Enable proxying Google Static Maps through your own origin.
+     * @default false
+     */
+    enabled?: boolean
+    /**
+     * Cache duration for static map images in seconds.
+     * @default 3600 (1 hour)
+     */
+    cacheMaxAge?: number
+  }
+  /**
    * Whether the module is enabled.
    *
    * @default true
@@ -107,6 +123,10 @@ export default defineNuxtModule<ModuleOptions>({
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
     },
+    googleStaticMapsProxy: {
+      enabled: false,
+      cacheMaxAge: 3600,
+    },
     enabled: true,
     debug: false,
   },
@@ -133,6 +153,7 @@ export default defineNuxtModule<ModuleOptions>({
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
       defaultScriptOptions: config.defaultScriptOptions,
+      googleStaticMapsProxy: config.googleStaticMapsProxy,
     }
 
     // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
@@ -266,6 +287,14 @@ export {}`
           await p?.()
       })
     })
+
+    // Add Google Static Maps proxy handler if enabled
+    if (config.googleStaticMapsProxy?.enabled) {
+      addServerHandler({
+        route: '/_scripts/google-static-maps-proxy',
+        handler: await resolvePath('./runtime/server/google-static-maps-proxy.ts'),
+      })
+    }
 
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolvePath)
