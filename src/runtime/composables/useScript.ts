@@ -64,11 +64,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     nuxtApp.$scripts[id] = undefined
     return _remove()
   }
+  const _load = instance.load
   instance.load = async () => {
     if (err) {
       return Promise.reject(err)
     }
-    return instance.load()
+    return _load()
   }
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
