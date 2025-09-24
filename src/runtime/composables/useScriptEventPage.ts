@@ -1,5 +1,5 @@
 import { useNuxtApp, useRoute, injectHead } from 'nuxt/app'
-import { ref } from 'vue'
+import { ref, onScopeDispose } from 'vue'
 import type { TrackedPage } from '#nuxt-scripts/types'
 
 export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
@@ -17,7 +17,7 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
   let lastPayload: TrackedPage = { path: '', title: '' }
   let stopDomWatcher = () => {}
   // TODO make sure useAsyncData isn't running
-  nuxt.hooks.hook('page:finish', () => {
+  const stopPageFinishHook = nuxt.hooks.hook('page:finish', () => {
     Promise.race([
       // possibly no head update is needed
       new Promise(resolve => setTimeout(resolve, 100)),
@@ -39,5 +39,11 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
         }
       })
   })
+
+  onScopeDispose(() => {
+    stopDomWatcher()
+    stopPageFinishHook()
+  })
+
   return payload
 }
