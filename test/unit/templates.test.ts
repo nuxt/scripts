@@ -9,7 +9,8 @@ describe('template plugin file', () => {
       registry: {},
     }, [])
     expect(res).toMatchInlineSnapshot(`
-      "import { useScript, defineNuxtPlugin } from '#imports'
+      "import { useScript } from '#nuxt-scripts/composables/useScript'
+      import { defineNuxtPlugin } from 'nuxt/app'
 
       export default defineNuxtPlugin({
         name: "scripts:init",
@@ -84,7 +85,8 @@ describe('template plugin file', () => {
       },
     }, [])
     expect(res).toMatchInlineSnapshot(`
-      "import { useScript, defineNuxtPlugin } from '#imports'
+      "import { useScript } from '#nuxt-scripts/composables/useScript'
+      import { defineNuxtPlugin } from 'nuxt/app'
 
       export default defineNuxtPlugin({
         name: "scripts:init",

@@ -2,7 +2,7 @@ import { hash } from 'ohash'
 import type { ModuleOptions } from './module'
 import { logger } from './logger'
 import type { RegistryScript } from '#nuxt-scripts/types'
-import { useNuxt } from '@nuxt/kit'
+import { tryUseNuxt } from '@nuxt/kit'
 import { relative } from 'pathe'
 
 export function templatePlugin(config: Partial<ModuleOptions>, registry: Required<RegistryScript>[]) {
@@ -11,7 +11,8 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
     logger.warn('The `globals` array option is deprecated, please convert to an object.')
   }
-  const nuxt = useNuxt()
+  // handles tests
+  const nuxt = tryUseNuxt() || { options: { buildDir: import.meta.dirname }}
   const buildDir = nuxt.options.buildDir
   const imports = []
   const inits = []
