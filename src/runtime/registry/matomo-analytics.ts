@@ -1,7 +1,9 @@
 import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
 import { useRegistryScript } from '../utils'
+import { useScriptEventPage } from '../composables/useScriptEventPage'
 import { boolean, object, optional, string, number, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { logger } from '../logger'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),
@@ -11,6 +13,7 @@ export const MatomoAnalyticsOptions = object({
   trackPageView: optional(boolean()),
   enableLinkTracking: optional(boolean()),
   disableCookies: optional(boolean()),
+  watch: optional(boolean()),
 })
 
 export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false, false>
@@ -48,6 +51,7 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
               return window._paq.push(...args)
             },
           }
+
           return { _paq: _paqProxy }
         },
       },
@@ -67,8 +71,21 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
               _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(normalizedCloudId))])
             }
             _paq.push(['setSiteId', String(options?.siteId) || '1'])
-            if (options?.trackPageView) {
-              _paq.push(['trackPageView'])
+            // Deprecated: trackPageView option
+            if (options?.trackPageView !== undefined) {
+              if (import.meta.dev) {
+                logger.warn('The `trackPageView` option is deprecated. Use `watch: true` (default) for automatic page view tracking, or remove this option entirely.')
+              }
+              if (options.trackPageView) {
+                _paq.push(['trackPageView'])
+              }
+            }
+            else if (options?.watch !== false) {
+              useScriptEventPage((payload) => {
+                window._paq.push(['setDocumentTitle', payload.title])
+                window._paq.push(['setCustomUrl', payload.path])
+                window._paq.push(['trackPageView'])
+              })
             }
           },
     }
