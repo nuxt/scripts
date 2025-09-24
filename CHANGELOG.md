@@ -1,5 +1,78 @@
 # Changelog
 
+## v0.11.13...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.13...main)
+
+### 🚀 Enhancements
+
+- Add databuddy analytics ([#495](https://github.com/nuxt/scripts/pull/495))
+- PayPal SDK ([#503](https://github.com/nuxt/scripts/pull/503))
+- Reddit Pixel ([#507](https://github.com/nuxt/scripts/pull/507))
+- **stripe:** ⚠️  Stripe basil ([#509](https://github.com/nuxt/scripts/pull/509))
+- **google-maps:** Declarative SFC API ([#510](https://github.com/nuxt/scripts/pull/510))
+- Bundling cache expiration & bypass ([#497](https://github.com/nuxt/scripts/pull/497))
+- **devtools:** Improved tracking ([9aa000d](https://github.com/nuxt/scripts/commit/9aa000d))
+- **matomoAnalytics:** ⚠️  `watch` mode ([#514](https://github.com/nuxt/scripts/pull/514))
+- New event triggers ([#515](https://github.com/nuxt/scripts/pull/515))
+
+### 🩹 Fixes
+
+- **devtools:** Show URL logos correctly ([30abad4](https://github.com/nuxt/scripts/commit/30abad4))
+- **devtools:** Show error status's ([22d91c5](https://github.com/nuxt/scripts/commit/22d91c5))
+- **devtools:** Show validation errors ([c9e1a20](https://github.com/nuxt/scripts/commit/c9e1a20))
+- **devtools:** Add null safety ([#501](https://github.com/nuxt/scripts/pull/501))
+- Merge query parms when overriding `scriptInput.src` ([#500](https://github.com/nuxt/scripts/pull/500))
+- **gtm:** Broken `onBeforeGtmStart` arguments ([#494](https://github.com/nuxt/scripts/pull/494))
+- **types:** Publish types for node context ([695b7f1](https://github.com/nuxt/scripts/commit/695b7f1))
+- **matomo:** Broken event tracking ([712a869](https://github.com/nuxt/scripts/commit/712a869))
+- Gracefully handle production only scripts ([a53ab33](https://github.com/nuxt/scripts/commit/a53ab33))
+- Drop `#imports` usage ([67b7e70](https://github.com/nuxt/scripts/commit/67b7e70))
+- Drop `performanceMarkFeature` emits ([c079f51](https://github.com/nuxt/scripts/commit/c079f51))
+- **googleAnalytics:** Support customer ids ([20aa9d5](https://github.com/nuxt/scripts/commit/20aa9d5))
+- Respect env data when bundling ([864102f](https://github.com/nuxt/scripts/commit/864102f))
+- Improved debugging when bundling fails ([34d7be7](https://github.com/nuxt/scripts/commit/34d7be7))
+- **useScriptEventPage:** Remove hooks on dispose ([cf5d715](https://github.com/nuxt/scripts/commit/cf5d715))
+
+### 📖 Documentation
+
+- Improve responsiveness ([#505](https://github.com/nuxt/scripts/pull/505))
+- Improve bundling documentation ([#498](https://github.com/nuxt/scripts/pull/498))
+
+### 🏡 Chore
+
+- Type issue ([fe6ea30](https://github.com/nuxt/scripts/commit/fe6ea30))
+- Changelog ([83e9954](https://github.com/nuxt/scripts/commit/83e9954))
+- Bump deps ([110eaa9](https://github.com/nuxt/scripts/commit/110eaa9))
+- Bump lock ([57ea493](https://github.com/nuxt/scripts/commit/57ea493))
+- Missing paypal type ([3c01eb8](https://github.com/nuxt/scripts/commit/3c01eb8))
+- Bump deps ([511b57f](https://github.com/nuxt/scripts/commit/511b57f))
+- Types ([1ae8043](https://github.com/nuxt/scripts/commit/1ae8043))
+- Standalone playground ([8662c66](https://github.com/nuxt/scripts/commit/8662c66))
+- Tidy up playground ([dbed5b7](https://github.com/nuxt/scripts/commit/dbed5b7))
+- Sync playground ([6571544](https://github.com/nuxt/scripts/commit/6571544))
+- Lint ([b7213e0](https://github.com/nuxt/scripts/commit/b7213e0))
+- Lint ([78fbd7c](https://github.com/nuxt/scripts/commit/78fbd7c))
+- Lint ([6361c68](https://github.com/nuxt/scripts/commit/6361c68))
+- Broken tests ([ba85f61](https://github.com/nuxt/scripts/commit/ba85f61))
+- Bump deps ([a27120d](https://github.com/nuxt/scripts/commit/a27120d))
+- Lint ([ecada33](https://github.com/nuxt/scripts/commit/ecada33))
+- Fix broken test ([9dd054f](https://github.com/nuxt/scripts/commit/9dd054f))
+- Bump deps ([b98c236](https://github.com/nuxt/scripts/commit/b98c236))
+- Maybe fix nightly ([b9f6727](https://github.com/nuxt/scripts/commit/b9f6727))
+
+#### ⚠️ Breaking Changes
+
+- **stripe:** ⚠️  Stripe basil ([#509](https://github.com/nuxt/scripts/pull/509))
+- **matomoAnalytics:** ⚠️  `watch` mode ([#514](https://github.com/nuxt/scripts/pull/514))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- René Kersten <rene.kersten@gmail.com>
+- Gelanderos <gelanderos@artlesslabs.com>
+- Vachmara <valentinchmara@gmail.com>
+
 ## v0.11.12...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.12...main)
