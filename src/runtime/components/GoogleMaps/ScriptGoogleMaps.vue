@@ -153,13 +153,14 @@ const options = computed(() => {
 const ready = ref(false)
 
 const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
-const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement>>> = ref(new Map())
+const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement | google.maps.Marker>>> = ref(new Map())
+const centerMarkerIsLegacy = ref(false)
 
 function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
 }
 
-function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | Promise<google.maps.marker.AdvancedMarkerElement>) {
+function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker | Promise<google.maps.marker.AdvancedMarkerElement | google.maps.Marker>) {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async (resolve) => {
     const marker = _marker instanceof Promise ? await _marker : _marker
@@ -205,6 +206,38 @@ async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMar
       map: toRaw(map.value!),
     }
     resolve(new lib.AdvancedMarkerElement(mapMarkerOptions))
+  })
+  mapMarkers.value.set(key, p)
+  return p
+}
+
+async function createLegacyMarker(_options?: google.maps.MarkerOptions | `${string},${string}`) {
+  if (!_options)
+    return
+  const normalizedOptions = typeof _options === 'string'
+    ? {
+        position: {
+          lat: Number.parseFloat(_options.split(',')[0] || '0'),
+          lng: Number.parseFloat(_options.split(',')[1] || '0'),
+        },
+      }
+    : _options
+  if (!normalizedOptions.position) {
+    normalizedOptions.position = {
+      lat: 0,
+      lng: 0,
+    }
+  }
+  const key = hash({ position: normalizedOptions.position })
+  if (mapMarkers.value.has(key))
+    return mapMarkers.value.get(key)
+  // eslint-disable-next-line no-async-promise-executor
+  const p = new Promise<google.maps.Marker>(async (resolve) => {
+    const mapMarkerOptions = {
+      ...toRaw(normalizedOptions),
+      map: toRaw(map.value!),
+    }
+    resolve(new mapsApi.value!.Marker(mapMarkerOptions))
   })
   mapMarkers.value.set(key, p)
   return p
@@ -274,6 +307,7 @@ const googleMaps = {
   googleMaps: mapsApi,
   map,
   createAdvancedMapMarker,
+  createLegacyMarker,
   resolveQueryToLatLang,
   importLibrary,
 } as const
@@ -323,8 +357,15 @@ onMounted(() => {
           })
       }
     }
+    const shouldUseLegacyMarkers = options.value.styles && options.value.mapId === 'map'
+
     for (const k of toAdd) {
-      createAdvancedMapMarker(nextMap.get(k))
+      const markerOptions = nextMap.get(k)
+      if (shouldUseLegacyMarkers) {
+        createLegacyMarker(markerOptions as any)
+      } else {
+        createAdvancedMapMarker(markerOptions)
+      }
     }
   }, {
     immediate: true,
@@ -342,10 +383,9 @@ onMounted(() => {
       }
       map.value!.setCenter(center as google.maps.LatLng)
       if (props.centerMarker) {
-        if (options.value.mapId) {
-          // not allowed to use advanced markers with styles
-          return
-        }
+        // Check if we need to use legacy markers due to styled maps
+        const shouldUseLegacyMarker = options.value.styles && options.value.mapId === 'map'
+
         if (prev[0]) {
           const prevCenterHash = hash({ position: prev[0] })
           if (mapMarkers.value.has(prevCenterHash)) {
@@ -355,7 +395,19 @@ onMounted(() => {
               })
           }
         }
-        createAdvancedMapMarker({ position: center })
+
+        if (shouldUseLegacyMarker) {
+          // Use legacy marker for styled maps
+          centerMarkerIsLegacy.value = true
+          createLegacyMarker({ position: center })
+          if (import.meta.dev) {
+            console.info('[nuxt-scripts] Using legacy marker for center marker due to custom map styles. Consider using a Map ID with cloud-based styling for Advanced Markers support.')
+          }
+        } else {
+          // Use advanced marker (preferred)
+          centerMarkerIsLegacy.value = false
+          createAdvancedMapMarker({ position: center })
+        }
       }
     }
   }, {
