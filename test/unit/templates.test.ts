@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { templatePlugin } from '../../src/templates'
+import { templatePlugin, resolveTriggerForTemplate } from '../../src/templates'
 
 describe('template plugin file', () => {
   // global
@@ -140,5 +140,103 @@ describe('template plugin file', () => {
       },
     ])
     expect(res).toContain('useScriptStripe([{"id":"test"},{"trigger":"onNuxtReady"}])')
+  })
+
+  // Test idleTimeout trigger in globals
+  it('global with idleTimeout trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { idleTimeout: 3000 },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('useScriptTriggerIdleTimeout({ timeout: 3000 })')
+  })
+
+  // Test interaction trigger in globals
+  it('global with interaction trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        chatWidget: ['https://chat.example.com/widget.js', {
+          trigger: { interaction: ['scroll', 'click'] },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerInteraction }')
+    expect(res).toContain('useScriptTriggerInteraction({ events: [\\"scroll\\",\\"click\\"] })')
+  })
+
+  // Test registry with idleTimeout trigger
+  it('registry with idleTimeout trigger', async () => {
+    const res = templatePlugin({
+      registry: {
+        googleAnalytics: [
+          { id: 'GA_MEASUREMENT_ID' },
+          { trigger: { idleTimeout: 5000 } },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    // Registry scripts pass trigger objects directly, they don't resolve triggers in templates
+    expect(res).toContain('useScriptGoogleAnalytics([{"id":"GA_MEASUREMENT_ID"},{"trigger":{"idleTimeout":5000}}])')
+  })
+
+  // Test both triggers together (should import both)
+  it('mixed triggers import both composables', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { idleTimeout: 3000 },
+        }],
+        chat: ['https://chat.example.com/widget.js', {
+          trigger: { interaction: ['scroll'] },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('import { useScriptTriggerInteraction }')
+  })
+})
+
+describe('resolveTriggerForTemplate', () => {
+  it('should return null for non-object triggers', () => {
+    expect(resolveTriggerForTemplate('onNuxtReady')).toBe(null)
+    expect(resolveTriggerForTemplate(null)).toBe(null)
+    expect(resolveTriggerForTemplate(undefined)).toBe(null)
+    expect(resolveTriggerForTemplate(42)).toBe(null)
+  })
+
+  it('should handle idleTimeout trigger', () => {
+    const result = resolveTriggerForTemplate({ idleTimeout: 5000 })
+    expect(result).toBe('useScriptTriggerIdleTimeout({ timeout: 5000 })')
+  })
+
+  it('should handle interaction trigger', () => {
+    const result = resolveTriggerForTemplate({ interaction: ['scroll', 'click'] })
+    expect(result).toBe('useScriptTriggerInteraction({ events: ["scroll","click"] })')
+  })
+
+  it('should return null for unknown trigger types', () => {
+    const result = resolveTriggerForTemplate({ unknownTrigger: 'value' })
+    expect(result).toBe(null)
+  })
+
+  it('should throw error for multiple trigger properties', () => {
+    expect(() => {
+      resolveTriggerForTemplate({ idleTimeout: 3000, interaction: ['click'] })
+    }).toThrow('Trigger object must have exactly one property, received: idleTimeout, interaction')
+  })
+
+  it('should throw error with correct property names', () => {
+    expect(() => {
+      resolveTriggerForTemplate({ idleTimeout: 3000, interaction: ['click'], someOther: 'value' })
+    }).toThrow('Trigger object must have exactly one property, received: idleTimeout, interaction, someOther')
   })
 })
