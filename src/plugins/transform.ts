@@ -34,6 +34,11 @@ export interface AssetBundlerTransformerOptions {
   defaultBundle?: boolean | 'force'
   assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
+  /**
+   * Merged configuration from both scripts.registry and runtimeConfig.public.scripts
+   * Used to provide default options to script bundling functions when no arguments are provided
+   */
+  registryConfig?: Record<string, any>
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
@@ -211,28 +216,42 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   return
 
                 // integration case
+                // Get registry key from function name (e.g., useScriptGoogleTagManager -> googleTagManager)
+                const baseName = fnName.replace(/^useScript/, '')
+                const registryKey = baseName.length > 0 ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : ''
+
+                // Get registry config for this script
+                const registryConfig = options.registryConfig?.[registryKey] || {}
+
+                const fnArg0 = {}
+
                 // extract the options as the first argument that we'll use to reconstruct the src
                 if (node.arguments[0]?.type === 'ObjectExpression') {
                   const optionsNode = node.arguments[0] as ObjectExpression
-                  const fnArg0 = {}
                   // extract literal values from the object to reconstruct the options
                   for (const prop of optionsNode.properties) {
-                    if (prop.type === 'Property' && prop.value.type === 'Literal')
+                    if (prop.type === 'Property' && prop.value.type === 'Literal' && prop.key && 'name' in prop.key)
                       // @ts-expect-error untyped
                       fnArg0[prop.key.name] = prop.value.value
                   }
+
                   const srcProperty = node.arguments[0].properties.find(
                     (p: any) => (p.key?.name === 'src' || p.key?.value === 'src') && p?.value.type === 'Literal' && p.type === 'Property',
                   ) as Property | undefined
                   if ((srcProperty?.value as Literal)?.value) {
                     scriptSrcNode = srcProperty?.value as Literal & { start: number, end: number }
                   }
-                  else {
-                    src = registryNode.scriptBundling && registryNode.scriptBundling(fnArg0 as any as InferInput<any>)
-                    // not supported
-                    if (src === false)
-                      return
-                  }
+                }
+
+                // If no src was found from function arguments, try to generate from registry config
+                if (!scriptSrcNode) {
+                  // Merge registry config with function arguments (function args take precedence)
+                  const mergedOptions = { ...registryConfig, ...fnArg0 }
+
+                  src = registryNode.scriptBundling && registryNode.scriptBundling(mergedOptions as InferInput<any>)
+                  // not supported
+                  if (src === false)
+                    return
                 }
               }
 
@@ -296,7 +315,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     }
                   }
                   // @ts-expect-error untyped
-                  const scriptOptions = node.arguments[0].properties?.find(
+                  const scriptOptions = node.arguments[0]?.properties?.find(
                     (p: any) => (p.key?.name === 'scriptOptions'),
                   ) as Property | undefined
                   // we need to check if scriptOptions contains bundle: true/false/'force', if it exists
@@ -335,28 +354,37 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
                     }
                     else {
-                      const optionsNode = node.arguments[0] as ObjectExpression
-                      // check if there's a scriptInput property
-                      const scriptInputProperty = optionsNode.properties.find(
-                        (p: any) => p.key?.name === 'scriptInput' || p.key?.value === 'scriptInput',
-                      )
-                      // see if there is a script input on it
-                      if (scriptInputProperty) {
-                        // @ts-expect-error untyped
-                        const scriptInput = scriptInputProperty.value
-                        if (scriptInput.type === 'ObjectExpression') {
-                          const srcProperty = scriptInput.properties.find(
-                            (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
-                          )
-                          if (srcProperty)
-                            s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${url}'`)
-                          else
-                            s.appendRight(scriptInput.end, `, src: '${url}'`)
+                      // Handle case where we need to add scriptInput
+                      if (node.arguments[0]) {
+                        // There's at least one argument
+                        const optionsNode = node.arguments[0] as ObjectExpression
+                        // check if there's a scriptInput property
+                        const scriptInputProperty = optionsNode.properties.find(
+                          (p: any) => p.key?.name === 'scriptInput' || p.key?.value === 'scriptInput',
+                        )
+                        // see if there is a script input on it
+                        if (scriptInputProperty) {
+                          // @ts-expect-error untyped
+                          const scriptInput = scriptInputProperty.value
+                          if (scriptInput.type === 'ObjectExpression') {
+                            const srcProperty = scriptInput.properties.find(
+                              (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
+                            )
+                            if (srcProperty)
+                              s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${url}'`)
+                            else
+                              s.appendRight(scriptInput.end, `, src: '${url}'`)
+                          }
+                        }
+                        else {
+                          // @ts-expect-error untyped
+                          s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}' }, `)
                         }
                       }
                       else {
+                        // No arguments at all, need to create the first argument
                         // @ts-expect-error untyped
-                        s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}' }, `)
+                        s.appendRight(node.callee.end, `({ scriptInput: { src: '${url}' } })`)
                       }
                     }
                   }

@@ -7,6 +7,7 @@ import {
   defineNuxtModule,
   hasNuxtModule,
 } from '@nuxt/kit'
+import { defu } from 'defu'
 import { readPackageJSON } from 'pkg-types'
 import type { FetchOptions } from 'ofetch'
 import { setupDevToolsUI } from './devtools'
@@ -134,6 +135,18 @@ export default defineNuxtModule<ModuleOptions>({
       defaultScriptOptions: config.defaultScriptOptions,
     }
 
+    // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
+    // Both scripts.registry and runtimeConfig.public.scripts should be supported
+    if (config.registry) {
+      // Ensure runtimeConfig.public exists
+      nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
+
+      nuxt.options.runtimeConfig.public.scripts = defu(
+        nuxt.options.runtimeConfig.public.scripts || {},
+        config.registry,
+      )
+    }
+
     const composables = [
       'useScript',
       'useScriptEventPage',
@@ -234,6 +247,7 @@ export {}`
       })
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
+        registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         defaultBundle: config.defaultScriptOptions?.bundle,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))

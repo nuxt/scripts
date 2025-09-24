@@ -709,6 +709,279 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     })
   })
 
+  it('registry config is passed to scriptBundling functions - no function arguments', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+    const code = await transform(
+      `const instance = useScriptGoogleTagManager()`,
+      {
+        defaultBundle: true,
+        registryConfig: {
+          googleTagManager: {
+            id: 'GTM-REGISTRY-CONFIG',
+          },
+        },
+        scripts: [
+          {
+            scriptBundling(options: any) {
+              if (!options?.id) {
+                return false
+              }
+              return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+            },
+            import: {
+              name: 'useScriptGoogleTagManager',
+              from: '',
+            },
+          },
+        ],
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })()"`)
+  })
+
+  describe('configuration merging', () => {
+    it('supports both scripts.registry and runtimeConfig.public.scripts - runtime config takes precedence', async () => {
+      vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+      const code = await transform(
+        `const instance = useScriptGoogleTagManager()`,
+        {
+          defaultBundle: true,
+          // This simulates the merged config where runtimeConfig.public.scripts overrides scripts.registry
+          registryConfig: {
+            googleTagManager: {
+              id: 'GTM-FROM-RUNTIME-CONFIG', // This should take precedence
+              debug: false, // This comes from registry config
+            },
+          },
+          scripts: [
+            {
+              scriptBundling(options: any) {
+                if (!options?.id) {
+                  return false
+                }
+                const url = new URL('https://www.googletagmanager.com/gtm.js')
+                url.searchParams.set('id', options.id)
+                if (options.debug) {
+                  url.searchParams.set('debug', '1')
+                }
+                return url.toString()
+              },
+              import: {
+                name: 'useScriptGoogleTagManager',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })()"`)
+    })
+
+    it('merges multiple properties from registry config', async () => {
+      vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+      const code = await transform(
+        `const instance = useScriptGoogleTagManager()`,
+        {
+          defaultBundle: true,
+          registryConfig: {
+            googleTagManager: {
+              id: 'GTM-CONFIG-ID',
+              debug: true,
+              l: 'dataLayer',
+              auth: 'auth-token',
+            },
+          },
+          scripts: [
+            {
+              scriptBundling(options: any) {
+                if (!options?.id) {
+                  return false
+                }
+                const url = new URL('https://www.googletagmanager.com/gtm.js')
+                url.searchParams.set('id', options.id)
+                if (options.l) url.searchParams.set('l', options.l)
+                if (options.auth) url.searchParams.set('gtm_auth', options.auth)
+                if (options.debug) url.searchParams.set('gtm_debug', 'x')
+                return url.toString()
+              },
+              import: {
+                name: 'useScriptGoogleTagManager',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })()"`)
+    })
+
+    it('function arguments override merged registry config', async () => {
+      vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+      const code = await transform(
+        `const instance = useScriptGoogleTagManager({ id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })`,
+        {
+          defaultBundle: true,
+          registryConfig: {
+            googleTagManager: {
+              id: 'GTM-CONFIG-ID',
+              debug: true,
+              l: 'dataLayer',
+            },
+          },
+          scripts: [
+            {
+              scriptBundling(options: any) {
+                if (!options?.id) {
+                  return false
+                }
+                const url = new URL('https://www.googletagmanager.com/gtm.js')
+                url.searchParams.set('id', options.id)
+                if (options.l) url.searchParams.set('l', options.l)
+                if (options.debug) url.searchParams.set('gtm_debug', 'x')
+                if (options.customParam) url.searchParams.set('custom', options.customParam)
+                return url.toString()
+              },
+              import: {
+                name: 'useScriptGoogleTagManager',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+      // Function args take precedence: id from function, debug and l from registry
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' },  id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })"`)
+    })
+
+    it('works with empty registry config', async () => {
+      const code = await transform(
+        `const instance = useScriptGoogleTagManager()`,
+        {
+          defaultBundle: true,
+          registryConfig: {}, // Empty registry config
+          scripts: [
+            {
+              scriptBundling(options: any) {
+                if (!options?.id) {
+                  return false // Should return false since no id provided
+                }
+                return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+              },
+              import: {
+                name: 'useScriptGoogleTagManager',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+      // Should not transform since scriptBundling returns false
+      expect(code).toBeUndefined()
+    })
+
+    it('works with undefined registry config', async () => {
+      const code = await transform(
+        `const instance = useScriptGoogleTagManager()`,
+        {
+          defaultBundle: true,
+          registryConfig: undefined, // No registry config
+          scripts: [
+            {
+              scriptBundling(options: any) {
+                if (!options?.id) {
+                  return false // Should return false since no id provided
+                }
+                return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+              },
+              import: {
+                name: 'useScriptGoogleTagManager',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+      // Should not transform since scriptBundling returns false
+      expect(code).toBeUndefined()
+    })
+
+    it('handles nested registry config properly', async () => {
+      vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+      const code = await transform(
+        `const instance = useScriptGoogleAnalytics()`,
+        {
+          defaultBundle: true,
+          registryConfig: {
+            googleAnalytics: {
+              id: 'GA-CONFIG-ID',
+              config: {
+                send_page_view: false,
+                custom_map: { custom_parameter_1: 'dimension1' },
+              },
+            },
+            // Also test that other configs don't interfere
+            googleTagManager: {
+              id: 'GTM-OTHER-ID',
+            },
+          },
+          scripts: [
+            {
+              scriptBundling(options: any) {
+                if (!options?.id) {
+                  return false
+                }
+                const url = new URL('https://www.googletagmanager.com/gtag/js')
+                url.searchParams.set('id', options.id)
+                return url.toString()
+              },
+              import: {
+                name: 'useScriptGoogleAnalytics',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' } })()"`)
+    })
+  })
+
+  it('registry config merges with function arguments - function args take precedence', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+    const code = await transform(
+      `const instance = useScriptGoogleTagManager({ id: 'GTM-FUNCTION-ARG' })`,
+      {
+        defaultBundle: true,
+        registryConfig: {
+          googleTagManager: {
+            id: 'GTM-REGISTRY-CONFIG',
+            debug: true,
+          },
+        },
+        scripts: [
+          {
+            scriptBundling(options: any) {
+              if (!options?.id) {
+                return false
+              }
+              const url = new URL('https://www.googletagmanager.com/gtm.js')
+              url.searchParams.set('id', options.id)
+              if (options.debug) {
+                url.searchParams.set('debug', '1')
+              }
+              return url.toString()
+            },
+            import: {
+              name: 'useScriptGoogleTagManager',
+              from: '',
+            },
+          },
+        ],
+      },
+    )
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' },  id: 'GTM-FUNCTION-ARG' })"`)
+  })
+
   describe.todo('fallbackOnSrcOnBundleFail', () => {
     beforeEach(() => {
       vi.mocked($fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
