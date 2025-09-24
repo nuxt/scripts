@@ -103,7 +103,7 @@ async function downloadScript(opts: {
     let size = 0
     res = await $fetch.raw(src, { ...fetchOptions, responseType: 'arrayBuffer' }).then(async (r) => {
       if (!r.ok) {
-        throw new Error(`Failed to fetch ${src}`)
+        throw new Error(`Failed to fetch ${src} (HTTP ${r.status})`)
       }
       encoding = r.headers.get('content-encoding')
       const contentLength = r.headers.get('content-length')
@@ -140,6 +140,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
   // done after all transformation is done
   // copy all scripts to build
   nuxt.hooks.hook('build:done', async () => {
+    if (nuxt.options._prepare) {
+      return
+    }
     const scripts = [...renderedScript]
     if (!scripts.length) {
       logger.debug('[bundle-script-transformer] No scripts to bundle...')
@@ -334,12 +337,18 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     try {
                       await downloadScript({ src, url, filename, forceDownload }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                     }
-                    catch (e) {
+                    catch (e: any) {
                       if (options.fallbackOnSrcOnBundleFail) {
                         logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
                         url = src
                       }
                       else {
+                        // Provide more helpful error message, especially for Docker/network issues
+                        const errorMessage = e?.message || 'Unknown error'
+                        if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND')) {
+                          logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
+                          logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
+                        }
                         throw e
                       }
                     }
