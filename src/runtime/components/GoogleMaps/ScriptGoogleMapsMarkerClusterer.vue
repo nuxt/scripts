@@ -4,13 +4,13 @@
 
 <script lang="ts">
 import { MarkerClusterer, type MarkerClustererOptions } from '@googlemaps/markerclusterer'
-import { inject, onUnmounted, provide, ref, shallowRef, type InjectionKey, type ShallowRef } from 'vue'
+import { inject, onUnmounted, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 
 export const MARKER_CLUSTERER_INJECTION_KEY = Symbol('marker-clusterer') as InjectionKey<{
   markerClusterer: ShallowRef<MarkerClusterer | undefined>
-  reportMarkerRemoval: () => void
+  requestRerender: () => void
 }>
 </script>
 
@@ -45,9 +45,9 @@ whenever(() => mapContext?.map.value, (map) => {
   once: true,
 })
 
-const markerClustererNeedsRerender = ref(false)
+const markerClustererNeedsRerender = shallowRef(false)
 
-function reportMarkerRemoval() {
+function requestRerender() {
   markerClustererNeedsRerender.value = true
 }
 
@@ -67,7 +67,13 @@ onUnmounted(() => {
   markerClusterer.value.setMap(null)
 })
 
-provide(MARKER_CLUSTERER_INJECTION_KEY, { markerClusterer, reportMarkerRemoval })
+provide(
+  MARKER_CLUSTERER_INJECTION_KEY,
+  {
+    markerClusterer,
+    requestRerender,
+  },
+)
 
 function setupMarkerClustererEventListeners(markerClusterer: MarkerClusterer) {
   markerClustererEvents.forEach((event) => {

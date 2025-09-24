@@ -62,7 +62,9 @@ whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
   setupMarkerEventListeners(marker.value)
 
   if (markerClustererContext?.markerClusterer.value) {
-    markerClustererContext.markerClusterer.value.addMarker(marker.value)
+    markerClustererContext.markerClusterer.value.addMarker(marker.value, true)
+
+    markerClustererContext.requestRerender()
   }
   else {
     marker.value.setMap(mapContext!.map.value!)
@@ -88,7 +90,7 @@ onUnmounted(() => {
   if (markerClustererContext?.markerClusterer.value) {
     markerClustererContext.markerClusterer.value.removeMarker(marker.value, true)
 
-    markerClustererContext.reportMarkerRemoval()
+    markerClustererContext.requestRerender()
   }
   else {
     marker.value.setMap(null)
