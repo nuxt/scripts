@@ -9,6 +9,10 @@ import { logger } from '../logger'
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
     defaultScriptOptions: NuxtUseScriptOptions
+    googleStaticMapsProxy?: {
+      enabled?: boolean
+      cacheMaxAge?: number
+    }
   }
 }
 
