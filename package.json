@@ -73,12 +73,12 @@
   },
   "peerDependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
-    "@paypal/paypal-js": "^8.1.2",
-    "@stripe/stripe-js": "^7.0.0",
+    "@paypal/paypal-js": "^8.4.2",
+    "@stripe/stripe-js": "^7.9.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
-    "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3"
+    "@types/youtube": "^0.1.2",
+    "@unhead/vue": "^2.0.17"
   },
   "peerDependenciesMeta": {
     "@stripe/stripe-js": {
