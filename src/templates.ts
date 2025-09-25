@@ -27,9 +27,6 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
     logger.warn('The `globals` array option is deprecated, please convert to an object.')
   }
-  // handles tests
-  const nuxt = tryUseNuxt() || { options: { buildDir: import.meta.dirname } }
-  const buildDir = nuxt.options.buildDir
   const imports = []
   const inits = []
   let needsIdleTimeoutImport = false
@@ -40,7 +37,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     const importDefinition = registry.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
     if (importDefinition) {
       // title case
-      imports.unshift(`import { ${importDefinition.import.name} } from '${relative(buildDir, importDefinition.import.from)}'`)
+      imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)
       const args = (typeof c !== 'object' ? {} : c) || {}
       if (c === 'mock') {
         args.scriptOptions = { trigger: 'manual', skipValidation: true }
