@@ -2,8 +2,6 @@ import { hash } from 'ohash'
 import type { ModuleOptions } from './module'
 import { logger } from './logger'
 import type { RegistryScript } from '#nuxt-scripts/types'
-import { tryUseNuxt } from '@nuxt/kit'
-import { relative } from 'pathe'
 
 export function resolveTriggerForTemplate(trigger: any): string | null {
   if (trigger && typeof trigger === 'object') {
