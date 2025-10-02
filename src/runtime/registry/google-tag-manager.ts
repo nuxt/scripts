@@ -167,6 +167,9 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
                 (window as any)[dataLayerName].push(arguments)
               }
 
+              // Assign gtag to window for global access
+              (window as any).gtag = gtag
+
               // Allow custom initialization
               options?.onBeforeGtmStart?.(gtag);
 
