@@ -7,6 +7,7 @@ import type { InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { Import } from 'unimport'
 import type { SegmentInput } from './registry/segment'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
+import type { DatabuddyAnalyticsInput } from './registry/databuddy-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
 import type { FathomAnalyticsInput } from './registry/fathom-analytics'
 import type { HotjarInput } from './registry/hotjar'
@@ -134,6 +135,7 @@ export interface ScriptRegistry {
   crisp?: CrispInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
+  databuddyAnalytics?: DatabuddyAnalyticsInput
   metaPixel?: MetaPixelInput
   fathomAnalytics?: FathomAnalyticsInput
   plausibleAnalytics?: PlausibleAnalyticsInput
