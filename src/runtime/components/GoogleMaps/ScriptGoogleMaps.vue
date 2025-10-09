@@ -6,7 +6,7 @@ import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import { hash } from 'ohash'
-import { useHead } from 'nuxt/app'
+import { useHead, useRuntimeConfig } from 'nuxt/app'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
@@ -119,6 +119,8 @@ const emits = defineEmits<{
 }>()
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
+const runtimeConfig = useRuntimeConfig()
+const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
 
 const mapsApi = ref<typeof google.maps | undefined>()
 
@@ -381,14 +383,17 @@ onMounted(() => {
 })
 
 if (import.meta.server) {
-  useHead({
-    link: [
-      {
-        rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
-        href: 'https://maps.googleapis.com',
-      },
-    ],
-  })
+  // Only preconnect to Google Maps if not using proxy
+  if (!proxyConfig?.enabled) {
+    useHead({
+      link: [
+        {
+          rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
+          href: 'https://maps.googleapis.com',
+        },
+      ],
+    })
+  }
 }
 
 function transformMapStyles(styles: google.maps.MapTypeStyle[]) {
@@ -438,7 +443,13 @@ const placeholder = computed(() => {
       })
       .join('|'),
   })
-  return withQuery('https://maps.googleapis.com/maps/api/staticmap', placeholderOptions as QueryObject)
+
+  // Use proxy endpoint if enabled, otherwise use direct Google Maps API
+  const baseUrl = proxyConfig?.enabled
+    ? '/_scripts/google-static-maps-proxy'
+    : 'https://maps.googleapis.com/maps/api/staticmap'
+
+  return withQuery(baseUrl, placeholderOptions as QueryObject)
 })
 
 const placeholderAttrs = computed(() => {
