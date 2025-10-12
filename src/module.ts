@@ -152,6 +152,8 @@ export default defineNuxtModule<ModuleOptions>({
       'useScriptEventPage',
       'useScriptTriggerConsent',
       'useScriptTriggerElement',
+      'useScriptTriggerIdleTimeout',
+      'useScriptTriggerInteraction',
     ]
     for (const composable of composables) {
       addImports({
