@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.12.0...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.12.0...main)
+
+### 🔥 Performance
+
+- **googleMaps:** Avoid multiple rerenders when adding markers to clusterer ([#517](https://github.com/nuxt/scripts/pull/517))
+
+### 🩹 Fixes
+
+- Resolve import paths as absolute ([a217362](https://github.com/nuxt/scripts/commit/a217362))
+
+### 🏡 Chore
+
+- Changelog ([61d694e](https://github.com/nuxt/scripts/commit/61d694e))
+- Sync ([da732bf](https://github.com/nuxt/scripts/commit/da732bf))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Damian Głowala ([@DamianGlowala](https://github.com/DamianGlowala))
+
 ## v0.11.13...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.13...main)
