@@ -71,6 +71,12 @@ const analytics = registryScripts
       logo: registryScripts.find(s => s.label === 'Google Analytics')?.logo,
       registryScript: null,
     },
+    {
+      name: 'Plausible Analytics v2 (Oct 2025)',
+      path: '/third-parties/plausible-analytics-v2',
+      logo: registryScripts.find(s => s.label === 'Plausible Analytics')?.logo,
+      registryScript: null,
+    },
   ])
 
 const pixels = registryScripts

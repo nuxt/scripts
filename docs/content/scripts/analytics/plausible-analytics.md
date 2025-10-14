@@ -25,7 +25,10 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       plausibleAnalytics: {
-        domain: 'YOUR_DOMAIN'
+        // Get this from your Plausible script URL:
+        // https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js
+        //                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        scriptId: 'gYyxvZhkMzdzXBAtSeSNz'
       }
     }
   }
@@ -38,7 +41,7 @@ export default defineNuxtConfig({
     scripts: {
       registry: {
         plausibleAnalytics: {
-          domain: 'YOUR_DOMAIN',
+          scriptId: 'YOUR_SCRIPT_ID',
         }
       }
     }
@@ -59,8 +62,8 @@ export default defineNuxtConfig({
       scripts: {
         plausibleAnalytics: {
           // .env
-          // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_DOMAIN=<your-domin>
-          domain: ''
+          // NUXT_PUBLIC_SCRIPTS_PLAUSIBLE_ANALYTICS_SCRIPT_ID=<your-script-id>
+          scriptId: ''
         },
       },
     },
@@ -75,8 +78,11 @@ export default defineNuxtConfig({
 The `useScriptPlausibleAnalytics` composable lets you have fine-grain control over when and how Plausible Analytics is loaded on your site.
 
 ```ts
+// New October 2025 format
 const plausible = useScriptPlausibleAnalytics({
-  domain: 'YOUR_DOMAIN'
+  // Extract from: https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js
+  //                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  scriptId: 'gYyxvZhkMzdzXBAtSeSNz'
 })
 ```
 
@@ -112,10 +118,63 @@ export interface PlausibleAnalyticsApi {
 You must provide the options when setting up the script for the first time.
 
 ```ts
-export const PlausibleAnalyticsOptions = object({
-  domain: string(), // required
-  extension: optional(union([union(extensions), array(union(extensions))])),
-})
+export interface PlausibleAnalyticsOptions {
+  /**
+   * Unique script ID for your site (recommended - new format as of October 2025)
+   * Extract from: <script src="https://plausible.io/js/pa-{scriptId}.js"></script>
+   */
+  scriptId?: string
+  /** Custom properties to track with every pageview */
+  customProperties?: Record<string, any>
+  /** Custom tracking endpoint URL */
+  endpoint?: string
+  /** Configure file download tracking */
+  fileDownloads?: {
+    fileExtensions?: string[]
+  }
+  /** Enable hash-based routing for single-page apps */
+  hashBasedRouting?: boolean
+  /** Set to false to manually trigger pageviews */
+  autoCapturePageviews?: boolean
+  /** Enable tracking on localhost */
+  captureOnLocalhost?: boolean
+  /** Enable form submission tracking */
+  trackForms?: boolean
+}
+```
+
+```ts
+export interface PlausibleAnalyticsDeprecatedOptions {
+  /**
+   * Your site domain
+   * @deprecated Use `scriptId` instead (new October 2025 format)
+   */
+  domain?: string
+  /**
+   * Script extensions for additional features
+   * @deprecated Use init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead
+   */
+  extension?: 'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual'
+}
+ 
+```
+
+**Note:** The `scriptId` is found in your Plausible dashboard under **Site Installation** in your site settings.
+
+**Extracting your Script ID:**
+
+Plausible provides you with a script tag like this:
+
+```html
+<script async src="https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js"></script>
+```
+
+Your `scriptId` is the part after `pa-` and before `.js`:
+
+```ts
+scriptId: 'gYyxvZhkMzdzXBAtSeSNz'
+//         ^^^^^^^^^^^^^^^^^^^^^^^
+//         Extract from: pa-{scriptId}.js
 ```
 
 ## Example

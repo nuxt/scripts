@@ -2,34 +2,27 @@
 import { ref, useHead } from '#imports'
 
 useHead({
-  title: 'Plausible',
+  title: 'Plausible v2',
 })
 
-// composables return the underlying api as a proxy object and the script state
-// Using legacy domain format for playground - in production use scriptId instead
+// New October 2025 format with scriptId
 const { status, proxy } = useScriptPlausibleAnalytics({
-  domain: 'scripts.nuxt.com',
-  captureOnLocalhost: true, // New October 2025 init option
+  scriptId: 'gYyxvZhkMzdzXBAtSeSNz',
+  captureOnLocalhost: true,
   scriptOptions: {
     trigger: 'onNuxtReady',
   },
 })
-// Example with new scriptId format:
-// const { status, proxy } = useScriptPlausibleAnalytics({
-//   scriptId: 'YOUR_SCRIPT_ID', // Get from Plausible dashboard
-//   captureOnLocalhost: true,
-//   scriptOptions: { trigger: 'onNuxtReady' },
-// })
 
 const clicks = ref(0)
 
 function trackPageView() {
-  proxy('404', { props: { path: '/404' } })
+  proxy.plausible('404', { props: { path: '/404' } })
 }
 
 async function clickHandler() {
   clicks.value++
-  proxy('test', { props: { clicks: clicks.value } })
+  proxy.plausible('test', { props: { clicks: clicks.value } })
 }
 </script>
 
@@ -37,10 +30,10 @@ async function clickHandler() {
   <div class="space-y-6">
     <div>
       <h1 class="text-3xl font-bold">
-        Plausible Analytics
+        Plausible Analytics v2 (October 2025)
       </h1>
       <p class="text-gray-600 mt-2">
-        Privacy-focused web analytics platform with custom event tracking.
+        New format with unique script ID and plausible.init() configuration.
       </p>
     </div>
 
@@ -50,6 +43,14 @@ async function clickHandler() {
         <span class="ml-2 px-2 py-1 rounded text-sm" :class="status === 'loaded' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
           {{ status }}
         </span>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 rounded p-4">
+        <h3 class="font-semibold mb-2">
+          Configuration
+        </h3>
+        <pre class="text-xs bg-white p-2 rounded overflow-x-auto">scriptId: 'gYyxvZhkMzdzXBAtSeSNz'
+captureOnLocalhost: true</pre>
       </div>
 
       <div class="flex gap-3">
