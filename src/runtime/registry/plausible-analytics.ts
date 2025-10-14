@@ -127,23 +127,15 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
     if (import.meta.dev) {
       // Check for missing required options
       if (!useNewScript && !options?.domain) {
-        logger.warn('Plausible Analytics: No `scriptId` or `domain` provided. Please provide either `scriptId` (recommended, new October 2025 format) or `domain` (legacy).')
+        logger.warn('Plausible Analytics: No `scriptId` or `domain` provided. Please provide either `scriptId` or `domain` (legacy).')
       }
 
       // Check for mixing new and deprecated options
       if (useNewScript && options?.domain) {
-        logger.warn('Plausible Analytics: You are using both `scriptId` (new format) and `domain` (deprecated). Please use only `scriptId` for the new October 2025 format.')
+        logger.warn('Plausible Analytics: You are using both `scriptId` (new format) and `domain` (deprecated). Please use only `scriptId` for the new format.')
       }
       if (useNewScript && useLegacyScript) {
         logger.warn('Plausible Analytics: You are using both `scriptId` (new format) and `extension` (deprecated). Please use `scriptId` with init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead.')
-      }
-
-      // Deprecation warnings
-      if (!useNewScript && options?.domain && !useLegacyScript) {
-        logger.warn('Plausible Analytics: You are using `domain` which is deprecated. Consider migrating to the new October 2025 format using `scriptId` (get it from your Plausible dashboard).')
-      }
-      if (useLegacyScript) {
-        logger.warn('Plausible Analytics: You are using `extension` which is deprecated. Consider migrating to the new October 2025 format using `scriptId` with init options like `hashBasedRouting`, `captureOnLocalhost`, etc.')
       }
     }
 
