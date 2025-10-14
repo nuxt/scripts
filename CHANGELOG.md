@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.12.1...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.12.1...main)
+
+### 🩹 Fixes
+
+- Databuddy types script registry ([#528](https://github.com/nuxt/scripts/pull/528))
+- **gtm:** Expose `gtag` globally ([#524](https://github.com/nuxt/scripts/pull/524))
+- Add missing autoImports ([#532](https://github.com/nuxt/scripts/pull/532))
+
+### 🏡 Chore
+
+- Bump ([927326d](https://github.com/nuxt/scripts/commit/927326d))
+- Bump ([fb10711](https://github.com/nuxt/scripts/commit/fb10711))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](https://github.com/huang-julien))
+- DanLdu ([@DanLDU](https://github.com/DanLDU))
+- Vachmara <valentinchmara@gmail.com>
+
 ## v0.12.0...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.12.0...main)
