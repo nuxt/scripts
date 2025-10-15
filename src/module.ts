@@ -2,7 +2,7 @@ import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
-  addPluginTemplate, addTypeTemplate,
+  addPluginTemplate, addTemplate, addTypeTemplate,
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
@@ -24,7 +24,7 @@ import type {
   RegistryScripts,
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
-import { templatePlugin } from './templates'
+import { templatePlugin, templateTriggerResolver } from './templates'
 import { relative, resolve } from 'pathe'
 
 export interface ModuleOptions {
@@ -167,6 +167,13 @@ export default defineNuxtModule<ModuleOptions>({
     addComponentsDir({
       path: await resolvePath('./runtime/components'),
       pathPrefix: false,
+    })
+
+    addTemplate({
+      filename: 'nuxt-scripts-trigger-resolver.mjs',
+      getContents() {
+        return templateTriggerResolver(config.defaultScriptOptions)
+      },
     })
 
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]

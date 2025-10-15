@@ -5,6 +5,8 @@ import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from 'nuxt/app'
 import { logger } from '../logger'
+// @ts-expect-error virtual template
+import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -25,6 +27,14 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     console.warn('[Nuxt Scripts] Bundling is not supported for dynamic script sources. Static URLs are required for bundling.')
     // Reset to false to prevent any unexpected behavior
     options.bundle = false
+  }
+
+  // Handle trigger objects (idleTimeout, interaction)
+  if (options.trigger && typeof options.trigger === 'object' && !('then' in options.trigger)) {
+    const resolved = resolveTrigger(options.trigger)
+    if (resolved) {
+      options.trigger = resolved
+    }
   }
 
   // browser hint optimizations

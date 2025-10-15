@@ -3,6 +3,28 @@ import type { ModuleOptions } from './module'
 import { logger } from './logger'
 import type { RegistryScript } from '#nuxt-scripts/types'
 
+export function templateTriggerResolver(defaultScriptOptions?: ModuleOptions['defaultScriptOptions']) {
+  const needsIdleTimeout = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'idleTimeout' in defaultScriptOptions.trigger
+  const needsInteraction = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'interaction' in defaultScriptOptions.trigger
+
+  const imports = []
+  if (needsIdleTimeout) {
+    imports.push(`import { useScriptTriggerIdleTimeout } from '#nuxt-scripts/composables/useScriptTriggerIdleTimeout'`)
+  }
+  if (needsInteraction) {
+    imports.push(`import { useScriptTriggerInteraction } from '#nuxt-scripts/composables/useScriptTriggerInteraction'`)
+  }
+
+  return [
+    ...imports,
+    `export function resolveTrigger(trigger) {`,
+    needsIdleTimeout ? `  if ('idleTimeout' in trigger) return useScriptTriggerIdleTimeout({ timeout: trigger.idleTimeout })` : '',
+    needsInteraction ? `  if ('interaction' in trigger) return useScriptTriggerInteraction({ events: trigger.interaction })` : '',
+    `  return null`,
+    `}`,
+  ].filter(Boolean).join('\n')
+}
+
 export function resolveTriggerForTemplate(trigger: any): string | null {
   if (trigger && typeof trigger === 'object') {
     const keys = Object.keys(trigger)
