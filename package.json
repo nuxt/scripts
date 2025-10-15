@@ -81,6 +81,9 @@
     "@unhead/vue": "^2.0.3"
   },
   "peerDependenciesMeta": {
+    "@googlemaps/markerclusterer": {
+      "optional": true
+    },
     "@stripe/stripe-js": {
       "optional": true
     },
