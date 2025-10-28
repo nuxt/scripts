@@ -101,7 +101,7 @@ const { proxy } = useScriptGoogleTagManager({
   id: 'YOUR_ID' // id is only needed if you haven't configured globally
 }) 
 
-useScriptEventPage((title, path) => {
+useScriptEventPage(({ title, path }) => {
   // triggered on route change after title is updated
   proxy.dataLayer.push({ 
     event: 'pageview',
