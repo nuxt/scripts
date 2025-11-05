@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import type { Nuxt } from 'nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
-import { useNuxt } from '@nuxt/kit'
+import { extendViteConfig, useNuxt } from '@nuxt/kit'
 import type { ModuleOptions } from './module'
 import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
@@ -21,7 +21,7 @@ export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver[
   }
   // In local development, start a separate Nuxt Server and proxy to serve the client
   else {
-    nuxt.hook('vite:extendConfig', (config) => {
+    extendViteConfig((config) => {
       config.server = config.server || {}
       config.server.proxy = config.server.proxy || {}
       config.server.proxy[DEVTOOLS_UI_ROUTE] = {
