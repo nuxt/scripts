@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { MarkerClusterer, type MarkerClustererOptions } from '@googlemaps/markerclusterer'
+import type { MarkerClusterer, MarkerClustererOptions } from '@googlemaps/markerclusterer'
 import { inject, onUnmounted, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
@@ -33,7 +33,8 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
 const markerClusterer = shallowRef<MarkerClusterer | undefined>(undefined)
 
-whenever(() => mapContext?.map.value, (map) => {
+whenever(() => mapContext?.map.value, async (map) => {
+  const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
   markerClusterer.value = new MarkerClusterer({
     map,
     ...props.options,
