@@ -140,7 +140,7 @@
     "playwright-core": "^1.56.0",
     "shiki": "^3.13.0",
     "typescript": "5.9.3",
-    "vitest": "^3.2.4",
+    "vitest": "^4.0.15",
     "vue": "^3.5.22",
     "vue-router": "^4.6.2",
     "vue-tsc": "^3.0.9"
