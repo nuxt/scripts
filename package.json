@@ -120,7 +120,7 @@
   },
   "devDependencies": {
     "@nuxt/devtools-kit": "^2.6.5",
-    "@nuxt/devtools-ui-kit": "^2.6.5",
+    "@nuxt/devtools-ui-kit": "^3.1.1",
     "@nuxt/eslint-config": "^1.9.0",
     "@nuxt/module-builder": "^1.0.2",
     "@nuxt/scripts": "workspace:*",
