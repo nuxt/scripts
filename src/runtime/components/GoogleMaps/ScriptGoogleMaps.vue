@@ -20,7 +20,7 @@ export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
 </script>
 
 <script lang="ts" setup>
-interface PlaceholderOptions {
+export interface PlaceholderOptions {
   width?: string | number
   height?: string | number
   center?: string
