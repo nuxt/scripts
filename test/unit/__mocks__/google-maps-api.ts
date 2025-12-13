@@ -33,6 +33,14 @@ export const createMockMarkerClusterer = () => ({
   render: vi.fn(),
 })
 
+// Class-based mocks for Vitest 4 constructor support - returns shared instance
+const createMockClass = <T>(instance: T) => {
+  const MockClass = vi.fn(function () {
+    return instance
+  }) as unknown as (new (...args: any[]) => T) & ReturnType<typeof vi.fn>
+  return MockClass
+}
+
 export const createMockGoogleMapsAPI = () => {
   const mockMarker = createMockMarker()
   const mockAdvancedMarkerElement = createMockAdvancedMarkerElement()
@@ -40,21 +48,29 @@ export const createMockGoogleMapsAPI = () => {
   const mockPinElement = createMockPinElement()
   const mockMarkerClusterer = createMockMarkerClusterer()
 
+  const MockMarker = createMockClass(mockMarker)
+  const MockAdvancedMarkerElement = createMockClass(mockAdvancedMarkerElement)
+  const MockPinElement = createMockClass(mockPinElement)
+  const MockInfoWindow = createMockClass(mockInfoWindow)
+  const MockLatLng = vi.fn(function (this: any, lat: number, lng: number) {
+    return { lat, lng }
+  }) as unknown as (new (lat: number, lng: number) => { lat: number, lng: number }) & ReturnType<typeof vi.fn>
+
   const mockMapsApi = {
-    Marker: vi.fn(() => mockMarker),
+    Marker: MockMarker,
     marker: {
-      AdvancedMarkerElement: vi.fn(() => mockAdvancedMarkerElement),
-      PinElement: vi.fn(() => mockPinElement),
+      AdvancedMarkerElement: MockAdvancedMarkerElement,
+      PinElement: MockPinElement,
     },
-    InfoWindow: vi.fn(() => mockInfoWindow),
+    InfoWindow: MockInfoWindow,
     event: {
       clearInstanceListeners: vi.fn(),
     },
     importLibrary: vi.fn().mockResolvedValue({
-      AdvancedMarkerElement: vi.fn(() => mockAdvancedMarkerElement),
-      PinElement: vi.fn(() => mockPinElement),
+      AdvancedMarkerElement: MockAdvancedMarkerElement,
+      PinElement: MockPinElement,
     }),
-    LatLng: vi.fn((lat: number, lng: number) => ({ lat, lng })),
+    LatLng: MockLatLng,
   }
 
   return {

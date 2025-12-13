@@ -9,7 +9,7 @@ describe('basic', async () => {
   await setup({
     rootDir: resolve('../fixtures/extend-registry'),
   })
-  it('extended registry script loads and executes function', async () => {
+  it('extended registry script loads and executes function', { timeout: 30000 }, async () => {
     const page = await createPage()
     const logs: { text: string, location: string }[] = []
     // visit and collect all logs, we need to do a snapshot on them
@@ -37,7 +37,5 @@ describe('basic', async () => {
         },
       ]
     `)
-  }, {
-    timeout: 30000,
   })
 })
