@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.13.0...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.13.0...main)
+
+### 🩹 Fixes
+
+- **x-pixel:** Correct variable name from e.exe to s.exe ([#541](https://github.com/nuxt/scripts/pull/541))
+- Convert MarkerClusterer to dynamic import to support optional peer dependency ([#551](https://github.com/nuxt/scripts/pull/551))
+- **google-maps:** Missing types for `<ScriptGoogleMaps/>` ([#560](https://github.com/nuxt/scripts/pull/560))
+
+### 💅 Refactors
+
+- Use `extendViteConfig` in development ([#554](https://github.com/nuxt/scripts/pull/554))
+
+### 📖 Documentation
+
+- Correct weird wording ([#538](https://github.com/nuxt/scripts/pull/538))
+- Destruct TrackedPage payload ([#549](https://github.com/nuxt/scripts/pull/549))
+- Fix Nuxt badge icon ([#559](https://github.com/nuxt/scripts/pull/559))
+
+### 🏡 Chore
+
+- Bump ([d825df9](https://github.com/nuxt/scripts/commit/d825df9))
+- Vitest v4 fixes ([2053869](https://github.com/nuxt/scripts/commit/2053869))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Bobbie Goede <bobbiegoede@gmail.com>
+- IO-Fire ([@IO-Fire](https://github.com/IO-Fire))
+- Copilot ([@MicrosoftCopilot](https://github.com/MicrosoftCopilot))
+- Daniel Roe ([@danielroe](https://github.com/danielroe))
+- Dennis Adriaansen <adriaansendennis@gmail.com>
+- Kohei Tsukiyama ([@tsukiyama-3](https://github.com/tsukiyama-3))
+- Alexandru Ungureanu ([@unguul](https://github.com/unguul))
+
 ## v0.12.2...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.12.2...main)
