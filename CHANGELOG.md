@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.12.2...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.12.2...main)
+
+### 🚀 Enhancements
+
+- ⚠️  Plausible script updates ([#534](https://github.com/nuxt/scripts/pull/534))
+
+### 🩹 Fixes
+
+- **google-maps:** Mark peer dependency as optional ([#537](https://github.com/nuxt/scripts/pull/537))
+- DefaultScriptOptions idleTimeout config ([faf83ff](https://github.com/nuxt/scripts/commit/faf83ff))
+
+### 🏡 Chore
+
+- Sync changelog ([da14392](https://github.com/nuxt/scripts/commit/da14392))
+- Bump ([e1a02d3](https://github.com/nuxt/scripts/commit/e1a02d3))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Plausible script updates ([#534](https://github.com/nuxt/scripts/pull/534))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Danshil Kokil Mungur <danshil.mungur@gmail.com>
+
 ## v0.12.1...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.12.1...main)
