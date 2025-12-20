@@ -22,11 +22,9 @@ export interface PostHogApi {
 declare global {
   interface Window {
     posthog?: PostHog
+    __posthogInitPromise?: Promise<PostHog | undefined>
   }
 }
-
-let posthogInstance: PostHog | undefined
-let initPromise: Promise<PostHog | undefined> | undefined
 
 export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) {
   return useRegistryScript<T, typeof PostHogOptions>('posthog', options => ({
@@ -36,13 +34,14 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
     schema: import.meta.dev ? PostHogOptions : undefined,
     scriptOptions: {
       use() {
-        return posthogInstance ? { posthog: posthogInstance } : undefined
+        return window.posthog ? { posthog: window.posthog } : undefined
       },
     },
     clientInit: import.meta.server
       ? undefined
       : () => {
-          if (initPromise)
+          // Use window for state to handle HMR correctly
+          if (window.__posthogInitPromise || window.posthog)
             return
 
           const region = options?.region || 'us'
@@ -50,7 +49,7 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
             ? 'https://eu.i.posthog.com'
             : 'https://us.i.posthog.com'
 
-          initPromise = import('posthog-js').then(({ default: posthog }) => {
+          window.__posthogInitPromise = import('posthog-js').then(({ default: posthog }) => {
             const config: Partial<PostHogConfig> = {
               api_host: apiHost,
               ...options?.config as Partial<PostHogConfig>,
@@ -64,9 +63,8 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
             if (typeof options?.disableSessionRecording === 'boolean')
               config.disable_session_recording = options.disableSessionRecording
 
-            posthogInstance = posthog.init(options?.apiKey || '', config)
-            window.posthog = posthogInstance
-            return posthogInstance
+            window.posthog = posthog.init(options?.apiKey || '', config)
+            return window.posthog
           })
         },
   }), _options)
