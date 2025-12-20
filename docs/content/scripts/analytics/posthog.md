@@ -160,16 +160,20 @@ export default defineNuxtConfig({
 
 ## Feature Flags
 
+Feature flag methods return values, so you need to wait for PostHog to load first:
+
 ```ts
-const { proxy } = useScriptPostHog()
+const { onLoaded } = useScriptPostHog()
 
-// Check a feature flag
-if (proxy.posthog.isFeatureEnabled('new-dashboard')) {
-  // Show new dashboard
-}
+onLoaded(({ posthog }) => {
+  // Check a feature flag
+  if (posthog.isFeatureEnabled('new-dashboard')) {
+    // Show new dashboard
+  }
 
-// Get flag payload
-const payload = proxy.posthog.getFeatureFlagPayload('experiment-config')
+  // Get flag payload
+  const payload = posthog.getFeatureFlagPayload('experiment-config')
+})
 ```
 
 ## Disabling Session Recording
