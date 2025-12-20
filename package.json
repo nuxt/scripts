@@ -73,7 +73,7 @@
   },
   "peerDependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
-    "@paypal/paypal-js": "^8.1.2",
+    "@paypal/paypal-js": "^9.1.0",
     "@stripe/stripe-js": "^7.0.0 || ^8.0.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
