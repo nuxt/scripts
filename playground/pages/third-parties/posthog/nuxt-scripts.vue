@@ -5,7 +5,7 @@ useHead({
   title: 'PostHog',
 })
 
-const { status, proxy, onLoaded } = useScriptPostHog({
+const { status, proxy } = useScriptPostHog({
   apiKey: 'phc_YOUR_API_KEY',
 })
 
@@ -21,10 +21,6 @@ function identifyUser() {
     name: 'Test User',
   })
 }
-
-onLoaded(({ posthog }) => {
-  console.log('PostHog loaded:', posthog)
-})
 </script>
 
 <template>
