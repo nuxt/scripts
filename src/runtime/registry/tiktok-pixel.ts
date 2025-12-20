@@ -1,3 +1,4 @@
+import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { object, string, optional, boolean } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
@@ -64,7 +65,10 @@ export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, tr
 export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput) {
   return useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({
     scriptInput: {
-      src: 'https://analytics.tiktok.com/i18n/pixel/events.js',
+      src: withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', {
+        sdkid: options?.id,
+        lib: 'ttq',
+      }),
       crossorigin: false,
     },
     schema: import.meta.dev ? TikTokPixelOptions : undefined,

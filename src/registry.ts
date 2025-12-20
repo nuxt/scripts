@@ -8,6 +8,7 @@ import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analy
 import type { RegistryScript } from './runtime/types'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 import type { ClarityInput } from './runtime/registry/clarity'
+import type { TikTokPixelInput } from './runtime/registry/tiktok-pixel'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
@@ -113,12 +114,16 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     {
       label: 'TikTok Pixel',
-      src: 'https://analytics.tiktok.com/i18n/pixel/events.js',
       category: 'tracking',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path d="M224 72a52.059 52.059 0 0 1-52-52a4 4 0 0 0-4-4h-40a4 4 0 0 0-4 4v132a28 28 0 1 1-40.567-25.019a4 4 0 0 0 2.567-3.734V80a4 4 0 0 0-4.652-3.949A84.032 84.032 0 1 0 156 152v-43.047a99.432 99.432 0 0 0 52 14.586a4 4 0 0 0 4-4V76a4 4 0 0 0-4-4z" fill="currentColor"/></svg>`,
       import: {
         name: 'useScriptTikTokPixel',
         from: await resolve('./runtime/registry/tiktok-pixel'),
+      },
+      scriptBundling(options?: TikTokPixelInput) {
+        if (!options?.id)
+          return false
+        return withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', { sdkid: options.id, lib: 'ttq' })
       },
     },
     {
