@@ -48,6 +48,26 @@ export default defineNuxtConfig({
 })
 ```
 
+```ts [Default consent mode]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: '<YOUR_ID>',
+        defaultConsent: {
+          // This can be any string or number value according to GTM documentation
+          // Here we set all consent types to 'denied' by default
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied',
+          'ad_storage': 'denied',
+          'analytics_storage': 'denied',
+        }
+      }
+    }
+  }
+})
+```
+
 ```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
@@ -154,6 +174,9 @@ export const GoogleTagManagerOptions = object({
 
     /** Referrer policy for analytics requests */
     authReferrerPolicy: optional(string()),
+    
+    /** Default consent settings for GTM */
+    defaultConsent: optional(record(string(), union([string(), number()]))),
   })
 ```
 
