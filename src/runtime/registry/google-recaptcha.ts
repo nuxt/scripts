@@ -56,9 +56,15 @@ export function useScriptGoogleRecaptcha<T extends GoogleRecaptchaApi>(_options?
         : () => {
             const w = window as any
             w.grecaptcha = w.grecaptcha || {}
-            w.grecaptcha.ready = w.grecaptcha.ready || function (cb: () => void) {
+            const readyFn = function (cb: () => void) {
               (w.___grecaptcha_cfg = w.___grecaptcha_cfg || {}).fns
                 = (w.___grecaptcha_cfg.fns || []).concat([cb])
+            }
+            w.grecaptcha.ready = w.grecaptcha.ready || readyFn
+            // Enterprise mode uses grecaptcha.enterprise.ready
+            if (options?.enterprise) {
+              w.grecaptcha.enterprise = w.grecaptcha.enterprise || {}
+              w.grecaptcha.enterprise.ready = w.grecaptcha.enterprise.ready || readyFn
             }
           },
     }
