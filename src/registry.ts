@@ -8,6 +8,7 @@ import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analy
 import type { RegistryScript } from './runtime/types'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 import type { ClarityInput } from './runtime/registry/clarity'
+import type { GoogleRecaptchaInput } from './runtime/registry/google-recaptcha'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
@@ -287,6 +288,24 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
         name: 'useScriptNpm',
         // key is based on package name
         from: await resolve('./runtime/registry/npm'),
+      },
+    },
+    {
+      label: 'Google reCAPTCHA',
+      category: 'utility',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><path fill="#1c3aa9" d="M64 32a32 32 0 1 1-64 0 32 32 0 0 1 64 0"/><path fill="#4285f4" d="m32 14-2 18 2 2 18-2V14z"/><path fill="#efefef" d="M14 32v18h18l2-2-2-16-16-2z"/><path fill="#f1f1f1" d="M32 32h18v18H32z"/><path fill="#e1e1e1" d="M14 14h18v18H14z"/><path fill="#1c3aa9" d="M32 14v18H14V14z"/><path fill="#4285f4" d="M32 32v18h18V32z"/><path d="M14 32h18v18H14z" fill="#f1f1f1"/><path d="M32 14h18v18H32z" fill="#fff"/></svg>`,
+      import: {
+        name: 'useScriptGoogleRecaptcha',
+        from: await resolve('./runtime/registry/google-recaptcha'),
+      },
+      scriptBundling(options?: GoogleRecaptchaInput) {
+        if (!options?.siteKey) {
+          return false
+        }
+        const baseUrl = options?.recaptchaNet
+          ? 'https://www.recaptcha.net/recaptcha'
+          : 'https://www.google.com/recaptcha'
+        return `${baseUrl}/${options?.enterprise ? 'enterprise.js' : 'api.js'}`
       },
     },
     {
