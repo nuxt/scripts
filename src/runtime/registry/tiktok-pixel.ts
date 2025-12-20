@@ -93,9 +93,11 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
           ttq.push = ttq
           ttq.loaded = true
           ttq.queue = []
-          ttq('init', options?.id)
-          if (options?.trackPageView !== false) {
-            ttq('page')
+          if (options?.id) {
+            ttq('init', options.id)
+            if (options?.trackPageView !== false) {
+              ttq('page')
+            }
           }
         },
   }), _options)
