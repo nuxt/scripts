@@ -31,6 +31,7 @@ import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { PayPalInput } from './registry/paypal'
+import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -142,6 +143,7 @@ export interface ScriptRegistry {
   googleAdsense?: GoogleAdsenseInput
   googleAnalytics?: GoogleAnalyticsInput
   googleMaps?: GoogleMapsInput
+  googleRecaptcha?: GoogleRecaptchaInput
   lemonSqueezy?: LemonSqueezyInput
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
