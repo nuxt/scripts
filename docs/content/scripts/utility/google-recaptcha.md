@@ -193,6 +193,70 @@ export default defineNuxtConfig({
 })
 ```
 
+## Server-Side Verification
+
+reCAPTCHA tokens must be verified on your server. Create an API endpoint to validate the token:
+
+::code-group
+
+```ts [server/api/verify-recaptcha.post.ts]
+export default defineEventHandler(async (event) => {
+  const { token } = await readBody(event)
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY
+
+  const response = await $fetch('https://www.google.com/recaptcha/api/siteverify', {
+    method: 'POST',
+    body: new URLSearchParams({
+      secret: secretKey,
+      response: token,
+    }),
+  })
+
+  if (!response.success || response.score < 0.5) {
+    throw createError({
+      statusCode: 400,
+      message: 'reCAPTCHA verification failed',
+    })
+  }
+
+  return { success: true, score: response.score }
+})
+```
+
+```ts [Enterprise - server/api/verify-recaptcha.post.ts]
+export default defineEventHandler(async (event) => {
+  const { token } = await readBody(event)
+  const projectId = process.env.RECAPTCHA_PROJECT_ID
+  const apiKey = process.env.RECAPTCHA_API_KEY
+  const siteKey = process.env.NUXT_PUBLIC_SCRIPTS_GOOGLE_RECAPTCHA_SITE_KEY
+
+  const response = await $fetch(
+    `https://recaptchaenterprise.googleapis.com/v1/projects/${projectId}/assessments?key=${apiKey}`,
+    {
+      method: 'POST',
+      body: {
+        event: { token, siteKey, expectedAction: 'submit' },
+      },
+    }
+  )
+
+  if (!response.tokenProperties?.valid || response.riskAnalysis?.score < 0.5) {
+    throw createError({
+      statusCode: 400,
+      message: 'reCAPTCHA verification failed',
+    })
+  }
+
+  return { success: true, score: response.riskAnalysis.score }
+})
+```
+
+::
+
+::callout{type="warning"}
+Never expose your secret key on the client. Always verify tokens server-side.
+::
+
 ## Hiding the Badge
 
 reCAPTCHA v3 displays a badge in the corner of your site. You can hide it with CSS, but you must include attribution in your form:
