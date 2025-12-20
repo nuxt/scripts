@@ -6,12 +6,11 @@ useHead({
   title: 'Google reCAPTCHA',
 })
 
-const { status, proxy, onLoaded } = useScriptGoogleRecaptcha({
+const { status, onLoaded } = useScriptGoogleRecaptcha({
   siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // test key
 })
 
 const token = ref<string | null>(null)
-const score = ref<number | null>(null)
 
 async function executeRecaptcha() {
   onLoaded(async ({ grecaptcha }) => {
