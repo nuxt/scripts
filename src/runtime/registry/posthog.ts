@@ -34,7 +34,11 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
     schema: import.meta.dev ? PostHogOptions : undefined,
     scriptOptions: {
       use() {
-        return window.posthog ? { posthog: window.posthog } : undefined
+        if (window.posthog)
+          return { posthog: window.posthog }
+        if (window.__posthogInitPromise)
+          return { posthog: window.__posthogInitPromise.then(() => window.posthog) }
+        return undefined
       },
     },
     clientInit: import.meta.server
