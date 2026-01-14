@@ -197,7 +197,7 @@ export type RegistryScriptInput<
       scriptInput?: ScriptInput
       scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
     })
-  | Partial<InferIfSchema<T>> & (
+    | Partial<InferIfSchema<T>> & (
     CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

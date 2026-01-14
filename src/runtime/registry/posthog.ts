@@ -62,45 +62,56 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
       ? undefined
       : () => {
         // Use window for state to handle HMR correctly
-        if (window.__posthogInitPromise || window.posthog)
-          return
+          if (window.__posthogInitPromise || window.posthog)
+            return
 
-        if (!options?.apiKey) {
-          console.warn('[nuxt-scripts] PostHog apiKey is required')
-          return
-        }
+          if (!options?.apiKey) {
+            logger.warn('PostHog apiKey is required')
+            return
+          }
 
-        const region = options?.region || 'us'
-        const apiHost = region === 'eu'
-          ? 'https://eu.i.posthog.com'
-          : 'https://us.i.posthog.com'
+          const region = options?.region || 'us'
+          const apiHost = region === 'eu'
+            ? 'https://eu.i.posthog.com'
+            : 'https://us.i.posthog.com'
 
-        window.__posthogInitPromise = import('posthog-js')
-          .then(({ default: posthog }) => {
-            const config: Partial<PostHogConfig> = {
-              api_host: apiHost,
-              ...options?.config as Partial<PostHogConfig>,
-            }
-            if (typeof options?.autocapture === 'boolean')
-              config.autocapture = options.autocapture
-            if (typeof options?.capturePageview === 'boolean')
-              config.capture_pageview = options.capturePageview
-            if (typeof options?.capturePageleave === 'boolean')
-              config.capture_pageleave = options.capturePageleave
-            if (typeof options?.disableSessionRecording === 'boolean')
-              config.disable_session_recording = options.disableSessionRecording
+          window.__posthogInitPromise = import('posthog-js')
+            .then(({ default: posthog }) => {
+              const config: Partial<PostHogConfig> = {
+                api_host: apiHost,
+                ...options?.config as Partial<PostHogConfig>,
+              }
+              if (typeof options?.autocapture === 'boolean')
+                config.autocapture = options.autocapture
+              if (typeof options?.capturePageview === 'boolean')
+                config.capture_pageview = options.capturePageview
+              if (typeof options?.capturePageleave === 'boolean')
+                config.capture_pageleave = options.capturePageleave
+              if (typeof options?.disableSessionRecording === 'boolean')
+                config.disable_session_recording = options.disableSessionRecording
 
-            window.posthog = posthog.init(options.apiKey, config)
-            if (window._posthogQueue) {
-              window._posthogQueue.forEach(q => (window.posthog as any)[q.prop]?.(...q.args))
+              const instance = posthog.init(options.apiKey, config)
+              if (!instance) {
+                logger.error('PostHog init returned undefined - initialization failed')
+                // Clear queue on init failure to prevent memory leak
+                delete window._posthogQueue
+                return undefined
+              }
+
+              window.posthog = instance
+              // Flush queued calls now that PostHog is ready
+              if (window._posthogQueue && window._posthogQueue.length > 0) {
+                window._posthogQueue.forEach(q => (window.posthog as any)[q.prop]?.(...q.args))
+                delete window._posthogQueue
+              }
+              return window.posthog
+            })
+            .catch((e) => {
+              logger.error('Failed to load posthog-js:', e)
+              // Clear queue on error to prevent memory leak
               delete window._posthogQueue
-            }
-            return window.posthog
-          })
-          .catch((e) => {
-            logger.error('Failed to load posthog-js:', e)
-            return undefined
-          })
-      },
+              return undefined
+            })
+        },
   }), _options)
 }

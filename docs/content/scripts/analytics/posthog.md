@@ -108,7 +108,7 @@ export const PostHogOptions = object({
   capturePageview: optional(boolean()),
   capturePageleave: optional(boolean()),
   disableSessionRecording: optional(boolean()),
-  config: optional(object({})), // Full PostHogConfig passthrough
+  config: optional(record(string(), any())), // Full PostHogConfig passthrough
 })
 ```
 
