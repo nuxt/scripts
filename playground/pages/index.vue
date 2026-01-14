@@ -42,6 +42,7 @@ function getPlaygroundPath(script: any): string | null {
     'vimeo-player': '/third-parties/vimeo/nuxt-scripts',
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
+    'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
     'npm': '/npm/js-confetti',
   }
 
