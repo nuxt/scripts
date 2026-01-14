@@ -35,6 +35,10 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
       schema: import.meta.dev ? PostHogOptions : undefined,
       scriptOptions: {
         use() {
+          // SSR guard - don't access window on server
+          if (import.meta.server)
+            return { posthog: {} as any }
+
           if (window.posthog)
             return { posthog: window.posthog }
 
