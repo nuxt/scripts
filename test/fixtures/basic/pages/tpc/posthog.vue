@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import type { PostHog } from 'posthog-js'
+import { watch, onMounted } from 'vue'
+
+// eslint-disable-next-line no-console
+console.log('[PostHog Test] Component initializing...')
 
 const { proxy, status, onLoaded } = useScriptPostHog({
   apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W',
@@ -11,33 +15,60 @@ const { proxy, status, onLoaded } = useScriptPostHog({
   },
 })
 
+// eslint-disable-next-line no-console
+console.log('[PostHog Test] useScriptPostHog called, initial status:', status.value)
+
+watch(status, (newStatus) => {
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Status changed to:', newStatus)
+})
+
 const eventCaptured = ref(false)
 const identifyCalled = ref(false)
 const featureFlagValue = ref<boolean | undefined>(undefined)
 const featureFlagPayload = ref<any>(undefined)
 
 function captureTestEvent() {
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Capturing event...')
   proxy.posthog.capture('test_event', {
     property1: 'value1',
     property2: 42,
   })
   eventCaptured.value = true
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Event captured flag set to true')
 }
 
 function identifyTestUser() {
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Identifying user...')
   proxy.posthog.identify('test-user-123', {
     email: 'test@example.com',
     name: 'Test User',
   })
   identifyCalled.value = true
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Identify flag set to true')
 }
 
 onLoaded(({ posthog }: { posthog: PostHog }) => {
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] onLoaded callback triggered!')
   // Check feature flag (we'll mock this in the test)
   featureFlagValue.value = posthog.isFeatureEnabled('test-feature-flag')
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Feature flag value:', featureFlagValue.value)
 
   // Get feature flag payload
   featureFlagPayload.value = posthog.getFeatureFlagPayload('test-feature-flag')
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Feature flag payload:', featureFlagPayload.value)
+})
+
+onMounted(() => {
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Component mounted, status:', status.value)
 })
 </script>
 
