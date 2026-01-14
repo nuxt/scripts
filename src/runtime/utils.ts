@@ -3,6 +3,7 @@ import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot
 import type { UseScriptInput } from '@unhead/vue'
 import { useRuntimeConfig } from 'nuxt/app'
 import { useScript } from './composables/useScript'
+import { createNpmScriptStub } from './npm-script-stub'
 import { parse } from '#nuxt-scripts-validator'
 import { parseURL, withQuery, parseQuery } from 'ufo'
 import type {
@@ -32,7 +33,8 @@ type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptIn
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
   schema?: O extends ObjectSchema<any, any> ? O : undefined
-  clientInit?: () => void
+  clientInit?: () => void | Promise<any>
+  scriptMode?: 'external' | 'npm' // NEW: external = CDN script (default), npm = NPM package only
 })
 
 export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
@@ -43,6 +45,16 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
+
+  // NEW: Handle NPM-only scripts differently
+  if (options.scriptMode === 'npm') {
+    return createNpmScriptStub<T>({
+      key: String(registryKey),
+      use: options.scriptOptions?.use,
+      clientInit: options.clientInit,
+      trigger: userOptions.scriptOptions?.trigger as any,
+    }) as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  }
 
   let finalScriptInput = options.scriptInput
 
