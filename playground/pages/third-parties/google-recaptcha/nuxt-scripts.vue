@@ -51,9 +51,15 @@ async function executeAndVerify() {
       </div>
       <div v-if="verification" class="mt-4 p-4 rounded" :class="verification.success ? 'bg-green-100' : 'bg-red-100'">
         <p><strong>Verification:</strong> {{ verification.success ? '✅ Passed' : '❌ Failed' }}</p>
-        <p v-if="verification.score !== undefined">Score: {{ verification.score }}</p>
-        <p v-if="verification.action">Action: {{ verification.action }}</p>
-        <p v-if="verification.errors?.length">Errors: {{ verification.errors.join(', ') }}</p>
+        <p v-if="verification.score !== undefined">
+          Score: {{ verification.score }}
+        </p>
+        <p v-if="verification.action">
+          Action: {{ verification.action }}
+        </p>
+        <p v-if="verification.errors?.length">
+          Errors: {{ verification.errors.join(', ') }}
+        </p>
       </div>
     </ClientOnly>
   </div>
