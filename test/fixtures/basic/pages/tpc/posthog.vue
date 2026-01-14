@@ -2,10 +2,10 @@
 import type { PostHog } from 'posthog-js'
 
 const { proxy, status, onLoaded } = useScriptPostHog({
-  apiKey: 'phc_test_key_e2e_testing',
-  // Use a mock endpoint that we can intercept in tests
+  apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W',
+  region: 'us',
   config: {
-    api_host: 'http://localhost:3000/mock-posthog',
+    person_profiles: 'identified_only',
     autocapture: false,
     capture_pageview: false,
   },
