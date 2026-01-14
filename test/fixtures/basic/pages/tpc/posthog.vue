@@ -5,7 +5,7 @@ import { watch, onMounted } from 'vue'
 // eslint-disable-next-line no-console
 console.log('[PostHog Test] Component initializing...')
 
-const { proxy, status, onLoaded } = useScriptPostHog({
+const { proxy, status, onLoaded, load } = useScriptPostHog({
   apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W',
   region: 'us',
   config: {
@@ -13,6 +13,7 @@ const { proxy, status, onLoaded } = useScriptPostHog({
     autocapture: false,
     capture_pageview: false,
   },
+  trigger: 'onNuxtReady', // Load immediately when Nuxt is ready
 })
 
 // eslint-disable-next-line no-console
@@ -69,6 +70,10 @@ onLoaded(({ posthog }: { posthog: PostHog }) => {
 onMounted(() => {
   // eslint-disable-next-line no-console
   console.log('[PostHog Test] Component mounted, status:', status.value)
+  // Manually trigger load
+  // eslint-disable-next-line no-console
+  console.log('[PostHog Test] Calling load()...')
+  load()
 })
 </script>
 
