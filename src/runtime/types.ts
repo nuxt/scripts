@@ -31,6 +31,7 @@ import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { PayPalInput } from './registry/paypal'
+import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -152,6 +153,7 @@ export interface ScriptRegistry {
   redditPixel?: RedditPixelInput
   segment?: SegmentInput
   stripe?: StripeInput
+  tiktokPixel?: TikTokPixelInput
   xPixel?: XPixelInput
   snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
