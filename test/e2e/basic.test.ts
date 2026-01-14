@@ -205,4 +205,48 @@ describe('third-party-capital', () => {
     expect(token!.length).toBeGreaterThan(100)
     expect(verified).toBe('true')
   })
+
+  it('expect PostHog to capture events and handle feature flags', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/tpc/posthog')
+    await page.waitForTimeout(500)
+
+    // Wait for script to load
+    await page.waitForFunction(() => document.querySelector('#status')?.textContent?.trim() === 'loaded', { timeout: 10000 })
+
+    // Test event capture
+    const captureRequest = page.waitForRequest(request => request.url().includes('/mock-posthog') && (request.url().includes('/batch') || request.url().includes('/capture')), {
+      timeout: 5000,
+    })
+    await page.click('#capture-event')
+    await captureRequest
+
+    // Verify event was captured
+    const eventCaptured = await page.$eval('#event-captured', el => el.textContent?.trim())
+    expect(eventCaptured).toBe('true')
+
+    // Test identify
+    const identifyRequest = page.waitForRequest(request => request.url().includes('/mock-posthog') && request.url().includes('/batch'), {
+      timeout: 5000,
+    })
+    await page.click('#identify-user')
+    await identifyRequest
+
+    // Verify identify was called
+    const identifyCalled = await page.$eval('#identify-called', el => el.textContent?.trim())
+    expect(identifyCalled).toBe('true')
+
+    // Verify feature flags were loaded (via onLoaded callback)
+    await page.waitForTimeout(1000) // Give time for feature flags to load
+    const featureFlagValue = await page.$eval('#feature-flag-value', el => el.textContent?.trim())
+    const featureFlagPayload = await page.$eval('#feature-flag-payload', el => el.textContent?.trim())
+
+    // Feature flag should be enabled (mocked to return true)
+    expect(featureFlagValue).toBe('true')
+
+    // Feature flag payload should contain our mock data
+    expect(featureFlagPayload).toContain('variant')
+    expect(featureFlagPayload).toContain('test')
+  })
 })
