@@ -32,6 +32,7 @@ import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { PayPalInput } from './registry/paypal'
 import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
+import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -154,6 +155,7 @@ export interface ScriptRegistry {
   redditPixel?: RedditPixelInput
   segment?: SegmentInput
   stripe?: StripeInput
+  tiktokPixel?: TikTokPixelInput
   xPixel?: XPixelInput
   snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
@@ -193,15 +195,15 @@ export type RegistryScriptInput<
       scriptInput?: ScriptInput
       scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
     })
-    | Partial<InferIfSchema<T>> & (
-      CanBypassOptions extends true ? {
+  | Partial<InferIfSchema<T>> & (
+    CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.
        */
-        key?: string
-        scriptInput: Required<Pick<ScriptInput, 'src'>> & ScriptInput
-        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-      } : never)
+      key?: string
+      scriptInput: Required<Pick<ScriptInput, 'src'>> & ScriptInput
+      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+    } : never)
 
 export interface RegistryScript {
   import?: Import // might just be a component

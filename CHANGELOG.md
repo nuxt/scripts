@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.13.1...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.13.1...main)
+
+### 🩹 Fixes
+
+- Allow `@stripe/stripe-js` v8 ([f516827](https://github.com/nuxt/scripts/commit/f516827))
+- **paypal:** V9 sdk peer dependency ([a8a93f4](https://github.com/nuxt/scripts/commit/a8a93f4))
+
+### 🏡 Chore
+
+- Changelog ([6d7b22a](https://github.com/nuxt/scripts/commit/6d7b22a))
+- Bump ([9909791](https://github.com/nuxt/scripts/commit/9909791))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
 ## v0.13.0...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.13.0...main)
