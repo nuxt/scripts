@@ -182,4 +182,27 @@ describe('third-party-capital', () => {
     await page.getByText('trigger').click()
     await request
   })
+
+  it('expect reCAPTCHA to execute and verify token', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/tpc/recaptcha')
+    await page.waitForTimeout(500)
+
+    // wait for script to load
+    await page.waitForFunction(() => document.querySelector('#status')?.textContent?.trim() === 'loaded', { timeout: 5000 })
+
+    // click execute button (this also verifies via server)
+    await page.click('#execute')
+
+    // wait for token + verification result
+    await page.waitForSelector('#verified', { timeout: 10000 })
+    const token = await page.$eval('#token', el => el.textContent?.trim())
+    const verified = await page.$eval('#verified', el => el.textContent?.trim())
+
+    // token should exist and verification should pass
+    expect(token).toBeTruthy()
+    expect(token!.length).toBeGreaterThan(100)
+    expect(verified).toBe('true')
+  })
 })

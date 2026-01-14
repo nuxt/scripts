@@ -1,7 +1,8 @@
 import type { PostHog, PostHogConfig } from 'posthog-js'
-import { useRegistryScript } from '../utils'
-import { string, object, optional, boolean, union, literal } from '#nuxt-scripts-validator'
+import { any, record, string, object, optional, boolean, union, literal } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { logger } from '../logger'
 
 export const PostHogOptions = object({
   apiKey: string(),
@@ -10,7 +11,7 @@ export const PostHogOptions = object({
   capturePageview: optional(boolean()),
   capturePageleave: optional(boolean()),
   disableSessionRecording: optional(boolean()),
-  config: optional(object({})),
+  config: optional(record(string(), any())),
 })
 
 export type PostHogInput = RegistryScriptInput<typeof PostHogOptions, false, true>
@@ -23,6 +24,7 @@ declare global {
   interface Window {
     posthog?: PostHog
     __posthogInitPromise?: Promise<PostHog | undefined>
+    _posthogQueue?: { prop: string | symbol, args: any[] }[]
   }
 }
 
@@ -36,24 +38,45 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
       use() {
         if (window.posthog)
           return { posthog: window.posthog }
-        if (window.__posthogInitPromise)
-          return { posthog: window.__posthogInitPromise.then(() => window.posthog) }
-        return undefined
+
+        const posthog = new Proxy({}, {
+          get(_, prop) {
+            if (window.posthog)
+              return (window.posthog as any)[prop]
+
+            if (prop === 'then')
+              return undefined
+
+            return (...args: any[]) => {
+              if (window.posthog)
+                return (window.posthog as any)[prop](...args)
+              window._posthogQueue = window._posthogQueue || []
+              window._posthogQueue.push({ prop, args })
+            }
+          },
+        })
+        return { posthog } as unknown as PostHogApi
       },
     },
     clientInit: import.meta.server
       ? undefined
       : () => {
-          // Use window for state to handle HMR correctly
-          if (window.__posthogInitPromise || window.posthog)
-            return
+        // Use window for state to handle HMR correctly
+        if (window.__posthogInitPromise || window.posthog)
+          return
 
-          const region = options?.region || 'us'
-          const apiHost = region === 'eu'
-            ? 'https://eu.i.posthog.com'
-            : 'https://us.i.posthog.com'
+        if (!options?.apiKey) {
+          console.warn('[nuxt-scripts] PostHog apiKey is required')
+          return
+        }
 
-          window.__posthogInitPromise = import('posthog-js').then(({ default: posthog }) => {
+        const region = options?.region || 'us'
+        const apiHost = region === 'eu'
+          ? 'https://eu.i.posthog.com'
+          : 'https://us.i.posthog.com'
+
+        window.__posthogInitPromise = import('posthog-js')
+          .then(({ default: posthog }) => {
             const config: Partial<PostHogConfig> = {
               api_host: apiHost,
               ...options?.config as Partial<PostHogConfig>,
@@ -67,9 +90,17 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
             if (typeof options?.disableSessionRecording === 'boolean')
               config.disable_session_recording = options.disableSessionRecording
 
-            window.posthog = posthog.init(options?.apiKey || '', config)
+            window.posthog = posthog.init(options.apiKey, config)
+            if (window._posthogQueue) {
+              window._posthogQueue.forEach(q => (window.posthog as any)[q.prop]?.(...q.args))
+              delete window._posthogQueue
+            }
             return window.posthog
           })
-        },
+          .catch((e) => {
+            logger.error('Failed to load posthog-js:', e)
+            return undefined
+          })
+      },
   }), _options)
 }

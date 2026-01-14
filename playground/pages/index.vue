@@ -30,6 +30,7 @@ function getPlaygroundPath(script: any): string | null {
     'x-pixel': '/third-parties/x-pixel/nuxt-scripts',
     'reddit-pixel': '/third-parties/reddit-pixel/nuxt-scripts',
     'snapchat-pixel': '/third-parties/snapchat/nuxt-scripts',
+    'tiktok-pixel': '/third-parties/tiktok-pixel/nuxt-scripts',
     'google-adsense': '/third-parties/google-adsense/nuxt-scripts',
     'carbon-ads': '/third-parties/carbon/nuxt-scripts',
     'clarity': '/third-parties/clarity/nuxt-scripts',
@@ -42,6 +43,7 @@ function getPlaygroundPath(script: any): string | null {
     'vimeo-player': '/third-parties/vimeo/nuxt-scripts',
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
+    'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
     'npm': '/npm/js-confetti',
   }
 
