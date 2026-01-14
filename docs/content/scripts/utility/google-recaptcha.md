@@ -321,3 +321,30 @@ reCAPTCHA v3 displays a badge in the corner of your site. You can hide it with C
   <a href="https://policies.google.com/terms">Terms of Service</a> apply.
 </p>
 ```
+
+## Test Keys
+
+Google provides test keys for development that always pass verification. Use these for local testing:
+
+| Key Type | Value |
+|----------|-------|
+| Site Key | `6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI` |
+| Secret Key | `6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe` |
+
+::callout{type="info"}
+Test keys will always return `success: true` with a score of `0.9`. See [Google's FAQ](https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do) for more details.
+::
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  $development: {
+    scripts: {
+      registry: {
+        googleRecaptcha: {
+          siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+        }
+      }
+    }
+  }
+})
+```
