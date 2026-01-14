@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PostHog } from 'posthog-js'
-import { watch, onMounted } from 'vue'
+import { watch, onMounted, ref } from 'vue'
 
 // eslint-disable-next-line no-console
 console.log('[PostHog Test] Component initializing...')
@@ -13,7 +13,9 @@ const { proxy, status, onLoaded, load } = useScriptPostHog({
     autocapture: false,
     capture_pageview: false,
   },
-  trigger: 'onNuxtReady', // Load immediately when Nuxt is ready
+  scriptOptions: {
+    trigger: 'onNuxtReady', // Load immediately when Nuxt is ready
+  },
 })
 
 // eslint-disable-next-line no-console

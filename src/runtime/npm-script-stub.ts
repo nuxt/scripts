@@ -103,6 +103,12 @@ export function createNpmScriptStub<T = any>(
     else if (options.trigger === 'manual') {
       // Manual trigger - do nothing, user calls load()
     }
+    else if (options.trigger === 'onNuxtReady') {
+      // onNuxtReady string - import and use onNuxtReady
+      import('nuxt/app').then(({ onNuxtReady }) => {
+        onNuxtReady(() => stub.load())
+      })
+    }
     else if (options.trigger === 'client') {
       // Load immediately on client
       if (import.meta.client) {
