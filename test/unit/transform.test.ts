@@ -982,6 +982,241 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' },  id: 'GTM-FUNCTION-ARG' })"`)
   })
 
+  describe('integrity', () => {
+    beforeEach(() => {
+      mockBundleStorage.getItem.mockReset()
+      mockBundleStorage.setItem.mockReset()
+      mockBundleStorage.getItemRaw.mockReset()
+      mockBundleStorage.setItemRaw.mockReset()
+      mockBundleStorage.hasItem.mockReset()
+      vi.clearAllMocks()
+    })
+
+    it('injects integrity attribute for useScript(string) pattern', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("test")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          integrity: true,
+          renderedScript: new Map(),
+        },
+      )
+
+      // Should convert to object form with integrity and crossorigin
+      expect(code).toContain('integrity:')
+      expect(code).toContain('sha384-')
+      expect(code).toContain(`crossorigin: 'anonymous'`)
+    })
+
+    it('injects integrity attribute for useScript({ src }) pattern', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("test")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      const code = await transform(
+        `const instance = useScript({ src: 'https://static.cloudflareinsights.com/beacon.min.js' }, {
+          bundle: true,
+        })`,
+        {
+          integrity: true,
+          renderedScript: new Map(),
+        },
+      )
+
+      expect(code).toContain('integrity:')
+      expect(code).toContain('sha384-')
+      expect(code).toContain(`crossorigin: 'anonymous'`)
+    })
+
+    it('injects integrity for registry scripts via scriptInput', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'gtag')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("analytics")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      const code = await transform(
+        `const instance = useScriptGoogleAnalytics({ id: 'GA-123' }, { bundle: true })`,
+        {
+          integrity: true,
+          renderedScript: new Map(),
+          scripts: [
+            {
+              scriptBundling() {
+                return 'https://www.googletagmanager.com/gtag/js'
+              },
+              import: {
+                name: 'useScriptGoogleAnalytics',
+                from: '',
+              },
+            },
+          ],
+        },
+      )
+
+      expect(code).toContain('scriptInput:')
+      expect(code).toContain('integrity:')
+      expect(code).toContain('sha384-')
+      expect(code).toContain(`crossorigin: 'anonymous'`)
+    })
+
+    it('supports sha256 algorithm', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("test")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          integrity: 'sha256',
+          renderedScript: new Map(),
+        },
+      )
+
+      expect(code).toContain('sha256-')
+    })
+
+    it('supports sha512 algorithm', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("test")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          integrity: 'sha512',
+          renderedScript: new Map(),
+        },
+      )
+
+      expect(code).toContain('sha512-')
+    })
+
+    it('does not inject integrity when disabled', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("test")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          integrity: false,
+          renderedScript: new Map(),
+        },
+      )
+
+      expect(code).not.toContain('integrity:')
+      expect(code).not.toContain('crossorigin:')
+    })
+
+    it('loads cached integrity hash', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+
+      const cachedContent = Buffer.from('cached script content')
+      const cachedIntegrity = 'sha384-cachedHashValue'
+
+      mockBundleStorage.hasItem.mockResolvedValue(true)
+      mockBundleStorage.getItem.mockResolvedValue({
+        timestamp: Date.now(),
+        integrity: cachedIntegrity,
+      })
+      mockBundleStorage.getItemRaw.mockResolvedValue(cachedContent)
+
+      const code = await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          integrity: true,
+          renderedScript: new Map(),
+        },
+      )
+
+      expect(code).toContain(cachedIntegrity)
+    })
+
+    it('stores integrity hash in metadata', async () => {
+      vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
+      mockBundleStorage.hasItem.mockResolvedValue(false)
+
+      const scriptContent = Buffer.from('console.log("test")')
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(scriptContent),
+        headers: { get: () => null },
+        _data: scriptContent,
+      } as any)
+
+      await transform(
+        `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
+          bundle: true,
+        })`,
+        {
+          integrity: true,
+          renderedScript: new Map(),
+        },
+      )
+
+      const metadataCall = mockBundleStorage.setItem.mock.calls.find(call =>
+        call[0].startsWith('bundle-meta:'),
+      )
+      expect(metadataCall).toBeDefined()
+      expect(metadataCall[1].integrity).toBeDefined()
+      expect(metadataCall[1].integrity).toMatch(/^sha384-/)
+    })
+  })
+
   describe.todo('fallbackOnSrcOnBundleFail', () => {
     beforeEach(() => {
       vi.mocked($fetch).mockImplementationOnce(() => Promise.reject(new Error('fetch error')))
