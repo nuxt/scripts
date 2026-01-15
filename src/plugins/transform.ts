@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'
 import { createUnplugin } from 'unplugin'
 import MagicString from 'magic-string'
@@ -20,6 +21,13 @@ import type { RegistryScript } from '#nuxt-scripts/types'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
+export type IntegrityAlgorithm = 'sha256' | 'sha384' | 'sha512'
+
+function calculateIntegrity(content: Buffer, algorithm: IntegrityAlgorithm = 'sha384'): string {
+  const hash = createHash(algorithm).update(content).digest('base64')
+  return `${algorithm}-${hash}`
+}
+
 export async function isCacheExpired(storage: any, filename: string, cacheMaxAge: number = SEVEN_DAYS_IN_MS): Promise<boolean> {
   const metaKey = `bundle-meta:${filename}`
   const meta = await storage.getItem(metaKey)
@@ -27,6 +35,18 @@ export async function isCacheExpired(storage: any, filename: string, cacheMaxAge
     return true // No metadata means expired/invalid cache
   }
   return Date.now() - meta.timestamp > cacheMaxAge
+}
+
+export interface RenderedScriptMeta {
+  content: Buffer
+  /**
+   * in kb
+   */
+  size: number
+  encoding?: string
+  src: string
+  filename?: string
+  integrity?: string
 }
 
 export interface AssetBundlerTransformerOptions {
@@ -42,16 +62,13 @@ export interface AssetBundlerTransformerOptions {
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
-  renderedScript?: Map<string, {
-    content: Buffer
-    /**
-     * in kb
-     */
-    size: number
-    encoding?: string
-    src: string
-    filename?: string
-  } | Error>
+  /**
+   * Enable automatic integrity hash generation for bundled scripts.
+   * When enabled, calculates SRI hash and injects integrity attribute.
+   * @default false
+   */
+  integrity?: boolean | IntegrityAlgorithm
+  renderedScript?: Map<string, RenderedScriptMeta | Error>
 }
 
 function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): { url: string, filename?: string } {
@@ -74,8 +91,9 @@ async function downloadScript(opts: {
   url: string
   filename?: string
   forceDownload?: boolean
+  integrity?: boolean | IntegrityAlgorithm
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload } = opts
+  const { src, url, filename, forceDownload, integrity } = opts
   if (src === url || !filename) {
     return
   }
@@ -88,15 +106,16 @@ async function downloadScript(opts: {
     const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
     if (shouldUseCache) {
-      const res = await storage.getItemRaw<Buffer>(cacheKey)
+      const cachedContent = await storage.getItemRaw<Buffer>(cacheKey)
+      const meta = await storage.getItem(`bundle-meta:${filename}`) as { integrity?: string } | null
       renderedScript.set(url, {
-        content: res!,
-        size: res!.length / 1024,
+        content: cachedContent!,
+        size: cachedContent!.length / 1024,
         encoding: 'utf-8',
         src,
         filename,
+        integrity: meta?.integrity,
       })
-
       return
     }
     let encoding
@@ -111,21 +130,28 @@ async function downloadScript(opts: {
       return Buffer.from(r._data || await r.arrayBuffer())
     })
 
+    // Calculate integrity hash if enabled
+    const integrityHash = integrity && res
+      ? calculateIntegrity(res, integrity === true ? 'sha384' : integrity)
+      : undefined
+
     await storage.setItemRaw(`bundle:${filename}`, res)
     // Save metadata with timestamp for cache expiration
     await storage.setItem(`bundle-meta:${filename}`, {
       timestamp: Date.now(),
       src,
       filename,
+      integrity: integrityHash,
     })
     size = size || res!.length / 1024
-    logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})`)}`)
+    logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})${integrityHash ? ` [${integrityHash.slice(0, 15)}...]` : ''}`)}`)
     renderedScript.set(url, {
       content: res!,
       size,
       encoding,
       src,
       filename,
+      integrity: integrityHash,
     })
   }
 }
@@ -335,7 +361,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url
                     try {
-                      await downloadScript({ src, url, filename, forceDownload }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                      await downloadScript({ src, url, filename, forceDownload, integrity: options.integrity }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                     }
                     catch (e: any) {
                       if (options.fallbackOnSrcOnBundleFail) {
@@ -359,11 +385,29 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       else
                         logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
                     }
+
+                    // Get the integrity hash from rendered script
+                    const scriptMeta = renderedScript.get(url)
+                    const integrityHash = scriptMeta instanceof Error ? undefined : scriptMeta?.integrity
+
                     if (scriptSrcNode) {
-                      s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
+                      // For useScript('src') pattern, we need to convert to object form to add integrity
+                      if (integrityHash && fnName === 'useScript' && node.arguments[0]?.type === 'Literal') {
+                        s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `{ src: '${url}', integrity: '${integrityHash}', crossorigin: 'anonymous' }`)
+                      }
+                      else if (integrityHash && fnName === 'useScript' && node.arguments[0]?.type === 'ObjectExpression') {
+                        // For useScript({ src: '...' }) pattern, update src and add integrity
+                        s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
+                        const objArg = node.arguments[0] as ObjectExpression & { end: number }
+                        s.appendLeft(objArg.end - 1, `, integrity: '${integrityHash}', crossorigin: 'anonymous'`)
+                      }
+                      else {
+                        s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
+                      }
                     }
                     else {
-                      // Handle case where we need to add scriptInput
+                      // Handle case where we need to add scriptInput (registry scripts)
+                      const integrityProps = integrityHash ? `, integrity: '${integrityHash}', crossorigin: 'anonymous'` : ''
                       if (node.arguments[0]) {
                         // There's at least one argument
                         const optionsNode = node.arguments[0] as ObjectExpression
@@ -379,21 +423,25 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                             const srcProperty = scriptInput.properties.find(
                               (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
                             )
-                            if (srcProperty)
+                            if (srcProperty) {
                               s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${url}'`)
-                            else
-                              s.appendRight(scriptInput.end, `, src: '${url}'`)
+                              if (integrityHash)
+                                s.appendLeft(scriptInput.end - 1, integrityProps)
+                            }
+                            else {
+                              s.appendRight(scriptInput.end - 1, `, src: '${url}'${integrityProps}`)
+                            }
                           }
                         }
                         else {
                           // @ts-expect-error untyped
-                          s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}' }, `)
+                          s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}'${integrityProps} }, `)
                         }
                       }
                       else {
                         // No arguments at all, need to create the first argument
                         // @ts-expect-error untyped
-                        s.appendRight(node.callee.end, `({ scriptInput: { src: '${url}' } })`)
+                        s.appendRight(node.callee.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
                       }
                     }
                   }

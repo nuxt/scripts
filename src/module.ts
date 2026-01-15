@@ -69,6 +69,14 @@ export interface ModuleOptions {
      * @default 604800000 (7 days)
      */
     cacheMaxAge?: number
+    /**
+     * Enable automatic integrity hash generation for bundled scripts.
+     * When enabled, calculates SRI (Subresource Integrity) hash and injects
+     * integrity attribute along with crossorigin="anonymous".
+     *
+     * @default false
+     */
+    integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
   }
   /**
    * Whether the module is enabled.
@@ -231,6 +239,7 @@ export default defineNuxtModule<ModuleOptions>({
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
         fetchOptions: config.assets?.fetchOptions,
         cacheMaxAge: config.assets?.cacheMaxAge,
+        integrity: config.assets?.integrity,
         renderedScript,
       }))
 
