@@ -68,7 +68,8 @@
       "esbuild",
       "unimport",
       "#nuxt-scripts/types",
-      "#nuxt-scripts-validator"
+      "#nuxt-scripts-validator",
+      "posthog-js"
     ]
   },
   "peerDependencies": {
@@ -78,7 +79,8 @@
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3"
+    "@unhead/vue": "^2.0.3",
+    "posthog-js": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "@googlemaps/markerclusterer": {
@@ -97,6 +99,9 @@
       "optional": true
     },
     "@types/youtube": {
+      "optional": true
+    },
+    "posthog-js": {
       "optional": true
     }
   },
@@ -126,6 +131,7 @@
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "3.19.2",
     "@paypal/paypal-js": "^9.1.0",
+    "posthog-js": "^1.222.0",
     "@types/semver": "^7.7.1",
     "@typescript-eslint/typescript-estree": "^8.53.0",
     "@vue/test-utils": "^2.4.6",

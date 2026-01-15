@@ -31,6 +31,7 @@ import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { PayPalInput } from './registry/paypal'
+import type { PostHogInput } from './registry/posthog'
 import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import { object } from '#nuxt-scripts-validator'
@@ -150,6 +151,7 @@ export interface ScriptRegistry {
   hotjar?: HotjarInput
   intercom?: IntercomInput
   paypal?: PayPalInput
+  posthog?: PostHogInput
   matomoAnalytics?: MatomoAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
   redditPixel?: RedditPixelInput

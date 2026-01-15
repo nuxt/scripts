@@ -20,6 +20,7 @@ function getPlaygroundPath(script: any): string | null {
     'cloudflare-web-analytics': '/third-parties/cloudflare-web-analytics/nuxt-scripts',
     'fathom-analytics': '/third-parties/fathom-analytics',
     'plausible-analytics': '/third-parties/plausible-analytics',
+    'posthog': '/third-parties/posthog/nuxt-scripts',
     'matomo-analytics': '/third-parties/matomo-analytics/nuxt-scripts',
     'rybbit-analytics': '/third-parties/rybbit-analytics',
     'databuddy-analytics': '/third-parties/databuddy-analytics',
