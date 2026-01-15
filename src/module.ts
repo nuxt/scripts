@@ -2,7 +2,8 @@ import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
-  addPluginTemplate, addTemplate, addTypeTemplate,
+  addPluginTemplate,
+  addTemplate,
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
@@ -24,8 +25,7 @@ import type {
   RegistryScripts,
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
-import { templatePlugin, templateTriggerResolver } from './templates'
-import { relative, resolve } from 'pathe'
+import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
 export interface ModuleOptions {
   /**
@@ -201,42 +201,7 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
-      addTypeTemplate({
-        filename: 'module/nuxt-scripts.d.ts',
-        getContents: (data) => {
-          const typesPath = relative(resolve(data.nuxt!.options.rootDir, data.nuxt!.options.buildDir, 'module'), resolve('runtime/types'))
-          let types = `
-declare module '#app' {
-  interface NuxtApp {
-    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts/types').UseScriptContext<any>)>
-    _scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)>
-  }
-  interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)> }) => void | Promise<void>
-  }
-}
-`
-          if (newScripts.length) {
-            types = `${types}
-declare module '#nuxt-scripts/types' {
-    type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
-    interface ScriptRegistry {
-${newScripts.map((i) => {
-  const key = i.import?.name.replace('useScript', '')
-  const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-  return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-}).join('\n')}
-    }
-}`
-            return types
-          }
-          return `${types}
-export {}`
-        },
-      }, {
-        nuxt: true,
-        node: true,
-      })
+      registerTypeTemplates({ nuxt, config, newScripts })
 
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin

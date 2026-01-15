@@ -54,7 +54,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "pnpm dev:prepare && vitest --run",
-    "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck"
+    "test:types": "vitest run --project typecheck"
   },
   "build": {
     "externals": [

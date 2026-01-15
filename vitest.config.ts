@@ -4,6 +4,19 @@ import { defineConfig, defineProject } from 'vitest/config'
 export default defineConfig({
   test: {
     projects: [
+      // type tests using vitest typecheck
+      defineProject({
+        test: {
+          name: 'typecheck',
+          include: [
+            './test/types/**/*.test-d.ts',
+          ],
+          typecheck: {
+            enabled: true,
+            include: ['./test/types/**/*.test-d.ts'],
+          },
+        },
+      }),
       // utils folders as *.test.ts in either test/unit or in src/**/*.test.ts
       defineProject({
         test: {
