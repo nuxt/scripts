@@ -26,8 +26,31 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
+import { getAllProxyConfigs, type ProxyConfig } from './proxy-configs'
+
+export interface FirstPartyOptions {
+  /**
+   * Path prefix for serving bundled scripts.
+   * @default '/_scripts'
+   */
+  prefix?: string
+  /**
+   * Path prefix for collection proxy endpoints.
+   * @default '/_scripts/c'
+   */
+  collectPrefix?: string
+}
 
 export interface ModuleOptions {
+  /**
+   * Route third-party scripts through your domain for improved privacy.
+   * When enabled, scripts are downloaded at build time and served from your domain.
+   * Collection endpoints (analytics, pixels) are also routed through your server,
+   * keeping user IPs private and eliminating third-party cookies.
+   *
+   * @default false
+   */
+  firstParty?: boolean | FirstPartyOptions
   /**
    * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
@@ -147,6 +170,26 @@ export default defineNuxtModule<ModuleOptions>({
       )
     }
 
+    // Handle deprecation of bundle option - migrate to firstParty
+    if (config.defaultScriptOptions?.bundle !== undefined) {
+      logger.warn(
+        '`scripts.defaultScriptOptions.bundle` is deprecated. '
+        + 'Use `scripts.firstParty: true` instead.',
+      )
+      // Migrate: treat bundle as firstParty
+      if (!config.firstParty && config.defaultScriptOptions.bundle) {
+        config.firstParty = true
+      }
+    }
+
+    // Resolve first-party configuration
+    const firstPartyEnabled = !!config.firstParty
+    const firstPartyPrefix = typeof config.firstParty === 'object' ? config.firstParty.prefix : undefined
+    const firstPartyCollectPrefix = typeof config.firstParty === 'object'
+      ? config.firstParty.collectPrefix || '/_scripts/c'
+      : '/_scripts/c'
+    const assetsPrefix = firstPartyPrefix || config.assets?.prefix || '/_scripts'
+
     const composables = [
       'useScript',
       'useScriptEventPage',
@@ -214,6 +257,47 @@ export default defineNuxtModule<ModuleOptions>({
       }
       const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
+      // Inject proxy route rules if first-party mode is enabled
+      if (firstPartyEnabled) {
+        const proxyConfigs = getAllProxyConfigs(firstPartyCollectPrefix)
+        const registryKeys = Object.keys(config.registry || {})
+
+        // Collect routes for all configured registry scripts that support proxying
+        const neededRoutes: Record<string, { proxy: string }> = {}
+        for (const key of registryKeys) {
+          // Find the registry script definition
+          const script = registryScriptsWithImport.find(s => s.import.name === `useScript${key.charAt(0).toUpperCase() + key.slice(1)}`)
+          // Use script's proxy field if defined, otherwise fall back to registry key
+          // If proxy is explicitly false, skip this script entirely
+          const proxyKey = script?.proxy !== false ? (script?.proxy || key) : undefined
+          if (proxyKey) {
+            const proxyConfig = proxyConfigs[proxyKey]
+            if (proxyConfig?.routes) {
+              Object.assign(neededRoutes, proxyConfig.routes)
+            }
+          }
+        }
+
+        // Inject route rules
+        if (Object.keys(neededRoutes).length) {
+          nuxt.options.routeRules = {
+            ...nuxt.options.routeRules,
+            ...neededRoutes,
+          }
+        }
+
+        // Warn for static presets
+        const preset = nuxt.options.nitro?.preset || process.env.NITRO_PRESET || ''
+        const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static']
+        if (staticPresets.includes(preset)) {
+          logger.warn(
+            'Proxy collection endpoints require a server runtime. '
+            + 'Scripts will be bundled but collection requests will not be proxied. '
+            + 'See https://scripts.nuxt.com/docs/guides/proxy for manual platform rewrite configuration.',
+          )
+        }
+      }
+
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
       addBuildPlugin(NuxtScriptsCheckScripts(), {
@@ -222,12 +306,14 @@ export default defineNuxtModule<ModuleOptions>({
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
-        defaultBundle: config.defaultScriptOptions?.bundle,
+        defaultBundle: firstPartyEnabled || config.defaultScriptOptions?.bundle,
+        firstPartyEnabled,
+        firstPartyCollectPrefix,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
-        assetsBaseURL: config.assets?.prefix,
+        assetsBaseURL: assetsPrefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
         fetchOptions: config.assets?.fetchOptions,
         cacheMaxAge: config.assets?.cacheMaxAge,

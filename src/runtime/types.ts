@@ -57,8 +57,17 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    * - `false` - Do not bundle the script. (default)
    *
    * Note: Using 'force' may significantly increase build time as scripts will be re-downloaded on every build.
+   *
+   * @deprecated Use `scripts.firstParty: true` in nuxt.config instead for bundling and routing scripts through your domain.
    */
   bundle?: boolean | 'force'
+  /**
+   * Opt-out of first-party routing for this specific script when global `scripts.firstParty` is enabled.
+   * Set to `false` to load this script directly from its original source instead of through your domain.
+   *
+   * Note: This option only works as an opt-out. To enable first-party routing, use the global `scripts.firstParty` option in nuxt.config.
+   */
+  firstParty?: false
   /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
@@ -210,6 +219,17 @@ export type RegistryScriptInput<
 export interface RegistryScript {
   import?: Import // might just be a component
   scriptBundling?: false | ((options?: any) => string | false)
+  /**
+   * First-party routing configuration for this script.
+   * - `string` - The proxy config key to use (e.g., 'googleAnalytics', 'metaPixel')
+   * - `false` - Explicitly disable first-party routing for this script
+   * - `undefined` - Use the default key derived from the function name
+   *
+   * When set to a string, the script's URLs will be rewritten and collection
+   * endpoints will be routed through your server when `scripts.firstParty` is enabled.
+   * @internal
+   */
+  proxy?: string | false
   label?: string
   src?: string | false
   category?: string

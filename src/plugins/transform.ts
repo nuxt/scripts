@@ -15,6 +15,7 @@ import type { FetchOptions } from 'ofetch'
 import { $fetch } from 'ofetch'
 import { logger } from '../logger'
 import { bundleStorage } from '../assets'
+import { getProxyConfig, rewriteScriptUrls, type ProxyRewrite } from '../proxy-configs'
 import { isJS, isVue } from './util'
 import type { RegistryScript } from '#nuxt-scripts/types'
 
@@ -39,6 +40,14 @@ export interface AssetBundlerTransformerOptions {
    * Used to provide default options to script bundling functions when no arguments are provided
    */
   registryConfig?: Record<string, any>
+  /**
+   * Whether first-party mode is enabled
+   */
+  firstPartyEnabled?: boolean
+  /**
+   * Path prefix for collection proxy endpoints
+   */
+  firstPartyCollectPrefix?: string
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
@@ -74,8 +83,9 @@ async function downloadScript(opts: {
   url: string
   filename?: string
   forceDownload?: boolean
+  proxyRewrites?: ProxyRewrite[]
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload } = opts
+  const { src, url, filename, forceDownload, proxyRewrites } = opts
   if (src === url || !filename) {
     return
   }
@@ -84,7 +94,8 @@ async function downloadScript(opts: {
   let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
   if (!res) {
     // Use storage to cache the font data between builds
-    const cacheKey = `bundle:${filename}`
+    // Include proxy in cache key to differentiate proxied vs non-proxied versions
+    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename}` : `bundle:${filename}`
     const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
     if (shouldUseCache) {
@@ -111,7 +122,15 @@ async function downloadScript(opts: {
       return Buffer.from(r._data || await r.arrayBuffer())
     })
 
-    await storage.setItemRaw(`bundle:${filename}`, res)
+    // Apply URL rewrites for proxy mode
+    if (proxyRewrites?.length && res) {
+      const content = res.toString('utf-8')
+      const rewritten = rewriteScriptUrls(content, proxyRewrites)
+      res = Buffer.from(rewritten, 'utf-8')
+      logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
+    }
+
+    await storage.setItemRaw(cacheKey, res)
     // Save metadata with timestamp for cache expiration
     await storage.setItem(`bundle-meta:${filename}`, {
       timestamp: Date.now(),
@@ -195,6 +214,12 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               const node = _node as SimpleCallExpression
               let scriptSrcNode: Literal & { start: number, end: number } | undefined
               let src: false | string | undefined
+              // Compute registryKey for proxy config lookup
+              let registryKey: string | undefined
+              if (fnName !== 'useScript') {
+                const baseName = fnName.replace(/^useScript/, '')
+                registryKey = baseName.length > 0 ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : undefined
+              }
               if (fnName === 'useScript') {
                 // do easy case first where first argument is a literal
                 if (node.arguments[0]?.type === 'Literal') {
@@ -219,12 +244,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   return
 
                 // integration case
-                // Get registry key from function name (e.g., useScriptGoogleTagManager -> googleTagManager)
-                const baseName = fnName.replace(/^useScript/, '')
-                const registryKey = baseName.length > 0 ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : ''
-
                 // Get registry config for this script
-                const registryConfig = options.registryConfig?.[registryKey] || {}
+                const registryConfig = options.registryConfig?.[registryKey || ''] || {}
 
                 const fnArg0 = {}
 
@@ -331,11 +352,24 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
                     forceDownload = bundleValue === 'force'
                   }
+                  // Check for per-script first-party opt-out (firstParty: false)
+                  // @ts-expect-error untyped
+                  const firstPartyOption = scriptOptions?.value.properties?.find((prop) => {
+                    return prop.type === 'Property' && prop.key?.name === 'firstParty' && prop.value.type === 'Literal'
+                  })
+                  const firstPartyOptOut = firstPartyOption?.value.value === false
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url
+                    // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
+                    // Use script's proxy field if defined, otherwise fall back to registry key
+                    const script = options.scripts.find(s => s.import.name === fnName)
+                    const proxyConfigKey = script?.proxy !== false ? (script?.proxy || registryKey) : undefined
+                    const proxyRewrites = options.firstPartyEnabled && !firstPartyOptOut && proxyConfigKey && options.firstPartyCollectPrefix
+                      ? getProxyConfig(proxyConfigKey, options.firstPartyCollectPrefix)?.rewrite
+                      : undefined
                     try {
-                      await downloadScript({ src, url, filename, forceDownload }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                      await downloadScript({ src, url, filename, forceDownload, proxyRewrites }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                     }
                     catch (e: any) {
                       if (options.fallbackOnSrcOnBundleFail) {
