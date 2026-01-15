@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PostHog } from 'posthog-js'
-import { watch, onMounted, ref } from 'vue'
+import { ref, watch, onMounted, useScriptPostHog } from '#imports'
 
 // eslint-disable-next-line no-console
 console.log('[PostHog Test] Component initializing...')

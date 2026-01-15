@@ -98,7 +98,9 @@ export function createNpmScriptStub<T = any>(
   if (options.trigger) {
     if (typeof options.trigger === 'function') {
       // Custom trigger function (e.g., onNuxtReady)
-      Promise.resolve(options.trigger()).then(() => stub.load())
+      const res = (options.trigger as any)(() => stub.load())
+      if (res && typeof res === 'object' && 'then' in res)
+        res.then(() => stub.load())
     }
     else if (options.trigger === 'manual') {
       // Manual trigger - do nothing, user calls load()
