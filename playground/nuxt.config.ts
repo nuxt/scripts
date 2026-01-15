@@ -13,6 +13,16 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      scripts: {
+        googleSignIn: {
+          clientId: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_SIGN_IN_CLIENT_ID
+        },
+      },
+    },
+  },
+
   nitro: {
     prerender: {
       failOnError: false,
@@ -35,5 +45,8 @@ export default defineNuxtConfig({
 
   scripts: {
     debug: true,
+    registry: {
+      googleSignIn: true,
+    },
   },
 })

@@ -137,6 +137,14 @@ export default defineNuxtConfig({
     zeroRuntime: true,
   },
 
+  scripts: {
+    registry: {
+      googleSignIn: {
+        clientId: '1035629894173-c0rpj3bqmcgsi8r8r08hh0kej3cpmikv.apps.googleusercontent.com',
+      },
+    },
+  },
+
   seo: {
     meta: {
       googleSiteVerification: 'y3acjlg66w6e8QRmX-asCZv9EBpyLHdrhIKzdXJvqDg',

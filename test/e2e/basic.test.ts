@@ -252,4 +252,31 @@ describe('third-party-capital', () => {
     // eslint-disable-next-line no-console
     console.log('Feature flag payload:', featureFlagPayload)
   })
+
+  it.todo('expect Google Sign-In to load and render button - requires network access to Google', async () => {
+    const { page } = await createPage('/tpc/google-sign-in')
+
+    // wait for client hydration
+    await page.waitForSelector('#status', { timeout: 5000 })
+
+    // wait for script to load (Google's script can be slow)
+    await page.waitForFunction(() => {
+      const status = document.querySelector('#status')?.textContent?.trim()
+      return status === 'loaded'
+    }, { timeout: 20000 })
+
+    // verify button was rendered
+    await page.waitForSelector('#button-rendered', { timeout: 5000 })
+    const buttonRendered = await page.$eval('#button-rendered', el => el.textContent?.trim())
+    expect(buttonRendered).toBe('true')
+
+    // verify window.google.accounts.id is available
+    const hasGoogleApi = await page.evaluate(() => {
+      return typeof window.google !== 'undefined'
+        && typeof window.google.accounts !== 'undefined'
+        && typeof window.google.accounts.id !== 'undefined'
+        && typeof window.google.accounts.id.initialize === 'function'
+    })
+    expect(hasGoogleApi).toBe(true)
+  })
 })
