@@ -18,6 +18,9 @@
     "url": "https://github.com/nuxt/scripts/issues"
   },
   "sideEffects": false,
+  "bin": {
+    "nuxt-scripts": "./dist/cli.mjs"
+  },
   "exports": {
     ".": {
       "types": "./dist/types.d.mts",
@@ -107,6 +110,7 @@
   },
   "dependencies": {
     "@nuxt/kit": "^4.2.2",
+    "citty": "^0.1.6",
     "@vueuse/core": "^14.1.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",

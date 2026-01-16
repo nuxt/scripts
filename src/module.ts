@@ -3,6 +3,7 @@ import {
   addComponentsDir,
   addImports,
   addPluginTemplate,
+  addServerHandler,
   addTemplate,
   createResolver,
   defineNuxtModule,
@@ -31,12 +32,19 @@ import { getAllProxyConfigs, type ProxyConfig } from './proxy-configs'
 export interface FirstPartyOptions {
   /**
    * Path prefix for serving bundled scripts.
+   *
+   * This is where the downloaded and rewritten script files are served from.
    * @default '/_scripts'
+   * @example '/_analytics'
    */
   prefix?: string
   /**
-   * Path prefix for collection proxy endpoints.
+   * Path prefix for collection/tracking proxy endpoints.
+   *
+   * Analytics collection requests are proxied through these paths.
+   * For example, Google Analytics collection goes to `/_scripts/c/ga/g/collect`.
    * @default '/_scripts/c'
+   * @example '/_tracking'
    */
   collectPrefix?: string
 }
@@ -44,11 +52,27 @@ export interface FirstPartyOptions {
 export interface ModuleOptions {
   /**
    * Route third-party scripts through your domain for improved privacy.
+   *
    * When enabled, scripts are downloaded at build time and served from your domain.
    * Collection endpoints (analytics, pixels) are also routed through your server,
    * keeping user IPs private and eliminating third-party cookies.
    *
-   * @default false
+   * **Benefits:**
+   * - User IPs stay private (third parties see your server's IP)
+   * - No third-party cookies (requests are same-origin)
+   * - Works with ad blockers (requests appear first-party)
+   * - Faster loads (no extra DNS lookups)
+   *
+   * **Options:**
+   * - `true` - Enable for all supported scripts (default)
+   * - `false` - Disable (scripts load directly from third parties)
+   * - `{ collectPrefix: '/_analytics' }` - Enable with custom paths
+   *
+   * For static hosting, scripts are bundled but proxy endpoints require
+   * platform rewrites (see docs). A warning is shown for static presets.
+   *
+   * @default true
+   * @see https://scripts.nuxt.com/docs/guides/first-party
    */
   firstParty?: boolean | FirstPartyOptions
   /**
@@ -128,6 +152,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
+    firstParty: true,
     defaultScriptOptions: {
       trigger: 'onNuxtReady',
     },
@@ -191,6 +216,10 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Resolve first-party configuration
+    const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static']
+    const preset = nuxt.options.nitro?.preset || process.env.NITRO_PRESET || ''
+    const isStaticPreset = staticPresets.includes(preset)
+
     const firstPartyEnabled = !!config.firstParty
     const firstPartyPrefix = typeof config.firstParty === 'object' ? config.firstParty.prefix : undefined
     const firstPartyCollectPrefix = typeof config.firstParty === 'object'
@@ -292,16 +321,44 @@ export default defineNuxtModule<ModuleOptions>({
             ...nuxt.options.routeRules,
             ...neededRoutes,
           }
+
+          // Log active proxy routes in dev
+          if (nuxt.options.dev) {
+            const routeCount = Object.keys(neededRoutes).length
+            const scriptsCount = registryKeys.length
+            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured`)
+            if (logger.level >= 4) {
+              for (const [path, config] of Object.entries(neededRoutes)) {
+                logger.debug(`  ${path} → ${config.proxy}`)
+              }
+            }
+          }
         }
 
-        // Warn for static presets
-        const preset = nuxt.options.nitro?.preset || process.env.NITRO_PRESET || ''
-        const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static']
-        if (staticPresets.includes(preset)) {
+        // Expose first-party status via runtime config (for DevTools and status endpoint)
+        const flatRoutes: Record<string, string> = {}
+        for (const [path, config] of Object.entries(neededRoutes)) {
+          flatRoutes[path] = config.proxy
+        }
+        nuxt.options.runtimeConfig.public['nuxt-scripts-status'] = {
+          enabled: firstPartyEnabled,
+          scripts: registryKeys,
+          routes: flatRoutes,
+          collectPrefix: firstPartyCollectPrefix,
+        }
+
+        // Warn for static presets with actionable guidance
+        if (isStaticPreset) {
           logger.warn(
-            'Proxy collection endpoints require a server runtime. '
-            + 'Scripts will be bundled but collection requests will not be proxied. '
-            + 'See https://scripts.nuxt.com/docs/guides/proxy for manual platform rewrite configuration.',
+            `First-party collection endpoints require a server runtime (detected: ${preset || 'static'}).\n`
+            + 'Scripts will be bundled, but collection requests will not be proxied.\n'
+            + '\n'
+            + 'Options:\n'
+            + '  1. Configure platform rewrites (Vercel, Netlify, Cloudflare)\n'
+            + '  2. Switch to server-rendered mode (ssr: true)\n'
+            + '  3. Disable with firstParty: false\n'
+            + '\n'
+            + 'See: https://scripts.nuxt.com/docs/guides/first-party#static-hosting',
           )
         }
       }
@@ -336,7 +393,18 @@ export default defineNuxtModule<ModuleOptions>({
       })
     })
 
-    if (nuxt.options.dev)
+    if (nuxt.options.dev) {
       setupDevToolsUI(config, resolvePath)
+
+      // Add status and health endpoints in dev mode
+      addServerHandler({
+        route: '/_scripts/status.json',
+        handler: await resolvePath('./runtime/server/api/scripts-status'),
+      })
+      addServerHandler({
+        route: '/_scripts/health.json',
+        handler: await resolvePath('./runtime/server/api/scripts-health'),
+      })
+    }
   },
 })
