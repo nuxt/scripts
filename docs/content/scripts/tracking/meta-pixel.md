@@ -147,6 +147,38 @@ export const MetaPixelOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `connect.facebook.net`
+- Route tracking requests (`/tr`) through your server
+- Hide user IP addresses from Meta
+- Strip fingerprinting parameters (`ud`, `fbp`, `fbc`, `external_id`)
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      metaPixel: { id: '123456789' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptMetaPixel({
+  id: '123456789',
+  scriptOptions: {
+    firstParty: false // Load directly from Meta
+  }
+})
+```
+
 ## Example
 
 Using Meta Pixel only in production while using `fbq` to send a conversion event.

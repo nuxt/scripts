@@ -203,6 +203,19 @@ describe('template plugin file', () => {
     expect(res).toContain('import { useScriptTriggerIdleTimeout }')
     expect(res).toContain('import { useScriptTriggerInteraction }')
   })
+
+  // Test serviceWorker trigger in globals
+  it('global with serviceWorker trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { serviceWorker: true },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerServiceWorker }')
+    expect(res).toContain('useScriptTriggerServiceWorker()')
+  })
 })
 
 describe('resolveTriggerForTemplate', () => {
@@ -221,6 +234,11 @@ describe('resolveTriggerForTemplate', () => {
   it('should handle interaction trigger', () => {
     const result = resolveTriggerForTemplate({ interaction: ['scroll', 'click'] })
     expect(result).toBe('useScriptTriggerInteraction({ events: ["scroll","click"] })')
+  })
+
+  it('should handle serviceWorker trigger', () => {
+    const result = resolveTriggerForTemplate({ serviceWorker: true })
+    expect(result).toBe('useScriptTriggerServiceWorker()')
   })
 
   it('should return null for unknown trigger types', () => {

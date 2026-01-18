@@ -54,8 +54,13 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
         if (!scriptDescriptor || scriptDescriptor instanceof Error)
           throw createError({ statusCode: 404 })
 
+        // Use pre-rendered content which includes proxy rewrites for first-party mode
+        if (scriptDescriptor.content) {
+          return scriptDescriptor.content
+        }
+
+        // Fallback to storage cache
         const key = `bundle:${filename}`
-        // Use storage to cache the font data between requests
         let res = await storage.getItemRaw(key)
         if (!res) {
           res = await fetch(scriptDescriptor.src).then(r => r.arrayBuffer()).then(r => Buffer.from(r))
