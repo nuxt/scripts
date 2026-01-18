@@ -22,6 +22,11 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
 
+  // Partytown support: add type="text/partytown" for web worker execution
+  if (options.partytown) {
+    input = { ...input, type: 'text/partytown' }
+  }
+
   // Warn about unsupported bundling for dynamic sources (internal value set by transform)
   if (import.meta.dev && (options.bundle as any) === 'unsupported') {
     console.warn('[Nuxt Scripts] Bundling is not supported for dynamic script sources. Static URLs are required for bundling.')

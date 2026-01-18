@@ -142,6 +142,25 @@ describe('template plugin file', () => {
     expect(res).toContain('useScriptStripe([{"id":"test"},{"trigger":"onNuxtReady"}])')
   })
 
+  it('registry with partytown option', async () => {
+    const res = templatePlugin({
+      globals: {},
+      registry: {
+        googleAnalytics: [
+          { id: 'G-XXXXX' },
+          { partytown: true },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptGoogleAnalytics([{"id":"G-XXXXX"},{"partytown":true}])')
+  })
+
   // Test idleTimeout trigger in globals
   it('global with idleTimeout trigger', async () => {
     const res = templatePlugin({
