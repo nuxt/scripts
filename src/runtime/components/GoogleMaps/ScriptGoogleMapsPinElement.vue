@@ -2,7 +2,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, shallowRef } from 'vue'
+import { inject, onUnmounted, shallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './ScriptGoogleMapsAdvancedMarkerElement.vue'
@@ -42,4 +42,12 @@ whenever(
     once: true,
   },
 )
+
+onUnmounted(() => {
+  if (advancedMarkerElementContext?.advancedMarkerElement.value && pinElement.value) {
+    // Clear the content from the parent marker
+    advancedMarkerElementContext.advancedMarkerElement.value.content = null
+  }
+  pinElement.value = undefined
+})
 </script>
