@@ -153,6 +153,48 @@ describe('basic', () => {
   })
 })
 
+describe('youtube', () => {
+  it('multiple players only load clicked player', {
+    timeout: 20000,
+  }, async () => {
+    const { page } = await createPage('/youtube-multiple')
+    await page.waitForTimeout(500)
+
+    // All players should be waiting initially
+    const player1Status = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2Status = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3Status = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1Status).toBe('waiting')
+    expect(player2Status).toBe('waiting')
+    expect(player3Status).toBe('waiting')
+
+    // Click only player 2
+    await page.click('#player2')
+    await page.waitForTimeout(3000) // Wait for YouTube iframe to load
+
+    // Only player 2 should be ready, others still waiting
+    const player1StatusAfter = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2StatusAfter = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3StatusAfter = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusAfter).toBe('waiting')
+    expect(player2StatusAfter).toBe('ready')
+    expect(player3StatusAfter).toBe('waiting')
+
+    // Now click player 1
+    await page.click('#player1')
+    await page.waitForTimeout(3000)
+
+    // Player 1 and 2 should be ready, player 3 still waiting
+    const player1StatusFinal = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player3StatusFinal = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusFinal).toBe('ready')
+    expect(player3StatusFinal).toBe('waiting')
+  })
+})
+
 describe('third-party-capital', () => {
   it('expect GA to collect data', {
     timeout: 10000,

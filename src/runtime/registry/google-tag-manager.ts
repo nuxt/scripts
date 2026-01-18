@@ -125,7 +125,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
     onBeforeGtmStart?: (gtag: DataLayerPush) => void
   },
 ): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
-  return useRegistryScript<T, typeof GoogleTagManagerOptions>(
+  const instance = useRegistryScript<T, typeof GoogleTagManagerOptions>(
     options?.key || 'googleTagManager',
     (opts) => {
       const dataLayerName = opts?.l ?? opts?.dataLayer ?? 'dataLayer'
@@ -183,4 +183,17 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
     },
     options,
   )
+
+  // Handle callback for cached/pre-initialized scripts (e.g., when ID is in nuxt.config)
+  // If script was already initialized by the plugin, clientInit already ran without this callback
+  if (import.meta.client && options?.onBeforeGtmStart) {
+    const dataLayerName = options?.l ?? options?.dataLayer ?? 'dataLayer'
+    const gtag = (window as any).gtag
+    // If gtag exists, script was already initialized - invoke callback immediately
+    if (gtag) {
+      options.onBeforeGtmStart(gtag)
+    }
+  }
+
+  return instance
 }
