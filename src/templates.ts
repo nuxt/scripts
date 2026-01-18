@@ -58,6 +58,7 @@ export {}`
 export function templateTriggerResolver(defaultScriptOptions?: ModuleOptions['defaultScriptOptions']) {
   const needsIdleTimeout = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'idleTimeout' in defaultScriptOptions.trigger
   const needsInteraction = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'interaction' in defaultScriptOptions.trigger
+  const needsServiceWorker = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'serviceWorker' in defaultScriptOptions.trigger
 
   const imports = []
   if (needsIdleTimeout) {
@@ -66,12 +67,16 @@ export function templateTriggerResolver(defaultScriptOptions?: ModuleOptions['de
   if (needsInteraction) {
     imports.push(`import { useScriptTriggerInteraction } from '#nuxt-scripts/composables/useScriptTriggerInteraction'`)
   }
+  if (needsServiceWorker) {
+    imports.push(`import { useScriptTriggerServiceWorker } from '#nuxt-scripts/composables/useScriptTriggerServiceWorker'`)
+  }
 
   return [
     ...imports,
     `export function resolveTrigger(trigger) {`,
     needsIdleTimeout ? `  if ('idleTimeout' in trigger) return useScriptTriggerIdleTimeout({ timeout: trigger.idleTimeout })` : '',
     needsInteraction ? `  if ('interaction' in trigger) return useScriptTriggerInteraction({ events: trigger.interaction })` : '',
+    needsServiceWorker ? `  if ('serviceWorker' in trigger) return useScriptTriggerServiceWorker()` : '',
     `  return null`,
     `}`,
   ].filter(Boolean).join('\n')
@@ -89,6 +94,9 @@ export function resolveTriggerForTemplate(trigger: any): string | null {
     if ('interaction' in trigger) {
       return `useScriptTriggerInteraction({ events: ${JSON.stringify(trigger.interaction)} })`
     }
+    if ('serviceWorker' in trigger) {
+      return `useScriptTriggerServiceWorker()`
+    }
   }
   return null
 }
@@ -103,6 +111,8 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   const inits = []
   let needsIdleTimeoutImport = false
   let needsInteractionImport = false
+
+  let needsServiceWorkerImport = false
 
   // for global scripts, we can initialise them script away
   for (const [k, c] of Object.entries(config.registry || {})) {
@@ -124,6 +134,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
           }
           if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
           if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
+          if (triggerResolved.includes('useScriptTriggerServiceWorker')) needsServiceWorkerImport = true
         }
       }
       inits.push(`const ${k} = ${importDefinition.import.name}(${JSON.stringify(args).replace(/"__TRIGGER_(.*?)__"/g, '$1')})`)
@@ -139,6 +150,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       if (triggerResolved) {
         if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
         if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
+        if (triggerResolved.includes('useScriptTriggerServiceWorker')) needsServiceWorkerImport = true
         const resolvedOptions = { ...options, trigger: `__TRIGGER_${triggerResolved}__` } as any
         inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${JSON.stringify(resolvedOptions).replace(/"__TRIGGER_(.*?)__"/g, '$1')}, use: () => ({ ${k}: window.${k} }) })`)
       }
@@ -151,6 +163,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       if (triggerResolved) {
         if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
         if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
+        if (triggerResolved.includes('useScriptTriggerServiceWorker')) needsServiceWorkerImport = true
         const resolvedOptions = { ...c, trigger: `__TRIGGER_${triggerResolved}__` } as any
         inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...resolvedOptions }).replace(/"__TRIGGER_(.*?)__"/g, '$1')}, { use: () => ({ ${k}: window.${k} }) })`)
       }
@@ -166,6 +179,9 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   }
   if (needsInteractionImport) {
     triggerImports.push(`import { useScriptTriggerInteraction } from '#nuxt-scripts/composables/useScriptTriggerInteraction'`)
+  }
+  if (needsServiceWorkerImport) {
+    triggerImports.push(`import { useScriptTriggerServiceWorker } from '#nuxt-scripts/composables/useScriptTriggerServiceWorker'`)
   }
 
   return [

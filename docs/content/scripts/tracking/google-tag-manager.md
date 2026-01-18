@@ -227,6 +227,38 @@ function sendConversion() {
 
 ::
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `www.googletagmanager.com`
+- Route all GTM requests through your server
+- Hide user IP addresses from Google
+- Strip fingerprinting parameters
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      googleTagManager: { id: 'GTM-XXXXXX' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptGoogleTagManager({
+  id: 'GTM-XXXXXX',
+  scriptOptions: {
+    firstParty: false // Load directly from Google
+  }
+})
+```
+
 ## Configuring GTM before it starts
 
 `useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.

@@ -116,6 +116,38 @@ export const RedditPixelOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `alb.reddit.com`
+- Route tracking requests through your server
+- Hide user IP addresses from Reddit
+- Strip fingerprinting parameters
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      redditPixel: { id: 'YOUR_ID' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptRedditPixel({
+  id: 'YOUR_ID',
+  scriptOptions: {
+    firstParty: false // Load directly from Reddit
+  }
+})
+```
+
 ## Example
 
 Using Reddit Pixel only in production while using `rdt` to send a tracking event.

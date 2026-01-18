@@ -1,0 +1,24 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {
+        "cx": "c",
+        "gtm": "4e61e1",
+        "id": "G-TR58L0EF8P",
+      },
+    },
+    "path": "/_proxy/gtm/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=4e61e1",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {
+        "cx": "c",
+        "gtm": "4e61e1",
+        "id": "G-TR58L0EF8P",
+      },
+    },
+    "targetUrl": "https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=4e61e1",
+  },
+]

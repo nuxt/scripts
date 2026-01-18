@@ -137,6 +137,38 @@ export const XPixelOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `analytics.twitter.com`
+- Route tracking requests (`t.co`) through your server
+- Hide user IP addresses from X/Twitter
+- Strip fingerprinting parameters (`dv`, `bci`, `eci`, `pl_id`, `p_user_id`)
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      xPixel: { id: 'YOUR_ID' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptXPixel({
+  id: 'YOUR_ID',
+  scriptOptions: {
+    firstParty: false // Load directly from X/Twitter
+  }
+})
+```
+
 ## Example
 
 Using X Pixel only in production while using `twq` to send a conversion event.

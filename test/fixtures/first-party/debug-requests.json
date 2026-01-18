@@ -1,0 +1,51 @@
+{
+  "allRequests": [
+    "http://127.0.0.1:39745/ga",
+    "http://127.0.0.1:39745/_scripts/fIIw52GBoJRk8J1Miee3C4IN8ibDJAkHphE6slvPl94.js?id=G-TR58L0EF8P",
+    "http://127.0.0.1:39745/_scripts/pdv-Fkm4qIrOid8YyM2IGu4aAORhFag84_ZRgSAl1EA.js?id=GTM-MWW974PF",
+    "http://127.0.0.1:39745/_scripts/iUZUAPOLBiK63YxNbAqyPPRo-t90FhxmmXFsSWZlZYg.js",
+    "http://127.0.0.1:39745/_scripts/-WYkXcASm-jFZWXdrYKDxkZnIN8V1WU58M-LZwArz4E.js",
+    "http://127.0.0.1:39745/_scripts/CDla3HSHwVgNlNGQYQTK03iTSw89bkOdsKkw8hNk-mE.js?sv=6",
+    "http://127.0.0.1:39745/_proxy/segment-cdn/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings",
+    "http://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=4e61e1"
+  ],
+  "proxyRequests": [
+    "http://127.0.0.1:39745/_proxy/segment-cdn/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings"
+  ],
+  "gaRequests": [
+    "http://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=4e61e1"
+  ],
+  "consoleLogs": [
+    "error: Failed to load resource: the server responded with a status of 404 (Server Error)",
+    "error: Refused to execute script from 'http://127.0.0.1:39745/_scripts/-WYkXcASm-jFZWXdrYKDxkZnIN8V1WU58M-LZwArz4E.js' because its MIME type ('application/json') is not executable, and strict MIME type checking is enabled.",
+    "warning: Hotjar not launching due to suspicious userAgent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+    "error: Failed to load resource: net::ERR_FAILED",
+    "error: Failed to load resource: net::ERR_FAILED",
+    "error: Failed to load resource: net::ERR_FAILED"
+  ],
+  "captureCount": 1,
+  "captures": [
+    {
+      "path": "/_proxy/gtm/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=4e61e1",
+      "targetUrl": "https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=4e61e1",
+      "method": "GET",
+      "privacy": "anonymize",
+      "original": {
+        "query": {
+          "id": "G-TR58L0EF8P",
+          "cx": "c",
+          "gtm": "4e61e1"
+        },
+        "body": null
+      },
+      "stripped": {
+        "query": {
+          "id": "G-TR58L0EF8P",
+          "cx": "c",
+          "gtm": "4e61e1"
+        },
+        "body": null
+      }
+    }
+  ]
+}

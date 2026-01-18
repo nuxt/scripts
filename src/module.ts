@@ -27,7 +27,20 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
-import { getAllProxyConfigs, type ProxyConfig } from './proxy-configs'
+import { getAllProxyConfigs, getSWInterceptRules, type ProxyConfig } from './proxy-configs'
+
+/**
+ * Privacy mode for first-party proxy requests.
+ *
+ * - `'strict'` - Maximum privacy: strips all identifying headers (IP, User-Agent, language).
+ *   Third parties see only your server's IP with a generic User-Agent.
+ *
+ * - `'anonymize'` - Balanced: preserves useful analytics (browser family, country-level geo, page context)
+ *   while preventing fingerprinting. Truncates IP for country-level geo only.
+ *
+ * - `false` - No header modification: forwards all headers as-is (not recommended).
+ */
+export type FirstPartyPrivacy = 'strict' | 'anonymize' | false
 
 export interface FirstPartyOptions {
   /**
@@ -47,6 +60,18 @@ export interface FirstPartyOptions {
    * @example '/_tracking'
    */
   collectPrefix?: string
+  /**
+   * Privacy level for proxied requests.
+   *
+   * Controls what user information is forwarded to third-party analytics services.
+   *
+   * - `'strict'` - Maximum privacy: strips all identifying headers
+   * - `'anonymize'` - Preserves useful analytics while preventing fingerprinting (default)
+   * - `false` - No header modification (forwards everything, not recommended)
+   *
+   * @default 'anonymize'
+   */
+  privacy?: FirstPartyPrivacy
 }
 
 export interface ModuleOptions {
@@ -223,8 +248,11 @@ export default defineNuxtModule<ModuleOptions>({
     const firstPartyEnabled = !!config.firstParty
     const firstPartyPrefix = typeof config.firstParty === 'object' ? config.firstParty.prefix : undefined
     const firstPartyCollectPrefix = typeof config.firstParty === 'object'
-      ? config.firstParty.collectPrefix || '/_scripts/c'
-      : '/_scripts/c'
+      ? config.firstParty.collectPrefix || '/_proxy'
+      : '/_proxy'
+    const firstPartyPrivacy = typeof config.firstParty === 'object'
+      ? config.firstParty.privacy ?? 'anonymize'
+      : 'anonymize'
     const assetsPrefix = firstPartyPrefix || config.assets?.prefix || '/_scripts'
 
     const composables = [
@@ -234,6 +262,7 @@ export default defineNuxtModule<ModuleOptions>({
       'useScriptTriggerElement',
       'useScriptTriggerIdleTimeout',
       'useScriptTriggerInteraction',
+      'useScriptTriggerServiceWorker',
     ]
     for (const composable of composables) {
       addImports({
@@ -255,6 +284,123 @@ export default defineNuxtModule<ModuleOptions>({
         return templateTriggerResolver(config.defaultScriptOptions)
       },
     })
+
+    // Pre-resolve paths needed for hooks
+    const swHandlerPath = await resolvePath('./runtime/server/sw-handler')
+
+    console.log('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
+
+    // Setup Service Worker for first-party mode (must be before modules:done)
+    if (firstPartyEnabled) {
+      // Use root path to avoid conflict with /_scripts/** wildcard route
+      const swPath = '/_nuxt-scripts-sw.js'
+      const swRules = getSWInterceptRules(firstPartyCollectPrefix)
+
+      // Serve SW from the scripts prefix
+      addServerHandler({
+        route: swPath,
+        handler: swHandlerPath,
+      })
+
+      // Register the SW registration plugin
+      addPluginTemplate({
+        filename: 'nuxt-scripts-sw-register.client.mjs',
+        getContents() {
+          return `import { defineNuxtPlugin } from 'nuxt/app'
+
+export default defineNuxtPlugin({
+  name: 'nuxt-scripts:sw-register',
+  enforce: 'pre',
+  async setup() {
+    if (!('serviceWorker' in navigator)) return;
+
+    try {
+      const reg = await navigator.serviceWorker.register('${swPath}', { scope: '/' });
+
+      // Wait for SW to be active and controlling this page
+      if (!navigator.serviceWorker.controller) {
+        await new Promise((resolve) => {
+          const onControllerChange = () => {
+            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+            resolve();
+          };
+          navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+          // Fallback timeout
+          setTimeout(resolve, 2000);
+        });
+      }
+    } catch (err) {
+      console.warn('[nuxt-scripts] SW registration failed:', err);
+    }
+  },
+})
+`
+        },
+      })
+
+      // Register beacon intercept plugin - patches navigator.sendBeacon to route through proxy
+      // This is critical because sendBeacon bypasses Service Workers
+      addPluginTemplate({
+        filename: 'nuxt-scripts-beacon-intercept.client.mjs',
+        getContents() {
+          const rulesJson = JSON.stringify(swRules)
+          return `export default defineNuxtPlugin({
+  name: 'nuxt-scripts:beacon-intercept',
+  enforce: 'pre',
+  setup() {
+    if (typeof navigator === 'undefined' || !navigator.sendBeacon) return;
+
+    const rules = ${rulesJson};
+    const originalBeacon = navigator.sendBeacon.bind(navigator);
+
+    navigator.sendBeacon = (url, data) => {
+      try {
+        const parsed = new URL(url, window.location.origin);
+
+        // Check if this URL matches any of our proxy rules
+        for (const rule of rules) {
+          if (parsed.hostname === rule.pattern || parsed.hostname.endsWith('.' + rule.pattern)) {
+            // Check path prefix if specified
+            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix)) {
+              continue;
+            }
+
+            // Rewrite to proxy: strip pathPrefix from original, prepend target
+            const pathWithoutPrefix = rule.pathPrefix
+              ? parsed.pathname.slice(rule.pathPrefix.length)
+              : parsed.pathname;
+            const proxyUrl = rule.target + pathWithoutPrefix + parsed.search;
+
+            return originalBeacon(proxyUrl, data);
+          }
+        }
+      } catch (e) {
+        // URL parsing failed, pass through
+      }
+
+      return originalBeacon(url, data);
+    };
+  },
+})
+`
+        },
+      })
+
+      // Store SW path in runtime config for the trigger composable
+      nuxt.options.runtimeConfig.public['nuxt-scripts-sw'] = { path: swPath }
+
+      // Register proxy handler (must be before modules:done like SW handler)
+      // Only needed when privacy mode is enabled (otherwise use Nitro route rules)
+      if (firstPartyPrivacy !== false) {
+        const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
+        console.log('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
+        addServerHandler({
+          route: `${firstPartyCollectPrefix}/**`,
+          handler: proxyHandlerPath,
+        })
+      }
+    }
 
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
@@ -301,6 +447,7 @@ export default defineNuxtModule<ModuleOptions>({
 
         // Collect routes for all configured registry scripts that support proxying
         const neededRoutes: Record<string, { proxy: string }> = {}
+        const unsupportedScripts: string[] = []
         for (const key of registryKeys) {
           // Find the registry script definition
           const script = registryScriptsWithImport.find(s => s.import.name === `useScript${key.charAt(0).toUpperCase() + key.slice(1)}`)
@@ -312,27 +459,19 @@ export default defineNuxtModule<ModuleOptions>({
             if (proxyConfig?.routes) {
               Object.assign(neededRoutes, proxyConfig.routes)
             }
+            else {
+              // Track scripts without proxy support
+              unsupportedScripts.push(key)
+            }
           }
         }
 
-        // Inject route rules
-        if (Object.keys(neededRoutes).length) {
-          nuxt.options.routeRules = {
-            ...nuxt.options.routeRules,
-            ...neededRoutes,
-          }
-
-          // Log active proxy routes in dev
-          if (nuxt.options.dev) {
-            const routeCount = Object.keys(neededRoutes).length
-            const scriptsCount = registryKeys.length
-            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured`)
-            if (logger.level >= 4) {
-              for (const [path, config] of Object.entries(neededRoutes)) {
-                logger.debug(`  ${path} → ${config.proxy}`)
-              }
-            }
-          }
+        // Warn about scripts that don't support first-party mode
+        if (unsupportedScripts.length && nuxt.options.dev) {
+          logger.warn(
+            `First-party mode is enabled but these scripts don't support it yet: ${unsupportedScripts.join(', ')}.\n`
+            + 'They will load directly from third-party servers. Request support at https://github.com/nuxt/scripts/issues',
+          )
         }
 
         // Expose first-party status via runtime config (for DevTools and status endpoint)
@@ -340,11 +479,56 @@ export default defineNuxtModule<ModuleOptions>({
         for (const [path, config] of Object.entries(neededRoutes)) {
           flatRoutes[path] = config.proxy
         }
+
+        // Collect rewrites for all configured registry scripts
+        const allRewrites: Array<{ from: string, to: string }> = []
+        for (const key of registryKeys) {
+          const script = registryScriptsWithImport.find(s => s.import.name === `useScript${key.charAt(0).toUpperCase() + key.slice(1)}`)
+          const proxyKey = script?.proxy !== false ? (script?.proxy || key) : undefined
+          if (proxyKey) {
+            const proxyConfig = proxyConfigs[proxyKey]
+            if (proxyConfig?.rewrite) {
+              allRewrites.push(...proxyConfig.rewrite)
+            }
+          }
+        }
+
         nuxt.options.runtimeConfig.public['nuxt-scripts-status'] = {
           enabled: firstPartyEnabled,
           scripts: registryKeys,
           routes: flatRoutes,
           collectPrefix: firstPartyCollectPrefix,
+        }
+        // Server-side config for proxy privacy handling
+        nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
+          routes: flatRoutes,
+          privacy: firstPartyPrivacy,
+          rewrites: allRewrites,
+        }
+
+        // Inject route handling (handler already registered outside modules:done)
+        if (Object.keys(neededRoutes).length) {
+          if (firstPartyPrivacy === false) {
+            // No privacy mode: use simple Nitro route rules (forwards all headers)
+            nuxt.options.routeRules = {
+              ...nuxt.options.routeRules,
+              ...neededRoutes,
+            }
+          }
+          // Privacy mode: handler was already registered before modules:done
+
+          // Log active proxy routes in dev
+          if (nuxt.options.dev) {
+            const routeCount = Object.keys(neededRoutes).length
+            const scriptsCount = registryKeys.length
+            const privacyMode = firstPartyPrivacy === false ? 'disabled' : firstPartyPrivacy
+            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${privacyMode})`)
+            if (logger.level >= 4) {
+              for (const [path, config] of Object.entries(neededRoutes)) {
+                logger.debug(`  ${path} → ${config.proxy}`)
+              }
+            }
+          }
         }
 
         // Warn for static presets with actionable guidance

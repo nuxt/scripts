@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs, getProxyConfig, rewriteScriptUrls } from '../../src/proxy-configs'
+import { getAllProxyConfigs, getProxyConfig, getSWInterceptRules, rewriteScriptUrls } from '../../src/proxy-configs'
 
 describe('proxy configs', () => {
   describe('rewriteScriptUrls', () => {
@@ -92,10 +92,10 @@ describe('proxy configs', () => {
         from: 'www.google.com/g/collect',
         to: '/_scripts/c/ga/g/collect',
       })
-      // Legacy endpoint
+      // Legacy endpoint (also goes to /ga, unified route)
       expect(config?.rewrite).toContainEqual({
         from: 'www.google-analytics.com',
-        to: '/_scripts/c/ga-legacy',
+        to: '/_scripts/c/ga',
       })
     })
 
@@ -129,13 +129,12 @@ describe('proxy configs', () => {
         from: 'www.google.com/g/collect',
         to: '/_custom/proxy/ga/g/collect',
       })
-      // Legacy endpoint with custom prefix
+      // Legacy endpoint also rewrites to /ga (unified route)
       expect(config?.rewrite).toContainEqual({
         from: 'www.google-analytics.com',
-        to: '/_custom/proxy/ga-legacy',
+        to: '/_custom/proxy/ga',
       })
       expect(config?.routes).toHaveProperty('/_custom/proxy/ga/**')
-      expect(config?.routes).toHaveProperty('/_custom/proxy/ga-legacy/**')
     })
   })
 
@@ -165,12 +164,9 @@ describe('proxy configs', () => {
   describe('route rules structure', () => {
     it('googleAnalytics routes proxy to correct target', () => {
       const config = getProxyConfig('googleAnalytics', '/_scripts/c')
-      // Modern GA4 endpoint
+      // GA collect endpoint - routes to google-analytics.com which accepts both
+      // modern (www.google.com/g/collect) and legacy formats
       expect(config?.routes?.['/_scripts/c/ga/**']).toEqual({
-        proxy: 'https://www.google.com/**',
-      })
-      // Legacy endpoint
-      expect(config?.routes?.['/_scripts/c/ga-legacy/**']).toEqual({
         proxy: 'https://www.google-analytics.com/**',
       })
     })
@@ -187,6 +183,53 @@ describe('proxy configs', () => {
       expect(config?.routes?.['/_scripts/c/meta/**']).toEqual({
         proxy: 'https://connect.facebook.net/**',
       })
+    })
+  })
+
+  describe('getSWInterceptRules', () => {
+    it('extracts rules from all proxy configs', () => {
+      const rules = getSWInterceptRules('/_proxy')
+      expect(rules.length).toBeGreaterThan(0)
+      // All rules should have pattern, pathPrefix, and target
+      for (const rule of rules) {
+        expect(rule).toHaveProperty('pattern')
+        expect(rule).toHaveProperty('pathPrefix')
+        expect(rule).toHaveProperty('target')
+        expect(typeof rule.pattern).toBe('string')
+        expect(typeof rule.pathPrefix).toBe('string')
+        expect(typeof rule.target).toBe('string')
+      }
+    })
+
+    it('includes GA rule with empty pathPrefix', () => {
+      const rules = getSWInterceptRules('/_proxy')
+      const gaRule = rules.find(r => r.pattern === 'www.google-analytics.com')
+      expect(gaRule).toBeDefined()
+      expect(gaRule?.pathPrefix).toBe('')
+      expect(gaRule?.target).toBe('/_proxy/ga')
+    })
+
+    it('includes Meta tracking rule with /tr pathPrefix', () => {
+      const rules = getSWInterceptRules('/_proxy')
+      // Meta-tr route: https://www.facebook.com/tr/**
+      const metaTrRule = rules.find(r => r.pattern === 'www.facebook.com')
+      expect(metaTrRule).toBeDefined()
+      expect(metaTrRule?.pathPrefix).toBe('/tr')
+      expect(metaTrRule?.target).toBe('/_proxy/meta-tr')
+    })
+
+    it('includes Meta script rule with empty pathPrefix', () => {
+      const rules = getSWInterceptRules('/_proxy')
+      const metaRule = rules.find(r => r.pattern === 'connect.facebook.net')
+      expect(metaRule).toBeDefined()
+      expect(metaRule?.pathPrefix).toBe('')
+      expect(metaRule?.target).toBe('/_proxy/meta')
+    })
+
+    it('uses custom collectPrefix', () => {
+      const rules = getSWInterceptRules('/_custom')
+      const gaRule = rules.find(r => r.pattern === 'www.google-analytics.com')
+      expect(gaRule?.target).toBe('/_custom/ga')
     })
   })
 })

@@ -1,0 +1,40 @@
+<script lang="ts" setup>
+import { useHead, useScriptSegment } from '#imports'
+
+useHead({
+  title: 'Segment - First Party',
+})
+
+const { proxy, status } = useScriptSegment({
+  writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C',
+})
+
+function trackPage() {
+  proxy.analytics.page('Test Page')
+}
+
+function trackEvent() {
+  proxy.analytics.track('Button Clicked', {
+    button_name: 'test_button',
+  })
+}
+</script>
+
+<template>
+  <div>
+    <h1>Segment First-Party Test</h1>
+    <ClientOnly>
+      <div id="status">
+        status: {{ status }}
+      </div>
+    </ClientOnly>
+    <div style="margin-top: 20px;">
+      <button id="trigger-page" @click="trackPage">
+        Track Page
+      </button>
+      <button id="trigger-event" @click="trackEvent">
+        Track Event
+      </button>
+    </div>
+  </div>
+</template>

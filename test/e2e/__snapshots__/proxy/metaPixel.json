@@ -1,0 +1,16 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {},
+    },
+    "path": "/_proxy/metaen_US/fbevents.js",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {},
+    },
+    "targetUrl": "https://connect.facebook.net/en_US/fbevents.js",
+  },
+]

@@ -390,7 +390,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     let url = _url
                     // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
                     // Use script's proxy field if defined, otherwise fall back to registry key
-                    const script = options.scripts.find(s => s.import.name === fnName)
+                    const script = options.scripts?.find(s => s.import.name === fnName)
                     const proxyConfigKey = script?.proxy !== false ? (script?.proxy || registryKey) : undefined
                     const proxyRewrites = options.firstPartyEnabled && !firstPartyOptOut && proxyConfigKey && options.firstPartyCollectPrefix
                       ? getProxyConfig(proxyConfigKey, options.firstPartyCollectPrefix)?.rewrite

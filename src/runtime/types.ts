@@ -104,7 +104,7 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
   _validate?: () => ValiError<any> | null | undefined
 }
 
-export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' | { idleTimeout: number } | { interaction: string[] } }
+export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' | { idleTimeout: number } | { interaction: string[] } | { serviceWorker: true } }
 
 export type NuxtUseScriptInput = UseScriptInput
 
