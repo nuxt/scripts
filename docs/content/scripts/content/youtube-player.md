@@ -82,6 +82,7 @@ The `ScriptYouTubePlayer` component accepts the following props:
 - `trigger`: The trigger event to load the YouTube Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
 - `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
 - `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
+- `placeholderObjectFit`: The `object-fit` CSS property for the placeholder image. Default is `cover`. Useful for non-16:9 videos like YouTube Shorts.
 
 All script options from the [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference) are supported on the `playerVars` prop, please consult the [Supported paramters](https://developers.google.com/youtube/player_parameters#Parameters) for full documentation.
 
@@ -92,6 +93,7 @@ export interface YouTubeProps {
   playerVars?: YT.PlayerVars
   width?: number
   height?: number
+  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 }
 ```
 
@@ -155,6 +157,7 @@ const emits = defineEmits<{
   'playback-quality-change': [e: YT.OnPlaybackQualityChangeEvent, target: YT.Player]
   'playback-rate-change': [e: YT.OnPlaybackRateChangeEvent, target: YT.Player]
   'error': [e: YT.OnErrorEvent, target: YT.Player]
+  'api-change': [e: YT.PlayerEvent, target: YT.Player]
 }>()
 ```
 
