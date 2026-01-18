@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { ref, useHead } from '#imports'
+import { ref, useHead, watch } from '#imports'
 
 useHead({
   title: 'Rybbit Analytics',
 })
 
-// Rybbit Analytics with demo configuration
+// Rybbit Analytics with real site ID
 const { proxy, status } = useScriptRybbitAnalytics({
-  siteId: 'demo-site-123',
+  siteId: '874',
   autoTrackPageview: true,
   trackSpa: true,
   trackOutbound: true,
@@ -23,37 +23,76 @@ proxy.pageview()
 
 const eventCounter = ref(0)
 const userId = ref('')
+const eventLog = ref<Array<{ time: string, event: string, status: string }>>([])
+
+// Log status changes
+watch(status, (newStatus, oldStatus) => {
+  logEvent(`Status: ${oldStatus} -> ${newStatus}`, newStatus)
+}, { immediate: true })
+
+// Fire an event immediately on component setup (before script loads)
+// This is the actual test for issue #461
+const initialStatus = status.value
+proxy.event('mount_event', { fired_at: 'component_setup' })
+logEvent(`proxy.event('mount_event') - FIRED ON MOUNT`, initialStatus)
+
+function logEvent(event: string, scriptStatus: string) {
+  eventLog.value.unshift({
+    time: new Date().toLocaleTimeString(),
+    event,
+    status: scriptStatus,
+  })
+  // Keep only last 20 events
+  if (eventLog.value.length > 20) {
+    eventLog.value.pop()
+  }
+}
 
 function trackCustomEvent() {
   eventCounter.value++
+  const currentStatus = status.value
   proxy.event('button_click', {
     button_name: 'Custom Event Button',
     click_count: eventCounter.value,
     timestamp: Date.now(),
   })
+  logEvent(`proxy.event('button_click', { count: ${eventCounter.value} })`, currentStatus)
+}
+
+// Test event that runs immediately without checking status
+// This is what the issue #461 tests - events called before script is ready
+function trackImmediateEvent() {
+  const currentStatus = status.value
+  proxy.event('immediate_test', { timestamp: Date.now() })
+  logEvent(`proxy.event('immediate_test') - NO STATUS CHECK`, currentStatus)
 }
 
 function trackConversion() {
+  const currentStatus = status.value
   proxy.event('conversion', {
     conversion_type: 'demo_conversion',
     value: 25.99,
     currency: 'USD',
   })
+  logEvent(`proxy.event('conversion')`, currentStatus)
 }
 
 function identifyUser() {
   if (userId.value) {
     proxy.identify(userId.value)
+    logEvent(`proxy.identify('${userId.value}')`, status.value)
   }
 }
 
 function clearUser() {
   proxy.clearUserId()
+  logEvent(`proxy.clearUserId()`, status.value)
   userId.value = ''
 }
 
 function getCurrentUserId() {
   const currentId = proxy.getUserId()
+  logEvent(`proxy.getUserId() => ${currentId}`, status.value)
   if (currentId) {
     userId.value = currentId
   }
@@ -79,14 +118,29 @@ function getCurrentUserId() {
       />
     </div>
 
+    <!-- Issue #461 Test Section -->
     <UCard>
       <template #header>
-        <h2 class="text-xl font-semibold">
-          Script Status
+        <h2 class="text-xl font-semibold text-orange-600">
+          Issue #461 Test: Refresh Behavior
         </h2>
       </template>
 
       <div class="space-y-4">
+        <UAlert
+          icon="i-heroicons-exclamation-triangle"
+          color="orange"
+          variant="soft"
+          title="How to Test"
+        >
+          <ol class="list-decimal list-inside space-y-1 text-sm mt-2">
+            <li>Refresh this page (Cmd+R / F5)</li>
+            <li>Immediately click "Track Immediate Event" before status becomes "loaded"</li>
+            <li>Check the Event Log - event should be queued and sent when script loads</li>
+            <li>Compare: Navigate away and back (SPA nav) - events should work immediately</li>
+          </ol>
+        </UAlert>
+
         <div>
           <span class="font-medium">Current Status:</span>
           <UBadge
@@ -97,6 +151,61 @@ function getCurrentUserId() {
           </UBadge>
         </div>
 
+        <div class="flex gap-3">
+          <UButton
+            color="orange"
+            @click="trackImmediateEvent"
+          >
+            Track Immediate Event (no status check)
+          </UButton>
+        </div>
+
+        <p class="text-sm text-gray-500">
+          This button calls proxy.event() without checking if status === 'loaded'.
+          Before the fix, this would silently fail on page refresh.
+        </p>
+      </div>
+    </UCard>
+
+    <!-- Event Log -->
+    <UCard>
+      <template #header>
+        <h2 class="text-xl font-semibold">
+          Event Log
+        </h2>
+      </template>
+
+      <div class="space-y-2 max-h-64 overflow-y-auto">
+        <div
+          v-for="(entry, i) in eventLog"
+          :key="i"
+          class="text-sm font-mono p-2 rounded"
+          :class="entry.status === 'loaded' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'"
+        >
+          <span class="text-gray-500">{{ entry.time }}</span>
+          <UBadge
+            :color="entry.status === 'loaded' ? 'green' : 'yellow'"
+            size="xs"
+            class="mx-2"
+          >
+            {{ entry.status }}
+          </UBadge>
+          <span>{{ entry.event }}</span>
+        </div>
+        <div v-if="eventLog.length === 0" class="text-gray-400 text-sm">
+          No events logged yet
+        </div>
+      </div>
+    </UCard>
+
+    <UCard>
+      <template #header>
+        <h2 class="text-xl font-semibold">
+          Script Status
+        </h2>
+      </template>
+
+      <div class="space-y-4">
         <div>
           <span class="font-medium">Features Enabled:</span>
           <ul class="list-disc list-inside mt-2 space-y-1 text-sm">

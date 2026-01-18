@@ -61,6 +61,28 @@ declare global {
 }
 
 export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?: RybbitAnalyticsInput) {
+  // Queue for buffering calls before script loads
+  let _queue: Array<[string, ...any[]]> | null = null
+
+  // Helper to check if the real Rybbit script is loaded (not our stub)
+  const isRealRybbit = () => typeof window !== 'undefined'
+    && window.rybbit
+    && typeof window.rybbit.event === 'function'
+    && !('_isStub' in window.rybbit)
+
+  // Flush queued calls to real implementation
+  const flushQueue = () => {
+    if (!_queue || !isRealRybbit()) return
+    const q = _queue
+    _queue = null // Clear queue first to prevent re-entrancy
+    for (const [method, ...args] of q) {
+      const fn = (window.rybbit as any)[method]
+      if (typeof fn === 'function') {
+        fn.apply(window.rybbit, args)
+      }
+    }
+  }
+
   return useRegistryScript<T, typeof RybbitAnalyticsOptions>('rybbitAnalytics', (options) => {
     return {
       scriptInput: {
@@ -81,19 +103,35 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
       schema: import.meta.dev ? RybbitAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          if (typeof window.rybbit === 'undefined') {
-            return null
-          }
+          // Try to flush queue every time use() is called (it's called on status changes)
+          flushQueue()
           return {
-            pageview: window.rybbit.pageview,
-            event: window.rybbit.event,
-            identify: window.rybbit.identify,
-            clearUserId: window.rybbit.clearUserId,
-            getUserId: window.rybbit.getUserId,
+            pageview: window.rybbit?.pageview,
+            event: window.rybbit?.event,
+            identify: window.rybbit?.identify,
+            clearUserId: window.rybbit?.clearUserId,
+            getUserId: window.rybbit?.getUserId,
             rybbit: window.rybbit,
-          } satisfies RybbitAnalyticsApi
+          } as RybbitAnalyticsApi
         },
       },
+      // Create a stub that queues calls until the real script loads
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            const w = window as any
+            if (!w.rybbit) {
+              _queue = []
+              w.rybbit = {
+                _isStub: true,
+                pageview: function () { _queue?.push(['pageview', ...arguments]) },
+                event: function () { _queue?.push(['event', ...arguments]) },
+                identify: function () { _queue?.push(['identify', ...arguments]) },
+                clearUserId: function () { _queue?.push(['clearUserId', ...arguments]) },
+                getUserId: () => null,
+              }
+            }
+          },
     }
   }, _options)
 }
