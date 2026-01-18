@@ -41,6 +41,9 @@ importers:
       defu:
         specifier: ^6.1.4
         version: 6.1.4
+      estree-walker:
+        specifier: ^3.0.3
+        version: 3.0.3
       h3:
         specifier: ^1.15.4
         version: 1.15.4
