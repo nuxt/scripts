@@ -98,7 +98,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
     function syncScripts() {
       nuxtApp._scripts[instance.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtDevToolsScriptInstance> })
+      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts })
     }
 
     if (!nuxtApp._scripts[instance.id]) {
