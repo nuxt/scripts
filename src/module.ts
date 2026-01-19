@@ -158,7 +158,7 @@ export default defineNuxtModule<ModuleOptions>({
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
     nuxt.options.runtimeConfig['nuxt-scripts'] = {
-      version,
+      version: version!,
       // Private proxy config with API key (server-side only)
       googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
         ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
@@ -167,7 +167,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
-      defaultScriptOptions: config.defaultScriptOptions,
+      defaultScriptOptions: config.defaultScriptOptions as any,
       // Only expose enabled and cacheMaxAge to client, not apiKey
       googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
         ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
@@ -227,7 +227,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
-      // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
 
       for (const script of registryScripts) {
