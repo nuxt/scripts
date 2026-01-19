@@ -3,6 +3,7 @@ import {
   addComponentsDir,
   addImports,
   addPluginTemplate,
+  addServerHandler,
   addTemplate,
   createResolver,
   defineNuxtModule,
@@ -79,6 +80,22 @@ export interface ModuleOptions {
     integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
   }
   /**
+   * Google Static Maps proxy configuration.
+   * Proxies static map images through your server to fix CORS issues and enable caching.
+   */
+  googleStaticMapsProxy?: {
+    /**
+     * Enable proxying Google Static Maps through your own origin.
+     * @default false
+     */
+    enabled?: boolean
+    /**
+     * Cache duration for static map images in seconds.
+     * @default 3600 (1 hour)
+     */
+    cacheMaxAge?: number
+  }
+  /**
    * Whether the module is enabled.
    *
    * @default true
@@ -115,6 +132,10 @@ export default defineNuxtModule<ModuleOptions>({
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
     },
+    googleStaticMapsProxy: {
+      enabled: false,
+      cacheMaxAge: 3600,
+    },
     enabled: true,
     debug: false,
   },
@@ -136,11 +157,21 @@ export default defineNuxtModule<ModuleOptions>({
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
-    nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
+    nuxt.options.runtimeConfig['nuxt-scripts'] = {
+      version: version!,
+      // Private proxy config with API key (server-side only)
+      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
+        : undefined,
+    }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
-      defaultScriptOptions: config.defaultScriptOptions,
+      defaultScriptOptions: config.defaultScriptOptions as any,
+      // Only expose enabled and cacheMaxAge to client, not apiKey
+      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
+        : undefined,
     }
 
     // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
@@ -196,7 +227,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
-      // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
 
       for (const script of registryScripts) {
@@ -249,6 +279,14 @@ export default defineNuxtModule<ModuleOptions>({
           await p?.()
       })
     })
+
+    // Add Google Static Maps proxy handler if enabled
+    if (config.googleStaticMapsProxy?.enabled) {
+      addServerHandler({
+        route: '/_scripts/google-static-maps-proxy',
+        handler: await resolvePath('./runtime/server/google-static-maps-proxy'),
+      })
+    }
 
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolvePath)
