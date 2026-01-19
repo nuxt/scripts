@@ -2,7 +2,9 @@ import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
-  addPluginTemplate, addTemplate, addTypeTemplate,
+  addPluginTemplate,
+  addServerHandler,
+  addTemplate,
   createResolver,
   defineNuxtModule,
   hasNuxtModule,
@@ -24,8 +26,7 @@ import type {
   RegistryScripts,
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
-import { templatePlugin, templateTriggerResolver } from './templates'
-import { relative, resolve } from 'pathe'
+import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
 export interface ModuleOptions {
   /**
@@ -69,6 +70,30 @@ export interface ModuleOptions {
      * @default 604800000 (7 days)
      */
     cacheMaxAge?: number
+    /**
+     * Enable automatic integrity hash generation for bundled scripts.
+     * When enabled, calculates SRI (Subresource Integrity) hash and injects
+     * integrity attribute along with crossorigin="anonymous".
+     *
+     * @default false
+     */
+    integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
+  }
+  /**
+   * Google Static Maps proxy configuration.
+   * Proxies static map images through your server to fix CORS issues and enable caching.
+   */
+  googleStaticMapsProxy?: {
+    /**
+     * Enable proxying Google Static Maps through your own origin.
+     * @default false
+     */
+    enabled?: boolean
+    /**
+     * Cache duration for static map images in seconds.
+     * @default 3600 (1 hour)
+     */
+    cacheMaxAge?: number
   }
   /**
    * Whether the module is enabled.
@@ -107,6 +132,10 @@ export default defineNuxtModule<ModuleOptions>({
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
     },
+    googleStaticMapsProxy: {
+      enabled: false,
+      cacheMaxAge: 3600,
+    },
     enabled: true,
     debug: false,
   },
@@ -128,11 +157,21 @@ export default defineNuxtModule<ModuleOptions>({
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
-    nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
+    nuxt.options.runtimeConfig['nuxt-scripts'] = {
+      version: version!,
+      // Private proxy config with API key (server-side only)
+      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
+        : undefined,
+    }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
-      defaultScriptOptions: config.defaultScriptOptions,
+      defaultScriptOptions: config.defaultScriptOptions as any,
+      // Only expose enabled and cacheMaxAge to client, not apiKey
+      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
+        : undefined,
     }
 
     // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
@@ -188,7 +227,6 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
-      // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
 
       for (const script of registryScripts) {
@@ -201,42 +239,7 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
-      addTypeTemplate({
-        filename: 'module/nuxt-scripts.d.ts',
-        getContents: (data) => {
-          const typesPath = relative(resolve(data.nuxt!.options.rootDir, data.nuxt!.options.buildDir, 'module'), resolve('runtime/types'))
-          let types = `
-declare module '#app' {
-  interface NuxtApp {
-    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts/types').UseScriptContext<any>)>
-    _scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)>
-  }
-  interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)> }) => void | Promise<void>
-  }
-}
-`
-          if (newScripts.length) {
-            types = `${types}
-declare module '#nuxt-scripts/types' {
-    type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
-    interface ScriptRegistry {
-${newScripts.map((i) => {
-  const key = i.import?.name.replace('useScript', '')
-  const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-  return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-}).join('\n')}
-    }
-}`
-            return types
-          }
-          return `${types}
-export {}`
-        },
-      }, {
-        nuxt: true,
-        node: true,
-      })
+      registerTypeTemplates({ nuxt, config, newScripts })
 
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
@@ -266,6 +269,7 @@ export {}`
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
         fetchOptions: config.assets?.fetchOptions,
         cacheMaxAge: config.assets?.cacheMaxAge,
+        integrity: config.assets?.integrity,
         renderedScript,
       }))
 
@@ -275,6 +279,14 @@ export {}`
           await p?.()
       })
     })
+
+    // Add Google Static Maps proxy handler if enabled
+    if (config.googleStaticMapsProxy?.enabled) {
+      addServerHandler({
+        route: '/_scripts/google-static-maps-proxy',
+        handler: await resolvePath('./runtime/server/google-static-maps-proxy'),
+      })
+    }
 
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolvePath)

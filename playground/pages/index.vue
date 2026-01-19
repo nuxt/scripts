@@ -20,6 +20,7 @@ function getPlaygroundPath(script: any): string | null {
     'cloudflare-web-analytics': '/third-parties/cloudflare-web-analytics/nuxt-scripts',
     'fathom-analytics': '/third-parties/fathom-analytics',
     'plausible-analytics': '/third-parties/plausible-analytics',
+    'posthog': '/third-parties/posthog/nuxt-scripts',
     'matomo-analytics': '/third-parties/matomo-analytics/nuxt-scripts',
     'rybbit-analytics': '/third-parties/rybbit-analytics',
     'databuddy-analytics': '/third-parties/databuddy-analytics',
@@ -29,6 +30,7 @@ function getPlaygroundPath(script: any): string | null {
     'x-pixel': '/third-parties/x-pixel/nuxt-scripts',
     'reddit-pixel': '/third-parties/reddit-pixel/nuxt-scripts',
     'snapchat-pixel': '/third-parties/snapchat/nuxt-scripts',
+    'tiktok-pixel': '/third-parties/tiktok-pixel/nuxt-scripts',
     'google-adsense': '/third-parties/google-adsense/nuxt-scripts',
     'carbon-ads': '/third-parties/carbon/nuxt-scripts',
     'clarity': '/third-parties/clarity/nuxt-scripts',
@@ -41,6 +43,7 @@ function getPlaygroundPath(script: any): string | null {
     'vimeo-player': '/third-parties/vimeo/nuxt-scripts',
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
+    'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
     'npm': '/npm/js-confetti',
   }
 

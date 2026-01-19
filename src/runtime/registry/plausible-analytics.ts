@@ -181,12 +181,14 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
         use() {
           return { plausible: window.plausible }
         },
-        clientInit() {
-          // @ts-expect-error untyped
-          // eslint-disable-next-line @typescript-eslint/no-unused-expressions,@stylistic/max-statements-per-line,prefer-rest-params
-          window.plausible = window.plausible || function () { (plausible.q = plausible.q || []).push(arguments) }, plausible.init = plausible.init || function (i) { plausible.o = i || {} }
-          window.plausible.init(initOptions)
-        },
+        clientInit: import.meta.server
+          ? undefined
+          : () => {
+              const w = window as any
+              w.plausible = w.plausible || function () { (w.plausible.q = w.plausible.q || []).push(arguments) }
+              w.plausible.init = w.plausible.init || function (i: PlausibleInitOptions) { w.plausible.o = i || {} }
+              w.plausible.init(initOptions)
+            },
       },
     }
   }, _options)

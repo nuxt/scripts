@@ -23,7 +23,7 @@ interface MatomoAnalyticsApi {
 }
 
 declare global {
-  interface Window extends MatomoAnalyticsApi {}
+  interface Window extends MatomoAnalyticsApi { }
 }
 
 export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
@@ -65,7 +65,7 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
               _paq.push(['disableCookies'])
             }
             if (options?.trackerUrl || options?.matomoUrl) {
-              _paq.push(['setTrackerUrl', options?.trackerUrl ? withHttps(options.trackerUrl) : withBase(`/matomo.php`, withHttps(options?.matomoUrl || ''))])
+              _paq.push(['setTrackerUrl', options?.trackerUrl ?? withBase(`/matomo.php`, options?.matomoUrl || '')])
             }
             else if (normalizedCloudId) {
               _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(normalizedCloudId))])

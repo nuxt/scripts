@@ -8,6 +8,8 @@ import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analy
 import type { RegistryScript } from './runtime/types'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 import type { ClarityInput } from './runtime/registry/clarity'
+import type { GoogleRecaptchaInput } from './runtime/registry/google-recaptcha'
+import type { TikTokPixelInput } from './runtime/registry/tiktok-pixel'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
@@ -36,6 +38,17 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       import: {
         name: 'useScriptCloudflareWebAnalytics',
         from: await resolve('./runtime/registry/cloudflare-web-analytics'),
+      },
+    },
+    {
+      label: 'PostHog',
+      src: false,
+      scriptBundling: false,
+      category: 'analytics',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 128 128"><path fill="#1d4aff" d="M0 .52v32.15l31.79 31.78V32.3L0 .52zm32.3 32.15v32.15l31.78 31.78V64.45L32.3 32.67zM0 64.97v32.15l31.79 31.78V96.75L0 64.97zm64.6-32.3v32.15l31.78 31.78V64.45L64.6 32.67zm31.78 31.78v32.15l31.78 31.78V96.23l-31.78-31.78zm-64.08.52v32.15l31.78 31.78V96.75L32.3 64.97zM64.6 .52v32.15l31.78 31.78V32.3L64.6 .52zm0 64.45v32.15l31.78 31.78V96.75L64.6 64.97z"/></svg>`,
+      import: {
+        name: 'useScriptPostHog',
+        from: await resolve('./runtime/registry/posthog'),
       },
     },
     {
@@ -109,6 +122,20 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       import: {
         name: 'useScriptXPixel',
         from: await resolve('./runtime/registry/x-pixel'),
+      },
+    },
+    {
+      label: 'TikTok Pixel',
+      category: 'tracking',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path d="M224 72a52.059 52.059 0 0 1-52-52a4 4 0 0 0-4-4h-40a4 4 0 0 0-4 4v132a28 28 0 1 1-40.567-25.019a4 4 0 0 0 2.567-3.734V80a4 4 0 0 0-4.652-3.949A84.032 84.032 0 1 0 156 152v-43.047a99.432 99.432 0 0 0 52 14.586a4 4 0 0 0 4-4V76a4 4 0 0 0-4-4z" fill="currentColor"/></svg>`,
+      import: {
+        name: 'useScriptTikTokPixel',
+        from: await resolve('./runtime/registry/tiktok-pixel'),
+      },
+      scriptBundling(options?: TikTokPixelInput) {
+        if (!options?.id)
+          return false
+        return withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', { sdkid: options.id, lib: 'ttq' })
       },
     },
     {
@@ -287,6 +314,35 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
         name: 'useScriptNpm',
         // key is based on package name
         from: await resolve('./runtime/registry/npm'),
+      },
+    },
+    {
+      label: 'Google reCAPTCHA',
+      category: 'utility',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><path fill="#1c3aa9" d="M64 32a32 32 0 1 1-64 0 32 32 0 0 1 64 0"/><path fill="#4285f4" d="m32 14-2 18 2 2 18-2V14z"/><path fill="#efefef" d="M14 32v18h18l2-2-2-16-16-2z"/><path fill="#f1f1f1" d="M32 32h18v18H32z"/><path fill="#e1e1e1" d="M14 14h18v18H14z"/><path fill="#1c3aa9" d="M32 14v18H14V14z"/><path fill="#4285f4" d="M32 32v18h18V32z"/><path d="M14 32h18v18H14z" fill="#f1f1f1"/><path d="M32 14h18v18H32z" fill="#fff"/></svg>`,
+      import: {
+        name: 'useScriptGoogleRecaptcha',
+        from: await resolve('./runtime/registry/google-recaptcha'),
+      },
+      scriptBundling(options?: GoogleRecaptchaInput) {
+        if (!options?.siteKey) {
+          return false
+        }
+        const baseUrl = options?.recaptchaNet
+          ? 'https://www.recaptcha.net/recaptcha'
+          : 'https://www.google.com/recaptcha'
+        return `${baseUrl}/${options?.enterprise ? 'enterprise.js' : 'api.js'}`
+      },
+    },
+    {
+      label: 'Google Sign-In',
+      src: 'https://accounts.google.com/gsi/client',
+      scriptBundling: false, // CORS prevents bundling
+      category: 'utility',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 262"><path fill="#4285F4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622l38.755 30.023l2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"/><path fill="#34A853" d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055c-34.523 0-63.824-22.773-74.269-54.25l-1.531.13l-40.298 31.187l-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"/><path fill="#FBBC05" d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82c0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602z"/><path fill="#EB4335" d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"/></svg>`,
+      import: {
+        name: 'useScriptGoogleSignIn',
+        from: await resolve('./runtime/registry/google-sign-in'),
       },
     },
     {

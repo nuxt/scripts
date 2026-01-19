@@ -3,7 +3,7 @@
 // @ts-nocheck
 
 /// <reference types="youtube" />
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
 import { defu } from 'defu'
 import { useHead } from 'nuxt/app'
@@ -45,6 +45,12 @@ const props = withDefaults(defineProps<{
   playerOptions?: YT.PlayerOptions
   thumbnailSize?: YoutubeThumbnailSize
   webp?: boolean
+  /**
+   * Object-fit for the placeholder image.
+   *
+   * @default 'cover'
+   */
+  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 }>(), {
   cookies: false,
   trigger: 'mousedown',
@@ -55,6 +61,7 @@ const props = withDefaults(defineProps<{
   width: 640,
   height: 360,
   ratio: '16/9',
+  placeholderObjectFit: 'cover',
 })
 
 const emits = defineEmits<{
@@ -63,6 +70,7 @@ const emits = defineEmits<{
   'playback-quality-change': [e: YT.OnPlaybackQualityChangeEvent, target: YT.Player]
   'playback-rate-change': [e: YT.OnPlaybackRateChangeEvent, target: YT.Player]
   'error': [e: YT.OnErrorEvent, target: YT.Player]
+  'api-change': [e: YT.PlayerEvent, target: YT.Player]
 }>()
 const events: (keyof YT.Events)[] = [
   'onReady',
@@ -75,25 +83,63 @@ const events: (keyof YT.Events)[] = [
 const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
+// Track this instance's trigger state separately from the shared script load state
+const isTriggered = ref(false)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
+
+// Load script immediately (shared across all players), but track this player's trigger separately
 const script = useScriptYouTubePlayer({
   scriptOptions: {
+    // Use immediate trigger so script loads when ANY player needs it
+    // Each player will wait for its own trigger before creating iframe
     trigger,
   },
 })
 const { onLoaded, status } = script
 
 const player: Ref<YT.Player | undefined> = ref()
-let clickTriggered = false
-if (props.trigger === 'mousedown' && trigger instanceof Promise) {
+const clickTriggered = ref(false)
+
+// Track when THIS player's trigger fires
+if (trigger instanceof Promise) {
   trigger.then((triggered) => {
     if (triggered) {
-      clickTriggered = true
+      isTriggered.value = true
+      if (props.trigger === 'mousedown') {
+        clickTriggered.value = true
+      }
     }
   })
 }
+else {
+  // Immediate trigger
+  isTriggered.value = true
+}
+
+// Watch for videoId changes (outside onLoaded to avoid creating multiple watchers)
+const stopVideoIdWatch = watch(() => props.videoId, (newId) => {
+  if (ready.value && player.value) {
+    player.value.loadVideoById(newId)
+  }
+})
+
+// Cleanup player on unmount
+onBeforeUnmount(() => {
+  stopVideoIdWatch()
+  player.value?.destroy()
+})
+
 onMounted(() => {
   onLoaded(async (instance) => {
+    // Wait for THIS player's trigger before creating iframe (fixes #339)
+    if (!isTriggered.value && trigger instanceof Promise) {
+      const triggered = await trigger
+      if (!triggered) return // Component was disposed
+    }
+
+    // Guard against stale refs during layout transitions (fixes #297)
+    if (!youtubeEl.value) return
+
     const YouTube = instance.YT instanceof Promise ? await instance.YT : instance.YT
     await new Promise<void>((resolve) => {
       if (typeof YT.Player === 'undefined')
@@ -101,9 +147,16 @@ onMounted(() => {
       else
         resolve()
     })
+
+    // Double-check ref is still valid after async operations
+    if (!youtubeEl.value) return
+
     player.value = new YT.Player(youtubeEl.value, {
       host: !props.cookies ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com',
-      ...props,
+      videoId: props.videoId,
+      width: props.width,
+      height: props.height,
+      playerVars: props.playerVars,
       ...props.playerOptions,
       events: Object.fromEntries(events.map(event => [event, (e: any) => {
         const emitEventName = event.replace(/([A-Z])/g, '-$1').replace('on-', '').toLowerCase()
@@ -111,13 +164,10 @@ onMounted(() => {
         emits(emitEventName, e)
         if (event === 'onReady') {
           ready.value = true
-          if (clickTriggered) {
+          if (clickTriggered.value) {
             player.value?.playVideo()
-            clickTriggered = false
+            clickTriggered.value = false
           }
-          watch(() => props.videoId, () => {
-            player.value?.loadVideoById(props.videoId)
-          })
         }
       }])),
     })
@@ -160,18 +210,16 @@ const placeholder = computed(() => `https://i.ytimg.com/${props.webp ? 'vi_webp'
 const isFallbackPlaceHolder = ref(false)
 
 if (import.meta.server) {
-  // dns-prefetch https://i.vimeocdn.com
   useHead({
     link: [
       {
-        key: `nuxt-script-youtube-img`,
+        key: 'nuxt-script-youtube-img-preconnect',
         rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
         href: 'https://i.ytimg.com',
       },
       props.aboveTheFold
-        // we can preload the placeholder image
         ? {
-            key: `nuxt-script-youtube-img`,
+            key: `nuxt-script-youtube-img-preload-${props.videoId}`,
             rel: 'preload',
             as: 'image',
             href: placeholder.value,
@@ -188,7 +236,7 @@ const placeholderAttrs = computed(() => {
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
       width: '100%',
-      objectFit: 'cover',
+      objectFit: props.placeholderObjectFit,
       height: '100%',
     },
     onLoad(payload) {

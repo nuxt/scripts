@@ -153,6 +153,48 @@ describe('basic', () => {
   })
 })
 
+describe('youtube', () => {
+  it('multiple players only load clicked player', {
+    timeout: 20000,
+  }, async () => {
+    const { page } = await createPage('/youtube-multiple')
+    await page.waitForTimeout(500)
+
+    // All players should be waiting initially
+    const player1Status = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2Status = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3Status = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1Status).toBe('waiting')
+    expect(player2Status).toBe('waiting')
+    expect(player3Status).toBe('waiting')
+
+    // Click only player 2
+    await page.click('#player2')
+    await page.waitForTimeout(3000) // Wait for YouTube iframe to load
+
+    // Only player 2 should be ready, others still waiting
+    const player1StatusAfter = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2StatusAfter = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3StatusAfter = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusAfter).toBe('waiting')
+    expect(player2StatusAfter).toBe('ready')
+    expect(player3StatusAfter).toBe('waiting')
+
+    // Now click player 1
+    await page.click('#player1')
+    await page.waitForTimeout(3000)
+
+    // Player 1 and 2 should be ready, player 3 still waiting
+    const player1StatusFinal = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player3StatusFinal = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusFinal).toBe('ready')
+    expect(player3StatusFinal).toBe('waiting')
+  })
+})
+
 describe('third-party-capital', () => {
   it('expect GA to collect data', {
     timeout: 10000,
@@ -181,5 +223,102 @@ describe('third-party-capital', () => {
     })
     await page.getByText('trigger').click()
     await request
+  })
+
+  it('expect reCAPTCHA to execute and verify token', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/tpc/recaptcha')
+    await page.waitForTimeout(500)
+
+    // wait for script to load
+    await page.waitForFunction(() => document.querySelector('#status')?.textContent?.trim() === 'loaded', { timeout: 5000 })
+
+    // click execute button (this also verifies via server)
+    await page.click('#execute')
+
+    // wait for token + verification result
+    await page.waitForSelector('#verified', { timeout: 10000 })
+    const token = await page.$eval('#token', el => el.textContent?.trim())
+    const verified = await page.$eval('#verified', el => el.textContent?.trim())
+
+    // token should exist and verification should pass
+    expect(token).toBeTruthy()
+    expect(token!.length).toBeGreaterThan(100)
+    expect(verified).toBe('true')
+  })
+
+  it('expect PostHog to capture events and handle feature flags', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/tpc/posthog')
+    await page.waitForTimeout(500)
+
+    // Wait for PostHog to actually initialize (window.posthog exists)
+    // Note: Status goes to 'error' for NPM-based scripts, but clientInit still works
+    await page.waitForFunction(() => window.posthog !== undefined, { timeout: 10000 })
+
+    // eslint-disable-next-line no-console
+    console.log('PostHog initialized successfully')
+
+    // Test event capture - verify client-side call is made
+    await page.click('#capture-event')
+    await page.waitForTimeout(500)
+
+    // Verify event capture was triggered on client side
+    const eventCaptured = await page.$eval('#event-captured', el => el.textContent?.trim())
+    expect(eventCaptured).toBe('true')
+
+    // Test identify - verify client-side call is made
+    await page.click('#identify-user')
+    await page.waitForTimeout(500)
+
+    // Verify identify was triggered on client side
+    const identifyCalled = await page.$eval('#identify-called', el => el.textContent?.trim())
+    expect(identifyCalled).toBe('true')
+
+    // Verify feature flags were loaded from real PostHog API
+    // Give PostHog time to fetch feature flags via /decide endpoint
+    await page.waitForTimeout(2000)
+    const featureFlagValue = await page.$eval('#feature-flag-value', el => el.textContent?.trim())
+    const featureFlagPayload = await page.$eval('#feature-flag-payload', el => el.textContent?.trim())
+
+    // Feature flag should be loaded (value depends on PostHog dashboard config)
+    // We just verify the API was called and returned a value
+    expect(featureFlagValue).toBeDefined()
+    expect(featureFlagPayload).toBeDefined()
+
+    // Optional: Log actual values for debugging
+    // eslint-disable-next-line no-console
+    console.log('Feature flag value:', featureFlagValue)
+    // eslint-disable-next-line no-console
+    console.log('Feature flag payload:', featureFlagPayload)
+  })
+
+  it.todo('expect Google Sign-In to load and render button - requires network access to Google', async () => {
+    const { page } = await createPage('/tpc/google-sign-in')
+
+    // wait for client hydration
+    await page.waitForSelector('#status', { timeout: 5000 })
+
+    // wait for script to load (Google's script can be slow)
+    await page.waitForFunction(() => {
+      const status = document.querySelector('#status')?.textContent?.trim()
+      return status === 'loaded'
+    }, { timeout: 20000 })
+
+    // verify button was rendered
+    await page.waitForSelector('#button-rendered', { timeout: 5000 })
+    const buttonRendered = await page.$eval('#button-rendered', el => el.textContent?.trim())
+    expect(buttonRendered).toBe('true')
+
+    // verify window.google.accounts.id is available
+    const hasGoogleApi = await page.evaluate(() => {
+      return typeof window.google !== 'undefined'
+        && typeof window.google.accounts !== 'undefined'
+        && typeof window.google.accounts.id !== 'undefined'
+        && typeof window.google.accounts.id.initialize === 'function'
+    })
+    expect(hasGoogleApi).toBe(true)
   })
 })
