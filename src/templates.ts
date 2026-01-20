@@ -40,10 +40,10 @@ declare module '#nuxt-scripts/types' {
   type _NuxtScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
   interface ScriptRegistry {
 ${newScripts.map((i) => {
-    const key = i.import.name.replace('useScript', '')
-    const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-    return `    ${keyLcFirst}?: import('${i.import.from}').${key}Input | [import('${i.import.from}').${key}Input, _NuxtScriptOptions]`
-  }).join('\n')}
+  const key = i.import.name.replace('useScript', '')
+  const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
+  return `    ${keyLcFirst}?: import('${i.import.from}').${key}Input | [import('${i.import.from}').${key}Input, _NuxtScriptOptions]`
+}).join('\n')}
   }
 }
 `
