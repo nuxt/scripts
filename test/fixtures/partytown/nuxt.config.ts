@@ -10,6 +10,6 @@ export default defineNuxtConfig({
 
   partytown: {
     debug: true,
-    forward: ['dataLayer.push'],
+    forward: ['plausible'],
   },
 })

@@ -50,4 +50,40 @@ describe('partytown integration', () => {
     // Verify our script executed in the worker (check console log)
     expect(consoleLogs.some(log => log.includes('Partytown script executing in worker'))).toBe(true)
   })
+
+  it('plausible analytics loads and executes via partytown', async () => {
+    const browser = await getBrowser()
+    const page = await browser.newPage()
+
+    // Track network requests to plausible
+    const plausibleRequests: string[] = []
+    page.on('request', (req) => {
+      if (req.url().includes('plausible.io'))
+        plausibleRequests.push(req.url())
+    })
+
+    await page.goto(url('/'), { waitUntil: 'networkidle' })
+    await waitForHydration(page, '/')
+
+    // Wait for partytown to load and execute plausible
+    await page.waitForTimeout(3000)
+
+    // Verify plausible script tag exists with partytown type
+    const plausibleScript = await page.evaluate(() => {
+      const script = document.querySelector('script[src*="plausible.io"]')
+      return {
+        exists: !!script,
+        type: script?.getAttribute('type'),
+      }
+    })
+    expect(plausibleScript.exists).toBe(true)
+    expect(plausibleScript.type?.startsWith('text/partytown')).toBe(true)
+
+    // Verify plausible script was fetched
+    expect(plausibleRequests.some(url => url.includes('script.js'))).toBe(true)
+
+    // Verify plausible function exists (proxied by partytown)
+    const plausibleFn = await page.evaluate(() => typeof window.plausible)
+    expect(plausibleFn).toBe('function')
+  })
 })

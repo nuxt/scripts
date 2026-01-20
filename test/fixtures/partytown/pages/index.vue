@@ -2,19 +2,26 @@
 // Load custom script in partytown web worker
 useScript('/worker-script.js', { partytown: true })
 
-// Load GA with partytown
-// Define gtag on main thread - it just pushes to dataLayer which partytown forwards
-const GA_ID = 'G-TR58L0EF8P'
-useScript(`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`, {
+// Load Plausible Analytics - known to work well with Partytown
+// Using script.plausible.io which is the real Plausible script
+useScript('https://plausible.io/js/script.js', {
   partytown: true,
-  partytownInit: `window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','${GA_ID}');`,
+  // data-domain is required but doesn't need to be valid for script to load
+  scriptOptions: {
+    defer: true,
+  },
 })
 
-const gtagReady = ref(false)
+const plausibleReady = ref(false)
 onMounted(() => {
-  setTimeout(() => {
-    gtagReady.value = typeof window.gtag === 'function'
-  }, 500)
+  // Plausible creates window.plausible function
+  const check = () => {
+    plausibleReady.value = typeof window.plausible === 'function'
+  }
+  // Check multiple times as partytown may take a moment
+  setTimeout(check, 500)
+  setTimeout(check, 1500)
+  setTimeout(check, 3000)
 })
 </script>
 
@@ -24,8 +31,8 @@ onMounted(() => {
     <div id="status">
       Ready
     </div>
-    <div id="gtag-status">
-      gtag: {{ gtagReady ? 'ready' : 'loading...' }}
+    <div id="plausible-status">
+      plausible: {{ plausibleReady ? 'ready' : 'loading...' }}
     </div>
   </div>
 </template>
