@@ -143,6 +143,35 @@ describe('basic', () => {
       ]
     `)
   })
+  it('reload method re-executes script', async () => {
+    const { page, logs } = await createPage('/reload-trigger')
+    await page.waitForTimeout(500)
+    // Script should have loaded once
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
+    // Status should be loaded
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+    // Click reload button
+    await page.click('#reload-script')
+    await page.waitForTimeout(500)
+    // Script should have loaded twice
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(2)
+    // Status should still be loaded after reload
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+  })
+  it('reload method can be called multiple times', async () => {
+    const { page, logs } = await createPage('/reload-trigger')
+    await page.waitForTimeout(500)
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
+    // Reload 3 times
+    await page.click('#reload-script')
+    await page.waitForTimeout(300)
+    await page.click('#reload-script')
+    await page.waitForTimeout(300)
+    await page.click('#reload-script')
+    await page.waitForTimeout(500)
+    // Script should have loaded 4 times total
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(4)
+  })
   it('bundle', async () => {
     const { page } = await createPage('/bundle-use-script')
     // wait for the script to be loaded

@@ -68,7 +68,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
-  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> & { reload: () => Promise<T> }
   const _remove = instance.remove
   instance.remove = () => {
     nuxtApp.$scripts[id] = undefined
@@ -80,6 +80,22 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       return Promise.reject(err)
     }
     return _load()
+  }
+  // Add reload method for scripts that need to re-execute (e.g., DOM-scanning scripts)
+  instance.reload = async () => {
+    instance.remove()
+    // Use unique key to bypass Unhead's deduplication
+    const reloadInput = typeof input === 'string'
+      ? { src: input, key: `${id}-${Date.now()}` }
+      : { ...input, key: `${id}-${Date.now()}` }
+    // Re-create the script entry
+    const reloaded = _useScript<T>(reloadInput, { ...options, trigger: 'client' } as any as UseScriptOptions<T>)
+    // Copy over the new instance properties
+    Object.assign(instance, {
+      status: reloaded.status,
+      entry: reloaded.entry,
+    })
+    return reloaded.load()
   }
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
