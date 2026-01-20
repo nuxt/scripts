@@ -6,7 +6,7 @@ import { withQuery } from 'ufo'
 import type { QueryObject } from 'ufo'
 import { defu } from 'defu'
 import { hash } from 'ohash'
-import { useHead } from 'nuxt/app'
+import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
@@ -104,6 +104,17 @@ const props = withDefaults(defineProps<{
    * Extra Markers to add to the map.
    */
   markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]
+  /**
+   * Map IDs for light and dark color modes.
+   * When provided, the map will automatically switch styles based on color mode.
+   * Requires @nuxtjs/color-mode or manual colorMode prop.
+   */
+  mapIds?: { light?: string, dark?: string }
+  /**
+   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.
+   * Accepts 'light', 'dark', or a reactive ref.
+   */
+  colorMode?: 'light' | 'dark'
 }>(), {
   // @ts-expect-error untyped
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
@@ -119,6 +130,26 @@ const emits = defineEmits<{
 }>()
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
+const runtimeConfig = useRuntimeConfig()
+const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
+
+// Color mode support - try to auto-detect from @nuxtjs/color-mode
+const nuxtApp = tryUseNuxtApp()
+const nuxtColorMode = nuxtApp?.$colorMode as { value: string } | undefined
+
+const currentColorMode = computed(() => {
+  if (props.colorMode)
+    return props.colorMode
+  if (nuxtColorMode?.value)
+    return nuxtColorMode.value === 'dark' ? 'dark' : 'light'
+  return 'light'
+})
+
+const currentMapId = computed(() => {
+  if (!props.mapIds)
+    return props.mapOptions?.mapId
+  return props.mapIds[currentColorMode.value] || props.mapIds.light || props.mapOptions?.mapId
+})
 
 const mapsApi = ref<typeof google.maps | undefined>()
 
@@ -144,10 +175,10 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
 })
 
 const options = computed(() => {
-  return defu({ center: centerOverride.value }, props.mapOptions, {
+  const mapId = props.mapOptions?.styles ? undefined : (currentMapId.value || 'map')
+  return defu({ center: centerOverride.value, mapId }, props.mapOptions, {
     center: props.center,
     zoom: 15,
-    mapId: props.mapOptions?.styles ? undefined : 'map',
   })
 })
 const ready = ref(false)
@@ -266,8 +297,13 @@ function importLibrary<T>(key: string): Promise<T> {
       }
     }, { immediate: true })
   })
-  libraries.set(key, p)
-  return p as any as Promise<T>
+  // Clear cache on failure to allow retry
+  const cached = Promise.resolve(p).catch((err) => {
+    libraries.delete(key)
+    throw err
+  })
+  libraries.set(key, cached)
+  return cached as Promise<T>
 }
 
 const googleMaps = {
@@ -380,7 +416,7 @@ onMounted(() => {
   })
 })
 
-if (import.meta.server) {
+if (import.meta.server && !proxyConfig?.enabled) {
   useHead({
     link: [
       {
@@ -419,9 +455,11 @@ const placeholder = computed(() => {
     center,
   }, {
     size: `${props.width}x${props.height}`,
-    key: apiKey,
+    // Only include API key if not using proxy (proxy injects it server-side)
+    key: proxyConfig?.enabled ? undefined : apiKey,
     scale: 2, // we assume a high DPI to avoid hydration issues
     style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
+    map_id: currentMapId.value,
     markers: [
       ...(props.markers || []),
       props.centerMarker && center,
@@ -438,7 +476,12 @@ const placeholder = computed(() => {
       })
       .join('|'),
   })
-  return withQuery('https://maps.googleapis.com/maps/api/staticmap', placeholderOptions as QueryObject)
+
+  const baseUrl = proxyConfig?.enabled
+    ? '/_scripts/google-static-maps-proxy'
+    : 'https://maps.googleapis.com/maps/api/staticmap'
+
+  return withQuery(baseUrl, placeholderOptions as QueryObject)
 })
 
 const placeholderAttrs = computed(() => {

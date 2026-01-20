@@ -48,6 +48,26 @@ export default defineNuxtConfig({
 })
 ```
 
+```ts [Default consent mode]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: '<YOUR_ID>',
+        defaultConsent: {
+          // This can be any string or number value according to GTM documentation
+          // Here we set all consent types to 'denied' by default
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied',
+          'ad_storage': 'denied',
+          'analytics_storage': 'denied',
+        }
+      }
+    }
+  }
+})
+```
+
 ```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
@@ -154,6 +174,9 @@ export const GoogleTagManagerOptions = object({
 
     /** Referrer policy for analytics requests */
     authReferrerPolicy: optional(string()),
+    
+    /** Default consent settings for GTM */
+    defaultConsent: optional(record(string(), union([string(), number()]))),
   })
 ```
 
@@ -232,6 +255,10 @@ function sendConversion() {
 `useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
 
 If you need to configure GTM before it starts. For example, [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.
+
+::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
+Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) on StackBlitz for a complete Consent Mode v2 implementation.
+::
 
 ```vue
 const { proxy } = useScriptGoogleTagManager({

@@ -143,6 +143,35 @@ describe('basic', () => {
       ]
     `)
   })
+  it('reload method re-executes script', async () => {
+    const { page, logs } = await createPage('/reload-trigger')
+    await page.waitForTimeout(500)
+    // Script should have loaded once
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
+    // Status should be loaded
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+    // Click reload button
+    await page.click('#reload-script')
+    await page.waitForTimeout(500)
+    // Script should have loaded twice
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(2)
+    // Status should still be loaded after reload
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+  })
+  it('reload method can be called multiple times', async () => {
+    const { page, logs } = await createPage('/reload-trigger')
+    await page.waitForTimeout(500)
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
+    // Reload 3 times
+    await page.click('#reload-script')
+    await page.waitForTimeout(300)
+    await page.click('#reload-script')
+    await page.waitForTimeout(300)
+    await page.click('#reload-script')
+    await page.waitForTimeout(500)
+    // Script should have loaded 4 times total
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(4)
+  })
   it('bundle', async () => {
     const { page } = await createPage('/bundle-use-script')
     // wait for the script to be loaded
@@ -160,6 +189,48 @@ describe('basic', () => {
       return script?.getAttribute('type')
     })
     expect(scriptType).toBe('text/partytown')
+  })
+})
+
+describe('youtube', () => {
+  it('multiple players only load clicked player', {
+    timeout: 20000,
+  }, async () => {
+    const { page } = await createPage('/youtube-multiple')
+    await page.waitForTimeout(500)
+
+    // All players should be waiting initially
+    const player1Status = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2Status = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3Status = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1Status).toBe('waiting')
+    expect(player2Status).toBe('waiting')
+    expect(player3Status).toBe('waiting')
+
+    // Click only player 2
+    await page.click('#player2')
+    await page.waitForTimeout(3000) // Wait for YouTube iframe to load
+
+    // Only player 2 should be ready, others still waiting
+    const player1StatusAfter = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2StatusAfter = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3StatusAfter = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusAfter).toBe('waiting')
+    expect(player2StatusAfter).toBe('ready')
+    expect(player3StatusAfter).toBe('waiting')
+
+    // Now click player 1
+    await page.click('#player1')
+    await page.waitForTimeout(3000)
+
+    // Player 1 and 2 should be ready, player 3 still waiting
+    const player1StatusFinal = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player3StatusFinal = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusFinal).toBe('ready')
+    expect(player3StatusFinal).toBe('waiting')
   })
 })
 

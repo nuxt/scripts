@@ -38,7 +38,13 @@ import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T>
+export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
+  /**
+   * Remove and reload the script. Useful for scripts that need to re-execute
+   * after SPA navigation (e.g., DOM-scanning scripts like iubenda).
+   */
+  reload: () => Promise<T>
+}
 
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**

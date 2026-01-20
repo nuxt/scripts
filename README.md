@@ -42,6 +42,15 @@ npx nuxi@latest module add scripts
 
 That's it! The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
 
+## 📦 Examples
+
+Explore live examples on StackBlitz:
+
+- [Cookie Consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) - Google Consent Mode v2 with GTM
+- [Granular Consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) - Per-category consent management
+- [Custom Script](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/custom-script) - Integrating any third-party script
+- [Performance](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/performance) - Optimize loading with triggers
+
 ## ⛰️ Next Steps
 
 Need some inspiration to start using Nuxt Scripts? Try out the following:
