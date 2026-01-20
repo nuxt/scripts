@@ -22,7 +22,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const cleanUrl = parsedUrl.origin + parsedUrl.pathname
+  const pathname = parsedUrl.pathname.endsWith('/') ? parsedUrl.pathname : `${parsedUrl.pathname}/`
+  const cleanUrl = parsedUrl.origin + pathname
   const embedUrl = cleanUrl + 'embed/' + (captions ? 'captioned/' : '')
 
   const html = await $fetch<string>(embedUrl, {
