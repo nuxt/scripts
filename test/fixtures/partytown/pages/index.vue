@@ -1,10 +1,6 @@
 <script setup lang="ts">
-// For partytown, we need the script in SSR HTML - use useHead directly
-useHead({
-  script: [
-    { src: '/worker-script.js', type: 'text/partytown' },
-  ],
-})
+// Load script in partytown web worker
+useScript('/worker-script.js', { partytown: true })
 </script>
 
 <template>

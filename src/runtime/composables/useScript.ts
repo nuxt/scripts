@@ -3,7 +3,7 @@ import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from 'nuxt/app'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead, useHead } from 'nuxt/app'
 import { logger } from '../logger'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
@@ -22,11 +22,24 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
 
-  // Partytown support: add type="text/partytown" for web worker execution
+  // Partytown quick-path: use useHead for SSR rendering
+  // Partytown needs scripts in initial HTML with type="text/partytown"
   if (options.partytown) {
-    input = { ...input, type: 'text/partytown' }
-    // Disable preload - Partytown handles script loading differently
-    options.warmupStrategy = false
+    const src = input.src
+    if (!src) {
+      throw new Error('useScript with partytown requires a src')
+    }
+    useHead({
+      script: [{ src, type: 'text/partytown' }],
+    })
+    // Return minimal stub - partytown handles execution in worker
+    return {
+      id: src,
+      status: 'loaded',
+      load: () => Promise.resolve({} as T),
+      remove: () => false,
+      entry: undefined,
+    } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
   }
 
   // Warn about unsupported bundling for dynamic sources (internal value set by transform)
