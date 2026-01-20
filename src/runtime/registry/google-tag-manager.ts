@@ -2,7 +2,7 @@ import { withQuery } from 'ufo'
 import type { GTag } from './google-analytics'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
-import { object, string, optional, boolean, union, literal } from '#nuxt-scripts-validator'
+import { object, string, optional, boolean, union, literal, record, number } from '#nuxt-scripts-validator'
 
 /**
  * Improved DataLayer type that better reflects GTM's capabilities
@@ -16,7 +16,7 @@ export type DataLayer = Array<DataLayerItem>
  */
 export interface DataLayerPush {
   (...args: Parameters<GTag>): void
-  (obj: Record<string, unknown>): void
+  (obj: Record<string, unknown> | any[]): void
 }
 
 /**
@@ -109,6 +109,9 @@ export const GoogleTagManagerOptions = object({
 
   /** Referrer policy for analytics requests */
   authReferrerPolicy: optional(string()),
+
+  /** Default consent settings for GTM */
+  defaultConsent: optional(record(string(), union([string(), number()]))),
 })
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
@@ -161,17 +164,22 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
 
               // Create gtag function
-              function gtag() {
+              function gtag(...args: any[]) {
                 // Pushing arguments to dataLayer is necessary for GTM to process events
-                // eslint-disable-next-line prefer-rest-params
-                (window as any)[dataLayerName].push(arguments)
+                (window as any)[dataLayerName].push(args)
               }
 
               // Assign gtag to window for global access
               (window as any).gtag = gtag
 
               // Allow custom initialization
-              options?.onBeforeGtmStart?.(gtag);
+              options?.onBeforeGtmStart?.(gtag)
+
+              if (opts.defaultConsent) {
+                // Set default consent state if provided
+                // ts-disable-next-line
+                gtag('consent', 'default', opts.defaultConsent)
+              }
 
               // Push the standard GTM initialization event
               (window as any)[dataLayerName].push({
