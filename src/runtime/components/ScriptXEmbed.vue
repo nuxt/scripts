@@ -29,8 +29,10 @@ const props = withDefaults(defineProps<{
   imageProxyEndpoint: '/api/_scripts/x-embed-image',
 })
 
+const cacheKey = computed(() => `x-embed-${props.tweetId}`)
+
 const { data: tweet, status, error } = useAsyncData<XEmbedTweetData>(
-  `x-embed-${props.tweetId}`,
+  cacheKey,
   () => $fetch(`${props.apiEndpoint}?id=${props.tweetId}`),
 )
 
