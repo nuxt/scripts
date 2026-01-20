@@ -39,4 +39,27 @@ describe('partytown integration', () => {
     expect(partytownConfig).toBeDefined()
     expect(partytownConfig.forward).toContain('testFn')
   })
+
+  it('partytown library is loaded and configured for worker execution', async () => {
+    const browser = await getBrowser()
+    const page = await browser.newPage()
+
+    await page.goto(url('/'), { waitUntil: 'networkidle' })
+    await waitForHydration(page, '/')
+
+    // Verify partytown library script is injected
+    const partytownLib = await page.evaluate(() => {
+      // Partytown injects its library script
+      const scripts = Array.from(document.querySelectorAll('script'))
+      return scripts.some(s => s.textContent?.includes('partytown') || s.src.includes('partytown'))
+    })
+    expect(partytownLib).toBe(true)
+
+    // Verify our script has the partytown type (already tested but good to confirm in integration)
+    const scriptType = await page.evaluate(() => {
+      const script = document.querySelector('script[src="/worker-script.js"]')
+      return script?.getAttribute('type')
+    })
+    expect(scriptType).toBe('text/partytown')
+  })
 })
