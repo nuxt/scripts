@@ -60,7 +60,59 @@ declare global {
   }
 }
 
+// Queue state stored on globalThis to persist across module instances
+// Using Symbol to avoid conflicts - don't use window.rybbit as stub
+// because Rybbit's script checks for it and skips init if it exists
+const RYBBIT_QUEUE_KEY = Symbol.for('nuxt-scripts.rybbit-queue')
+
+interface RybbitQueueState {
+  queue: Array<[string, ...any[]]>
+  flushed: boolean
+}
+
+function getRybbitState(): RybbitQueueState | undefined {
+  if (!import.meta.client) return
+  const g = globalThis as any
+  if (!g[RYBBIT_QUEUE_KEY]) {
+    g[RYBBIT_QUEUE_KEY] = { queue: [], flushed: false }
+  }
+  return g[RYBBIT_QUEUE_KEY]
+}
+
 export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?: RybbitAnalyticsInput) {
+  // Check if real Rybbit is loaded
+  const isRybbitReady = () => import.meta.client
+    && typeof window !== 'undefined'
+    && window.rybbit
+    && typeof window.rybbit.event === 'function'
+
+  // Flush queued calls to real implementation
+  const flushQueue = () => {
+    const state = getRybbitState()
+    if (!state || state.flushed || !isRybbitReady()) return
+    state.flushed = true
+    while (state.queue.length > 0) {
+      const [method, ...args] = state.queue.shift()!
+      const fn = (window.rybbit as any)[method]
+      if (typeof fn === 'function') {
+        fn.apply(window.rybbit, args)
+      }
+    }
+  }
+
+  // Wrapper that queues or calls directly
+  const callOrQueue = (method: string, ...args: any[]) => {
+    if (isRybbitReady()) {
+      const fn = (window.rybbit as any)[method]
+      if (typeof fn === 'function') {
+        fn.apply(window.rybbit, args)
+      }
+    }
+    else {
+      getRybbitState()?.queue.push([method, ...args])
+    }
+  }
+
   return useRegistryScript<T, typeof RybbitAnalyticsOptions>('rybbitAnalytics', (options) => {
     return {
       scriptInput: {
@@ -81,17 +133,17 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
       schema: import.meta.dev ? RybbitAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          if (typeof window.rybbit === 'undefined') {
-            return null
-          }
+          // Flush queue when use() is called (happens on status changes)
+          flushQueue()
+          // Return wrappers that queue if not ready
           return {
-            pageview: window.rybbit.pageview,
-            event: window.rybbit.event,
-            identify: window.rybbit.identify,
-            clearUserId: window.rybbit.clearUserId,
-            getUserId: window.rybbit.getUserId,
+            pageview: () => callOrQueue('pageview'),
+            event: (name: string, properties?: Record<string, any>) => callOrQueue('event', name, properties),
+            identify: (userId: string) => callOrQueue('identify', userId),
+            clearUserId: () => callOrQueue('clearUserId'),
+            getUserId: () => window.rybbit?.getUserId?.() ?? null,
             rybbit: window.rybbit,
-          } satisfies RybbitAnalyticsApi
+          } as RybbitAnalyticsApi
         },
       },
     }
