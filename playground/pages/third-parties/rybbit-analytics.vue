@@ -30,11 +30,13 @@ watch(status, (newStatus, oldStatus) => {
   logEvent(`Status: ${oldStatus} -> ${newStatus}`, newStatus)
 }, { immediate: true })
 
-// Fire an event immediately on component setup (before script loads)
-// This is the actual test for issue #461
+// Fire events immediately on component setup (before script loads)
+// This is the actual test for issue #461 - all these should queue and flush
 const initialStatus = status.value
 proxy.event('mount_event', { fired_at: 'component_setup' })
-logEvent(`proxy.event('mount_event') - FIRED ON MOUNT`, initialStatus)
+proxy.identify('test-user-on-mount')
+proxy.pageview()
+logEvent(`Queued on mount: event, identify, pageview`, initialStatus)
 
 function logEvent(event: string, scriptStatus: string) {
   eventLog.value.unshift({
@@ -110,7 +112,7 @@ function getCurrentUserId() {
       </p>
       <UAlert
         icon="i-heroicons-information-circle"
-        color="blue"
+        color="info"
         variant="soft"
         class="mt-4"
         title="Demo Configuration"
@@ -121,7 +123,7 @@ function getCurrentUserId() {
     <!-- Issue #461 Test Section -->
     <UCard>
       <template #header>
-        <h2 class="text-xl font-semibold text-orange-600">
+        <h2 class="text-xl font-semibold text-amber-600">
           Issue #461 Test: Refresh Behavior
         </h2>
       </template>
@@ -129,7 +131,7 @@ function getCurrentUserId() {
       <div class="space-y-4">
         <UAlert
           icon="i-heroicons-exclamation-triangle"
-          color="orange"
+          color="warning"
           variant="soft"
           title="How to Test"
         >
@@ -144,25 +146,39 @@ function getCurrentUserId() {
         <div>
           <span class="font-medium">Current Status:</span>
           <UBadge
-            :color="status === 'loaded' ? 'green' : status === 'loading' ? 'yellow' : 'gray'"
+            :color="status === 'loaded' ? 'success' : status === 'loading' ? 'warning' : 'neutral'"
             class="ml-2"
           >
             {{ status }}
           </UBadge>
         </div>
 
-        <div class="flex gap-3">
+        <div class="flex flex-wrap gap-3">
           <UButton
-            color="orange"
+            color="warning"
             @click="trackImmediateEvent"
           >
-            Track Immediate Event (no status check)
+            Track Event (no status check)
+          </UButton>
+          <UButton
+            color="warning"
+            variant="outline"
+            @click="() => { proxy.identify(`user-${Date.now()}`); logEvent('proxy.identify() - NO STATUS CHECK', status) }"
+          >
+            Identify (no status check)
+          </UButton>
+          <UButton
+            color="warning"
+            variant="outline"
+            @click="() => { proxy.pageview(); logEvent('proxy.pageview() - NO STATUS CHECK', status) }"
+          >
+            Pageview (no status check)
           </UButton>
         </div>
 
         <p class="text-sm text-gray-500">
-          This button calls proxy.event() without checking if status === 'loaded'.
-          Before the fix, this would silently fail on page refresh.
+          These buttons call proxy methods without checking status === 'loaded'.
+          Events are queued and flushed when script loads.
         </p>
       </div>
     </UCard>
@@ -184,7 +200,7 @@ function getCurrentUserId() {
         >
           <span class="text-gray-500">{{ entry.time }}</span>
           <UBadge
-            :color="entry.status === 'loaded' ? 'green' : 'yellow'"
+            :color="entry.status === 'loaded' ? 'success' : 'warning'"
             size="xs"
             class="mx-2"
           >
@@ -237,7 +253,7 @@ function getCurrentUserId() {
 
           <UButton
             :disabled="status !== 'loaded'"
-            color="green"
+            color="success"
             @click="trackConversion"
           >
             Track Conversion
@@ -245,7 +261,7 @@ function getCurrentUserId() {
 
           <UButton
             :disabled="status !== 'loaded'"
-            color="blue"
+            color="info"
             @click="proxy.pageview()"
           >
             Manual Page View
@@ -283,7 +299,7 @@ function getCurrentUserId() {
         <div class="flex gap-3">
           <UButton
             :disabled="status !== 'loaded'"
-            color="orange"
+            color="warning"
             @click="getCurrentUserId"
           >
             Get Current User ID
@@ -291,7 +307,7 @@ function getCurrentUserId() {
 
           <UButton
             :disabled="status !== 'loaded'"
-            color="red"
+            color="error"
             @click="clearUser"
           >
             Clear User ID
