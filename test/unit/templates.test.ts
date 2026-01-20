@@ -128,7 +128,7 @@ describe('template plugin file', () => {
             id: 'test',
           },
           {
-            trigger: 'onNuxtReady',
+            scriptOptions: { trigger: 'onNuxtReady' },
           },
         ],
       },
@@ -139,7 +139,7 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptStripe([{"id":"test"},{"trigger":"onNuxtReady"}])')
+    expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
   })
 
   it('registry with partytown option', async () => {
@@ -148,7 +148,7 @@ describe('template plugin file', () => {
       registry: {
         googleAnalytics: [
           { id: 'G-XXXXX' },
-          { partytown: true },
+          { scriptOptions: { partytown: true } },
         ],
       },
     }, [
@@ -158,7 +158,7 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptGoogleAnalytics([{"id":"G-XXXXX"},{"partytown":true}])')
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"G-XXXXX","scriptOptions":{"partytown":true}})')
   })
 
   // Test idleTimeout trigger in globals
@@ -193,7 +193,7 @@ describe('template plugin file', () => {
       registry: {
         googleAnalytics: [
           { id: 'GA_MEASUREMENT_ID' },
-          { trigger: { idleTimeout: 5000 } },
+          { scriptOptions: { trigger: { idleTimeout: 5000 } } },
         ],
       },
     }, [
@@ -203,8 +203,8 @@ describe('template plugin file', () => {
         },
       },
     ])
-    // Registry scripts pass trigger objects directly, they don't resolve triggers in templates
-    expect(res).toContain('useScriptGoogleAnalytics([{"id":"GA_MEASUREMENT_ID"},{"trigger":{"idleTimeout":5000}}])')
+    // Registry scripts resolve triggers in templates
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"GA_MEASUREMENT_ID","scriptOptions":{"trigger":useScriptTriggerIdleTimeout({ timeout: 5000 })}})')
   })
 
   // Test both triggers together (should import both)

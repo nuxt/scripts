@@ -29,9 +29,13 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     if (!src) {
       throw new Error('useScript with partytown requires a src')
     }
-    useHead({
-      script: [{ src, type: 'text/partytown' }],
-    })
+    const scripts: any[] = [{ src, type: 'text/partytown' }]
+    // Add inline init script if provided (e.g. GA's dataLayer/gtag setup)
+    // This runs on main thread but partytown intercepts the calls via forwards
+    if (options.partytownInit) {
+      scripts.unshift({ innerHTML: options.partytownInit, key: `${src}-init` })
+    }
+    useHead({ script: scripts })
     // Return minimal stub - partytown handles execution in worker
     return {
       id: src,

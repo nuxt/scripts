@@ -73,6 +73,12 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    */
   partytown?: boolean
   /**
+   * Inline script to initialize globals before partytown script runs.
+   * Used by registry scripts (e.g. GA's dataLayer/gtag setup).
+   * Partytown's forward mechanism intercepts these calls.
+   */
+  partytownInit?: string
+  /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
    */

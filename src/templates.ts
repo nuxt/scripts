@@ -110,21 +110,25 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     if (importDefinition) {
       // title case
       imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)
-      const args = (typeof c !== 'object' ? {} : c) || {}
+      let args: any = {}
       if (c === 'mock') {
         args.scriptOptions = { trigger: 'manual', skipValidation: true }
       }
-      else if (Array.isArray(c) && c.length === 2 && c[1]?.trigger) {
-        const triggerResolved = resolveTriggerForTemplate(c[1].trigger)
-        if (triggerResolved) {
-          args.scriptOptions = { ...c[1] } as any
-          // Store the resolved trigger as a string that will be replaced later
-          if (args.scriptOptions) {
+      else if (Array.isArray(c) && c.length === 2) {
+        // [inputOptions, scriptOptions] format
+        args = { ...c[0], scriptOptions: { ...c[1]?.scriptOptions } }
+        // Handle trigger resolution
+        if (c[1]?.scriptOptions?.trigger) {
+          const triggerResolved = resolveTriggerForTemplate(c[1].scriptOptions.trigger)
+          if (triggerResolved) {
             args.scriptOptions.trigger = `__TRIGGER_${triggerResolved}__` as any
+            if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
+            if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
           }
-          if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
-          if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
         }
+      }
+      else if (typeof c === 'object' && c !== null) {
+        args = c
       }
       inits.push(`const ${k} = ${importDefinition.import.name}(${JSON.stringify(args).replace(/"__TRIGGER_(.*?)__"/g, '$1')})`)
     }

@@ -229,21 +229,25 @@ export default defineNuxtModule<ModuleOptions>({
         }
 
         const existing = config.registry[scriptKey]
+        const partytownScriptOptions = { scriptOptions: { partytown: true } }
         if (Array.isArray(existing)) {
-          // [input, options] format - merge partytown into options
-          existing[1] = { ...existing[1], partytown: true }
+          // [input, options] format - merge partytown into scriptOptions
+          existing[1] = {
+            ...existing[1],
+            scriptOptions: { ...existing[1]?.scriptOptions, partytown: true },
+          }
         }
         else if (existing && typeof existing === 'object' && existing !== true && existing !== 'mock') {
           // input object format - wrap with partytown option
-          config.registry[scriptKey] = [existing, { partytown: true }] as any
+          config.registry[scriptKey] = [existing, partytownScriptOptions] as any
         }
         else if (existing === true || existing === 'mock') {
           // simple enable - convert to array with partytown
-          config.registry[scriptKey] = [{}, { partytown: true }] as any
+          config.registry[scriptKey] = [{}, partytownScriptOptions] as any
         }
         else {
           // not configured - add with partytown enabled
-          config.registry[scriptKey] = [{}, { partytown: true }] as any
+          config.registry[scriptKey] = [{}, partytownScriptOptions] as any
         }
       }
 
