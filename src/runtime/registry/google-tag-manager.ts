@@ -175,14 +175,11 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               // Allow custom initialization
               options?.onBeforeGtmStart?.(gtag)
 
-              if (opts.defaultConsent) {
-                // Set default consent state if provided
-                // ts-disable-next-line
+              if (opts.defaultConsent)
                 gtag('consent', 'default', opts.defaultConsent)
-              }
 
               // Push the standard GTM initialization event
-              (window as any)[dataLayerName].push({
+              ;(window as any)[dataLayerName].push({
                 'gtm.start': new Date().getTime(),
                 'event': 'gtm.js',
               })
@@ -193,14 +190,10 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
   )
 
   // Handle callback for cached/pre-initialized scripts (e.g., when ID is in nuxt.config)
-  // If script was already initialized by the plugin, clientInit already ran without this callback
   if (import.meta.client && options?.onBeforeGtmStart) {
-    const dataLayerName = options?.l ?? options?.dataLayer ?? 'dataLayer'
     const gtag = (window as any).gtag
-    // If gtag exists, script was already initialized - invoke callback immediately
-    if (gtag) {
+    if (gtag)
       options.onBeforeGtmStart(gtag)
-    }
   }
 
   return instance

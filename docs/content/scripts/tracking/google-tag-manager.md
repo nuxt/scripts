@@ -252,15 +252,30 @@ function sendConversion() {
 
 ## Configuring GTM before it starts
 
-`useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
+`useScriptGoogleTagManager` initializes Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
 
-If you need to configure GTM before it starts. For example, [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.
+If you need to configure GTM before it starts, for example [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic), you have two options:
+
+### Option 1: Using `defaultConsent` in nuxt.config (Recommended)
+
+If you're configuring GTM in `nuxt.config`, use the `defaultConsent` option. See the [Default consent mode](#loading-globally) example above.
+
+### Option 2: Using `onBeforeGtmStart` callback
+
+If you're calling `useScriptGoogleTagManager` with the ID directly in a component (not in nuxt.config), use the `onBeforeGtmStart` hook which runs right before the `gtm.start` event is pushed.
+
+::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
+`onBeforeGtmStart` only works when the GTM ID is passed directly to `useScriptGoogleTagManager`, not when configured globally in nuxt.config. For global config, use the `defaultConsent` option instead.
+::
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
 Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) on StackBlitz for a complete Consent Mode v2 implementation.
 ::
 
 ```vue
+<script setup lang="ts">
+const consent = useState('consent', () => 'denied')
+
 const { proxy } = useScriptGoogleTagManager({
   onBeforeGtmStart: (gtag) => {
     // set default consent state to denied
@@ -292,4 +307,5 @@ useScriptEventPage(({ title, path }) => {
     path
   })
 })
+</script>
 ```
