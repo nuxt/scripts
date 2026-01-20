@@ -233,6 +233,10 @@ function sendConversion() {
 
 If you need to configure GTM before it starts. For example, [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.
 
+::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
+Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) on StackBlitz for a complete Consent Mode v2 implementation.
+::
+
 ```vue
 const { proxy } = useScriptGoogleTagManager({
   onBeforeGtmStart: (gtag) => {
