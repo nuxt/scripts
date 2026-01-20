@@ -25,6 +25,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   // Partytown support: add type="text/partytown" for web worker execution
   if (options.partytown) {
     input = { ...input, type: 'text/partytown' }
+    // Disable preload - Partytown handles script loading differently
+    options.warmupStrategy = false
   }
 
   // Warn about unsupported bundling for dynamic sources (internal value set by transform)

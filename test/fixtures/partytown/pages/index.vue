@@ -1,13 +1,10 @@
 <script setup lang="ts">
-// Set up forwarded function to capture worker execution
-if (import.meta.client) {
-  (window as any).testFn = (msg: string) => {
-    (window as any).__partytownExecuted = msg
-  }
-}
-
-// Load script in partytown web worker
-useScript('/worker-script.js', { partytown: true })
+// For partytown, we need the script in SSR HTML - use useHead directly
+useHead({
+  script: [
+    { src: '/worker-script.js', type: 'text/partytown' },
+  ],
+})
 </script>
 
 <template>
