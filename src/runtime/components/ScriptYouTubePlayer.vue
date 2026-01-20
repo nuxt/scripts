@@ -35,6 +35,7 @@ const props = withDefaults(defineProps<{
   playerVars?: YT.PlayerVars
   width?: number
   height?: number
+  ratio?: string
   /**
    * Whether to use youtube-nocookie.com for embedding.
    *
@@ -59,6 +60,7 @@ const props = withDefaults(defineProps<{
   playerVars: { autoplay: 0, playsinline: 1 },
   width: 640,
   height: 360,
+  ratio: '16/9',
   placeholderObjectFit: 'cover',
 })
 
@@ -197,7 +199,7 @@ const rootAttrs = computed(() => {
       position: 'relative',
       backgroundColor: 'black',
       width: '100%',
-      aspectRatio: `${props.width}/${props.height}`,
+      aspectRatio: props.ratio,
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
