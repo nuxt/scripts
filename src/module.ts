@@ -288,6 +288,30 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
+    // Add X/Twitter embed proxy handlers
+    addServerHandler({
+      route: '/api/_scripts/x-embed',
+      handler: await resolvePath('./runtime/server/x-embed'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/x-embed-image',
+      handler: await resolvePath('./runtime/server/x-embed-image'),
+    })
+
+    // Add Instagram embed proxy handlers
+    addServerHandler({
+      route: '/api/_scripts/instagram-embed',
+      handler: await resolvePath('./runtime/server/instagram-embed'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/instagram-embed-image',
+      handler: await resolvePath('./runtime/server/instagram-embed-image'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/instagram-embed-asset',
+      handler: await resolvePath('./runtime/server/instagram-embed-asset'),
+    })
+
     if (nuxt.options.dev)
       setupDevToolsUI(config, resolvePath)
   },
