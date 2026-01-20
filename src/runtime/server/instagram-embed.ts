@@ -42,12 +42,12 @@ export default defineEventHandler(async (event) => {
     // Rewrite scontent CDN images
     .replace(
       /https:\/\/scontent\.cdninstagram\.com([^"'\s)]+)/g,
-      '/api/_scripts/instagram-embed-image?url=' + encodeURIComponent('https://scontent.cdninstagram.com') + '$1',
+      (match) => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(match)}`,
     )
     // Rewrite static CDN CSS/assets
     .replace(
       /https:\/\/static\.cdninstagram\.com([^"'\s)]+)/g,
-      '/api/_scripts/instagram-embed-asset?url=' + encodeURIComponent('https://static.cdninstagram.com') + '$1',
+      (match) => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(match)}`,
     )
     // Remove Instagram's embed.js script (we don't need it)
     .replace(/<script[^>]*src="[^"]*embed\.js"[^>]*><\/script>/gi, '')
