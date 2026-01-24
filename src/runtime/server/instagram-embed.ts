@@ -39,7 +39,8 @@ export default defineEventHandler(async (event) => {
   const html = await $fetch<string>(embedUrl, {
     headers: {
       'Accept': 'text/html',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      // Use simple UA - full Chrome UA triggers JS-heavy version without static content
+      'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
     },
   }).catch((error: any) => {
     throw createError({
@@ -48,20 +49,65 @@ export default defineEventHandler(async (event) => {
     })
   })
 
-  // Rewrite image URLs to proxy through our endpoint
-  const rewrittenHtml = html
-    // Rewrite scontent CDN images (handles regional subdomains like scontent-syd2-1)
+  // Extract CSS URLs from link tags
+  const cssUrls: string[] = []
+  const linkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["'][^>]*>/gi
+  let match
+  while ((match = linkRegex.exec(html)) !== null) {
+    cssUrls.push(match[1])
+  }
+  // Also check href before rel
+  const linkRegex2 = /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']stylesheet["'][^>]*>/gi
+  while ((match = linkRegex2.exec(html)) !== null) {
+    cssUrls.push(match[1])
+  }
+
+  // Fetch all CSS files in parallel
+  const cssContents = await Promise.all(
+    cssUrls.map(url =>
+      $fetch<string>(url, {
+        headers: { Accept: 'text/css' },
+      }).catch(() => ''),
+    ),
+  )
+
+  // Combine CSS and rewrite image URLs inside CSS
+  let combinedCss = cssContents.join('\n')
+  combinedCss = combinedCss.replace(
+    /url\(\/rsrc\.php([^)]+)\)/g,
+    (_m, path) => `url(/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
+  )
+
+  // Base styles to ensure visibility without JS
+  const baseStyles = `
+    html { background: white; max-width: 540px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px; }
+    #splash-screen { display: none !important; }
+    .Embed { opacity: 1 !important; visibility: visible !important; }
+    .EmbeddedMedia, .EmbeddedMediaImage { display: block !important; visibility: visible !important; }
+  `
+
+  let rewrittenHtml = html
+    // Remove link tags (we're inlining CSS)
+    .replace(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi, '')
+    .replace(/<link[^>]+href=["'][^"']+\.css[^"']*["'][^>]*>/gi, '')
+    // Remove noscript redirect
+    .replace(/<noscript>[\s\S]*?<\/noscript>/gi, '')
+    // Rewrite scontent CDN images (decode &amp; entities before encoding)
     .replace(
-      /https:\/\/scontent[^.]*\.cdninstagram\.com[^"'\s),]+/g,
-      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m)}`,
+      /https:\/\/scontent[^"'\s),]+\.cdninstagram\.com[^"'\s),]+/g,
+      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
     )
-    // Rewrite static CDN CSS/assets
+    // Rewrite static CDN assets
     .replace(
       /https:\/\/static\.cdninstagram\.com[^"'\s),]+/g,
-      m => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(m)}`,
+      m => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
     )
-    // Remove all script tags (security + we don't need interactivity)
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+
+  // Inject inlined CSS into head
+  rewrittenHtml = rewrittenHtml.replace(
+    '</head>',
+    `<style>${baseStyles}\n${combinedCss}</style></head>`,
+  )
 
   // Cache for 10 minutes
   setHeader(event, 'Content-Type', 'text/html')

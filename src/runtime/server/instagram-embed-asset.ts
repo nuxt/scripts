@@ -3,7 +3,8 @@ import { $fetch } from 'ofetch'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const url = query.url as string
+  // Decode HTML entities (&amp; -> &) that may be in the URL
+  const url = (query.url as string)?.replace(/&amp;/g, '&')
 
   if (!url) {
     throw createError({
