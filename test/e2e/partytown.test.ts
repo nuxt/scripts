@@ -43,7 +43,7 @@ describe('partytown integration', () => {
     // Verify partytown library is loaded
     const partytownLib = await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'))
-      return scripts.some(s => s.id === 'partytown' || s.src.includes('partytown'))
+      return scripts.some(s => s.id === 'partytown' || s.src?.includes('partytown'))
     })
     expect(partytownLib).toBe(true)
 

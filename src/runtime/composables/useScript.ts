@@ -1,7 +1,7 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead, useHead } from 'nuxt/app'
 import { logger } from '../logger'
@@ -32,14 +32,19 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     useHead({
       script: [{ src, type: 'text/partytown' }],
     })
-    // Return minimal stub - partytown handles execution in worker
-    return {
+    // Register with nuxtApp.$scripts for DevTools visibility
+    const nuxtApp = useNuxtApp()
+    nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+    const status = ref('loaded')
+    const stub = {
       id: src,
-      status: 'loaded',
+      status,
       load: () => Promise.resolve({} as T),
       remove: () => false,
       entry: undefined,
     } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    nuxtApp.$scripts[src] = stub
+    return stub
   }
 
   // Warn about unsupported bundling for dynamic sources (internal value set by transform)
