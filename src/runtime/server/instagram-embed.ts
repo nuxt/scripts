@@ -13,8 +13,18 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Validate Instagram URL
-  const parsedUrl = new URL(postUrl)
+  // Parse and validate URL
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(postUrl)
+  }
+  catch {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid postUrl',
+    })
+  }
+
   if (!['instagram.com', 'www.instagram.com'].includes(parsedUrl.hostname)) {
     throw createError({
       statusCode: 400,
@@ -40,18 +50,18 @@ export default defineEventHandler(async (event) => {
 
   // Rewrite image URLs to proxy through our endpoint
   const rewrittenHtml = html
-    // Rewrite scontent CDN images
+    // Rewrite scontent CDN images (handles regional subdomains like scontent-syd2-1)
     .replace(
-      /https:\/\/scontent\.cdninstagram\.com([^"'\s)]+)/g,
-      (match) => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(match)}`,
+      /https:\/\/scontent[^.]*\.cdninstagram\.com[^"'\s),]+/g,
+      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m)}`,
     )
     // Rewrite static CDN CSS/assets
     .replace(
-      /https:\/\/static\.cdninstagram\.com([^"'\s)]+)/g,
-      (match) => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(match)}`,
+      /https:\/\/static\.cdninstagram\.com[^"'\s),]+/g,
+      m => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(m)}`,
     )
-    // Remove Instagram's embed.js script (we don't need it)
-    .replace(/<script[^>]*src="[^"]*embed\.js"[^>]*><\/script>/gi, '')
+    // Remove all script tags (security + we don't need interactivity)
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
 
   // Cache for 10 minutes
   setHeader(event, 'Content-Type', 'text/html')

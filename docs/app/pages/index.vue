@@ -468,7 +468,7 @@ const contributors = useRuntimeConfig().public.contributors
           </div>
         </div>
         <div class="flex-1 mt-8 xl:mt-0">
-          <ScriptXEmbed tweet-id="1754336034228171055" class="max-w-md mx-auto">
+          <ScriptXEmbed tweet-id="1829496926842368288" class="max-w-md mx-auto">
             <template #default="{ userName, userHandle, userAvatar, text, datetime, likesFormatted, tweetUrl, isVerified }">
               <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
                 <div class="flex items-start gap-3 mb-3">
@@ -482,7 +482,7 @@ const contributors = useRuntimeConfig().public.contributors
                     </div>
                     <span class="text-gray-500 text-sm">@{{ userHandle }}</span>
                   </div>
-                  <a :href="tweetUrl" target="_blank" class="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                  <a :href="tweetUrl" target="_blank" rel="noopener noreferrer" aria-label="Share on X" class="text-gray-400 hover:text-gray-600 flex-shrink-0">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                   </a>
                 </div>

@@ -47,10 +47,10 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const tweetId = query.id as string
 
-  if (!tweetId) {
+  if (!tweetId || !/^\d+$/.test(tweetId)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Tweet ID is required',
+      statusMessage: 'Valid Tweet ID is required',
     })
   }
 
@@ -59,8 +59,9 @@ export default defineEventHandler(async (event) => {
     .map(() => (Math.random() * 36).toString(36)[2])
     .join('')
 
+  const params = new URLSearchParams({ id: tweetId, token: randomToken })
   const tweetData = await $fetch<TweetData>(
-    `https://cdn.syndication.twimg.com/tweet-result?id=${tweetId}&token=${randomToken}`,
+    `https://cdn.syndication.twimg.com/tweet-result?${params.toString()}`,
     {
       headers: {
         'Accept': 'application/json',

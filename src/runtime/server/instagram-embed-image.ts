@@ -12,8 +12,27 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Parse and validate URL
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  }
+  catch {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid image URL',
+    })
+  }
+
+  // Only allow http/https schemes
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid URL scheme',
+    })
+  }
+
   // Only allow Instagram CDN domains (any scontent*.cdninstagram.com subdomain)
-  const parsedUrl = new URL(url)
   if (!parsedUrl.hostname.endsWith('.cdninstagram.com') && parsedUrl.hostname !== 'scontent.cdninstagram.com') {
     throw createError({
       statusCode: 403,
@@ -22,6 +41,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const response = await $fetch.raw(url, {
+    redirect: 'manual',
     headers: {
       'Accept': 'image/webp,image/jpeg,image/png,image/*,*/*;q=0.8',
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
@@ -32,6 +52,14 @@ export default defineEventHandler(async (event) => {
       statusMessage: error.statusMessage || 'Failed to fetch image',
     })
   })
+
+  // Reject redirects to prevent SSRF
+  if (response.status >= 300 && response.status < 400) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Redirects not allowed',
+    })
+  }
 
   // Cache images for 1 hour
   setHeader(event, 'Content-Type', response.headers.get('content-type') || 'image/jpeg')

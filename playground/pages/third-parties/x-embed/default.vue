@@ -1,8 +1,8 @@
 <script setup>
 // Example tweet IDs for testing
 const tweetIds = [
-  '1754336034228171055', // Example tweet
-  '1846337112850932088', // Another example
+  '1754336034228171055', // Matthew Prince tweet
+  '2014481742875521242', // Nuxt 4.3 announcement
 ]
 </script>
 
@@ -28,7 +28,7 @@ const tweetIds = [
                 </div>
                 <a :href="`https://x.com/${userHandle}`" class="text-gray-500 text-sm hover:underline">@{{ userHandle }}</a>
               </div>
-              <a :href="tweetUrl" target="_blank" class="text-gray-400 hover:text-gray-600">
+              <a :href="tweetUrl" target="_blank" rel="noopener noreferrer" aria-label="View on X" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>

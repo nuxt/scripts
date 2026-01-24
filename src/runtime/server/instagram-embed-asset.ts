@@ -12,8 +12,19 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Parse and validate URL
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  }
+  catch {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid asset URL',
+    })
+  }
+
   // Only allow Instagram static CDN
-  const parsedUrl = new URL(url)
   if (parsedUrl.hostname !== 'static.cdninstagram.com') {
     throw createError({
       statusCode: 403,

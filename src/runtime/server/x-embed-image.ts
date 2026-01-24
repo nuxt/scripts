@@ -12,6 +12,26 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Parse and validate URL
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  }
+  catch {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid image URL',
+    })
+  }
+
+  // Only allow http/https schemes
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid URL scheme',
+    })
+  }
+
   // Only allow Twitter/X image domains
   const allowedDomains = [
     'pbs.twimg.com',
@@ -19,7 +39,6 @@ export default defineEventHandler(async (event) => {
     'video.twimg.com',
   ]
 
-  const parsedUrl = new URL(url)
   if (!allowedDomains.includes(parsedUrl.hostname)) {
     throw createError({
       statusCode: 403,
@@ -28,6 +47,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const response = await $fetch.raw(url, {
+    timeout: 5000,
     headers: {
       'Accept': 'image/webp,image/jpeg,image/png,image/*,*/*;q=0.8',
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',

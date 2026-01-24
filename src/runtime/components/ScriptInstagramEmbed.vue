@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
+import { computed } from 'vue'
 import { useAsyncData } from 'nuxt/app'
 import { extractInstagramShortcode } from '../registry/instagram-embed'
 
@@ -16,7 +17,7 @@ const props = withDefaults(defineProps<{
   captions?: boolean
   /**
    * Custom API endpoint for fetching embed HTML
-   * @default '/_scripts/instagram-embed'
+   * @default '/api/_scripts/instagram-embed'
    */
   apiEndpoint?: string
   /**
@@ -28,11 +29,12 @@ const props = withDefaults(defineProps<{
   apiEndpoint: '/api/_scripts/instagram-embed',
 })
 
-const shortcode = extractInstagramShortcode(props.postUrl)
+const shortcode = computed(() => extractInstagramShortcode(props.postUrl))
 
 const { data: html, status, error } = useAsyncData<string>(
-  `instagram-embed-${shortcode}`,
+  `instagram-embed-${props.postUrl}`,
   () => $fetch(`${props.apiEndpoint}?url=${encodeURIComponent(props.postUrl)}&captions=${props.captions}`),
+  { watch: [() => props.postUrl, () => props.captions] },
 )
 
 defineExpose({
