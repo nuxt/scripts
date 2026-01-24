@@ -351,3 +351,87 @@ describe('third-party-capital', () => {
     expect(hasGoogleApi).toBe(true)
   })
 })
+
+describe('social-embeds', () => {
+  it('X embed fetches tweet data server-side and renders', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/x-embed')
+
+    // Wait for content to load (SSR should have it immediately, but useAsyncData may need hydration)
+    await page.waitForSelector('#tweet-content', { timeout: 10000 })
+
+    // Verify tweet data was fetched and rendered
+    const userName = await page.$eval('#user-name', el => el.textContent?.trim())
+    const userHandle = await page.$eval('#user-handle', el => el.textContent?.trim())
+    const text = await page.$eval('#text', el => el.textContent?.trim())
+    const tweetUrl = await page.$eval('#tweet-url', el => el.getAttribute('href'))
+
+    expect(userName).toBeTruthy()
+    expect(userHandle).toBeTruthy()
+    expect(text).toBeTruthy()
+    expect(tweetUrl).toContain('x.com')
+    expect(tweetUrl).toContain('/status/')
+  })
+
+  it('X embed proxies images through server', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/x-embed')
+
+    await page.waitForSelector('#tweet-content', { timeout: 10000 })
+
+    // Check if there are any images and they use the proxy endpoint
+    const hasProxiedImages = await page.evaluate(() => {
+      const photos = document.querySelector('#photos')
+      if (!photos)
+        return true // No photos is OK, some tweets don't have them
+      const imgs = photos.querySelectorAll('img')
+      return Array.from(imgs).every(img => img.src.includes('/api/_scripts/x-embed-image'))
+    })
+    expect(hasProxiedImages).toBe(true)
+  })
+
+  it('Instagram embed fetches HTML server-side and renders', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/instagram-embed')
+
+    // Wait for content to load
+    await page.waitForSelector('#instagram-content', { timeout: 10000 })
+
+    // Verify shortcode was extracted
+    const shortcode = await page.$eval('#shortcode', el => el.textContent?.trim())
+    expect(shortcode).toBe('C3Sk6d2MTjI')
+
+    // Verify HTML was rendered (should contain Instagram embed markup)
+    const hasEmbedHtml = await page.evaluate(() => {
+      const embedDiv = document.querySelector('#embed-html')
+      return embedDiv && embedDiv.innerHTML.length > 100
+    })
+    expect(hasEmbedHtml).toBe(true)
+  })
+
+  it('Instagram embed proxies images through server', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/instagram-embed')
+
+    await page.waitForSelector('#instagram-content', { timeout: 10000 })
+
+    // Check that images in the embed use the proxy endpoint
+    const hasProxiedImages = await page.evaluate(() => {
+      const embedDiv = document.querySelector('#embed-html')
+      if (!embedDiv)
+        return false
+      const imgs = embedDiv.querySelectorAll('img')
+      if (imgs.length === 0)
+        return true // No images yet is OK (might be lazy loaded)
+      return Array.from(imgs).every(img =>
+        img.src.includes('/api/_scripts/instagram-embed-image')
+        || img.src.includes('/api/_scripts/instagram-embed-asset'),
+      )
+    })
+    expect(hasProxiedImages).toBe(true)
+  })
+})
