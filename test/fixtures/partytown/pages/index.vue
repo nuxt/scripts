@@ -6,5 +6,8 @@ useScript('/worker-script.js', { partytown: true })
 <template>
   <div>
     <h1>Partytown Test</h1>
+    <div id="status">
+      Ready
+    </div>
   </div>
 </template>
