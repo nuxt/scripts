@@ -74,6 +74,26 @@ export interface FirstPartyOptions {
   privacy?: FirstPartyPrivacy
 }
 
+/**
+ * Partytown forward config for registry scripts.
+ * Scripts not listed here are likely incompatible due to DOM access requirements.
+ * @see https://partytown.qwik.dev/forwarding-events
+ */
+const PARTYTOWN_FORWARDS: Record<string, string[]> = {
+  googleAnalytics: ['dataLayer.push', 'gtag'],
+  plausible: ['plausible'],
+  fathom: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'],
+  umami: ['umami', 'umami.track'],
+  matomo: ['_paq.push'],
+  segment: ['analytics', 'analytics.track', 'analytics.page', 'analytics.identify'],
+  metaPixel: ['fbq'],
+  xPixel: ['twq'],
+  tiktokPixel: ['ttq.track', 'ttq.page', 'ttq.identify'],
+  snapchatPixel: ['snaptr'],
+  redditPixel: ['rdt'],
+  cloudflareWebAnalytics: ['__cfBeacon'],
+}
+
 export interface ModuleOptions {
   /**
    * Route third-party scripts through your domain for improved privacy.
@@ -104,6 +124,12 @@ export interface ModuleOptions {
    * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
   registry?: NuxtConfigScriptRegistry
+  /**
+   * Registry scripts to load via Partytown (web worker).
+   * Shorthand for setting `partytown: true` on individual registry scripts.
+   * @example ['googleAnalytics', 'plausible', 'fathom']
+   */
+  partytown?: (keyof NuxtConfigScriptRegistry)[]
   /**
    * Default options for scripts.
    */
@@ -151,6 +177,22 @@ export interface ModuleOptions {
     integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
   }
   /**
+   * Google Static Maps proxy configuration.
+   * Proxies static map images through your server to fix CORS issues and enable caching.
+   */
+  googleStaticMapsProxy?: {
+    /**
+     * Enable proxying Google Static Maps through your own origin.
+     * @default false
+     */
+    enabled?: boolean
+    /**
+     * Cache duration for static map images in seconds.
+     * @default 3600 (1 hour)
+     */
+    cacheMaxAge?: number
+  }
+  /**
    * Whether the module is enabled.
    *
    * @default true
@@ -188,6 +230,10 @@ export default defineNuxtModule<ModuleOptions>({
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
     },
+    googleStaticMapsProxy: {
+      enabled: false,
+      cacheMaxAge: 3600,
+    },
     enabled: true,
     debug: false,
   },
@@ -209,11 +255,21 @@ export default defineNuxtModule<ModuleOptions>({
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
-    nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
+    nuxt.options.runtimeConfig['nuxt-scripts'] = {
+      version: version!,
+      // Private proxy config with API key (server-side only)
+      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
+        : undefined,
+    }
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
-      defaultScriptOptions: config.defaultScriptOptions,
+      defaultScriptOptions: config.defaultScriptOptions as any,
+      // Only expose enabled and cacheMaxAge to client, not apiKey
+      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
+        : undefined,
     }
 
     // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
@@ -254,6 +310,51 @@ export default defineNuxtModule<ModuleOptions>({
       ? config.firstParty.privacy ?? 'anonymize'
       : 'anonymize'
     const assetsPrefix = firstPartyPrefix || config.assets?.prefix || '/_scripts'
+
+    // Process partytown shorthand - add partytown: true to specified registry scripts
+    // and auto-configure @nuxtjs/partytown forward array
+    if (config.partytown?.length) {
+      config.registry = config.registry || {}
+      const requiredForwards: string[] = []
+
+      for (const scriptKey of config.partytown) {
+        // Collect required forwards for this script
+        const forwards = PARTYTOWN_FORWARDS[scriptKey]
+        if (forwards) {
+          requiredForwards.push(...forwards)
+        }
+        else if (import.meta.dev) {
+          logger.warn(`[partytown] "${scriptKey}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
+        }
+
+        const existing = config.registry[scriptKey]
+        if (Array.isArray(existing)) {
+          // [input, options] format - merge partytown into options
+          existing[1] = { ...existing[1], partytown: true }
+        }
+        else if (existing && typeof existing === 'object' && existing !== true && existing !== 'mock') {
+          // input object format - wrap with partytown option
+          config.registry[scriptKey] = [existing, { partytown: true }] as any
+        }
+        else if (existing === true || existing === 'mock') {
+          // simple enable - convert to array with partytown
+          config.registry[scriptKey] = [{}, { partytown: true }] as any
+        }
+        else {
+          // not configured - add with partytown enabled
+          config.registry[scriptKey] = [{}, { partytown: true }] as any
+        }
+      }
+
+      // Auto-configure @nuxtjs/partytown forward array
+      if (requiredForwards.length && hasNuxtModule('@nuxtjs/partytown')) {
+        const partytownConfig = (nuxt.options as any).partytown || {}
+        const existingForwards = partytownConfig.forward || []
+        const newForwards = [...new Set([...existingForwards, ...requiredForwards])]
+        ;(nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
+        logger.info(`[partytown] Auto-configured forwards: ${requiredForwards.join(', ')}`)
+      }
+    }
 
     const composables = [
       'useScript',
@@ -414,7 +515,6 @@ export default defineNuxtPlugin({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
-      // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
       await nuxt.hooks.callHook('scripts:registry', registryScripts)
 
       for (const script of registryScripts) {
@@ -575,6 +675,38 @@ export default defineNuxtPlugin({
         for (const p of initPromise)
           await p?.()
       })
+    })
+
+    // Add Google Static Maps proxy handler if enabled
+    if (config.googleStaticMapsProxy?.enabled) {
+      addServerHandler({
+        route: '/_scripts/google-static-maps-proxy',
+        handler: await resolvePath('./runtime/server/google-static-maps-proxy'),
+      })
+    }
+
+    // Add X/Twitter embed proxy handlers
+    addServerHandler({
+      route: '/api/_scripts/x-embed',
+      handler: await resolvePath('./runtime/server/x-embed'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/x-embed-image',
+      handler: await resolvePath('./runtime/server/x-embed-image'),
+    })
+
+    // Add Instagram embed proxy handlers
+    addServerHandler({
+      route: '/api/_scripts/instagram-embed',
+      handler: await resolvePath('./runtime/server/instagram-embed'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/instagram-embed-image',
+      handler: await resolvePath('./runtime/server/instagram-embed-image'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/instagram-embed-asset',
+      handler: await resolvePath('./runtime/server/instagram-embed-asset'),
     })
 
     if (nuxt.options.dev) {

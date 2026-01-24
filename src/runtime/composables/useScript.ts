@@ -1,9 +1,9 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from 'nuxt/app'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead, useHead } from 'nuxt/app'
 import { logger } from '../logger'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
@@ -21,6 +21,31 @@ export function resolveScriptKey(input: any): string {
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
+
+  // Partytown quick-path: use useHead for SSR rendering
+  // Partytown needs scripts in initial HTML with type="text/partytown"
+  if (options.partytown) {
+    const src = input.src
+    if (!src) {
+      throw new Error('useScript with partytown requires a src')
+    }
+    useHead({
+      script: [{ src, type: 'text/partytown' }],
+    })
+    // Register with nuxtApp.$scripts for DevTools visibility
+    const nuxtApp = useNuxtApp()
+    nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+    const status = ref('loaded')
+    const stub = {
+      id: src,
+      status,
+      load: () => Promise.resolve({} as T),
+      remove: () => false,
+      entry: undefined,
+    } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    nuxtApp.$scripts[src] = stub
+    return stub
+  }
 
   // Warn about unsupported bundling for dynamic sources (internal value set by transform)
   if (import.meta.dev && (options.bundle as any) === 'unsupported') {
@@ -68,7 +93,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
-  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> & { reload: () => Promise<T> }
   const _remove = instance.remove
   instance.remove = () => {
     nuxtApp.$scripts[id] = undefined
@@ -80,6 +105,22 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       return Promise.reject(err)
     }
     return _load()
+  }
+  // Add reload method for scripts that need to re-execute (e.g., DOM-scanning scripts)
+  instance.reload = async () => {
+    instance.remove()
+    // Use unique key to bypass Unhead's deduplication
+    const reloadInput = typeof input === 'string'
+      ? { src: input, key: `${id}-${Date.now()}` }
+      : { ...input, key: `${id}-${Date.now()}` }
+    // Re-create the script entry
+    const reloaded = _useScript<T>(reloadInput, { ...options, trigger: 'client' } as any as UseScriptOptions<T>)
+    // Copy over the new instance properties
+    Object.assign(instance, {
+      status: reloaded.status,
+      entry: reloaded.entry,
+    })
+    return reloaded.load()
   }
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
@@ -98,7 +139,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
     function syncScripts() {
       nuxtApp._scripts[instance.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtDevToolsScriptInstance> })
+      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts })
     }
 
     if (!nuxtApp._scripts[instance.id]) {

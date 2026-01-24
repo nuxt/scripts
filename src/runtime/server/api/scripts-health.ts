@@ -35,10 +35,14 @@ export default defineEventHandler(async (event) => {
 
   const checks: HealthCheckResult[] = []
 
+  // Build regex dynamically from collectPrefix to extract script name
+  const escapedPrefix = scriptsConfig.collectPrefix.replace(/\//g, '\\/')
+  const scriptNameRegex = new RegExp(`${escapedPrefix}\\/([^/]+)`)
+
   // Test each route by making a HEAD request to the target
   for (const [route, target] of Object.entries(scriptsConfig.routes)) {
     // Extract script name from route (e.g., /_scripts/c/ga/** -> ga)
-    const scriptMatch = route.match(/\/_scripts\/c\/([^/]+)/)
+    const scriptMatch = route.match(scriptNameRegex)
     const scriptName = scriptMatch?.[1] || 'unknown'
 
     // Convert wildcard target to a testable URL

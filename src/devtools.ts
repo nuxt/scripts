@@ -33,7 +33,6 @@ export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver[
     })
   }
 
-  // @ts-expect-error untyped
   nuxt.hook('devtools:customTabs', (tabs) => {
     tabs.push({
       // unique identifier

@@ -139,7 +139,26 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptStripe([{"id":"test"},{"trigger":"onNuxtReady"}])')
+    expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
+  })
+
+  it('registry with partytown option', async () => {
+    const res = templatePlugin({
+      globals: {},
+      registry: {
+        googleAnalytics: [
+          { id: 'G-XXXXX' },
+          { partytown: true },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"G-XXXXX","scriptOptions":{"partytown":true}})')
   })
 
   // Test idleTimeout trigger in globals
@@ -165,7 +184,7 @@ describe('template plugin file', () => {
       },
     }, [])
     expect(res).toContain('import { useScriptTriggerInteraction }')
-    expect(res).toContain('useScriptTriggerInteraction({ events: [\\"scroll\\",\\"click\\"] })')
+    expect(res).toContain('useScriptTriggerInteraction({ events: ["scroll","click"] })')
   })
 
   // Test registry with idleTimeout trigger
@@ -184,8 +203,9 @@ describe('template plugin file', () => {
         },
       },
     ])
-    // Registry scripts pass trigger objects directly, they don't resolve triggers in templates
-    expect(res).toContain('useScriptGoogleAnalytics([{"id":"GA_MEASUREMENT_ID"},{"trigger":{"idleTimeout":5000}}])')
+    // Registry scripts now properly resolve triggers in templates
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"GA_MEASUREMENT_ID","scriptOptions":{"trigger":useScriptTriggerIdleTimeout({ timeout: 5000 })}})')
   })
 
   // Test both triggers together (should import both)

@@ -113,7 +113,9 @@ async function downloadScript(opts: {
   if (!res) {
     // Use storage to cache the font data between builds
     // Include proxy in cache key to differentiate proxied vs non-proxied versions
-    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename}` : `bundle:${filename}`
+    // Also include a hash of proxyRewrites content to handle different collectPrefix values
+    const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
+    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename}${proxyRewritesHash}` : `bundle:${filename}`
     const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
     if (shouldUseCache) {
@@ -380,11 +382,33 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     forceDownload = bundleValue === 'force'
                   }
                   // Check for per-script first-party opt-out (firstParty: false)
+                  // Check in three locations:
+                  // 1. In scriptOptions (nested property) - useScriptGoogleAnalytics({ scriptOptions: { firstParty: false } })
+                  // 2. In the second argument for direct options - useScript('...', { firstParty: false })
+                  // 3. In the first argument's direct properties - useScript({ src: '...', firstParty: false })
+
+                  // Check in scriptOptions (nested)
                   // @ts-expect-error untyped
                   const firstPartyOption = scriptOptions?.value.properties?.find((prop) => {
                     return prop.type === 'Property' && prop.key?.name === 'firstParty' && prop.value.type === 'Literal'
                   })
-                  const firstPartyOptOut = firstPartyOption?.value.value === false
+                  let firstPartyOptOut = firstPartyOption?.value.value === false
+
+                  // Check in second argument (direct options)
+                  if (!firstPartyOptOut && node.arguments[1]?.type === 'ObjectExpression') {
+                    const secondArgFirstPartyProp = (node.arguments[1] as ObjectExpression).properties.find(
+                      (p: any) => p.type === 'Property' && p.key?.name === 'firstParty' && p.value.type === 'Literal',
+                    )
+                    firstPartyOptOut = (secondArgFirstPartyProp as any)?.value.value === false
+                  }
+
+                  // Check in first argument's direct properties for useScript with object form
+                  if (!firstPartyOptOut && node.arguments[0]?.type === 'ObjectExpression') {
+                    const firstArgFirstPartyProp = (node.arguments[0] as ObjectExpression).properties.find(
+                      (p: any) => p.type === 'Property' && p.key?.name === 'firstParty' && p.value.type === 'Literal',
+                    )
+                    firstPartyOptOut = (firstArgFirstPartyProp as any)?.value.value === false
+                  }
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     let url = _url

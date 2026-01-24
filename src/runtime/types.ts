@@ -38,7 +38,13 @@ import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T>
+export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
+  /**
+   * Remove and reload the script. Useful for scripts that need to re-execute
+   * after SPA navigation (e.g., DOM-scanning scripts like iubenda).
+   */
+  reload: () => Promise<T>
+}
 
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -68,6 +74,13 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    * Note: This option only works as an opt-out. To enable first-party routing, use the global `scripts.firstParty` option in nuxt.config.
    */
   firstParty?: false
+  /**
+   * Load the script in a web worker using Partytown.
+   * When enabled, adds `type="text/partytown"` to the script tag.
+   * Requires @nuxtjs/partytown to be installed and configured separately.
+   * @see https://partytown.qwik.dev/
+   */
+  partytown?: boolean
   /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
