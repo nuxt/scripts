@@ -79,9 +79,10 @@ export function formatTweetDate(dateString: string): string {
     hour: 'numeric',
     minute: 'numeric',
     hour12: true,
+    timeZone: 'UTC',
   })
-  const day = date.toLocaleString('en-US', { month: 'short' })
-  return `${time} · ${day} ${date.getDate()}, ${date.getFullYear()}`
+  const day = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })
+  return `${time} · ${day} ${date.getUTCDate()}, ${date.getUTCFullYear()}`
 }
 
 /**

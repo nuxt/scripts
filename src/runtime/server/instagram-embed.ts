@@ -54,12 +54,14 @@ export default defineEventHandler(async (event) => {
   const linkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["'][^>]*>/gi
   let match
   while ((match = linkRegex.exec(html)) !== null) {
-    cssUrls.push(match[1])
+    if (match[1])
+      cssUrls.push(match[1])
   }
   // Also check href before rel
   const linkRegex2 = /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']stylesheet["'][^>]*>/gi
   while ((match = linkRegex2.exec(html)) !== null) {
-    cssUrls.push(match[1])
+    if (match[1])
+      cssUrls.push(match[1])
   }
 
   // Fetch all CSS files in parallel
@@ -101,6 +103,11 @@ export default defineEventHandler(async (event) => {
     .replace(
       /https:\/\/static\.cdninstagram\.com[^"'\s),]+/g,
       m => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
+    )
+    // Rewrite lookaside Instagram images (SEO/crawler images)
+    .replace(
+      /https:\/\/lookaside\.instagram\.com[^"'\s),]+/g,
+      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
     )
 
   // Inject inlined CSS into head
