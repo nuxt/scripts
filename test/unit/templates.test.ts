@@ -184,7 +184,7 @@ describe('template plugin file', () => {
       },
     }, [])
     expect(res).toContain('import { useScriptTriggerInteraction }')
-    expect(res).toContain('useScriptTriggerInteraction({ events: [\\"scroll\\",\\"click\\"] })')
+    expect(res).toContain('useScriptTriggerInteraction({ events: ["scroll","click"] })')
   })
 
   // Test registry with idleTimeout trigger

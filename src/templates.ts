@@ -119,12 +119,15 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
         const scriptOptions = { ...c[1] }
         const triggerResolved = resolveTriggerForTemplate(scriptOptions?.trigger)
         if (triggerResolved) {
-          scriptOptions.trigger = `__TRIGGER_${triggerResolved}__` as any
+          scriptOptions.trigger = '__TRIGGER_PLACEHOLDER__' as any
           if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
           if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
         }
         const args = { ...input, scriptOptions }
-        inits.push(`const ${k} = ${importDefinition.import.name}(${JSON.stringify(args).replace(/"__TRIGGER_(.*?)__"/g, '$1')})`)
+        const argsJson = triggerResolved
+          ? JSON.stringify(args).replace(/"__TRIGGER_PLACEHOLDER__"/g, triggerResolved)
+          : JSON.stringify(args)
+        inits.push(`const ${k} = ${importDefinition.import.name}(${argsJson})`)
       }
       else {
         const args = (typeof c !== 'object' ? {} : c) || {}
@@ -142,8 +145,9 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       if (triggerResolved) {
         if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
         if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
-        const resolvedOptions = { ...options, trigger: `__TRIGGER_${triggerResolved}__` } as any
-        inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${JSON.stringify(resolvedOptions).replace(/"__TRIGGER_(.*?)__"/g, '$1')}, use: () => ({ ${k}: window.${k} }) })`)
+        const resolvedOptions = { ...options, trigger: '__TRIGGER_PLACEHOLDER__' } as any
+        const optionsJson = JSON.stringify(resolvedOptions).replace(/"__TRIGGER_PLACEHOLDER__"/g, triggerResolved)
+        inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${optionsJson}, use: () => ({ ${k}: window.${k} }) })`)
       }
       else {
         inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${JSON.stringify(c[1])}, use: () => ({ ${k}: window.${k} }) })`)
@@ -154,8 +158,9 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       if (triggerResolved) {
         if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
         if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
-        const resolvedOptions = { ...c, trigger: `__TRIGGER_${triggerResolved}__` } as any
-        inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...resolvedOptions }).replace(/"__TRIGGER_(.*?)__"/g, '$1')}, { use: () => ({ ${k}: window.${k} }) })`)
+        const resolvedOptions = { ...c, trigger: '__TRIGGER_PLACEHOLDER__' } as any
+        const argsJson = JSON.stringify({ key: k, ...resolvedOptions }).replace(/"__TRIGGER_PLACEHOLDER__"/g, triggerResolved)
+        inits.push(`const ${k} = useScript(${argsJson}, { use: () => ({ ${k}: window.${k} }) })`)
       }
       else {
         inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...c })}, { use: () => ({ ${k}: window.${k} }) })`)
