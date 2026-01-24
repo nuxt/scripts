@@ -48,6 +48,26 @@ export default defineNuxtConfig({
 })
 ```
 
+```ts [Default consent mode]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: '<YOUR_ID>',
+        defaultConsent: {
+          // This can be any string or number value according to GTM documentation
+          // Here we set all consent types to 'denied' by default
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied',
+          'ad_storage': 'denied',
+          'analytics_storage': 'denied',
+        }
+      }
+    }
+  }
+})
+```
+
 ```ts [Environment Variables]
 export default defineNuxtConfig({
   scripts: {
@@ -154,6 +174,9 @@ export const GoogleTagManagerOptions = object({
 
     /** Referrer policy for analytics requests */
     authReferrerPolicy: optional(string()),
+    
+    /** Default consent settings for GTM */
+    defaultConsent: optional(record(string(), union([string(), number()]))),
   })
 ```
 
@@ -167,7 +190,13 @@ type GoogleTagManagerInput = typeof GoogleTagManagerOptions & { onBeforeGtmStart
 
 ### Server-Side GTM Setup
 
-We can add custom GTM script source for server-side implementation. You can override the script src, this will merge in any of the computed query params. 
+Server-side GTM moves tag execution to your server for better privacy, performance (~500ms faster), and ad-blocker bypass.
+
+**Prerequisites:** [Server-side GTM container](https://tagmanager.google.com), hosting ([Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) / [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide)), and a custom domain.
+
+#### Configuration
+
+Override the script source with your custom domain:
 
 ```ts
 // nuxt.config.ts
@@ -177,7 +206,7 @@ export default defineNuxtConfig({
       googleTagManager: {
         id: 'GTM-XXXXXX',
         scriptInput: {
-          src: 'https://your-domain.com/gtm.js'
+          src: 'https://gtm.example.com/gtm.js'
         }
       }
     }
@@ -185,17 +214,19 @@ export default defineNuxtConfig({
 })
 ```
 
-```vue
-<!-- Component usage -->
-<script setup lang="ts">
-const { proxy } = useScriptGoogleTagManager({
-  id: 'GTM-XXXXXX',
-  scriptInput: {
-    src: 'https://your-domain.com/gtm.js'
-  }
-})
-</script>
-```
+For environment tokens (`auth`, `preview`), find them in GTM: Admin > Environments > Get Snippet.
+
+#### Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Script blocked by ad blocker | Custom domain detected as tracker | Use a non-obvious subdomain name (avoid `gtm`, `analytics`, `tracking`) |
+| Cookies expire after 7 days in Safari | ITP treats subdomain as third-party | Use same-origin setup or implement cookie keeper |
+| Preview mode not working | Missing or incorrect auth/preview tokens | Copy tokens from GTM: Admin > Environments > Get Snippet |
+| CORS errors | Server container misconfigured | Ensure your server container allows requests from your domain |
+| `gtm.js` returns 404 | Incorrect path mapping | Verify your CDN/proxy routes `/gtm.js` to the container |
+
+For infrastructure setup, see [Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) or [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide) guides.
 
 ### Basic Usage
 
@@ -229,11 +260,56 @@ function sendConversion() {
 
 ## Configuring GTM before it starts
 
-`useScriptGoogleTagManager` initialize Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
+`useScriptGoogleTagManager` initializes Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
 
-If you need to configure GTM before it starts. For example, [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). You can use the `onBeforeGtmStart` hook which is run right before we push the `gtm.start` event into the dataLayer.
+If you need to configure GTM before it starts, for example [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic), you have two options:
+
+### Option 1: Using `defaultConsent` in nuxt.config (Recommended)
+
+If you're configuring GTM in `nuxt.config`, use the `defaultConsent` option. See the [Default consent mode](#loading-globally) example above.
+
+### Option 2: Using `onBeforeGtmStart` callback
+
+If you're calling `useScriptGoogleTagManager` with the ID directly in a component (not in nuxt.config), use the `onBeforeGtmStart` hook which runs right before the `gtm.start` event is pushed.
+
+::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
+`onBeforeGtmStart` only works when the GTM ID is passed directly to `useScriptGoogleTagManager`, not when configured globally in nuxt.config. For global config, use the `defaultConsent` option instead.
+::
+
+::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
+Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) or [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) on StackBlitz.
+::
+
+#### Consent Mode v2 Signals
+
+| Signal | Purpose |
+|--------|---------|
+| `ad_storage` | Cookies for advertising |
+| `ad_user_data` | Send user data to Google for ads |
+| `ad_personalization` | Personalized ads (remarketing) |
+| `analytics_storage` | Cookies for analytics |
+
+#### Updating Consent
+
+When the user accepts, call `gtag('consent', 'update', ...)`:
+
+```ts
+function acceptCookies() {
+  window.gtag?.('consent', 'update', {
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
+    analytics_storage: 'granted',
+  })
+}
+```
+
+To block GTM entirely until consent, combine with [useScriptTriggerConsent](/docs/guides/consent).
 
 ```vue
+<script setup lang="ts">
+const consent = useState('consent', () => 'denied')
+
 const { proxy } = useScriptGoogleTagManager({
   onBeforeGtmStart: (gtag) => {
     // set default consent state to denied
@@ -265,4 +341,5 @@ useScriptEventPage(({ title, path }) => {
     path
   })
 })
+</script>
 ```

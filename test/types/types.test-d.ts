@@ -28,6 +28,12 @@ describe('#nuxt-scripts/types exports', () => {
     expectTypeOf<UseScriptContext<{ foo: string }>>().toBeObject()
   })
 
+  it('UseScriptContext has reload method', () => {
+    type Ctx = UseScriptContext<{ foo: string }>
+    expectTypeOf<Ctx['reload']>().toBeFunction()
+    expectTypeOf<Ctx['reload']>().returns.toEqualTypeOf<Promise<{ foo: string }>>()
+  })
+
   it('exports NuxtUseScriptOptions type', () => {
     expectTypeOf<NuxtUseScriptOptions>().not.toBeAny()
     expectTypeOf<NuxtUseScriptOptions>().toBeObject()

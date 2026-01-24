@@ -6,12 +6,12 @@
     "client",
     "scripts",
     "dist",
-    ".nuxt",
     ".output",
     "test/e2e",
     "test/fixtures",
     "test/unit",
-    "test/benchmark.skip.ts"
+    "test/benchmark.skip.ts",
+    "examples"
   ],
   "compilerOptions": {
     "types": ["vitest/globals"]

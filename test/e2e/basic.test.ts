@@ -143,6 +143,35 @@ describe('basic', () => {
       ]
     `)
   })
+  it('reload method re-executes script', async () => {
+    const { page, logs } = await createPage('/reload-trigger')
+    await page.waitForTimeout(500)
+    // Script should have loaded once
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
+    // Status should be loaded
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+    // Click reload button
+    await page.click('#reload-script')
+    await page.waitForTimeout(500)
+    // Script should have loaded twice
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(2)
+    // Status should still be loaded after reload
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+  })
+  it('reload method can be called multiple times', async () => {
+    const { page, logs } = await createPage('/reload-trigger')
+    await page.waitForTimeout(500)
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
+    // Reload 3 times
+    await page.click('#reload-script')
+    await page.waitForTimeout(300)
+    await page.click('#reload-script')
+    await page.waitForTimeout(300)
+    await page.click('#reload-script')
+    await page.waitForTimeout(500)
+    // Script should have loaded 4 times total
+    expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(4)
+  })
   it('bundle', async () => {
     const { page } = await createPage('/bundle-use-script')
     // wait for the script to be loaded
@@ -160,6 +189,48 @@ describe('basic', () => {
       return script?.getAttribute('type')
     })
     expect(scriptType).toBe('text/partytown')
+  })
+})
+
+describe('youtube', () => {
+  it('multiple players only load clicked player', {
+    timeout: 20000,
+  }, async () => {
+    const { page } = await createPage('/youtube-multiple')
+    await page.waitForTimeout(500)
+
+    // All players should be waiting initially
+    const player1Status = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2Status = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3Status = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1Status).toBe('waiting')
+    expect(player2Status).toBe('waiting')
+    expect(player3Status).toBe('waiting')
+
+    // Click only player 2
+    await page.click('#player2')
+    await page.waitForTimeout(3000) // Wait for YouTube iframe to load
+
+    // Only player 2 should be ready, others still waiting
+    const player1StatusAfter = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player2StatusAfter = await page.$eval('#player2-status', el => el.textContent?.trim())
+    const player3StatusAfter = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusAfter).toBe('waiting')
+    expect(player2StatusAfter).toBe('ready')
+    expect(player3StatusAfter).toBe('waiting')
+
+    // Now click player 1
+    await page.click('#player1')
+    await page.waitForTimeout(3000)
+
+    // Player 1 and 2 should be ready, player 3 still waiting
+    const player1StatusFinal = await page.$eval('#player1-status', el => el.textContent?.trim())
+    const player3StatusFinal = await page.$eval('#player3-status', el => el.textContent?.trim())
+
+    expect(player1StatusFinal).toBe('ready')
+    expect(player3StatusFinal).toBe('waiting')
   })
 })
 
@@ -288,5 +359,89 @@ describe('third-party-capital', () => {
         && typeof window.google.accounts.id.initialize === 'function'
     })
     expect(hasGoogleApi).toBe(true)
+  })
+})
+
+describe('social-embeds', () => {
+  it('X embed fetches tweet data server-side and renders', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/x-embed')
+
+    // Wait for content to load (SSR should have it immediately, but useAsyncData may need hydration)
+    await page.waitForSelector('#tweet-content', { timeout: 10000 })
+
+    // Verify tweet data was fetched and rendered
+    const userName = await page.$eval('#user-name', el => el.textContent?.trim())
+    const userHandle = await page.$eval('#user-handle', el => el.textContent?.trim())
+    const text = await page.$eval('#text', el => el.textContent?.trim())
+    const tweetUrl = await page.$eval('#tweet-url', el => el.getAttribute('href'))
+
+    expect(userName).toBeTruthy()
+    expect(userHandle).toBeTruthy()
+    expect(text).toBeTruthy()
+    expect(tweetUrl).toContain('x.com')
+    expect(tweetUrl).toContain('/status/')
+  })
+
+  it('X embed proxies images through server', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/x-embed')
+
+    await page.waitForSelector('#tweet-content', { timeout: 10000 })
+
+    // Check if there are any images and they use the proxy endpoint
+    const hasProxiedImages = await page.evaluate(() => {
+      const photos = document.querySelector('#photos')
+      if (!photos)
+        return true // No photos is OK, some tweets don't have them
+      const imgs = photos.querySelectorAll('img')
+      return Array.from(imgs).every(img => img.src.includes('/api/_scripts/x-embed-image'))
+    })
+    expect(hasProxiedImages).toBe(true)
+  })
+
+  it('Instagram embed fetches HTML server-side and renders', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/instagram-embed')
+
+    // Wait for content to load
+    await page.waitForSelector('#instagram-content', { timeout: 10000 })
+
+    // Verify shortcode was extracted
+    const shortcode = await page.$eval('#shortcode', el => el.textContent?.trim())
+    expect(shortcode).toBe('C3Sk6d2MTjI')
+
+    // Verify HTML was rendered (should contain Instagram embed markup)
+    const hasEmbedHtml = await page.evaluate(() => {
+      const embedDiv = document.querySelector('#embed-html')
+      return embedDiv && embedDiv.innerHTML.length > 100
+    })
+    expect(hasEmbedHtml).toBe(true)
+  })
+
+  it('Instagram embed proxies images through server', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/instagram-embed')
+
+    await page.waitForSelector('#instagram-content', { timeout: 10000 })
+
+    // Check that images in the embed use the proxy endpoint
+    const hasProxiedImages = await page.evaluate(() => {
+      const embedDiv = document.querySelector('#embed-html')
+      if (!embedDiv)
+        return false
+      const imgs = embedDiv.querySelectorAll('img')
+      if (imgs.length === 0)
+        return true // No images yet is OK (might be lazy loaded)
+      return Array.from(imgs).every(img =>
+        img.src.includes('/api/_scripts/instagram-embed-image')
+        || img.src.includes('/api/_scripts/instagram-embed-asset'),
+      )
+    })
+    expect(hasProxiedImages).toBe(true)
   })
 })
