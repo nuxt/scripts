@@ -66,6 +66,13 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    */
   bundle?: boolean | 'force'
   /**
+   * Load the script in a web worker using Partytown.
+   * When enabled, adds `type="text/partytown"` to the script tag.
+   * Requires @nuxtjs/partytown to be installed and configured separately.
+   * @see https://partytown.qwik.dev/
+   */
+  partytown?: boolean
+  /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
    */

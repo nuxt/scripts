@@ -28,11 +28,37 @@ import type {
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
+/**
+ * Partytown forward config for registry scripts.
+ * Scripts not listed here are likely incompatible due to DOM access requirements.
+ * @see https://partytown.qwik.dev/forwarding-events
+ */
+const PARTYTOWN_FORWARDS: Record<string, string[]> = {
+  googleAnalytics: ['dataLayer.push', 'gtag'],
+  plausible: ['plausible'],
+  fathom: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'],
+  umami: ['umami', 'umami.track'],
+  matomo: ['_paq.push'],
+  segment: ['analytics', 'analytics.track', 'analytics.page', 'analytics.identify'],
+  metaPixel: ['fbq'],
+  xPixel: ['twq'],
+  tiktokPixel: ['ttq.track', 'ttq.page', 'ttq.identify'],
+  snapchatPixel: ['snaptr'],
+  redditPixel: ['rdt'],
+  cloudflareWebAnalytics: ['__cfBeacon'],
+}
+
 export interface ModuleOptions {
   /**
    * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
   registry?: NuxtConfigScriptRegistry
+  /**
+   * Registry scripts to load via Partytown (web worker).
+   * Shorthand for setting `partytown: true` on individual registry scripts.
+   * @example ['googleAnalytics', 'plausible', 'fathom']
+   */
+  partytown?: (keyof NuxtConfigScriptRegistry)[]
   /**
    * Default options for scripts.
    */
@@ -184,6 +210,51 @@ export default defineNuxtModule<ModuleOptions>({
         nuxt.options.runtimeConfig.public.scripts || {},
         config.registry,
       )
+    }
+
+    // Process partytown shorthand - add partytown: true to specified registry scripts
+    // and auto-configure @nuxtjs/partytown forward array
+    if (config.partytown?.length) {
+      config.registry = config.registry || {}
+      const requiredForwards: string[] = []
+
+      for (const scriptKey of config.partytown) {
+        // Collect required forwards for this script
+        const forwards = PARTYTOWN_FORWARDS[scriptKey]
+        if (forwards) {
+          requiredForwards.push(...forwards)
+        }
+        else if (import.meta.dev) {
+          logger.warn(`[partytown] "${scriptKey}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
+        }
+
+        const existing = config.registry[scriptKey]
+        if (Array.isArray(existing)) {
+          // [input, options] format - merge partytown into options
+          existing[1] = { ...existing[1], partytown: true }
+        }
+        else if (existing && typeof existing === 'object' && existing !== true && existing !== 'mock') {
+          // input object format - wrap with partytown option
+          config.registry[scriptKey] = [existing, { partytown: true }] as any
+        }
+        else if (existing === true || existing === 'mock') {
+          // simple enable - convert to array with partytown
+          config.registry[scriptKey] = [{}, { partytown: true }] as any
+        }
+        else {
+          // not configured - add with partytown enabled
+          config.registry[scriptKey] = [{}, { partytown: true }] as any
+        }
+      }
+
+      // Auto-configure @nuxtjs/partytown forward array
+      if (requiredForwards.length && hasNuxtModule('@nuxtjs/partytown')) {
+        const partytownConfig = (nuxt.options as any).partytown || {}
+        const existingForwards = partytownConfig.forward || []
+        const newForwards = [...new Set([...existingForwards, ...requiredForwards])]
+        ;(nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
+        logger.info(`[partytown] Auto-configured forwards: ${requiredForwards.join(', ')}`)
+      }
     }
 
     const composables = [

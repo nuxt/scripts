@@ -180,6 +180,16 @@ describe('basic', () => {
     const text = await page.$eval('#script-src', el => el.textContent)
     expect(text).toMatchInlineSnapshot(`"/_scripts/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
   })
+  it('partytown adds type attribute', async () => {
+    const { page } = await createPage('/partytown')
+    await page.waitForTimeout(500)
+    // verify the script tag has type="text/partytown"
+    const scriptType = await page.evaluate(() => {
+      const script = document.querySelector('script[src="/myScript.js"]')
+      return script?.getAttribute('type')
+    })
+    expect(scriptType).toBe('text/partytown')
+  })
 })
 
 describe('youtube', () => {

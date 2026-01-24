@@ -1,9 +1,9 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from 'nuxt/app'
+import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead, useHead } from 'nuxt/app'
 import { logger } from '../logger'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
@@ -21,6 +21,31 @@ export function resolveScriptKey(input: any): string {
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
+
+  // Partytown quick-path: use useHead for SSR rendering
+  // Partytown needs scripts in initial HTML with type="text/partytown"
+  if (options.partytown) {
+    const src = input.src
+    if (!src) {
+      throw new Error('useScript with partytown requires a src')
+    }
+    useHead({
+      script: [{ src, type: 'text/partytown' }],
+    })
+    // Register with nuxtApp.$scripts for DevTools visibility
+    const nuxtApp = useNuxtApp()
+    nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+    const status = ref('loaded')
+    const stub = {
+      id: src,
+      status,
+      load: () => Promise.resolve({} as T),
+      remove: () => false,
+      entry: undefined,
+    } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    nuxtApp.$scripts[src] = stub
+    return stub
+  }
 
   // Warn about unsupported bundling for dynamic sources (internal value set by transform)
   if (import.meta.dev && (options.bundle as any) === 'unsupported') {
