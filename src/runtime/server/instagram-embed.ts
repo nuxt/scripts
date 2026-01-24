@@ -89,6 +89,8 @@ export default defineEventHandler(async (event) => {
   `
 
   let rewrittenHtml = html
+    // Remove all scripts - embed works without JS via Googlebot UA
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
     // Remove link tags (we're inlining CSS)
     .replace(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi, '')
     .replace(/<link[^>]+href=["'][^"']+\.css[^"']*["'][^>]*>/gi, '')
