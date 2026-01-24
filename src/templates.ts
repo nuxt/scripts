@@ -110,23 +110,26 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     if (importDefinition) {
       // title case
       imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)
-      const args = (typeof c !== 'object' ? {} : c) || {}
       if (c === 'mock') {
-        args.scriptOptions = { trigger: 'manual', skipValidation: true }
+        inits.push(`const ${k} = ${importDefinition.import.name}({ scriptOptions: { trigger: 'manual', skipValidation: true } })`)
       }
-      else if (Array.isArray(c) && c.length === 2 && c[1]?.trigger) {
-        const triggerResolved = resolveTriggerForTemplate(c[1].trigger)
+      else if (Array.isArray(c) && c.length === 2) {
+        // [input, options] format - unpack properly
+        const input = c[0] || {}
+        const scriptOptions = { ...c[1] }
+        const triggerResolved = resolveTriggerForTemplate(scriptOptions?.trigger)
         if (triggerResolved) {
-          args.scriptOptions = { ...c[1] } as any
-          // Store the resolved trigger as a string that will be replaced later
-          if (args.scriptOptions) {
-            args.scriptOptions.trigger = `__TRIGGER_${triggerResolved}__` as any
-          }
+          scriptOptions.trigger = `__TRIGGER_${triggerResolved}__` as any
           if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
           if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
         }
+        const args = { ...input, scriptOptions }
+        inits.push(`const ${k} = ${importDefinition.import.name}(${JSON.stringify(args).replace(/"__TRIGGER_(.*?)__"/g, '$1')})`)
       }
-      inits.push(`const ${k} = ${importDefinition.import.name}(${JSON.stringify(args).replace(/"__TRIGGER_(.*?)__"/g, '$1')})`)
+      else {
+        const args = (typeof c !== 'object' ? {} : c) || {}
+        inits.push(`const ${k} = ${importDefinition.import.name}(${JSON.stringify(args)})`)
+      }
     }
   }
   for (const [k, c] of Object.entries(config.globals || {})) {
