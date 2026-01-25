@@ -111,6 +111,42 @@ export const HotjarOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `static.hotjar.com`
+- Route configuration and data requests through your server
+- Hide user IP addresses from Hotjar
+- Strip device fingerprinting parameters
+
+::callout{type="info"}
+Hotjar uses WebSocket connections for session recording data. The proxy handles initial setup, but WebSocket connections go directly to Hotjar servers.
+::
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      hotjar: { id: 123456 }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptHotjar({
+  id: 123456,
+  scriptOptions: {
+    firstParty: false // Load directly from Hotjar
+  }
+})
+```
+
 ## Example
 
 Using Hotjar only in production while using `hj` to send a conversion event.

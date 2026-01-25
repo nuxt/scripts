@@ -185,6 +185,38 @@ if (consumerGtagId.value) {
 </script>
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of third-party servers
+- Route collection requests (`/g/collect`) through your server
+- Hide user IP addresses from Google
+- Strip fingerprinting parameters (`sr`, `vp`, `sd`, `ul`)
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      googleAnalytics: { id: 'G-XXXXXX' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptGoogleAnalytics({
+  id: 'G-XXXXXX',
+  scriptOptions: {
+    firstParty: false // Load directly from Google
+  }
+})
+```
+
 ## Example
 
 Using Google Analytics only in production while using `gtag` to send a conversion event.

@@ -133,6 +133,38 @@ export const TikTokPixelOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `analytics.tiktok.com`
+- Route tracking requests through your server
+- Hide user IP addresses from TikTok
+- Strip fingerprinting parameters
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      tiktokPixel: { id: 'YOUR_PIXEL_ID' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptTikTokPixel({
+  id: 'YOUR_PIXEL_ID',
+  scriptOptions: {
+    firstParty: false // Load directly from TikTok
+  }
+})
+```
+
 ## Example
 
 Using TikTok Pixel to track a purchase event.

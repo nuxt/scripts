@@ -125,6 +125,38 @@ export const ClarityOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `www.clarity.ms`
+- Route data/event collection through your server
+- Hide user IP addresses from Microsoft
+- Strip fingerprinting parameters from session data
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      clarity: { id: 'YOUR_ID' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptClarity({
+  id: 'YOUR_ID',
+  scriptOptions: {
+    firstParty: false // Load directly from Microsoft
+  }
+})
+```
+
 ## Example
 
 Using Clarity only in production while using `clarity` to send a conversion event.

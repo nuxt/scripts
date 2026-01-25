@@ -1,0 +1,132 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {
+        "v": "3.54.0-2512101929",
+      },
+    },
+    "path": "/_proxy/snapconfig/1/<UUID>.json?v=3.54.0-2512101929",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {
+        "v": "3.54.0-2512101929",
+      },
+    },
+    "targetUrl": "https://tr.snapchat.com/config/1/<UUID>.json?v=3.54.0-2512101929",
+  },
+  {
+    "method": "POST",
+    "original": {
+      "body": "{"ctx":{"bt":"1d53c387","c1":"<UUID>","lc":"<UUID>","ls":"<UUID>","r":"<UUID>","si":"WNnDYC8yxUKrqSfuSorf7Sbuj-Pz5vCLL2UgbEoWgu3y_YpJ7emmEBl57O8eyr0mVae6smZuMuULC4s5w4Tw2Ea6djU6Em0ueLlqreUPJxgYFXQj-TDoYW3LJiC5s1JRD689OPtzDEpFRKtJVxoaQx-w-bvPJz0P","ss":"<UUID>","bg":false,"df":true,"mtp":0,"sh":720,"sw":1280,"ua":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36","url":"http://127.0.0.1:<PORT>/snap","v":"3.54.0-2512101929","a":[3,4,1163,1163,1],"p":[9,21,32,21,603],"pv":2,"rd":2007,"sa":1768578017503,"sps":1404,"ts":1768578018907,"d_a":"x86","d_bvs":"[,{\"brand\":\"HeadlessChrome\",\"version\":\"143.0.7499.4\"}{\"brand\":\"Chromium\",\"version\":\"143.0.7499.4\"}{\"brand\":\"Not A(Brand\",\"version\":\"24.0.0.0\"}]","d_ot":"Linux","d_os":"6.15.6","huah":true},"req":[{"t":{"pid":"<UUID>","ev":"PAGE_VIEW","u_c1":"<UUID>","u_sclid":"<UUID>","u_scsid":"<UUID>","gat":["G-TR58L0EF8P"],"gac":"8db16041"},"del":240},{"md":{"btx":"Track Event","pids":["<UUID>"]},"del":209},{"t":{"pid":"<UUID>","ev":"VIEW_CONTENT","u_c1":"<UUID>","e_ic":"Testing","u_sclid":"<UUID>","u_scsid":"<UUID>","gat":["G-TR58L0EF8P"],"gac":"8db16041"},"del":209},{"md":{"md":[{"tagProtocol":5,"tagData":{"meta:viewport":"width=device-width, initial-scale=1"}},{"tagProtocol":5,"tagData":{"title":"Snapchat Pixel - First Party"}}],"pids":["<UUID>"],"gat":["G-TR58L0EF8P"],"gac":"8db16041"},"del":190}],"u_scsid":"<UUID>"}",
+      "query": {},
+    },
+    "path": "/_proxy/snap/p",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": {
+        "ctx": {
+          "a": [
+            3,
+            4,
+            1163,
+            1163,
+            1,
+          ],
+          "bg": false,
+          "bt": "1d53c387",
+          "c1": "<UUID>",
+          "df": true,
+          "huah": true,
+          "lc": "<UUID>",
+          "ls": "<UUID>",
+          "mtp": 0,
+          "p": [
+            9,
+            21,
+            32,
+            21,
+            603,
+          ],
+          "pv": 2,
+          "r": "<UUID>",
+          "rd": 2007,
+          "sa": 1768578017503,
+          "sh": "1920x1080",
+          "si": "WNnDYC8yxUKrqSfuSorf7Sbuj-Pz5vCLL2UgbEoWgu3y_YpJ7emmEBl57O8eyr0mVae6smZuMuULC4s5w4Tw2Ea6djU6Em0ueLlqreUPJxgYFXQj-TDoYW3LJiC5s1JRD689OPtzDEpFRKtJVxoaQx-w-bvPJz0P",
+          "sps": 1404,
+          "ss": "<UUID>",
+          "sw": "1920x1080",
+          "ts": 1768578018907,
+          "ua": "Mozilla/5.0 (compatible; Chrome)",
+          "url": "http://127.0.0.1:<PORT>/snap",
+          "v": "3.54.0-2512101929",
+        },
+        "req": [
+          {
+            "del": 240,
+            "t": {
+              "ev": "PAGE_VIEW",
+              "gac": "8db16041",
+              "gat": [
+                "G-TR58L0EF8P",
+              ],
+              "pid": "<UUID>",
+            },
+          },
+          {
+            "del": 209,
+            "md": {
+              "btx": "Track Event",
+              "pids": [
+                "<UUID>",
+              ],
+            },
+          },
+          {
+            "del": 209,
+            "t": {
+              "e_ic": "Testing",
+              "ev": "VIEW_CONTENT",
+              "gac": "8db16041",
+              "gat": [
+                "G-TR58L0EF8P",
+              ],
+              "pid": "<UUID>",
+            },
+          },
+          {
+            "del": 190,
+            "md": {
+              "gac": "8db16041",
+              "gat": [
+                "G-TR58L0EF8P",
+              ],
+              "md": [
+                {
+                  "tagData": {
+                    "meta:viewport": "width=device-width, initial-scale=1",
+                  },
+                  "tagProtocol": 5,
+                },
+                {
+                  "tagData": {
+                    "title": "Snapchat Pixel - First Party",
+                  },
+                  "tagProtocol": 5,
+                },
+              ],
+              "pids": [
+                "<UUID>",
+              ],
+            },
+          },
+        ],
+      },
+      "query": {},
+    },
+    "targetUrl": "https://tr.snapchat.com/p",
+  },
+]
