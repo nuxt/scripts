@@ -10,6 +10,10 @@ interface HealthCheckResult {
   error?: string
 }
 
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 /**
  * Dev-only endpoint that verifies first-party proxy routes are working.
  * Available at /_scripts/health.json
@@ -36,7 +40,7 @@ export default defineEventHandler(async (event) => {
   const checks: HealthCheckResult[] = []
 
   // Build regex dynamically from collectPrefix to extract script name
-  const escapedPrefix = scriptsConfig.collectPrefix.replace(/\//g, '\\/')
+  const escapedPrefix = escapeRegExp(scriptsConfig.collectPrefix)
   const scriptNameRegex = new RegExp(`${escapedPrefix}\\/([^/]+)`)
 
   // Test each route by making a HEAD request to the target
@@ -79,7 +83,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const allOk = checks.every(c => c.status === 'ok')
-  const avgLatency = checks.reduce((sum, c) => sum + (c.latency || 0), 0) / checks.length
+  const avgLatency = checks.length > 0 ? checks.reduce((sum, c) => sum + (c.latency || 0), 0) / checks.length : 0
 
   return {
     status: allOk ? 'healthy' : 'degraded',

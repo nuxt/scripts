@@ -1,6 +1,7 @@
 import { defineEventHandler, getHeaders, getRequestIP, readBody, getQuery, setResponseHeader, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { useNitroApp } from 'nitropack/runtime'
+import { rewriteScriptUrls } from '../../proxy-configs'
 
 interface ProxyRewrite {
   from: string
@@ -15,62 +16,6 @@ interface ProxyConfig {
   cacheTtl?: number
   /** Enable verbose logging (default: only in dev) */
   debug?: boolean
-}
-
-/**
- * Rewrite URLs in script content based on proxy config.
- * Inlined from proxy-configs.ts for runtime use.
- */
-function rewriteScriptUrls(content: string, rewrites: ProxyRewrite[]): string {
-  let result = content
-  for (const { from, to } of rewrites) {
-    // Rewrite various URL formats
-    // IMPORTANT: Order matters - match longer patterns first (with trailing slash)
-    // to avoid partial replacements
-    result = result
-      // Full URLs with protocol AND trailing slash (e.g., "https://t.co/" + path)
-      .replaceAll(`"https://${from}/"`, `"${to}/"`)
-      .replaceAll(`'https://${from}/'`, `'${to}/'`)
-      .replaceAll(`\`https://${from}/\``, `\`${to}/\``)
-      .replaceAll(`"https://${from}/"+`, `"${to}/"+`) // Dynamic concatenation
-      .replaceAll(`'https://${from}/'+`, `'${to}/'+`)
-      // Full URLs with protocol (no trailing slash)
-      .replaceAll(`"https://${from}`, `"${to}`)
-      .replaceAll(`'https://${from}`, `'${to}`)
-      .replaceAll(`\`https://${from}`, `\`${to}`)
-      .replaceAll(`"http://${from}`, `"${to}`)
-      .replaceAll(`'http://${from}`, `'${to}`)
-      .replaceAll(`\`http://${from}`, `\`${to}`)
-      // Protocol-relative URLs
-      .replaceAll(`"//${from}`, `"${to}`)
-      .replaceAll(`'//${from}`, `'${to}`)
-      .replaceAll(`\`//${from}`, `\`${to}`)
-      // Bare domain strings (e.g., "api.segment.io/v1" without protocol)
-      // Only match if domain starts string (after quote) to avoid partial matches
-      .replaceAll(`"${from}`, `"${to.startsWith('/') ? to.slice(1) : to}`)
-      .replaceAll(`'${from}`, `'${to.startsWith('/') ? to.slice(1) : to}`)
-      .replaceAll(`\`${from}`, `\`${to.startsWith('/') ? to.slice(1) : to}`)
-  }
-
-  // Handle GA's specific dynamic URL construction patterns:
-  // "https://"+(Qm()||"www")+".google-analytics.com/g/collect"
-  // These need to replace the entire expression with a simple string
-  const gaRewrite = rewrites.find(r => r.from.includes('google-analytics.com/g/collect'))
-  if (gaRewrite) {
-    // Pattern: "https://"+(...)+".google-analytics.com/g/collect"
-    // Use non-greedy .*? to handle nested parentheses like (Qm()||"www")
-    result = result.replace(
-      /"https:\/\/"\+\(.*?\)\+"\.google-analytics\.com\/g\/collect"/g,
-      `"${gaRewrite.to}"`,
-    )
-    // Also handle analytics.google.com variant
-    result = result.replace(
-      /"https:\/\/"\+\(.*?\)\+"\.analytics\.google\.com\/g\/collect"/g,
-      `"${gaRewrite.to}"`,
-    )
-  }
-
-  return result
 }
 
 /**
@@ -99,6 +44,17 @@ const FINGERPRINT_HEADERS = [
   'sec-ch-ua-platform',
   'sec-ch-ua-mobile',
   'sec-ch-ua-full-version-list',
+]
+
+/**
+ * Sensitive headers that should never be forwarded to third parties.
+ */
+const SENSITIVE_HEADERS = [
+  'cookie',
+  'authorization',
+  'proxy-authorization',
+  'x-csrf-token',
+  'www-authenticate',
 ]
 
 /**
@@ -323,7 +279,7 @@ export default defineEventHandler(async (event) => {
 
   const { routes, privacy, cacheTtl = 3600, debug = import.meta.dev } = proxyConfig
   const path = event.path
-  const log = debug ? console.log.bind(console) : () => {}
+  const log = debug ? console.debug.bind(console) : () => {}
 
   // Find matching route (sort by length descending to match longest/most specific first)
   let targetBase: string | undefined
@@ -401,6 +357,10 @@ export default defineEventHandler(async (event) => {
 
       // Skip IP-revealing headers entirely
       if (IP_HEADERS.includes(lowerKey))
+        continue
+
+      // Skip sensitive headers
+      if (SENSITIVE_HEADERS.includes(lowerKey))
         continue
 
       // Skip content-length - we modify the body so fetch needs to recalculate

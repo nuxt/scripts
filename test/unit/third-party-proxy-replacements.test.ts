@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { $fetch } from 'ofetch'
 import { getAllProxyConfigs, rewriteScriptUrls } from '../../src/proxy-configs'
-import { stripFingerprintingFromPayload } from './proxy-privacy.test'
+import { stripFingerprintingFromPayload } from '../utils/proxy-privacy'
 
 const COLLECT_PREFIX = '/_scripts/c'
 

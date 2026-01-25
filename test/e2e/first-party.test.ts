@@ -128,6 +128,17 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
   return JSON.parse(normalized)
 }
 
+function isAllowedDomain(urlStr: string | undefined, allowedDomain: string) {
+  if (!urlStr) return false
+  try {
+    const hostname = new URL(urlStr).hostname
+    return hostname === allowedDomain || hostname.endsWith('.' + allowedDomain)
+  }
+  catch {
+    return false
+  }
+}
+
 function readCaptures(provider?: string) {
   if (!existsSync(captureDir)) return []
   const captures = readdirSync(captureDir)
@@ -192,7 +203,7 @@ describe('first-party privacy stripping', () => {
 
       // Should return JS content (or at least not 404)
       if (typeof response === 'object' && response.error) {
-        console.log('[test] Proxy error:', response)
+        console.warn('[test] Proxy error:', response)
       }
       expect(typeof response).toBe('string')
     }, 30000)
@@ -341,7 +352,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/')
-          && c.targetUrl?.startsWith('https://')
+          && (isAllowedDomain(c.targetUrl, 'google-analytics.com') || isAllowedDomain(c.targetUrl, 'analytics.google.com'))
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)
@@ -373,7 +384,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/gtm')
-          && c.targetUrl?.includes('googletagmanager.com')
+          && isAllowedDomain(c.targetUrl, 'googletagmanager.com')
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)
@@ -410,7 +421,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/meta')
-          && c.targetUrl?.includes('facebook')
+          && (isAllowedDomain(c.targetUrl, 'facebook.com') || isAllowedDomain(c.targetUrl, 'facebook.net'))
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)
@@ -445,7 +456,7 @@ describe('first-party privacy stripping', () => {
       expect(captures.length).toBeGreaterThan(0)
       const hasValidCapture = captures.some(c =>
         c.path?.startsWith('/_proxy/segment')
-        && c.targetUrl?.includes('segment.')
+        && (isAllowedDomain(c.targetUrl, 'segment.io') || isAllowedDomain(c.targetUrl, 'segment.com'))
         && c.privacy === 'anonymize',
       )
       expect(hasValidCapture).toBe(true)
@@ -465,7 +476,7 @@ describe('first-party privacy stripping', () => {
       expect(captures.length).toBeGreaterThan(0)
       const hasValidCapture = captures.some(c =>
         c.path?.startsWith('/_proxy/x')
-        && (c.targetUrl?.includes('twitter.com') || c.targetUrl?.includes('t.co'))
+        && (isAllowedDomain(c.targetUrl, 'twitter.com') || isAllowedDomain(c.targetUrl, 't.co'))
         && c.privacy === 'anonymize',
       )
       expect(hasValidCapture).toBe(true)
@@ -498,7 +509,7 @@ describe('first-party privacy stripping', () => {
       expect(captures.length).toBeGreaterThan(0)
       const hasValidCapture = captures.some(c =>
         c.path?.startsWith('/_proxy/snap')
-        && c.targetUrl?.includes('snapchat.com')
+        && isAllowedDomain(c.targetUrl, 'snapchat.com')
         && c.privacy === 'anonymize',
       )
       expect(hasValidCapture).toBe(true)
@@ -546,7 +557,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/clarity')
-          && c.targetUrl?.includes('clarity.ms')
+          && isAllowedDomain(c.targetUrl, 'clarity.ms')
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)
@@ -584,7 +595,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/hotjar')
-          && c.targetUrl?.includes('hotjar.com')
+          && isAllowedDomain(c.targetUrl, 'hotjar.com')
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)
@@ -620,7 +631,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/tiktok')
-          && c.targetUrl?.includes('tiktok.com')
+          && isAllowedDomain(c.targetUrl, 'tiktok.com')
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)
@@ -656,7 +667,7 @@ describe('first-party privacy stripping', () => {
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/reddit')
-          && c.targetUrl?.includes('reddit.com')
+          && isAllowedDomain(c.targetUrl, 'reddit.com')
           && c.privacy === 'anonymize',
         )
         expect(hasValidCapture).toBe(true)

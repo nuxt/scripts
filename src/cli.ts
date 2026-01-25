@@ -125,7 +125,7 @@ const main = defineCommand({
 
         consola.info(`Checking health at ${url}...`)
 
-        const res = await fetch(url)
+        const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
           .then(r => r.json())
           .catch((err) => {
             consola.error(`Failed to connect: ${err.message}`)

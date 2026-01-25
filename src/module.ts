@@ -27,7 +27,7 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
-import { getAllProxyConfigs, getSWInterceptRules, type ProxyConfig } from './proxy-configs'
+import { getAllProxyConfigs, getSWInterceptRules } from './proxy-configs'
 
 /**
  * Privacy mode for first-party proxy requests.
@@ -56,7 +56,7 @@ export interface FirstPartyOptions {
    *
    * Analytics collection requests are proxied through these paths.
    * For example, Google Analytics collection goes to `/_scripts/c/ga/g/collect`.
-   * @default '/_scripts/c'
+   * @default '/_proxy'
    * @example '/_tracking'
    */
   collectPrefix?: string
@@ -389,7 +389,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Pre-resolve paths needed for hooks
     const swHandlerPath = await resolvePath('./runtime/server/sw-handler')
 
-    console.log('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
+    logger.info('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
 
     // Setup Service Worker for first-party mode (must be before modules:done)
     if (firstPartyEnabled) {
@@ -495,7 +495,7 @@ export default defineNuxtPlugin({
       // Only needed when privacy mode is enabled (otherwise use Nitro route rules)
       if (firstPartyPrivacy !== false) {
         const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
-        console.log('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
+        logger.debug('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
         addServerHandler({
           route: `${firstPartyCollectPrefix}/**`,
           handler: proxyHandlerPath,
