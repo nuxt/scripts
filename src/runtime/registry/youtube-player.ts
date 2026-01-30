@@ -32,13 +32,13 @@ export interface YouTubePlayerApi {
 declare global {
   interface Window extends YouTubePlayerApi {
     onYouTubeIframeAPIReady: () => void
+    _nuxt_youtube_readyPromise?: Promise<void>
   }
 }
 
 export type YouTubePlayerInput = RegistryScriptInput
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
-  let readyPromise: Promise<void> = Promise.resolve()
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
@@ -46,8 +46,13 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     },
     scriptOptions: {
       use() {
+        if (typeof window !== 'undefined' && !window._nuxt_youtube_readyPromise && !window.YT) {
+          window._nuxt_youtube_readyPromise = new Promise((resolve) => {
+            window.onYouTubeIframeAPIReady = resolve
+          })
+        }
         return {
-          YT: window.YT || readyPromise.then(() => {
+          YT: window.YT || (window._nuxt_youtube_readyPromise || Promise.resolve()).then(() => {
             return window.YT
           }),
         }
@@ -56,7 +61,9 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     clientInit: import.meta.server
       ? undefined
       : () => {
-          readyPromise = new Promise((resolve) => {
+          if (window._nuxt_youtube_readyPromise)
+            return
+          window._nuxt_youtube_readyPromise = new Promise((resolve) => {
             window.onYouTubeIframeAPIReady = resolve
           })
         },

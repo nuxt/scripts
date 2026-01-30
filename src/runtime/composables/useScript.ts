@@ -1,9 +1,9 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { useScript as _useScript } from '@unhead/vue/scripts'
-import { reactive, ref } from 'vue'
+import { getCurrentScope, onScopeDispose, reactive, ref } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead, useHead } from 'nuxt/app'
+import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { logger } from '../logger'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
@@ -94,6 +94,21 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
 
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> & { reload: () => Promise<T> }
+
+  if (options.trigger && typeof options.trigger === 'object' && 'then' in options.trigger) {
+    let isDisposed = false
+    if (getCurrentScope()) {
+      onScopeDispose(() => {
+        isDisposed = true
+      })
+    }
+    options.trigger.then((val) => {
+      if (!isDisposed && val !== false) {
+        instance.load()
+      }
+    })
+  }
+
   const _remove = instance.remove
   instance.remove = () => {
     nuxtApp.$scripts[id] = undefined
