@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import type { Nuxt } from 'nuxt/schema'
+import type { Nuxt } from '@nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
 import { extendViteConfig, useNuxt } from '@nuxt/kit'
 import type { ModuleOptions } from './module'
