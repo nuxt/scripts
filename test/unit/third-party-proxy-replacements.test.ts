@@ -331,33 +331,13 @@ describe('privacy stripping snapshots', () => {
   }
 
   describe('Google Analytics payload', () => {
-    it('strict mode - snapshot', () => {
-      const result = stripFingerprintingFromPayload(gaPayload, 'strict')
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "_s": "1",
-          "dl": "https://example.com/products/widget",
-          "dp": "/products/widget",
-          "dr": "https://google.com/search?q=widgets",
-          "dt": "Widget Product Page",
-          "en": "page_view",
-          "ep": {
-            "category": "products",
-            "value": 100,
-          },
-          "tid": "G-XXXXXXX",
-          "ua": "Mozilla/5.0 (compatible; Chrome)",
-          "ul": "en",
-          "v": "2",
-        }
-      `)
-    })
-
     it('anonymize mode - snapshot', () => {
-      const result = stripFingerprintingFromPayload(gaPayload, 'anonymize')
+      const result = stripFingerprintingFromPayload(gaPayload)
       expect(result).toMatchInlineSnapshot(`
         {
+          "_gid": "GA1.2.1234567890.1700000000",
           "_s": "1",
+          "cid": "1234567890.1234567890",
           "dl": "https://example.com/products/widget",
           "dp": "/products/widget",
           "dr": "https://google.com/search?q=widgets",
@@ -371,6 +351,7 @@ describe('privacy stripping snapshots', () => {
           "sr": "2560x1440",
           "tid": "G-XXXXXXX",
           "ua": "Mozilla/5.0 (compatible; Chrome)",
+          "uid": "user-abc-123",
           "uip": "192.168.1.0",
           "ul": "en",
           "v": "2",
@@ -379,67 +360,45 @@ describe('privacy stripping snapshots', () => {
       `)
     })
 
-    it('shows what gets stripped', () => {
-      const strict = stripFingerprintingFromPayload(gaPayload, 'strict')
-      const anonymize = stripFingerprintingFromPayload(gaPayload, 'anonymize')
+    it('shows normalized fields diff', () => {
+      const result = stripFingerprintingFromPayload(gaPayload)
 
-      // These should be GONE in both modes
-      expect(strict).not.toHaveProperty('cid') // Client ID
-      expect(strict).not.toHaveProperty('uid') // User ID
-      expect(strict).not.toHaveProperty('_gid') // Session ID
-      expect(anonymize).not.toHaveProperty('cid')
-      expect(anonymize).not.toHaveProperty('uid')
-      expect(anonymize).not.toHaveProperty('_gid')
+      // What gets normalized (original -> normalized)
+      expect({
+        ip: { original: gaPayload.uip, normalized: result.uip },
+        ua: { original: gaPayload.ua, normalized: result.ua },
+        language: { original: gaPayload.ul, normalized: result.ul },
+      }).toMatchInlineSnapshot(`
+        {
+          "ip": {
+            "normalized": "192.168.1.0",
+            "original": "192.168.1.100",
+          },
+          "language": {
+            "normalized": "en",
+            "original": "en-US,en;q=0.9,fr;q=0.8",
+          },
+          "ua": {
+            "normalized": "Mozilla/5.0 (compatible; Chrome)",
+            "original": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+          },
+        }
+      `)
 
-      // These should be GONE in strict, PRESENT in anonymize
-      expect(strict).not.toHaveProperty('uip')
-      expect(strict).not.toHaveProperty('sr')
-      expect(strict).not.toHaveProperty('vp')
-      expect(strict).not.toHaveProperty('sd')
-      expect(anonymize).toHaveProperty('uip', '192.168.1.0') // Anonymized
-      expect(anonymize).toHaveProperty('sr', '2560x1440') // Generalized
-      expect(anonymize).toHaveProperty('vp', '1920x1080')
+      // User IDs preserved (not normalized)
+      expect(result.cid).toBe(gaPayload.cid)
+      expect(result.uid).toBe(gaPayload.uid)
+      expect(result._gid).toBe(gaPayload._gid)
 
-      // These should be NORMALIZED in both
-      expect(strict).toHaveProperty('ua', 'Mozilla/5.0 (compatible; Chrome)')
-      expect(strict).toHaveProperty('ul', 'en')
-      expect(anonymize).toHaveProperty('ua', 'Mozilla/5.0 (compatible; Chrome)')
-      expect(anonymize).toHaveProperty('ul', 'en')
-
-      // These should be PRESERVED in both
-      expect(strict).toHaveProperty('dl')
-      expect(strict).toHaveProperty('dt')
-      expect(strict).toHaveProperty('en')
-      expect(anonymize).toHaveProperty('dl')
-      expect(anonymize).toHaveProperty('dt')
-      expect(anonymize).toHaveProperty('en')
+      // Page context preserved
+      expect(result.dl).toBe(gaPayload.dl)
+      expect(result.dt).toBe(gaPayload.dt)
     })
   })
 
   describe('Meta Pixel payload', () => {
-    it('strict mode - snapshot', () => {
-      const result = stripFingerprintingFromPayload(metaPayload, 'strict')
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "action_source": "website",
-          "client_user_agent": "Mozilla/5.0 (compatible; Chrome)",
-          "custom_data": {
-            "content_ids": [
-              "SKU123",
-            ],
-            "currency": "USD",
-            "value": 99.99,
-          },
-          "ev": "PageView",
-          "event_source_url": "https://example.com/checkout",
-          "event_time": 1700000000,
-          "id": "123456789012345",
-        }
-      `)
-    })
-
     it('anonymize mode - snapshot', () => {
-      const result = stripFingerprintingFromPayload(metaPayload, 'anonymize')
+      const result = stripFingerprintingFromPayload(metaPayload)
       expect(result).toMatchInlineSnapshot(`
         {
           "action_source": "website",
@@ -455,156 +414,157 @@ describe('privacy stripping snapshots', () => {
           "ev": "PageView",
           "event_source_url": "https://example.com/checkout",
           "event_time": 1700000000,
+          "external_id": "user-abc-123",
+          "fbc": "_fbc=fb.1.1700000000.AbCdEfGhIjKl",
+          "fbp": "_fbp=fb.1.1700000000.1234567890",
           "id": "123456789012345",
+          "ud": {
+            "country": "us",
+            "ct": "newyork",
+            "em": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+            "fn": "abc123def456",
+            "ln": "xyz789uvw012",
+            "ph": "f6e5d4c3b2a1z9y8x7w6v5u4t3s2r1q0",
+            "st": "ny",
+            "zp": "10001",
+          },
         }
       `)
     })
 
-    it('shows what gets stripped', () => {
-      const strict = stripFingerprintingFromPayload(metaPayload, 'strict')
-      const anonymize = stripFingerprintingFromPayload(metaPayload, 'anonymize')
+    it('shows normalized fields diff', () => {
+      const result = stripFingerprintingFromPayload(metaPayload)
 
-      // User data and identifiers GONE in both
-      expect(strict).not.toHaveProperty('ud') // User data (PII)
-      expect(strict).not.toHaveProperty('fbp') // Browser ID
-      expect(strict).not.toHaveProperty('fbc') // Click ID
-      expect(strict).not.toHaveProperty('external_id') // External ID
-      expect(anonymize).not.toHaveProperty('ud')
-      expect(anonymize).not.toHaveProperty('fbp')
-      expect(anonymize).not.toHaveProperty('fbc')
-      expect(anonymize).not.toHaveProperty('external_id')
+      // What gets normalized (original -> normalized)
+      expect({
+        ip: { original: metaPayload.client_ip_address, normalized: result.client_ip_address },
+        ua: { original: metaPayload.client_user_agent, normalized: result.client_user_agent },
+      }).toMatchInlineSnapshot(`
+        {
+          "ip": {
+            "normalized": "192.168.1.0",
+            "original": "192.168.1.100",
+          },
+          "ua": {
+            "normalized": "Mozilla/5.0 (compatible; Chrome)",
+            "original": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0",
+          },
+        }
+      `)
 
-      // IP stripped in strict, anonymized in anonymize
-      expect(strict).not.toHaveProperty('client_ip_address')
-      expect(anonymize).toHaveProperty('client_ip_address', '192.168.1.0')
+      // User data and IDs preserved (not normalized)
+      expect(result.ud).toEqual(metaPayload.ud)
+      expect(result.fbp).toBe(metaPayload.fbp)
+      expect(result.fbc).toBe(metaPayload.fbc)
+      expect(result.external_id).toBe(metaPayload.external_id)
 
       // Event data preserved
-      expect(strict).toHaveProperty('custom_data')
-      expect(strict).toHaveProperty('event_source_url')
-      expect(anonymize).toHaveProperty('custom_data')
+      expect(result.custom_data).toEqual(metaPayload.custom_data)
     })
   })
 
   describe('Session recording payload (Clarity/Hotjar)', () => {
-    it('strict mode - snapshot', () => {
-      const result = stripFingerprintingFromPayload(sessionPayload, 'strict')
-      expect(result).toMatchInlineSnapshot(`
-        {
-          "referrer": "https://example.com/login",
-          "title": "Dashboard",
-          "ua": "Mozilla/5.0 (compatible; Chrome)",
-          "url": "https://example.com/dashboard",
-        }
-      `)
-    })
-
     it('anonymize mode - snapshot', () => {
-      const result = stripFingerprintingFromPayload(sessionPayload, 'anonymize')
+      const result = stripFingerprintingFromPayload(sessionPayload)
       expect(result).toMatchInlineSnapshot(`
         {
           "referrer": "https://example.com/login",
           "sd": "1920x1080",
+          "sid": "session-abc-123",
           "sr": "1920x1080",
           "title": "Dashboard",
           "ua": "Mozilla/5.0 (compatible; Chrome)",
+          "uid": "user-xyz-789",
           "url": "https://example.com/dashboard",
           "vp": "1920x1080",
         }
       `)
     })
 
-    it('shows what gets stripped', () => {
-      const strict = stripFingerprintingFromPayload(sessionPayload, 'strict')
-      const anonymize = stripFingerprintingFromPayload(sessionPayload, 'anonymize')
+    it('shows normalized fields diff', () => {
+      const result = stripFingerprintingFromPayload(sessionPayload)
 
-      // Session IDs gone
-      expect(strict).not.toHaveProperty('sid')
-      expect(strict).not.toHaveProperty('uid')
-      expect(anonymize).not.toHaveProperty('sid')
-      expect(anonymize).not.toHaveProperty('uid')
+      // What gets normalized (original -> normalized)
+      expect({
+        ua: { original: sessionPayload.ua, normalized: result.ua },
+        screen: { original: sessionPayload.sr, normalized: result.sr },
+        viewport: { original: sessionPayload.vp, normalized: result.vp },
+      }).toMatchInlineSnapshot(`
+        {
+          "screen": {
+            "normalized": "1920x1080",
+            "original": "1920x1080",
+          },
+          "ua": {
+            "normalized": "Mozilla/5.0 (compatible; Chrome)",
+            "original": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+          },
+          "viewport": {
+            "normalized": "1920x1080",
+            "original": "1920x937",
+          },
+        }
+      `)
 
-      // Platform fingerprinting gone
-      expect(strict).not.toHaveProperty('platform')
-      expect(strict).not.toHaveProperty('hardwareConcurrency')
-      expect(strict).not.toHaveProperty('deviceMemory')
-      expect(anonymize).not.toHaveProperty('platform')
-      expect(anonymize).not.toHaveProperty('hardwareConcurrency')
-      expect(anonymize).not.toHaveProperty('deviceMemory')
+      // Hardware fingerprinting removed
+      expect(result).not.toHaveProperty('platform')
+      expect(result).not.toHaveProperty('hardwareConcurrency')
+      expect(result).not.toHaveProperty('deviceMemory')
+      expect(result).not.toHaveProperty('plugins')
+      expect(result).not.toHaveProperty('fonts')
+      expect(result).not.toHaveProperty('canvas')
+      expect(result).not.toHaveProperty('webgl')
+      expect(result).not.toHaveProperty('timezone')
+      expect(result).not.toHaveProperty('timezoneOffset')
 
-      // Browser fingerprinting gone
-      expect(strict).not.toHaveProperty('plugins')
-      expect(strict).not.toHaveProperty('fonts')
-      expect(strict).not.toHaveProperty('canvas')
-      expect(strict).not.toHaveProperty('webgl')
-      expect(anonymize).not.toHaveProperty('plugins')
-      expect(anonymize).not.toHaveProperty('fonts')
-      expect(anonymize).not.toHaveProperty('canvas')
-      expect(anonymize).not.toHaveProperty('webgl')
-
-      // Timezone gone
-      expect(strict).not.toHaveProperty('timezone')
-      expect(strict).not.toHaveProperty('timezoneOffset')
-      expect(anonymize).not.toHaveProperty('timezone')
-      expect(anonymize).not.toHaveProperty('timezoneOffset')
+      // User IDs preserved (not normalized)
+      expect(result.sid).toBe(sessionPayload.sid)
+      expect(result.uid).toBe(sessionPayload.uid)
 
       // Page context preserved
-      expect(strict).toHaveProperty('url')
-      expect(strict).toHaveProperty('referrer')
-      expect(strict).toHaveProperty('title')
+      expect(result).toHaveProperty('url')
+      expect(result).toHaveProperty('referrer')
+      expect(result).toHaveProperty('title')
     })
   })
 
   describe('comparison table', () => {
-    it('prints comparison of all modes', () => {
+    it('prints what gets stripped vs preserved', () => {
       const payloads = { ga: gaPayload, meta: metaPayload, session: sessionPayload }
-      const comparisons: string[] = ['\n=== PRIVACY STRIPPING COMPARISON ===\n']
+      const comparisons: string[] = ['\n=== PRIVACY STRIPPING SUMMARY ===\n']
 
       for (const [name, payload] of Object.entries(payloads)) {
         const original = Object.keys(payload)
-        const strict = Object.keys(stripFingerprintingFromPayload(payload, 'strict'))
-        const anonymize = Object.keys(stripFingerprintingFromPayload(payload, 'anonymize'))
-
-        const stripped = original.filter(k => !strict.includes(k))
-        const anonymizedOnly = anonymize.filter(k => !strict.includes(k))
+        const anonymized = Object.keys(stripFingerprintingFromPayload(payload))
+        const stripped = original.filter(k => !anonymized.includes(k))
 
         comparisons.push(`--- ${name.toUpperCase()} ---`)
         comparisons.push(`Original fields (${original.length}): ${original.join(', ')}`)
-        comparisons.push(`Strict output (${strict.length}): ${strict.join(', ')}`)
-        comparisons.push(`Anonymize output (${anonymize.length}): ${anonymize.join(', ')}`)
-        comparisons.push(`Stripped in strict: ${stripped.join(', ')}`)
-        comparisons.push(`Extra in anonymize: ${anonymizedOnly.join(', ')}`)
+        comparisons.push(`Output fields (${anonymized.length}): ${anonymized.join(', ')}`)
+        comparisons.push(`Stripped: ${stripped.join(', ')}`)
         comparisons.push('')
       }
 
-      // Use console.warn (allowed by linter) for visibility in test output
-
       console.warn(comparisons.join('\n'))
 
-      // Snapshot the comparison for CI visibility
       expect(comparisons.join('\n')).toMatchInlineSnapshot(`
         "
-        === PRIVACY STRIPPING COMPARISON ===
+        === PRIVACY STRIPPING SUMMARY ===
 
         --- GA ---
         Original fields (18): v, tid, cid, uid, _gid, uip, ua, ul, sr, vp, sd, dl, dr, dt, dp, en, ep, _s
-        Strict output (11): v, tid, ua, ul, dl, dr, dt, dp, en, ep, _s
-        Anonymize output (15): v, tid, uip, ua, ul, sr, vp, sd, dl, dr, dt, dp, en, ep, _s
-        Stripped in strict: cid, uid, _gid, uip, sr, vp, sd
-        Extra in anonymize: uip, sr, vp, sd
+        Output fields (18): v, tid, cid, uid, _gid, uip, ua, ul, sr, vp, sd, dl, dr, dt, dp, en, ep, _s
+        Stripped: 
 
         --- META ---
         Original fields (12): id, ev, fbp, fbc, external_id, ud, client_user_agent, client_ip_address, event_time, event_source_url, action_source, custom_data
-        Strict output (7): id, ev, client_user_agent, event_time, event_source_url, action_source, custom_data
-        Anonymize output (8): id, ev, client_user_agent, client_ip_address, event_time, event_source_url, action_source, custom_data
-        Stripped in strict: fbp, fbc, external_id, ud, client_ip_address
-        Extra in anonymize: client_ip_address
+        Output fields (12): id, ev, fbp, fbc, external_id, ud, client_user_agent, client_ip_address, event_time, event_source_url, action_source, custom_data
+        Stripped: 
 
         --- SESSION ---
         Original fields (18): sid, uid, ua, sr, vp, sd, platform, hardwareConcurrency, deviceMemory, timezone, timezoneOffset, plugins, fonts, canvas, webgl, url, referrer, title
-        Strict output (4): ua, url, referrer, title
-        Anonymize output (7): ua, sr, vp, sd, url, referrer, title
-        Stripped in strict: sid, uid, sr, vp, sd, platform, hardwareConcurrency, deviceMemory, timezone, timezoneOffset, plugins, fonts, canvas, webgl
-        Extra in anonymize: sr, vp, sd
+        Output fields (9): sid, uid, ua, sr, vp, sd, url, referrer, title
+        Stripped: platform, hardwareConcurrency, deviceMemory, timezone, timezoneOffset, plugins, fonts, canvas, webgl
         "
       `)
     })

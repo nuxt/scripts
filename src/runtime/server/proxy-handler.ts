@@ -3,14 +3,9 @@ import { useRuntimeConfig } from '#imports'
 import { useNitroApp } from 'nitropack/runtime'
 import { rewriteScriptUrls } from '../../proxy-configs'
 
-interface ProxyRewrite {
-  from: string
-  to: string
-}
-
 interface ProxyConfig {
   routes: Record<string, string>
-  privacy: 'strict' | 'anonymize' | false
+  privacy: 'anonymize' | 'proxy'
   rewrites?: Array<{ from: string, to: string }>
   /** Cache duration for JavaScript responses in seconds (default: 3600 = 1 hour) */
   cacheTtl?: number
@@ -19,7 +14,7 @@ interface ProxyConfig {
 }
 
 /**
- * Headers that reveal user IP address - always stripped in strict mode,
+ * Headers that reveal user IP address - stripped in proxy mode,
  * anonymized in anonymize mode.
  */
 const IP_HEADERS = [
@@ -33,8 +28,7 @@ const IP_HEADERS = [
 ]
 
 /**
- * Headers that enable fingerprinting - stripped in strict mode,
- * normalized in anonymize mode.
+ * Headers that enable fingerprinting - normalized in anonymize mode.
  */
 const FINGERPRINT_HEADERS = [
   'user-agent',
@@ -162,7 +156,6 @@ function generalizeScreen(value: unknown): string {
  */
 function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
-  mode: 'strict' | 'anonymize',
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
@@ -194,8 +187,6 @@ function stripPayloadFingerprinting(
     }
 
     const isIpParam = matchesParam(key, STRIP_PARAMS.ip)
-    const isUserIdParam = matchesParam(key, STRIP_PARAMS.userId)
-    const isUserDataParam = matchesParam(key, STRIP_PARAMS.userData)
     const isScreenParam = matchesParam(key, STRIP_PARAMS.screen)
     const isPlatformParam = matchesParam(key, STRIP_PARAMS.platform)
     const isCanvasParam = matchesParam(key, STRIP_PARAMS.canvas)
@@ -203,38 +194,31 @@ function stripPayloadFingerprinting(
     const isLocationParam = matchesParam(key, STRIP_PARAMS.location)
     const isDeviceInfoParam = matchesParam(key, STRIP_PARAMS.deviceInfo)
 
-    const shouldStrip = isIpParam || isUserIdParam || isUserDataParam || isScreenParam
-      || isPlatformParam || isCanvasParam || isBrowserParam || isLocationParam || isDeviceInfoParam
-
-    if (mode === 'strict' && shouldStrip) {
-      continue // Strip entirely
+    // Anonymize IP addresses to country-level
+    if (isIpParam && typeof value === 'string') {
+      result[key] = anonymizeIP(value)
+      continue
     }
-
-    if (mode === 'anonymize') {
-      if (isIpParam && typeof value === 'string') {
-        result[key] = anonymizeIP(value)
-        continue
-      }
-      if (isScreenParam) {
-        result[key] = generalizeScreen(value)
-        continue
-      }
-      // Always strip these even in anonymize mode
-      if (isUserIdParam || isUserDataParam || isCanvasParam || isPlatformParam || isBrowserParam || isLocationParam || isDeviceInfoParam) {
-        continue
-      }
+    // Generalize screen resolution to common buckets
+    if (isScreenParam) {
+      result[key] = generalizeScreen(value)
+      continue
+    }
+    // Normalize out hardware fingerprinting data
+    if (isCanvasParam || isPlatformParam || isBrowserParam || isLocationParam || isDeviceInfoParam) {
+      continue
     }
 
     // Recursively process nested objects and arrays
     if (Array.isArray(value)) {
       result[key] = value.map(item =>
         typeof item === 'object' && item !== null
-          ? stripPayloadFingerprinting(item as Record<string, unknown>, mode)
+          ? stripPayloadFingerprinting(item as Record<string, unknown>)
           : item,
       )
     }
     else if (typeof value === 'object' && value !== null) {
-      result[key] = stripPayloadFingerprinting(value as Record<string, unknown>, mode)
+      result[key] = stripPayloadFingerprinting(value as Record<string, unknown>)
     }
     else {
       result[key] = value
@@ -249,9 +233,8 @@ function stripPayloadFingerprinting(
  */
 function stripQueryFingerprinting(
   query: Record<string, unknown>,
-  mode: 'strict' | 'anonymize',
 ): string {
-  const stripped = stripPayloadFingerprinting(query, mode)
+  const stripped = stripPayloadFingerprinting(query)
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(stripped)) {
     if (value !== undefined && value !== null) {
@@ -313,11 +296,11 @@ export default defineEventHandler(async (event) => {
   }
   let targetUrl = targetBase + targetPath
 
-  // Strip fingerprinting from query string if privacy enabled
-  if (privacy) {
+  // Strip fingerprinting from query string in anonymize mode
+  if (privacy === 'anonymize') {
     const query = getQuery(event)
     if (Object.keys(query).length > 0) {
-      const strippedQuery = stripQueryFingerprinting(query, privacy as 'strict' | 'anonymize')
+      const strippedQuery = stripQueryFingerprinting(query)
       // Replace query string in URL
       const basePath = targetUrl.split('?')[0] || targetUrl
       targetUrl = strippedQuery ? `${basePath}?${strippedQuery}` : basePath
@@ -329,23 +312,9 @@ export default defineEventHandler(async (event) => {
   const headers: Record<string, string> = {}
 
   // Process headers based on privacy mode
-  if (privacy === false) {
-    // No privacy: forward all headers
+  if (privacy === 'proxy') {
+    // Proxy mode: forward all headers
     Object.assign(headers, originalHeaders)
-  }
-  else if (privacy === 'strict') {
-    // Strict mode: minimal headers, maximum privacy
-    // Only forward essential non-identifying headers
-    // Note: content-length is omitted because we modify the body (fetch calculates it)
-    const allowedHeaders = ['content-type', 'accept']
-    for (const [key, value] of Object.entries(originalHeaders)) {
-      const lowerKey = key.toLowerCase()
-      if (allowedHeaders.includes(lowerKey) && value) {
-        headers[key] = value
-      }
-    }
-    // Generic User-Agent so requests don't look suspicious
-    headers['user-agent'] = 'Mozilla/5.0 (compatible)'
   }
   else {
     // Anonymize mode: preserve useful analytics, prevent fingerprinting
@@ -401,11 +370,10 @@ export default defineEventHandler(async (event) => {
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
     rawBody = await readBody(event)
 
-    if (privacy && rawBody) {
-      const privacyMode = privacy as 'strict' | 'anonymize'
+    if (privacy === 'anonymize' && rawBody) {
       if (typeof rawBody === 'object') {
         // JSON body - strip fingerprinting recursively
-        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacyMode)
+        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>)
       }
       else if (typeof rawBody === 'string') {
         // Try parsing as JSON first (sendBeacon often sends JSON with text/plain content-type)
@@ -415,7 +383,7 @@ export default defineEventHandler(async (event) => {
           catch { /* not valid JSON */ }
 
           if (parsed && typeof parsed === 'object') {
-            body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacyMode)
+            body = stripPayloadFingerprinting(parsed as Record<string, unknown>)
           }
           else {
             body = rawBody
@@ -426,7 +394,7 @@ export default defineEventHandler(async (event) => {
           const params = new URLSearchParams(rawBody)
           const obj: Record<string, unknown> = {}
           params.forEach((value, key) => { obj[key] = value })
-          const stripped = stripPayloadFingerprinting(obj, privacyMode)
+          const stripped = stripPayloadFingerprinting(obj)
           body = new URLSearchParams(stripped as Record<string, string>).toString()
         }
         else {
@@ -456,7 +424,7 @@ export default defineEventHandler(async (event) => {
     },
     stripped: {
       headers,
-      query: privacy ? stripPayloadFingerprinting(originalQuery, privacy as 'strict' | 'anonymize') : originalQuery,
+      query: privacy === 'anonymize' ? stripPayloadFingerprinting(originalQuery) : originalQuery,
       body: body ?? null,
     },
   })

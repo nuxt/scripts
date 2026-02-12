@@ -32,15 +32,13 @@ import { getAllProxyConfigs, getSWInterceptRules } from './proxy-configs'
 /**
  * Privacy mode for first-party proxy requests.
  *
- * - `'strict'` - Maximum privacy: strips all identifying headers (IP, User-Agent, language).
- *   Third parties see only your server's IP with a generic User-Agent.
+ * - `'anonymize'` (default) - Prevents fingerprinting: anonymizes IP addresses to country-level,
+ *   normalizes device info and canvas data. All other data passes through unchanged.
  *
- * - `'anonymize'` - Balanced: preserves useful analytics (browser family, country-level geo, page context)
- *   while preventing fingerprinting. Truncates IP for country-level geo only.
- *
- * - `false` - No header modification: forwards all headers as-is (not recommended).
+ * - `'proxy'` - No modification: forwards all headers and data as-is. Privacy comes from
+ *   routing requests through your server (third parties see server IP, not user IP).
  */
-export type FirstPartyPrivacy = 'strict' | 'anonymize' | false
+export type FirstPartyPrivacy = 'proxy' | 'anonymize'
 
 export interface FirstPartyOptions {
   /**
@@ -65,9 +63,8 @@ export interface FirstPartyOptions {
    *
    * Controls what user information is forwarded to third-party analytics services.
    *
-   * - `'strict'` - Maximum privacy: strips all identifying headers
-   * - `'anonymize'` - Preserves useful analytics while preventing fingerprinting (default)
-   * - `false` - No header modification (forwards everything, not recommended)
+   * - `'anonymize'` - Prevents fingerprinting by anonymizing IPs and device info (default)
+   * - `'proxy'` - No modification, just routes through your server
    *
    * @default 'anonymize'
    */
@@ -492,8 +489,8 @@ export default defineNuxtPlugin({
       nuxt.options.runtimeConfig.public['nuxt-scripts-sw'] = { path: swPath }
 
       // Register proxy handler (must be before modules:done like SW handler)
-      // Only needed when privacy mode is enabled (otherwise use Nitro route rules)
-      if (firstPartyPrivacy !== false) {
+      // Only needed for anonymize mode (proxy mode can use simple Nitro route rules)
+      if (firstPartyPrivacy === 'anonymize') {
         const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
         logger.debug('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
         addServerHandler({
@@ -608,21 +605,20 @@ export default defineNuxtPlugin({
 
         // Inject route handling (handler already registered outside modules:done)
         if (Object.keys(neededRoutes).length) {
-          if (firstPartyPrivacy === false) {
-            // No privacy mode: use simple Nitro route rules (forwards all headers)
+          if (firstPartyPrivacy === 'proxy') {
+            // Proxy mode: use simple Nitro route rules (forwards all headers)
             nuxt.options.routeRules = {
               ...nuxt.options.routeRules,
               ...neededRoutes,
             }
           }
-          // Privacy mode: handler was already registered before modules:done
+          // Anonymize mode: handler was already registered before modules:done
 
           // Log active proxy routes in dev
           if (nuxt.options.dev) {
             const routeCount = Object.keys(neededRoutes).length
             const scriptsCount = registryKeys.length
-            const privacyMode = firstPartyPrivacy === false ? 'disabled' : firstPartyPrivacy
-            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${privacyMode})`)
+            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${firstPartyPrivacy})`)
             if (logger.level >= 4) {
               for (const [path, config] of Object.entries(neededRoutes)) {
                 logger.debug(`  ${path} → ${config.proxy}`)

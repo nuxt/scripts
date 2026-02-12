@@ -243,90 +243,17 @@ describe('proxy privacy - payload analysis', () => {
 })
 
 describe('stripFingerprintingFromPayload', () => {
-  describe('strict mode', () => {
-    it('strips all fingerprinting from GA payload', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.ga, 'strict')
-
-      // Should NOT have these
-      expect(result.uip).toBeUndefined() // IP
-      expect(result.cid).toBeUndefined() // Client ID
-      expect(result.uid).toBeUndefined() // User ID
-      expect(result.sr).toBeUndefined() // Screen
-      expect(result.vp).toBeUndefined() // Viewport
-      expect(result.sd).toBeUndefined() // Color depth
-      expect(result._gid).toBeUndefined() // Session ID
-
-      // Should have normalized these
-      expect(result.ul).toBe('en') // Language normalized
-      expect(result.ua).toBe('Mozilla/5.0 (compatible; Chrome)') // UA normalized
-
-      // Should keep these
-      expect(result.dt).toBe('Page Title')
-      expect(result.dl).toBe('https://example.com/page')
-      expect(result.dr).toBe('https://google.com')
-      expect(result.z).toBe('1234567890')
-    })
-
-    it('strips all fingerprinting from Meta payload', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.meta, 'strict')
-
-      expect(result.ud).toBeUndefined() // User data
-      expect(result.fbp).toBeUndefined() // Browser ID
-      expect(result.fbc).toBeUndefined() // Click ID
-      expect(result.external_id).toBeUndefined() // External ID
-      expect(result.client_ip_address).toBeUndefined() // IP
-      expect(result.client_user_agent).toBe('Mozilla/5.0 (compatible; Chrome)') // Normalized
-    })
-
-    it('strips fingerprinting from X/Twitter pixel payload', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.xPixel, 'strict')
-
-      // Should NOT have these fingerprinting params
-      expect(result.dv).toBeUndefined() // Combined device info
-      expect(result.bci).toBeUndefined() // Browser context
-      expect(result.eci).toBeUndefined() // Environment context
-      expect(result.pl_id).toBeUndefined() // Pixel/placement ID
-      expect(result.p_user_id).toBeUndefined() // User ID
-
-      // Should keep non-fingerprinting params
-      expect(result.event).toBe('{}')
-      expect(result.event_id).toBe('a944216c-54e2-4dbb-a338-144f32888929')
-      expect(result.pt).toBe('Test Page')
-      expect(result.txn_id).toBe('ol7lz')
-      expect(result.type).toBe('javascript')
-    })
-
-    it('strips all vectors from fingerprint payload', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.fingerprint, 'strict')
-
-      expect(result.screen).toBeUndefined()
-      expect(result.viewport).toBeUndefined()
-      expect(result.hardwareConcurrency).toBeUndefined()
-      expect(result.deviceMemory).toBeUndefined()
-      expect(result.platform).toBeUndefined()
-      expect(result.plugins).toBeUndefined()
-      expect(result.canvas).toBeUndefined()
-      expect(result.webgl).toBeUndefined()
-      expect(result.audioFingerprint).toBeUndefined()
-      expect(result.fonts).toBeUndefined()
-
-      // Normalized
-      expect(result.userAgent).toBe('Mozilla/5.0 (compatible; Chrome)')
-      expect(result.language).toBe('en')
-    })
-  })
-
   describe('anonymize mode', () => {
     it('anonymizes GA payload while preserving analytics value', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.ga, 'anonymize')
+      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.ga)
 
       // IP anonymized to country level
       expect(result.uip).toBe('192.168.1.0')
 
-      // Identifiers still stripped
-      expect(result.cid).toBeUndefined()
-      expect(result.uid).toBeUndefined()
-      expect(result._gid).toBeUndefined()
+      // User IDs preserved for analytics
+      expect(result.cid).toBe('1234567890.1234567890')
+      expect(result.uid).toBe('user-123')
+      expect(result._gid).toBe('GA1.2.1234567890.1234567890')
 
       // Screen generalized
       expect(result.sr).toBe('2560x1440')
@@ -342,19 +269,64 @@ describe('stripFingerprintingFromPayload', () => {
     })
 
     it('anonymizes Meta payload while preserving event tracking', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.meta, 'anonymize')
+      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.meta)
 
-      // User data and identifiers stripped
-      expect(result.ud).toBeUndefined()
-      expect(result.fbp).toBeUndefined()
-      expect(result.fbc).toBeUndefined()
-      expect(result.external_id).toBeUndefined()
+      // User data preserved
+      expect(result.ud).toBeDefined()
+
+      // User IDs preserved for analytics
+      expect(result.fbp).toBe('_fbp=fb.1.1234567890.1234567890')
+      expect(result.fbc).toBe('_fbc=fb.1.1234567890.AbCdEfGh')
+      expect(result.external_id).toBe('ext-user-123')
 
       // IP anonymized
       expect(result.client_ip_address).toBe('192.168.1.0')
 
       // UA normalized
       expect(result.client_user_agent).toBe('Mozilla/5.0 (compatible; Chrome)')
+    })
+
+    it('strips fingerprinting from X/Twitter pixel payload', () => {
+      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.xPixel)
+
+      // Should NOT have these fingerprinting params
+      expect(result.dv).toBeUndefined() // Combined device info
+      expect(result.bci).toBeUndefined() // Browser context
+      expect(result.eci).toBeUndefined() // Environment context
+
+      // User IDs preserved for analytics
+      expect(result.pl_id).toBe('35809bf2-ef6f-4b4f-9afc-4ffceb3b7e4c')
+      expect(result.p_user_id).toBe('0')
+
+      // Should keep non-fingerprinting params
+      expect(result.event).toBe('{}')
+      expect(result.event_id).toBe('a944216c-54e2-4dbb-a338-144f32888929')
+      expect(result.pt).toBe('Test Page')
+      expect(result.txn_id).toBe('ol7lz')
+      expect(result.type).toBe('javascript')
+    })
+
+    it('strips fingerprinting vectors but keeps normalized values', () => {
+      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.fingerprint)
+
+      // Fingerprinting stripped
+      expect(result.hardwareConcurrency).toBeUndefined()
+      expect(result.deviceMemory).toBeUndefined()
+      expect(result.platform).toBeUndefined()
+      expect(result.plugins).toBeUndefined()
+      expect(result.canvas).toBeUndefined()
+      expect(result.webgl).toBeUndefined()
+      expect(result.audioFingerprint).toBeUndefined()
+      expect(result.fonts).toBeUndefined()
+      expect(result.timezone).toBeUndefined()
+
+      // Screen generalized
+      expect(result.screen).toBe('2560x1440')
+      expect(result.viewport).toBe('1920x1080')
+
+      // Normalized
+      expect(result.userAgent).toBe('Mozilla/5.0 (compatible; Chrome)')
+      expect(result.language).toBe('en')
     })
   })
 })

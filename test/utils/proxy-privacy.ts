@@ -80,7 +80,7 @@ export function generalizeScreen(value: unknown): string {
   // Generalize to common buckets to prevent unique identification
   if (typeof value === 'string') {
     const match = value.match(/(\d+)x(\d+)/)
-    if (match) {
+    if (match && match[1]) {
       const width = Number.parseInt(match[1])
       // Bucket to common resolutions
       if (width >= 2560) return '2560x1440'
@@ -106,7 +106,6 @@ export function generalizeScreen(value: unknown): string {
 // Helper functions for the proxy handler
 export function stripFingerprintingFromPayload(
   payload: Record<string, unknown>,
-  mode: 'strict' | 'anonymize',
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
@@ -141,8 +140,6 @@ export function stripFingerprintingFromPayload(
     }
 
     const isIpParam = matchesParam(key, STRIP_PARAMS.ip)
-    const isUserIdParam = matchesParam(key, STRIP_PARAMS.userId)
-    const isUserDataParam = matchesParam(key, STRIP_PARAMS.userData)
     const isScreenParam = STRIP_PARAMS.screen.some(p => lowerKey === p.toLowerCase() || lowerKey.includes(p.toLowerCase()))
     const isPlatformParam = matchesParam(key, STRIP_PARAMS.platform)
     const isCanvasParam = matchesParam(key, STRIP_PARAMS.canvas)
@@ -151,34 +148,24 @@ export function stripFingerprintingFromPayload(
     const isLocationParam = matchesParam(key, STRIP_PARAMS.location)
     const isDeviceInfoParam = matchesParam(key, STRIP_PARAMS.deviceInfo)
 
-    const shouldStrip = isIpParam || isUserIdParam || isUserDataParam || isScreenParam
-      || isPlatformParam || isCanvasParam || isBrowserParam || isLocationParam || isDeviceInfoParam
-
-    if (mode === 'strict') {
-      if (shouldStrip) {
-        // Skip entirely in strict mode
-        continue
-      }
+    // Anonymize IP addresses to country-level
+    if (isIpParam && typeof value === 'string') {
+      result[key] = anonymizeIP(value)
+      continue
     }
-    else if (mode === 'anonymize') {
-      // In anonymize mode, some params get transformed instead of stripped
-      if (isIpParam && typeof value === 'string') {
-        result[key] = anonymizeIP(value)
-        continue
-      }
-      if (isScreenParam) {
-        result[key] = generalizeScreen(value)
-        continue
-      }
-      // Always strip these even in anonymize mode
-      if (isUserIdParam || isUserDataParam || isCanvasParam || isPlatformParam || isBrowserParam || isLocationParam || isDeviceInfoParam) {
-        continue
-      }
+    // Generalize screen resolution to common buckets
+    if (isScreenParam) {
+      result[key] = generalizeScreen(value)
+      continue
+    }
+    // Normalize out hardware fingerprinting data
+    if (isCanvasParam || isPlatformParam || isBrowserParam || isLocationParam || isDeviceInfoParam) {
+      continue
     }
 
     // Recursively process nested objects
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      result[key] = stripFingerprintingFromPayload(value as Record<string, unknown>, mode)
+      result[key] = stripFingerprintingFromPayload(value as Record<string, unknown>)
     }
     else {
       result[key] = value
