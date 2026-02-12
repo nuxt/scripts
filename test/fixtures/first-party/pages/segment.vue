@@ -6,7 +6,7 @@ useHead({
 })
 
 const { proxy, status } = useScriptSegment({
-  writeKey: import.meta.env.NUXT_PUBLIC_SCRIPTS_SEGMENT_WRITE_KEY || 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C',
+  writeKey: import.meta.env.NUXT_PUBLIC_SCRIPTS_SEGMENT_WRITE_KEY || 'YOUR_WRITE_KEY',
 })
 
 function trackPage() {

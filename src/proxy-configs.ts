@@ -1,14 +1,11 @@
+import { rewriteScriptUrls, type ProxyRewrite } from './runtime/utils/pure'
+
+export type { ProxyRewrite }
+
 /**
  * Proxy configuration for third-party scripts.
  * Defines URL rewrites and route rules for proxying collection endpoints.
  */
-export interface ProxyRewrite {
-  /** Domain to match and replace */
-  from: string
-  /** Local path to rewrite to */
-  to: string
-}
-
 export interface ProxyConfig {
   /** URL rewrites to apply to downloaded script content */
   rewrite?: ProxyRewrite[]
@@ -235,57 +232,4 @@ export function getSWInterceptRules(collectPrefix: string): SWInterceptRule[] {
   return rules
 }
 
-/**
- * Rewrite URLs in script content based on proxy config.
- */
-export function rewriteScriptUrls(content: string, rewrites: ProxyRewrite[]): string {
-  let result = content
-  for (const { from, to } of rewrites) {
-    // Rewrite various URL formats
-    // IMPORTANT: Order matters - match longer patterns first (with trailing slash)
-    // to avoid partial replacements
-    result = result
-      // Full URLs with protocol AND trailing slash (e.g., "https://t.co/" + path)
-      .replaceAll(`"https://${from}/"`, `"${to}/"`)
-      .replaceAll(`'https://${from}/'`, `'${to}/'`)
-      .replaceAll(`\`https://${from}/\``, `\`${to}/\``)
-      .replaceAll(`"https://${from}/"+`, `"${to}/"+`) // Dynamic concatenation
-      .replaceAll(`'https://${from}/'+`, `'${to}/'+`)
-      // Full URLs with protocol (no trailing slash)
-      .replaceAll(`"https://${from}`, `"${to}`)
-      .replaceAll(`'https://${from}`, `'${to}`)
-      .replaceAll(`\`https://${from}`, `\`${to}`)
-      .replaceAll(`"http://${from}`, `"${to}`)
-      .replaceAll(`'http://${from}`, `'${to}`)
-      .replaceAll(`\`http://${from}`, `\`${to}`)
-      // Protocol-relative URLs
-      .replaceAll(`"//${from}`, `"${to}`)
-      .replaceAll(`'//${from}`, `'${to}`)
-      .replaceAll(`\`//${from}`, `\`${to}`)
-      // Bare domain strings (e.g., "api.segment.io/v1" without protocol)
-      // Only match if domain starts string (after quote) to avoid partial matches
-      .replaceAll(`"${from}`, `"${to.startsWith('/') ? to.slice(1) : to}`)
-      .replaceAll(`'${from}`, `'${to.startsWith('/') ? to.slice(1) : to}`)
-      .replaceAll(`\`${from}`, `\`${to.startsWith('/') ? to.slice(1) : to}`)
-  }
-
-  // Handle GA's specific dynamic URL construction patterns:
-  // "https://"+(Qm()||"www")+".google-analytics.com/g/collect"
-  // These need to replace the entire expression with a simple string
-  const gaRewrite = rewrites.find(r => r.from.includes('google-analytics.com/g/collect'))
-  if (gaRewrite) {
-    // Pattern: "https://"+(...)+".google-analytics.com/g/collect"
-    // Use non-greedy .*? to handle nested parentheses like (Qm()||"www")
-    result = result.replace(
-      /"https:\/\/"\+\(.*?\)\+"\.google-analytics\.com\/g\/collect"/g,
-      `"${gaRewrite.to}"`,
-    )
-    // Also handle analytics.google.com variant
-    result = result.replace(
-      /"https:\/\/"\+\(.*?\)\+"\.analytics\.google\.com\/g\/collect"/g,
-      `"${gaRewrite.to}"`,
-    )
-  }
-
-  return result
-}
+export { rewriteScriptUrls }

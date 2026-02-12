@@ -350,7 +350,7 @@ describe('privacy stripping snapshots', () => {
           "sd": "1920x1080",
           "sr": "2560x1440",
           "tid": "G-XXXXXXX",
-          "ua": "Mozilla/5.0 (compatible; Chrome)",
+          "ua": "Mozilla/5.0 (compatible; Chrome/120.0)",
           "uid": "user-abc-123",
           "uip": "192.168.1.0",
           "ul": "en",
@@ -379,7 +379,7 @@ describe('privacy stripping snapshots', () => {
             "original": "en-US,en;q=0.9,fr;q=0.8",
           },
           "ua": {
-            "normalized": "Mozilla/5.0 (compatible; Chrome)",
+            "normalized": "Mozilla/5.0 (compatible; Chrome/120.0)",
             "original": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
           },
         }
@@ -403,7 +403,7 @@ describe('privacy stripping snapshots', () => {
         {
           "action_source": "website",
           "client_ip_address": "192.168.1.0",
-          "client_user_agent": "Mozilla/5.0 (compatible; Chrome)",
+          "client_user_agent": "Mozilla/5.0 (compatible; Chrome/120.0)",
           "custom_data": {
             "content_ids": [
               "SKU123",
@@ -446,7 +446,7 @@ describe('privacy stripping snapshots', () => {
             "original": "192.168.1.100",
           },
           "ua": {
-            "normalized": "Mozilla/5.0 (compatible; Chrome)",
+            "normalized": "Mozilla/5.0 (compatible; Chrome/120.0)",
             "original": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0",
           },
         }
@@ -473,7 +473,7 @@ describe('privacy stripping snapshots', () => {
           "sid": "session-abc-123",
           "sr": "1920x1080",
           "title": "Dashboard",
-          "ua": "Mozilla/5.0 (compatible; Chrome)",
+          "ua": "Mozilla/5.0 (compatible; Chrome/120.0)",
           "uid": "user-xyz-789",
           "url": "https://example.com/dashboard",
           "vp": "1920x1080",
@@ -496,7 +496,7 @@ describe('privacy stripping snapshots', () => {
             "original": "1920x1080",
           },
           "ua": {
-            "normalized": "Mozilla/5.0 (compatible; Chrome)",
+            "normalized": "Mozilla/5.0 (compatible; Chrome/120.0)",
             "original": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
           },
           "viewport": {

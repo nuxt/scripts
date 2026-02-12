@@ -9,6 +9,7 @@ import {
   defineNuxtModule,
   hasNuxtModule,
 } from '@nuxt/kit'
+import { readFileSync } from 'node:fs'
 import { defu } from 'defu'
 import { readPackageJSON } from 'pkg-types'
 import type { FetchOptions } from 'ofetch'
@@ -258,7 +259,8 @@ export default defineNuxtModule<ModuleOptions>({
       googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
         ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
         : undefined,
-    }
+      swTemplate: readFileSync(await resolvePath('./runtime/sw/proxy-sw.template.js'), 'utf-8'),
+    } as any
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
@@ -281,16 +283,12 @@ export default defineNuxtModule<ModuleOptions>({
       )
     }
 
-    // Handle deprecation of bundle option - migrate to firstParty
+    // Handle deprecation of bundle option
     if (config.defaultScriptOptions?.bundle !== undefined) {
       logger.warn(
         '`scripts.defaultScriptOptions.bundle` is deprecated. '
-        + 'Use `scripts.firstParty: true` instead.',
+        + 'Use `scripts.firstParty: true` instead. First-party mode is now enabled by default.',
       )
-      // Migrate: treat bundle as firstParty
-      if (!config.firstParty && config.defaultScriptOptions.bundle) {
-        config.firstParty = true
-      }
     }
 
     // Resolve first-party configuration
@@ -386,7 +384,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Pre-resolve paths needed for hooks
     const swHandlerPath = await resolvePath('./runtime/server/sw-handler')
 
-    logger.info('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
+    logger.debug('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
 
     // Setup Service Worker for first-party mode (must be before modules:done)
     if (firstPartyEnabled) {

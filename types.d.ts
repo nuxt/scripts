@@ -10,4 +10,10 @@ declare module '#app' {
   }
 }
 
+declare module '@nuxt/schema' {
+  interface NuxtHooks {
+    'scripts:registry': (registry: import('./src/runtime/types').RegistryScripts) => void | Promise<void>
+  }
+}
+
 export {}

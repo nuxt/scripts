@@ -1,7 +1,17 @@
 import { defineEventHandler, getHeaders, getRequestIP, readBody, getQuery, setResponseHeader, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
-import { useNitroApp } from 'nitropack/runtime'
-import { rewriteScriptUrls } from '../../proxy-configs'
+import { useStorage, useNitroApp } from 'nitropack/runtime'
+import { hash } from 'ohash'
+import { rewriteScriptUrls } from '../utils/pure'
+import {
+  FINGERPRINT_HEADERS,
+  IP_HEADERS,
+  SENSITIVE_HEADERS,
+  anonymizeIP,
+  normalizeLanguage,
+  normalizeUserAgent,
+  stripPayloadFingerprinting,
+} from './utils/privacy'
 
 interface ProxyConfig {
   routes: Record<string, string>
@@ -11,221 +21,6 @@ interface ProxyConfig {
   cacheTtl?: number
   /** Enable verbose logging (default: only in dev) */
   debug?: boolean
-}
-
-/**
- * Headers that reveal user IP address - stripped in proxy mode,
- * anonymized in anonymize mode.
- */
-const IP_HEADERS = [
-  'x-forwarded-for',
-  'x-real-ip',
-  'forwarded',
-  'cf-connecting-ip',
-  'true-client-ip',
-  'x-client-ip',
-  'x-cluster-client-ip',
-]
-
-/**
- * Headers that enable fingerprinting - normalized in anonymize mode.
- */
-const FINGERPRINT_HEADERS = [
-  'user-agent',
-  'accept-language',
-  'accept-encoding',
-  'sec-ch-ua',
-  'sec-ch-ua-platform',
-  'sec-ch-ua-mobile',
-  'sec-ch-ua-full-version-list',
-]
-
-/**
- * Sensitive headers that should never be forwarded to third parties.
- */
-const SENSITIVE_HEADERS = [
-  'cookie',
-  'authorization',
-  'proxy-authorization',
-  'x-csrf-token',
-  'www-authenticate',
-]
-
-/**
- * Payload parameters that should be stripped (fingerprinting/tracking).
- */
-const STRIP_PARAMS = {
-  // IP addresses
-  ip: ['uip', 'ip', 'client_ip_address', 'ip_address', 'user_ip', 'ipaddress', 'context.ip'],
-  // User identifiers
-  userId: ['uid', 'user_id', 'userid', 'external_id', 'cid', '_gid', 'fbp', 'fbc', 'sid', 'session_id', 'sessionid', 'pl_id', 'p_user_id', 'uuid', 'anonymousid', 'twclid', 'u_c1', 'u_sclid', 'u_scsid'],
-  // User data (PII) - includes email, phone, etc.
-  userData: ['ud', 'user_data', 'userdata', 'email', 'phone', 'traits.email', 'traits.phone'],
-  // Screen/Hardware fingerprinting (sh/sw = Snapchat screen height/width)
-  screen: ['sr', 'vp', 'sd', 'screen', 'viewport', 'colordepth', 'pixelratio', 'sh', 'sw'],
-  // Platform fingerprinting (d_a = architecture, d_ot = OS type, d_os = OS version)
-  platform: ['plat', 'platform', 'hardwareconcurrency', 'devicememory', 'cpu', 'mem', 'd_a', 'd_ot', 'd_os'],
-  // Browser fingerprinting (d_bvs = Snapchat browser versions)
-  browser: ['plugins', 'fonts', 'd_bvs'],
-  // Location/Timezone
-  location: ['tz', 'timezone', 'timezoneoffset'],
-  // Canvas/WebGL fingerprinting
-  canvas: ['canvas', 'webgl', 'audiofingerprint'],
-  // Combined device fingerprinting (X/Twitter dv param contains: timezone, locale, vendor, platform, screen, etc.)
-  deviceInfo: ['dv', 'device_info', 'deviceinfo', 'bci', 'eci'],
-}
-
-/**
- * Parameters that should be normalized (not stripped).
- */
-const NORMALIZE_PARAMS = {
-  language: ['ul', 'lang', 'language', 'languages'],
-  userAgent: ['ua', 'useragent', 'user_agent', 'client_user_agent', 'context.useragent'],
-}
-
-/**
- * Anonymize an IP address to country-level precision.
- * IPv4: Zero last octet (e.g., 1.2.3.4 → 1.2.3.0)
- * IPv6: Keep first 48 bits (e.g., 2001:db8:85a3::1 → 2001:db8:85a3::)
- */
-function anonymizeIP(ip: string): string {
-  if (ip.includes(':')) {
-    // IPv6: keep first 3 segments (48 bits) for country-level geo
-    const parts = ip.split(':')
-    return parts.slice(0, 3).join(':') + '::'
-  }
-  // IPv4: zero last octet for country-level geo
-  const parts = ip.split('.')
-  if (parts.length === 4) {
-    parts[3] = '0'
-    return parts.join('.')
-  }
-  return ip
-}
-
-/**
- * Normalize User-Agent to browser family only.
- * Preserves: Chrome, Firefox, Safari, Edge, Opera
- * Removes: version details, OS info, device info
- */
-function normalizeUserAgent(ua: string): string {
-  // Detect browser family
-  if (ua.includes('Firefox/'))
-    return 'Mozilla/5.0 (compatible; Firefox)'
-  if (ua.includes('Edg/'))
-    return 'Mozilla/5.0 (compatible; Edge)'
-  if (ua.includes('OPR/') || ua.includes('Opera/'))
-    return 'Mozilla/5.0 (compatible; Opera)'
-  if (ua.includes('Safari/') && !ua.includes('Chrome/'))
-    return 'Mozilla/5.0 (compatible; Safari)'
-  if (ua.includes('Chrome/'))
-    return 'Mozilla/5.0 (compatible; Chrome)'
-  // Generic fallback
-  return 'Mozilla/5.0 (compatible)'
-}
-
-/**
- * Normalize Accept-Language to primary language only.
- * e.g., "en-US,en;q=0.9,fr;q=0.8" → "en"
- */
-function normalizeLanguage(lang: string): string {
-  const primary = lang.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim()
-  return primary || 'en'
-}
-
-/**
- * Generalize screen resolution to common bucket.
- */
-function generalizeScreen(value: unknown): string {
-  if (typeof value === 'string') {
-    const match = value.match(/(\d+)x(\d+)/)
-    if (match && match[1]) {
-      const width = Number.parseInt(match[1])
-      if (width >= 2560) return '2560x1440'
-      if (width >= 1920) return '1920x1080'
-      if (width >= 1440) return '1440x900'
-      if (width >= 1366) return '1366x768'
-      return '1280x720'
-    }
-  }
-  return '1920x1080'
-}
-
-/**
- * Recursively strip fingerprinting data from payload.
- */
-function stripPayloadFingerprinting(
-  payload: Record<string, unknown>,
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-
-  for (const [key, value] of Object.entries(payload)) {
-    const lowerKey = key.toLowerCase()
-
-    // Check if should be normalized FIRST (takes priority)
-    const isLanguageParam = NORMALIZE_PARAMS.language.some(p => lowerKey === p.toLowerCase())
-    const isUserAgentParam = NORMALIZE_PARAMS.userAgent.some(p => lowerKey === p.toLowerCase())
-
-    if ((isLanguageParam || isUserAgentParam) && typeof value === 'string') {
-      result[key] = isLanguageParam ? normalizeLanguage(value) : normalizeUserAgent(value)
-      continue
-    }
-
-    // Check fingerprinting params
-    // Handle bracket notation (e.g., ud[em] matches ud) and dot notation (e.g., context.ip)
-    const matchesParam = (key: string, params: string[]) => {
-      const lk = key.toLowerCase()
-      return params.some((p) => {
-        const lp = p.toLowerCase()
-        // Exact match
-        if (lk === lp) return true
-        // Bracket notation: ud[em] matches ud
-        if (lk.startsWith(lp + '[')) return true
-        // Dot notation: context.ip matches context.ip exactly (handled above)
-        return false
-      })
-    }
-
-    const isIpParam = matchesParam(key, STRIP_PARAMS.ip)
-    const isScreenParam = matchesParam(key, STRIP_PARAMS.screen)
-    const isPlatformParam = matchesParam(key, STRIP_PARAMS.platform)
-    const isCanvasParam = matchesParam(key, STRIP_PARAMS.canvas)
-    const isBrowserParam = matchesParam(key, STRIP_PARAMS.browser)
-    const isLocationParam = matchesParam(key, STRIP_PARAMS.location)
-    const isDeviceInfoParam = matchesParam(key, STRIP_PARAMS.deviceInfo)
-
-    // Anonymize IP addresses to country-level
-    if (isIpParam && typeof value === 'string') {
-      result[key] = anonymizeIP(value)
-      continue
-    }
-    // Generalize screen resolution to common buckets
-    if (isScreenParam) {
-      result[key] = generalizeScreen(value)
-      continue
-    }
-    // Normalize out hardware fingerprinting data
-    if (isCanvasParam || isPlatformParam || isBrowserParam || isLocationParam || isDeviceInfoParam) {
-      continue
-    }
-
-    // Recursively process nested objects and arrays
-    if (Array.isArray(value)) {
-      result[key] = value.map(item =>
-        typeof item === 'object' && item !== null
-          ? stripPayloadFingerprinting(item as Record<string, unknown>)
-          : item,
-      )
-    }
-    else if (typeof value === 'object' && value !== null) {
-      result[key] = stripPayloadFingerprinting(value as Record<string, unknown>)
-    }
-    else {
-      result[key] = value
-    }
-  }
-
-  return result
 }
 
 /**
@@ -262,7 +57,12 @@ export default defineEventHandler(async (event) => {
 
   const { routes, privacy, cacheTtl = 3600, debug = import.meta.dev } = proxyConfig
   const path = event.path
-  const log = debug ? console.debug.bind(console) : () => {}
+  const log = debug
+    ? (message: string, ...args: any[]) => {
+        // eslint-disable-next-line no-console
+        console.debug(message, ...args)
+      }
+    : () => {}
 
   // Find matching route (sort by length descending to match longest/most specific first)
   let targetBase: string | undefined
@@ -284,7 +84,8 @@ export default defineEventHandler(async (event) => {
     log('[proxy] No match for path:', path)
     throw createError({
       statusCode: 404,
-      statusMessage: `No proxy target found for path: ${path}`,
+      statusMessage: 'No proxy route matched',
+      message: `No proxy target found for path: ${path}`,
     })
   }
 
@@ -379,7 +180,9 @@ export default defineEventHandler(async (event) => {
         // Try parsing as JSON first (sendBeacon often sends JSON with text/plain content-type)
         if (rawBody.startsWith('{') || rawBody.startsWith('[')) {
           let parsed: unknown = null
-          try { parsed = JSON.parse(rawBody) }
+          try {
+            parsed = JSON.parse(rawBody)
+          }
           catch { /* not valid JSON */ }
 
           if (parsed && typeof parsed === 'object') {
@@ -393,7 +196,9 @@ export default defineEventHandler(async (event) => {
           // URL-encoded form data
           const params = new URLSearchParams(rawBody)
           const obj: Record<string, unknown> = {}
-          params.forEach((value, key) => { obj[key] = value })
+          params.forEach((value, key) => {
+            obj[key] = value
+          })
           const stripped = stripPayloadFingerprinting(obj)
           body = new URLSearchParams(stripped as Record<string, string>).toString()
         }
@@ -411,7 +216,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Emit hook for E2E testing - allows capturing before/after data
-  await (nitro.hooks.callHook as Function)('nuxt-scripts:proxy', {
+  await (nitro.hooks.callHook as (name: string, ctx: any) => Promise<void>)('nuxt-scripts:proxy', {
     timestamp: Date.now(),
     path: event.path,
     targetUrl,
@@ -450,7 +255,14 @@ export default defineEventHandler(async (event) => {
     const message = err instanceof Error ? err.message : 'Unknown error'
     log('[proxy] Fetch error:', message)
 
-    // Return a graceful error response instead of crashing
+    // For analytics endpoints, return a graceful 204 No Content instead of a noisy 5xx error
+    // this avoids cluttering the user's console with errors for non-critical tracking requests
+    if (path.includes('/collect') || path.includes('/tr') || path.includes('/events')) {
+      event.node.res.statusCode = 204
+      return ''
+    }
+
+    // Return a graceful error response instead of crashing for other requests
     if (message.includes('aborted') || message.includes('timeout')) {
       throw createError({
         statusCode: 504,
@@ -491,10 +303,22 @@ export default defineEventHandler(async (event) => {
     // Rewrite URLs in JavaScript responses to route through our proxy
     // This is necessary because some SDKs use sendBeacon() which can't be intercepted by SW
     if (responseContentType.includes('javascript') && proxyConfig?.rewrites?.length) {
-      content = rewriteScriptUrls(content, proxyConfig.rewrites)
-      log('[proxy] Rewrote URLs in JavaScript response')
+      // Use storage to cache rewritten scripts
+      const cacheKey = `nuxt-scripts:proxy:${hash(targetUrl + JSON.stringify(proxyConfig.rewrites))}`
+      const storage = useStorage('cache')
+      const cached = await storage.getItem(cacheKey)
 
-      // Add cache headers for JavaScript responses (immutable content with hash in filename)
+      if (cached && typeof cached === 'string') {
+        log('[proxy] Serving rewritten script from cache')
+        content = cached
+      }
+      else {
+        content = rewriteScriptUrls(content, proxyConfig.rewrites)
+        await storage.setItem(cacheKey, content, { ttl: cacheTtl })
+        log('[proxy] Rewrote URLs in JavaScript response and cached')
+      }
+
+      // Add cache headers for proxied JavaScript responses
       setResponseHeader(event, 'cache-control', `public, max-age=${cacheTtl}, stale-while-revalidate=${cacheTtl * 2}`)
     }
 

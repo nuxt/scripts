@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs, getProxyConfig } from '../../src/proxy-configs'
+import { getAllProxyConfigs } from '../../src/proxy-configs'
 
 describe('first-party mode', () => {
   describe('default configuration', () => {

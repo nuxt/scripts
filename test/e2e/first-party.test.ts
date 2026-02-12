@@ -526,12 +526,6 @@ describe('first-party privacy stripping', () => {
     // Note: Clarity and Hotjar are session recording tools that primarily use:
     // - Clarity: d.clarity.ms (data collection) - may buffer data before sending
     // - Hotjar: WebSocket connections (wss://ws*.hotjar.com) which can't be proxied via HTTP
-    // These tests verify the script loads and proxy config is correct.
-    // Data collection may not occur in short headless sessions.
-
-    // Note: Clarity and Hotjar are session recording tools that primarily use:
-    // - Clarity: d.clarity.ms (data collection) - may buffer data before sending
-    // - Hotjar: WebSocket connections (wss://ws*.hotjar.com) which can't be proxied via HTTP
     // These tests verify page loads and proxy config is correct.
     // Data collection may not occur in short headless sessions.
 

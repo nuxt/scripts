@@ -1,5 +1,6 @@
 import { defineEventHandler } from 'h3'
 import { useRuntimeConfig } from '#imports'
+import { escapeRegExp } from '../../utils/pure'
 
 interface HealthCheckResult {
   script: string
@@ -10,17 +11,13 @@ interface HealthCheckResult {
   error?: string
 }
 
-function escapeRegExp(string: string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 /**
  * Dev-only endpoint that verifies first-party proxy routes are working.
  * Available at /_scripts/health.json
  *
  * Tests a sample request to each proxy route to verify connectivity.
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   const config = useRuntimeConfig()
   const scriptsConfig = config.public?.['nuxt-scripts-status'] as {
     enabled: boolean

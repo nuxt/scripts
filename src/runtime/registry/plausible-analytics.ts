@@ -185,8 +185,12 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
           ? undefined
           : () => {
               const w = window as any
-              w.plausible = w.plausible || function () { (w.plausible.q = w.plausible.q || []).push(arguments) }
-              w.plausible.init = w.plausible.init || function (i: PlausibleInitOptions) { w.plausible.o = i || {} }
+              w.plausible = w.plausible || function (...args: any[]) {
+                (w.plausible.q = w.plausible.q || []).push(args)
+              }
+              w.plausible.init = w.plausible.init || function (i: PlausibleInitOptions) {
+                w.plausible.o = i || {}
+              }
               w.plausible.init(initOptions)
             },
       },
