@@ -3,8 +3,7 @@ import { getAllProxyConfigs } from '../../src/proxy-configs'
 
 describe('first-party mode', () => {
   describe('default configuration', () => {
-    it('firstParty defaults to true', async () => {
-      // This is a documentation test - the actual default is in module.ts
+    it('proxy configs are available for all supported scripts', async () => {
       // We test the proxy configs work correctly when enabled
       const configs = getAllProxyConfigs('/_scripts/c')
       expect(Object.keys(configs).length).toBeGreaterThan(0)

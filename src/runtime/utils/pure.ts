@@ -48,7 +48,7 @@ export function rewriteScriptUrls(content: string, rewrites: ProxyRewrite[]): st
       if (url.host) {
         // Full URL with host
         const hostMatches = isSuffixMatch
-          ? url.host.endsWith(from)
+          ? url.host.endsWith(fromHost)
           : url.host === fromHost
 
         if (hostMatches) {
@@ -69,7 +69,7 @@ export function rewriteScriptUrls(content: string, rewrites: ProxyRewrite[]): st
         // Protocol-relative URL
         const hostPart = inner.slice(2).split('/')[0]
         const hostMatches = isSuffixMatch
-          ? hostPart?.endsWith(from) ?? false
+          ? hostPart?.endsWith(fromHost) ?? false
           : hostPart === fromHost
 
         if (hostMatches) {

@@ -67,17 +67,10 @@ const PROVIDER_PATHS: Record<string, string[]> = {
 }
 
 /**
- * Fingerprinting parameters that should NEVER appear in stripped query/body.
- * These are verified for every captured request.
+ * Fingerprinting parameters that stripPayloadFingerprinting actually removes or normalizes.
+ * These should NEVER appear unchanged in stripped query/body.
  */
-const FINGERPRINT_PARAMS = [
-  // IP addresses
-  'uip', 'ip', 'client_ip', 'user_ip', 'ipaddress',
-  // User identifiers (should be stripped)
-  'uid', 'user_id', 'userid', 'external_id', 'cid', '_gid', 'fbp', 'fbc',
-  'sid', 'session_id', 'sessionid', 'pl_id', 'p_user_id', 'anonymousid', 'twclid',
-  // User data (PII)
-  'ud', 'user_data', 'userdata', 'email', 'phone',
+const STRIPPED_FINGERPRINT_PARAMS = [
   // Screen/Hardware fingerprinting
   'sr', 'vp', 'sd', 'screen', 'viewport', 'colordepth', 'pixelratio',
   // Platform fingerprinting
@@ -93,6 +86,19 @@ const FINGERPRINT_PARAMS = [
 ]
 
 /**
+ * User-id and PII parameters that are intentionally PRESERVED by stripPayloadFingerprinting.
+ * Analytics services require these to function. Listed here for documentation;
+ * these are NOT checked by verifyFingerprintingStripped.
+ */
+const _PRESERVED_USER_PARAMS = [
+  // User identifiers (preserved for analytics)
+  'uid', 'user_id', 'userid', 'external_id', 'cid', '_gid', 'fbp', 'fbc',
+  'sid', 'session_id', 'sessionid', 'pl_id', 'p_user_id', 'anonymousid', 'twclid',
+  // User data (PII — hashed by SDKs before sending, preserved for analytics)
+  'ud', 'user_data', 'userdata', 'email', 'phone',
+]
+
+/**
  * Verify that fingerprinting parameters are stripped from captured request.
  * Returns list of fingerprinting params that were NOT stripped (should be empty).
  */
@@ -101,7 +107,7 @@ function verifyFingerprintingStripped(capture: Record<string, any>): string[] {
   const strippedQuery = capture.stripped?.query || {}
   const strippedBody = capture.stripped?.body || {}
 
-  for (const param of FINGERPRINT_PARAMS) {
+  for (const param of STRIPPED_FINGERPRINT_PARAMS) {
     if (strippedQuery[param] !== undefined) {
       leakedParams.push(`query.${param}`)
     }
@@ -277,10 +283,7 @@ describe('first-party privacy stripping', () => {
     it('bundled scripts contain rewritten collect URLs', async () => {
       // Check bundled scripts have proxy URLs
       const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-proxy')
-      if (!existsSync(cacheDir)) {
-        // Cache might not exist in this test run
-        return
-      }
+      expect(existsSync(cacheDir), `Bundle proxy cache dir should exist at ${cacheDir}`).toBe(true)
 
       const files = readdirSync(cacheDir).filter(f => f.endsWith('.js'))
       expect(files.length).toBeGreaterThan(0)

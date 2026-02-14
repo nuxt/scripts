@@ -80,7 +80,10 @@ export default defineEventHandler(async (_event) => {
   }
 
   const allOk = checks.every(c => c.status === 'ok')
-  const avgLatency = checks.length > 0 ? checks.reduce((sum, c) => sum + (c.latency || 0), 0) / checks.length : 0
+  const checksWithLatency = checks.filter(c => typeof c.latency === 'number')
+  const avgLatency = checksWithLatency.length > 0
+    ? checksWithLatency.reduce((sum, c) => sum + c.latency!, 0) / checksWithLatency.length
+    : 0
 
   return {
     status: allOk ? 'healthy' : 'degraded',

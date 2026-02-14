@@ -114,8 +114,13 @@ export default defineEventHandler(async (event) => {
 
   // Process headers based on privacy mode
   if (privacy === 'proxy') {
-    // Proxy mode: forward all headers
-    Object.assign(headers, originalHeaders)
+    // Proxy mode: forward headers but strip sensitive auth/session headers
+    // to prevent leaking credentials to third-party analytics endpoints
+    for (const [key, value] of Object.entries(originalHeaders)) {
+      if (!value) continue
+      if (SENSITIVE_HEADERS.includes(key.toLowerCase())) continue
+      headers[key] = value
+    }
   }
   else {
     // Anonymize mode: preserve useful analytics, prevent fingerprinting
@@ -200,7 +205,14 @@ export default defineEventHandler(async (event) => {
             obj[key] = value
           })
           const stripped = stripPayloadFingerprinting(obj)
-          body = new URLSearchParams(stripped as Record<string, string>).toString()
+          // Convert all values to strings — URLSearchParams coerces non-strings
+          // to "[object Object]" which corrupts nested objects/arrays
+          const stringified: Record<string, string> = {}
+          for (const [k, v] of Object.entries(stripped)) {
+            if (v === undefined || v === null) continue
+            stringified[k] = typeof v === 'string' ? v : JSON.stringify(v)
+          }
+          body = new URLSearchParams(stringified).toString()
         }
         else {
           body = rawBody

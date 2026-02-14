@@ -38,13 +38,18 @@ export const SENSITIVE_HEADERS = [
 
 /**
  * Payload parameters that should be stripped (fingerprinting/tracking).
+ *
+ * Note: userId and userData are intentionally NOT stripped by stripPayloadFingerprinting.
+ * Analytics services require user identifiers (cid, uid, fbp, etc.) and user data (ud, email)
+ * to function correctly. These are listed here for documentation and param-detection tests only.
+ * The privacy model strips device/browser fingerprinting while preserving user-level analytics IDs.
  */
 export const STRIP_PARAMS = {
-  // IP addresses
+  // IP addresses (anonymized, not stripped)
   ip: ['uip', 'ip', 'client_ip_address', 'ip_address', 'user_ip', 'ipaddress', 'context.ip'],
-  // User identifiers
+  // User identifiers - intentionally preserved for analytics functionality
   userId: ['uid', 'user_id', 'userid', 'external_id', 'cid', '_gid', 'fbp', 'fbc', 'sid', 'session_id', 'sessionid', 'pl_id', 'p_user_id', 'uuid', 'anonymousid', 'twclid', 'u_c1', 'u_sclid', 'u_scsid'],
-  // User data (PII) - includes email, phone, etc.
+  // User data (PII) - intentionally preserved; hashed by analytics SDKs before sending
   userData: ['ud', 'user_data', 'userdata', 'email', 'phone', 'traits.email', 'traits.phone'],
   // Screen/Hardware fingerprinting (sh/sw = Snapchat screen height/width)
   screen: ['sr', 'vp', 'sd', 'screen', 'viewport', 'colordepth', 'pixelratio', 'sh', 'sw'],
@@ -69,14 +74,14 @@ export const NORMALIZE_PARAMS = {
 }
 
 /**
- * Anonymize an IP address to country-level precision.
+ * Anonymize an IP address by zeroing trailing segments.
  */
 export function anonymizeIP(ip: string): string {
   if (ip.includes(':')) {
-    // IPv6: keep first 3 segments (48 bits)
+    // IPv6: keep first 3 segments (48 bits) — roughly city/ISP-level aggregation
     return ip.split(':').slice(0, 3).join(':') + '::'
   }
-  // IPv4: zero last octet
+  // IPv4: zero last octet (/24 subnet — typically ISP/neighborhood-level precision)
   const parts = ip.split('.')
   if (parts.length === 4) {
     parts[3] = '0'

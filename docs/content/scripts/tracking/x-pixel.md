@@ -14,7 +14,7 @@ Nuxt Scripts provides a registry script composable `useScriptXPixel` to easily i
 
 ### Nuxt Config Setup
 
-The simplest way to load Meta Pixel globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+The simplest way to load X Pixel globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptXPixel](#useScriptXPixel) composable.
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to

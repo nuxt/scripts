@@ -604,10 +604,24 @@ export default defineNuxtPlugin({
         // Inject route handling (handler already registered outside modules:done)
         if (Object.keys(neededRoutes).length) {
           if (firstPartyPrivacy === 'proxy') {
-            // Proxy mode: use simple Nitro route rules (forwards all headers)
+            // Proxy mode: use Nitro route rules with sensitive headers stripped.
+            // Even in passthrough proxy mode, we must not forward auth/session
+            // headers (Cookie, Authorization, etc.) to third-party analytics endpoints.
+            const sanitizedRoutes: Record<string, { proxy: string, headers: Record<string, string> }> = {}
+            for (const [path, config] of Object.entries(neededRoutes)) {
+              sanitizedRoutes[path] = {
+                proxy: config.proxy,
+                headers: {
+                  'cookie': '',
+                  'authorization': '',
+                  'proxy-authorization': '',
+                  'x-csrf-token': '',
+                },
+              }
+            }
             nuxt.options.routeRules = {
               ...nuxt.options.routeRules,
-              ...neededRoutes,
+              ...sanitizedRoutes,
             }
           }
           // Anonymize mode: handler was already registered before modules:done
