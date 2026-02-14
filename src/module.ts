@@ -720,14 +720,10 @@ export default defineNuxtPlugin({
     if (nuxt.options.dev) {
       setupDevToolsUI(config, resolvePath)
 
-      // Add status and health endpoints in dev mode
+      // Add status endpoint in dev mode
       addServerHandler({
         route: '/_scripts/status.json',
         handler: await resolvePath('./runtime/server/api/scripts-status'),
-      })
-      addServerHandler({
-        route: '/_scripts/health.json',
-        handler: await resolvePath('./runtime/server/api/scripts-health'),
       })
     }
   },
