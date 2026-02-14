@@ -94,13 +94,24 @@ export function anonymizeIP(ip: string): string {
  * Normalize User-Agent to browser family and major version only.
  */
 export function normalizeUserAgent(ua: string): string {
-  // We use a specific regex here for precision as it's the most reliable way
-  // to extract browser info from UA strings without a heavy parser.
-  const match = ua.match(/(Firefox|Edg|OPR|Opera|Safari|Chrome)\/(\d+)/)
-  if (match) {
-    const family = match[1] === 'Edg' ? 'Edge' : (match[1] === 'OPR' ? 'Opera' : match[1])
-    const majorVersion = match[2]
-    return `Mozilla/5.0 (compatible; ${family}/${majorVersion}.0)`
+  // Test tokens in specificity order — Edge/Opera UA strings also contain "Chrome" and "Safari",
+  // so we must check for more-specific tokens first.
+  const tokens: [pattern: string, family: string][] = [
+    ['Edg/', 'Edge'],
+    ['OPR/', 'Opera'],
+    ['Opera/', 'Opera'],
+    ['Firefox/', 'Firefox'],
+    ['Chrome/', 'Chrome'],
+    ['Safari/', 'Safari'],
+  ]
+  for (const [pattern, family] of tokens) {
+    const idx = ua.indexOf(pattern)
+    if (idx !== -1) {
+      const versionStart = idx + pattern.length
+      const majorVersion = ua.slice(versionStart).match(/^(\d+)/)?.[1]
+      if (majorVersion)
+        return `Mozilla/5.0 (compatible; ${family}/${majorVersion}.0)`
+    }
   }
   return 'Mozilla/5.0 (compatible)'
 }

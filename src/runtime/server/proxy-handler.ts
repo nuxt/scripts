@@ -264,8 +264,7 @@ export default defineEventHandler(async (event) => {
   }
   catch (err: unknown) {
     clearTimeout(timeoutId)
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    log('[proxy] Fetch error:', message)
+    log('[proxy] Fetch error:', err instanceof Error ? err.message : err)
 
     // For analytics endpoints, return a graceful 204 No Content instead of a noisy 5xx error
     // this avoids cluttering the user's console with errors for non-critical tracking requests
@@ -274,19 +273,11 @@ export default defineEventHandler(async (event) => {
       return ''
     }
 
-    // Return a graceful error response instead of crashing for other requests
-    if (message.includes('aborted') || message.includes('timeout')) {
-      throw createError({
-        statusCode: 504,
-        statusMessage: 'Upstream timeout',
-        message: `Request to ${new URL(targetUrl).hostname} timed out`,
-      })
-    }
-
+    const isTimeout = err instanceof Error && (err.message.includes('aborted') || err.message.includes('timeout'))
     throw createError({
-      statusCode: 502,
-      statusMessage: 'Bad Gateway',
-      message: `Failed to reach upstream: ${message}`,
+      statusCode: isTimeout ? 504 : 502,
+      statusMessage: isTimeout ? 'Upstream timeout' : 'Bad Gateway',
+      message: 'Failed to reach upstream',
     })
   }
 

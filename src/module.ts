@@ -486,16 +486,14 @@ export default defineNuxtPlugin({
       // Store SW path in runtime config for the trigger composable
       nuxt.options.runtimeConfig.public['nuxt-scripts-sw'] = { path: swPath }
 
-      // Register proxy handler (must be before modules:done like SW handler)
-      // Only needed for anonymize mode (proxy mode can use simple Nitro route rules)
-      if (firstPartyPrivacy === 'anonymize') {
-        const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
-        logger.debug('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
-        addServerHandler({
-          route: `${firstPartyCollectPrefix}/**`,
-          handler: proxyHandlerPath,
-        })
-      }
+      // Register proxy handler for both privacy modes (must be before modules:done like SW handler)
+      // Both modes need the handler: 'proxy' strips sensitive headers, 'anonymize' also strips fingerprinting
+      const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
+      logger.debug('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
+      addServerHandler({
+        route: `${firstPartyCollectPrefix}/**`,
+        handler: proxyHandlerPath,
+      })
     }
 
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
@@ -595,31 +593,8 @@ export default defineNuxtPlugin({
           rewrites: allRewrites,
         }
 
-        // Inject route handling (handler already registered outside modules:done)
+        // Proxy handler is registered before modules:done for both privacy modes
         if (Object.keys(neededRoutes).length) {
-          if (firstPartyPrivacy === 'proxy') {
-            // Proxy mode: use Nitro route rules with sensitive headers stripped.
-            // Even in passthrough proxy mode, we must not forward auth/session
-            // headers (Cookie, Authorization, etc.) to third-party analytics endpoints.
-            const sanitizedRoutes: Record<string, { proxy: string, headers: Record<string, string> }> = {}
-            for (const [path, config] of Object.entries(neededRoutes)) {
-              sanitizedRoutes[path] = {
-                proxy: config.proxy,
-                headers: {
-                  'cookie': '',
-                  'authorization': '',
-                  'proxy-authorization': '',
-                  'x-csrf-token': '',
-                },
-              }
-            }
-            nuxt.options.routeRules = {
-              ...nuxt.options.routeRules,
-              ...sanitizedRoutes,
-            }
-          }
-          // Anonymize mode: handler was already registered before modules:done
-
           // Log active proxy routes in dev
           if (nuxt.options.dev) {
             const routeCount = Object.keys(neededRoutes).length
