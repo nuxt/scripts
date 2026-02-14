@@ -143,11 +143,6 @@ async function downloadScript(opts: {
       return Buffer.from(r._data || await r.arrayBuffer())
     })
 
-    // Calculate integrity hash if enabled
-    const integrityHash = integrity && res
-      ? calculateIntegrity(res, integrity === true ? 'sha384' : integrity)
-      : undefined
-
     await storage.setItemRaw(`bundle:${filename}`, res)
     // Apply URL rewrites for proxy mode
     if (proxyRewrites?.length && res) {
@@ -156,6 +151,11 @@ async function downloadScript(opts: {
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
+
+    // Calculate integrity hash after rewrites so the hash matches the served content
+    const integrityHash = integrity && res
+      ? calculateIntegrity(res, integrity === true ? 'sha384' : integrity)
+      : undefined
 
     await storage.setItemRaw(cacheKey, res)
     // Save metadata with timestamp for cache expiration

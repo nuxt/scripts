@@ -36,8 +36,10 @@ import { getAllProxyConfigs, getSWInterceptRules } from './proxy-configs'
  * - `'anonymize'` (default) - Prevents fingerprinting: anonymizes IP addresses to country-level,
  *   normalizes device info and canvas data. All other data passes through unchanged.
  *
- * - `'proxy'` - No modification: forwards all headers and data as-is. Privacy comes from
- *   routing requests through your server (third parties see server IP, not user IP).
+ * - `'proxy'` - Minimal modification: forwards headers and data, but strips sensitive
+ *   auth/session headers (cookie, authorization) to prevent leaking credentials to
+ *   third-party endpoints. Privacy comes from routing requests through your server
+ *   (third parties see server IP, not user IP).
  */
 export type FirstPartyPrivacy = 'proxy' | 'anonymize'
 
