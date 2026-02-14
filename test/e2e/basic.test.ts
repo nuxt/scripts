@@ -251,14 +251,14 @@ describe('third-party-capital', () => {
   })
 
   it('expect GTM to work collect data', {
-    timeout: 10000,
+    timeout: 30000,
   }, async () => {
     const { page } = await createPage('/tpc/gtm')
     await page.waitForTimeout(500)
 
-    // wait for the collect request
+    // wait for the collect request - GTM needs to load, init GA, then GA fires collect
     const request = page.waitForRequest(request => request.url().includes('analytics.google.com/g/collect?'), {
-      timeout: 10000,
+      timeout: 25000,
     })
     await page.getByText('trigger').click()
     await request

@@ -216,6 +216,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       name: 'nuxt:scripts:bundler-transformer',
 
       transformInclude(id) {
+        // Skip test files - no need to bundle scripts in test code
+        if (id.includes('.test.') || id.includes('.spec.'))
+          return false
         return isVue(id, { type: ['template', 'script'] }) || isJS(id)
       },
 
@@ -430,7 +433,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       else {
                         // Provide more helpful error message, especially for Docker/network issues
                         const errorMessage = e?.message || 'Unknown error'
-                        if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND')) {
+                        if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('certificate')) {
                           logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
                           logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
                         }
