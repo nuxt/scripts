@@ -588,12 +588,6 @@ export default defineNuxtPlugin({
           }
         }
 
-        nuxt.options.runtimeConfig.public['nuxt-scripts-status'] = {
-          enabled: firstPartyEnabled,
-          scripts: registryKeys,
-          routes: flatRoutes,
-          collectPrefix: firstPartyCollectPrefix,
-        }
         // Server-side config for proxy privacy handling
         nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
           routes: flatRoutes,
@@ -719,12 +713,6 @@ export default defineNuxtPlugin({
 
     if (nuxt.options.dev) {
       setupDevToolsUI(config, resolvePath)
-
-      // Add status endpoint in dev mode
-      addServerHandler({
-        route: '/_scripts/status.json',
-        handler: await resolvePath('./runtime/server/api/scripts-status'),
-      })
     }
   },
 })
