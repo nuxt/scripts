@@ -115,7 +115,7 @@ async function downloadScript(opts: {
     // Include proxy in cache key to differentiate proxied vs non-proxied versions
     // Also include a hash of proxyRewrites content to handle different collectPrefix values
     const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
-    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename}${proxyRewritesHash}` : `bundle:${filename}`
+    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename.replace('.js', `${proxyRewritesHash}.js`)}` : `bundle:${filename}`
     const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
     if (shouldUseCache) {
