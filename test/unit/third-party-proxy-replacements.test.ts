@@ -468,15 +468,24 @@ describe('privacy stripping snapshots', () => {
       const result = stripFingerprintingFromPayload(sessionPayload)
       expect(result).toMatchInlineSnapshot(`
         {
+          "canvas": "",
+          "deviceMemory": 16,
+          "fonts": [],
+          "hardwareConcurrency": 8,
+          "platform": "Win32",
+          "plugins": [],
           "referrer": "https://example.com/login",
           "sd": "1920x1080",
           "sid": "session-abc-123",
           "sr": "1920x1080",
+          "timezone": "UTC",
+          "timezoneOffset": 360,
           "title": "Dashboard",
           "ua": "Mozilla/5.0 (compatible; Chrome/120.0)",
           "uid": "user-xyz-789",
           "url": "https://example.com/dashboard",
           "vp": "1920x1080",
+          "webgl": {},
         }
       `)
     })
@@ -506,16 +515,16 @@ describe('privacy stripping snapshots', () => {
         }
       `)
 
-      // Hardware fingerprinting removed
-      expect(result).not.toHaveProperty('platform')
-      expect(result).not.toHaveProperty('hardwareConcurrency')
-      expect(result).not.toHaveProperty('deviceMemory')
-      expect(result).not.toHaveProperty('plugins')
-      expect(result).not.toHaveProperty('fonts')
-      expect(result).not.toHaveProperty('canvas')
-      expect(result).not.toHaveProperty('webgl')
-      expect(result).not.toHaveProperty('timezone')
-      expect(result).not.toHaveProperty('timezoneOffset')
+      // Hardware fingerprinting anonymized (not removed)
+      expect(result.platform).toBe(sessionPayload.platform) // Low entropy, kept as-is
+      expect(result.hardwareConcurrency).toBe(8) // Generalized to bucket
+      expect(result.deviceMemory).toBe(16) // Generalized to bucket
+      expect(result.plugins).toEqual([]) // Replaced with empty
+      expect(result.fonts).toEqual([]) // Replaced with empty
+      expect(result.canvas).toBe('') // Replaced with empty
+      expect(result.webgl).toEqual({}) // Replaced with empty
+      expect(result.timezone).toBe('UTC') // Generalized to UTC
+      expect(result.timezoneOffset).toBe(360) // Bucketed to 3-hour interval
 
       // User IDs preserved (not normalized)
       expect(result.sid).toBe(sessionPayload.sid)
@@ -563,8 +572,8 @@ describe('privacy stripping snapshots', () => {
 
         --- SESSION ---
         Original fields (18): sid, uid, ua, sr, vp, sd, platform, hardwareConcurrency, deviceMemory, timezone, timezoneOffset, plugins, fonts, canvas, webgl, url, referrer, title
-        Output fields (9): sid, uid, ua, sr, vp, sd, url, referrer, title
-        Stripped: platform, hardwareConcurrency, deviceMemory, timezone, timezoneOffset, plugins, fonts, canvas, webgl
+        Output fields (18): sid, uid, ua, sr, vp, sd, platform, hardwareConcurrency, deviceMemory, timezone, timezoneOffset, plugins, fonts, canvas, webgl, url, referrer, title
+        Stripped: 
         "
       `)
     })

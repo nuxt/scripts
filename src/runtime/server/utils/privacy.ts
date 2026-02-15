@@ -37,32 +37,38 @@ export const SENSITIVE_HEADERS = [
 ]
 
 /**
- * Payload parameters that should be stripped (fingerprinting/tracking).
+ * Payload parameters relevant to privacy.
  *
- * Note: userId and userData are intentionally NOT stripped by stripPayloadFingerprinting.
+ * Note: userId and userData are intentionally NOT modified by stripPayloadFingerprinting.
  * Analytics services require user identifiers (cid, uid, fbp, etc.) and user data (ud, email)
  * to function correctly. These are listed here for documentation and param-detection tests only.
- * The privacy model strips device/browser fingerprinting while preserving user-level analytics IDs.
+ * The privacy model anonymizes device/browser fingerprinting while preserving user-level analytics IDs.
  */
 export const STRIP_PARAMS = {
-  // IP addresses (anonymized, not stripped)
+  // IP addresses — anonymized to subnet
   ip: ['uip', 'ip', 'client_ip_address', 'ip_address', 'user_ip', 'ipaddress', 'context.ip'],
-  // User identifiers - intentionally preserved for analytics functionality
+  // User identifiers — intentionally preserved for analytics functionality
   userId: ['uid', 'user_id', 'userid', 'external_id', 'cid', '_gid', 'fbp', 'fbc', 'sid', 'session_id', 'sessionid', 'pl_id', 'p_user_id', 'uuid', 'anonymousid', 'twclid', 'u_c1', 'u_sclid', 'u_scsid'],
-  // User data (PII) - intentionally preserved; hashed by analytics SDKs before sending
+  // User data (PII) — intentionally preserved; hashed by analytics SDKs before sending
   userData: ['ud', 'user_data', 'userdata', 'email', 'phone', 'traits.email', 'traits.phone'],
-  // Screen/Hardware fingerprinting (sh/sw = Snapchat screen height/width)
+  // Screen/Hardware — generalized to common buckets
   screen: ['sr', 'vp', 'sd', 'screen', 'viewport', 'colordepth', 'pixelratio', 'sh', 'sw'],
-  // Platform fingerprinting (d_a = architecture, d_ot = OS type, d_os = OS version)
-  platform: ['plat', 'platform', 'hardwareconcurrency', 'devicememory', 'cpu', 'mem', 'd_a', 'd_ot', 'd_os'],
-  // Browser fingerprinting (d_bvs = Snapchat browser versions)
-  browser: ['plugins', 'fonts', 'd_bvs'],
-  // Location/Timezone
+  // Hardware capabilities — generalized to common buckets
+  hardware: ['hardwareconcurrency', 'devicememory', 'cpu', 'mem'],
+  // Platform identifiers — low entropy, kept as-is (e.g. "Linux", "x86")
+  platform: ['plat', 'platform', 'd_a', 'd_ot'],
+  // Version strings — generalized to major version only (d_os = Snapchat OS version, uapv = GA platform version)
+  version: ['d_os', 'uapv'],
+  // Browser version lists — generalized to major versions (d_bvs = Snapchat, uafvl = GA Client Hints)
+  browserVersion: ['d_bvs', 'uafvl'],
+  // Browser data lists — replaced with empty value
+  browserData: ['plugins', 'fonts'],
+  // Location/Timezone — generalized
   location: ['tz', 'timezone', 'timezoneoffset'],
-  // Canvas/WebGL fingerprinting
+  // Canvas/WebGL/Audio fingerprints — replaced with empty value (pure fingerprints, no analytics value)
   canvas: ['canvas', 'webgl', 'audiofingerprint'],
   // Combined device fingerprinting (X/Twitter dv param contains: timezone, locale, vendor, platform, screen, etc.)
-  deviceInfo: ['dv', 'device_info', 'deviceinfo', 'bci', 'eci'],
+  deviceInfo: ['dv', 'device_info', 'deviceinfo'],
 }
 
 /**
@@ -139,7 +145,63 @@ export function generalizeScreen(value: unknown): string {
 }
 
 /**
- * Recursively strip fingerprinting data from payload.
+ * Generalize hardware concurrency / device memory to common bucket.
+ */
+export function generalizeHardware(value: unknown): number {
+  const num = typeof value === 'number' ? value : Number(value)
+  if (Number.isNaN(num)) return 4
+  if (num >= 16) return 16
+  if (num >= 8) return 8
+  if (num >= 4) return 4
+  return 2
+}
+
+/**
+ * Generalize a version string to major version only.
+ * "6.17.0" → "6", "143.0.7499.4" → "143"
+ */
+export function generalizeVersion(value: unknown): string {
+  if (typeof value !== 'string') return String(value)
+  return value.match(/^(\d+)/)?.[1] || String(value)
+}
+
+/**
+ * Generalize browser version list to major versions only.
+ * Handles Snapchat d_bvs format: [,{"brand":"Chrome","version":"143.0.7499.4"}...]
+ * Handles GA uafvl format: HeadlessChrome;143.0.7499.4|Chromium;143.0.7499.4|...
+ */
+export function generalizeBrowserVersions(value: unknown): string {
+  if (typeof value !== 'string') return String(value)
+  // Snapchat d_bvs: JSON with version fields
+  if (value.includes('"version"'))
+    return value.replace(/("version"\s*:\s*")(\d+)\.[^"]*(")/g, '$1$2.0$3')
+  // GA uafvl: semicolon-separated brand;version pairs, pipe-delimited
+  if (value.includes(';'))
+    return value.replace(/;(\d+)\.[^|]*/g, ';$1.0')
+  return value
+}
+
+/**
+ * Generalize timezone to reduce precision.
+ * IANA names → UTC offset string, numeric offsets → bucketed to 3-hour intervals.
+ */
+export function generalizeTimezone(value: unknown): string | number {
+  if (typeof value === 'number') {
+    // timezoneoffset in minutes — bucket to 3-hour intervals
+    return Math.round(value / 180) * 180
+  }
+  if (typeof value === 'string') {
+    // IANA timezone name → replace with generic UTC offset
+    // This reduces ~400 IANA zones to ~25 offset buckets
+    return 'UTC'
+  }
+  return 0
+}
+
+/**
+ * Recursively anonymize fingerprinting data in payload.
+ * Fields are generalized or normalized rather than stripped, so endpoints
+ * still receive valid data with reduced fingerprinting precision.
  */
 export function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
@@ -165,17 +227,54 @@ export function stripPayloadFingerprinting(
       })
     }
 
+    // Anonymize IP to subnet
     if (matchesParam(key, STRIP_PARAMS.ip) && typeof value === 'string') {
       result[key] = anonymizeIP(value)
       continue
     }
+    // Generalize screen to common bucket
     if (matchesParam(key, STRIP_PARAMS.screen)) {
       result[key] = generalizeScreen(value)
       continue
     }
-    if (matchesParam(key, STRIP_PARAMS.platform) || matchesParam(key, STRIP_PARAMS.canvas)
-      || matchesParam(key, STRIP_PARAMS.browser) || matchesParam(key, STRIP_PARAMS.location)
-      || matchesParam(key, STRIP_PARAMS.deviceInfo)) {
+    // Generalize hardware to common bucket
+    if (matchesParam(key, STRIP_PARAMS.hardware)) {
+      result[key] = generalizeHardware(value)
+      continue
+    }
+    // Generalize version strings to major version
+    if (matchesParam(key, STRIP_PARAMS.version)) {
+      result[key] = generalizeVersion(value)
+      continue
+    }
+    // Generalize browser version lists to major versions
+    if (matchesParam(key, STRIP_PARAMS.browserVersion)) {
+      result[key] = generalizeBrowserVersions(value)
+      continue
+    }
+    // Generalize timezone
+    if (matchesParam(key, STRIP_PARAMS.location)) {
+      result[key] = generalizeTimezone(value)
+      continue
+    }
+    // Replace browser data lists with empty value
+    if (matchesParam(key, STRIP_PARAMS.browserData)) {
+      result[key] = Array.isArray(value) ? [] : ''
+      continue
+    }
+    // Replace canvas/webgl/audio fingerprints with empty value
+    if (matchesParam(key, STRIP_PARAMS.canvas)) {
+      result[key] = typeof value === 'number' ? 0 : typeof value === 'object' ? {} : ''
+      continue
+    }
+    // Replace combined device info with empty value
+    if (matchesParam(key, STRIP_PARAMS.deviceInfo)) {
+      result[key] = ''
+      continue
+    }
+    // Platform identifiers are low entropy — keep as-is
+    if (matchesParam(key, STRIP_PARAMS.platform)) {
+      result[key] = value
       continue
     }
 

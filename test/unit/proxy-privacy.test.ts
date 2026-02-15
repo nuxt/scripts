@@ -136,7 +136,8 @@ describe('proxy privacy - payload analysis', () => {
         return STRIP_PARAMS.ip.includes(key)
           || STRIP_PARAMS.userId.includes(key)
           || STRIP_PARAMS.screen.includes(key)
-          || STRIP_PARAMS.browser.includes(key)
+          || STRIP_PARAMS.browserData.includes(key)
+          || STRIP_PARAMS.browserVersion.includes(key)
       })
       const normalizedParams = Object.keys(gaPayload).filter((key) => {
         return NORMALIZE_PARAMS.language.includes(key)
@@ -188,7 +189,8 @@ describe('proxy privacy - payload analysis', () => {
         if (STRIP_PARAMS.ip.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
         if (STRIP_PARAMS.userId.some(p => key.toLowerCase() === p.toLowerCase())) fingerprintParams.push(key)
         if (STRIP_PARAMS.userData.some(p => key.toLowerCase() === p.toLowerCase())) fingerprintParams.push(key)
-        if (STRIP_PARAMS.browser.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
+        if (STRIP_PARAMS.browserData.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
+        if (STRIP_PARAMS.browserVersion.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
       }
 
       console.warn('Meta fingerprinting params found:', fingerprintParams)
@@ -213,8 +215,7 @@ describe('proxy privacy - payload analysis', () => {
 
       console.warn('X/Twitter fingerprinting params found:', fingerprintParams)
       expect(fingerprintParams).toContain('dv') // Device info - contains timezone, screen, platform etc.
-      expect(fingerprintParams).toContain('bci') // Browser context indicator
-      expect(fingerprintParams).toContain('eci') // Environment context indicator
+      // bci/eci are batch/event counters, not fingerprinting — no longer in deviceInfo
       expect(fingerprintParams).toContain('pl_id') // Pixel/placement ID
       expect(fingerprintParams).toContain('p_user_id') // User ID
     })
@@ -291,13 +292,15 @@ describe('stripFingerprintingFromPayload', () => {
       expect(result.client_user_agent).toBe('Mozilla/5.0 (compatible; Chrome/120.0)')
     })
 
-    it('strips fingerprinting from X/Twitter pixel payload', () => {
+    it('anonymizes fingerprinting from X/Twitter pixel payload', () => {
       const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.xPixel)
 
-      // Should NOT have these fingerprinting params
-      expect(result.dv).toBeUndefined() // Combined device info
-      expect(result.bci).toBeUndefined() // Browser context
-      expect(result.eci).toBeUndefined() // Environment context
+      // Combined device info replaced with empty string (not stripped)
+      expect(result.dv).toBe('')
+
+      // bci/eci are not fingerprinting — preserved as-is
+      expect(result.bci).toBe('4')
+      expect(result.eci).toBe('3')
 
       // User IDs preserved for analytics
       expect(result.pl_id).toBe('35809bf2-ef6f-4b4f-9afc-4ffceb3b7e4c')
@@ -311,19 +314,28 @@ describe('stripFingerprintingFromPayload', () => {
       expect(result.type).toBe('javascript')
     })
 
-    it('strips fingerprinting vectors but keeps normalized values', () => {
+    it('anonymizes fingerprinting vectors but keeps normalized values', () => {
       const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.fingerprint)
 
-      // Fingerprinting stripped
-      expect(result.hardwareConcurrency).toBeUndefined()
-      expect(result.deviceMemory).toBeUndefined()
-      expect(result.platform).toBeUndefined()
-      expect(result.plugins).toBeUndefined()
-      expect(result.canvas).toBeUndefined()
-      expect(result.webgl).toBeUndefined()
-      expect(result.audioFingerprint).toBeUndefined()
-      expect(result.fonts).toBeUndefined()
-      expect(result.timezone).toBeUndefined()
+      // Hardware generalized to common buckets
+      expect(result.hardwareConcurrency).toBe(8)
+      expect(result.deviceMemory).toBe(8)
+
+      // Platform kept as-is (low entropy)
+      expect(result.platform).toBe('MacIntel')
+
+      // Browser data replaced with empty
+      expect(result.plugins).toEqual([])
+      expect(result.fonts).toEqual([])
+
+      // Canvas/WebGL/Audio replaced with empty (pure fingerprints)
+      expect(result.canvas).toBe('')
+      expect(result.webgl).toEqual({})
+      expect(result.audioFingerprint).toBe(0)
+
+      // Timezone generalized
+      expect(result.timezone).toBe('UTC')
+      expect(result.timezoneOffset).toBe(360) // 300 bucketed to nearest 180
 
       // Screen generalized (objects get default bucket since generalizeScreen handles strings)
       expect(result.screen).toBe('1920x1080')

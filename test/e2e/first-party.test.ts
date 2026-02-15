@@ -70,25 +70,27 @@ const PROVIDER_PATHS: Record<string, string[]> = {
  * Fingerprinting parameters that stripPayloadFingerprinting actually removes or normalizes.
  * These should NEVER appear unchanged in stripped query/body.
  */
-const STRIPPED_FINGERPRINT_PARAMS = [
-  // Screen/Hardware params are NOT stripped — they are generalized by generalizeScreen()
-  // so they will still be present in the payload (with a bucketed value).
-  // Platform fingerprinting
-  'plat', 'platform', 'hardwareconcurrency', 'devicememory', 'cpu', 'mem',
-  // Browser fingerprinting
+const ANONYMIZED_FINGERPRINT_PARAMS = [
+  // These params are anonymized (generalized/emptied) — NOT stripped.
+  // They remain present in the payload with reduced-precision values so endpoints still receive valid data.
+  // Note: platform params (plat, platform) are low entropy and kept as-is — not listed here.
+  // Note: bci/eci are batch/event counters, NOT fingerprinting — not listed here.
+  // Hardware (generalized to common buckets)
+  'hardwareconcurrency', 'devicememory', 'cpu', 'mem',
+  // Browser data (replaced with empty value)
   'plugins', 'fonts',
-  // Location/Timezone
+  // Location/Timezone (generalized)
   'tz', 'timezone', 'timezoneoffset',
-  // Canvas/WebGL fingerprinting
+  // Canvas/WebGL fingerprinting (replaced with empty value)
   'canvas', 'webgl', 'audiofingerprint',
-  // Combined device fingerprinting (X/Twitter)
-  'dv', 'device_info', 'deviceinfo', 'bci', 'eci',
+  // Combined device fingerprinting (replaced with empty string)
+  'dv', 'device_info', 'deviceinfo',
 ]
 
 /**
  * User-id and PII parameters that are intentionally PRESERVED by stripPayloadFingerprinting.
  * Analytics services require these to function. Listed here for documentation;
- * these are NOT checked by verifyFingerprintingStripped.
+ * these are NOT checked by verifyFingerprintingAnonymized.
  */
 const _PRESERVED_USER_PARAMS = [
   // User identifiers (preserved for analytics)
@@ -99,20 +101,38 @@ const _PRESERVED_USER_PARAMS = [
 ]
 
 /**
- * Verify that fingerprinting parameters are stripped from captured request.
- * Returns list of fingerprinting params that were NOT stripped (should be empty).
+ * Verify that fingerprinting parameters are anonymized (not forwarded as-is).
+ * Checks that known fingerprinting params, when present, have been transformed
+ * from their original values. Returns list of params that leaked unchanged.
  */
-function verifyFingerprintingStripped(capture: Record<string, any>): string[] {
+function verifyFingerprintingAnonymized(capture: Record<string, any>): string[] {
   const leakedParams: string[] = []
+  const originalQuery = capture.original?.query || {}
+  const originalBody = capture.original?.body || {}
   const strippedQuery = capture.stripped?.query || {}
   const strippedBody = capture.stripped?.body || {}
 
-  for (const param of STRIPPED_FINGERPRINT_PARAMS) {
-    if (strippedQuery[param] !== undefined) {
-      leakedParams.push(`query.${param}`)
+  // Values considered already-anonymized (empty/zeroed) — not a leak even if unchanged
+  const isAnonymizedValue = (v: unknown) =>
+    v === '' || v === 0 || (Array.isArray(v) && v.length === 0)
+    || (typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length === 0)
+
+  for (const param of ANONYMIZED_FINGERPRINT_PARAMS) {
+    // Only check params present in both original and stripped
+    if (originalQuery[param] !== undefined && strippedQuery[param] !== undefined) {
+      const orig = originalQuery[param]
+      const stripped = strippedQuery[param]
+      // Leak = unchanged AND not already an empty/anonymized value
+      if (JSON.stringify(stripped) === JSON.stringify(orig) && !isAnonymizedValue(orig)) {
+        leakedParams.push(`query.${param}`)
+      }
     }
-    if (strippedBody[param] !== undefined) {
-      leakedParams.push(`body.${param}`)
+    if (originalBody[param] !== undefined && strippedBody[param] !== undefined) {
+      const orig = originalBody[param]
+      const stripped = strippedBody[param]
+      if (JSON.stringify(stripped) === JSON.stringify(orig) && !isAnonymizedValue(orig)) {
+        leakedParams.push(`body.${param}`)
+      }
     }
   }
 
@@ -137,14 +157,21 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
   const VOLATILE: Record<string, string> = {
     // Common timestamps
     ts: '<TS>',
+    // Environment-specific (OS version, locale, browser version)
+    uapv: '<UAPV>', ul: '<UL>', uafvl: '<UAFVL>', d_os: '<D_OS>', d_bvs: '<D_BVS>',
+    ua: '<UA>',
     // X/Twitter
     dv: '<DEVICE_INFO>',
     // GA
     cid: '<CID>', _p: '<P>', _et: '<ET>', _s: '<S>',
     sid: '<SID>', tag_exp: '<TAG_EXP>', tfd: '<TFD>', gtm: '<GTM>',
+    // Meta pixel
+    it: '<IT>',
     // Snapchat
     si: '<SI>', sa: '<SA>', sps: '<SPS>', rd: '<RD>', del: '<DEL>', gac: '<GAC>',
   }
+  // Prefix-based volatile keys (e.g. expv2[0], expv2[1], ...)
+  const VOLATILE_PREFIXES = ['expv2[']
   // Array fields to replace with placeholders
   const VOLATILE_ARRAYS = new Set(['a', 'p'])
   // Fields to strip entirely (appear inconsistently between runs)
@@ -158,6 +185,8 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
         if (STRIP_KEYS.has(k)) continue
         if (k in VOLATILE && (typeof v === 'string' || typeof v === 'number'))
           result[k] = VOLATILE[k]
+        else if (VOLATILE_PREFIXES.some(p => k.startsWith(p)) && (typeof v === 'string' || typeof v === 'number'))
+          result[k] = '<VOLATILE>'
         else if (VOLATILE_ARRAYS.has(k) && Array.isArray(v))
           result[k] = `<${k.toUpperCase()}>`
         else
@@ -189,6 +218,13 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
     .replace(/([?&])tfd=\d+/g, '$1tfd=<TFD>')
     .replace(/([?&])gtm=[^&"]*/g, '$1gtm=<GTM>')
     .replace(/([?&])sa=\d+/g, '$1sa=<SA>')
+    // Environment-specific URL params
+    .replace(/([?&])ul=[^&"]*/g, '$1ul=<UL>')
+    .replace(/([?&])uapv=[^&"]*/g, '$1uapv=<UAPV>')
+    .replace(/([?&])uafvl=[^&"]*/g, '$1uafvl=<UAFVL>')
+    // Meta pixel volatile params
+    .replace(/([?&])it=\d+/g, '$1it=<IT>')
+    .replace(/([?&])expv2[^=]*=[^&"]*/g, '$1expv2=<VOLATILE>')
 
   return JSON.parse(json)
 }
@@ -204,22 +240,20 @@ function isAllowedDomain(urlStr: string | undefined, allowedDomain: string) {
   }
 }
 
-function readCaptures(provider?: string) {
+function readRawCaptures(provider?: string) {
   if (!existsSync(captureDir)) return []
   const captures = readdirSync(captureDir)
     .filter(f => f.endsWith('.json'))
     .sort()
     .map((f) => {
       const content = JSON.parse(readFileSync(join(captureDir, f), 'utf-8'))
-      // Remove volatile fields for stable snapshots
+      // Remove volatile fields not needed for verification or snapshots
       delete content.timestamp
       delete content.original?.headers
       delete content.stripped?.headers
-      // Normalize remaining volatile values
-      return normalizeCapture(content)
+      return content
     })
 
-  // Filter by provider if specified
   if (provider && PROVIDER_PATHS[provider]) {
     const prefixes = PROVIDER_PATHS[provider]
     return captures.filter(c => prefixes.some(p => c.path?.startsWith(p)))
@@ -395,12 +429,13 @@ describe('first-party privacy stripping', () => {
       await page.waitForTimeout(2000)
 
       // Read captures filtered to this provider
-      const captures = readCaptures(provider)
+      const rawCaptures = readRawCaptures(provider)
+      const captures = rawCaptures.map(normalizeCapture)
 
       await page.close()
 
-      // Return captures for assertions
-      return { captures, proxyRequests }
+      // Return both raw (for verification) and normalized (for snapshots)
+      return { captures, rawCaptures, proxyRequests }
     }
 
     it('googleAnalytics', async () => {
@@ -417,7 +452,8 @@ describe('first-party privacy stripping', () => {
       await page.click('#trigger-pageview').catch(() => {})
       await page.waitForTimeout(2000) // GA batches events
 
-      const captures = readCaptures('googleAnalytics')
+      const rawCaptures = readRawCaptures('googleAnalytics')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // GA may not always fire collection events in headless (depends on gtag.js behavior)
@@ -429,9 +465,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -450,7 +486,8 @@ describe('first-party privacy stripping', () => {
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('googleTagManager')
+      const rawCaptures = readRawCaptures('googleTagManager')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // GTM may not fire requests if no tags are configured
@@ -462,9 +499,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -487,7 +524,8 @@ describe('first-party privacy stripping', () => {
       await page.click('#trigger-event').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('metaPixel')
+      const rawCaptures = readRawCaptures('metaPixel')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // Meta tracking events may not be captured if script bundling isn't active
@@ -500,9 +538,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -525,7 +563,8 @@ describe('first-party privacy stripping', () => {
       await page.click('#trigger-event').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('segment')
+      const rawCaptures = readRawCaptures('segment')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       if (captures.length > 0) {
@@ -536,9 +575,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -547,7 +586,7 @@ describe('first-party privacy stripping', () => {
     }, 30000)
 
     it('xPixel', async () => {
-      const { captures } = await testProvider('xPixel', '/x')
+      const { captures, rawCaptures } = await testProvider('xPixel', '/x')
 
       if (captures.length > 0) {
         const hasValidCapture = captures.some(c =>
@@ -557,9 +596,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -581,7 +620,8 @@ describe('first-party privacy stripping', () => {
       await page.click('#trigger-event').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('snapchatPixel')
+      const rawCaptures = readRawCaptures('snapchatPixel')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       if (captures.length > 0) {
@@ -592,9 +632,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -624,7 +664,8 @@ describe('first-party privacy stripping', () => {
       await page.fill('#test-input', 'test input').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('clarity')
+      const rawCaptures = readRawCaptures('clarity')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // Clarity may not send data in short headless sessions (buffers data)
@@ -636,9 +677,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -663,7 +704,8 @@ describe('first-party privacy stripping', () => {
       await page.fill('#test-input', 'test input').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('hotjar')
+      const rawCaptures = readRawCaptures('hotjar')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // Hotjar uses WebSocket for real-time data which can't be HTTP proxied
@@ -675,9 +717,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -700,7 +742,8 @@ describe('first-party privacy stripping', () => {
       await page.click('#trigger-event').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('tiktokPixel')
+      const rawCaptures = readRawCaptures('tiktokPixel')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // TikTok may not fire events in headless without valid pixel ID
@@ -712,9 +755,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 
@@ -737,7 +780,8 @@ describe('first-party privacy stripping', () => {
       await page.click('#trigger-event').catch(() => {})
       await page.waitForTimeout(2000)
 
-      const captures = readCaptures('redditPixel')
+      const rawCaptures = readRawCaptures('redditPixel')
+      const captures = rawCaptures.map(normalizeCapture)
       await page.close()
 
       // Reddit may not fire events in headless without valid advertiser ID
@@ -749,9 +793,9 @@ describe('first-party privacy stripping', () => {
         )
         expect(hasValidCapture).toBe(true)
 
-        // Verify ALL fingerprinting params are stripped
-        for (const capture of captures) {
-          const leaked = verifyFingerprintingStripped(capture)
+        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
           expect(leaked).toEqual([])
         }
 

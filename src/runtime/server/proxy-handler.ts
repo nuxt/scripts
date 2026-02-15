@@ -149,9 +149,13 @@ export default defineEventHandler(async (event) => {
       else if (lowerKey === 'accept-language') {
         headers[key] = normalizeLanguage(value)
       }
+      else if (lowerKey === 'sec-ch-ua' || lowerKey === 'sec-ch-ua-full-version-list') {
+        // Normalize to major versions: "Chromium";v="143.0.7499.4" → "Chromium";v="143"
+        headers[key] = value.replace(/;v="(\d+)\.[^"]*"/g, ';v="$1"')
+      }
       else if (FINGERPRINT_HEADERS.includes(lowerKey)) {
-        // Skip other fingerprinting headers (sec-ch-ua-*)
-        continue
+        // Forward other Client Hints as-is (sec-ch-ua-platform, sec-ch-ua-mobile are low entropy)
+        headers[key] = value
       }
       else {
         // Forward other headers (content-type, accept, referer, etc.)
