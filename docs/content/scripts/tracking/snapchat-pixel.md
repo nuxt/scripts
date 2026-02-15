@@ -174,6 +174,38 @@ export const SnapTrPixelOptions = object({
 })
 ```
 
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `tr.snapchat.com`
+- Route tracking requests through your server
+- Hide user IP addresses from Snapchat
+- Strip fingerprinting parameters (`d_a`, `d_ot`, `d_os`, `d_bvs`, screen dimensions)
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      snapchatPixel: { id: 'YOUR_ID' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptSnapchatPixel({
+  id: 'YOUR_ID',
+  scriptOptions: {
+    firstParty: false // Load directly from Snapchat
+  }
+})
+```
+
 ## Example
 
 Using Snapchat Pixel only in production while using `snaptr` to send a conversion event.

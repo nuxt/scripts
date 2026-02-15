@@ -2,10 +2,10 @@ import { defu } from 'defu'
 import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { UseScriptInput } from '@unhead/vue'
 import { useRuntimeConfig } from 'nuxt/app'
+import { parseURL, withQuery, parseQuery } from 'ufo'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
 import { parse } from '#nuxt-scripts-validator'
-import { parseURL, withQuery, parseQuery } from 'ufo'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
@@ -151,3 +151,5 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   }
   return useScript<T>(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
 }
+
+export * from './utils/pure'
