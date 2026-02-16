@@ -261,12 +261,12 @@ describe('stripFingerprintingFromPayload', () => {
       expect(result.uid).toBe('user-123')
       expect(result._gid).toBe('GA1.2.1234567890.1234567890')
 
-      // Screen generalized
-      expect(result.sr).toBe('2560x1440')
+      // Screen generalized to device-class buckets
+      expect(result.sr).toBe('1920x1080')
       expect(result.vp).toBe('1920x1080')
 
       // Language/UA normalized
-      expect(result.ul).toBe('en')
+      expect(result.ul).toBe('en-US')
       expect(result.ua).toBe('Mozilla/5.0 (compatible; Chrome/120.0)')
 
       // Page context preserved
@@ -295,8 +295,9 @@ describe('stripFingerprintingFromPayload', () => {
     it('anonymizes fingerprinting from X/Twitter pixel payload', () => {
       const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.xPixel)
 
-      // Combined device info replaced with empty string (not stripped)
-      expect(result.dv).toBe('')
+      // Combined device info anonymized (timezone, language, screen dims generalized)
+      // Screen pairs: 1280x720 → desktop class → 1920x1080 (paired bucketing)
+      expect(result.dv).toBe('UTC&en-GB&Google Inc.&Linux x86_64&255&1920&1080&24&24&1920&1080&0&na')
 
       // bci/eci are not fingerprinting — preserved as-is
       expect(result.bci).toBe('4')
@@ -343,7 +344,45 @@ describe('stripFingerprintingFromPayload', () => {
 
       // Normalized
       expect(result.userAgent).toBe('Mozilla/5.0 (compatible; Chrome/120.0)')
-      expect(result.language).toBe('en')
+      expect(result.language).toBe('en-US')
+    })
+
+    it('generalizes individual sh/sw dimensions to device-class buckets', () => {
+      // Numeric sh/sw (e.g. Snapchat) — desktop class (paired: sw determines device class)
+      const numResult = stripFingerprintingFromPayload({ sw: 1280, sh: 720 })
+      expect(numResult.sw).toBe(1920)
+      expect(numResult.sh).toBe(1080) // paired with sw → desktop height
+      expect(typeof numResult.sw).toBe('number')
+      expect(typeof numResult.sh).toBe('number')
+
+      // String sh/sw (e.g. Reddit, Meta) — desktop class
+      const strResult = stripFingerprintingFromPayload({ sw: '1280', sh: '720' })
+      expect(strResult.sw).toBe('1920')
+      expect(strResult.sh).toBe('1080') // paired with sw → desktop height
+      expect(typeof strResult.sw).toBe('string')
+      expect(typeof strResult.sh).toBe('string')
+
+      // Mobile class
+      const mobileResult = stripFingerprintingFromPayload({ sw: 375, sh: 667 })
+      expect(mobileResult.sw).toBe(360)
+      expect(mobileResult.sh).toBe(640)
+
+      // Tablet class
+      const tabletResult = stripFingerprintingFromPayload({ sw: 768, sh: 1024 })
+      expect(tabletResult.sw).toBe(768)
+      expect(tabletResult.sh).toBe(1024)
+
+      // Combined sr format — desktop
+      const srResult = stripFingerprintingFromPayload({ sr: '2560x1440' })
+      expect(srResult.sr).toBe('1920x1080')
+
+      // Combined sr format — tablet
+      const srTablet = stripFingerprintingFromPayload({ sr: '768x1024' })
+      expect(srTablet.sr).toBe('768x1024')
+
+      // Combined sr format — mobile
+      const srMobile = stripFingerprintingFromPayload({ sr: '375x667' })
+      expect(srMobile.sr).toBe('360x640')
     })
   })
 })

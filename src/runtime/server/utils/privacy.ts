@@ -123,23 +123,53 @@ export function normalizeUserAgent(ua: string): string {
 }
 
 /**
- * Normalize Accept-Language to primary language only.
+ * Normalize Accept-Language to primary language tag (preserving country).
+ * "en-US,en;q=0.9,fr;q=0.8" → "en-US"
  */
 export function normalizeLanguage(lang: string): string {
-  return lang.split(',')[0]?.split('-')[0]?.split(';')[0]?.trim() || 'en'
+  return lang.split(',')[0]?.split(';')[0]?.trim() || 'en'
 }
 
 /**
- * Generalize screen resolution to common bucket.
+ * Device-class screen resolution buckets.
+ * Each class maps to a real-world resolution to blend with genuine traffic.
  */
-export function generalizeScreen(value: unknown): string {
+const SCREEN_BUCKETS = {
+  desktop: { w: 1920, h: 1080 },
+  tablet: { w: 768, h: 1024 },
+  mobile: { w: 360, h: 640 },
+} as const
+
+type DeviceClass = keyof typeof SCREEN_BUCKETS
+
+function getDeviceClass(width: number): DeviceClass {
+  if (width >= 1200) return 'desktop'
+  if (width >= 700) return 'tablet'
+  return 'mobile'
+}
+
+/**
+ * Generalize screen resolution to 3 coarse device-class buckets (mobile / tablet / desktop).
+ * Handles both combined "WxH" strings and individual dimension values (sh, sw).
+ *
+ * When `dimension` is specified, uses the correct bucket for that axis:
+ *   - 'width': [1920, 768, 360]
+ *   - 'height': [1080, 1024, 640]
+ * Without `dimension`, individual values use width thresholds (backward-compatible).
+ */
+export function generalizeScreen(value: unknown, dimension?: 'width' | 'height'): string | number {
+  // Combined resolution format (e.g., "1920x1080")
   if (typeof value === 'string' && value.includes('x')) {
     const width = Number.parseInt(value.split('x')[0] || '0')
-    if (width >= 2560) return '2560x1440'
-    if (width >= 1920) return '1920x1080'
-    if (width >= 1440) return '1440x900'
-    if (width >= 1366) return '1366x768'
-    return '1280x720'
+    const cls = getDeviceClass(width)
+    return `${SCREEN_BUCKETS[cls].w}x${SCREEN_BUCKETS[cls].h}`
+  }
+  // Individual dimension (sh, sw as number or numeric string)
+  const num = typeof value === 'number' ? value : Number(value)
+  if (!Number.isNaN(num)) {
+    const cls = getDeviceClass(num)
+    const bucketed = dimension === 'height' ? SCREEN_BUCKETS[cls].h : SCREEN_BUCKETS[cls].w
+    return typeof value === 'number' ? bucketed : String(bucketed)
   }
   return '1920x1080'
 }
@@ -157,27 +187,36 @@ export function generalizeHardware(value: unknown): number {
 }
 
 /**
- * Generalize a version string to major version only.
- * "6.17.0" → "6", "143.0.7499.4" → "143"
+ * Generalize a version string to major version, preserving the original format.
+ * "6.17.0" → "6.0.0", "143.0.7499.4" → "143.0.0.0"
  */
 export function generalizeVersion(value: unknown): string {
   if (typeof value !== 'string') return String(value)
-  return value.match(/^(\d+)/)?.[1] || String(value)
+  const match = value.match(/^(\d+)(([.\-_])\d+)*/)
+  if (!match) return String(value)
+  const major = match[1]
+  const sep = match[3] || '.'
+  const segmentCount = value.split(/[.\-_]/).length
+  return major + (sep + '0').repeat(segmentCount - 1)
 }
 
 /**
- * Generalize browser version list to major versions only.
+ * Generalize browser version list to major versions, preserving segment count.
  * Handles Snapchat d_bvs format: [,{"brand":"Chrome","version":"143.0.7499.4"}...]
  * Handles GA uafvl format: HeadlessChrome;143.0.7499.4|Chromium;143.0.7499.4|...
  */
 export function generalizeBrowserVersions(value: unknown): string {
   if (typeof value !== 'string') return String(value)
+  const zeroSegments = (ver: string) => {
+    const parts = ver.split('.')
+    return parts[0] + parts.slice(1).map(() => '.0').join('')
+  }
   // Snapchat d_bvs: JSON with version fields
   if (value.includes('"version"'))
-    return value.replace(/("version"\s*:\s*")(\d+)\.[^"]*(")/g, '$1$2.0$3')
+    return value.replace(/("version"\s*:\s*")(\d+(?:\.\d+)*)/g, (_, prefix, ver) => prefix + zeroSegments(ver))
   // GA uafvl: semicolon-separated brand;version pairs, pipe-delimited
   if (value.includes(';'))
-    return value.replace(/;(\d+)\.[^|]*/g, ';$1.0')
+    return value.replace(/;(\d+(?:\.\d+)*)/g, (_, ver) => ';' + zeroSegments(ver))
   return value
 }
 
@@ -199,6 +238,54 @@ export function generalizeTimezone(value: unknown): string | number {
 }
 
 /**
+ * Anonymize a combined device-info string (e.g. X/Twitter `dv` param).
+ * Parses the delimited string and generalizes fingerprinting components
+ * (timezone, language, screen dimensions) while keeping low-entropy values.
+ */
+export function anonymizeDeviceInfo(value: string): string {
+  const sep = value.includes('|') ? '|' : '&'
+  const parts = value.split(sep)
+  if (parts.length < 4) return value
+
+  const result = [...parts]
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]!
+    // IANA timezone (contains /)
+    if (part.includes('/') && /^[A-Z]/.test(part)) {
+      result[i] = String(generalizeTimezone(part))
+      continue
+    }
+    // Language code
+    if (/^[a-z]{2}(?:-[a-z]{2,})?$/i.test(part)) {
+      result[i] = normalizeLanguage(part)
+      continue
+    }
+    // Screen-like dimension pair (consecutive numbers 300–10000 = width, height)
+    const num = Number(part)
+    if (!Number.isNaN(num) && num >= 300 && num <= 10000) {
+      const nextNum = Number(parts[i + 1])
+      if (!Number.isNaN(nextNum) && nextNum >= 300 && nextNum <= 10000) {
+        // Pair: determine device class from width, apply both
+        const cls = getDeviceClass(num)
+        result[i] = String(SCREEN_BUCKETS[cls].w)
+        result[i + 1] = String(SCREEN_BUCKETS[cls].h)
+        i++ // skip next (already handled as height)
+        continue
+      }
+      // Standalone screen-like number
+      result[i] = String(generalizeScreen(num))
+      continue
+    }
+    // Timezone offset (negative number)
+    if (!Number.isNaN(num) && num < -60) {
+      result[i] = String(generalizeTimezone(num))
+    }
+    // Everything else (vendor, platform, color depth, flags): keep as-is
+  }
+  return result.join(sep)
+}
+
+/**
  * Recursively anonymize fingerprinting data in payload.
  * Fields are generalized or normalized rather than stripped, so endpoints
  * still receive valid data with reduced fingerprinting precision.
@@ -207,6 +294,17 @@ export function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
+
+  // Pre-scan for screen width to enable paired height bucketing.
+  // When sw is present, sh maps to the paired height for that device class
+  // (e.g., sw=1280 → desktop → sh becomes 1080, not independently bucketed).
+  let deviceClass: DeviceClass | undefined
+  for (const [key, value] of Object.entries(payload)) {
+    if (key.toLowerCase() === 'sw') {
+      const num = typeof value === 'number' ? value : Number(value)
+      if (!Number.isNaN(num)) deviceClass = getDeviceClass(num)
+    }
+  }
 
   for (const [key, value] of Object.entries(payload)) {
     const lowerKey = key.toLowerCase()
@@ -232,9 +330,16 @@ export function stripPayloadFingerprinting(
       result[key] = anonymizeIP(value)
       continue
     }
-    // Generalize screen to common bucket
+    // Generalize screen to common bucket (with paired width/height awareness)
     if (matchesParam(key, STRIP_PARAMS.screen)) {
-      result[key] = generalizeScreen(value)
+      if (lowerKey === 'sh' && deviceClass) {
+        // Paired: use height from the device class determined by sw
+        const paired = SCREEN_BUCKETS[deviceClass].h
+        result[key] = typeof value === 'number' ? paired : String(paired)
+      }
+      else {
+        result[key] = generalizeScreen(value, lowerKey === 'sw' ? 'width' : lowerKey === 'sh' ? 'height' : undefined)
+      }
       continue
     }
     // Generalize hardware to common bucket
@@ -267,9 +372,9 @@ export function stripPayloadFingerprinting(
       result[key] = typeof value === 'number' ? 0 : typeof value === 'object' ? {} : ''
       continue
     }
-    // Replace combined device info with empty value
+    // Anonymize combined device info (parse and generalize components)
     if (matchesParam(key, STRIP_PARAMS.deviceInfo)) {
-      result[key] = ''
+      result[key] = typeof value === 'string' ? anonymizeDeviceInfo(value) : ''
       continue
     }
     // Platform identifiers are low entropy — keep as-is

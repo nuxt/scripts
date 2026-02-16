@@ -67,14 +67,10 @@ const PROVIDER_PATHS: Record<string, string[]> = {
 }
 
 /**
- * Fingerprinting parameters that stripPayloadFingerprinting actually removes or normalizes.
+ * Fingerprinting parameters that stripPayloadFingerprinting removes, empties, or generalizes.
  * These should NEVER appear unchanged in stripped query/body.
  */
 const ANONYMIZED_FINGERPRINT_PARAMS = [
-  // These params are anonymized (generalized/emptied) — NOT stripped.
-  // They remain present in the payload with reduced-precision values so endpoints still receive valid data.
-  // Note: platform params (plat, platform) are low entropy and kept as-is — not listed here.
-  // Note: bci/eci are batch/event counters, NOT fingerprinting — not listed here.
   // Hardware (generalized to common buckets)
   'hardwareconcurrency', 'devicememory', 'cpu', 'mem',
   // Browser data (replaced with empty value)
@@ -85,6 +81,12 @@ const ANONYMIZED_FINGERPRINT_PARAMS = [
   'canvas', 'webgl', 'audiofingerprint',
   // Combined device fingerprinting (replaced with empty string)
   'dv', 'device_info', 'deviceinfo',
+  // Screen/viewport (generalized to device-class buckets)
+  'sr', 'vp', 'sd', 'sh', 'sw', 'screen', 'viewport', 'colordepth', 'pixelratio',
+  // Version strings (generalized to major version)
+  'd_os', 'uapv', 'd_bvs', 'uafvl',
+  // User agent (normalized to family/major version)
+  'ua', 'useragent', 'user_agent', 'client_user_agent',
 ]
 
 /**
@@ -148,8 +150,10 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
   const cloned = JSON.parse(JSON.stringify(capture))
   for (const section of ['original', 'stripped']) {
     if (cloned[section]?.body && typeof cloned[section].body === 'string') {
-      try { cloned[section].body = JSON.parse(cloned[section].body) }
-      catch {}
+      try {
+        cloned[section].body = JSON.parse(cloned[section].body)
+      }
+      catch { /* non-JSON body, keep as string */ }
     }
   }
 
@@ -160,8 +164,6 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
     // Environment-specific (OS version, locale, browser version)
     uapv: '<UAPV>', ul: '<UL>', uafvl: '<UAFVL>', d_os: '<D_OS>', d_bvs: '<D_BVS>',
     ua: '<UA>',
-    // X/Twitter
-    dv: '<DEVICE_INFO>',
     // GA
     cid: '<CID>', _p: '<P>', _et: '<ET>', _s: '<S>',
     sid: '<SID>', tag_exp: '<TAG_EXP>', tfd: '<TFD>', gtm: '<GTM>',
@@ -170,6 +172,10 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
     // Snapchat
     si: '<SI>', sa: '<SA>', sps: '<SPS>', rd: '<RD>', del: '<DEL>', gac: '<GAC>',
   }
+  // Fingerprinting params: masked in original only so stripped proves anonymization worked
+  const ORIGINAL_ONLY_VOLATILE: Record<string, string> = {
+    dv: '<DEVICE_INFO>',
+  }
   // Prefix-based volatile keys (e.g. expv2[0], expv2[1], ...)
   const VOLATILE_PREFIXES = ['expv2[']
   // Array fields to replace with placeholders
@@ -177,27 +183,36 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
   // Fields to strip entirely (appear inconsistently between runs)
   const STRIP_KEYS = new Set(['gat'])
 
-  function normalizeObj(obj: any): any {
-    if (Array.isArray(obj)) return obj.map(normalizeObj)
+  function normalizeObj(obj: any, isOriginal = false): any {
+    if (Array.isArray(obj)) return obj.map(v => normalizeObj(v, isOriginal))
     if (obj !== null && typeof obj === 'object') {
       const result: Record<string, any> = {}
       for (const [k, v] of Object.entries(obj)) {
         if (STRIP_KEYS.has(k)) continue
         if (k in VOLATILE && (typeof v === 'string' || typeof v === 'number'))
           result[k] = VOLATILE[k]
+        else if (isOriginal && k in ORIGINAL_ONLY_VOLATILE && (typeof v === 'string' || typeof v === 'number'))
+          result[k] = ORIGINAL_ONLY_VOLATILE[k]
         else if (VOLATILE_PREFIXES.some(p => k.startsWith(p)) && (typeof v === 'string' || typeof v === 'number'))
           result[k] = '<VOLATILE>'
         else if (VOLATILE_ARRAYS.has(k) && Array.isArray(v))
           result[k] = `<${k.toUpperCase()}>`
         else
-          result[k] = normalizeObj(v)
+          result[k] = normalizeObj(v, isOriginal)
       }
       return result
     }
     return obj
   }
 
-  const normalized = normalizeObj(cloned)
+  // Normalize original (mask fingerprints) and stripped (show actual values) separately
+  const normalized = { ...cloned }
+  normalized.original = normalizeObj(cloned.original, true)
+  normalized.stripped = normalizeObj(cloned.stripped, false)
+
+  // Strip headers from the main snapshot — they're volatile and captured in diff snapshots instead
+  delete normalized.original?.headers
+  delete normalized.stripped?.headers
   let json = JSON.stringify(normalized)
 
   // Normalize UUIDs
@@ -206,8 +221,9 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
   json = json.replace(/127\.0\.0\.1:\d+/g, '127.0.0.1:<PORT>')
   json = json.replace(/127\.0\.0\.1%3A\d+/gi, '127.0.0.1%3A<PORT>')
   // Normalize volatile URL query params (in path/targetUrl strings)
+  // Mask dv only in "path" (original request), not "targetUrl" (stripped), to prove anonymization
+  json = json.replace(/"path":"([^"]*)"/g, match => match.replace(/dv=[^&"]*/g, 'dv=<DEVICE_INFO>'))
   json = json
-    .replace(/dv=([^&"]*)/g, 'dv=<DEVICE_INFO>')
     .replace(/cid=([^&"]*)/g, 'cid=<CID>')
     .replace(/_p=([^&"]*)/g, '_p=<P>')
     .replace(/_et=([^&"]*)/g, '_et=<ET>')
@@ -227,6 +243,96 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
     .replace(/([?&])expv2[^=]*=[^&"]*/g, '$1expv2=<VOLATILE>')
 
   return JSON.parse(json)
+}
+
+/**
+ * Extract the full request diff from a raw (un-normalized) capture.
+ * Shows every field that changed between original and stripped across
+ * query params, headers, and body — giving a complete privacy picture.
+ */
+function extractRequestDiff(capture: Record<string, any>): Record<string, any> {
+  function diffObjects(
+    original: Record<string, unknown> | undefined,
+    stripped: Record<string, unknown> | undefined,
+  ): Record<string, { original: unknown, anonymized: unknown }> | 'removed' | undefined {
+    if (!original && !stripped) return undefined
+    // Section existed in original but was entirely removed
+    if (original && !stripped) return 'removed'
+    if (!original || !stripped) return undefined
+
+    const result: Record<string, { original: unknown, anonymized: unknown }> = {}
+    const allKeys = new Set([...Object.keys(original), ...Object.keys(stripped)])
+
+    for (const k of allKeys) {
+      const ov = original[k]
+      const sv = stripped[k]
+
+      // Key removed in stripped
+      if (sv === undefined && ov !== undefined) {
+        result[k] = { original: ov, anonymized: '<removed>' }
+        continue
+      }
+      // Key added in stripped (rare but possible, e.g. anonymized x-forwarded-for)
+      if (ov === undefined && sv !== undefined) {
+        result[k] = { original: '<absent>', anonymized: sv }
+        continue
+      }
+      // Deep compare — only include if changed
+      if (JSON.stringify(ov) !== JSON.stringify(sv)) {
+        result[k] = { original: ov, anonymized: sv }
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined
+  }
+
+  let target = ''
+  try {
+    const u = new URL(capture.targetUrl)
+    target = u.host + u.pathname
+  }
+  catch {
+    target = capture.targetUrl || ''
+  }
+
+  const result: Record<string, any> = {
+    method: capture.method,
+    target,
+  }
+
+  const query = diffObjects(capture.original?.query, capture.stripped?.query)
+  const headers = diffObjects(capture.original?.headers, capture.stripped?.headers)
+
+  // Parse string bodies to objects before diffing (proxy handler parses JSON strings)
+  let origBody = capture.original?.body
+  let strippedBody = capture.stripped?.body
+  if (typeof origBody === 'string') {
+    try {
+      origBody = JSON.parse(origBody)
+    }
+    catch { /* non-JSON body */ }
+  }
+  if (typeof strippedBody === 'string') {
+    try {
+      strippedBody = JSON.parse(strippedBody)
+    }
+    catch { /* non-JSON body */ }
+  }
+  const body = diffObjects(origBody, strippedBody)
+
+  if (query) result.query = query
+  if (headers) result.headers = headers
+  if (body) result.body = body
+
+  return result
+}
+
+async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Record<string, any>[], provider: string) {
+  await expect(captures).toMatchFileSnapshot(`__snapshots__/proxy/${provider}.json`)
+  for (let i = 0; i < rawCaptures.length; i++) {
+    const diff = extractRequestDiff(rawCaptures[i])
+    await expect(diff).toMatchFileSnapshot(`__snapshots__/proxy/${provider}/${i}.diff.json`)
+  }
 }
 
 function isAllowedDomain(urlStr: string | undefined, allowedDomain: string) {
@@ -249,8 +355,6 @@ function readRawCaptures(provider?: string) {
       const content = JSON.parse(readFileSync(join(captureDir, f), 'utf-8'))
       // Remove volatile fields not needed for verification or snapshots
       delete content.timestamp
-      delete content.original?.headers
-      delete content.stripped?.headers
       return content
     })
 
@@ -471,7 +575,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/googleAnalytics.json')
+        await assertSnapshots(rawCaptures, captures, 'googleAnalytics')
       }
       // No captures acceptable - gtag.js behavior varies in headless
     }, 45000)
@@ -505,7 +609,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/googleTagManager.json')
+        await assertSnapshots(rawCaptures, captures, 'googleTagManager')
       }
       // No captures acceptable - depends on GTM container configuration
     }, 30000)
@@ -544,7 +648,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/metaPixel.json')
+        await assertSnapshots(rawCaptures, captures, 'metaPixel')
       }
       // No captures is acceptable in environments where script bundling isn't active
     }, 30000)
@@ -581,7 +685,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/segment.json')
+        await assertSnapshots(rawCaptures, captures, 'segment')
       }
     }, 30000)
 
@@ -602,7 +706,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/xPixel.json')
+        await assertSnapshots(rawCaptures, captures, 'xPixel')
       }
     }, 30000)
 
@@ -638,7 +742,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/snapchatPixel.json')
+        await assertSnapshots(rawCaptures, captures, 'snapchatPixel')
       }
     }, 30000)
 
@@ -683,7 +787,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/clarity.json')
+        await assertSnapshots(rawCaptures, captures, 'clarity')
       }
       // No captures is acceptable - session recording tools buffer data
     }, 30000)
@@ -723,7 +827,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/hotjar.json')
+        await assertSnapshots(rawCaptures, captures, 'hotjar')
       }
       // No captures is acceptable - Hotjar primarily uses WebSocket
     }, 30000)
@@ -761,7 +865,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/tiktokPixel.json')
+        await assertSnapshots(rawCaptures, captures, 'tiktokPixel')
       }
       // No captures acceptable - TikTok behavior varies in headless
     }, 30000)
@@ -799,7 +903,7 @@ describe('first-party privacy stripping', () => {
           expect(leaked).toEqual([])
         }
 
-        await expect(captures).toMatchFileSnapshot('__snapshots__/proxy/redditPixel.json')
+        await assertSnapshots(rawCaptures, captures, 'redditPixel')
       }
       // No captures acceptable - Reddit behavior varies in headless
     }, 30000)

@@ -1,0 +1,28 @@
+{
+  "headers": {
+    "cookie": {
+      "anonymized": "<removed>",
+      "original": "_ga=GA1.1.220588894.1771251559; _ga_TR58L0EF8P=GS2.1.s1771251559$o1$g0$t1771251559$j60$l0$h0; ajs_anonymous_id=0572ec6e-f5e4-4a8f-8d01-071b89b07b62; _rdt_uuid=1771251559147.0e000729-a05d-4f82-a76d-ea8d17576f1c",
+    },
+    "user-agent": {
+      "anonymized": "Mozilla/5.0 (compatible; Chrome/143.0)",
+      "original": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+    },
+    "x-forwarded-for": {
+      "anonymized": "127.0.0.0",
+      "original": "<absent>",
+    },
+  },
+  "method": "GET",
+  "query": {
+    "sh": {
+      "anonymized": "1024",
+      "original": "1280",
+    },
+    "sw": {
+      "anonymized": "768",
+      "original": "720",
+    },
+  },
+  "target": "alb.reddit.com/rp.gif",
+}

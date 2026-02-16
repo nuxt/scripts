@@ -109,6 +109,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   }
   const imports = []
   const inits = []
+  const resolvedRegistryKeys: string[] = []
   let needsIdleTimeoutImport = false
   let needsInteractionImport = false
 
@@ -116,9 +117,9 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
 
   // for global scripts, we can initialise them script away
   for (const [k, c] of Object.entries(config.registry || {})) {
-    const importDefinition = registry.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+    const importDefinition = registry.find(i => i.proxy === k || i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
     if (importDefinition) {
-      // title case
+      resolvedRegistryKeys.push(k)
       imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)
       if (c === 'mock') {
         inits.push(`const ${k} = ${importDefinition.import.name}({ scriptOptions: { trigger: 'manual', skipValidation: true } })`)
@@ -204,7 +205,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     `  parallel: true,`,
     `  setup() {`,
     ...inits.map(i => `    ${i}`),
-    `    return { provide: { $scripts: { ${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].join(', ')} } } }`,
+    `    return { provide: { $scripts: { ${[...Object.keys(config.globals || {}), ...resolvedRegistryKeys].join(', ')} } } }`,
     `  }`,
     `})`,
   ].join('\n')
