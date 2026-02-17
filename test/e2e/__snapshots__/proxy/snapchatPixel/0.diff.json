@@ -2,7 +2,7 @@
   "headers": {
     "cookie": {
       "anonymized": "<removed>",
-      "original": "_ga=GA1.1.531459851.1771251550; _ga_TR58L0EF8P=GS2.1.s1771251549$o1$g0$t1771251549$j60$l0$h0; ajs_anonymous_id=4cf8f86f-f9c4-4f4a-8412-7eba3d6b555d; _rdt_uuid=1771251549566.6f7ddb2a-cbd1-4105-a687-7c867bda5f7b; _scid=LOSGiOn6JJAGAN-SDXwESUb5QgxcCT50; _scid_r=LOSGiOn6JJAGAN-SDXwESUb5QgxcCT50",
+      "original": "_ga=<dynamic>; _ga_TR58L0EF8P=<dynamic>; ajs_anonymous_id=<dynamic>; _rdt_uuid=<dynamic>; _scid=<dynamic>; _scid_r=<dynamic>",
     },
     "user-agent": {
       "anonymized": "Mozilla/5.0 (compatible; Chrome/143.0)",
@@ -14,5 +14,5 @@
     },
   },
   "method": "GET",
-  "target": "tr.snapchat.com/config/1/2295cbcc-cb3f-4727-8c09-1133b742722c.json",
+  "target": "tr.snapchat.com/config/1/<UUID>.json",
 }

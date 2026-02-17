@@ -6,7 +6,7 @@
     },
     "cookie": {
       "anonymized": "<removed>",
-      "original": "_ga=GA1.1.912103435.1771251402; _rdt_uuid=1771251401628.077de8f5-d504-4537-8a88-8793fd7c7828; _ga_TR58L0EF8P=GS2.1.s1771251401$o1$g1$t1771251401$j60$l0$h0",
+      "original": "_ga=<dynamic>; _rdt_uuid=<dynamic>; _ga_TR58L0EF8P=<dynamic>",
     },
     "user-agent": {
       "anonymized": "Mozilla/5.0 (compatible; Chrome/143.0)",

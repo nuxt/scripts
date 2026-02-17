@@ -2,7 +2,7 @@
   "headers": {
     "cookie": {
       "anonymized": "<removed>",
-      "original": "_ga=GA1.1.611425664.1771251406; _ga_TR58L0EF8P=GS2.1.s1771251405$o1$g0$t1771251405$j60$l0$h0; ajs_anonymous_id=cf8c2db0-cb31-443c-84c1-8d36f7ebf2d4; _rdt_uuid=1771251405886.3aac9d6a-ab8b-4dac-8d31-430bd0297591",
+      "original": "_ga=<dynamic>; _ga_TR58L0EF8P=<dynamic>; ajs_anonymous_id=<dynamic>; _rdt_uuid=<dynamic>",
     },
     "user-agent": {
       "anonymized": "Mozilla/5.0 (compatible; Chrome/143.0)",

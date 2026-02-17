@@ -6,7 +6,7 @@
     },
     "cookie": {
       "anonymized": "<removed>",
-      "original": "_ga=GA1.1.1958965566.1771251397; _ga_TR58L0EF8P=GS2.1.s1771251396$o1$g0$t1771251396$j60$l0$h0; ajs_anonymous_id=d9f3e0db-854a-4435-9a31-edb6dfbbcc73; _rdt_uuid=1771251396598.7b89282e-2933-4d7a-aa2c-c1b7db75e0cf; _scid=QJ6zIz5HQWUgI6481R43FHqjf6ehRAWs; _scid_r=QJ6zIz5HQWUgI6481R43FHqjf6ehRAWs; _sctr=1%7C1771246800000",
+      "original": "_ga=<dynamic>; _ga_TR58L0EF8P=<dynamic>; ajs_anonymous_id=<dynamic>; _rdt_uuid=<dynamic>; _scid=<dynamic>; _scid_r=<dynamic>; _sctr=<dynamic>",
     },
     "user-agent": {
       "anonymized": "Mozilla/5.0 (compatible; Chrome/143.0)",

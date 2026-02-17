@@ -3,7 +3,7 @@
     "supported": true,
     "registrations": [
       {
-        "scope": "http://127.0.0.1:35975/",
+        "scope": "http://127.0.0.1:37591/",
         "active": "activated"
       }
     ],

@@ -332,7 +332,11 @@ export function stripPayloadFingerprinting(
     }
     // Generalize screen to common bucket (with paired width/height awareness)
     if (matchesParam(key, STRIP_PARAMS.screen)) {
-      if (lowerKey === 'sh' && deviceClass) {
+      // Color depth and pixel ratio are low-entropy (2-4 distinct values) — keep as-is
+      if (['sd', 'colordepth', 'pixelratio'].includes(lowerKey)) {
+        result[key] = value
+      }
+      else if (lowerKey === 'sh' && deviceClass) {
         // Paired: use height from the device class determined by sw
         const paired = SCREEN_BUCKETS[deviceClass].h
         result[key] = typeof value === 'number' ? paired : String(paired)
