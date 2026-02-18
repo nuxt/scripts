@@ -41,6 +41,17 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      label: 'Vercel Analytics',
+      src: 'https://va.vercel-scripts.com/v1/script.js',
+      proxy: 'vercelAnalytics',
+      category: 'analytics',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512"><path d="M256 48L496 464H16z" fill="currentColor"/></svg>`,
+      import: {
+        name: 'useScriptVercelAnalytics',
+        from: await resolve('./runtime/registry/vercel-analytics'),
+      },
+    },
+    {
       label: 'PostHog',
       src: false,
       scriptBundling: false,

@@ -371,6 +371,40 @@ describe('third-party-capital', () => {
     })
     expect(hasGoogleApi).toBe(true)
   })
+
+  it('expect Vercel Analytics to initialize queue and handle events', {
+    timeout: 10000,
+  }, async () => {
+    const { page } = await createPage('/tpc/vercel-analytics')
+    await page.waitForTimeout(500)
+
+    // Verify the queue was initialized (clientInit sets up window.va)
+    const hasQueue = await page.evaluate(() => {
+      return typeof window.va === 'function'
+    })
+    expect(hasQueue).toBe(true)
+
+    // Track an event via the UI button
+    await page.click('#track-event')
+    await page.waitForTimeout(300)
+
+    const eventTracked = await page.$eval('#event-tracked', el => el.textContent?.trim())
+    expect(eventTracked).toBe('true')
+
+    // Send a pageview via the UI button
+    await page.click('#send-pageview')
+    await page.waitForTimeout(300)
+
+    const pageviewSent = await page.$eval('#pageview-sent', el => el.textContent?.trim())
+    expect(pageviewSent).toBe('true')
+
+    // Verify the queue accumulated events (script won't load from /_vercel/insights in test env)
+    const queueLength = await page.evaluate(() => {
+      return (window.vaq || []).length
+    })
+    // Queue should have: beforeSend (if configured) + event + pageview calls
+    expect(queueLength).toBeGreaterThanOrEqual(2)
+  })
 })
 
 describe('social-embeds', () => {
