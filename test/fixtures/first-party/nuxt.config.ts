@@ -47,6 +47,7 @@ export default defineNuxtConfig({
       redditPixel: {
         id: 't2_test_advertiser_id',
       },
+      vercelAnalytics: true,
     },
   },
 })

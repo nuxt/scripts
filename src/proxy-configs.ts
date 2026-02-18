@@ -174,9 +174,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     vercelAnalytics: {
-      rewrite: [
-        { from: 'va.vercel-scripts.com', to: `${collectPrefix}/vercel` },
-      ],
+      // No rewrite needed — the Vercel Analytics script uses relative paths
+      // for data collection (/_vercel/insights/*), not absolute URLs to va.vercel-scripts.com
       routes: {
         [`${collectPrefix}/vercel/**`]: { proxy: 'https://va.vercel-scripts.com/**' },
       },

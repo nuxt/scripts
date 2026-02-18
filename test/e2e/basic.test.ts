@@ -402,8 +402,8 @@ describe('third-party-capital', () => {
     const queueLength = await page.evaluate(() => {
       return (window.vaq || []).length
     })
-    // Queue should have: beforeSend (if configured) + event + pageview calls
-    expect(queueLength).toBeGreaterThanOrEqual(2)
+    // Queue should have: event + pageview calls
+    expect(queueLength).toBe(2)
   })
 })
 

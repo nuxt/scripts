@@ -4,13 +4,6 @@ import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export type AllowedPropertyValues = string | number | boolean | null | undefined
 
-export interface BeforeSendEvent {
-  type: 'pageview' | 'event'
-  url: string
-}
-
-export type BeforeSend = (event: BeforeSendEvent) => BeforeSendEvent | null
-
 export type VercelAnalyticsMode = 'auto' | 'development' | 'production'
 
 export const VercelAnalyticsOptions = object({
@@ -54,7 +47,7 @@ declare global {
   }
 }
 
-export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: VercelAnalyticsInput & { beforeSend?: BeforeSend }) {
+export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: VercelAnalyticsInput) {
   return useRegistryScript<T, typeof VercelAnalyticsOptions>('vercelAnalytics', (options) => {
     const scriptInput: { 'src': string, 'defer': boolean, 'data-dsn'?: string, 'data-disable-auto-track'?: string, 'data-debug'?: string } = {
       src: 'https://va.vercel-scripts.com/v1/script.js',
@@ -72,20 +65,12 @@ export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?
       scriptInput,
       schema: import.meta.dev ? VercelAnalyticsOptions : undefined,
       scriptOptions: {
+        // Load on client hydration for accurate web vitals
+        trigger: 'client',
         use: () => ({
-          va: window.va as VercelAnalyticsApi['va'],
+          va: (...args: [string, unknown?]) => window.va?.(...args),
           track(name: string, properties?: Record<string, AllowedPropertyValues>) {
-            if (!properties) {
-              window.va?.('event', { name })
-              return
-            }
-            // Strip non-primitive values (objects) in production
-            const cleaned: Record<string, AllowedPropertyValues> = {}
-            for (const [key, value] of Object.entries(properties)) {
-              if (typeof value !== 'object' || value === null)
-                cleaned[key] = value
-            }
-            window.va?.('event', { name, data: cleaned })
+            window.va?.('event', properties ? { name, data: properties } : { name })
           },
           pageview(opts?: { route?: string | null, path?: string }) {
             window.va?.('pageview', opts)
@@ -100,13 +85,8 @@ export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?
             window.va = function (...params: [string, unknown?]) {
               ; (window.vaq = window.vaq || []).push(params)
             }
-            // Set mode
             if (options?.mode && options.mode !== 'auto') {
               window.vam = options.mode
-            }
-            // Register beforeSend middleware
-            if (_options?.beforeSend) {
-              window.va('beforeSend', _options.beforeSend)
             }
           },
     }
