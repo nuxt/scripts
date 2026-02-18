@@ -181,8 +181,8 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `tr.snapchat.com`
 - Route tracking requests through your server
-- Hide user IP addresses from Snapchat
-- Strip fingerprinting parameters (`d_a`, `d_ot`, `d_os`, `d_bvs`, screen dimensions)
+- Anonymize user IP addresses to subnet level
+- Generalize device fingerprinting data (`d_os`, `d_bvs`, screen dimensions) to common buckets
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({

@@ -192,8 +192,8 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of third-party servers
 - Route collection requests (`/g/collect`) through your server
-- Hide user IP addresses from Google
-- Strip fingerprinting parameters (`sr`, `vp`, `sd`, `ul`)
+- Anonymize user IP addresses to subnet level
+- Generalize device fingerprinting data (`sr`, `vp`, `ul`) to common buckets
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({

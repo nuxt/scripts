@@ -349,7 +349,7 @@ function extractRequestDiff(capture: Record<string, any>): Record<string, any> {
   json = json.replace(/:17\d{11,}([,}\]])/g, ':"<TS_MS>"$1')
   json = json.replace(/"17\d{11,}"/g, '"<TS_MS>"')
   // Normalize long base64-like session tokens (Snapchat si, etc.)
-  json = json.replace(/"si":"[\w\-]{40,}"/g, '"si":"<SESSION_TOKEN>"')
+  json = json.replace(/"si":"[\w-]{40,}"/g, '"si":"<SESSION_TOKEN>"')
   // Normalize volatile numeric arrays (Snapchat timing/perf data)
   json = json.replace(/"a":\[[\d,\s]+\]/g, '"a":"<TIMING>"')
   json = json.replace(/"p":\[[\d,\s]+\]/g, '"p":"<PERF>"')

@@ -125,8 +125,8 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `cdn.segment.com`
 - Route API requests (`api.segment.io`) through your server
-- Hide user IP addresses from Segment
-- Strip fingerprinting parameters (`anonymousId`, `context.ip`, `context.userAgent`)
+- Anonymize user IP addresses to subnet level
+- Normalize User-Agent and generalize device fingerprinting data to common buckets
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({

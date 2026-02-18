@@ -144,8 +144,8 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `analytics.twitter.com`
 - Route tracking requests (`t.co`) through your server
-- Hide user IP addresses from X/Twitter
-- Strip fingerprinting parameters (`dv`, `bci`, `eci`, `pl_id`, `p_user_id`)
+- Anonymize user IP addresses to subnet level
+- Generalize device fingerprinting data (`dv` combined device info) to common buckets
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({
