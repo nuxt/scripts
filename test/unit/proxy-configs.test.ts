@@ -148,6 +148,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('segment')
       expect(configs).toHaveProperty('clarity')
       expect(configs).toHaveProperty('hotjar')
+      expect(configs).toHaveProperty('gravatar')
     })
 
     it('all configs have valid structure', () => {
