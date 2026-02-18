@@ -79,7 +79,7 @@ export default defineNuxtConfig({
 The `useScriptVercelAnalytics` composable lets you have fine-grain control over when and how Vercel Analytics is loaded on your site.
 
 ```ts
-function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: VercelAnalyticsInput & { beforeSend?: BeforeSend }) {}
+function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: VercelAnalyticsInput) {}
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
@@ -125,23 +125,6 @@ export interface VercelAnalyticsApi {
   pageview: (options?: { route?: string | null, path?: string }) => void
 }
 ```
-
-### BeforeSend
-
-You can pass a `beforeSend` callback to modify or filter events before they're sent. This is useful for stripping sensitive data from URLs.
-
-```ts
-const { proxy } = useScriptVercelAnalytics({
-  beforeSend(event) {
-    // Strip query params from URLs
-    const url = new URL(event.url)
-    url.search = ''
-    return { ...event, url: url.toString() }
-  },
-})
-```
-
-Returning `null` from `beforeSend` will prevent the event from being sent.
 
 ## Example
 

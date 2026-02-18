@@ -453,7 +453,7 @@ describe('proxy configs', () => {
     it('all configs have valid structure', () => {
       const configs = getAllProxyConfigs('/_scripts/c')
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
-      const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausible', 'cloudflareWebAnalytics', 'rybbit', 'umami', 'databuddy', 'fathom']
+      const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausible', 'cloudflareWebAnalytics', 'rybbit', 'umami', 'databuddy', 'fathom', 'vercelAnalytics']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have routes`).toHaveProperty('routes')
         expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')

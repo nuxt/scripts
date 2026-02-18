@@ -36,6 +36,7 @@ export default defineNuxtConfig({
         intercom: { app_id: 'test-app' },
         crisp: { id: 'test-id' },
       },
+      vercelAnalytics: true,
     },
   },
 
