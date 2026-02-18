@@ -195,7 +195,7 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
         if (matchedPrefix && (typeof v === 'string' || typeof v === 'number')) {
           if (!seenPrefixes.has(matchedPrefix)) {
             seenPrefixes.add(matchedPrefix)
-            result[matchedPrefix.replace('[', '')] = '<VOLATILE>'
+            result[matchedPrefix.replace(/\[/g, '')] = '<VOLATILE>'
           }
         }
         else if (k in VOLATILE && (typeof v === 'string' || typeof v === 'number'))
