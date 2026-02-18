@@ -18,7 +18,7 @@
     "url": "https://github.com/nuxt/scripts/issues"
   },
   "sideEffects": false,
-  "exports": {
+"exports": {
     ".": {
       "types": "./dist/types.d.mts",
       "import": "./dist/module.mjs"
@@ -46,7 +46,7 @@
     "prepack": "pnpm dev:prepare && nuxt-module-build build && npm run client:build",
     "dev": "nuxi dev playground",
     "dev:ssl": "nuxi dev playground --https",
-    "prepare:fixtures": "nuxi prepare test/fixtures/basic && nuxi prepare test/fixtures/cdn && nuxi prepare test/fixtures/extend-registry && nuxi prepare test/fixtures/partytown",
+    "prepare:fixtures": "nuxi prepare test/fixtures/basic && nuxi prepare test/fixtures/cdn && nuxi prepare test/fixtures/extend-registry && nuxi prepare test/fixtures/partytown && nuxi prepare test/fixtures/first-party",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground && pnpm run prepare:fixtures",
     "typecheck": "vue-tsc --noEmit",
     "bump": "bumpp package.json --commit --push --tag",

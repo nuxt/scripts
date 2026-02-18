@@ -1,0 +1,24 @@
+{
+  "headers": {
+    "cookie": {
+      "anonymized": "<removed>",
+      "original": "_ga=<dynamic>; _ga_TR58L0EF8P=<dynamic>; ajs_anonymous_id=<dynamic>",
+    },
+    "user-agent": {
+      "anonymized": "Mozilla/5.0 (compatible; Chrome/143.0)",
+      "original": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36",
+    },
+    "x-forwarded-for": {
+      "anonymized": "127.0.0.0",
+      "original": "<absent>",
+    },
+  },
+  "method": "GET",
+  "query": {
+    "dv": {
+      "anonymized": "UTC&en-GB&Google Inc.&Linux x86_64&255&1920&1080&24&24&1920&1080&0&na",
+      "original": "Australia/Melbourne&en-GB&Google Inc.&Linux x86_64&255&1280&720&24&24&1280&720&0&na",
+    },
+  },
+  "target": "t.co/1/i/adsct",
+}

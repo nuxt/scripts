@@ -3,7 +3,7 @@
 // Shows different ways to defer script loading
 
 const chatSection = ref<HTMLElement>()
-const mapSection = ref<HTMLElement>()
+const _mapSection = ref<HTMLElement>()
 
 // 1. Load on first user interaction (scroll, click, keypress)
 const interactionTrigger = useScriptTriggerInteraction({

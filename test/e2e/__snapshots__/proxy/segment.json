@@ -1,0 +1,16 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {},
+    },
+    "path": "/_proxy/segment-cdn/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {},
+    },
+    "targetUrl": "https://cdn.segment.com/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings",
+  },
+]

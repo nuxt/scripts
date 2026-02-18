@@ -1,0 +1,22 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {
+        "lib": "ttq",
+        "sdkid": "TEST_PIXEL_ID",
+      },
+    },
+    "path": "/_proxy/tiktoki18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {
+        "lib": "ttq",
+        "sdkid": "TEST_PIXEL_ID",
+      },
+    },
+    "targetUrl": "https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq",
+  },
+]

@@ -173,15 +173,28 @@ function titleToCamelCase(s: string) {
 }
 
 const version = ref(null)
+const firstPartyStatus = ref<{
+  enabled: boolean
+  scripts: string[]
+  routes: Record<string, string>
+  collectPrefix: string
+} | null>(null)
+
 onDevtoolsClientConnected(async (client) => {
   devtools.value = client.devtools
   client.host.nuxt.hooks.hook('scripts:updated', (ctx) => {
     syncScripts(ctx.scripts)
   })
   version.value = client.host.nuxt.$config.public['nuxt-scripts'].version
+  firstPartyStatus.value = client.host.nuxt.$config.public['nuxt-scripts-status'] || null
   syncScripts(client.host.nuxt._scripts || {})
 })
 const tab = ref('scripts')
+
+function isFirstPartyScript(registryKey: string | undefined): boolean {
+  if (!registryKey || !firstPartyStatus.value?.enabled) return false
+  return firstPartyStatus.value.scripts.includes(registryKey)
+}
 
 function viewDocs(docs: string) {
   tab.value = 'docs'
@@ -268,7 +281,7 @@ function viewDocs(docs: string) {
             class="n-select-tabs flex flex-inline flex-wrap items-center border n-border-base rounded-lg n-bg-base"
           >
             <label
-              v-for="(value, idx) of ['scripts', 'registry', 'docs']"
+              v-for="(value, idx) of ['scripts', 'first-party', 'registry', 'docs']"
               :key="idx"
               class="relative n-border-base hover:n-bg-active cursor-pointer"
               :class="[
@@ -285,6 +298,18 @@ function viewDocs(docs: string) {
                   </div>
                   <template #popper>
                     Scripts
+                  </template>
+                </VTooltip>
+              </div>
+              <div v-else-if="value === 'first-party'" :class="[value === tab ? '' : 'op35']">
+                <VTooltip>
+                  <div class="px-5 py-2">
+                    <h2 text-lg flex items-center>
+                      <NIcon icon="carbon:security opacity-50" />
+                    </h2>
+                  </div>
+                  <template #popper>
+                    First-Party Mode
                   </template>
                 </VTooltip>
               </div>
@@ -395,6 +420,13 @@ function viewDocs(docs: string) {
                     :status="script.$script.status"
                     :error="scriptErrors[script.src]"
                   />
+                  <div
+                    v-if="isFirstPartyScript(script.registryKey)"
+                    class="flex items-center gap-1 text-xs px-2 py-[2px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 rounded-lg"
+                  >
+                    <NIcon icon="carbon:security" class="text-xs" />
+                    First-Party
+                  </div>
                   <ScriptSize :size="scriptSizes[script.src]" />
                   <ScriptLoadTime :load-time="script.loadTime" />
                   <div v-if="script.loadedFrom" class="flex items-center gap-1">
@@ -506,6 +538,138 @@ function viewDocs(docs: string) {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="tab === 'first-party'" class="h-full relative max-h-full p-4">
+          <div class="space-y-6">
+            <!-- Status Banner -->
+            <div
+              class="p-4 rounded-lg"
+              :class="firstPartyStatus?.enabled ? 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full flex items-center justify-center"
+                  :class="firstPartyStatus?.enabled ? 'bg-emerald-100 dark:bg-emerald-900' : 'bg-gray-200 dark:bg-gray-700'"
+                >
+                  <NIcon
+                    :icon="firstPartyStatus?.enabled ? 'carbon:checkmark-filled' : 'carbon:close-filled'"
+                    :class="firstPartyStatus?.enabled ? 'text-emerald-600 dark:text-emerald-400 text-xl' : 'text-gray-500 text-xl'"
+                  />
+                </div>
+                <div>
+                  <h3 class="font-semibold text-lg">
+                    First-Party Mode {{ firstPartyStatus?.enabled ? 'Enabled' : 'Disabled' }}
+                  </h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ firstPartyStatus?.enabled
+                      ? 'Scripts are routed through your domain for improved privacy'
+                      : 'Enable in nuxt.config: scripts.firstParty: true' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configuration -->
+            <div v-if="firstPartyStatus?.enabled" class="space-y-4">
+              <!-- Scripts List -->
+              <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <h4 class="font-medium flex items-center gap-2">
+                    <NIcon icon="carbon:script" class="opacity-50" />
+                    Proxied Scripts ({{ firstPartyStatus.scripts.length }})
+                  </h4>
+                </div>
+                <div class="p-4">
+                  <div v-if="firstPartyStatus.scripts.length" class="flex flex-wrap gap-2">
+                    <span
+                      v-for="script in firstPartyStatus.scripts"
+                      :key="script"
+                      class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-full text-sm"
+                    >
+                      {{ script }}
+                    </span>
+                  </div>
+                  <div v-else class="text-gray-500 text-sm">
+                    No scripts configured in registry
+                  </div>
+                </div>
+              </div>
+
+              <!-- Proxy Routes -->
+              <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <h4 class="font-medium flex items-center gap-2">
+                    <NIcon icon="carbon:arrows-horizontal" class="opacity-50" />
+                    Proxy Routes ({{ Object.keys(firstPartyStatus.routes).length }})
+                  </h4>
+                </div>
+                <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                  <div
+                    v-for="(target, path) in firstPartyStatus.routes"
+                    :key="path"
+                    class="px-4 py-3 flex items-center gap-3 text-sm font-mono"
+                  >
+                    <span class="text-blue-600 dark:text-blue-400">{{ path }}</span>
+                    <NIcon icon="carbon:arrow-right" class="opacity-30" />
+                    <span class="text-gray-600 dark:text-gray-400">{{ target }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Collect Prefix -->
+              <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-medium">
+                      Collection Prefix
+                    </h4>
+                    <p class="text-sm text-gray-500">
+                      Base path for proxy endpoints
+                    </p>
+                  </div>
+                  <code class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+                    {{ firstPartyStatus.collectPrefix }}
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <!-- Benefits Info -->
+            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <h4 class="font-medium mb-3">
+                Privacy Benefits
+              </h4>
+              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li class="flex items-center gap-2">
+                  <NIcon icon="carbon:checkmark" class="text-emerald-500" />
+                  User IPs stay private (third parties see your server's IP)
+                </li>
+                <li class="flex items-center gap-2">
+                  <NIcon icon="carbon:checkmark" class="text-emerald-500" />
+                  No third-party cookies (requests are same-origin)
+                </li>
+                <li class="flex items-center gap-2">
+                  <NIcon icon="carbon:checkmark" class="text-emerald-500" />
+                  Works with ad blockers (requests appear first-party)
+                </li>
+                <li class="flex items-center gap-2">
+                  <NIcon icon="carbon:checkmark" class="text-emerald-500" />
+                  Faster loads (no extra DNS lookups)
+                </li>
+              </ul>
+            </div>
+
+            <!-- Docs Link -->
+            <div class="text-center">
+              <a
+                href="https://scripts.nuxt.com/docs/guides/first-party"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+              >
+                View First-Party Mode Documentation
+              </a>
             </div>
           </div>
         </div>

@@ -14,7 +14,7 @@ Nuxt Scripts provides a registry script composable `useScriptXPixel` to easily i
 
 ### Nuxt Config Setup
 
-The simplest way to load Meta Pixel globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
+The simplest way to load X Pixel globally in your Nuxt App is to use Nuxt config. Alternatively you can directly
 use the [useScriptXPixel](#useScriptXPixel) composable.
 
 If you don't plan to send custom events you can use the [Environment overrides](https://nuxt.com/docs/getting-started/configuration#environment-overrides) to
@@ -134,6 +134,38 @@ You must provide the options when setting up the script for the first time.
 export const XPixelOptions = object({
   id: string(),
   version: optional(string()),
+})
+```
+
+## First-Party Mode
+
+This script supports [First-Party Mode](/docs/guides/first-party) which routes all traffic through your domain for improved privacy and ad blocker bypass.
+
+When enabled globally via `scripts.firstParty: true`, this script will:
+- Load from your domain instead of `analytics.twitter.com`
+- Route tracking requests (`t.co`) through your server
+- Hide user IP addresses from X/Twitter
+- Strip fingerprinting parameters (`dv`, `bci`, `eci`, `pl_id`, `p_user_id`)
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true,
+    registry: {
+      xPixel: { id: 'YOUR_ID' }
+    }
+  }
+})
+```
+
+To opt-out for this specific script:
+
+```ts
+useScriptXPixel({
+  id: 'YOUR_ID',
+  scriptOptions: {
+    firstParty: false // Load directly from X/Twitter
+  }
 })
 ```
 

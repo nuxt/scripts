@@ -58,6 +58,7 @@ export {}`
 export function templateTriggerResolver(defaultScriptOptions?: ModuleOptions['defaultScriptOptions']) {
   const needsIdleTimeout = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'idleTimeout' in defaultScriptOptions.trigger
   const needsInteraction = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'interaction' in defaultScriptOptions.trigger
+  const needsServiceWorker = defaultScriptOptions?.trigger && typeof defaultScriptOptions.trigger === 'object' && 'serviceWorker' in defaultScriptOptions.trigger
 
   const imports = []
   if (needsIdleTimeout) {
@@ -66,12 +67,16 @@ export function templateTriggerResolver(defaultScriptOptions?: ModuleOptions['de
   if (needsInteraction) {
     imports.push(`import { useScriptTriggerInteraction } from '#nuxt-scripts/composables/useScriptTriggerInteraction'`)
   }
+  if (needsServiceWorker) {
+    imports.push(`import { useScriptTriggerServiceWorker } from '#nuxt-scripts/composables/useScriptTriggerServiceWorker'`)
+  }
 
   return [
     ...imports,
     `export function resolveTrigger(trigger) {`,
     needsIdleTimeout ? `  if ('idleTimeout' in trigger) return useScriptTriggerIdleTimeout({ timeout: trigger.idleTimeout })` : '',
     needsInteraction ? `  if ('interaction' in trigger) return useScriptTriggerInteraction({ events: trigger.interaction })` : '',
+    needsServiceWorker ? `  if ('serviceWorker' in trigger) return useScriptTriggerServiceWorker()` : '',
     `  return null`,
     `}`,
   ].filter(Boolean).join('\n')
@@ -89,6 +94,9 @@ export function resolveTriggerForTemplate(trigger: any): string | null {
     if ('interaction' in trigger) {
       return `useScriptTriggerInteraction({ events: ${JSON.stringify(trigger.interaction)} })`
     }
+    if ('serviceWorker' in trigger) {
+      return `useScriptTriggerServiceWorker()`
+    }
   }
   return null
 }
@@ -101,14 +109,17 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   }
   const imports = []
   const inits = []
+  const resolvedRegistryKeys: string[] = []
   let needsIdleTimeoutImport = false
   let needsInteractionImport = false
 
+  let needsServiceWorkerImport = false
+
   // for global scripts, we can initialise them script away
   for (const [k, c] of Object.entries(config.registry || {})) {
-    const importDefinition = registry.find(i => i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+    const importDefinition = registry.find(i => i.proxy === k || i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
     if (importDefinition) {
-      // title case
+      resolvedRegistryKeys.push(k)
       imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)
       if (c === 'mock') {
         inits.push(`const ${k} = ${importDefinition.import.name}({ scriptOptions: { trigger: 'manual', skipValidation: true } })`)
@@ -122,6 +133,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
           scriptOptions.trigger = '__TRIGGER_PLACEHOLDER__' as any
           if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
           if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
+          if (triggerResolved.includes('useScriptTriggerServiceWorker')) needsServiceWorkerImport = true
         }
         const args = { ...input, scriptOptions }
         const argsJson = triggerResolved
@@ -145,6 +157,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       if (triggerResolved) {
         if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
         if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
+        if (triggerResolved.includes('useScriptTriggerServiceWorker')) needsServiceWorkerImport = true
         const resolvedOptions = { ...options, trigger: '__TRIGGER_PLACEHOLDER__' } as any
         const optionsJson = JSON.stringify(resolvedOptions).replace(/"__TRIGGER_PLACEHOLDER__"/g, triggerResolved)
         inits.push(`const ${k} = useScript(${JSON.stringify({ key: k, ...(typeof c[0] === 'string' ? { src: c[0] } : c[0]) })}, { ...${optionsJson}, use: () => ({ ${k}: window.${k} }) })`)
@@ -158,6 +171,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
       if (triggerResolved) {
         if (triggerResolved.includes('useScriptTriggerIdleTimeout')) needsIdleTimeoutImport = true
         if (triggerResolved.includes('useScriptTriggerInteraction')) needsInteractionImport = true
+        if (triggerResolved.includes('useScriptTriggerServiceWorker')) needsServiceWorkerImport = true
         const resolvedOptions = { ...c, trigger: '__TRIGGER_PLACEHOLDER__' } as any
         const argsJson = JSON.stringify({ key: k, ...resolvedOptions }).replace(/"__TRIGGER_PLACEHOLDER__"/g, triggerResolved)
         inits.push(`const ${k} = useScript(${argsJson}, { use: () => ({ ${k}: window.${k} }) })`)
@@ -175,6 +189,9 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   if (needsInteractionImport) {
     triggerImports.push(`import { useScriptTriggerInteraction } from '#nuxt-scripts/composables/useScriptTriggerInteraction'`)
   }
+  if (needsServiceWorkerImport) {
+    triggerImports.push(`import { useScriptTriggerServiceWorker } from '#nuxt-scripts/composables/useScriptTriggerServiceWorker'`)
+  }
 
   return [
     `import { useScript } from '#nuxt-scripts/composables/useScript'`,
@@ -188,7 +205,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     `  parallel: true,`,
     `  setup() {`,
     ...inits.map(i => `    ${i}`),
-    `    return { provide: { $scripts: { ${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].join(', ')} } } }`,
+    `    return { provide: { $scripts: { ${[...Object.keys(config.globals || {}), ...resolvedRegistryKeys].join(', ')} } } }`,
     `  }`,
     `})`,
   ].join('\n')
