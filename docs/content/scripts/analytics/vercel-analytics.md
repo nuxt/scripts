@@ -85,7 +85,7 @@ function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: Verce
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
 The composable comes with the following defaults:
-- **Trigger: Client** Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
+- **Trigger: Client** Script will load when Nuxt is hydrating to keep web vital metrics accurate.
 
 ### VercelAnalyticsInput
 
@@ -109,8 +109,8 @@ export const VercelAnalyticsOptions = object({
    */
   mode: optional(union([literal('auto'), literal('development'), literal('production')])),
   /**
-   * Whether to enable debug logging in development.
-   * @default true
+   * Whether to enable debug logging.
+   * Automatically enabled in development/test environments.
    */
   debug: optional(boolean()),
 })
