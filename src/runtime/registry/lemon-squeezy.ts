@@ -15,7 +15,6 @@ export type LemonSqueezyEventPayload = { event: 'Checkout.Success', data: Record
 export interface LemonSqueezyApi {
   /**
    * Initialises Lemon.js on your page.
-   * @param options - An object with a single property, eventHandler, which is a function that will be called when Lemon.js emits an event.
    */
   Setup: (options: {
     eventHandler: (event: LemonSqueezyEventPayload) => void

@@ -57,3 +57,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
 /docs/.data/content/contents.sqlite
+
+# Skilld references (recreated by `skilld install`)
+.skilld
