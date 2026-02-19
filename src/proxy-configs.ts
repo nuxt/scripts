@@ -172,6 +172,14 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/hotjar-insights/**`]: { proxy: 'https://insights.hotjar.com/**' },
       },
     },
+
+    vercelAnalytics: {
+      // No rewrite needed — the Vercel Analytics script uses relative paths
+      // for data collection (/_vercel/insights/*), not absolute URLs to va.vercel-scripts.com
+      routes: {
+        [`${collectPrefix}/vercel/**`]: { proxy: 'https://va.vercel-scripts.com/**' },
+      },
+    },
   } satisfies Record<string, ProxyConfig>
 }
 

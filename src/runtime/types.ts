@@ -34,6 +34,7 @@ import type { PayPalInput } from './registry/paypal'
 import type { PostHogInput } from './registry/posthog'
 import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
+import type { VercelAnalyticsInput } from './registry/vercel-analytics'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -183,6 +184,7 @@ export interface ScriptRegistry {
   xPixel?: XPixelInput
   snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
+  vercelAnalytics?: VercelAnalyticsInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
   [key: `${string}-npm`]: NpmInput
