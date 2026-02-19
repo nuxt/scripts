@@ -389,7 +389,8 @@ export default defineNuxtModule<ModuleOptions>({
     logger.debug('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
 
     // Setup Service Worker for first-party mode (must be before modules:done)
-    if (firstPartyEnabled) {
+    // Skip in dev - persistent SW causes issues when switching between dev servers
+    if (firstPartyEnabled && !nuxt.options.dev) {
       // Use root path to avoid conflict with /_scripts/** wildcard route
       const swPath = '/_nuxt-scripts-sw.js'
       const swRules = getSWInterceptRules(firstPartyCollectPrefix)
