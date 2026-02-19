@@ -405,5 +405,16 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
         from: await resolve('./runtime/registry/umami-analytics'),
       },
     },
+    {
+      label: 'Gravatar',
+      proxy: 'gravatar',
+      src: 'https://secure.gravatar.com/js/gprofiles.js',
+      category: 'utility',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><circle cx="128" cy="128" r="128" fill="#1d4fc4"/><path d="M128 28c-55.2 0-100 44.8-100 100s44.8 100 100 100 100-44.8 100-100S183.2 28 128 28zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z" fill="#fff"/></svg>`,
+      import: {
+        name: 'useScriptGravatar',
+        from: await resolve('./runtime/registry/gravatar'),
+      },
+    },
   ]
 }
