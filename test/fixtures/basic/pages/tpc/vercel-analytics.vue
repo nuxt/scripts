@@ -5,7 +5,14 @@ useHead({
   title: 'Vercel Analytics',
 })
 
+const beforeSendCalled = ref(false)
+
 const { proxy, status } = useScriptVercelAnalytics({
+  endpoint: '/custom/collect',
+  beforeSend(event) {
+    beforeSendCalled.value = true
+    return event
+  },
   scriptOptions: {
     trigger: 'onNuxtReady',
   },
@@ -13,6 +20,7 @@ const { proxy, status } = useScriptVercelAnalytics({
 
 const eventTracked = ref(false)
 const pageviewSent = ref(false)
+const nestedError = ref('')
 
 function trackTestEvent() {
   proxy.track('test_event', {
@@ -20,6 +28,18 @@ function trackTestEvent() {
     value: 42,
   })
   eventTracked.value = true
+}
+
+function trackNestedProps() {
+  try {
+    proxy.track('bad_event', {
+      name: 'test',
+      nested: { deep: true } as any,
+    })
+  }
+  catch (err) {
+    nestedError.value = (err as Error).message
+  }
 }
 
 function sendPageview() {
@@ -42,8 +62,20 @@ function sendPageview() {
       {{ pageviewSent }}
     </div>
 
+    <div id="before-send-called">
+      {{ beforeSendCalled }}
+    </div>
+
+    <div id="nested-error">
+      {{ nestedError }}
+    </div>
+
     <button id="track-event" @click="trackTestEvent">
       Track Event
+    </button>
+
+    <button id="track-nested" @click="trackNestedProps">
+      Track Nested
     </button>
 
     <button id="send-pageview" @click="sendPageview">

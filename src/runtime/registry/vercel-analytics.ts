@@ -6,6 +6,13 @@ export type AllowedPropertyValues = string | number | boolean | null | undefined
 
 export type VercelAnalyticsMode = 'auto' | 'development' | 'production'
 
+export interface BeforeSendEvent {
+  type: 'pageview' | 'event'
+  url: string
+}
+
+export type BeforeSend = (event: BeforeSendEvent) => BeforeSendEvent | null
+
 export const VercelAnalyticsOptions = object({
   /**
    * The DSN of the project to send events to.
@@ -29,9 +36,16 @@ export const VercelAnalyticsOptions = object({
    * Automatically enabled in development/test environments.
    */
   debug: optional(boolean()),
+  /**
+   * Custom endpoint for data collection.
+   * Useful for self-hosted or proxied setups.
+   */
+  endpoint: optional(string()),
 })
 
-export type VercelAnalyticsInput = RegistryScriptInput<typeof VercelAnalyticsOptions, false, false, false>
+export type VercelAnalyticsInput = RegistryScriptInput<typeof VercelAnalyticsOptions, false, false, false> & {
+  beforeSend?: BeforeSend
+}
 
 export interface VercelAnalyticsApi {
   va: (event: string, properties?: unknown) => void
@@ -47,19 +61,51 @@ declare global {
   }
 }
 
+function parseProperties(
+  properties: Record<string, unknown>,
+  options: { strip?: boolean },
+): Record<string, AllowedPropertyValues> {
+  let props = properties
+  const errorProperties: string[] = []
+  for (const [key, value] of Object.entries(properties)) {
+    if (typeof value === 'object' && value !== null) {
+      if (options.strip) {
+        const { [key]: _, ...rest } = props
+        props = rest
+      }
+      else {
+        errorProperties.push(key)
+      }
+    }
+  }
+  if (errorProperties.length > 0 && !options.strip) {
+    throw new Error(
+      `The following properties are not valid: ${errorProperties.join(', ')}. Only strings, numbers, booleans, and null are allowed.`,
+    )
+  }
+  return props as Record<string, AllowedPropertyValues>
+}
+
 export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: VercelAnalyticsInput) {
+  const beforeSend = _options?.beforeSend
   return useRegistryScript<T, typeof VercelAnalyticsOptions>('vercelAnalytics', (options) => {
-    const scriptInput: { 'src': string, 'defer': boolean, 'data-dsn'?: string, 'data-disable-auto-track'?: string, 'data-debug'?: string } = {
-      src: 'https://va.vercel-scripts.com/v1/script.js',
-      defer: true,
+    const scriptInput: { 'src': string, 'defer': boolean, 'data-sdkn': string, 'data-dsn'?: string, 'data-disable-auto-track'?: string, 'data-debug'?: string, 'data-endpoint'?: string } = {
+      'src': import.meta.dev
+        ? 'https://va.vercel-scripts.com/v1/script.debug.js'
+        : 'https://va.vercel-scripts.com/v1/script.js',
+      'defer': true,
+      'data-sdkn': '@nuxt/scripts',
     }
 
     if (options?.dsn)
       scriptInput['data-dsn'] = options.dsn
     if (options?.disableAutoTrack)
       scriptInput['data-disable-auto-track'] = '1'
-    if (options?.debug !== undefined)
-      scriptInput['data-debug'] = String(options.debug)
+    if (options?.endpoint)
+      scriptInput['data-endpoint'] = options.endpoint
+    // Only set data-debug="false" in dev mode to explicitly disable debug logging
+    if (import.meta.dev && options?.debug === false)
+      scriptInput['data-debug'] = 'false'
 
     return {
       scriptInput,
@@ -70,7 +116,18 @@ export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?
         use: () => ({
           va: (...args: [string, unknown?]) => window.va?.(...args),
           track(name: string, properties?: Record<string, AllowedPropertyValues>) {
-            window.va?.('event', properties ? { name, data: properties } : { name })
+            if (!properties) {
+              window.va?.('event', { name })
+              return
+            }
+            try {
+              const props = parseProperties(properties, { strip: !import.meta.dev })
+              window.va?.('event', { name, data: props })
+            }
+            catch (err) {
+              if (err instanceof Error && import.meta.dev)
+                console.error(err)
+            }
           },
           pageview(opts?: { route?: string | null, path?: string }) {
             window.va?.('pageview', opts)
@@ -83,10 +140,18 @@ export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?
             if (window.va) return
             // Set up the queue exactly as @vercel/analytics does
             window.va = function (...params: [string, unknown?]) {
-              ; (window.vaq = window.vaq || []).push(params)
+              ;(window.vaq = window.vaq || []).push(params)
             }
-            if (options?.mode && options.mode !== 'auto') {
+            // Set mode — auto detects via build environment, explicit sets directly
+            if (options?.mode === 'auto' || !options?.mode) {
+              window.vam = import.meta.dev ? 'development' : 'production'
+            }
+            else {
               window.vam = options.mode
+            }
+            // Register beforeSend middleware
+            if (beforeSend) {
+              window.va('beforeSend', beforeSend)
             }
           },
     }
