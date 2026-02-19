@@ -113,7 +113,19 @@ export const VercelAnalyticsOptions = object({
    * Automatically enabled in development/test environments.
    */
   debug: optional(boolean()),
+  /**
+   * Custom endpoint for data collection.
+   * Useful for self-hosted or proxied setups.
+   */
+  endpoint: optional(string()),
 })
+```
+
+You can also pass a `beforeSend` callback to filter or modify events before they are sent:
+
+```ts
+type BeforeSendEvent = { type: 'pageview' | 'event', url: string }
+type BeforeSend = (event: BeforeSendEvent) => BeforeSendEvent | null
 ```
 
 ### VercelAnalyticsApi
@@ -125,6 +137,10 @@ export interface VercelAnalyticsApi {
   pageview: (options?: { route?: string | null, path?: string }) => void
 }
 ```
+
+::callout{icon="i-heroicons-light-bulb"}
+The `track()` method validates properties at runtime — nested objects are silently stripped in production, and throw an error in development.
+::
 
 ## Example
 
@@ -158,5 +174,21 @@ proxy.track('purchase', { product: 'widget', price: 9.99 })
 
 // Manual pageview
 proxy.pageview({ path: '/custom-page' })
+</script>
+```
+
+### beforeSend
+
+Use `beforeSend` to filter or modify events before they reach Vercel. Return `null` to cancel an event.
+
+```vue [app.vue]
+<script setup lang="ts">
+const { proxy } = useScriptVercelAnalytics({
+  beforeSend(event) {
+    // Ignore admin pages
+    if (event.url.includes('/admin')) return null
+    return event
+  },
+})
 </script>
 ```

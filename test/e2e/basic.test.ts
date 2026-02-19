@@ -384,12 +384,45 @@ describe('third-party-capital', () => {
     })
     expect(hasQueue).toBe(true)
 
+    // Verify window.vam is set (mode auto detects build environment)
+    const mode = await page.evaluate(() => window.vam)
+    expect(mode).toBe('production')
+
+    // Verify the script tag has correct attributes
+    const scriptAttrs = await page.evaluate(() => {
+      const script = document.querySelector('script[data-sdkn="@nuxt/scripts"]')
+      if (!script) return null
+      return {
+        src: script.getAttribute('src'),
+        sdkn: script.getAttribute('data-sdkn'),
+        endpoint: script.getAttribute('data-endpoint'),
+      }
+    })
+    // Production build uses production script
+    expect(scriptAttrs?.src).toContain('script.js')
+    expect(scriptAttrs?.src).not.toContain('script.debug.js')
+    expect(scriptAttrs?.sdkn).toBe('@nuxt/scripts')
+    expect(scriptAttrs?.endpoint).toBe('/custom/collect')
+
+    // Verify beforeSend was registered in the queue
+    const hasBeforeSend = await page.evaluate(() => {
+      return (window.vaq || []).some(entry => entry[0] === 'beforeSend')
+    })
+    expect(hasBeforeSend).toBe(true)
+
     // Track an event via the UI button
     await page.click('#track-event')
     await page.waitForTimeout(300)
 
     const eventTracked = await page.$eval('#event-tracked', el => el.textContent?.trim())
     expect(eventTracked).toBe('true')
+
+    // Track event with nested properties — in prod, nested props are silently stripped
+    await page.click('#track-nested')
+    await page.waitForTimeout(300)
+
+    const nestedError = await page.$eval('#nested-error', el => el.textContent?.trim())
+    expect(nestedError).toBe('')
 
     // Send a pageview via the UI button
     await page.click('#send-pageview')
@@ -398,12 +431,22 @@ describe('third-party-capital', () => {
     const pageviewSent = await page.$eval('#pageview-sent', el => el.textContent?.trim())
     expect(pageviewSent).toBe('true')
 
-    // Verify the queue accumulated events (script won't load from /_vercel/insights in test env)
+    // Verify the queue accumulated events
+    // Queue should have: beforeSend + event + stripped-nested-event + pageview
     const queueLength = await page.evaluate(() => {
       return (window.vaq || []).length
     })
-    // Queue should have: event + pageview calls
-    expect(queueLength).toBe(2)
+    expect(queueLength).toBe(4)
+
+    // Verify the nested event was tracked with the nested prop stripped
+    const strippedEvent = await page.evaluate(() => {
+      const events = (window.vaq || []).filter(e => e[0] === 'event')
+      const nested = events.find((e: any) => e[1]?.name === 'bad_event')
+      return nested ? (nested[1] as any)?.data : null
+    })
+    expect(strippedEvent).toBeDefined()
+    expect(strippedEvent.name).toBe('test')
+    expect(strippedEvent.nested).toBeUndefined()
   })
 })
 
