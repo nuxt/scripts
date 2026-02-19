@@ -32,6 +32,8 @@ reports
 coverage
 *.lcov
 .nyc_output
+test/fixtures/**/proxy-test.json
+test/fixtures/**/sw-status.json
 
 # VSCode
 .vscode/*
