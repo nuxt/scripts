@@ -546,9 +546,8 @@ export default defineNuxtPlugin({
         for (const key of registryKeys) {
           // Find the registry script definition
           const script = registryScriptsWithImport.find(s => s.import.name === `useScript${key.charAt(0).toUpperCase() + key.slice(1)}`)
-          // Use script's proxy field if defined, otherwise fall back to registry key
-          // If proxy is explicitly false, skip this script entirely
-          const proxyKey = script?.proxy !== false ? (script?.proxy || key) : undefined
+          // Only proxy scripts that explicitly opt in with a proxy field
+          const proxyKey = script?.proxy || undefined
           if (proxyKey) {
             const proxyConfig = proxyConfigs[proxyKey]
             if (proxyConfig?.routes) {
