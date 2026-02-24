@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import type { Nuxt } from '@nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
 import { extendViteConfig, useNuxt } from '@nuxt/kit'
+import { addCustomTab } from '@nuxt/devtools-kit'
 import type { ModuleOptions } from './module'
 import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
@@ -33,19 +34,17 @@ export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver[
     })
   }
 
-  nuxt.hook('devtools:customTabs', (tabs) => {
-    tabs.push({
-      // unique identifier
-      name: 'nuxt-scripts',
-      // title to display in the tab
-      title: 'Scripts',
-      // any icon from Iconify, or a URL to an image
-      icon: 'carbon:script',
-      // iframe view
-      view: {
-        type: 'iframe',
-        src: DEVTOOLS_UI_ROUTE,
-      },
-    })
+  addCustomTab({
+    // unique identifier
+    name: 'nuxt-scripts',
+    // title to display in the tab
+    title: 'Scripts',
+    // any icon from Iconify, or a URL to an image
+    icon: 'carbon:script',
+    // iframe view
+    view: {
+      type: 'iframe',
+      src: DEVTOOLS_UI_ROUTE,
+    },
   })
 }
