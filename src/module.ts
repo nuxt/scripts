@@ -547,7 +547,7 @@ export default defineNuxtPlugin({
         const unsupportedScripts: string[] = []
         for (const key of registryKeys) {
           // Find the registry script definition
-          const script = registryScriptsWithImport.find(s => s.import.name === `useScript${key.charAt(0).toUpperCase() + key.slice(1)}`)
+          const script = registryScriptsWithImport.find(s => s.import.name.toLowerCase() === `usescript${key.toLowerCase()}`)
           // Only proxy scripts that explicitly opt in with a proxy field
           const proxyKey = script?.proxy || undefined
           if (proxyKey) {
@@ -579,7 +579,7 @@ export default defineNuxtPlugin({
         // Collect rewrites for all configured registry scripts
         const allRewrites: Array<{ from: string, to: string }> = []
         for (const key of registryKeys) {
-          const script = registryScriptsWithImport.find(s => s.import.name === `useScript${key.charAt(0).toUpperCase() + key.slice(1)}`)
+          const script = registryScriptsWithImport.find(s => s.import.name.toLowerCase() === `usescript${key.toLowerCase()}`)
           const proxyKey = script?.proxy !== false ? (script?.proxy || key) : undefined
           if (proxyKey) {
             const proxyConfig = proxyConfigs[proxyKey]
