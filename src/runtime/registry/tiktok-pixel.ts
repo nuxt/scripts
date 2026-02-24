@@ -52,7 +52,9 @@ export interface TikTokPixelApi {
 }
 
 declare global {
-  interface Window extends TikTokPixelApi {}
+  interface Window extends TikTokPixelApi {
+    TiktokAnalyticsObject: string
+  }
 }
 
 export const TikTokPixelOptions = object({
@@ -80,6 +82,7 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
     clientInit: import.meta.server
       ? undefined
       : () => {
+          window.TiktokAnalyticsObject = 'ttq'
           const ttq: TikTokPixelApi['ttq'] = window.ttq = function (...params: any[]) {
             // @ts-expect-error untyped
             if (ttq.callMethod) {
