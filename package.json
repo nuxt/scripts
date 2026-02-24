@@ -105,6 +105,7 @@
     }
   },
   "dependencies": {
+    "@nuxt/devtools-kit": "^3.2.1",
     "@nuxt/kit": "^4.3.1",
     "@vueuse/core": "^14.2.1",
     "consola": "^3.4.2",
@@ -125,7 +126,6 @@
     "valibot": "^1.2.0"
   },
   "devDependencies": {
-    "@nuxt/devtools-kit": "^3.2.1",
     "@nuxt/devtools-ui-kit": "^3.2.1",
     "@nuxt/eslint-config": "^1.15.2",
     "@nuxt/module-builder": "^1.0.2",
