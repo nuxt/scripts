@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { parse } from 'acorn-loose'
 import { joinURL, withBase, hasProtocol } from 'ufo'
 import { hash } from 'ohash'
 import { $fetch } from 'ofetch'
@@ -100,7 +99,7 @@ vi.mocked(hash).mockImplementation(src => src.pathname)
 async function transform(code: string | string[], options?: AssetBundlerTransformerOptions) {
   const plugin = NuxtScriptBundleTransformer(options).vite() as any
   const res = await plugin.transform.handler.call(
-    { parse: (code: string) => parse(code, { ecmaVersion: 2022, sourceType: 'module', allowImportExportEverywhere: true, allowAwaitOutsideFunction: true }) },
+    {},
     Array.isArray(code) ? code.join('\n') : code,
     'file.js',
   )
