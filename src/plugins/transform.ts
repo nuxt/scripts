@@ -310,6 +310,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // not supported
                     if (src === false)
                       return
+                    if (!src && registryNode.src)
+                      src = registryNode.src
                   }
                 }
 
