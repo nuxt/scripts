@@ -1,0 +1,86 @@
+{
+  "body": {
+    "context": {
+      "anonymized": {
+        "ad": {
+          "jsb_status": 2,
+          "sdk_env": "external",
+        },
+        "device": {
+          "platform": "pc",
+        },
+        "index": 0,
+        "library": {
+          "name": "pixel.js",
+          "version": "2.2.1",
+        },
+        "page": {
+          "load_progress": "2",
+          "referrer": "",
+          "url": "http://127.0.0.1:<PORT>/tiktok",
+        },
+        "pageview_id": "<UUID>-hl1Rj.0.0::<UUID>",
+        "pixel": {
+          "code": "TEST_PIXEL_ID",
+          "codes": "TEST_PIXEL_ID",
+          "runtime": "1",
+        },
+        "session_id": "<UUID>::ge79D3CLeVHuobW8xFAW",
+        "sessions": [],
+        "user": {},
+        "userAgent": "Mozilla/5.0 (compatible; Chrome/145.0)",
+        "variation_id": "default",
+      },
+      "original": {
+        "ad": {
+          "jsb_status": 2,
+          "sdk_env": "external",
+        },
+        "device": {
+          "platform": "pc",
+        },
+        "index": 0,
+        "library": {
+          "name": "pixel.js",
+          "version": "2.2.1",
+        },
+        "page": {
+          "load_progress": "2",
+          "referrer": "",
+          "url": "http://127.0.0.1:<PORT>/tiktok",
+        },
+        "pageview_id": "<UUID>-hl1Rj.0.0::<UUID>",
+        "pixel": {
+          "code": "TEST_PIXEL_ID",
+          "codes": "TEST_PIXEL_ID",
+          "runtime": "1",
+        },
+        "session_id": "<UUID>::ge79D3CLeVHuobW8xFAW",
+        "sessions": [],
+        "user": {},
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+        "variation_id": "default",
+      },
+    },
+  },
+  "headers": {
+    "content-length": {
+      "anonymized": "<removed>",
+      "original": "1521",
+    },
+    "cookie": {
+      "anonymized": "<removed>",
+      "original": "_rdt_uuid=<dynamic>; _scid=<dynamic>; _scid_r=<dynamic>; _ga=<dynamic>; _ga_TR58L0EF8P=<dynamic>; ajs_anonymous_id=<dynamic>",
+    },
+    "user-agent": {
+      "anonymized": "Mozilla/5.0 (compatible; Chrome/145.0)",
+      "original": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+    },
+    "x-forwarded-for": {
+      "anonymized": "127.0.0.0",
+      "original": "<absent>",
+    },
+  },
+  "method": "POST",
+  "target": "analytics.tiktok.com/api/v2/pixel/act",
+}

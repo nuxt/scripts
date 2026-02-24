@@ -14,15 +14,5 @@
     },
   },
   "method": "GET",
-  "query": {
-    "sh": {
-      "anonymized": "1080",
-      "original": "720",
-    },
-    "sw": {
-      "anonymized": "1920",
-      "original": "1280",
-    },
-  },
-  "target": "www.facebook.com/tr/",
+  "target": "analytics.tiktok.com/i18n/pixel/config.js",
 }

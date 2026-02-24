@@ -8,7 +8,7 @@
         "sdkid": "TEST_PIXEL_ID",
       },
     },
-    "path": "/_proxy/tiktoki18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq",
+    "path": "/_proxy/tiktok/i18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq",
     "privacy": "anonymize",
     "stripped": {
       "body": null,
@@ -18,5 +18,245 @@
       },
     },
     "targetUrl": "https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq",
+  },
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {},
+    },
+    "path": "/_proxy/tiktok/i18n/pixel/static/main.MTEwMjY2ZTExMA.js",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {},
+    },
+    "targetUrl": "https://analytics.tiktok.com/i18n/pixel/static/main.MTEwMjY2ZTExMA.js",
+  },
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {},
+    },
+    "path": "/_proxy/tiktok/i18n/pixel/static/identify_31760074.js",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {},
+    },
+    "targetUrl": "https://analytics.tiktok.com/i18n/pixel/static/identify_31760074.js",
+  },
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {
+        "hostname": "127.0.0.1",
+        "sdkid": "TEST_PIXEL_ID",
+      },
+    },
+    "path": "/_proxy/tiktok/i18n/pixel/config.js?sdkid=TEST_PIXEL_ID&hostname=127.0.0.1",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {
+        "hostname": "127.0.0.1",
+        "sdkid": "TEST_PIXEL_ID",
+      },
+    },
+    "targetUrl": "https://analytics.tiktok.com/i18n/pixel/config.js?sdkid=TEST_PIXEL_ID&hostname=127.0.0.1",
+  },
+  {
+    "method": "POST",
+    "original": {
+      "body": {
+        "_inspection": {
+          "vids": "",
+        },
+        "action": "Click",
+        "auto_collected_properties": {
+          "page_trigger": "Click",
+          "trigger_element": {
+            "attributes": {
+              "id": "trigger-pageview",
+            },
+            "inner_text": "Track PageView",
+            "num_child_buttons": 0,
+            "position": {
+              "x": 8,
+              "y": 117.875,
+            },
+            "tag": "BUTTON",
+            "timestamp": "2026-02-24T15:07:29.006Z",
+            "xpath": "/HTML/body[1]/div[1]/div[1]/div[1]/div[2]/button[1]",
+          },
+        },
+        "context": {
+          "ad": {
+            "jsb_status": 2,
+            "sdk_env": "external",
+          },
+          "device": {
+            "platform": "pc",
+          },
+          "index": 0,
+          "library": {
+            "name": "pixel.js",
+            "version": "2.2.1",
+          },
+          "page": {
+            "load_progress": "2",
+            "referrer": "",
+            "url": "http://127.0.0.1:<PORT>/tiktok",
+          },
+          "pageview_id": "<UUID>-hl1Rj.0.0::<UUID>",
+          "pixel": {
+            "code": "TEST_PIXEL_ID",
+            "codes": "TEST_PIXEL_ID",
+            "runtime": "1",
+          },
+          "session_id": "<UUID>::ge79D3CLeVHuobW8xFAW",
+          "sessions": [],
+          "user": {},
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+          "variation_id": "default",
+        },
+        "event_id": "",
+        "is_onsite": false,
+        "message_id": "messageId-1771945649010-2648138934770",
+        "properties": {},
+        "signal_diagnostic_labels": {
+          "hashed_eb_email": {
+            "label": "missing",
+          },
+          "hashed_eb_phone": {
+            "label": "missing",
+          },
+          "hashed_email": {
+            "label": "missing",
+          },
+          "hashed_phone": {
+            "label": "missing",
+          },
+          "raw_auto_email": {
+            "label": "missing",
+          },
+          "raw_auto_phone": {
+            "label": "missing",
+          },
+          "raw_eb_email": {
+            "label": "missing",
+          },
+          "raw_eb_phone": {
+            "label": "missing",
+          },
+          "raw_email": {
+            "label": "missing",
+          },
+          "raw_phone": {
+            "label": "missing",
+          },
+        },
+        "timestamp": "2026-02-24T15:07:29.010Z",
+      },
+      "query": {},
+    },
+    "path": "/_proxy/tiktok/api/v2/pixel/act",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": {
+        "_inspection": {
+          "vids": "",
+        },
+        "action": "Click",
+        "auto_collected_properties": {
+          "page_trigger": "Click",
+          "trigger_element": {
+            "attributes": {
+              "id": "trigger-pageview",
+            },
+            "inner_text": "Track PageView",
+            "num_child_buttons": 0,
+            "position": {
+              "x": 8,
+              "y": 117.875,
+            },
+            "tag": "BUTTON",
+            "timestamp": "2026-02-24T15:07:29.006Z",
+            "xpath": "/HTML/body[1]/div[1]/div[1]/div[1]/div[2]/button[1]",
+          },
+        },
+        "context": {
+          "ad": {
+            "jsb_status": 2,
+            "sdk_env": "external",
+          },
+          "device": {
+            "platform": "pc",
+          },
+          "index": 0,
+          "library": {
+            "name": "pixel.js",
+            "version": "2.2.1",
+          },
+          "page": {
+            "load_progress": "2",
+            "referrer": "",
+            "url": "http://127.0.0.1:<PORT>/tiktok",
+          },
+          "pageview_id": "<UUID>-hl1Rj.0.0::<UUID>",
+          "pixel": {
+            "code": "TEST_PIXEL_ID",
+            "codes": "TEST_PIXEL_ID",
+            "runtime": "1",
+          },
+          "session_id": "<UUID>::ge79D3CLeVHuobW8xFAW",
+          "sessions": [],
+          "user": {},
+          "userAgent": "Mozilla/5.0 (compatible; Chrome/145.0)",
+          "variation_id": "default",
+        },
+        "event_id": "",
+        "is_onsite": false,
+        "message_id": "messageId-1771945649010-2648138934770",
+        "properties": {},
+        "signal_diagnostic_labels": {
+          "hashed_eb_email": {
+            "label": "missing",
+          },
+          "hashed_eb_phone": {
+            "label": "missing",
+          },
+          "hashed_email": {
+            "label": "missing",
+          },
+          "hashed_phone": {
+            "label": "missing",
+          },
+          "raw_auto_email": {
+            "label": "missing",
+          },
+          "raw_auto_phone": {
+            "label": "missing",
+          },
+          "raw_eb_email": {
+            "label": "missing",
+          },
+          "raw_eb_phone": {
+            "label": "missing",
+          },
+          "raw_email": {
+            "label": "missing",
+          },
+          "raw_phone": {
+            "label": "missing",
+          },
+        },
+        "timestamp": "2026-02-24T15:07:29.010Z",
+      },
+      "query": {},
+    },
+    "targetUrl": "https://analytics.tiktok.com/api/v2/pixel/act",
   },
 ]

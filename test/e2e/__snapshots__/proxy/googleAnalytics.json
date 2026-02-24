@@ -39,7 +39,7 @@
         "v": "2",
       },
     },
-    "path": "/_proxy/gag/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1280x720&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AEAAAAQ&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google%20Analytics%20-%20First%20Party&en=scroll&epn.percent_scrolled=90&_et=<ET>&tfd=<TFD>",
+    "path": "/_proxy/ga/g/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1280x720&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AEAAAAQ&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google%20Analytics%20-%20First%20Party&en=scroll&epn.percent_scrolled=90&_et=<ET>&tfd=<TFD>",
     "privacy": "anonymize",
     "stripped": {
       "body": null,
@@ -122,7 +122,7 @@
         "v": "2",
       },
     },
-    "path": "/_proxy/gag/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1280x720&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google%20Analytics%20-%20First%20Party&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=<TFD>",
+    "path": "/_proxy/ga/g/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1280x720&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google%20Analytics%20-%20First%20Party&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=<TFD>",
     "privacy": "anonymize",
     "stripped": {
       "body": null,
@@ -205,7 +205,7 @@
         "v": "2",
       },
     },
-    "path": "/_proxy/gag/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1280x720&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AEAAAAQ&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google%20Analytics%20-%20First%20Party&en=scroll&epn.percent_scrolled=90&_et=<ET>&tfd=<TFD>",
+    "path": "/_proxy/ga/g/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1280x720&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AEAAAAQ&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google%20Analytics%20-%20First%20Party&en=scroll&epn.percent_scrolled=90&_et=<ET>&tfd=<TFD>",
     "privacy": "anonymize",
     "stripped": {
       "body": null,

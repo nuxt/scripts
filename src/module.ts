@@ -330,22 +330,23 @@ export default defineNuxtModule<ModuleOptions>({
           logger.warn(`[partytown] "${scriptKey}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
         }
 
-        const existing = config.registry[scriptKey]
+        const reg = config.registry as Record<string, any>
+        const existing = reg[scriptKey]
         if (Array.isArray(existing)) {
           // [input, options] format - merge partytown into options
           existing[1] = { ...existing[1], partytown: true }
         }
         else if (existing && typeof existing === 'object' && existing !== true && existing !== 'mock') {
           // input object format - wrap with partytown option
-          config.registry[scriptKey] = [existing, { partytown: true }] as any
+          reg[scriptKey] = [existing, { partytown: true }]
         }
         else if (existing === true || existing === 'mock') {
           // simple enable - convert to array with partytown
-          config.registry[scriptKey] = [{}, { partytown: true }] as any
+          reg[scriptKey] = [{}, { partytown: true }]
         }
         else {
           // not configured - add with partytown enabled
-          config.registry[scriptKey] = [{}, { partytown: true }] as any
+          reg[scriptKey] = [{}, { partytown: true }]
         }
       }
 
@@ -518,7 +519,7 @@ export default defineNuxtPlugin({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
-      await nuxt.hooks.callHook('scripts:registry', registryScripts)
+      await nuxt.hooks.callHook('scripts:registry' as any, registryScripts)
 
       for (const script of registryScripts) {
         if (script.import?.name && !script._importRegistered) {
