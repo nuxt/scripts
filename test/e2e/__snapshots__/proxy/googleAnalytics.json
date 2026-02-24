@@ -82,6 +82,28 @@
     "targetUrl": "https://www.google-analytics.com/g/collect?v=2&tid=G-TR58L0EF8P&gtm=<GTM>&_p=<P>&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=<CID>&ul=<UL>&sr=1920x1080&uaa=x86&uab=64&uafvl=<UAFVL>&uamb=0&uam=&uap=Linux&uapv=<UAPV>&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AEAAAAQ&_s=<S>&tag_exp=<TAG_EXP>&sid=<SID>&sct=1&seg=0&dl=http%3A%2F%2F127.0.0.1%2Fga&dt=Google+Analytics+-+First+Party&en=scroll&epn.percent_scrolled=90&_et=<ET>&tfd=<TFD>",
   },
   {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {
+        "cx": "c",
+        "gtm": "<GTM>",
+        "id": "G-TR58L0EF8P",
+      },
+    },
+    "path": "/_proxy/gtm/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=<GTM>",
+    "privacy": "anonymize",
+    "stripped": {
+      "body": null,
+      "query": {
+        "cx": "c",
+        "gtm": "<GTM>",
+        "id": "G-TR58L0EF8P",
+      },
+    },
+    "targetUrl": "https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=<GTM>",
+  },
+  {
     "method": "POST",
     "original": {
       "body": null,

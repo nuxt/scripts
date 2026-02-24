@@ -356,6 +356,16 @@ function extractRequestDiff(capture: Record<string, any>): Record<string, any> {
   return JSON.parse(json)
 }
 
+function captureToSnapshotName(capture: Record<string, any>): string {
+  try {
+    const u = new URL(capture.targetUrl)
+    return (u.host + u.pathname).replace(/^www\./, '').replace(/\//g, '~').replace(/~$/, '')
+  }
+  catch {
+    return 'unknown'
+  }
+}
+
 async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Record<string, any>[], provider: string) {
   // File snapshots document the exact request shape for review purposes.
   // Real analytics scripts produce non-deterministic request counts, cookies, and timing
@@ -363,9 +373,14 @@ async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Rec
   // (verifyFingerprintingAnonymized, proxy routing) above. Update with `vitest -u`.
   try {
     await expect(captures).toMatchFileSnapshot(`__snapshots__/proxy/${provider}.json`)
+    const nameCounts = new Map<string, number>()
     for (let i = 0; i < rawCaptures.length; i++) {
       const diff = extractRequestDiff(rawCaptures[i])
-      await expect(diff).toMatchFileSnapshot(`__snapshots__/proxy/${provider}/${i}.diff.json`)
+      const baseName = captureToSnapshotName(rawCaptures[i])
+      const count = (nameCounts.get(baseName) || 0) + 1
+      nameCounts.set(baseName, count)
+      const fileName = count > 1 ? `${baseName}~${count}` : baseName
+      await expect(diff).toMatchFileSnapshot(`__snapshots__/proxy/${provider}/${fileName}.diff.json`)
     }
   }
   catch {
