@@ -1,2 +1,3 @@
 imports.autoImport=true
-modules[]=@nuxt/scripts
+modules.0="@nuxt/scripts"
+setups.@nuxt/test-utils="4.0.0"
