@@ -8,6 +8,11 @@ import { logger } from '../logger'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 
+type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
+  $scripts: Record<string, UseScriptContext<any> | undefined>
+  _scripts: Record<string, NuxtDevToolsScriptInstance>
+}
+
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
     defaultScriptOptions: NuxtUseScriptOptions
@@ -33,7 +38,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       script: [{ src, type: 'text/partytown' }],
     })
     // Register with nuxtApp.$scripts for DevTools visibility
-    const nuxtApp = useNuxtApp()
+    const nuxtApp = useNuxtApp() as NuxtScriptsApp
     nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
     const status = ref('loaded')
     const stub = {
@@ -63,8 +68,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
 
   // browser hint optimizations
-  const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
-  const nuxtApp = useNuxtApp()
+  const nuxtApp = useNuxtApp() as NuxtScriptsApp
+  const id = String(resolveScriptKey(input))
   options.head = options.head || injectHead()
   if (!options.head) {
     throw new Error('useScript() has been called without Nuxt context.')
@@ -139,7 +144,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
     function syncScripts() {
       nuxtApp._scripts[instance.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts })
+      nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
     }
 
     if (!nuxtApp._scripts[instance.id]) {

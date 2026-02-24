@@ -30,6 +30,12 @@ import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { getAllProxyConfigs, getSWInterceptRules } from './proxy-configs'
 
+declare module '@nuxt/schema' {
+  interface NuxtHooks {
+    'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
+  }
+}
+
 /**
  * Privacy mode for first-party proxy requests.
  *
@@ -295,7 +301,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Resolve first-party configuration
     const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static']
-    const preset = nuxt.options.nitro?.preset || process.env.NITRO_PRESET || ''
+    const preset = process.env.NITRO_PRESET || ''
     const isStaticPreset = staticPresets.includes(preset)
 
     const firstPartyEnabled = !!config.firstParty
