@@ -6,7 +6,7 @@ const plugin = NuxtScriptsCheckScripts().vite() as any
 
 async function transform(code: string | string[]) {
   const errors = []
-  await plugin.transform.call(
+  await plugin.transform.handler.call(
     {
       error: (e: Error) => {
         errors.push(e)
