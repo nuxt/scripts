@@ -34,6 +34,7 @@ import type { PayPalInput } from './registry/paypal'
 import type { PostHogInput } from './registry/posthog'
 import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
+import type { GravatarInput } from './registry/gravatar'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -186,6 +187,7 @@ export interface ScriptRegistry {
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
   [key: `${string}-npm`]: NpmInput
+  gravatar?: GravatarInput
 }
 
 export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
@@ -219,7 +221,7 @@ export type RegistryScriptInput<
       scriptInput?: ScriptInput
       scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
     })
-    | Partial<InferIfSchema<T>> & (
+  | Partial<InferIfSchema<T>> & (
     CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

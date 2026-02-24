@@ -172,6 +172,19 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/hotjar-insights/**`]: { proxy: 'https://insights.hotjar.com/**' },
       },
     },
+
+    gravatar: {
+      rewrite: [
+        // Hovercards JS and related scripts
+        { from: 'secure.gravatar.com', to: `${collectPrefix}/gravatar` },
+        // Avatar images (used by hovercards internally)
+        { from: 'gravatar.com/avatar', to: `${collectPrefix}/gravatar-avatar` },
+      ],
+      routes: {
+        [`${collectPrefix}/gravatar/**`]: { proxy: 'https://secure.gravatar.com/**' },
+        [`${collectPrefix}/gravatar-avatar/**`]: { proxy: 'https://gravatar.com/avatar/**' },
+      },
+    },
   } satisfies Record<string, ProxyConfig>
 }
 
