@@ -469,7 +469,8 @@ export default defineNuxtPlugin({
             const pathWithoutPrefix = rule.pathPrefix
               ? parsed.pathname.slice(rule.pathPrefix.length)
               : parsed.pathname;
-            const proxyUrl = rule.target + pathWithoutPrefix + parsed.search;
+            const separator = pathWithoutPrefix.startsWith('/') ? '' : '/';
+            const proxyUrl = rule.target + separator + pathWithoutPrefix + parsed.search;
 
             return originalBeacon(proxyUrl, data);
           }

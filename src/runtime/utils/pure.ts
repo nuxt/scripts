@@ -90,7 +90,7 @@ export function rewriteScriptUrls(content: string, rewrites: ProxyRewrite[]): st
       if (shouldRewrite) {
         // If suffix starts with ? or # (query/hash only), concatenate directly
         // joinURL would incorrectly add a / before the query string
-        const rewritten = rewriteSuffix.startsWith('?') || rewriteSuffix.startsWith('#')
+        const rewritten = rewriteSuffix === '/' || rewriteSuffix.startsWith('?') || rewriteSuffix.startsWith('#')
           ? to + rewriteSuffix
           : joinURL(to, rewriteSuffix)
         return quote + rewritten + quote

@@ -36,7 +36,8 @@ self.addEventListener('fetch', (event) => {
 
       // console.log('[nuxt-scripts-sw] Intercepting:', url.href, '->', rule.target + strippedPath);
 
-      const proxyUrl = new URL(rule.target + strippedPath + url.search, self.location.origin)
+      const separator = strippedPath.startsWith('/') ? '' : '/'
+      const proxyUrl = new URL(rule.target + separator + strippedPath + url.search, self.location.origin)
       const clonedRequest = event.request.clone()
       event.respondWith(
         fetch(proxyUrl.href, {
