@@ -618,7 +618,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/')
           && (isAllowedDomain(c.targetUrl, 'google-analytics.com') || isAllowedDomain(c.targetUrl, 'analytics.google.com'))
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -652,7 +652,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/gtm')
           && isAllowedDomain(c.targetUrl, 'googletagmanager.com')
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -691,7 +691,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/meta')
           && (isAllowedDomain(c.targetUrl, 'facebook.com') || isAllowedDomain(c.targetUrl, 'facebook.net'))
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -728,7 +728,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/segment')
           && (isAllowedDomain(c.targetUrl, 'segment.io') || isAllowedDomain(c.targetUrl, 'segment.com'))
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -749,7 +749,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/x')
           && (isAllowedDomain(c.targetUrl, 'twitter.com') || isAllowedDomain(c.targetUrl, 't.co'))
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -785,7 +785,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/snap')
           && isAllowedDomain(c.targetUrl, 'snapchat.com')
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -830,7 +830,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/clarity')
           && isAllowedDomain(c.targetUrl, 'clarity.ms')
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -870,7 +870,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/hotjar')
           && isAllowedDomain(c.targetUrl, 'hotjar.com')
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -908,7 +908,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/tiktok')
           && isAllowedDomain(c.targetUrl, 'tiktok.com')
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 
@@ -946,7 +946,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/reddit')
           && isAllowedDomain(c.targetUrl, 'reddit.com')
-          && typeof c.privacy === 'object' && c.privacy !== null,
+          && c.privacy && typeof c.privacy === 'object' && typeof c.privacy.ip === 'boolean' && typeof c.privacy.userAgent === 'boolean' && typeof c.privacy.language === 'boolean' && typeof c.privacy.screen === 'boolean' && typeof c.privacy.timezone === 'boolean' && typeof c.privacy.hardware === 'boolean',
         )
         expect(hasValidCapture).toBe(true)
 

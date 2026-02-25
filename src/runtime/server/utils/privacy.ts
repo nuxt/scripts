@@ -394,8 +394,16 @@ export function stripPayloadFingerprinting(
 
     // Language params — controlled by language flag
     const isLanguageParam = NORMALIZE_PARAMS.language.some(pm => lowerKey === pm.toLowerCase())
-    if (isLanguageParam && typeof value === 'string') {
-      result[key] = p.language ? normalizeLanguage(value) : value
+    if (isLanguageParam) {
+      if (Array.isArray(value)) {
+        result[key] = p.language ? value.map(v => typeof v === 'string' ? normalizeLanguage(v) : v) : value
+      }
+      else if (typeof value === 'string') {
+        result[key] = p.language ? normalizeLanguage(value) : value
+      }
+      else {
+        result[key] = value
+      }
       continue
     }
 

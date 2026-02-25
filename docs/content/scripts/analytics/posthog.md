@@ -161,7 +161,7 @@ export default defineNuxtConfig({
 
 ## First-Party Proxy
 
-When [first-party mode](/docs/guides/first-party) is enabled, PostHog requests are automatically proxied through your own server. This improves event capture reliability by avoiding ad blockers. No privacy anonymization is applied — PostHog is a trusted, open-source tool that requires full fidelity data for GeoIP enrichment, feature flags, and session replay.
+When [first-party mode](/docs/guides/first-party) is enabled, PostHog requests are automatically proxied through your own server. This improves event capture reliability by avoiding ad blockers. No privacy anonymization is applied — PostHog is a trusted, open-source tool that requires full-fidelity data for GeoIP enrichment, feature flags, and session replay.
 
 No additional configuration is needed — the module automatically sets `apiHost` to route through your server's proxy endpoint:
 

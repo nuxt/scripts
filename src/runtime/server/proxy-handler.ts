@@ -87,14 +87,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Resolve effective privacy: per-script is the base, global user override on top
-  const perScriptInput = matchedRoutePattern ? routePrivacy[matchedRoutePattern] : undefined
-  const perScriptResolved = resolvePrivacy(perScriptInput)
-  // Global override: when set by user, it overrides per-script field-by-field
-  const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
-  const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
-
-  if (!targetBase || !matchedPrefix) {
+  if (!targetBase || !matchedPrefix || !matchedRoutePattern) {
     log('[proxy] No match for path:', path)
     throw createError({
       statusCode: 404,
@@ -102,6 +95,13 @@ export default defineEventHandler(async (event) => {
       message: `No proxy target found for path: ${path}`,
     })
   }
+
+  // Resolve effective privacy: per-script is the base, global user override on top
+  const perScriptInput = routePrivacy[matchedRoutePattern]
+  const perScriptResolved = resolvePrivacy(perScriptInput)
+  // Global override: when set by user, it overrides per-script field-by-field
+  const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
+  const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
 
   // Build target URL with stripped query params
   let targetPath = path.slice(matchedPrefix.length)
@@ -142,7 +142,8 @@ export default defineEventHandler(async (event) => {
       || lowerKey === 'cf-connecting-ip' || lowerKey === 'true-client-ip'
       || lowerKey === 'x-client-ip' || lowerKey === 'x-cluster-client-ip') {
       if (privacy.ip) continue // skip — we add anonymized version below
-      headers[key] = value
+      // Use lowercase key to avoid duplicate headers with mixed casing
+      headers[lowerKey] = value
       continue
     }
 
@@ -160,9 +161,17 @@ export default defineEventHandler(async (event) => {
 
     // Client Hints (hardware flag)
     if (lowerKey === 'sec-ch-ua' || lowerKey === 'sec-ch-ua-full-version-list') {
-      headers[key] = privacy.hardware
+      headers[lowerKey] = privacy.hardware
         ? value.replace(/;v="(\d+)\.[^"]*"/g, ';v="$1"')
         : value
+      continue
+    }
+
+    // High-entropy client hints — strip when hardware flag active
+    if (lowerKey === 'sec-ch-ua-platform-version' || lowerKey === 'sec-ch-ua-arch'
+      || lowerKey === 'sec-ch-ua-model' || lowerKey === 'sec-ch-ua-bitness') {
+      if (privacy.hardware) continue // strip high-entropy hints
+      headers[lowerKey] = value
       continue
     }
 
@@ -170,17 +179,24 @@ export default defineEventHandler(async (event) => {
     headers[key] = value
   }
 
-  // IP handling: add x-forwarded-for based on ip flag
-  const clientIP = getRequestIP(event, { xForwardedFor: true })
-  if (clientIP) {
-    if (privacy.ip) {
-      // Anonymize IP for country-level geo
-      headers['x-forwarded-for'] = anonymizeIP(clientIP)
+  // IP handling: only set x-forwarded-for if not already copied from the header loop
+  if (!headers['x-forwarded-for']) {
+    const clientIP = getRequestIP(event, { xForwardedFor: true })
+    if (clientIP) {
+      if (privacy.ip) {
+        headers['x-forwarded-for'] = anonymizeIP(clientIP)
+      }
+      else {
+        headers['x-forwarded-for'] = clientIP
+      }
     }
-    else {
-      // Forward real IP — needed for services like PostHog geolocation
-      headers['x-forwarded-for'] = clientIP
-    }
+  }
+  else if (privacy.ip) {
+    // Anonymize each IP in the existing chain
+    headers['x-forwarded-for'] = headers['x-forwarded-for']
+      .split(',')
+      .map(ip => anonymizeIP(ip.trim()))
+      .join(', ')
   }
 
   // Read and process request body if present

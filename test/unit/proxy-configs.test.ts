@@ -168,15 +168,36 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('segment')
       expect(configs).toHaveProperty('clarity')
       expect(configs).toHaveProperty('hotjar')
+      expect(configs).toHaveProperty('xPixel')
+      expect(configs).toHaveProperty('snapchatPixel')
+      expect(configs).toHaveProperty('redditPixel')
+      expect(configs).toHaveProperty('posthog')
     })
 
     it('all configs have valid structure', () => {
       const configs = getAllProxyConfigs('/_scripts/c')
+      const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
+      const passthrough = ['segment', 'googleTagManager', 'posthog']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have routes`).toHaveProperty('routes')
         expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')
         if (config.rewrite) {
           expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
+        }
+        // Every config must declare a privacy object
+        expect(config, `${key} should have privacy`).toHaveProperty('privacy')
+        expect(typeof config.privacy, `${key}.privacy should be an object`).toBe('object')
+
+        if (fullAnonymize.includes(key)) {
+          expect(config.privacy, `${key} should be fully anonymized`).toEqual({
+            ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true,
+          })
+        }
+        if (passthrough.includes(key)) {
+          // All flags should be false (no-op privacy)
+          for (const flag of Object.values(config.privacy)) {
+            expect(flag, `${key} privacy flags should be false`).toBe(false)
+          }
         }
       }
     })

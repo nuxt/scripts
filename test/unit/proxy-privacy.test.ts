@@ -146,8 +146,6 @@ describe('proxy privacy - payload analysis', () => {
           || NORMALIZE_PARAMS.userAgent.includes(key)
       })
 
-      console.warn('GA fingerprinting params found:', hardwareParams)
-      console.warn('GA normalized params:', normalizedParams)
       expect(hardwareParams).toContain('uip') // IP
       expect(hardwareParams).toContain('cid') // Client ID
       expect(hardwareParams).toContain('uid') // User ID
@@ -162,7 +160,6 @@ describe('proxy privacy - payload analysis', () => {
         return NORMALIZE_PARAMS.language.includes(key)
       })
 
-      console.warn('GA params to normalize:', normalizeParams)
       expect(normalizeParams).toContain('ul') // Language
     })
 
@@ -174,7 +171,6 @@ describe('proxy privacy - payload analysis', () => {
           || ALLOWED_PARAMS.time.includes(key)
       })
 
-      console.warn('GA safe params:', safeParams)
       expect(safeParams).toContain('dt') // Title
       expect(safeParams).toContain('dl') // Location
       expect(safeParams).toContain('dr') // Referrer
@@ -195,7 +191,6 @@ describe('proxy privacy - payload analysis', () => {
         if (STRIP_PARAMS.browserVersion.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
       }
 
-      console.warn('Meta fingerprinting params found:', hardwareParams)
       expect(hardwareParams).toContain('client_ip_address')
       expect(hardwareParams).toContain('external_id')
       expect(hardwareParams).toContain('ud') // User data
@@ -215,7 +210,6 @@ describe('proxy privacy - payload analysis', () => {
         if (STRIP_PARAMS.userId.some(p => lowerKey === p.toLowerCase())) hardwareParams.push(key)
       }
 
-      console.warn('X/Twitter fingerprinting params found:', hardwareParams)
       expect(hardwareParams).toContain('dv') // Device info - contains timezone, screen, platform etc.
       // bci/eci are batch/event counters, not fingerprinting — no longer in deviceInfo
       expect(hardwareParams).toContain('pl_id') // Pixel/placement ID
@@ -244,7 +238,6 @@ describe('proxy privacy - payload analysis', () => {
       if (fp.fonts) vectors.push('fonts')
       if (fp.connection) vectors.push('connection')
 
-      console.warn('All fingerprinting vectors:', vectors)
       expect(vectors.length).toBeGreaterThan(10)
     })
   })
