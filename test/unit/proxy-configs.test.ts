@@ -184,9 +184,14 @@ describe('proxy configs', () => {
         if (config.rewrite) {
           expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
         }
-        // Every config must declare a privacy object
-        expect(config, `${key} should have privacy`).toHaveProperty('privacy')
+        // Every config must declare a non-null privacy object with all six boolean flags
+        expect(config.privacy, `${key} should have privacy`).toBeDefined()
+        expect(config.privacy, `${key}.privacy should not be null`).not.toBeNull()
         expect(typeof config.privacy, `${key}.privacy should be an object`).toBe('object')
+        const privacyFlags = ['ip', 'userAgent', 'language', 'screen', 'timezone', 'hardware'] as const
+        for (const flag of privacyFlags) {
+          expect(typeof config.privacy[flag], `${key}.privacy.${flag} should be boolean`).toBe('boolean')
+        }
 
         if (fullAnonymize.includes(key)) {
           expect(config.privacy, `${key} should be fully anonymized`).toEqual({

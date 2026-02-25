@@ -38,7 +38,7 @@ function stripQueryFingerprinting(
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(stripped)) {
     if (value !== undefined && value !== null) {
-      params.set(key, String(value))
+      params.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
     }
   }
   return params.toString()
@@ -97,8 +97,12 @@ export default defineEventHandler(async (event) => {
   }
 
   // Resolve effective privacy: per-script is the base, global user override on top
+  // Fail-closed: missing per-script entry → full anonymization (most restrictive)
   const perScriptInput = routePrivacy[matchedRoutePattern]
-  const perScriptResolved = resolvePrivacy(perScriptInput)
+  if (debug && perScriptInput === undefined) {
+    log('[proxy] WARNING: No privacy config for route', matchedRoutePattern, '— defaulting to full anonymization')
+  }
+  const perScriptResolved = resolvePrivacy(perScriptInput ?? true)
   // Global override: when set by user, it overrides per-script field-by-field
   const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
   const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware

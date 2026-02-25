@@ -21,10 +21,15 @@ export interface ProxyPrivacy {
  * Privacy input: `true` = full anonymize, `false` = passthrough (still strips sensitive headers),
  * or a `ProxyPrivacy` object for granular control (unset flags default to `false` — opt-in).
  */
-export type ProxyPrivacyInput = boolean | ProxyPrivacy
+export type ProxyPrivacyInput = boolean | ProxyPrivacy | null
 
 /** Resolved privacy with all flags explicitly set. */
 export type ResolvedProxyPrivacy = Required<ProxyPrivacy>
+
+/** Full anonymization — all flags true. Used as fail-closed default. */
+const FULL_PRIVACY: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
+/** Passthrough — all flags false. */
+const NO_PRIVACY: ResolvedProxyPrivacy = { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
 
 /**
  * Normalize a privacy input to a fully-resolved object.
@@ -35,8 +40,8 @@ export type ResolvedProxyPrivacy = Required<ProxyPrivacy>
  * - `{ ip: true, hardware: true }` → only those active, rest off
  */
 export function resolvePrivacy(input?: ProxyPrivacyInput): ResolvedProxyPrivacy {
-  if (input === true) return { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
-  if (input === false || input === undefined || input === null) return { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
+  if (input === true) return { ...FULL_PRIVACY }
+  if (input === false || input === undefined || input === null) return { ...NO_PRIVACY }
   return {
     ip: input.ip ?? false,
     userAgent: input.userAgent ?? false,
@@ -367,7 +372,7 @@ export function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
   privacy?: ResolvedProxyPrivacy,
 ): Record<string, unknown> {
-  const p = privacy || { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
+  const p = privacy || FULL_PRIVACY
   const result: Record<string, unknown> = {}
 
   // Pre-scan for screen width to enable paired height bucketing.
