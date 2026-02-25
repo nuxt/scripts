@@ -735,7 +735,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })()"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })"`)
   })
 
   describe('configuration merging', () => {
@@ -773,7 +773,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })()"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })"`)
     })
 
     it('merges multiple properties from registry config', async () => {
@@ -811,7 +811,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })()"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })"`)
     })
 
     it('function arguments override merged registry config', async () => {
@@ -941,7 +941,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' } })()"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' } })"`)
     })
   })
 

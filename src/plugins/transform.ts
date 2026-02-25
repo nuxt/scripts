@@ -495,8 +495,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                           }
                         }
                         else {
-                        // No arguments at all, need to create the first argument
-                          s.appendRight(node.callee.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
+                        // No arguments at all, replace empty () with new argument
+                          s.overwrite(node.callee.end, node.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
                         }
                       }
                     })
