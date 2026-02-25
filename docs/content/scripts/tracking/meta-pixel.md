@@ -154,8 +154,7 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `connect.facebook.net`
 - Route tracking requests (`/tr`) through your server
-- Anonymize user IP addresses to subnet level
-- Generalize device fingerprinting data to common buckets
+- Full privacy anonymization — IP, User-Agent, language, screen, timezone, and hardware fingerprints are all anonymized (untrusted ad network)
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({

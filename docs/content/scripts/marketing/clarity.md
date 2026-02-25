@@ -132,8 +132,8 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `www.clarity.ms`
 - Route data/event collection (`d.clarity.ms`, `e.clarity.ms`) through your server
-- Anonymize user IP addresses to subnet level
-- Generalize device fingerprinting data to common buckets
+- Anonymize IP addresses, language, and hardware fingerprints (canvas, webgl, browser versions)
+- Preserve User-Agent, screen resolution, and timezone for accurate heatmaps and device filtering
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({

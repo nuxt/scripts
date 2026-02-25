@@ -174,9 +174,10 @@ describe('proxy configs', () => {
       const configs = getAllProxyConfigs('/_scripts/c')
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have routes`).toHaveProperty('routes')
-        expect(config, `${key} should have rewrite`).toHaveProperty('rewrite')
-        expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
         expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')
+        if (config.rewrite) {
+          expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
+        }
       }
     })
   })

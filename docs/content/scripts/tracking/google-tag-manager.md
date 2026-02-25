@@ -265,8 +265,7 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `www.googletagmanager.com`
 - Route all GTM requests through your server
-- Anonymize user IP addresses to subnet level
-- Generalize device fingerprinting data to common buckets
+- No privacy anonymization applied (container script loading only — no user data in these requests)
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({

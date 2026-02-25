@@ -8,9 +8,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-07-05',
 
   scripts: {
-    firstParty: {
-      privacy: 'anonymize', // Test with anonymize mode by default
-    },
+    firstParty: true, // Uses per-script privacy defaults from registry
     // Wait for SW to be ready before loading scripts that need interception
     defaultScriptOptions: {
       trigger: { serviceWorker: true },

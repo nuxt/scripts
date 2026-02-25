@@ -4,18 +4,22 @@ import { useStorage, useNitroApp } from 'nitropack/runtime'
 import { hash } from 'ohash'
 import { rewriteScriptUrls } from '../utils/pure'
 import {
-  FINGERPRINT_HEADERS,
-  IP_HEADERS,
   SENSITIVE_HEADERS,
   anonymizeIP,
   normalizeLanguage,
   normalizeUserAgent,
   stripPayloadFingerprinting,
+  resolvePrivacy,
+  mergePrivacy,
 } from './utils/privacy'
+import type { ProxyPrivacyInput } from './utils/privacy'
 
 interface ProxyConfig {
   routes: Record<string, string>
-  privacy: 'anonymize' | 'proxy'
+  /** Global user override — undefined means use per-script defaults */
+  privacy?: ProxyPrivacyInput
+  /** Per-script privacy from registry (every route has an entry) */
+  routePrivacy: Record<string, ProxyPrivacyInput>
   rewrites?: Array<{ from: string, to: string }>
   /** Cache duration for JavaScript responses in seconds (default: 3600 = 1 hour) */
   cacheTtl?: number
@@ -28,8 +32,9 @@ interface ProxyConfig {
  */
 function stripQueryFingerprinting(
   query: Record<string, unknown>,
+  privacy?: import('./utils/privacy').ResolvedProxyPrivacy,
 ): string {
-  const stripped = stripPayloadFingerprinting(query)
+  const stripped = stripPayloadFingerprinting(query, privacy)
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(stripped)) {
     if (value !== undefined && value !== null) {
@@ -46,7 +51,7 @@ function stripQueryFingerprinting(
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const nitro = useNitroApp()
-  const proxyConfig = config['nuxt-scripts-proxy'] as ProxyConfig | undefined
+  const proxyConfig = config['nuxt-scripts-proxy'] as unknown as ProxyConfig | undefined
 
   if (!proxyConfig) {
     throw createError({
@@ -55,7 +60,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { routes, privacy, cacheTtl = 3600, debug = import.meta.dev } = proxyConfig
+  const { routes, privacy: globalPrivacy, routePrivacy, cacheTtl = 3600, debug = import.meta.dev } = proxyConfig
   const path = event.path
   const log = debug
     ? (message: string, ...args: any[]) => {
@@ -67,6 +72,7 @@ export default defineEventHandler(async (event) => {
   // Find matching route (sort by length descending to match longest/most specific first)
   let targetBase: string | undefined
   let matchedPrefix: string | undefined
+  let matchedRoutePattern: string | undefined
 
   const sortedRoutes = Object.entries(routes).sort((a, b) => b[0].length - a[0].length)
   for (const [routePattern, target] of sortedRoutes) {
@@ -75,10 +81,18 @@ export default defineEventHandler(async (event) => {
     if (path.startsWith(prefix)) {
       targetBase = target.replace(/\/\*\*$/, '')
       matchedPrefix = prefix
+      matchedRoutePattern = routePattern
       log('[proxy] Matched:', prefix, '->', targetBase)
       break
     }
   }
+
+  // Resolve effective privacy: per-script is the base, global user override on top
+  const perScriptInput = matchedRoutePattern ? routePrivacy[matchedRoutePattern] : undefined
+  const perScriptResolved = resolvePrivacy(perScriptInput)
+  // Global override: when set by user, it overrides per-script field-by-field
+  const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
+  const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
 
   if (!targetBase || !matchedPrefix) {
     log('[proxy] No match for path:', path)
@@ -97,11 +111,11 @@ export default defineEventHandler(async (event) => {
   }
   let targetUrl = targetBase + targetPath
 
-  // Strip fingerprinting from query string in anonymize mode
-  if (privacy === 'anonymize') {
+  // Strip fingerprinting from query string when any privacy flag is active
+  if (anyPrivacy) {
     const query = getQuery(event)
     if (Object.keys(query).length > 0) {
-      const strippedQuery = stripQueryFingerprinting(query)
+      const strippedQuery = stripQueryFingerprinting(query, privacy)
       // Replace query string in URL
       const basePath = targetUrl.split('?')[0] || targetUrl
       targetUrl = strippedQuery ? `${basePath}?${strippedQuery}` : basePath
@@ -112,61 +126,60 @@ export default defineEventHandler(async (event) => {
   const originalHeaders = getHeaders(event)
   const headers: Record<string, string> = {}
 
-  // Process headers based on privacy mode
-  if (privacy === 'proxy') {
-    // Proxy mode: forward headers but strip sensitive auth/session headers
-    // to prevent leaking credentials to third-party analytics endpoints
-    for (const [key, value] of Object.entries(originalHeaders)) {
-      if (!value) continue
-      if (SENSITIVE_HEADERS.includes(key.toLowerCase())) continue
+  // Process headers based on per-flag privacy
+  for (const [key, value] of Object.entries(originalHeaders)) {
+    if (!value) continue
+    const lowerKey = key.toLowerCase()
+
+    // SENSITIVE_HEADERS always stripped regardless of privacy flags
+    if (SENSITIVE_HEADERS.includes(lowerKey)) continue
+
+    // Skip content-length when any privacy is active — body may be modified
+    if (anyPrivacy && lowerKey === 'content-length') continue
+
+    // IP-revealing headers — controlled by ip flag
+    if (lowerKey === 'x-forwarded-for' || lowerKey === 'x-real-ip' || lowerKey === 'forwarded'
+      || lowerKey === 'cf-connecting-ip' || lowerKey === 'true-client-ip'
+      || lowerKey === 'x-client-ip' || lowerKey === 'x-cluster-client-ip') {
+      if (privacy.ip) continue // skip — we add anonymized version below
       headers[key] = value
+      continue
     }
+
+    // User-Agent — controlled by userAgent flag
+    if (lowerKey === 'user-agent') {
+      headers[key] = privacy.userAgent ? normalizeUserAgent(value) : value
+      continue
+    }
+
+    // Accept-Language — controlled by language flag
+    if (lowerKey === 'accept-language') {
+      headers[key] = privacy.language ? normalizeLanguage(value) : value
+      continue
+    }
+
+    // Client Hints (hardware flag)
+    if (lowerKey === 'sec-ch-ua' || lowerKey === 'sec-ch-ua-full-version-list') {
+      headers[key] = privacy.hardware
+        ? value.replace(/;v="(\d+)\.[^"]*"/g, ';v="$1"')
+        : value
+      continue
+    }
+
+    // Other client hints (sec-ch-ua-platform, sec-ch-ua-mobile are low entropy) — pass through
+    headers[key] = value
   }
-  else {
-    // Anonymize mode: preserve useful analytics, prevent fingerprinting
-    for (const [key, value] of Object.entries(originalHeaders)) {
-      if (!value)
-        continue
 
-      const lowerKey = key.toLowerCase()
-
-      // Skip IP-revealing headers entirely
-      if (IP_HEADERS.includes(lowerKey))
-        continue
-
-      // Skip sensitive headers
-      if (SENSITIVE_HEADERS.includes(lowerKey))
-        continue
-
-      // Skip content-length - we modify the body so fetch needs to recalculate
-      if (lowerKey === 'content-length')
-        continue
-
-      // Normalize fingerprinting headers
-      if (lowerKey === 'user-agent') {
-        headers[key] = normalizeUserAgent(value)
-      }
-      else if (lowerKey === 'accept-language') {
-        headers[key] = normalizeLanguage(value)
-      }
-      else if (lowerKey === 'sec-ch-ua' || lowerKey === 'sec-ch-ua-full-version-list') {
-        // Normalize to major versions: "Chromium";v="143.0.7499.4" → "Chromium";v="143"
-        headers[key] = value.replace(/;v="(\d+)\.[^"]*"/g, ';v="$1"')
-      }
-      else if (FINGERPRINT_HEADERS.includes(lowerKey)) {
-        // Forward other Client Hints as-is (sec-ch-ua-platform, sec-ch-ua-mobile are low entropy)
-        headers[key] = value
-      }
-      else {
-        // Forward other headers (content-type, accept, referer, etc.)
-        headers[key] = value
-      }
-    }
-
-    // Add anonymized IP for country-level geo
-    const clientIP = getRequestIP(event, { xForwardedFor: true })
-    if (clientIP) {
+  // IP handling: add x-forwarded-for based on ip flag
+  const clientIP = getRequestIP(event, { xForwardedFor: true })
+  if (clientIP) {
+    if (privacy.ip) {
+      // Anonymize IP for country-level geo
       headers['x-forwarded-for'] = anonymizeIP(clientIP)
+    }
+    else {
+      // Forward real IP — needed for services like PostHog geolocation
+      headers['x-forwarded-for'] = clientIP
     }
   }
 
@@ -180,10 +193,10 @@ export default defineEventHandler(async (event) => {
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
     rawBody = await readBody(event)
 
-    if (privacy === 'anonymize' && rawBody) {
+    if (anyPrivacy && rawBody) {
       if (typeof rawBody === 'object') {
         // JSON body - strip fingerprinting recursively
-        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>)
+        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
       }
       else if (typeof rawBody === 'string') {
         // Try parsing as JSON first (sendBeacon often sends JSON with text/plain content-type)
@@ -195,7 +208,7 @@ export default defineEventHandler(async (event) => {
           catch { /* not valid JSON */ }
 
           if (parsed && typeof parsed === 'object') {
-            body = stripPayloadFingerprinting(parsed as Record<string, unknown>)
+            body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
           }
           else {
             body = rawBody
@@ -208,7 +221,7 @@ export default defineEventHandler(async (event) => {
           params.forEach((value, key) => {
             obj[key] = value
           })
-          const stripped = stripPayloadFingerprinting(obj)
+          const stripped = stripPayloadFingerprinting(obj, privacy)
           // Convert all values to strings — URLSearchParams coerces non-strings
           // to "[object Object]" which corrupts nested objects/arrays
           const stringified: Record<string, string> = {}
@@ -245,7 +258,7 @@ export default defineEventHandler(async (event) => {
     },
     stripped: {
       headers,
-      query: privacy === 'anonymize' ? stripPayloadFingerprinting(originalQuery) : originalQuery,
+      query: anyPrivacy ? stripPayloadFingerprinting(originalQuery, privacy) : originalQuery,
       body: body ?? null,
     },
   })

@@ -118,8 +118,8 @@ This script supports [First-Party Mode](/docs/guides/first-party) which routes a
 When enabled globally via `scripts.firstParty: true`, this script will:
 - Load from your domain instead of `static.hotjar.com`
 - Route configuration and data requests (`vars.hotjar.com`, `in.hotjar.com`) through your server
-- Anonymize user IP addresses to subnet level
-- Generalize device fingerprinting data to common buckets
+- Anonymize IP addresses, language, and hardware fingerprints (canvas, webgl, browser versions)
+- Preserve User-Agent, screen resolution, and timezone for accurate heatmaps and device filtering
 
 ::callout{type="info"}
 Hotjar uses WebSocket connections for session recording data. The proxy handles initial setup, but WebSocket connections go directly to Hotjar servers.

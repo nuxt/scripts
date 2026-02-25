@@ -5,6 +5,8 @@ import {
   ALLOWED_PARAMS,
   stripFingerprintingFromPayload,
 } from '../utils/proxy-privacy'
+import { resolvePrivacy, mergePrivacy, stripPayloadFingerprinting } from '../../src/runtime/server/utils/privacy'
+import type { ResolvedProxyPrivacy } from '../../src/runtime/server/utils/privacy'
 
 /**
  * Test fingerprinting data that analytics scripts commonly collect and send.
@@ -68,7 +70,7 @@ const FINGERPRINT_PAYLOAD = {
   // X/Twitter Pixel - dv param contains concatenated fingerprinting data
   xPixel: {
     bci: '4', // Browser context indicator
-    dv: 'Australia/Melbourne&en-GB&Google Inc.&Linux x86_64&255&1280&720&24&24&1280&720&0&na', // Combined device fingerprint
+    dv: 'Australia/Melbourne&en-GB&Google Inc.&Linux x86_64&255&1280&720&24&24&1280&720&0&na', // Combined device hardware
     eci: '3', // Environment context indicator
     event: '{}',
     event_id: 'a944216c-54e2-4dbb-a338-144f32888929',
@@ -85,7 +87,7 @@ const FINGERPRINT_PAYLOAD = {
   },
 
   // Generic fingerprinting vectors
-  fingerprint: {
+  hardware: {
     // Hardware
     screen: { width: 2560, height: 1440, colorDepth: 24, pixelRatio: 2 },
     viewport: { width: 1920, height: 1080 },
@@ -106,14 +108,14 @@ const FINGERPRINT_PAYLOAD = {
     doNotTrack: null,
     plugins: ['PDF Viewer', 'Chrome PDF Viewer', 'Chromium PDF Viewer'],
 
-    // Canvas fingerprint
+    // Canvas hardware
     canvas: 'a1b2c3d4e5f6g7h8i9j0',
     webgl: {
       vendor: 'Google Inc. (Apple)',
       renderer: 'ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)',
     },
 
-    // Audio fingerprint
+    // Audio hardware
     audioFingerprint: 124.04347527516074,
 
     // Font detection
@@ -132,7 +134,7 @@ describe('proxy privacy - payload analysis', () => {
   describe('GA payload', () => {
     it('identifies fingerprinting params in GA payload', () => {
       const gaPayload = FINGERPRINT_PAYLOAD.ga
-      const fingerprintParams = Object.keys(gaPayload).filter((key) => {
+      const hardwareParams = Object.keys(gaPayload).filter((key) => {
         return STRIP_PARAMS.ip.includes(key)
           || STRIP_PARAMS.userId.includes(key)
           || STRIP_PARAMS.screen.includes(key)
@@ -144,13 +146,13 @@ describe('proxy privacy - payload analysis', () => {
           || NORMALIZE_PARAMS.userAgent.includes(key)
       })
 
-      console.warn('GA fingerprinting params found:', fingerprintParams)
+      console.warn('GA fingerprinting params found:', hardwareParams)
       console.warn('GA normalized params:', normalizedParams)
-      expect(fingerprintParams).toContain('uip') // IP
-      expect(fingerprintParams).toContain('cid') // Client ID
-      expect(fingerprintParams).toContain('uid') // User ID
-      expect(fingerprintParams).toContain('sr') // Screen resolution
-      expect(fingerprintParams).toContain('vp') // Viewport
+      expect(hardwareParams).toContain('uip') // IP
+      expect(hardwareParams).toContain('cid') // Client ID
+      expect(hardwareParams).toContain('uid') // User ID
+      expect(hardwareParams).toContain('sr') // Screen resolution
+      expect(hardwareParams).toContain('vp') // Viewport
       expect(normalizedParams).toContain('ua') // User agent (normalized, not stripped)
     })
 
@@ -183,47 +185,47 @@ describe('proxy privacy - payload analysis', () => {
   describe('Meta pixel payload', () => {
     it('identifies fingerprinting params in Meta payload', () => {
       const metaPayload = FINGERPRINT_PAYLOAD.meta
-      const fingerprintParams: string[] = []
+      const hardwareParams: string[] = []
 
       for (const key of Object.keys(metaPayload)) {
-        if (STRIP_PARAMS.ip.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
-        if (STRIP_PARAMS.userId.some(p => key.toLowerCase() === p.toLowerCase())) fingerprintParams.push(key)
-        if (STRIP_PARAMS.userData.some(p => key.toLowerCase() === p.toLowerCase())) fingerprintParams.push(key)
-        if (STRIP_PARAMS.browserData.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
-        if (STRIP_PARAMS.browserVersion.some(p => key.toLowerCase().includes(p.toLowerCase()))) fingerprintParams.push(key)
+        if (STRIP_PARAMS.ip.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
+        if (STRIP_PARAMS.userId.some(p => key.toLowerCase() === p.toLowerCase())) hardwareParams.push(key)
+        if (STRIP_PARAMS.userData.some(p => key.toLowerCase() === p.toLowerCase())) hardwareParams.push(key)
+        if (STRIP_PARAMS.browserData.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
+        if (STRIP_PARAMS.browserVersion.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
       }
 
-      console.warn('Meta fingerprinting params found:', fingerprintParams)
-      expect(fingerprintParams).toContain('client_ip_address')
-      expect(fingerprintParams).toContain('external_id')
-      expect(fingerprintParams).toContain('ud') // User data
-      expect(fingerprintParams).toContain('fbp') // Browser ID
-      expect(fingerprintParams).toContain('fbc') // Click ID
+      console.warn('Meta fingerprinting params found:', hardwareParams)
+      expect(hardwareParams).toContain('client_ip_address')
+      expect(hardwareParams).toContain('external_id')
+      expect(hardwareParams).toContain('ud') // User data
+      expect(hardwareParams).toContain('fbp') // Browser ID
+      expect(hardwareParams).toContain('fbc') // Click ID
     })
   })
 
   describe('X/Twitter pixel payload', () => {
     it('identifies fingerprinting params in X pixel payload', () => {
       const xPayload = FINGERPRINT_PAYLOAD.xPixel
-      const fingerprintParams: string[] = []
+      const hardwareParams: string[] = []
 
       for (const key of Object.keys(xPayload)) {
         const lowerKey = key.toLowerCase()
-        if (STRIP_PARAMS.deviceInfo.some(p => lowerKey === p.toLowerCase())) fingerprintParams.push(key)
-        if (STRIP_PARAMS.userId.some(p => lowerKey === p.toLowerCase())) fingerprintParams.push(key)
+        if (STRIP_PARAMS.deviceInfo.some(p => lowerKey === p.toLowerCase())) hardwareParams.push(key)
+        if (STRIP_PARAMS.userId.some(p => lowerKey === p.toLowerCase())) hardwareParams.push(key)
       }
 
-      console.warn('X/Twitter fingerprinting params found:', fingerprintParams)
-      expect(fingerprintParams).toContain('dv') // Device info - contains timezone, screen, platform etc.
+      console.warn('X/Twitter fingerprinting params found:', hardwareParams)
+      expect(hardwareParams).toContain('dv') // Device info - contains timezone, screen, platform etc.
       // bci/eci are batch/event counters, not fingerprinting — no longer in deviceInfo
-      expect(fingerprintParams).toContain('pl_id') // Pixel/placement ID
-      expect(fingerprintParams).toContain('p_user_id') // User ID
+      expect(hardwareParams).toContain('pl_id') // Pixel/placement ID
+      expect(hardwareParams).toContain('p_user_id') // User ID
     })
   })
 
-  describe('generic fingerprint payload', () => {
+  describe('generic hardware payload', () => {
     it('identifies all fingerprinting vectors', () => {
-      const fp = FINGERPRINT_PAYLOAD.fingerprint
+      const fp = FINGERPRINT_PAYLOAD.hardware
       const vectors: string[] = []
 
       // Check each category
@@ -316,7 +318,7 @@ describe('stripFingerprintingFromPayload', () => {
     })
 
     it('anonymizes fingerprinting vectors but keeps normalized values', () => {
-      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.fingerprint)
+      const result = stripFingerprintingFromPayload(FINGERPRINT_PAYLOAD.hardware)
 
       // Hardware generalized to common buckets
       expect(result.hardwareConcurrency).toBe(8)
@@ -384,5 +386,132 @@ describe('stripFingerprintingFromPayload', () => {
       const srMobile = stripFingerprintingFromPayload({ sr: '375x667' })
       expect(srMobile.sr).toBe('360x640')
     })
+  })
+})
+
+describe('resolvePrivacy', () => {
+  it('true → all flags true', () => {
+    expect(resolvePrivacy(true)).toEqual({ ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true })
+  })
+
+  it('undefined → all flags false (opt-in)', () => {
+    expect(resolvePrivacy()).toEqual({ ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false })
+  })
+
+  it('false → all flags false', () => {
+    expect(resolvePrivacy(false)).toEqual({ ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false })
+  })
+
+  it('partial object → unset flags default to false (opt-in)', () => {
+    expect(resolvePrivacy({ ip: true })).toEqual({ ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false })
+  })
+
+  it('full object → uses provided values', () => {
+    expect(resolvePrivacy({ ip: true, userAgent: true, language: false, screen: true, timezone: false, hardware: true }))
+      .toEqual({ ip: true, userAgent: true, language: false, screen: true, timezone: false, hardware: true })
+  })
+})
+
+describe('mergePrivacy', () => {
+  const allTrue: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
+
+  it('undefined override → returns base', () => {
+    expect(mergePrivacy(allTrue)).toEqual(allTrue)
+  })
+
+  it('boolean override fully replaces', () => {
+    expect(mergePrivacy(allTrue, false)).toEqual({ ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false })
+  })
+
+  it('partial object overrides only specified fields', () => {
+    expect(mergePrivacy(allTrue, { ip: false })).toEqual({ ip: false, userAgent: true, language: true, screen: true, timezone: true, hardware: true })
+  })
+
+  it('per-script + global override flow', () => {
+    // Ad pixel declares strict privacy
+    const metaBase = resolvePrivacy({ ip: true, userAgent: true, language: false, screen: true, timezone: true, hardware: true })
+    expect(metaBase).toEqual({ ip: true, userAgent: true, language: false, screen: true, timezone: true, hardware: true })
+
+    // No global override → per-script used as-is
+    expect(mergePrivacy(metaBase, undefined)).toEqual(metaBase)
+
+    // User sets global { ip: false } → overrides just ip
+    expect(mergePrivacy(metaBase, { ip: false }))
+      .toEqual({ ip: false, userAgent: true, language: false, screen: true, timezone: true, hardware: true })
+
+    // User sets global true → full anonymize overrides per-script
+    expect(mergePrivacy(metaBase, true))
+      .toEqual({ ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true })
+
+    // User sets global false → passthrough overrides per-script
+    expect(mergePrivacy(metaBase, false))
+      .toEqual({ ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false })
+  })
+})
+
+describe('selective privacy in stripPayloadFingerprinting', () => {
+  const testPayload = {
+    uip: '192.168.1.100',
+    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0',
+    ul: 'en-US,en;q=0.9,fr;q=0.8',
+    sr: '2560x1440',
+    hardwareConcurrency: 8,
+    canvas: 'abc123',
+    timezone: 'America/New_York',
+    dt: 'Page Title',
+  }
+
+  it('ip:false → IP passes through, everything else anonymized', () => {
+    const privacy: ResolvedProxyPrivacy = { ip: false, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
+    const result = stripPayloadFingerprinting(testPayload, privacy)
+    expect(result.uip).toBe('192.168.1.100') // not anonymized
+    expect(result.ua).toBe('Mozilla/5.0 (compatible; Chrome/120.0)') // normalized
+    expect(result.sr).toBe('1920x1080') // generalized
+  })
+
+  it('screen:false → screen/hardware pass through, canvas/timezone still anonymized', () => {
+    const privacy: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: false, timezone: true, hardware: true }
+    const result = stripPayloadFingerprinting(testPayload, privacy)
+    expect(result.uip).toBe('192.168.1.0') // anonymized
+    expect(result.sr).toBe('2560x1440') // not generalized (screen flag off)
+    expect(result.hardwareConcurrency).toBe(8) // not bucketed (screen flag off)
+    expect(result.canvas).toBe('') // stripped (hardware flag on)
+    expect(result.timezone).toBe('UTC') // generalized (timezone flag on)
+  })
+
+  it('timezone:false → timezone passes through', () => {
+    const privacy: ResolvedProxyPrivacy = { ip: false, userAgent: false, language: false, screen: true, timezone: false, hardware: true }
+    const result = stripPayloadFingerprinting(testPayload, privacy)
+    expect(result.timezone).toBe('America/New_York') // not generalized (timezone flag off)
+    expect(result.sr).toBe('1920x1080') // generalized (screen flag on)
+    expect(result.canvas).toBe('') // stripped (hardware flag on)
+  })
+
+  it('hardware:false → canvas/versions pass through', () => {
+    const privacy: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: false }
+    const result = stripPayloadFingerprinting(testPayload, privacy)
+    expect(result.uip).toBe('192.168.1.0') // anonymized (ip flag on)
+    expect(result.sr).toBe('1920x1080') // generalized (screen flag on)
+    expect(result.canvas).toBe('abc123') // not stripped (hardware flag off)
+    expect(result.timezone).toBe('UTC') // generalized (timezone flag on)
+  })
+
+  it('all false → everything passes through', () => {
+    const privacy: ResolvedProxyPrivacy = { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
+    const result = stripPayloadFingerprinting(testPayload, privacy)
+    expect(result.uip).toBe('192.168.1.100')
+    expect(result.ua).toBe(testPayload.ua)
+    expect(result.ul).toBe('en-US,en;q=0.9,fr;q=0.8')
+    expect(result.sr).toBe('2560x1440')
+    expect(result.canvas).toBe('abc123')
+    expect(result.timezone).toBe('America/New_York')
+  })
+
+  it('no privacy arg → defaults to all true (backward compat)', () => {
+    const result = stripPayloadFingerprinting(testPayload)
+    expect(result.uip).toBe('192.168.1.0')
+    expect(result.ua).toBe('Mozilla/5.0 (compatible; Chrome/120.0)')
+    expect(result.sr).toBe('1920x1080')
+    expect(result.timezone).toBe('UTC')
   })
 })
