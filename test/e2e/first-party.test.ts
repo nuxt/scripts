@@ -133,7 +133,7 @@ function verifyFingerprintingAnonymized(capture: Record<string, any>): string[] 
       // Normalized UA patterns (e.g. "Mozilla/5.0 (compatible; Chrome/131.0)")
       if (v.startsWith('Mozilla/5.0 (compatible')) return true
       // Major-only version (e.g. "90", "131.0")
-      if (/^\d+(\.\d)?$/.test(v)) return true
+      if (/^\d+(?:\.\d)?$/.test(v)) return true
       // Timezone names (IANA zones or UTC)
       if (v === 'UTC' || /^[A-Z][a-z]+\/[A-Z]/.test(v)) return true
     }
