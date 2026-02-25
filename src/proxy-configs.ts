@@ -145,6 +145,18 @@ function buildProxyConfig(collectPrefix: string) {
       },
     },
 
+    posthog: {
+      // No rewrites needed - PostHog uses NPM mode, SDK URLs are set via api_host config
+      routes: {
+        // US region
+        [`${collectPrefix}/ph/static/**`]: { proxy: 'https://us-assets.i.posthog.com/static/**' },
+        [`${collectPrefix}/ph/**`]: { proxy: 'https://us.i.posthog.com/**' },
+        // EU region
+        [`${collectPrefix}/ph-eu/static/**`]: { proxy: 'https://eu-assets.i.posthog.com/static/**' },
+        [`${collectPrefix}/ph-eu/**`]: { proxy: 'https://eu.i.posthog.com/**' },
+      },
+    },
+
     hotjar: {
       rewrite: [
         // Static assets

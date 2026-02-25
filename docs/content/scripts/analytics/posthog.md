@@ -104,6 +104,7 @@ export interface PostHogApi {
 export const PostHogOptions = object({
   apiKey: string(),
   region: optional(union([literal('us'), literal('eu')])),
+  apiHost: optional(string()), // Custom API host URL (e.g. '/ph' for reverse proxy)
   autocapture: optional(boolean()),
   capturePageview: optional(boolean()),
   capturePageleave: optional(boolean()),
@@ -157,6 +158,47 @@ export default defineNuxtConfig({
   }
 })
 ```
+
+## First-Party Proxy
+
+When [first-party mode](/docs/guides/first-party) is enabled, PostHog requests are automatically proxied through your own server. This improves event capture reliability by avoiding ad blockers.
+
+No additional configuration is needed — the module automatically sets `apiHost` to route through your server's proxy endpoint:
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    firstParty: true, // enabled by default
+    registry: {
+      posthog: {
+        apiKey: 'YOUR_API_KEY',
+        // apiHost is auto-set to '/_proxy/ph' (or '/_proxy/ph-eu' for EU region)
+      }
+    }
+  }
+})
+```
+
+The proxy handles both API requests and static assets (e.g. session recording SDK), routing them to the correct PostHog endpoints.
+
+## Custom API Host
+
+To use a custom reverse proxy or self-hosted PostHog instance, set `apiHost` directly:
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      posthog: {
+        apiKey: 'YOUR_API_KEY',
+        apiHost: '/my-proxy'
+      }
+    }
+  }
+})
+```
+
+The `apiHost` option accepts any URL or relative path, overriding both the `region` default and the first-party proxy auto-configuration. For additional PostHog SDK options like `ui_host`, use the `config` passthrough.
 
 ## Feature Flags
 

@@ -43,6 +43,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       label: 'PostHog',
       src: false,
+      proxy: 'posthog',
       scriptBundling: false,
       category: 'analytics',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 128 128"><path fill="#1d4aff" d="M0 .52v32.15l31.79 31.78V32.3L0 .52zm32.3 32.15v32.15l31.78 31.78V64.45L32.3 32.67zM0 64.97v32.15l31.79 31.78V96.75L0 64.97zm64.6-32.3v32.15l31.78 31.78V64.45L64.6 32.67zm31.78 31.78v32.15l31.78 31.78V96.23l-31.78-31.78zm-64.08.52v32.15l31.78 31.78V96.75L32.3 64.97zM64.6 .52v32.15l31.78 31.78V32.3L64.6 .52zm0 64.45v32.15l31.78 31.78V96.75L64.6 64.97z"/></svg>`,
