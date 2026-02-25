@@ -72,6 +72,26 @@ describe('proxy configs', () => {
       expect(output).toBe(`"/_scripts/c/meta/en_US/fbevents.js"`)
     })
 
+    it('does not rewrite bare domain strings without fromPath', () => {
+      // GA4 constructs URLs dynamically: "https://" + prefix + "analytics.google.com/" + "g/collect"
+      // The bare "analytics.google.com/" fragment should NOT be rewritten
+      const input = `"https://"+e+"analytics.google.com/"+"g/collect"`
+      const output = rewriteScriptUrls(input, [
+        { from: 'analytics.google.com', to: '/_scripts/c/ga' },
+      ])
+      // The bare string "analytics.google.com/" must survive — it's a concatenation component
+      expect(output).toContain(`"analytics.google.com/"`)
+    })
+
+    it('does not rewrite bare suffix-matched domain strings without fromPath', () => {
+      // Suffix match (.google-analytics.com) on bare string without path should not rewrite
+      const input = `"https://"+e+".google-analytics.com/"+"g/collect"`
+      const output = rewriteScriptUrls(input, [
+        { from: '.google-analytics.com', to: '/_scripts/c/ga' },
+      ])
+      expect(output).toContain(`".google-analytics.com/"`)
+    })
+
     it('returns unmodified content when no matches', () => {
       const input = `fetch("https://example.com/api")`
       const output = rewriteScriptUrls(input, [

@@ -77,7 +77,7 @@ export function rewriteScriptUrls(content: string, rewrites: ProxyRewrite[]): st
           }
         }
       }
-      else if ((fromPath && inner.startsWith(from)) || (isSuffixMatch && inner.includes(from))) {
+      else if (fromPath && (inner.startsWith(from) || (isSuffixMatch && inner.includes(from)))) {
         // Bare domain path or partial match
         const domainEnd = inner.indexOf(from) + from.length
         const nextChar = inner[domainEnd]
