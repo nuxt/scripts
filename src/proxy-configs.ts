@@ -1,4 +1,5 @@
 import { rewriteScriptUrls, type ProxyRewrite } from './runtime/utils/pure'
+import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 
 export type { ProxyRewrite }
 
@@ -11,6 +12,15 @@ export interface ProxyConfig {
   rewrite?: ProxyRewrite[]
   /** Nitro route rules to inject for proxying requests */
   routes?: Record<string, { proxy: string }>
+  /**
+   * Per-script privacy controls. Each script declares what it needs.
+   * - `true` (default) = full anonymize: IP, UA, language, screen, timezone, hardware fingerprints
+   * - `false` = passthrough (still strips sensitive auth headers)
+   * - `{ ip: false }` = selective (unset flags default to `false`)
+   *
+   * Users can override per-script defaults via `firstParty.privacy` in nuxt.config.
+   */
+  privacy: ProxyPrivacyInput
 }
 
 /**
@@ -19,6 +29,8 @@ export interface ProxyConfig {
 function buildProxyConfig(collectPrefix: string) {
   return {
     googleAnalytics: {
+      // GA4: screen/timezone/UA needed for device, time, and OS reports; rest anonymized safely
+      privacy: { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true },
       rewrite: [
         // Modern gtag.js uses www.google.com/g/collect
         { from: 'www.google.com/g/collect', to: `${collectPrefix}/ga/g/collect` },
@@ -50,6 +62,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     googleTagManager: {
+      // GTM: container only, passes data through — downstream tags have their own privacy
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       rewrite: [
         { from: 'www.googletagmanager.com', to: `${collectPrefix}/gtm` },
       ],
@@ -59,6 +73,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     metaPixel: {
+      // Meta: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         // SDK script loading
         { from: 'connect.facebook.net', to: `${collectPrefix}/meta` },
@@ -78,6 +94,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     tiktokPixel: {
+      // TikTok: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'analytics.tiktok.com', to: `${collectPrefix}/tiktok` },
       ],
@@ -87,6 +105,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     segment: {
+      // Segment: trusted data pipeline — needs maximum fidelity for downstream destinations
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       rewrite: [
         { from: 'api.segment.io', to: `${collectPrefix}/segment` },
         { from: 'cdn.segment.com', to: `${collectPrefix}/segment-cdn` },
@@ -98,6 +118,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     xPixel: {
+      // X/Twitter: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'analytics.twitter.com', to: `${collectPrefix}/x` },
         { from: 't.co', to: `${collectPrefix}/x-t` },
@@ -109,6 +131,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     snapchatPixel: {
+      // Snapchat: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'tr.snapchat.com', to: `${collectPrefix}/snap` },
       ],
@@ -118,6 +142,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     redditPixel: {
+      // Reddit: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'alb.reddit.com', to: `${collectPrefix}/reddit` },
       ],
@@ -127,6 +153,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     clarity: {
+      // Clarity: screen/UA/timezone needed for heatmaps and device filtering; rest anonymized
+      privacy: { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true },
       rewrite: [
         // Main clarity domain
         { from: 'www.clarity.ms', to: `${collectPrefix}/clarity` },
@@ -147,6 +175,8 @@ function buildProxyConfig(collectPrefix: string) {
 
     posthog: {
       // No rewrites needed - PostHog uses NPM mode, SDK URLs are set via api_host config
+      // PostHog: needs real IP for GeoIP enrichment + feature flag targeting
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       routes: {
         // US region
         [`${collectPrefix}/ph/static/**`]: { proxy: 'https://us-assets.i.posthog.com/static/**' },
@@ -158,6 +188,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     hotjar: {
+      // Hotjar: screen/UA/timezone needed for heatmaps and device segmentation; rest anonymized
+      privacy: { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true },
       rewrite: [
         // Static assets
         { from: 'static.hotjar.com', to: `${collectPrefix}/hotjar` },

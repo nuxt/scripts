@@ -29,6 +29,7 @@ import type {
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { getAllProxyConfigs, getSWInterceptRules } from './proxy-configs'
+import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 
 declare module '@nuxt/schema' {
   interface NuxtHooks {
@@ -37,17 +38,21 @@ declare module '@nuxt/schema' {
 }
 
 /**
- * Privacy mode for first-party proxy requests.
+ * Global privacy override for all first-party proxy requests.
  *
- * - `'anonymize'` (default) - Prevents fingerprinting: anonymizes IP addresses to country-level,
- *   normalizes device info and canvas data. All other data passes through unchanged.
+ * By default (`undefined`), each script uses its own privacy controls declared in the registry.
+ * Setting this overrides all per-script defaults:
  *
- * - `'proxy'` - Minimal modification: forwards headers and data, but strips sensitive
- *   auth/session headers (cookie, authorization) to prevent leaking credentials to
- *   third-party endpoints. Privacy comes from routing requests through your server
- *   (third parties see server IP, not user IP).
+ * - `true` - Full anonymize: anonymizes IP, normalizes User-Agent/language,
+ *   generalizes screen/hardware/canvas/timezone data.
+ *
+ * - `false` - Passthrough: forwards headers and data, but strips sensitive
+ *   auth/session headers (cookie, authorization).
+ *
+ * - `{ ip: false }` - Selective: override individual flags. Unset flags inherit
+ *   from the per-script default.
  */
-export type FirstPartyPrivacy = 'proxy' | 'anonymize'
+export type FirstPartyPrivacy = ProxyPrivacyInput
 
 export interface FirstPartyOptions {
   /**
@@ -68,14 +73,16 @@ export interface FirstPartyOptions {
    */
   collectPrefix?: string
   /**
-   * Privacy level for proxied requests.
+   * Global privacy override for all proxied scripts.
    *
-   * Controls what user information is forwarded to third-party analytics services.
+   * By default, each script uses its own privacy controls from the registry.
+   * Set this to override all scripts at once:
    *
-   * - `'anonymize'` - Prevents fingerprinting by anonymizing IPs and device info (default)
-   * - `'proxy'` - No modification, just routes through your server
+   * - `true` - Full anonymize for all scripts
+   * - `false` - Passthrough for all scripts (still strips sensitive auth headers)
+   * - `{ ip: false }` - Selective override (unset flags inherit per-script defaults)
    *
-   * @default 'anonymize'
+   * @default undefined
    */
   privacy?: FirstPartyPrivacy
 }
@@ -309,9 +316,9 @@ export default defineNuxtModule<ModuleOptions>({
     const firstPartyCollectPrefix = typeof config.firstParty === 'object'
       ? config.firstParty.collectPrefix || '/_proxy'
       : '/_proxy'
-    const firstPartyPrivacy = typeof config.firstParty === 'object'
-      ? config.firstParty.privacy ?? 'anonymize'
-      : 'anonymize'
+    const firstPartyPrivacy: ProxyPrivacyInput | undefined = typeof config.firstParty === 'object'
+      ? config.firstParty.privacy
+      : undefined
     const assetsPrefix = firstPartyPrefix || config.assets?.prefix || '/_scripts'
 
     // Process partytown shorthand - add partytown: true to specified registry scripts
@@ -551,6 +558,7 @@ export default defineNuxtPlugin({
 
         // Collect routes for all configured registry scripts that support proxying
         const neededRoutes: Record<string, { proxy: string }> = {}
+        const routePrivacyOverrides: Record<string, ProxyPrivacyInput> = {}
         const unsupportedScripts: string[] = []
         for (const key of registryKeys) {
           // Find the registry script definition
@@ -561,6 +569,10 @@ export default defineNuxtPlugin({
             const proxyConfig = proxyConfigs[proxyKey]
             if (proxyConfig?.routes) {
               Object.assign(neededRoutes, proxyConfig.routes)
+              // Record per-script privacy for each route
+              for (const routePath of Object.keys(proxyConfig.routes)) {
+                routePrivacyOverrides[routePath] = proxyConfig.privacy
+              }
             }
             else {
               // Track scripts without proxy support
@@ -611,9 +623,10 @@ export default defineNuxtPlugin({
         // Server-side config for proxy privacy handling
         nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
           routes: flatRoutes,
-          privacy: firstPartyPrivacy,
+          privacy: firstPartyPrivacy, // undefined = use per-script defaults, set = global override
+          routePrivacy: routePrivacyOverrides, // per-script privacy from registry
           rewrites: allRewrites,
-        }
+        } as any
 
         // Proxy handler is registered before modules:done for both privacy modes
         if (Object.keys(neededRoutes).length) {
@@ -621,7 +634,8 @@ export default defineNuxtPlugin({
           if (nuxt.options.dev) {
             const routeCount = Object.keys(neededRoutes).length
             const scriptsCount = registryKeys.length
-            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${firstPartyPrivacy})`)
+            const privacyLabel = firstPartyPrivacy === undefined ? 'per-script' : typeof firstPartyPrivacy === 'boolean' ? (firstPartyPrivacy ? 'anonymize' : 'passthrough') : 'custom'
+            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${privacyLabel})`)
             if (logger.level >= 4) {
               for (const [path, config] of Object.entries(neededRoutes)) {
                 logger.debug(`  ${path} → ${config.proxy}`)

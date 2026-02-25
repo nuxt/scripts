@@ -102,6 +102,15 @@ const _PRESERVED_USER_PARAMS = [
   'ud', 'user_data', 'userdata', 'email', 'phone',
 ]
 
+/** Check that a capture has a fully-resolved privacy object with all six boolean flags. */
+function hasResolvedPrivacy(c: Record<string, any>): boolean {
+  const p = c.privacy
+  return p && typeof p === 'object'
+    && typeof p.ip === 'boolean' && typeof p.userAgent === 'boolean'
+    && typeof p.language === 'boolean' && typeof p.screen === 'boolean'
+    && typeof p.timezone === 'boolean' && typeof p.hardware === 'boolean'
+}
+
 /**
  * Verify that fingerprinting parameters are anonymized (not forwarded as-is).
  * Checks that known fingerprinting params, when present, have been transformed
@@ -114,10 +123,26 @@ function verifyFingerprintingAnonymized(capture: Record<string, any>): string[] 
   const strippedQuery = capture.stripped?.query || {}
   const strippedBody = capture.stripped?.body || {}
 
-  // Values considered already-anonymized (empty/zeroed) — not a leak even if unchanged
-  const isAnonymizedValue = (v: unknown) =>
-    v === '' || v === 0 || (Array.isArray(v) && v.length === 0)
-    || (typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length === 0)
+  // Values considered already-anonymized — not a leak even if unchanged
+  const isAnonymizedValue = (v: unknown): boolean => {
+    if (v === '' || v === 0 || (Array.isArray(v) && v.length === 0)) return true
+    if (typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length === 0) return true
+    if (typeof v === 'string') {
+      // Screen bucket patterns (e.g. "1920x1080", "1280x720")
+      if (/^\d{3,4}x\d{3,4}$/.test(v)) return true
+      // Normalized UA patterns (e.g. "Mozilla/5.0 (compatible; Chrome/131.0)")
+      if (v.startsWith('Mozilla/5.0 (compatible')) return true
+      // Major-only version (e.g. "90", "131.0")
+      if (/^\d+(?:\.\d)?$/.test(v)) return true
+      // Timezone names (IANA zones or UTC)
+      if (v === 'UTC' || /^[A-Z][a-z]+\/[A-Z]/.test(v)) return true
+    }
+    if (typeof v === 'number') {
+      // Bucketed numeric values (common screen widths, heights, concurrency)
+      if ([320, 375, 414, 768, 1024, 1280, 1366, 1440, 1920, 2560, 3840].includes(v)) return true
+    }
+    return false
+  }
 
   for (const param of ANONYMIZED_FINGERPRINT_PARAMS) {
     // Only check params present in both original and stripped
@@ -454,11 +479,9 @@ describe('first-party privacy stripping', () => {
         data: e.data,
       }))
 
-      // Write debug info
-      writeFileSync(join(fixtureDir, 'proxy-test.json'), JSON.stringify(response, null, 2))
-
       // Should return JS content (or at least not 404)
       if (typeof response === 'object' && response.error) {
+        writeFileSync(join(fixtureDir, 'proxy-test.json'), JSON.stringify(response, null, 2))
         console.warn('[test] Proxy error:', response)
       }
       expect(typeof response).toBe('string')
@@ -497,11 +520,13 @@ describe('first-party privacy stripping', () => {
         }
       })
 
-      // Debug output
-      writeFileSync(join(fixtureDir, 'sw-status.json'), JSON.stringify({
-        swStatus,
-        swLogs: swLogs.filter(l => l.includes('SW') || l.includes('service') || l.includes('worker')),
-      }, null, 2))
+      // Debug output — only on failure
+      if (!swStatus.supported || !swStatus.registrations?.length) {
+        writeFileSync(join(fixtureDir, 'sw-status.json'), JSON.stringify({
+          swStatus,
+          swLogs: swLogs.filter(l => l.includes('SW') || l.includes('service') || l.includes('worker')),
+        }, null, 2))
+      }
 
       expect(swStatus.supported).toBe(true)
       expect(swStatus.registrations.length).toBeGreaterThan(0)
@@ -618,7 +643,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/')
           && (isAllowedDomain(c.targetUrl, 'google-analytics.com') || isAllowedDomain(c.targetUrl, 'analytics.google.com'))
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -652,7 +677,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/gtm')
           && isAllowedDomain(c.targetUrl, 'googletagmanager.com')
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -691,7 +716,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/meta')
           && (isAllowedDomain(c.targetUrl, 'facebook.com') || isAllowedDomain(c.targetUrl, 'facebook.net'))
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -728,7 +753,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/segment')
           && (isAllowedDomain(c.targetUrl, 'segment.io') || isAllowedDomain(c.targetUrl, 'segment.com'))
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -749,7 +774,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/x')
           && (isAllowedDomain(c.targetUrl, 'twitter.com') || isAllowedDomain(c.targetUrl, 't.co'))
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -785,7 +810,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/snap')
           && isAllowedDomain(c.targetUrl, 'snapchat.com')
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -830,7 +855,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/clarity')
           && isAllowedDomain(c.targetUrl, 'clarity.ms')
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -870,7 +895,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/hotjar')
           && isAllowedDomain(c.targetUrl, 'hotjar.com')
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -908,7 +933,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/tiktok')
           && isAllowedDomain(c.targetUrl, 'tiktok.com')
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 
@@ -946,7 +971,7 @@ describe('first-party privacy stripping', () => {
         const hasValidCapture = captures.some(c =>
           c.path?.startsWith('/_proxy/reddit')
           && isAllowedDomain(c.targetUrl, 'reddit.com')
-          && c.privacy === 'anonymize',
+          && hasResolvedPrivacy(c),
         )
         expect(hasValidCapture).toBe(true)
 

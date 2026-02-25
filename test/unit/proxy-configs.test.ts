@@ -168,15 +168,42 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('segment')
       expect(configs).toHaveProperty('clarity')
       expect(configs).toHaveProperty('hotjar')
+      expect(configs).toHaveProperty('xPixel')
+      expect(configs).toHaveProperty('snapchatPixel')
+      expect(configs).toHaveProperty('redditPixel')
+      expect(configs).toHaveProperty('posthog')
     })
 
     it('all configs have valid structure', () => {
       const configs = getAllProxyConfigs('/_scripts/c')
+      const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
+      const passthrough = ['segment', 'googleTagManager', 'posthog']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have routes`).toHaveProperty('routes')
-        expect(config, `${key} should have rewrite`).toHaveProperty('rewrite')
-        expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
         expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')
+        if (config.rewrite) {
+          expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
+        }
+        // Every config must declare a non-null privacy object with all six boolean flags
+        expect(config.privacy, `${key} should have privacy`).toBeDefined()
+        expect(config.privacy, `${key}.privacy should not be null`).not.toBeNull()
+        expect(typeof config.privacy, `${key}.privacy should be an object`).toBe('object')
+        const privacyFlags = ['ip', 'userAgent', 'language', 'screen', 'timezone', 'hardware'] as const
+        for (const flag of privacyFlags) {
+          expect(typeof config.privacy[flag], `${key}.privacy.${flag} should be boolean`).toBe('boolean')
+        }
+
+        if (fullAnonymize.includes(key)) {
+          expect(config.privacy, `${key} should be fully anonymized`).toEqual({
+            ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true,
+          })
+        }
+        if (passthrough.includes(key)) {
+          // All flags should be false (no-op privacy)
+          for (const flag of Object.values(config.privacy)) {
+            expect(flag, `${key} privacy flags should be false`).toBe(false)
+          }
+        }
       }
     })
   })

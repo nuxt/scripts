@@ -1,4 +1,79 @@
 /**
+ * Granular privacy controls for the first-party proxy.
+ * Each flag controls both headers AND body/query params for its domain.
+ */
+export interface ProxyPrivacy {
+  /** Anonymize IP (headers + body). When false, real IP is forwarded via x-forwarded-for. */
+  ip?: boolean
+  /** Normalize User-Agent (headers + body) */
+  userAgent?: boolean
+  /** Normalize Accept-Language (headers + body) */
+  language?: boolean
+  /** Generalize screen resolution, viewport, hardware concurrency, device memory */
+  screen?: boolean
+  /** Generalize timezone offset and IANA timezone names */
+  timezone?: boolean
+  /** Anonymize hardware fingerprints: canvas/webgl/audio, plugins/fonts, browser versions, device info */
+  hardware?: boolean
+}
+
+/**
+ * Privacy input: `true` = full anonymize, `false` = passthrough (still strips sensitive headers),
+ * or a `ProxyPrivacy` object for granular control (unset flags default to `false` — opt-in).
+ */
+export type ProxyPrivacyInput = boolean | ProxyPrivacy | null
+
+/** Resolved privacy with all flags explicitly set. */
+export type ResolvedProxyPrivacy = Required<ProxyPrivacy>
+
+/** Full anonymization — all flags true. Used as fail-closed default. */
+const FULL_PRIVACY: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
+/** Passthrough — all flags false. */
+const NO_PRIVACY: ResolvedProxyPrivacy = { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
+
+/**
+ * Normalize a privacy input to a fully-resolved object.
+ * Privacy is opt-in: unset object flags default to `false`.
+ * Each script in the registry explicitly sets all flags for its needs.
+ * - `true` → all flags true (full anonymize)
+ * - `false` / `undefined` → all flags false (passthrough)
+ * - `{ ip: true, hardware: true }` → only those active, rest off
+ */
+export function resolvePrivacy(input?: ProxyPrivacyInput): ResolvedProxyPrivacy {
+  if (input === true) return { ...FULL_PRIVACY }
+  if (input === false || input === undefined || input === null) return { ...NO_PRIVACY }
+  return {
+    ip: input.ip ?? false,
+    userAgent: input.userAgent ?? false,
+    language: input.language ?? false,
+    screen: input.screen ?? false,
+    timezone: input.timezone ?? false,
+    hardware: input.hardware ?? false,
+  }
+}
+
+/**
+ * Merge privacy settings: `override` fields take precedence over `base` field-by-field.
+ * When `override` is undefined, returns `base` unchanged.
+ * When `override` is a boolean, it fully replaces `base`.
+ * When `override` is an object, only explicitly-set fields override.
+ */
+export function mergePrivacy(base: ResolvedProxyPrivacy, override?: ProxyPrivacyInput): ResolvedProxyPrivacy {
+  if (override === undefined || override === null) return base
+  // Boolean fully replaces
+  if (typeof override === 'boolean') return resolvePrivacy(override)
+  // Object: only override fields that were explicitly set
+  return {
+    ip: override.ip !== undefined ? override.ip : base.ip,
+    userAgent: override.userAgent !== undefined ? override.userAgent : base.userAgent,
+    language: override.language !== undefined ? override.language : base.language,
+    screen: override.screen !== undefined ? override.screen : base.screen,
+    timezone: override.timezone !== undefined ? override.timezone : base.timezone,
+    hardware: override.hardware !== undefined ? override.hardware : base.hardware,
+  }
+}
+
+/**
  * Headers that reveal user IP address - stripped in proxy mode,
  * anonymized in anonymize mode.
  */
@@ -289,10 +364,15 @@ export function anonymizeDeviceInfo(value: string): string {
  * Recursively anonymize fingerprinting data in payload.
  * Fields are generalized or normalized rather than stripped, so endpoints
  * still receive valid data with reduced fingerprinting precision.
+ *
+ * When `privacy` is provided, only categories with their flag set to `true` are processed.
+ * Default (no arg) = all categories active, so existing callers work unchanged.
  */
 export function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
+  privacy?: ResolvedProxyPrivacy,
 ): Record<string, unknown> {
+  const p = privacy || FULL_PRIVACY
   const result: Record<string, unknown> = {}
 
   // Pre-scan for screen width to enable paired height bucketing.
@@ -309,29 +389,48 @@ export function stripPayloadFingerprinting(
   for (const [key, value] of Object.entries(payload)) {
     const lowerKey = key.toLowerCase()
 
-    const isLanguageParam = NORMALIZE_PARAMS.language.some(p => lowerKey === p.toLowerCase())
-    const isUserAgentParam = NORMALIZE_PARAMS.userAgent.some(p => lowerKey === p.toLowerCase())
-
-    if ((isLanguageParam || isUserAgentParam) && typeof value === 'string') {
-      result[key] = isLanguageParam ? normalizeLanguage(value) : normalizeUserAgent(value)
-      continue
-    }
-
     const matchesParam = (key: string, params: string[]) => {
       const lk = key.toLowerCase()
-      return params.some((p) => {
-        const lp = p.toLowerCase()
+      return params.some((pm) => {
+        const lp = pm.toLowerCase()
         return lk === lp || lk.startsWith(lp + '[')
       })
     }
 
-    // Anonymize IP to subnet
-    if (matchesParam(key, STRIP_PARAMS.ip) && typeof value === 'string') {
-      result[key] = anonymizeIP(value)
+    // Language params — controlled by language flag
+    const isLanguageParam = NORMALIZE_PARAMS.language.some(pm => lowerKey === pm.toLowerCase())
+    if (isLanguageParam) {
+      if (Array.isArray(value)) {
+        result[key] = p.language ? value.map(v => typeof v === 'string' ? normalizeLanguage(v) : v) : value
+      }
+      else if (typeof value === 'string') {
+        result[key] = p.language ? normalizeLanguage(value) : value
+      }
+      else {
+        result[key] = value
+      }
       continue
     }
-    // Generalize screen to common bucket (with paired width/height awareness)
+
+    // User-agent params — controlled by userAgent flag
+    const isUserAgentParam = NORMALIZE_PARAMS.userAgent.some(pm => lowerKey === pm.toLowerCase())
+    if (isUserAgentParam && typeof value === 'string') {
+      result[key] = p.userAgent ? normalizeUserAgent(value) : value
+      continue
+    }
+
+    // Anonymize IP to subnet — controlled by ip flag
+    if (matchesParam(key, STRIP_PARAMS.ip) && typeof value === 'string') {
+      result[key] = p.ip ? anonymizeIP(value) : value
+      continue
+    }
+
+    // Generalize screen to common bucket (with paired width/height awareness) — screen flag
     if (matchesParam(key, STRIP_PARAMS.screen)) {
+      if (!p.screen) {
+        result[key] = value
+        continue
+      }
       // Color depth and pixel ratio are low-entropy (2-4 distinct values) — keep as-is
       if (['sd', 'colordepth', 'pixelratio'].includes(lowerKey)) {
         result[key] = value
@@ -346,39 +445,39 @@ export function stripPayloadFingerprinting(
       }
       continue
     }
-    // Generalize hardware to common bucket
+    // Generalize hardware to common bucket — screen flag (device capabilities)
     if (matchesParam(key, STRIP_PARAMS.hardware)) {
-      result[key] = generalizeHardware(value)
+      result[key] = p.screen ? generalizeHardware(value) : value
       continue
     }
-    // Generalize version strings to major version
+    // Generalize version strings to major version — hardware flag
     if (matchesParam(key, STRIP_PARAMS.version)) {
-      result[key] = generalizeVersion(value)
+      result[key] = p.hardware ? generalizeVersion(value) : value
       continue
     }
-    // Generalize browser version lists to major versions
+    // Generalize browser version lists to major versions — hardware flag
     if (matchesParam(key, STRIP_PARAMS.browserVersion)) {
-      result[key] = generalizeBrowserVersions(value)
+      result[key] = p.hardware ? generalizeBrowserVersions(value) : value
       continue
     }
-    // Generalize timezone
+    // Generalize timezone — timezone flag
     if (matchesParam(key, STRIP_PARAMS.location)) {
-      result[key] = generalizeTimezone(value)
+      result[key] = p.timezone ? generalizeTimezone(value) : value
       continue
     }
-    // Replace browser data lists with empty value
+    // Replace browser data lists with empty value — hardware flag
     if (matchesParam(key, STRIP_PARAMS.browserData)) {
-      result[key] = Array.isArray(value) ? [] : ''
+      result[key] = p.hardware ? (Array.isArray(value) ? [] : '') : value
       continue
     }
-    // Replace canvas/webgl/audio fingerprints with empty value
+    // Replace canvas/webgl/audio fingerprints with empty value — hardware flag
     if (matchesParam(key, STRIP_PARAMS.canvas)) {
-      result[key] = typeof value === 'number' ? 0 : typeof value === 'object' ? {} : ''
+      result[key] = p.hardware ? (typeof value === 'number' ? 0 : typeof value === 'object' ? {} : '') : value
       continue
     }
-    // Anonymize combined device info (parse and generalize components)
+    // Anonymize combined device info (parse and generalize components) — hardware flag
     if (matchesParam(key, STRIP_PARAMS.deviceInfo)) {
-      result[key] = typeof value === 'string' ? anonymizeDeviceInfo(value) : ''
+      result[key] = p.hardware ? (typeof value === 'string' ? anonymizeDeviceInfo(value) : '') : value
       continue
     }
     // Platform identifiers are low entropy — keep as-is
@@ -390,12 +489,12 @@ export function stripPayloadFingerprinting(
     if (Array.isArray(value)) {
       result[key] = value.map(item =>
         typeof item === 'object' && item !== null
-          ? stripPayloadFingerprinting(item as Record<string, unknown>)
+          ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
           : item,
       )
     }
     else if (typeof value === 'object' && value !== null) {
-      result[key] = stripPayloadFingerprinting(value as Record<string, unknown>)
+      result[key] = stripPayloadFingerprinting(value as Record<string, unknown>, privacy)
     }
     else {
       result[key] = value
