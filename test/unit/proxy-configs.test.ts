@@ -8,7 +8,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
       ])
-      expect(output).toBe(`fetch("/_scripts/c/ga/g/collect")`)
+      expect(output).toBe(`fetch(self.location.origin+"/_scripts/c/ga/g/collect")`)
     })
 
     it('rewrites https URLs with single quotes', () => {
@@ -16,7 +16,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
       ])
-      expect(output).toBe(`url='/_scripts/c/ga/analytics.js'`)
+      expect(output).toBe(`url=self.location.origin+'/_scripts/c/ga/analytics.js'`)
     })
 
     it('rewrites https URLs with backticks', () => {
@@ -24,7 +24,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
       ])
-      expect(output).toBe('const u=`/_scripts/c/ga/collect`')
+      expect(output).toBe('const u=self.location.origin+`/_scripts/c/ga/collect`')
     })
 
     it('rewrites protocol-relative URLs', () => {
@@ -32,7 +32,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
       ])
-      expect(output).toBe(`"/_scripts/c/ga/analytics.js"`)
+      expect(output).toBe(`self.location.origin+"/_scripts/c/ga/analytics.js"`)
     })
 
     it('rewrites http URLs', () => {
@@ -40,7 +40,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
       ])
-      expect(output).toBe(`"/_scripts/c/ga/analytics.js"`)
+      expect(output).toBe(`self.location.origin+"/_scripts/c/ga/analytics.js"`)
     })
 
     it('handles multiple rewrites in single content', () => {
@@ -52,8 +52,8 @@ describe('proxy configs', () => {
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
         { from: 'analytics.google.com', to: '/_scripts/c/ga' },
       ])
-      expect(output).toContain(`"/_scripts/c/ga/g/collect"`)
-      expect(output).toContain(`"/_scripts/c/ga/collect"`)
+      expect(output).toContain(`self.location.origin+"/_scripts/c/ga/g/collect"`)
+      expect(output).toContain(`self.location.origin+"/_scripts/c/ga/collect"`)
     })
 
     it('handles GTM URLs', () => {
@@ -61,7 +61,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'www.googletagmanager.com', to: '/_scripts/c/gtm' },
       ])
-      expect(output).toBe(`src="/_scripts/c/gtm/gtm.js?id=GTM-XXXX"`)
+      expect(output).toBe(`src=self.location.origin+"/_scripts/c/gtm/gtm.js?id=GTM-XXXX"`)
     })
 
     it('handles Meta Pixel URLs', () => {
@@ -69,7 +69,7 @@ describe('proxy configs', () => {
       const output = rewriteScriptUrls(input, [
         { from: 'connect.facebook.net', to: '/_scripts/c/meta' },
       ])
-      expect(output).toBe(`"/_scripts/c/meta/en_US/fbevents.js"`)
+      expect(output).toBe(`self.location.origin+"/_scripts/c/meta/en_US/fbevents.js"`)
     })
 
     it('does not rewrite bare domain strings without fromPath', () => {

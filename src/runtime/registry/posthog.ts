@@ -75,9 +75,12 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
           }
 
           const region = options?.region || 'us'
-          const apiHost = options?.apiHost || (region === 'eu'
+          let apiHost = options?.apiHost || (region === 'eu'
             ? 'https://eu.i.posthog.com'
             : 'https://us.i.posthog.com')
+          // Resolve relative proxy paths to absolute URLs so SDKs using new URL() don't throw
+          if (apiHost.startsWith('/'))
+            apiHost = window.location.origin + apiHost
 
           window.__posthogInitPromise = import('posthog-js')
             .then(({ default: posthog }) => {
