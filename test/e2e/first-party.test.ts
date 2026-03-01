@@ -447,25 +447,7 @@ describe('first-party privacy stripping', () => {
   beforeAll(() => clearCaptures())
   afterAll(() => clearCaptures())
 
-  describe('service worker', () => {
-    it('SW endpoint is accessible', async () => {
-      // Verify the SW file is being served
-      const swContent = await $fetch('/_nuxt-scripts-sw.js', { responseType: 'text' })
-      expect(swContent).toContain('INTERCEPT_RULES')
-      expect(swContent).toContain('self.addEventListener')
-    })
-
-    it('SW contains correct intercept rules', async () => {
-      const swContent = await $fetch('/_nuxt-scripts-sw.js', { responseType: 'text' }) as string
-      // Extract the INTERCEPT_RULES JSON
-      const match = swContent.match(/const INTERCEPT_RULES = (\[.*?\]);/s)
-      expect(match).toBeTruthy()
-      const rules = JSON.parse(match![1])
-      // Should have rules for GTM
-      expect(rules.some((r: any) => r.pattern === 'www.googletagmanager.com')).toBe(true)
-      expect(rules.some((r: any) => r.pattern === 'www.google-analytics.com')).toBe(true)
-    })
-
+  describe('proxy endpoint', () => {
     it('proxy endpoint works directly', async () => {
       // Test if the proxy endpoint can reach external URL
       const response = await $fetch('/_proxy/gtm/gtag/js?id=G-TEST', {
@@ -486,53 +468,6 @@ describe('first-party privacy stripping', () => {
       }
       expect(typeof response).toBe('string')
     }, 30000)
-
-    it('SW registers in browser', async () => {
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      const swLogs: string[] = []
-      page.on('console', (msg) => {
-        swLogs.push(`${msg.type()}: ${msg.text()}`)
-      })
-
-      await page.goto(url('/'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-
-      // Wait for SW to register after page load
-      await page.waitForTimeout(3000)
-
-      // Check SW registration status
-      const swStatus = await page.evaluate(async () => {
-        if (!('serviceWorker' in navigator)) {
-          return { supported: false }
-        }
-        const registrations = await navigator.serviceWorker.getRegistrations()
-        return {
-          supported: true,
-          registrations: registrations.map(r => ({
-            scope: r.scope,
-            active: r.active?.state,
-            waiting: r.waiting?.state,
-            installing: r.installing?.state,
-          })),
-          ready: navigator.serviceWorker.controller !== null,
-        }
-      })
-
-      // Debug output — only on failure
-      if (!swStatus.supported || !swStatus.registrations?.length) {
-        writeFileSync(join(fixtureDir, 'sw-status.json'), JSON.stringify({
-          swStatus,
-          swLogs: swLogs.filter(l => l.includes('SW') || l.includes('service') || l.includes('worker')),
-        }, null, 2))
-      }
-
-      expect(swStatus.supported).toBe(true)
-      expect(swStatus.registrations.length).toBeGreaterThan(0)
-
-      await page.close()
-    }, 30000)
   })
 
   describe('script bundling', () => {
@@ -551,16 +486,12 @@ describe('first-party privacy stripping', () => {
 
       await page.goto(url('/ga'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
 
-      // Wait for SW-triggered script to load (scripts wait for SW to be ready)
+      // Wait for script to load
       await page.waitForTimeout(5000)
 
       // Verify bundled script is loaded from local /_scripts path
       const localScript = scriptUrls.find(u => u.includes('/_scripts/'))
       expect(localScript).toBeDefined()
-
-      // Note: Dynamic requests from gtag.js may escape SW on first page load
-      // due to inherent race condition. SW intercept improves on subsequent loads.
-      // The important thing is the main script bundle is served first-party.
     }, 30000)
 
     it('bundled scripts contain rewritten collect URLs', async () => {
@@ -985,5 +916,164 @@ describe('first-party privacy stripping', () => {
       }
       // No captures acceptable - Reddit behavior varies in headless
     }, 30000)
+  })
+
+  /**
+   * Console error detection — catches broken proxy rewrites at runtime.
+   *
+   * Previous bugs caught by this pattern:
+   * - SyntaxError from self.location.origin+ in object property keys (#608)
+   * - TypeError from new URL() with relative paths (#608)
+   * - Broken URL construction from bare hostname rewrites (#608)
+   *
+   * These errors only manifest at runtime in the browser, not at build time,
+   * so unit tests alone are insufficient.
+   */
+  describe('no script errors from proxy rewrites', () => {
+    /**
+     * Errors from third-party scripts unrelated to our rewrite logic.
+     * These occur in headless browsers regardless of proxy mode.
+     */
+    const KNOWN_THIRD_PARTY_NOISE = [
+      /Failed to load resource/i, // Network errors, 404s, CDN auth
+      /net::ERR_/i, // Chrome network errors
+      /Refused to connect/i, // CSP
+      /Tracking Prevention/i, // Browser tracking prevention
+      /favicon/i, // favicon 404
+      /The source list for Content Security Policy/i,
+      /Permissions policy/i,
+      /third-party cookie/i,
+    ]
+
+    /** Patterns that indicate the error is from a proxy-rewritten script (high confidence) */
+    const PROXY_ERROR_INDICATORS = [
+      /_proxy/,
+      /_scripts\/c/,
+      /self\.location/,
+      /SyntaxError/i,
+      /cannot be parsed as a URL/i,
+      /Invalid URL/i,
+      /Unexpected token/i,
+      /ERR_NAME_NOT_RESOLVED/i,
+      /Failed to construct 'URL'/i,
+    ]
+
+    function isKnownNoise(text: string): boolean {
+      return KNOWN_THIRD_PARTY_NOISE.some(p => p.test(text))
+    }
+
+    function isProxyRelated(text: string): boolean {
+      return PROXY_ERROR_INDICATORS.some(p => p.test(text))
+    }
+
+    const providerPages = [
+      { name: 'googleAnalytics', path: '/ga' },
+      { name: 'googleTagManager', path: '/gtm' },
+      { name: 'metaPixel', path: '/meta' },
+      { name: 'tiktokPixel', path: '/tiktok' },
+      { name: 'clarity', path: '/clarity' },
+      { name: 'hotjar', path: '/hotjar' },
+      { name: 'segment', path: '/segment' },
+      { name: 'xPixel', path: '/x' },
+      { name: 'snapchatPixel', path: '/snap' },
+      { name: 'redditPixel', path: '/reddit' },
+    ]
+
+    it.each(providerPages)('$name page has no script errors', async ({ name, path: pagePath }) => {
+      const browser = await getBrowser()
+      const page = await browser.newPage()
+      page.setDefaultTimeout(5000)
+
+      const consoleErrors: { type: string, text: string }[] = []
+      const uncaughtErrors: string[] = []
+
+      // Capture console errors
+      page.on('console', (msg) => {
+        const type = msg.type()
+        if (type === 'error') {
+          const text = msg.text()
+          if (!isKnownNoise(text)) {
+            consoleErrors.push({ type, text })
+          }
+        }
+      })
+
+      // Capture ALL uncaught exceptions — any uncaught error from a rewritten
+      // script is a bug (SyntaxError, TypeError, ReferenceError, etc.)
+      page.on('pageerror', (err) => {
+        const text = err.message || String(err)
+        if (!isKnownNoise(text)) {
+          uncaughtErrors.push(text)
+        }
+      })
+
+      await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+
+      // Verify page actually rendered — if not, the test is meaningless
+      const pageRendered = await page.waitForSelector('#status', { timeout: 8000 })
+        .then(() => true)
+        .catch(() => false)
+
+      // Wait for scripts to load and execute
+      if (pageRendered) {
+        await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 }).catch(() => {})
+      }
+      await page.waitForTimeout(2000)
+
+      await page.close()
+
+      // Guard: if the page didn't render at all, something is wrong with the
+      // test infrastructure — fail explicitly instead of passing vacuously.
+      expect(pageRendered, `${name}: Page did not render — test is meaningless without a rendered page`).toBe(true)
+
+      // Assert no uncaught exceptions at all — these indicate broken scripts
+      // regardless of whether the error message mentions proxying
+      expect(
+        uncaughtErrors,
+        `${name}: Uncaught exceptions detected:\n${uncaughtErrors.map(e => `  ${e}`).join('\n')}`,
+      ).toEqual([])
+
+      // Assert no proxy-related console errors
+      const proxyConsoleErrors = consoleErrors.filter(e => isProxyRelated(e.text))
+      expect(
+        proxyConsoleErrors,
+        `${name}: Proxy-related console errors:\n${proxyConsoleErrors.map(e => `  [${e.type}] ${e.text}`).join('\n')}`,
+      ).toEqual([])
+    }, 30000)
+  })
+
+  /**
+   * Bundled script integrity — verify rewritten scripts are syntactically valid JS.
+   * Catches issues like self.location.origin+ in object keys before they reach users.
+   */
+  describe('bundled script integrity', () => {
+    it('all cached proxy-rewritten scripts are syntactically valid', async () => {
+      const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-proxy')
+      if (!existsSync(cacheDir)) return // skip if no cached scripts
+
+      const files = readdirSync(cacheDir).filter(f => f.endsWith('.js'))
+      for (const file of files) {
+        const content = readFileSync(join(cacheDir, file), 'utf-8')
+
+        // Check for the broken pattern: expression in object property key position
+        // e.g. {self.location.origin+"/_proxy/...":handler}
+        // Matches self.location.origin+"..."<colon> — the expression directly followed by : means it's used as a key
+        const brokenPropertyKeyPattern = /self\.location\.origin\+["'`][^"'`]*["'`]\s*:/
+        expect(
+          brokenPropertyKeyPattern.test(content),
+          `${file}: Contains self.location.origin expression in object property key position`,
+        ).toBe(false)
+
+        // Verify proxy URLs are present (rewrites applied)
+        if (content.includes('/_proxy/') || content.includes('/_scripts/c/')) {
+          // Script has proxy rewrites — verify no full third-party URLs remain in common URL patterns
+          const thirdPartyUrlPattern = /["'`]https?:\/\/(www\.google-analytics\.com|analytics\.tiktok\.com|connect\.facebook\.net)\//
+          const hasUnrewrittenUrls = thirdPartyUrlPattern.test(content)
+          if (hasUnrewrittenUrls) {
+            console.warn(`[warn] ${file}: Found unrewritten third-party URLs — may be in non-URL context`)
+          }
+        }
+      }
+    })
   })
 })

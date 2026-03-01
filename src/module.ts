@@ -9,7 +9,8 @@ import {
   defineNuxtModule,
   hasNuxtModule,
 } from '@nuxt/kit'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { resolve as resolvePath_ } from 'pathe'
 import { defu } from 'defu'
 import { readPackageJSON } from 'pkg-types'
 import type { FetchOptions } from 'ofetch'
@@ -28,7 +29,7 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
-import { getAllProxyConfigs, getSWInterceptRules } from './proxy-configs'
+import { getAllProxyConfigs, getInterceptRules } from './proxy-configs'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 
 declare module '@nuxt/schema' {
@@ -92,6 +93,65 @@ export interface FirstPartyOptions {
  * Scripts not listed here are likely incompatible due to DOM access requirements.
  * @see https://partytown.qwik.dev/forwarding-events
  */
+// Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
+// e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
+const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\s*\/\s*>/g
+
+/**
+ * Expand self-closing `<Script*>` component tags in page files to work around
+ * a Nuxt core regex issue (nuxt `SFC_SCRIPT_RE` uses case-insensitive matching).
+ */
+function fixSelfClosingScriptComponents(nuxt: any) {
+  function expandTags(content: string): string | null {
+    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
+    if (!SELF_CLOSING_SCRIPT_RE.test(content)) return null
+    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
+    return content.replace(SELF_CLOSING_SCRIPT_RE, '<$1$2></$1>')
+  }
+
+  function fixFile(filePath: string) {
+    if (!existsSync(filePath)) return
+    const content = readFileSync(filePath, 'utf-8')
+    const fixed = expandTags(content)
+    if (fixed) nuxt.vfs[filePath] = fixed
+    else delete nuxt.vfs[filePath]
+  }
+
+  function scanDir(dir: string) {
+    if (!existsSync(dir)) return
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = resolvePath_(dir, entry.name)
+      if (entry.isDirectory()) scanDir(fullPath)
+      else if (entry.name.endsWith('.vue')) fixFile(fullPath)
+    }
+  }
+
+  const pagesDirs = new Set<string>()
+  for (const layer of nuxt.options._layers) {
+    pagesDirs.add(resolvePath_(
+      layer.config.srcDir,
+      layer.config.dir?.pages || 'pages',
+    ))
+  }
+  for (const dir of pagesDirs) scanDir(dir)
+
+  // Keep VFS entries fresh during dev HMR
+  if (nuxt.options.dev) {
+    nuxt.hook('builder:watch', (_event: string, relativePath: string) => {
+      if (!relativePath.endsWith('.vue')) return
+      for (const layer of nuxt.options._layers) {
+        const fullPath = resolvePath_(layer.config.srcDir, relativePath)
+        for (const dir of pagesDirs) {
+          if (fullPath.startsWith(`${dir}/`)) {
+            fixFile(fullPath)
+            return
+          }
+        }
+      }
+    })
+  }
+}
+
 const PARTYTOWN_FORWARDS: Record<string, string[]> = {
   googleAnalytics: ['dataLayer.push', 'gtag'],
   plausible: ['plausible'],
@@ -274,7 +334,6 @@ export default defineNuxtModule<ModuleOptions>({
       googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
         ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
         : undefined,
-      swTemplate: readFileSync(await resolvePath('./runtime/sw/proxy-sw.template.js'), 'utf-8'),
     } as any
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
@@ -390,6 +449,14 @@ export default defineNuxtModule<ModuleOptions>({
       pathPrefix: false,
     })
 
+    // Fix #613: Self-closing <Script*> tags break Nuxt's definePageMeta extraction.
+    // Nuxt's SFC_SCRIPT_RE regex uses case-insensitive matching, so <ScriptFoo /> is
+    // matched as a <script> opening tag. Without a closing </ScriptFoo>, the regex
+    // consumes the real </script> closing tag, losing definePageMeta. Expanding
+    // self-closing Script* tags to <ScriptFoo></ScriptFoo> provides the closing tag
+    // that the regex needs to scope its match correctly.
+    fixSelfClosingScriptComponents(nuxt)
+
     addTemplate({
       filename: 'nuxt-scripts-trigger-resolver.mjs',
       getContents() {
@@ -397,103 +464,46 @@ export default defineNuxtModule<ModuleOptions>({
       },
     })
 
-    // Pre-resolve paths needed for hooks
-    const swHandlerPath = await resolvePath('./runtime/server/sw-handler')
-
     logger.debug('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
 
-    // Setup Service Worker for first-party mode (must be before modules:done)
-    // Skip in dev - persistent SW causes issues when switching between dev servers
+    // Setup first-party proxy mode (must be before modules:done)
     if (firstPartyEnabled && !nuxt.options.dev) {
-      // Use root path to avoid conflict with /_scripts/** wildcard route
-      const swPath = '/_nuxt-scripts-sw.js'
-      const swRules = getSWInterceptRules(firstPartyCollectPrefix)
+      const interceptRules = getInterceptRules(firstPartyCollectPrefix)
 
-      // Serve SW from the scripts prefix
-      addServerHandler({
-        route: swPath,
-        handler: swHandlerPath,
-      })
-
-      // Register the SW registration plugin
+      // Register __nuxtScripts runtime helper — provides sendBeacon/fetch wrappers
+      // that route matching URLs through the first-party proxy. AST rewriting transforms
+      // navigator.sendBeacon/fetch calls to use these wrappers at build time.
       addPluginTemplate({
-        filename: 'nuxt-scripts-sw-register.client.mjs',
+        filename: 'nuxt-scripts-intercept.client.mjs',
         getContents() {
-          return `import { defineNuxtPlugin } from 'nuxt/app'
-
-export default defineNuxtPlugin({
-  name: 'nuxt-scripts:sw-register',
-  enforce: 'pre',
-  async setup() {
-    if (!('serviceWorker' in navigator)) return;
-
-    try {
-      const reg = await navigator.serviceWorker.register('${swPath}', { scope: '/' });
-
-      // Wait for SW to be active and controlling this page
-      if (!navigator.serviceWorker.controller) {
-        await new Promise((resolve) => {
-          const onControllerChange = () => {
-            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
-            resolve();
-          };
-          navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-
-          // Fallback timeout
-          setTimeout(resolve, 2000);
-        });
-      }
-    } catch (err) {
-      console.warn('[nuxt-scripts] SW registration failed:', err);
-    }
-  },
-})
-`
-        },
-      })
-
-      // Register beacon intercept plugin - patches navigator.sendBeacon to route through proxy
-      // This is critical because sendBeacon bypasses Service Workers
-      addPluginTemplate({
-        filename: 'nuxt-scripts-beacon-intercept.client.mjs',
-        getContents() {
-          const rulesJson = JSON.stringify(swRules)
+          const rulesJson = JSON.stringify(interceptRules)
           return `export default defineNuxtPlugin({
-  name: 'nuxt-scripts:beacon-intercept',
+  name: 'nuxt-scripts:intercept',
   enforce: 'pre',
   setup() {
-    if (typeof navigator === 'undefined' || !navigator.sendBeacon) return;
-
     const rules = ${rulesJson};
-    const originalBeacon = navigator.sendBeacon.bind(navigator);
+    const origBeacon = typeof navigator !== 'undefined' && navigator.sendBeacon
+      ? navigator.sendBeacon.bind(navigator)
+      : () => false;
+    const origFetch = globalThis.fetch.bind(globalThis);
 
-    navigator.sendBeacon = (url, data) => {
+    function rewriteUrl(url) {
       try {
-        const parsed = new URL(url, window.location.origin);
-
-        // Check if this URL matches any of our proxy rules
+        const parsed = new URL(url, location.origin);
         for (const rule of rules) {
           if (parsed.hostname === rule.pattern || parsed.hostname.endsWith('.' + rule.pattern)) {
-            // Check path prefix if specified
-            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix)) {
-              continue;
-            }
-
-            // Rewrite to proxy: strip pathPrefix from original, prepend target
-            const pathWithoutPrefix = rule.pathPrefix
-              ? parsed.pathname.slice(rule.pathPrefix.length)
-              : parsed.pathname;
-            const separator = pathWithoutPrefix.startsWith('/') ? '' : '/';
-            const proxyUrl = window.location.origin + rule.target + separator + pathWithoutPrefix + parsed.search;
-
-            return originalBeacon(proxyUrl, data);
+            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix)) continue;
+            const path = rule.pathPrefix ? parsed.pathname.slice(rule.pathPrefix.length) : parsed.pathname;
+            return location.origin + rule.target + (path.startsWith('/') ? '' : '/') + path + parsed.search;
           }
         }
-      } catch (e) {
-        // URL parsing failed, pass through
-      }
+      } catch {}
+      return url;
+    }
 
-      return originalBeacon(url, data);
+    globalThis.__nuxtScripts = {
+      sendBeacon: (url, data) => origBeacon(rewriteUrl(url), data),
+      fetch: (url, opts) => origFetch(typeof url === 'string' ? rewriteUrl(url) : url, opts),
     };
   },
 })
@@ -501,10 +511,7 @@ export default defineNuxtPlugin({
         },
       })
 
-      // Store SW path in runtime config for the trigger composable
-      nuxt.options.runtimeConfig.public['nuxt-scripts-sw'] = { path: swPath }
-
-      // Register proxy handler for both privacy modes (must be before modules:done like SW handler)
+      // Register proxy handler for both privacy modes (must be before modules:done)
       // Both modes need the handler: 'proxy' strips sensitive headers, 'anonymize' also strips fingerprinting
       const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
       logger.debug('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
@@ -607,25 +614,11 @@ export default defineNuxtPlugin({
           flatRoutes[path] = config.proxy
         }
 
-        // Collect rewrites for all configured registry scripts
-        const allRewrites: Array<{ from: string, to: string }> = []
-        for (const key of registryKeys) {
-          const script = registryScriptsWithImport.find(s => s.import.name.toLowerCase() === `usescript${key.toLowerCase()}`)
-          const proxyKey = script?.proxy !== false ? (script?.proxy || key) : undefined
-          if (proxyKey) {
-            const proxyConfig = proxyConfigs[proxyKey]
-            if (proxyConfig?.rewrite) {
-              allRewrites.push(...proxyConfig.rewrite)
-            }
-          }
-        }
-
         // Server-side config for proxy privacy handling
         nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
           routes: flatRoutes,
           privacy: firstPartyPrivacy, // undefined = use per-script defaults, set = global override
           routePrivacy: routePrivacyOverrides, // per-script privacy from registry
-          rewrites: allRewrites,
         } as any
 
         // Proxy handler is registered before modules:done for both privacy modes

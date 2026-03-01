@@ -1,4 +1,4 @@
-import { rewriteScriptUrls, type ProxyRewrite } from './runtime/utils/pure'
+import type { ProxyRewrite } from './runtime/utils/pure'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 
 export type { ProxyRewrite }
@@ -236,7 +236,7 @@ export function getAllProxyConfigs(collectPrefix: string): Record<string, ProxyC
   return buildProxyConfig(collectPrefix)
 }
 
-export interface SWInterceptRule {
+export interface InterceptRule {
   /** Domain pattern to match (supports wildcards like *.google-analytics.com) */
   pattern: string
   /** Path prefix to match and strip from the original URL (e.g., /tr for www.facebook.com/tr) */
@@ -246,12 +246,13 @@ export interface SWInterceptRule {
 }
 
 /**
- * Get service worker intercept rules from all proxy configs.
- * These rules are used by the SW to intercept and rewrite outbound requests.
+ * Get intercept rules from all proxy configs.
+ * These rules are embedded in the __nuxtScripts client plugin to rewrite
+ * outbound fetch/sendBeacon URLs through the first-party proxy.
  */
-export function getSWInterceptRules(collectPrefix: string): SWInterceptRule[] {
+export function getInterceptRules(collectPrefix: string): InterceptRule[] {
   const configs = buildProxyConfig(collectPrefix)
-  const rules: SWInterceptRule[] = []
+  const rules: InterceptRule[] = []
 
   // Extract unique domain -> target mappings from route rules
   for (const config of Object.values(configs)) {
@@ -275,5 +276,3 @@ export function getSWInterceptRules(collectPrefix: string): SWInterceptRule[] {
 
   return rules
 }
-
-export { rewriteScriptUrls }

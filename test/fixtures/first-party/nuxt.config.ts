@@ -7,12 +7,17 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2024-07-05',
 
+  // Force unhead to be bundled into the server code instead of externalized.
+  // Nitro's external tracing misses some unhead subpath exports (server, utils)
+  // which causes ERR_MODULE_NOT_FOUND in the test build output.
+  nitro: {
+    externals: {
+      inline: ['unhead'],
+    },
+  },
+
   scripts: {
     firstParty: true, // Uses per-script privacy defaults from registry
-    // Wait for SW to be ready before loading scripts that need interception
-    defaultScriptOptions: {
-      trigger: { serviceWorker: true },
-    },
     registry: {
       googleAnalytics: {
         id: 'G-TR58L0EF8P',

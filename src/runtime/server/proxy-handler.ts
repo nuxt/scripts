@@ -1,8 +1,6 @@
 import { defineEventHandler, getHeaders, getRequestIP, readBody, getQuery, setResponseHeader, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
-import { useStorage, useNitroApp } from 'nitropack/runtime'
-import { hash } from 'ohash'
-import { rewriteScriptUrls } from '../utils/pure'
+import { useNitroApp } from 'nitropack/runtime'
 import {
   SENSITIVE_HEADERS,
   anonymizeIP,
@@ -20,9 +18,6 @@ interface ProxyConfig {
   privacy?: ProxyPrivacyInput
   /** Per-script privacy from registry (every route has an entry) */
   routePrivacy: Record<string, ProxyPrivacyInput>
-  rewrites?: Array<{ from: string, to: string }>
-  /** Cache duration for JavaScript responses in seconds (default: 3600 = 1 hour) */
-  cacheTtl?: number
   /** Enable verbose logging (default: only in dev) */
   debug?: boolean
 }
@@ -60,7 +55,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { routes, privacy: globalPrivacy, routePrivacy, cacheTtl = 3600, debug = import.meta.dev } = proxyConfig
+  const { routes, privacy: globalPrivacy, routePrivacy, debug = import.meta.dev } = proxyConfig
   const path = event.path
   const log = debug
     ? (message: string, ...args: any[]) => {
@@ -338,31 +333,7 @@ export default defineEventHandler(async (event) => {
   const isTextContent = responseContentType.includes('text') || responseContentType.includes('javascript') || responseContentType.includes('json')
 
   if (isTextContent) {
-    let content = await response.text()
-
-    // Rewrite URLs in JavaScript responses to route through our proxy
-    // This is necessary because some SDKs use sendBeacon() which can't be intercepted by SW
-    if (responseContentType.includes('javascript') && proxyConfig?.rewrites?.length) {
-      // Use storage to cache rewritten scripts
-      const cacheKey = `nuxt-scripts:proxy:${hash(targetUrl + JSON.stringify(proxyConfig.rewrites))}`
-      const storage = useStorage('cache')
-      const cached = await storage.getItem(cacheKey)
-
-      if (cached && typeof cached === 'string') {
-        log('[proxy] Serving rewritten script from cache')
-        content = cached
-      }
-      else {
-        content = rewriteScriptUrls(content, proxyConfig.rewrites)
-        await storage.setItem(cacheKey, content, { ttl: cacheTtl })
-        log('[proxy] Rewrote URLs in JavaScript response and cached')
-      }
-
-      // Add cache headers for proxied JavaScript responses
-      setResponseHeader(event, 'cache-control', `public, max-age=${cacheTtl}, stale-while-revalidate=${cacheTtl * 2}`)
-    }
-
-    return content
+    return await response.text()
   }
 
   // For binary content (images, etc.)

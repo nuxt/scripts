@@ -14,8 +14,9 @@ import type { FetchOptions } from 'ofetch'
 import { $fetch } from 'ofetch'
 import { logger } from '../logger'
 import { bundleStorage } from '../assets'
-import { getProxyConfig, rewriteScriptUrls, type ProxyRewrite } from '../proxy-configs'
+import { getProxyConfig, type ProxyRewrite } from '../proxy-configs'
 import { isJS, isVue } from './util'
+import { rewriteScriptUrlsAST } from './rewrite-ast'
 import type { RegistryScript } from '#nuxt-scripts/types'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
@@ -142,10 +143,10 @@ async function downloadScript(opts: {
     })
 
     await storage.setItemRaw(`bundle:${filename}`, res)
-    // Apply URL rewrites for proxy mode
+    // Apply URL rewrites for proxy mode (AST-based at build time)
     if (proxyRewrites?.length && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrls(content, proxyRewrites)
+      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites)
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
