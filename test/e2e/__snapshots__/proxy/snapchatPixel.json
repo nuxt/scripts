@@ -63,7 +63,14 @@
       "query": {},
     },
     "path": "/_proxy/snap/p",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": {
         "ctx": {

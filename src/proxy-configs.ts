@@ -1,4 +1,4 @@
-import { rewriteScriptUrls, type ProxyRewrite } from './runtime/utils/pure'
+import type { ProxyRewrite } from './runtime/utils/pure'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 
 export type { ProxyRewrite }
@@ -216,6 +216,95 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/hotjar-insights/**`]: { proxy: 'https://insights.hotjar.com/**' },
       },
     },
+    plausible: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'plausible.io', to: `${collectPrefix}/plausible` },
+      ],
+      routes: {
+        [`${collectPrefix}/plausible/**`]: { proxy: 'https://plausible.io/**' },
+      },
+    },
+
+    cloudflareWebAnalytics: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'static.cloudflareinsights.com', to: `${collectPrefix}/cfwa` },
+        { from: 'cloudflareinsights.com', to: `${collectPrefix}/cfwa-beacon` },
+      ],
+      routes: {
+        [`${collectPrefix}/cfwa/**`]: { proxy: 'https://static.cloudflareinsights.com/**' },
+        [`${collectPrefix}/cfwa-beacon/**`]: { proxy: 'https://cloudflareinsights.com/**' },
+      },
+    },
+
+    rybbit: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'app.rybbit.io', to: `${collectPrefix}/rybbit` },
+      ],
+      routes: {
+        [`${collectPrefix}/rybbit/**`]: { proxy: 'https://app.rybbit.io/**' },
+      },
+    },
+
+    umami: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cloud.umami.is', to: `${collectPrefix}/umami` },
+      ],
+      routes: {
+        [`${collectPrefix}/umami/**`]: { proxy: 'https://cloud.umami.is/**' },
+      },
+    },
+
+    databuddy: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cdn.databuddy.cc', to: `${collectPrefix}/databuddy` },
+        { from: 'basket.databuddy.cc', to: `${collectPrefix}/databuddy-api` },
+      ],
+      routes: {
+        [`${collectPrefix}/databuddy/**`]: { proxy: 'https://cdn.databuddy.cc/**' },
+        [`${collectPrefix}/databuddy-api/**`]: { proxy: 'https://basket.databuddy.cc/**' },
+      },
+    },
+
+    fathom: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cdn.usefathom.com', to: `${collectPrefix}/fathom` },
+      ],
+      routes: {
+        [`${collectPrefix}/fathom/**`]: { proxy: 'https://cdn.usefathom.com/**' },
+      },
+    },
+
+    intercom: {
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'widget.intercom.io', to: `${collectPrefix}/intercom` },
+        { from: 'api-iam.intercom.io', to: `${collectPrefix}/intercom-api` },
+        { from: 'api-iam.eu.intercom.io', to: `${collectPrefix}/intercom-api-eu` },
+        { from: 'api-iam.au.intercom.io', to: `${collectPrefix}/intercom-api-au` },
+      ],
+      routes: {
+        [`${collectPrefix}/intercom/**`]: { proxy: 'https://widget.intercom.io/**' },
+        [`${collectPrefix}/intercom-api/**`]: { proxy: 'https://api-iam.intercom.io/**' },
+        [`${collectPrefix}/intercom-api-eu/**`]: { proxy: 'https://api-iam.eu.intercom.io/**' },
+        [`${collectPrefix}/intercom-api-au/**`]: { proxy: 'https://api-iam.au.intercom.io/**' },
+      },
+    },
+
+    crisp: {
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'client.crisp.chat', to: `${collectPrefix}/crisp` },
+      ],
+      routes: {
+        [`${collectPrefix}/crisp/**`]: { proxy: 'https://client.crisp.chat/**' },
+      },
+    },
   } satisfies Record<string, ProxyConfig>
 }
 
@@ -236,8 +325,8 @@ export function getAllProxyConfigs(collectPrefix: string): Record<string, ProxyC
   return buildProxyConfig(collectPrefix)
 }
 
-export interface SWInterceptRule {
-  /** Domain pattern to match (supports wildcards like *.google-analytics.com) */
+export interface InterceptRule {
+  /** Domain to match (exact match or implicit subdomain suffix match, e.g. google-analytics.com matches *.google-analytics.com) */
   pattern: string
   /** Path prefix to match and strip from the original URL (e.g., /tr for www.facebook.com/tr) */
   pathPrefix: string
@@ -246,34 +335,36 @@ export interface SWInterceptRule {
 }
 
 /**
- * Get service worker intercept rules from all proxy configs.
- * These rules are used by the SW to intercept and rewrite outbound requests.
+ * Convert route definitions into intercept rules for client-side URL rewriting.
  */
-export function getSWInterceptRules(collectPrefix: string): SWInterceptRule[] {
-  const configs = buildProxyConfig(collectPrefix)
-  const rules: SWInterceptRule[] = []
-
-  // Extract unique domain -> target mappings from route rules
-  for (const config of Object.values(configs)) {
-    if (!config.routes)
-      continue
-    for (const [localPath, { proxy }] of Object.entries(config.routes)) {
-      // Extract domain and path prefix from proxy URL
-      // e.g., "https://www.facebook.com/tr/**" -> domain="www.facebook.com", pathPrefix="/tr"
-      // e.g., "https://connect.facebook.net/**" -> domain="connect.facebook.net", pathPrefix=""
-      const match = proxy.match(/^https?:\/\/([^/]+)(\/.*)?\/\*\*$/)
-      if (match?.[1]) {
-        const domain = match[1]
-        // Path prefix is everything between domain and /** (e.g., /tr), empty if none
-        const pathPrefix = match[2] || ''
-        // Extract target prefix: "/_proxy/meta-tr/**" -> "/_proxy/meta-tr"
-        const target = localPath.replace(/\/\*\*$/, '')
-        rules.push({ pattern: domain, pathPrefix, target })
-      }
+export function routesToInterceptRules(routes: Record<string, { proxy: string }>): InterceptRule[] {
+  const rules: InterceptRule[] = []
+  for (const [localPath, { proxy }] of Object.entries(routes)) {
+    // Extract domain and path prefix from proxy URL
+    // e.g., "https://www.facebook.com/tr/**" -> domain="www.facebook.com", pathPrefix="/tr"
+    // e.g., "https://connect.facebook.net/**" -> domain="connect.facebook.net", pathPrefix=""
+    const match = proxy.match(/^https?:\/\/([^/]+)(\/.*)?\/\*\*$/)
+    if (match?.[1]) {
+      const domain = match[1]
+      const pathPrefix = match[2] || ''
+      const target = localPath.replace(/\/\*\*$/, '')
+      rules.push({ pattern: domain, pathPrefix, target })
     }
   }
-
   return rules
 }
 
-export { rewriteScriptUrls }
+/**
+ * Get intercept rules from all proxy configs.
+ * These rules are embedded in the __nuxtScripts client plugin to rewrite
+ * outbound fetch/sendBeacon URLs through the first-party proxy.
+ */
+export function getInterceptRules(collectPrefix: string): InterceptRule[] {
+  const configs = buildProxyConfig(collectPrefix)
+  const allRoutes: Record<string, { proxy: string }> = {}
+  for (const config of Object.values(configs)) {
+    if (config.routes)
+      Object.assign(allRoutes, config.routes)
+  }
+  return routesToInterceptRules(allRoutes)
+}

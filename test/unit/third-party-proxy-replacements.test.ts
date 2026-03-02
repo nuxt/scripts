@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { $fetch } from 'ofetch'
-import { getAllProxyConfigs, rewriteScriptUrls } from '../../src/proxy-configs'
+import { getAllProxyConfigs } from '../../src/proxy-configs'
+import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
 import { stripFingerprintingFromPayload } from '../utils/proxy-privacy'
 
 const COLLECT_PREFIX = '/_scripts/c'
@@ -105,7 +106,7 @@ describe('third-party script proxy replacements', () => {
       }
 
       // Apply rewrites
-      const rewritten = rewriteScriptUrls(content, proxyConfig.rewrite!)
+      const rewritten = rewriteScriptUrlsAST(content, 'script.js', proxyConfig.rewrite!)
 
       // Check that forbidden domains are replaced
       for (const forbidden of forbiddenAfterRewrite) {
@@ -214,7 +215,7 @@ describe('third-party script proxy replacements', () => {
       const config = proxyConfigs[key]
       expect(config, `Missing config for ${key}`).toBeDefined()
 
-      const rewritten = rewriteScriptUrls(content, config.rewrite!)
+      const rewritten = rewriteScriptUrlsAST(content, 'script.js', config.rewrite!)
 
       // Should have proxy paths
       expect(rewritten).toContain(COLLECT_PREFIX)

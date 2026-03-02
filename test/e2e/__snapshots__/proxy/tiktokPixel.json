@@ -9,7 +9,14 @@
       },
     },
     "path": "/_proxy/tiktok/i18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": null,
       "query": {
@@ -26,7 +33,14 @@
       "query": {},
     },
     "path": "/_proxy/tiktok/i18n/pixel/static/main.MTEwMjY2ZTExMA.js",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": null,
       "query": {},
@@ -40,7 +54,14 @@
       "query": {},
     },
     "path": "/_proxy/tiktok/i18n/pixel/static/identify_31760074.js",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": null,
       "query": {},
@@ -57,7 +78,14 @@
       },
     },
     "path": "/_proxy/tiktok/i18n/pixel/config.js?sdkid=TEST_PIXEL_ID&hostname=127.0.0.1",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": null,
       "query": {
@@ -88,7 +116,7 @@
               "y": 117.875,
             },
             "tag": "BUTTON",
-            "timestamp": "2026-02-24T15:17:59.714Z",
+            "timestamp": "2026-02-28T08:00:54.341Z",
             "xpath": "/HTML/body[1]/div[1]/div[1]/div[1]/div[2]/button[1]",
           },
         },
@@ -110,13 +138,13 @@
             "referrer": "",
             "url": "http://127.0.0.1:<PORT>/tiktok",
           },
-          "pageview_id": "<UUID>-slDb9.0.0::<UUID>",
+          "pageview_id": "<UUID>-A08P9.0.0::<UUID>",
           "pixel": {
             "code": "TEST_PIXEL_ID",
             "codes": "TEST_PIXEL_ID",
             "runtime": "1",
           },
-          "session_id": "<UUID>::TwKWx5wsgAieMIFKtP3K",
+          "session_id": "<UUID>::thh0ooOq3HLXa8r1g6t5",
           "sessions": [],
           "user": {},
           "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
@@ -124,7 +152,7 @@
         },
         "event_id": "",
         "is_onsite": false,
-        "message_id": "messageId-1771946279718-6430671339489",
+        "message_id": "messageId-1772265654345-1045857492235",
         "properties": {},
         "signal_diagnostic_labels": {
           "hashed_eb_email": {
@@ -158,12 +186,19 @@
             "label": "missing",
           },
         },
-        "timestamp": "2026-02-24T15:17:59.718Z",
+        "timestamp": "2026-02-28T08:00:54.345Z",
       },
       "query": {},
     },
     "path": "/_proxy/tiktok/api/v2/pixel/act",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": {
         "_inspection": {
@@ -183,7 +218,7 @@
               "y": 117.875,
             },
             "tag": "BUTTON",
-            "timestamp": "2026-02-24T15:17:59.714Z",
+            "timestamp": "2026-02-28T08:00:54.341Z",
             "xpath": "/HTML/body[1]/div[1]/div[1]/div[1]/div[2]/button[1]",
           },
         },
@@ -205,13 +240,13 @@
             "referrer": "",
             "url": "http://127.0.0.1:<PORT>/tiktok",
           },
-          "pageview_id": "<UUID>-slDb9.0.0::<UUID>",
+          "pageview_id": "<UUID>-A08P9.0.0::<UUID>",
           "pixel": {
             "code": "TEST_PIXEL_ID",
             "codes": "TEST_PIXEL_ID",
             "runtime": "1",
           },
-          "session_id": "<UUID>::TwKWx5wsgAieMIFKtP3K",
+          "session_id": "<UUID>::thh0ooOq3HLXa8r1g6t5",
           "sessions": [],
           "user": {},
           "userAgent": "Mozilla/5.0 (compatible; Chrome/145.0)",
@@ -219,7 +254,7 @@
         },
         "event_id": "",
         "is_onsite": false,
-        "message_id": "messageId-1771946279718-6430671339489",
+        "message_id": "messageId-1772265654345-1045857492235",
         "properties": {},
         "signal_diagnostic_labels": {
           "hashed_eb_email": {
@@ -253,7 +288,7 @@
             "label": "missing",
           },
         },
-        "timestamp": "2026-02-24T15:17:59.718Z",
+        "timestamp": "2026-02-28T08:00:54.345Z",
       },
       "query": {},
     },

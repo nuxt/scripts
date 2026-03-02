@@ -34,7 +34,14 @@
       },
     },
     "path": "/_proxy/reddit/rp.gif?ts=<TS>&id=t2_test_advertiser_id&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=<UUID>&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_4c7f42cc&dpm=&dpcc=&dprc=",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": null,
       "query": {

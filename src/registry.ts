@@ -19,6 +19,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
   return [
     {
       label: 'Plausible Analytics',
+      proxy: 'plausible',
       category: 'analytics',
       scriptBundling: (options?: PlausibleAnalyticsInput) => {
         const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
@@ -32,6 +33,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     {
       label: 'Cloudflare Web Analytics',
+      proxy: 'cloudflareWebAnalytics',
       src: 'https://static.cloudflareinsights.com/beacon.min.js',
       category: 'analytics',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="70.02" height="32" viewBox="0 0 256 117"><path fill="#FBAD41" d="M205.52 50.813c-.858 0-1.705.03-2.551.058c-.137.007-.272.04-.398.094a1.424 1.424 0 0 0-.92.994l-3.628 12.672c-1.565 5.449-.983 10.48 1.646 14.174c2.41 3.416 6.42 5.421 11.289 5.655l19.679 1.194c.585.03 1.092.312 1.4.776a1.92 1.92 0 0 1 .2 1.692a2.496 2.496 0 0 1-2.134 1.662l-20.448 1.193c-11.11.515-23.062 9.58-27.255 20.633l-1.474 3.9a1.092 1.092 0 0 0 .967 1.49h70.425a1.872 1.872 0 0 0 1.81-1.365A51.172 51.172 0 0 0 256 101.828c0-28.16-22.582-50.984-50.449-50.984"/><path fill="#F6821F" d="m174.782 115.362l1.303-4.583c1.568-5.449.987-10.48-1.639-14.173c-2.418-3.417-6.424-5.422-11.296-5.656l-92.312-1.193a1.822 1.822 0 0 1-1.459-.776a1.919 1.919 0 0 1-.203-1.693a2.496 2.496 0 0 1 2.154-1.662l93.173-1.193c11.063-.511 23.015-9.58 27.208-20.633l5.313-14.04c.214-.596.27-1.238.156-1.86C191.126 20.51 166.91 0 137.96 0C111.269 0 88.626 17.403 80.5 41.596a26.996 26.996 0 0 0-19.156-5.359C48.549 37.524 38.25 47.946 36.979 60.88a27.905 27.905 0 0 0 .702 9.642C16.773 71.145 0 88.454 0 109.726c0 1.923.137 3.818.413 5.667c.115.897.879 1.57 1.783 1.568h170.48a2.223 2.223 0 0 0 2.106-1.63"/></svg>`,
@@ -54,6 +56,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     {
       label: 'Fathom Analytics',
+      proxy: 'fathom',
       scriptBundling: false, // breaks script
       category: 'analytics',
       logo: `<svg width="32" height="32" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><circle cx="512" cy="512" r="512" style="fill:#9187ff"/><path d="M558.62 256c-36.31.16-78.78 10-129.45 28.4-170.71 62.15-206.9 139.74-144.79 310.45s139.73 206.89 310.45 144.76S801.74 599.88 739.6 429.16c-43.69-120-95-173.55-181-173.17zm59.1 140.16h26.73a5.33 5.33 0 0 1 5.16 6.72l-59.26 220.48a5.34 5.34 0 0 1-5.15 4h-26.75a5.33 5.33 0 0 1-5.16-6.72l3.6-13.4 2.63-9.75 53-197.38a5.33 5.33 0 0 1 5.14-3.94zM421.79 413.4h10.75a5.33 5.33 0 0 1 5.33 5.33v18a5.33 5.33 0 0 1-5.33 5.33h-9.13a36.76 36.76 0 0 0-5.51.24 4.7 4.7 0 0 0-2.56 1 4.19 4.19 0 0 0-1 1.66 18.91 18.91 0 0 0-.92 6.72v13.67h19.16a5.33 5.33 0 0 1 5.33 5.33v18a5.34 5.34 0 0 1-5.33 5.33h-19.21v108.71a5.34 5.34 0 0 1-5.34 5.34H387a5.33 5.33 0 0 1-5.33-5.34V448.48a36.74 36.74 0 0 1 3.6-16.64 29.76 29.76 0 0 1 9.73-11.16c7.9-5.48 17.62-7.27 26.82-7.31zm82.14 50c16.37 0 30.27 4.65 40.17 13.27s15.47 21.21 15.42 35.59v35.91l-16.11 59.92h-10.24a5.33 5.33 0 0 1-5.33-5.34v-4a39.13 39.13 0 0 1-4.76 3.56c-7.14 4.55-16.85 7.51-29.65 7.51a62.65 62.65 0 0 1-28.52-6.18 40.49 40.49 0 0 1-18.84-19.35 46.81 46.81 0 0 1-4-19.54 40.72 40.72 0 0 1 5.23-21.12 36.78 36.78 0 0 1 13.78-13.18c11.09-6.25 24.75-8.45 38.14-10.24 7.3-1 13.14-1.61 17.64-2.2a42 42 0 0 0 9.2-1.88 3.16 3.16 0 0 0 1.39-.86l.24-.48a6.77 6.77 0 0 0 .16-1.84v-.73a17.24 17.24 0 0 0-5.85-13.6c-3.8-3.31-9.77-5.55-18.07-5.57s-14.64 2.26-19 5.59a17.51 17.51 0 0 0-7.21 12.54 5.33 5.33 0 0 1-5.31 4.86h-22.25a5.33 5.33 0 0 1-5.33-5.57 45.64 45.64 0 0 1 17.6-34c10.47-8.34 24.85-13.12 41.49-13.12zm23.92 80.71c-1.92.48-4 1-6.31 1.45-6.47 1.28-14.29 2.41-21.87 3.48a61 61 0 0 0-14.76 3.65c-4.18 1.75-7.1 4-8.68 6.57a12.12 12.12 0 0 0-1.71 6.54v.2a12.93 12.93 0 0 0 1.32 5.87 11.81 11.81 0 0 0 3.76 4.22c3.41 2.45 9.13 4.14 16.85 4.14 11.95 0 19.52-3.5 24.32-8.32s7-11.56 7.08-19.11v-8.65zm0 0" style="fill:#fff"/></svg>`,
@@ -74,6 +77,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     {
       label: 'Rybbit Analytics',
+      proxy: 'rybbit',
       category: 'analytics',
       logo: `https://www.rybbit.io/rybbit.png`,
       import: {
@@ -83,6 +87,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     {
       label: 'Databuddy Analytics',
+      proxy: 'databuddy',
       category: 'analytics',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="56.5" height="32" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 0h8v8H0z"/><path fill="#fff" d="M1 1h1v6H1zm1 0h4v1H2zm4 1h1v1H6zm0 1h1v1H6zm0 1h1v1H6zm0 1h1v1H6zM2 6h4v1H2zm1-3h1v1H3zm1 1h1v1H4z"/></svg>`,
       import: {
@@ -168,6 +173,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     // ads
     {
       label: 'Google Adsense',
+      proxy: 'googleAnalytics',
       scriptBundling: (options?: GoogleAdsenseInput) => {
         if (!options?.client) {
           return false
@@ -192,6 +198,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     // marketing
     {
       label: 'Intercom',
+      proxy: 'intercom',
       scriptBundling(options?: IntercomInput) {
         if (!options?.app_id) {
           return false
@@ -301,6 +308,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     // chat
     {
       label: 'Crisp',
+      proxy: 'crisp',
       category: 'support',
       logo: {
         light: `<svg height="30" width="35" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="a" height="138.7%" width="131.4%" x="-15.7%" y="-15.1%"><feMorphology in="SourceAlpha" operator="dilate" radius="1" result="shadowSpreadOuter1"/><feOffset dy="1" in="shadowSpreadOuter1" result="shadowOffsetOuter1"/><feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="1"/><feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"/><feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0"/></filter><path id="b" d="M14.23 20.46l-9.65 1.1L3 5.12 30.07 2l1.58 16.46-9.37 1.07-3.5 5.72-4.55-4.8z"/></defs><g fill="none" fill-rule="evenodd"><use fill="#000" filter="url(#a)" xlink:href="#b"/><use fill="#1972f5" stroke="#1972f5" stroke-width="2" xlink:href="#b"/></g></svg>`,
@@ -399,6 +407,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     {
       label: 'Umami Analytics',
+      proxy: 'umami',
       category: 'analytics',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><path fill="currentColor" d="M2.203 8.611H.857a.845.845 0 0 0-.841.841v.858a13 13 0 0 0-.016.6c0 6.627 5.373 12 12 12c6.527 0 11.837-5.212 11.996-11.701c0-.025.004-.05.004-.075V9.452a.845.845 0 0 0-.841-.841h-1.346c-1.159-4.329-5.112-7.521-9.805-7.521S3.363 4.282 2.203 8.611m18.444 0H3.37c1.127-3.702 4.57-6.399 8.638-6.399c4.069 0 7.512 2.697 8.639 6.399"/></svg>`,
       import: {

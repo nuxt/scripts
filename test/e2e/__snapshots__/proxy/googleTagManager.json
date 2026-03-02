@@ -10,7 +10,14 @@
       },
     },
     "path": "/_proxy/gtm/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=<GTM>",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": false,
+      "ip": false,
+      "language": false,
+      "screen": false,
+      "timezone": false,
+      "userAgent": false,
+    },
     "stripped": {
       "body": null,
       "query": {
