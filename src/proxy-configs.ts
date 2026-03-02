@@ -216,6 +216,95 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/hotjar-insights/**`]: { proxy: 'https://insights.hotjar.com/**' },
       },
     },
+    plausible: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'plausible.io', to: `${collectPrefix}/plausible` },
+      ],
+      routes: {
+        [`${collectPrefix}/plausible/**`]: { proxy: 'https://plausible.io/**' },
+      },
+    },
+
+    cloudflareWebAnalytics: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'static.cloudflareinsights.com', to: `${collectPrefix}/cfwa` },
+        { from: 'cloudflareinsights.com', to: `${collectPrefix}/cfwa-beacon` },
+      ],
+      routes: {
+        [`${collectPrefix}/cfwa/**`]: { proxy: 'https://static.cloudflareinsights.com/**' },
+        [`${collectPrefix}/cfwa-beacon/**`]: { proxy: 'https://cloudflareinsights.com/**' },
+      },
+    },
+
+    rybbit: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'app.rybbit.io', to: `${collectPrefix}/rybbit` },
+      ],
+      routes: {
+        [`${collectPrefix}/rybbit/**`]: { proxy: 'https://app.rybbit.io/**' },
+      },
+    },
+
+    umami: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cloud.umami.is', to: `${collectPrefix}/umami` },
+      ],
+      routes: {
+        [`${collectPrefix}/umami/**`]: { proxy: 'https://cloud.umami.is/**' },
+      },
+    },
+
+    databuddy: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cdn.databuddy.cc', to: `${collectPrefix}/databuddy` },
+        { from: 'basket.databuddy.cc', to: `${collectPrefix}/databuddy-api` },
+      ],
+      routes: {
+        [`${collectPrefix}/databuddy/**`]: { proxy: 'https://cdn.databuddy.cc/**' },
+        [`${collectPrefix}/databuddy-api/**`]: { proxy: 'https://basket.databuddy.cc/**' },
+      },
+    },
+
+    fathom: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cdn.usefathom.com', to: `${collectPrefix}/fathom` },
+      ],
+      routes: {
+        [`${collectPrefix}/fathom/**`]: { proxy: 'https://cdn.usefathom.com/**' },
+      },
+    },
+
+    intercom: {
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'widget.intercom.io', to: `${collectPrefix}/intercom` },
+        { from: 'api-iam.intercom.io', to: `${collectPrefix}/intercom-api` },
+        { from: 'api-iam.eu.intercom.io', to: `${collectPrefix}/intercom-api-eu` },
+        { from: 'api-iam.au.intercom.io', to: `${collectPrefix}/intercom-api-au` },
+      ],
+      routes: {
+        [`${collectPrefix}/intercom/**`]: { proxy: 'https://widget.intercom.io/**' },
+        [`${collectPrefix}/intercom-api/**`]: { proxy: 'https://api-iam.intercom.io/**' },
+        [`${collectPrefix}/intercom-api-eu/**`]: { proxy: 'https://api-iam.eu.intercom.io/**' },
+        [`${collectPrefix}/intercom-api-au/**`]: { proxy: 'https://api-iam.au.intercom.io/**' },
+      },
+    },
+
+    crisp: {
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'client.crisp.chat', to: `${collectPrefix}/crisp` },
+      ],
+      routes: {
+        [`${collectPrefix}/crisp/**`]: { proxy: 'https://client.crisp.chat/**' },
+      },
+    },
   } satisfies Record<string, ProxyConfig>
 }
 

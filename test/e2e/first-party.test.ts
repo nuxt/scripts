@@ -977,6 +977,14 @@ describe('first-party privacy stripping', () => {
       { name: 'xPixel', path: '/x' },
       { name: 'snapchatPixel', path: '/snap' },
       { name: 'redditPixel', path: '/reddit' },
+      { name: 'plausibleAnalytics', path: '/plausible' },
+      { name: 'cloudflareWebAnalytics', path: '/cfwa' },
+      { name: 'rybbitAnalytics', path: '/rybbit' },
+      { name: 'umamiAnalytics', path: '/umami' },
+      { name: 'databuddyAnalytics', path: '/databuddy' },
+      { name: 'fathomAnalytics', path: '/fathom' },
+      { name: 'intercom', path: '/intercom-test' },
+      { name: 'crisp', path: '/crisp-test' },
     ]
 
     it.each(providerPages)('$name page has no script errors', async ({ name, path: pagePath }) => {
@@ -986,6 +994,7 @@ describe('first-party privacy stripping', () => {
 
       const consoleErrors: { type: string, text: string }[] = []
       const uncaughtErrors: string[] = []
+      const failedProxyRequests: { url: string, status: number }[] = []
 
       // Capture console errors
       page.on('console', (msg) => {
@@ -1004,6 +1013,16 @@ describe('first-party privacy stripping', () => {
         const text = err.message || String(err)
         if (!isKnownNoise(text)) {
           uncaughtErrors.push(text)
+        }
+      })
+
+      // Capture failed proxy requests — 404s from /_proxy/ paths indicate
+      // broken rewrite rules or missing route handlers
+      page.on('response', (response) => {
+        const reqUrl = response.url()
+        const status = response.status()
+        if (reqUrl.includes('/_proxy/') && status >= 400) {
+          failedProxyRequests.push({ url: reqUrl, status })
         }
       })
 
@@ -1039,6 +1058,12 @@ describe('first-party privacy stripping', () => {
         proxyConsoleErrors,
         `${name}: Proxy-related console errors:\n${proxyConsoleErrors.map(e => `  [${e.type}] ${e.text}`).join('\n')}`,
       ).toEqual([])
+
+      // Assert no failed proxy requests (404s, 500s from /_proxy/ paths)
+      expect(
+        failedProxyRequests,
+        `${name}: Failed proxy requests:\n${failedProxyRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
+      ).toEqual([])
     }, 30000)
   })
 
@@ -1057,8 +1082,9 @@ describe('first-party privacy stripping', () => {
 
         // Check for the broken pattern: expression in object property key position
         // e.g. {self.location.origin+"/_proxy/...":handler}
-        // Matches self.location.origin+"..."<colon> — the expression directly followed by : means it's used as a key
-        const brokenPropertyKeyPattern = /self\.location\.origin\+["'`][^"'`]*["'`]\s*:/
+        // Must distinguish from ternary `:` (condition?expr:else) which is valid.
+        // Object keys appear after `{` or `,` — match those preceding contexts.
+        const brokenPropertyKeyPattern = /[{,]\s*self\.location\.origin\+["'`][^"'`]*["'`]\s*:/
         expect(
           brokenPropertyKeyPattern.test(content),
           `${file}: Contains self.location.origin expression in object property key position`,

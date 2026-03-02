@@ -6,7 +6,14 @@
       "query": {},
     },
     "path": "/_proxy/segment-cdn/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings",
-    "privacy": "anonymize",
+    "privacy": {
+      "hardware": false,
+      "ip": false,
+      "language": false,
+      "screen": false,
+      "timezone": false,
+      "userAgent": false,
+    },
     "stripped": {
       "body": null,
       "query": {},

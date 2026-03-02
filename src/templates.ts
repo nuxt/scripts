@@ -117,7 +117,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
 
   // for global scripts, we can initialise them script away
   for (const [k, c] of Object.entries(config.registry || {})) {
-    const importDefinition = registry.find(i => i.proxy === k || i.import.name === `useScript${k.substring(0, 1).toUpperCase() + k.substring(1)}`)
+    const importDefinition = registry.find(i => i.import.name.toLowerCase() === `usescript${k.toLowerCase()}`)
     if (importDefinition) {
       resolvedRegistryKeys.push(k)
       imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)

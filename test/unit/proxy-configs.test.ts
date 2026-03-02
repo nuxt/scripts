@@ -312,6 +312,100 @@ describe('proxy configs', () => {
       })
     })
 
+    it('returns proxy config for plausible', () => {
+      const config = getProxyConfig('plausible', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'plausible.io',
+        to: '/_scripts/c/plausible',
+      })
+    })
+
+    it('returns proxy config for cloudflareWebAnalytics', () => {
+      const config = getProxyConfig('cloudflareWebAnalytics', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'static.cloudflareinsights.com',
+        to: '/_scripts/c/cfwa',
+      })
+      expect(config?.rewrite).toContainEqual({
+        from: 'cloudflareinsights.com',
+        to: '/_scripts/c/cfwa-beacon',
+      })
+    })
+
+    it('returns proxy config for rybbit', () => {
+      const config = getProxyConfig('rybbit', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'app.rybbit.io',
+        to: '/_scripts/c/rybbit',
+      })
+    })
+
+    it('returns proxy config for umami', () => {
+      const config = getProxyConfig('umami', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'cloud.umami.is',
+        to: '/_scripts/c/umami',
+      })
+    })
+
+    it('returns proxy config for databuddy', () => {
+      const config = getProxyConfig('databuddy', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'cdn.databuddy.cc',
+        to: '/_scripts/c/databuddy',
+      })
+      expect(config?.rewrite).toContainEqual({
+        from: 'basket.databuddy.cc',
+        to: '/_scripts/c/databuddy-api',
+      })
+    })
+
+    it('returns proxy config for fathom', () => {
+      const config = getProxyConfig('fathom', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'cdn.usefathom.com',
+        to: '/_scripts/c/fathom',
+      })
+    })
+
+    it('returns proxy config for intercom', () => {
+      const config = getProxyConfig('intercom', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'widget.intercom.io',
+        to: '/_scripts/c/intercom',
+      })
+      expect(config?.rewrite).toContainEqual({
+        from: 'api-iam.intercom.io',
+        to: '/_scripts/c/intercom-api',
+      })
+      expect(config?.rewrite).toContainEqual({
+        from: 'api-iam.eu.intercom.io',
+        to: '/_scripts/c/intercom-api-eu',
+      })
+      expect(config?.rewrite).toContainEqual({
+        from: 'api-iam.au.intercom.io',
+        to: '/_scripts/c/intercom-api-au',
+      })
+      expect(config?.privacy.ip).toBe(true)
+    })
+
+    it('returns proxy config for crisp', () => {
+      const config = getProxyConfig('crisp', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'client.crisp.chat',
+        to: '/_scripts/c/crisp',
+      })
+      expect(config?.privacy.ip).toBe(true)
+    })
+
     it('returns undefined for unsupported scripts', () => {
       const config = getProxyConfig('unknownScript', '/_scripts/c')
       expect(config).toBeUndefined()
@@ -345,12 +439,20 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('snapchatPixel')
       expect(configs).toHaveProperty('redditPixel')
       expect(configs).toHaveProperty('posthog')
+      expect(configs).toHaveProperty('plausible')
+      expect(configs).toHaveProperty('cloudflareWebAnalytics')
+      expect(configs).toHaveProperty('rybbit')
+      expect(configs).toHaveProperty('umami')
+      expect(configs).toHaveProperty('databuddy')
+      expect(configs).toHaveProperty('fathom')
+      expect(configs).toHaveProperty('intercom')
+      expect(configs).toHaveProperty('crisp')
     })
 
     it('all configs have valid structure', () => {
       const configs = getAllProxyConfigs('/_scripts/c')
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
-      const passthrough = ['segment', 'googleTagManager', 'posthog']
+      const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausible', 'cloudflareWebAnalytics', 'rybbit', 'umami', 'databuddy', 'fathom']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have routes`).toHaveProperty('routes')
         expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')
@@ -398,6 +500,49 @@ describe('proxy configs', () => {
       const config = getProxyConfig('metaPixel', '/_scripts/c')
       expect(config?.routes?.['/_scripts/c/meta/**']).toEqual({
         proxy: 'https://connect.facebook.net/**',
+      })
+    })
+
+    it('plausible routes proxy to correct target', () => {
+      const config = getProxyConfig('plausible', '/_scripts/c')
+      expect(config?.routes?.['/_scripts/c/plausible/**']).toEqual({
+        proxy: 'https://plausible.io/**',
+      })
+    })
+
+    it('cloudflareWebAnalytics routes proxy to correct targets', () => {
+      const config = getProxyConfig('cloudflareWebAnalytics', '/_scripts/c')
+      expect(config?.routes?.['/_scripts/c/cfwa/**']).toEqual({
+        proxy: 'https://static.cloudflareinsights.com/**',
+      })
+      expect(config?.routes?.['/_scripts/c/cfwa-beacon/**']).toEqual({
+        proxy: 'https://cloudflareinsights.com/**',
+      })
+    })
+
+    it('databuddy routes proxy to correct targets', () => {
+      const config = getProxyConfig('databuddy', '/_scripts/c')
+      expect(config?.routes?.['/_scripts/c/databuddy/**']).toEqual({
+        proxy: 'https://cdn.databuddy.cc/**',
+      })
+      expect(config?.routes?.['/_scripts/c/databuddy-api/**']).toEqual({
+        proxy: 'https://basket.databuddy.cc/**',
+      })
+    })
+
+    it('intercom routes proxy to correct targets', () => {
+      const config = getProxyConfig('intercom', '/_scripts/c')
+      expect(config?.routes?.['/_scripts/c/intercom/**']).toEqual({
+        proxy: 'https://widget.intercom.io/**',
+      })
+      expect(config?.routes?.['/_scripts/c/intercom-api/**']).toEqual({
+        proxy: 'https://api-iam.intercom.io/**',
+      })
+      expect(config?.routes?.['/_scripts/c/intercom-api-eu/**']).toEqual({
+        proxy: 'https://api-iam.eu.intercom.io/**',
+      })
+      expect(config?.routes?.['/_scripts/c/intercom-api-au/**']).toEqual({
+        proxy: 'https://api-iam.au.intercom.io/**',
       })
     })
   })

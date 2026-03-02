@@ -18,11 +18,18 @@
         "tw_iframe_status": "0",
         "txn_id": "ol7lz",
         "type": "javascript",
-        "version": "2.3.35",
+        "version": "2.3.37",
       },
     },
-    "path": "/_proxy/x/1/i/adsct?bci=4&dv=<DEVICE_INFO>&eci=3&event=%7B%7D&event_id=<UUID>&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=<UUID>&pt=X%20Pixel%20-%20First%20Party&tw_document_href=http%3A%2F%2F127.0.0.1%3A<PORT>%2Fx&tw_iframe_status=0&txn_id=ol7lz&type=javascript&version=2.3.35",
-    "privacy": "anonymize",
+    "path": "/_proxy/x/1/i/adsct?bci=4&dv=<DEVICE_INFO>&eci=3&event=%7B%7D&event_id=<UUID>&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=<UUID>&pt=X%20Pixel%20-%20First%20Party&tw_document_href=http%3A%2F%2F127.0.0.1%3A<PORT>%2Fx&tw_iframe_status=0&txn_id=ol7lz&type=javascript&version=2.3.37",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": true,
+      "timezone": true,
+      "userAgent": true,
+    },
     "stripped": {
       "body": null,
       "query": {
@@ -40,9 +47,9 @@
         "tw_iframe_status": "0",
         "txn_id": "ol7lz",
         "type": "javascript",
-        "version": "2.3.35",
+        "version": "2.3.37",
       },
     },
-    "targetUrl": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-GB%26Google+Inc.%26Linux+x86_64%26255%261920%261080%2624%2624%261920%261080%260%26na&eci=3&event=%7B%7D&event_id=<UUID>&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=<UUID>&pt=X+Pixel+-+First+Party&tw_document_href=http%3A%2F%2F127.0.0.1%3A<PORT>%2Fx&tw_iframe_status=0&txn_id=ol7lz&type=javascript&version=2.3.35",
+    "targetUrl": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=UTC%26en-GB%26Google+Inc.%26Linux+x86_64%26255%261920%261080%2624%2624%261920%261080%260%26na&eci=3&event=%7B%7D&event_id=<UUID>&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=<UUID>&pt=X+Pixel+-+First+Party&tw_document_href=http%3A%2F%2F127.0.0.1%3A<PORT>%2Fx&tw_iframe_status=0&txn_id=ol7lz&type=javascript&version=2.3.37",
   },
 ]

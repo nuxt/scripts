@@ -1,15 +1,7 @@
 {
   "headers": {
-    "cookie": {
-      "anonymized": "<removed>",
-      "original": "_rdt_uuid=<dynamic>",
-    },
-    "user-agent": {
-      "anonymized": "Mozilla/5.0 (compatible; Chrome/145.0)",
-      "original": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
-    },
     "x-forwarded-for": {
-      "anonymized": "127.0.0.0",
+      "anonymized": "127.0.0.1",
       "original": "<absent>",
     },
   },

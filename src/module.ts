@@ -467,7 +467,7 @@ export default defineNuxtModule<ModuleOptions>({
     logger.debug('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
 
     // Setup first-party proxy mode (must be before modules:done)
-    if (firstPartyEnabled && !nuxt.options.dev) {
+    if (firstPartyEnabled) {
       const interceptRules = getInterceptRules(firstPartyCollectPrefix)
 
       // Register __nuxtScripts runtime helper — provides sendBeacon/fetch wrappers

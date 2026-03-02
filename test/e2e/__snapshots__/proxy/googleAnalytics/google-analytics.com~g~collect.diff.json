@@ -8,10 +8,6 @@
       "anonymized": "<removed>",
       "original": "_rdt_uuid=<dynamic>; _scid=<dynamic>; _scid_r=<dynamic>; _ga=<dynamic>; _ga_TR58L0EF8P=<dynamic>; ajs_anonymous_id=<dynamic>; _sctr=<dynamic>",
     },
-    "user-agent": {
-      "anonymized": "Mozilla/5.0 (compatible; Chrome/145.0)",
-      "original": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
-    },
     "x-forwarded-for": {
       "anonymized": "127.0.0.0",
       "original": "<absent>",
@@ -19,10 +15,6 @@
   },
   "method": "POST",
   "query": {
-    "sr": {
-      "anonymized": "1920x1080",
-      "original": "1280x720",
-    },
     "uafvl": {
       "anonymized": "Not%3AA-Brand;99.0.0.0|HeadlessChrome;145.0.0.0|Chromium;145.0.0.0",
       "original": "Not%3AA-Brand;99.0.0.0|HeadlessChrome;145.0.7632.6|Chromium;145.0.7632.6",

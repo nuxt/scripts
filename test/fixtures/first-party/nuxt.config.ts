@@ -50,6 +50,14 @@ export default defineNuxtConfig({
       redditPixel: {
         id: 't2_test_advertiser_id',
       },
+      plausibleAnalytics: { domain: 'example.com' },
+      cloudflareWebAnalytics: { token: 'test-token' },
+      rybbitAnalytics: { analyticsId: 'test-id' },
+      umamiAnalytics: { websiteId: 'test-id' },
+      databuddyAnalytics: { id: 'test-id' },
+      fathomAnalytics: { site: 'TEST' },
+      intercom: { app_id: 'test-app' },
+      crisp: { id: 'test-id' },
     },
   },
 })
