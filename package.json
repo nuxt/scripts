@@ -77,9 +77,9 @@
     "@stripe/stripe-js": "^7.0.0 || ^8.0.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
-    "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3",
-    "posthog-js": "^1.0.0"
+    "@types/youtube": "^0.1.2",
+    "@unhead/vue": "^2.1.9",
+    "posthog-js": "^1.356.1"
   },
   "peerDependenciesMeta": {
     "@googlemaps/markerclusterer": {

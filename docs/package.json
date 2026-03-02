@@ -17,7 +17,7 @@
     "@nuxt/fonts": "^0.14.0",
     "@nuxt/image": "^2.0.0",
     "@nuxt/scripts": "workspace:*",
-    "@nuxt/ui": "4.0.0",
+    "@nuxt/ui": "4.5.0",
     "@nuxthq/studio": "^2.2.1",
     "@nuxtjs/seo": "^3.4.0",
     "@vueuse/core": "^14.2.1",
