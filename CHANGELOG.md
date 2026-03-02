@@ -1,5 +1,108 @@
 # Changelog
 
+## v1.0.0-beta.4...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.4...main)
+
+### 🩹 Fixes
+
+- Protect against broken new URL when proxying ([cb7ff7e](https://github.com/nuxt/scripts/commit/cb7ff7e))
+
+### 🏡 Chore
+
+- Bump ([d03285a](https://github.com/nuxt/scripts/commit/d03285a))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.3...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.3...main)
+
+### 🩹 Fixes
+
+- Broken bundle transforms ([84709eb](https://github.com/nuxt/scripts/commit/84709eb))
+
+### 🏡 Chore
+
+- Bump ([4a23752](https://github.com/nuxt/scripts/commit/4a23752))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.2...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.2...main)
+
+### 🚀 Enhancements
+
+- **posthog:** Support proxy mode ([6c4675f](https://github.com/nuxt/scripts/commit/6c4675f))
+- **proxy:** Granular per-script privacy controls ([#611](https://github.com/nuxt/scripts/pull/611))
+
+### 🩹 Fixes
+
+- Broken bare domain path matching ([58fe9e3](https://github.com/nuxt/scripts/commit/58fe9e3))
+
+### 🏡 Chore
+
+- Bump deps ([ff0135e](https://github.com/nuxt/scripts/commit/ff0135e))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.1...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.1...main)
+
+### 🚀 Enhancements
+
+- Add SSR social media embeds for X and Instagram ([#590](https://github.com/nuxt/scripts/pull/590))
+- Experimental nuxt/partytown support ([#576](https://github.com/nuxt/scripts/pull/576))
+- First-party proxy mode with privacy anonymization ([#577](https://github.com/nuxt/scripts/pull/577))
+
+### 🔥 Performance
+
+- Migrate plugins to oxc-walker (parseAndWalk) ([#610](https://github.com/nuxt/scripts/pull/610))
+
+### 🩹 Fixes
+
+- Safer resolve of triggers via nuxt.config ([738703a](https://github.com/nuxt/scripts/commit/738703a))
+- Import from `@nuxt/schema` ([#600](https://github.com/nuxt/scripts/pull/600))
+- Explicit opt-in for proxy mode ([ef5f418](https://github.com/nuxt/scripts/commit/ef5f418))
+- Migrate to unplugin v3 ([409a88c](https://github.com/nuxt/scripts/commit/409a88c))
+- **proxy:** Missing path separators ([a935e97](https://github.com/nuxt/scripts/commit/a935e97))
+- Better registry key matching ([23c7545](https://github.com/nuxt/scripts/commit/23c7545))
+- **proxy:** Missing script src ([fadda86](https://github.com/nuxt/scripts/commit/fadda86))
+- **tiktok:** Missing global ([8b39140](https://github.com/nuxt/scripts/commit/8b39140))
+
+### 📖 Documentation
+
+- Add skilld agent skill snippet ([#603](https://github.com/nuxt/scripts/pull/603))
+
+### 🏡 Chore
+
+- Broken type checks ([c5e8c84](https://github.com/nuxt/scripts/commit/c5e8c84))
+- Missed files ([0485d59](https://github.com/nuxt/scripts/commit/0485d59))
+- Sync ([eaf6620](https://github.com/nuxt/scripts/commit/eaf6620))
+- Disable proxy service worker in dev ([473894b](https://github.com/nuxt/scripts/commit/473894b))
+- Bump deps ([b0a5dca](https://github.com/nuxt/scripts/commit/b0a5dca))
+- Bump deps ([989e90d](https://github.com/nuxt/scripts/commit/989e90d))
+- Broken tests ([e96c0d3](https://github.com/nuxt/scripts/commit/e96c0d3))
+- Broken tests ([97d72a4](https://github.com/nuxt/scripts/commit/97d72a4))
+- Broken tests ([8dd59f5](https://github.com/nuxt/scripts/commit/8dd59f5))
+- Broken tests ([9c4662e](https://github.com/nuxt/scripts/commit/9c4662e))
+- Sync ([4290e7e](https://github.com/nuxt/scripts/commit/4290e7e))
+- Sync ([4db19a8](https://github.com/nuxt/scripts/commit/4db19a8))
+- Sync ([90ecc42](https://github.com/nuxt/scripts/commit/90ecc42))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Daniel Roe ([@danielroe](https://github.com/danielroe))
+
 ## v0.13.1...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.13.1...main)
