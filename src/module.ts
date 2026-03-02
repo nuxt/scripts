@@ -9,7 +9,8 @@ import {
   defineNuxtModule,
   hasNuxtModule,
 } from '@nuxt/kit'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { resolve as resolvePath_ } from 'node:path'
 import { defu } from 'defu'
 import { readPackageJSON } from 'pkg-types'
 import type { FetchOptions } from 'ofetch'
@@ -85,6 +86,64 @@ export interface FirstPartyOptions {
    * @default undefined
    */
   privacy?: FirstPartyPrivacy
+}
+
+// Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
+// e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
+const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
+
+/**
+ * Expand self-closing `<Script*>` component tags in page files to work around
+ * a Nuxt core regex issue (nuxt `SFC_SCRIPT_RE` uses case-insensitive matching).
+ */
+function fixSelfClosingScriptComponents(nuxt: any) {
+  function expandTags(content: string): string | null {
+    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
+    if (!SELF_CLOSING_SCRIPT_RE.test(content)) return null
+    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
+    return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
+  }
+
+  function fixFile(filePath: string) {
+    if (!existsSync(filePath)) return
+    const content = readFileSync(filePath, 'utf-8')
+    const fixed = expandTags(content)
+    if (fixed) nuxt.vfs[filePath] = fixed
+  }
+
+  function scanDir(dir: string) {
+    if (!existsSync(dir)) return
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = resolvePath_(dir, entry.name)
+      if (entry.isDirectory()) scanDir(fullPath)
+      else if (entry.name.endsWith('.vue')) fixFile(fullPath)
+    }
+  }
+
+  const pagesDirs = new Set<string>()
+  for (const layer of nuxt.options._layers) {
+    pagesDirs.add(resolvePath_(
+      layer.config.srcDir,
+      layer.config.dir?.pages || 'pages',
+    ))
+  }
+  for (const dir of pagesDirs) scanDir(dir)
+
+  // Keep VFS entries fresh during dev HMR
+  if (nuxt.options.dev) {
+    nuxt.hook('builder:watch', (_event: string, relativePath: string) => {
+      if (!relativePath.endsWith('.vue')) return
+      for (const layer of nuxt.options._layers) {
+        const fullPath = resolvePath_(layer.config.srcDir, relativePath)
+        for (const dir of pagesDirs) {
+          if (fullPath.startsWith(`${dir}/`)) {
+            fixFile(fullPath)
+            return
+          }
+        }
+      }
+    })
+  }
 }
 
 /**
@@ -389,6 +448,14 @@ export default defineNuxtModule<ModuleOptions>({
       path: await resolvePath('./runtime/components'),
       pathPrefix: false,
     })
+
+    // Fix #613: Self-closing <Script*> tags break Nuxt's definePageMeta extraction.
+    // Nuxt's SFC_SCRIPT_RE regex uses case-insensitive matching, so <ScriptFoo /> is
+    // matched as a <script> opening tag. Without a closing </ScriptFoo>, the regex
+    // consumes the real </script> closing tag, losing definePageMeta. Expanding
+    // self-closing Script* tags to <ScriptFoo></ScriptFoo> provides the closing tag
+    // that the regex needs to scope its match correctly.
+    fixSelfClosingScriptComponents(nuxt)
 
     addTemplate({
       filename: 'nuxt-scripts-trigger-resolver.mjs',
