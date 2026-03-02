@@ -26,6 +26,6 @@
     "nuxt-content-twoslash": "^0.1.2",
     "nuxt-llms": "^0.2.0",
     "ohash": "^2.0.11",
-    "shiki": "^3.23.0"
+    "shiki": "^4.0.0"
   }
 }

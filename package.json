@@ -145,7 +145,7 @@
     "nuxt": "^4.3.1",
     "playwright-core": "^1.58.2",
     "posthog-js": "^1.354.3",
-    "shiki": "^3.23.0",
+    "shiki": "^4.0.0",
     "typescript": "5.9.3",
     "vitest": "^4.0.18",
     "vue": "^3.5.29",
