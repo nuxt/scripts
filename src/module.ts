@@ -29,7 +29,8 @@ import type {
 } from './runtime/types'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
-import { getAllProxyConfigs, getInterceptRules } from './proxy-configs'
+import { getAllProxyConfigs, routesToInterceptRules } from './proxy-configs'
+import type { InterceptRule } from './proxy-configs'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 
 declare module '@nuxt/schema' {
@@ -466,10 +467,11 @@ export default defineNuxtModule<ModuleOptions>({
 
     logger.debug('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
 
+    // Populated inside modules:done with only the configured scripts' routes
+    let interceptRules: InterceptRule[] = []
+
     // Setup first-party proxy mode (must be before modules:done)
     if (firstPartyEnabled) {
-      const interceptRules = getInterceptRules(firstPartyCollectPrefix)
-
       // Register __nuxtScripts runtime helper — provides sendBeacon/fetch wrappers
       // that route matching URLs through the first-party proxy. AST rewriting transforms
       // navigator.sendBeacon/fetch calls to use these wrappers at build time.
@@ -607,6 +609,9 @@ export default defineNuxtModule<ModuleOptions>({
             + 'They will load directly from third-party servers. Request support at https://github.com/nuxt/scripts/issues',
           )
         }
+
+        // Compute intercept rules from only the configured scripts' routes
+        interceptRules = routesToInterceptRules(neededRoutes)
 
         // Expose first-party status via runtime config (for DevTools and status endpoint)
         const flatRoutes: Record<string, string> = {}

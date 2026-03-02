@@ -326,12 +326,32 @@ export function getAllProxyConfigs(collectPrefix: string): Record<string, ProxyC
 }
 
 export interface InterceptRule {
-  /** Domain pattern to match (supports wildcards like *.google-analytics.com) */
+  /** Domain to match (exact match or implicit subdomain suffix match, e.g. google-analytics.com matches *.google-analytics.com) */
   pattern: string
   /** Path prefix to match and strip from the original URL (e.g., /tr for www.facebook.com/tr) */
   pathPrefix: string
   /** Local path prefix to rewrite to */
   target: string
+}
+
+/**
+ * Convert route definitions into intercept rules for client-side URL rewriting.
+ */
+export function routesToInterceptRules(routes: Record<string, { proxy: string }>): InterceptRule[] {
+  const rules: InterceptRule[] = []
+  for (const [localPath, { proxy }] of Object.entries(routes)) {
+    // Extract domain and path prefix from proxy URL
+    // e.g., "https://www.facebook.com/tr/**" -> domain="www.facebook.com", pathPrefix="/tr"
+    // e.g., "https://connect.facebook.net/**" -> domain="connect.facebook.net", pathPrefix=""
+    const match = proxy.match(/^https?:\/\/([^/]+)(\/.*)?\/\*\*$/)
+    if (match?.[1]) {
+      const domain = match[1]
+      const pathPrefix = match[2] || ''
+      const target = localPath.replace(/\/\*\*$/, '')
+      rules.push({ pattern: domain, pathPrefix, target })
+    }
+  }
+  return rules
 }
 
 /**
@@ -341,27 +361,10 @@ export interface InterceptRule {
  */
 export function getInterceptRules(collectPrefix: string): InterceptRule[] {
   const configs = buildProxyConfig(collectPrefix)
-  const rules: InterceptRule[] = []
-
-  // Extract unique domain -> target mappings from route rules
+  const allRoutes: Record<string, { proxy: string }> = {}
   for (const config of Object.values(configs)) {
-    if (!config.routes)
-      continue
-    for (const [localPath, { proxy }] of Object.entries(config.routes)) {
-      // Extract domain and path prefix from proxy URL
-      // e.g., "https://www.facebook.com/tr/**" -> domain="www.facebook.com", pathPrefix="/tr"
-      // e.g., "https://connect.facebook.net/**" -> domain="connect.facebook.net", pathPrefix=""
-      const match = proxy.match(/^https?:\/\/([^/]+)(\/.*)?\/\*\*$/)
-      if (match?.[1]) {
-        const domain = match[1]
-        // Path prefix is everything between domain and /** (e.g., /tr), empty if none
-        const pathPrefix = match[2] || ''
-        // Extract target prefix: "/_proxy/meta-tr/**" -> "/_proxy/meta-tr"
-        const target = localPath.replace(/\/\*\*$/, '')
-        rules.push({ pattern: domain, pathPrefix, target })
-      }
-    }
+    if (config.routes)
+      Object.assign(allRoutes, config.routes)
   }
-
-  return rules
+  return routesToInterceptRules(allRoutes)
 }
