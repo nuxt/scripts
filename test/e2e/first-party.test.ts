@@ -1093,7 +1093,7 @@ describe('first-party privacy stripping', () => {
         // Verify proxy URLs are present (rewrites applied)
         if (content.includes('/_proxy/') || content.includes('/_scripts/c/')) {
           // Script has proxy rewrites — verify no full third-party URLs remain in common URL patterns
-          const thirdPartyUrlPattern = /["'`]https?:\/\/(www\.google-analytics\.com|analytics\.tiktok\.com|connect\.facebook\.net)\//
+          const thirdPartyUrlPattern = /["'`]https?:\/\/(?:www\.google-analytics\.com|analytics\.tiktok\.com|connect\.facebook\.net)\//
           const hasUnrewrittenUrls = thirdPartyUrlPattern.test(content)
           if (hasUnrewrittenUrls) {
             console.warn(`[warn] ${file}: Found unrewritten third-party URLs — may be in non-URL context`)

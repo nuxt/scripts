@@ -608,7 +608,7 @@ describe('proxy configs', () => {
           }
         }
       }
-      catch {}
+      catch { /* invalid URL */ }
       return url
     }
 

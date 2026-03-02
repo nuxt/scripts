@@ -96,7 +96,7 @@ export interface FirstPartyOptions {
  */
 // Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
 // e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
-const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\s*\/\s*>/g
+const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
 
 /**
  * Expand self-closing `<Script*>` component tags in page files to work around
@@ -107,7 +107,7 @@ function fixSelfClosingScriptComponents(nuxt: any) {
     SELF_CLOSING_SCRIPT_RE.lastIndex = 0
     if (!SELF_CLOSING_SCRIPT_RE.test(content)) return null
     SELF_CLOSING_SCRIPT_RE.lastIndex = 0
-    return content.replace(SELF_CLOSING_SCRIPT_RE, '<$1$2></$1>')
+    return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
   }
 
   function fixFile(filePath: string) {
@@ -115,7 +115,6 @@ function fixSelfClosingScriptComponents(nuxt: any) {
     const content = readFileSync(filePath, 'utf-8')
     const fixed = expandTags(content)
     if (fixed) nuxt.vfs[filePath] = fixed
-    else delete nuxt.vfs[filePath]
   }
 
   function scanDir(dir: string) {

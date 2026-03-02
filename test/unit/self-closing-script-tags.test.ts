@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 // Duplicated from module.ts since it's not exported
-const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\s*\/\s*>/g
+const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
 
 function expandTags(content: string): string | null {
   SELF_CLOSING_SCRIPT_RE.lastIndex = 0
   if (!SELF_CLOSING_SCRIPT_RE.test(content)) return null
   SELF_CLOSING_SCRIPT_RE.lastIndex = 0
-  return content.replace(SELF_CLOSING_SCRIPT_RE, '<$1$2></$1>')
+  return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
 }
 
 describe('self-closing Script* tag expansion (#613)', () => {
