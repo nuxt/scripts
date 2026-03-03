@@ -949,6 +949,7 @@ describe('first-party privacy stripping', () => {
       { name: 'fathomAnalytics', path: '/fathom' },
       { name: 'intercom', path: '/intercom-test' },
       { name: 'crisp', path: '/crisp-test' },
+      { name: 'posthog', path: '/posthog' },
     ]
 
     it.each(providerPages)('$name page has no script errors', async ({ name, path: pagePath }) => {
@@ -1065,6 +1066,7 @@ describe('first-party privacy stripping', () => {
       { name: 'fathomAnalytics', path: '/fathom' },
       { name: 'intercom', path: '/intercom-test' },
       { name: 'crisp', path: '/crisp-test' },
+      { name: 'posthog', path: '/posthog' },
     ]
 
     it.each(allProviders)('$name loads bundled script from /_scripts/', async ({ name, path: pagePath }) => {
@@ -1104,9 +1106,15 @@ describe('first-party privacy stripping', () => {
         `${name}: No bundled scripts loaded.\n  script requests: ${JSON.stringify(scriptRequests)}\n  proxy requests: ${JSON.stringify(proxyRequests.slice(0, 5))}`,
       ).toBeGreaterThan(0)
 
+      // Filter browser-level network errors (SSL, CORS, 404) from third-party SDKs
+      // hitting external servers with test keys — not JS errors from our proxy rewrites
+      const jsErrors = consoleErrors.filter(e =>
+        !e.startsWith('Failed to load resource')
+        && !e.includes('has been blocked by CORS policy'),
+      )
       expect(
-        consoleErrors,
-        `${name}: Console errors:\n${consoleErrors.map(e => `  ${e}`).join('\n')}`,
+        jsErrors,
+        `${name}: Console errors:\n${jsErrors.map(e => `  ${e}`).join('\n')}`,
       ).toEqual([])
     }, 30000)
   })

@@ -9,7 +9,7 @@ export const PostHogOptions = object({
   region: optional(union([literal('us'), literal('eu')])),
   apiHost: optional(string()),
   autocapture: optional(boolean()),
-  capturePageview: optional(boolean()),
+  capturePageview: optional(union([boolean(), literal('history_change')])),
   capturePageleave: optional(boolean()),
   disableSessionRecording: optional(boolean()),
   config: optional(record(string(), any())),
@@ -90,7 +90,7 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
               }
               if (typeof options?.autocapture === 'boolean')
                 config.autocapture = options.autocapture
-              if (typeof options?.capturePageview === 'boolean')
+              if (typeof options?.capturePageview === 'boolean' || options?.capturePageview === 'history_change')
                 config.capture_pageview = options.capturePageview
               if (typeof options?.capturePageleave === 'boolean')
                 config.capture_pageleave = options.capturePageleave

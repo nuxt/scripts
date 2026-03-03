@@ -1,4 +1,4 @@
-import { defineEventHandler, getHeaders, getRequestIP, readBody, getQuery, setResponseHeader, createError } from 'h3'
+import { defineEventHandler, getHeaders, getRequestIP, readBody, getRequestWebStream, getQuery, setResponseHeader, createError } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { useNitroApp } from 'nitropack/runtime'
 import {
@@ -102,6 +102,20 @@ export default defineEventHandler(async (event) => {
   const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
   const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
 
+  // Detect binary/compressed bodies that cannot be safely parsed as text.
+  // These must be passed through as raw bytes to avoid corruption:
+  // - content-encoding: transport-level compression (gzip, br, etc.)
+  // - application/octet-stream: explicitly binary content
+  // - ?compression=gzip-js: client-side compression (e.g. PostHog sends gzip bytes as text/plain)
+  const originalHeaders = getHeaders(event)
+  const contentType = originalHeaders['content-type'] || ''
+  const compressionParam = new URL(event.path, 'http://localhost').searchParams.get('compression')
+  const isBinaryBody = Boolean(
+    originalHeaders['content-encoding']
+    || contentType.includes('octet-stream')
+    || (compressionParam && /gzip|deflate|br|compress|base64/i.test(compressionParam)),
+  )
+
   // Build target URL with stripped query params
   let targetPath = path.slice(matchedPrefix.length)
   // Ensure path starts with /
@@ -121,8 +135,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Get original headers
-  const originalHeaders = getHeaders(event)
   const headers: Record<string, string> = {}
 
   // Process headers based on per-flag privacy
@@ -133,8 +145,13 @@ export default defineEventHandler(async (event) => {
     // SENSITIVE_HEADERS always stripped regardless of privacy flags
     if (SENSITIVE_HEADERS.includes(lowerKey)) continue
 
-    // Skip content-length when any privacy is active — body may be modified
-    if (anyPrivacy && lowerKey === 'content-length') continue
+    // Skip content-length when body will be modified by privacy transforms
+    // (preserved for binary passthrough and no-privacy paths)
+    if (lowerKey === 'content-length') {
+      if (anyPrivacy && !isBinaryBody) continue
+      headers[lowerKey] = value
+      continue
+    }
 
     // IP-revealing headers — controlled by ip flag
     if (lowerKey === 'x-forwarded-for' || lowerKey === 'x-real-ip' || lowerKey === 'forwarded'
@@ -198,64 +215,85 @@ export default defineEventHandler(async (event) => {
       .join(', ')
   }
 
-  // Read and process request body if present
-  let body: string | Record<string, unknown> | undefined
+  // Process request body: either stream through raw or read + transform
+  let body: string | Record<string, unknown> | unknown[] | undefined
   let rawBody: unknown
-  const contentType = originalHeaders['content-type'] || ''
+  // When true, body is not read — the raw request stream is piped directly to upstream
+  let passthroughBody = false
   const method = event.method?.toUpperCase()
   const originalQuery = getQuery(event)
+  const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
 
-  if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-    rawBody = await readBody(event)
+  if (isWriteMethod) {
+    if (isBinaryBody || !anyPrivacy) {
+      // No transforms needed — don't read the body at all, stream it through directly.
+      passthroughBody = true
+    }
+    else {
+      // Text body with privacy transforms — parse and strip fingerprinting
+      rawBody = await readBody(event)
 
-    if (anyPrivacy && rawBody) {
-      if (typeof rawBody === 'object') {
-        // JSON body - strip fingerprinting recursively
-        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
-      }
-      else if (typeof rawBody === 'string') {
-        // Try parsing as JSON first (sendBeacon often sends JSON with text/plain content-type)
-        if (rawBody.startsWith('{') || rawBody.startsWith('[')) {
-          let parsed: unknown = null
-          try {
-            parsed = JSON.parse(rawBody)
+      if (rawBody != null) {
+        if (Array.isArray(rawBody)) {
+          // JSON array body (e.g. batch payloads) — strip each element individually
+          body = rawBody.map(item =>
+            item && typeof item === 'object' && !Array.isArray(item)
+              ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+              : item,
+          )
+        }
+        else if (typeof rawBody === 'object') {
+          // JSON object body - strip fingerprinting recursively
+          body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
+        }
+        else if (typeof rawBody === 'string') {
+          // Try parsing as JSON first (sendBeacon often sends JSON with text/plain content-type)
+          if (rawBody.startsWith('{') || rawBody.startsWith('[')) {
+            let parsed: unknown = null
+            try {
+              parsed = JSON.parse(rawBody)
+            }
+            catch { /* not valid JSON */ }
+
+            if (Array.isArray(parsed)) {
+              body = parsed.map(item =>
+                item && typeof item === 'object' && !Array.isArray(item)
+                  ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+                  : item,
+              )
+            }
+            else if (parsed && typeof parsed === 'object') {
+              body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
+            }
+            else {
+              body = rawBody
+            }
           }
-          catch { /* not valid JSON */ }
-
-          if (parsed && typeof parsed === 'object') {
-            body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
+          else if (contentType.includes('application/x-www-form-urlencoded')) {
+            // URL-encoded form data
+            const params = new URLSearchParams(rawBody)
+            const obj: Record<string, unknown> = {}
+            params.forEach((value, key) => {
+              obj[key] = value
+            })
+            const stripped = stripPayloadFingerprinting(obj, privacy)
+            // Convert all values to strings — URLSearchParams coerces non-strings
+            // to "[object Object]" which corrupts nested objects/arrays
+            const stringified: Record<string, string> = {}
+            for (const [k, v] of Object.entries(stripped)) {
+              if (v === undefined || v === null) continue
+              stringified[k] = typeof v === 'string' ? v : JSON.stringify(v)
+            }
+            body = new URLSearchParams(stringified).toString()
           }
           else {
             body = rawBody
           }
         }
-        else if (contentType.includes('application/x-www-form-urlencoded')) {
-          // URL-encoded form data
-          const params = new URLSearchParams(rawBody)
-          const obj: Record<string, unknown> = {}
-          params.forEach((value, key) => {
-            obj[key] = value
-          })
-          const stripped = stripPayloadFingerprinting(obj, privacy)
-          // Convert all values to strings — URLSearchParams coerces non-strings
-          // to "[object Object]" which corrupts nested objects/arrays
-          const stringified: Record<string, string> = {}
-          for (const [k, v] of Object.entries(stripped)) {
-            if (v === undefined || v === null) continue
-            stringified[k] = typeof v === 'string' ? v : JSON.stringify(v)
-          }
-          body = new URLSearchParams(stringified).toString()
-        }
         else {
-          body = rawBody
+          body = rawBody as string
         }
       }
-      else {
-        body = rawBody as string
-      }
-    }
-    else {
-      body = rawBody as string | Record<string, unknown>
     }
   }
 
@@ -266,15 +304,16 @@ export default defineEventHandler(async (event) => {
     targetUrl,
     method: method || 'GET',
     privacy,
+    passthroughBody,
     original: {
       headers: { ...originalHeaders },
       query: originalQuery,
-      body: rawBody ?? null,
+      body: passthroughBody ? '<passthrough>' : (rawBody ?? null),
     },
     stripped: {
       headers,
       query: anyPrivacy ? stripPayloadFingerprinting(originalQuery, privacy) : originalQuery,
-      body: body ?? null,
+      body: passthroughBody ? '<passthrough>' : (body ?? null),
     },
   })
 
@@ -284,14 +323,25 @@ export default defineEventHandler(async (event) => {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout
 
+  // Resolve the fetch body: passthrough streams the raw request, otherwise serialize
+  let fetchBody: BodyInit | undefined
+  if (passthroughBody) {
+    fetchBody = getRequestWebStream(event) as BodyInit | undefined
+  }
+  else if (body !== undefined) {
+    fetchBody = typeof body === 'string' ? body : JSON.stringify(body)
+  }
+
   let response: Response
   try {
     response = await fetch(targetUrl, {
       method: method || 'GET',
       headers,
-      body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+      body: fetchBody,
       credentials: 'omit', // Don't send cookies to third parties
       signal: controller.signal,
+      // @ts-expect-error Node fetch supports duplex for streaming request bodies
+      duplex: passthroughBody ? 'half' : undefined,
     })
   }
   catch (err: unknown) {

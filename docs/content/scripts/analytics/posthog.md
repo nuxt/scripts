@@ -106,7 +106,7 @@ export const PostHogOptions = object({
   region: optional(union([literal('us'), literal('eu')])),
   apiHost: optional(string()), // Custom API host URL (e.g. '/ph' for reverse proxy)
   autocapture: optional(boolean()),
-  capturePageview: optional(boolean()),
+  capturePageview: optional(union([boolean(), literal('history_change')])),
   capturePageleave: optional(boolean()),
   disableSessionRecording: optional(boolean()),
   config: optional(record(string(), any())), // Full PostHogConfig passthrough
