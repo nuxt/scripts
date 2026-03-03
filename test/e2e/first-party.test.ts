@@ -931,45 +931,6 @@ describe('first-party privacy stripping', () => {
    * so unit tests alone are insufficient.
    */
   describe('no script errors from proxy rewrites', () => {
-    /**
-     * Errors from third-party scripts unrelated to our rewrite logic.
-     * These occur in headless browsers regardless of proxy mode.
-     */
-    const KNOWN_THIRD_PARTY_NOISE = [
-      /Failed to load resource/i, // Network errors, 404s, CDN auth
-      /net::ERR_/i, // Chrome network errors
-      /Refused to connect/i, // CSP
-      /Tracking Prevention/i, // Browser tracking prevention
-      /favicon/i, // favicon 404
-      /The source list for Content Security Policy/i,
-      /Permissions policy/i,
-      /third-party cookie/i,
-    ]
-
-    /** Patterns that indicate the error is from a proxy-rewritten script (high confidence) */
-    const PROXY_ERROR_INDICATORS = [
-      /_proxy/,
-      /_scripts\/c/,
-      /self\.location/,
-      /SyntaxError/i,
-      /cannot be parsed as a URL/i,
-      /Invalid URL/i,
-      /Unexpected token/i,
-      /ERR_NAME_NOT_RESOLVED/i,
-      /Failed to construct 'URL'/i,
-    ]
-
-    function isKnownNoise(text: string): boolean {
-      if (KNOWN_THIRD_PARTY_NOISE.some(p => p.test(text))) return true
-      // PostHog config.js returns JSON but SDK requests it as a script — MIME error is expected
-      if (/MIME type .* is not executable/i.test(text) && /config\.js/.test(text)) return true
-      return false
-    }
-
-    function isProxyRelated(text: string): boolean {
-      return PROXY_ERROR_INDICATORS.some(p => p.test(text))
-    }
-
     const providerPages = [
       { name: 'googleAnalytics', path: '/ga' },
       { name: 'googleTagManager', path: '/gtm' },
@@ -1001,24 +962,16 @@ describe('first-party privacy stripping', () => {
       const uncaughtErrors: string[] = []
       const failedProxyRequests: { url: string, status: number }[] = []
 
-      // Capture console errors
+      // Capture all console errors — no filtering, every error is critical
       page.on('console', (msg) => {
-        const type = msg.type()
-        if (type === 'error') {
-          const text = msg.text()
-          if (!isKnownNoise(text)) {
-            consoleErrors.push({ type, text })
-          }
+        if (msg.type() === 'error') {
+          consoleErrors.push({ type: 'error', text: msg.text() })
         }
       })
 
-      // Capture ALL uncaught exceptions — any uncaught error from a rewritten
-      // script is a bug (SyntaxError, TypeError, ReferenceError, etc.)
+      // Capture all uncaught exceptions
       page.on('pageerror', (err) => {
-        const text = err.message || String(err)
-        if (!isKnownNoise(text)) {
-          uncaughtErrors.push(text)
-        }
+        uncaughtErrors.push(err.message || String(err))
       })
 
       // Capture failed proxy requests — 4xx/5xx from /_proxy/ paths indicate
@@ -1050,32 +1003,20 @@ describe('first-party privacy stripping', () => {
       // test infrastructure — fail explicitly instead of passing vacuously.
       expect(pageRendered, `${name}: Page did not render — test is meaningless without a rendered page`).toBe(true)
 
-      // Assert no uncaught exceptions at all — these indicate broken scripts
-      // regardless of whether the error message mentions proxying
+      // Assert no errors at all — every error is critical
       expect(
         uncaughtErrors,
-        `${name}: Uncaught exceptions detected:\n${uncaughtErrors.map(e => `  ${e}`).join('\n')}`,
+        `${name}: Uncaught exceptions:\n${uncaughtErrors.map(e => `  ${e}`).join('\n')}`,
       ).toEqual([])
 
-      // Assert no proxy-related console errors
-      const proxyConsoleErrors = consoleErrors.filter(e => isProxyRelated(e.text))
       expect(
-        proxyConsoleErrors,
-        `${name}: Proxy-related console errors:\n${proxyConsoleErrors.map(e => `  [${e.type}] ${e.text}`).join('\n')}`,
+        consoleErrors,
+        `${name}: Console errors:\n${consoleErrors.map(e => `  ${e.text}`).join('\n')}`,
       ).toEqual([])
 
-      // Assert no failed proxy requests for this provider's paths
-      // Other globally-registered scripts may fire cross-provider requests
-      const providerPrefixes = PROVIDER_PATHS[name] || []
-      const ownFailedRequests = providerPrefixes.length > 0
-        ? failedProxyRequests.filter((r) => {
-            const urlPath = new URL(r.url).pathname
-            return providerPrefixes.some(prefix => urlPath.startsWith(prefix))
-          })
-        : failedProxyRequests
       expect(
-        ownFailedRequests,
-        `${name}: Failed proxy requests:\n${ownFailedRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
+        failedProxyRequests,
+        `${name}: Failed proxy requests:\n${failedProxyRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
       ).toEqual([])
     }, 30000)
   })
