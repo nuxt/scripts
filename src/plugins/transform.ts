@@ -83,9 +83,10 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): 
   if (hasProtocol(src, { acceptRelative: true })) {
     src = src.replace(/^\/\//, 'https://')
     const url = parseURL(src)
-    const file = [
-      `${ohash(url)}.js`, // force an extension
-    ].filter(Boolean).join('-')
+    const h = ohash(url)
+    // Prefix hashes starting with '-' — Nitro's publicAssets handler cannot serve
+    // files whose names begin with a dash (they get omitted from the asset manifest).
+    const file = `${h.startsWith('-') ? `_${h.slice(1)}` : h}.js`
     const nuxt = tryUseNuxt()
     // Use cdnURL if available, otherwise fall back to baseURL
     const cdnURL = nuxt?.options.runtimeConfig?.app?.cdnURL || nuxt?.options.app?.cdnURL || ''
