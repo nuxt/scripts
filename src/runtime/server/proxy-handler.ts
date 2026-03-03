@@ -216,7 +216,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Process request body: either stream through raw or read + transform
-  let body: string | Record<string, unknown> | undefined
+  let body: string | Record<string, unknown> | unknown[] | undefined
   let rawBody: unknown
   // When true, body is not read — the raw request stream is piped directly to upstream
   let passthroughBody = false
@@ -234,8 +234,16 @@ export default defineEventHandler(async (event) => {
       rawBody = await readBody(event)
 
       if (rawBody != null) {
-        if (typeof rawBody === 'object') {
-          // JSON body - strip fingerprinting recursively
+        if (Array.isArray(rawBody)) {
+          // JSON array body (e.g. batch payloads) — strip each element individually
+          body = rawBody.map(item =>
+            item && typeof item === 'object' && !Array.isArray(item)
+              ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+              : item,
+          )
+        }
+        else if (typeof rawBody === 'object') {
+          // JSON object body - strip fingerprinting recursively
           body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
         }
         else if (typeof rawBody === 'string') {
@@ -247,7 +255,14 @@ export default defineEventHandler(async (event) => {
             }
             catch { /* not valid JSON */ }
 
-            if (parsed && typeof parsed === 'object') {
+            if (Array.isArray(parsed)) {
+              body = parsed.map(item =>
+                item && typeof item === 'object' && !Array.isArray(item)
+                  ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+                  : item,
+              )
+            }
+            else if (parsed && typeof parsed === 'object') {
               body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
             }
             else {
