@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.0-beta.5...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.5...main)
+
+### 💅 Refactors
+
+- Replace SW + beacon monkey-patch with AST-based API rewriting ([#614](https://github.com/nuxt/scripts/pull/614))
+
+### 🏡 Chore
+
+- Bump deps ([814bbf6](https://github.com/nuxt/scripts/commit/814bbf6))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
 ## v1.0.0-beta.4...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.4...main)

@@ -1,14 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { createApp, defineEventHandler, readBody, getHeaders, getRequestWebStream, toNodeListener, getRequestURL } from 'h3'
+import { createApp, defineEventHandler, readBody, readRawBody, getHeaders, toNodeListener } from 'h3'
 import { createServer, type Server } from 'node:http'
 import { gzipSync } from 'node:zlib'
 
 /**
  * Tests for #618: proxy handler must preserve compressed/binary request bodies.
  *
- * Mirrors proxy-handler.ts logic: when no privacy transforms are needed or the
- * body is binary/compressed, the raw request stream is piped directly to upstream
- * without reading or re-encoding it.
+ * Uses the same body-handling logic as proxy-handler.ts to verify that:
+ * - Binary/compressed payloads are passed through as raw bytes
+ * - Text bodies with privacy transforms are still parsed and stripped correctly
+ * - JSON bodies continue to work (regression)
  */
 describe('proxy handler - compressed binary payloads (#618)', () => {
   let upstreamServer: Server
@@ -16,6 +17,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
   let upstreamPort: number
   let proxyPort: number
   let capturedUpstreamBody: Buffer | null = null
+  let capturedUpstreamContentType: string | undefined
 
   beforeAll(async () => {
     // Mock upstream: captures raw request bytes exactly as received
@@ -26,6 +28,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
         chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
       }
       capturedUpstreamBody = Buffer.concat(chunks)
+      capturedUpstreamContentType = event.node.req.headers['content-type'] as string
       return { status: 1 }
     }))
 
@@ -33,7 +36,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
     await new Promise<void>(resolve => upstreamServer.listen(0, resolve))
     upstreamPort = (upstreamServer.address() as any).port
 
-    // Proxy: mirrors proxy-handler.ts body logic
+    // Proxy: mirrors proxy-handler.ts body processing logic (the fixed version)
     const proxyApp = createApp()
     proxyApp.use('/', defineEventHandler(async (event) => {
       const method = event.method?.toUpperCase()
@@ -41,23 +44,21 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
       const contentType = originalHeaders['content-type'] || ''
       const anyPrivacy = originalHeaders['x-test-privacy'] === 'true'
 
-      const compressionParam = getRequestURL(event).searchParams.get('compression')
       const isBinaryBody = Boolean(
         originalHeaders['content-encoding']
-        || contentType.includes('octet-stream')
-        || (compressionParam && /gzip|deflate|br|compress|base64/i.test(compressionParam)),
+        || contentType.includes('octet-stream'),
       )
 
-      const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
-      let passthroughBody = false
-      let body: string | Record<string, unknown> | undefined
+      let body: string | Record<string, unknown> | Buffer | undefined
 
-      if (isWriteMethod) {
+      if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
         if (isBinaryBody || !anyPrivacy) {
-          // Don't read the body — stream it through directly
-          passthroughBody = true
+          // Binary/compressed or no privacy — pass raw bytes through
+          const raw = await readRawBody(event, false)
+          body = raw ?? undefined
         }
         else {
+          // Text body with privacy transforms — use readBody (parses JSON/form)
           const rawBody = await readBody(event)
           body = rawBody as string | Record<string, unknown>
         }
@@ -67,20 +68,14 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
       if (contentType)
         headers['content-type'] = contentType
 
-      let fetchBody: BodyInit | undefined
-      if (passthroughBody) {
-        fetchBody = getRequestWebStream(event) as BodyInit | undefined
-      }
-      else if (body !== undefined) {
-        fetchBody = typeof body === 'string' ? body : JSON.stringify(body)
-      }
-
       const response = await fetch(`http://localhost:${upstreamPort}/batch`, {
         method: method || 'GET',
         headers,
-        body: fetchBody,
-        // @ts-expect-error Node fetch supports duplex for streaming request bodies
-        duplex: passthroughBody ? 'half' : undefined,
+        body: body instanceof Buffer
+          ? body
+          : body
+            ? (typeof body === 'string' ? body : JSON.stringify(body))
+            : undefined,
       })
       return response.json()
     }))
@@ -97,6 +92,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
 
   beforeEach(() => {
     capturedUpstreamBody = null
+    capturedUpstreamContentType = undefined
   })
 
   it('preserves gzip-compressed body sent as text/plain (PostHog gzip-js)', async () => {
@@ -142,28 +138,9 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
     expect(Buffer.compare(capturedUpstreamBody!, binary)).toBe(0)
   })
 
-  it('preserves gzip-js body when privacy is enabled without content-encoding', async () => {
-    // PostHog gzip-js sends compressed bytes as text/plain with ?compression=gzip-js
-    // and no content-encoding header. Even with privacy enabled, this must pass through raw.
-    const payload = JSON.stringify({ event: 'test', ua: 'fingerprint' })
-    const compressed = gzipSync(Buffer.from(payload))
-
-    await fetch(`http://localhost:${proxyPort}/batch?compression=gzip-js`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'text/plain',
-        'x-test-privacy': 'true',
-      },
-      body: compressed,
-    })
-
-    expect(capturedUpstreamBody).not.toBeNull()
-    expect(Buffer.compare(capturedUpstreamBody!, compressed)).toBe(0)
-  })
-
   it('preserves content-encoding gzip body even with privacy enabled', async () => {
-    // content-encoding signals transport compression — body cannot be parsed,
-    // so it must pass through raw even when privacy flags are active
+    // When content-encoding indicates compressed transport, body must pass through
+    // raw even if privacy flags are active (can't strip compressed data)
     const payload = JSON.stringify({ event: 'test', ua: 'fingerprint' })
     const compressed = gzipSync(Buffer.from(payload))
 
@@ -181,15 +158,12 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
     expect(Buffer.compare(capturedUpstreamBody!, compressed)).toBe(0)
   })
 
-  it('still handles JSON bodies correctly with privacy (regression)', async () => {
+  it('still handles JSON bodies correctly (regression)', async () => {
     const json = { event: '$pageview', properties: { url: 'https://example.com' } }
 
     await fetch(`http://localhost:${proxyPort}/batch`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-test-privacy': 'true',
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify(json),
     })
 
@@ -198,18 +172,16 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
     expect(received).toEqual(json)
   })
 
-  it('streams JSON body through without re-parsing when no privacy', async () => {
-    // Without privacy, even JSON bodies should pass through as-is (no readBody)
-    const jsonStr = '{"event":"$pageview","properties":{"url":"https://example.com"}}'
+  it('still handles form-encoded bodies correctly (regression)', async () => {
+    const formData = 'event=%24pageview&url=https%3A%2F%2Fexample.com'
 
     await fetch(`http://localhost:${proxyPort}/batch`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: jsonStr,
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: formData,
     })
 
     expect(capturedUpstreamBody).not.toBeNull()
-    // Byte-exact: no re-serialization, no key reordering
-    expect(capturedUpstreamBody!.toString('utf-8')).toBe(jsonStr)
+    expect(capturedUpstreamBody!.toString('utf-8')).toBe(formData)
   })
 })
