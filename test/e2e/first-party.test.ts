@@ -1021,13 +1021,12 @@ describe('first-party privacy stripping', () => {
         }
       })
 
-      // Capture failed proxy requests — 5xx from /_proxy/ paths indicate
-      // broken proxy infrastructure (route mismatches, handler crashes).
-      // 4xx responses are expected — upstream APIs reject fake test API keys.
+      // Capture failed proxy requests — 4xx/5xx from /_proxy/ paths indicate
+      // broken rewrite rules or missing route handlers
       page.on('response', (response) => {
         const reqUrl = response.url()
         const status = response.status()
-        if (reqUrl.includes('/_proxy/') && status >= 500) {
+        if (reqUrl.includes('/_proxy/') && status >= 400) {
           failedProxyRequests.push({ url: reqUrl, status })
         }
       })
@@ -1065,10 +1064,18 @@ describe('first-party privacy stripping', () => {
         `${name}: Proxy-related console errors:\n${proxyConsoleErrors.map(e => `  [${e.type}] ${e.text}`).join('\n')}`,
       ).toEqual([])
 
-      // Assert no failed proxy requests (5xx from /_proxy/ paths)
+      // Assert no failed proxy requests for this provider's paths
+      // Other globally-registered scripts may fire cross-provider requests
+      const providerPrefixes = PROVIDER_PATHS[name] || []
+      const ownFailedRequests = providerPrefixes.length > 0
+        ? failedProxyRequests.filter((r) => {
+            const urlPath = new URL(r.url).pathname
+            return providerPrefixes.some(prefix => urlPath.startsWith(prefix))
+          })
+        : failedProxyRequests
       expect(
-        failedProxyRequests,
-        `${name}: Failed proxy requests:\n${failedProxyRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
+        ownFailedRequests,
+        `${name}: Failed proxy requests:\n${ownFailedRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
       ).toEqual([])
     }, 30000)
   })

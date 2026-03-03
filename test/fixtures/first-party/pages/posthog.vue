@@ -3,7 +3,7 @@ import { useHead, useScriptPostHog } from '#imports'
 
 useHead({ title: 'PostHog - First Party' })
 const { status } = useScriptPostHog({
-  apiKey: 'phc_test',
+  apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W',
   region: 'us',
   config: {
     autocapture: false,

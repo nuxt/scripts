@@ -56,7 +56,7 @@ export default defineNuxtConfig({
       umamiAnalytics: { websiteId: 'test-id' },
       databuddyAnalytics: { id: 'test-id' },
       fathomAnalytics: { site: 'TEST' },
-      posthog: { apiKey: 'phc_test' },
+      posthog: { apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W' },
       intercom: { app_id: 'test-app' },
       crisp: { id: 'test-id' },
     },
