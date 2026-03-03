@@ -79,7 +79,10 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       label: 'Rybbit Analytics',
       proxy: 'rybbit',
       category: 'analytics',
-      logo: `https://www.rybbit.io/rybbit.png`,
+      logo: {
+        light: `https://rybbit.com/rybbit/frog_dark%20green.svg`,
+        dark: `https://rybbit.com/rybbit/frog_light%20green.svg`,
+      },
       import: {
         name: 'useScriptRybbitAnalytics',
         from: await resolve('./runtime/registry/rybbit-analytics'),
