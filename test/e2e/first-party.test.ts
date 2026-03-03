@@ -64,6 +64,7 @@ const PROVIDER_PATHS: Record<string, string[]> = {
   ],
   tiktokPixel: ['/_proxy/tiktok'],
   redditPixel: ['/_proxy/reddit'],
+  posthog: ['/_proxy/ph', '/_proxy/ph-eu'],
 }
 
 /**
