@@ -984,6 +984,7 @@ describe('first-party privacy stripping', () => {
       { name: 'umamiAnalytics', path: '/umami' },
       { name: 'databuddyAnalytics', path: '/databuddy' },
       { name: 'fathomAnalytics', path: '/fathom' },
+      { name: 'posthog', path: '/posthog' },
       { name: 'intercom', path: '/intercom-test' },
       { name: 'crisp', path: '/crisp-test' },
     ]
