@@ -6,7 +6,7 @@ useHead({
 })
 
 const { proxy, status } = useScriptRedditPixel({
-  id: 't2_test_advertiser_id',
+  id: 'a2_ilz4u0kbdr3v',
 })
 
 function trackPageVisit() {
