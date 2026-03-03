@@ -930,42 +930,6 @@ describe('first-party privacy stripping', () => {
    * so unit tests alone are insufficient.
    */
   describe('no script errors from proxy rewrites', () => {
-    /**
-     * Errors from third-party scripts unrelated to our rewrite logic.
-     * These occur in headless browsers regardless of proxy mode.
-     */
-    const KNOWN_THIRD_PARTY_NOISE = [
-      /Failed to load resource/i, // Network errors, 404s, CDN auth
-      /net::ERR_/i, // Chrome network errors
-      /Refused to connect/i, // CSP
-      /Tracking Prevention/i, // Browser tracking prevention
-      /favicon/i, // favicon 404
-      /The source list for Content Security Policy/i,
-      /Permissions policy/i,
-      /third-party cookie/i,
-    ]
-
-    /** Patterns that indicate the error is from a proxy-rewritten script (high confidence) */
-    const PROXY_ERROR_INDICATORS = [
-      /_proxy/,
-      /_scripts\/c/,
-      /self\.location/,
-      /SyntaxError/i,
-      /cannot be parsed as a URL/i,
-      /Invalid URL/i,
-      /Unexpected token/i,
-      /ERR_NAME_NOT_RESOLVED/i,
-      /Failed to construct 'URL'/i,
-    ]
-
-    function isKnownNoise(text: string): boolean {
-      return KNOWN_THIRD_PARTY_NOISE.some(p => p.test(text))
-    }
-
-    function isProxyRelated(text: string): boolean {
-      return PROXY_ERROR_INDICATORS.some(p => p.test(text))
-    }
-
     const providerPages = [
       { name: 'googleAnalytics', path: '/ga' },
       { name: 'googleTagManager', path: '/gtm' },
@@ -985,6 +949,7 @@ describe('first-party privacy stripping', () => {
       { name: 'fathomAnalytics', path: '/fathom' },
       { name: 'intercom', path: '/intercom-test' },
       { name: 'crisp', path: '/crisp-test' },
+      { name: 'posthog', path: '/posthog' },
     ]
 
     it.each(providerPages)('$name page has no script errors', async ({ name, path: pagePath }) => {
@@ -992,48 +957,34 @@ describe('first-party privacy stripping', () => {
       const page = await browser.newPage()
       page.setDefaultTimeout(5000)
 
-      const consoleErrors: { type: string, text: string }[] = []
       const uncaughtErrors: string[] = []
-      const failedProxyRequests: { url: string, status: number }[] = []
+      const failedLocalRequests: { url: string, status: number }[] = []
+      let serverOrigin = ''
 
-      // Capture console errors
-      page.on('console', (msg) => {
-        const type = msg.type()
-        if (type === 'error') {
-          const text = msg.text()
-          if (!isKnownNoise(text)) {
-            consoleErrors.push({ type, text })
-          }
-        }
-      })
-
-      // Capture ALL uncaught exceptions — any uncaught error from a rewritten
-      // script is a bug (SyntaxError, TypeError, ReferenceError, etc.)
       page.on('pageerror', (err) => {
-        const text = err.message || String(err)
-        if (!isKnownNoise(text)) {
-          uncaughtErrors.push(text)
-        }
+        uncaughtErrors.push(err.message || String(err))
       })
 
-      // Capture failed proxy requests — 404s from /_proxy/ paths indicate
-      // broken rewrite rules or missing route handlers
+      // Catch failed responses from our server (/_proxy/ and /_scripts/).
+      // External 4xx from third-party services with test keys is expected.
       page.on('response', (response) => {
         const reqUrl = response.url()
         const status = response.status()
-        if (reqUrl.includes('/_proxy/') && status >= 400) {
-          failedProxyRequests.push({ url: reqUrl, status })
+        if (!serverOrigin) {
+          try { serverOrigin = new URL(reqUrl).origin }
+          catch {}
+        }
+        if (status >= 400 && serverOrigin && reqUrl.startsWith(serverOrigin)) {
+          failedLocalRequests.push({ url: new URL(reqUrl).pathname, status })
         }
       })
 
       await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
 
-      // Verify page actually rendered — if not, the test is meaningless
       const pageRendered = await page.waitForSelector('#status', { timeout: 8000 })
         .then(() => true)
         .catch(() => false)
 
-      // Wait for scripts to load and execute
       if (pageRendered) {
         await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 }).catch(() => {})
       }
@@ -1041,28 +992,16 @@ describe('first-party privacy stripping', () => {
 
       await page.close()
 
-      // Guard: if the page didn't render at all, something is wrong with the
-      // test infrastructure — fail explicitly instead of passing vacuously.
-      expect(pageRendered, `${name}: Page did not render — test is meaningless without a rendered page`).toBe(true)
+      expect(pageRendered, `${name}: Page did not render`).toBe(true)
 
-      // Assert no uncaught exceptions at all — these indicate broken scripts
-      // regardless of whether the error message mentions proxying
       expect(
         uncaughtErrors,
-        `${name}: Uncaught exceptions detected:\n${uncaughtErrors.map(e => `  ${e}`).join('\n')}`,
+        `${name}: Uncaught exceptions:\n${uncaughtErrors.map(e => `  ${e}`).join('\n')}`,
       ).toEqual([])
 
-      // Assert no proxy-related console errors
-      const proxyConsoleErrors = consoleErrors.filter(e => isProxyRelated(e.text))
       expect(
-        proxyConsoleErrors,
-        `${name}: Proxy-related console errors:\n${proxyConsoleErrors.map(e => `  [${e.type}] ${e.text}`).join('\n')}`,
-      ).toEqual([])
-
-      // Assert no failed proxy requests (404s, 500s from /_proxy/ paths)
-      expect(
-        failedProxyRequests,
-        `${name}: Failed proxy requests:\n${failedProxyRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
+        failedLocalRequests,
+        `${name}: Failed local requests:\n${failedLocalRequests.map(r => `  ${r.status} ${r.url}`).join('\n')}`,
       ).toEqual([])
     }, 30000)
   })
@@ -1101,5 +1040,82 @@ describe('first-party privacy stripping', () => {
         }
       }
     })
+  })
+
+  /**
+   * Diagnostic: verify each provider loads a bundled script and/or makes proxy requests.
+   * This test documents the observed bundle/proxy behavior for every provider.
+   */
+  describe('bundle and proxy coverage', () => {
+    const allProviders = [
+      { name: 'googleAnalytics', path: '/ga' },
+      { name: 'googleTagManager', path: '/gtm' },
+      { name: 'metaPixel', path: '/meta' },
+      { name: 'tiktokPixel', path: '/tiktok' },
+      { name: 'clarity', path: '/clarity' },
+      { name: 'hotjar', path: '/hotjar' },
+      { name: 'segment', path: '/segment' },
+      { name: 'xPixel', path: '/x' },
+      { name: 'snapchatPixel', path: '/snap' },
+      { name: 'redditPixel', path: '/reddit' },
+      { name: 'plausibleAnalytics', path: '/plausible' },
+      { name: 'cloudflareWebAnalytics', path: '/cfwa' },
+      { name: 'rybbitAnalytics', path: '/rybbit' },
+      { name: 'umamiAnalytics', path: '/umami' },
+      { name: 'databuddyAnalytics', path: '/databuddy' },
+      { name: 'fathomAnalytics', path: '/fathom' },
+      { name: 'intercom', path: '/intercom-test' },
+      { name: 'crisp', path: '/crisp-test' },
+      { name: 'posthog', path: '/posthog' },
+    ]
+
+    it.each(allProviders)('$name loads bundled script from /_scripts/', async ({ name, path: pagePath }) => {
+      const browser = await getBrowser()
+      const page = await browser.newPage()
+      page.setDefaultTimeout(5000)
+
+      const scriptRequests: { url: string, status: number }[] = []
+      const proxyRequests: { url: string, status: number }[] = []
+      const consoleErrors: string[] = []
+      const consoleWarnings: string[] = []
+
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') consoleErrors.push(msg.text())
+        if (msg.type() === 'warning') consoleWarnings.push(msg.text())
+      })
+
+      page.on('response', (response) => {
+        const reqUrl = response.url()
+        const status = response.status()
+        const pathname = new URL(reqUrl).pathname
+        if (pathname.startsWith('/_scripts/'))
+          scriptRequests.push({ url: pathname, status })
+        if (pathname.startsWith('/_proxy/'))
+          proxyRequests.push({ url: pathname, status })
+      })
+
+      await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+      await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 }).catch(() => {})
+      await page.waitForTimeout(2000)
+      await page.close()
+
+      // Every provider should load at least one bundled script from /_scripts/
+      const okScripts = scriptRequests.filter(r => r.status < 400)
+      expect(
+        okScripts.length,
+        `${name}: No bundled scripts loaded.\n  script requests: ${JSON.stringify(scriptRequests)}\n  proxy requests: ${JSON.stringify(proxyRequests.slice(0, 5))}`,
+      ).toBeGreaterThan(0)
+
+      // Filter browser-level network errors (SSL, CORS, 404) from third-party SDKs
+      // hitting external servers with test keys — not JS errors from our proxy rewrites
+      const jsErrors = consoleErrors.filter(e =>
+        !e.startsWith('Failed to load resource')
+        && !e.includes('has been blocked by CORS policy'),
+      )
+      expect(
+        jsErrors,
+        `${name}: Console errors:\n${jsErrors.map(e => `  ${e}`).join('\n')}`,
+      ).toEqual([])
+    }, 30000)
   })
 })

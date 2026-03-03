@@ -2,7 +2,7 @@
 import { useHead, useScriptRybbitAnalytics } from '#imports'
 
 useHead({ title: 'Rybbit - First Party' })
-const { status } = useScriptRybbitAnalytics({ analyticsId: 'test-id' })
+const { status } = useScriptRybbitAnalytics({ siteId: '874' })
 </script>
 
 <template>
