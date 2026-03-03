@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { createApp, defineEventHandler, readBody, getHeaders, getRequestWebStream, toNodeListener } from 'h3'
+import { createApp, defineEventHandler, readBody, getHeaders, getRequestWebStream, toNodeListener, getRequestURL } from 'h3'
 import { createServer, type Server } from 'node:http'
 import { gzipSync } from 'node:zlib'
 
@@ -41,9 +41,11 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
       const contentType = originalHeaders['content-type'] || ''
       const anyPrivacy = originalHeaders['x-test-privacy'] === 'true'
 
+      const compressionParam = getRequestURL(event).searchParams.get('compression')
       const isBinaryBody = Boolean(
         originalHeaders['content-encoding']
-        || contentType.includes('octet-stream'),
+        || contentType.includes('octet-stream')
+        || (compressionParam && /gzip|deflate|br|compress/i.test(compressionParam)),
       )
 
       const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
@@ -69,7 +71,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
       if (passthroughBody) {
         fetchBody = getRequestWebStream(event) as BodyInit | undefined
       }
-      else if (body) {
+      else if (body !== undefined) {
         fetchBody = typeof body === 'string' ? body : JSON.stringify(body)
       }
 
@@ -138,6 +140,25 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
 
     expect(capturedUpstreamBody).not.toBeNull()
     expect(Buffer.compare(capturedUpstreamBody!, binary)).toBe(0)
+  })
+
+  it('preserves gzip-js body when privacy is enabled without content-encoding', async () => {
+    // PostHog gzip-js sends compressed bytes as text/plain with ?compression=gzip-js
+    // and no content-encoding header. Even with privacy enabled, this must pass through raw.
+    const payload = JSON.stringify({ event: 'test', ua: 'fingerprint' })
+    const compressed = gzipSync(Buffer.from(payload))
+
+    await fetch(`http://localhost:${proxyPort}/batch?compression=gzip-js`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'text/plain',
+        'x-test-privacy': 'true',
+      },
+      body: compressed,
+    })
+
+    expect(capturedUpstreamBody).not.toBeNull()
+    expect(Buffer.compare(capturedUpstreamBody!, compressed)).toBe(0)
   })
 
   it('preserves content-encoding gzip body even with privacy enabled', async () => {

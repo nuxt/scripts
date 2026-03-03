@@ -103,13 +103,17 @@ export default defineEventHandler(async (event) => {
   const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
 
   // Detect binary/compressed bodies that cannot be safely parsed as text.
-  // content-encoding indicates transport-level compression (gzip, br, etc.);
-  // application/octet-stream is explicitly binary. These must be passed through as raw bytes.
+  // These must be passed through as raw bytes to avoid corruption:
+  // - content-encoding: transport-level compression (gzip, br, etc.)
+  // - application/octet-stream: explicitly binary content
+  // - ?compression=gzip-js: client-side compression (e.g. PostHog sends gzip bytes as text/plain)
   const originalHeaders = getHeaders(event)
   const contentType = originalHeaders['content-type'] || ''
+  const compressionParam = new URL(event.path, 'http://localhost').searchParams.get('compression')
   const isBinaryBody = Boolean(
     originalHeaders['content-encoding']
-    || contentType.includes('octet-stream'),
+    || contentType.includes('octet-stream')
+    || (compressionParam && /gzip|deflate|br|compress/i.test(compressionParam)),
   )
 
   // Build target URL with stripped query params
@@ -211,7 +215,7 @@ export default defineEventHandler(async (event) => {
       .join(', ')
   }
 
-  // Read and process request body if present
+  // Process request body: either stream through raw or read + transform
   let body: string | Record<string, unknown> | undefined
   let rawBody: unknown
   // When true, body is not read — the raw request stream is piped directly to upstream
@@ -229,7 +233,7 @@ export default defineEventHandler(async (event) => {
       // Text body with privacy transforms — parse and strip fingerprinting
       rawBody = await readBody(event)
 
-      if (rawBody) {
+      if (rawBody != null) {
         if (typeof rawBody === 'object') {
           // JSON body - strip fingerprinting recursively
           body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
@@ -309,7 +313,7 @@ export default defineEventHandler(async (event) => {
   if (passthroughBody) {
     fetchBody = getRequestWebStream(event) as BodyInit | undefined
   }
-  else if (body) {
+  else if (body !== undefined) {
     fetchBody = typeof body === 'string' ? body : JSON.stringify(body)
   }
 
