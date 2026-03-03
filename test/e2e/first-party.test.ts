@@ -944,6 +944,7 @@ describe('first-party privacy stripping', () => {
       /The source list for Content Security Policy/i,
       /Permissions policy/i,
       /third-party cookie/i,
+      /MIME type .* is not executable/i, // PostHog config.js returns JSON, browser expects JS
     ]
 
     /** Patterns that indicate the error is from a proxy-rewritten script (high confidence) */
