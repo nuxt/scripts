@@ -45,7 +45,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
       const isBinaryBody = Boolean(
         originalHeaders['content-encoding']
         || contentType.includes('octet-stream')
-        || (compressionParam && /gzip|deflate|br|compress/i.test(compressionParam)),
+        || (compressionParam && /gzip|deflate|br|compress|base64/i.test(compressionParam)),
       )
 
       const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'

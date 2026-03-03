@@ -113,7 +113,7 @@ export default defineEventHandler(async (event) => {
   const isBinaryBody = Boolean(
     originalHeaders['content-encoding']
     || contentType.includes('octet-stream')
-    || (compressionParam && /gzip|deflate|br|compress/i.test(compressionParam)),
+    || (compressionParam && /gzip|deflate|br|compress|base64/i.test(compressionParam)),
   )
 
   // Build target URL with stripped query params
