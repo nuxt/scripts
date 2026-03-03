@@ -79,7 +79,10 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       label: 'Rybbit Analytics',
       proxy: 'rybbit',
       category: 'analytics',
-      logo: `https://www.rybbit.io/rybbit.png`,
+      logo: {
+        light: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.33 173.53" width="37.24" height="32"><g><polygon fill="#0a3a3a" points="181.28 171.2 227.21 123.96 261.15 171.2 181.28 171.2"/><path fill="#0a3a3a" d="M261.15,89.05L206.64,2.33l-33.22,17.75-34.61-7.4c2.88,5.56,4.56,12.11,4.56,19.15,0,20.03-13.46,36.26-30.06,36.26-13.66,0-25.17-11-28.83-26.06l-39.92,71.46L2.18,94.19l22.66,77.01h55.81l22.28-54.01v54.01h64.66l-49.95-82.15h143.51Z"/></g><ellipse fill="#0a3a3a" cx="105.94" cy="28.62" rx="12.9" ry="18.88"/></svg>`,
+        dark: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.33 173.53" width="37.24" height="32"><g><polygon fill="#2fd381" points="181.28 171.2 227.21 123.96 261.15 171.2 181.28 171.2"/><path fill="#2fd381" d="M261.15,89.05L206.64,2.33l-33.22,17.75-34.61-7.4c2.88,5.56,4.56,12.11,4.56,19.15,0,20.03-13.46,36.26-30.06,36.26-13.66,0-25.17-11-28.83-26.06l-39.92,71.46L2.18,94.19l22.66,77.01h55.81l22.28-54.01v54.01h64.66l-49.95-82.15h143.51Z"/></g><ellipse fill="#2fd381" cx="105.94" cy="28.62" rx="12.9" ry="18.88"/></svg>`,
+      },
       import: {
         name: 'useScriptRybbitAnalytics',
         from: await resolve('./runtime/registry/rybbit-analytics'),
