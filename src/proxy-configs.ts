@@ -146,9 +146,11 @@ function buildProxyConfig(collectPrefix: string) {
       privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'alb.reddit.com', to: `${collectPrefix}/reddit` },
+        { from: 'pixel-config.reddit.com', to: `${collectPrefix}/reddit-cfg` },
       ],
       routes: {
         [`${collectPrefix}/reddit/**`]: { proxy: 'https://alb.reddit.com/**' },
+        [`${collectPrefix}/reddit-cfg/**`]: { proxy: 'https://pixel-config.reddit.com/**' },
       },
     },
 
