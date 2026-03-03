@@ -944,7 +944,6 @@ describe('first-party privacy stripping', () => {
       /The source list for Content Security Policy/i,
       /Permissions policy/i,
       /third-party cookie/i,
-      /MIME type .* is not executable/i, // PostHog config.js returns JSON, browser expects JS
     ]
 
     /** Patterns that indicate the error is from a proxy-rewritten script (high confidence) */
@@ -961,7 +960,10 @@ describe('first-party privacy stripping', () => {
     ]
 
     function isKnownNoise(text: string): boolean {
-      return KNOWN_THIRD_PARTY_NOISE.some(p => p.test(text))
+      if (KNOWN_THIRD_PARTY_NOISE.some(p => p.test(text))) return true
+      // PostHog config.js returns JSON but SDK requests it as a script — MIME error is expected
+      if (/MIME type .* is not executable/i.test(text) && /config\.js/.test(text)) return true
+      return false
     }
 
     function isProxyRelated(text: string): boolean {
