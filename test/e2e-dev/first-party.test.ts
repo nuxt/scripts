@@ -475,8 +475,8 @@ async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Rec
     await expect(captures).toMatchFileSnapshot(`__snapshots__/proxy/${provider}.json`)
     const nameCounts = new Map<string, number>()
     for (let i = 0; i < rawCaptures.length; i++) {
-      const diff = extractRequestDiff(rawCaptures[i])
-      const baseName = captureToSnapshotName(rawCaptures[i])
+      const diff = extractRequestDiff(rawCaptures[i]!)
+      const baseName = captureToSnapshotName(rawCaptures[i]!)
       const count = (nameCounts.get(baseName) || 0) + 1
       nameCounts.set(baseName, count)
       const fileName = count > 1 ? `${baseName}~${count}` : baseName
@@ -539,7 +539,7 @@ describe('first-party privacy stripping', () => {
       }))
 
       // Should return JS content (or at least not 404)
-      if (typeof response === 'object' && response.error) {
+      if (typeof response === 'object' && 'error' in response && response.error) {
         writeFileSync(join(fixtureDir, 'proxy-test.json'), JSON.stringify(response, null, 2))
         console.warn('[test] Proxy error:', response)
       }
