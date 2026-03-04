@@ -39,7 +39,8 @@ const { status: mapsStatus } = useScript('https://maps.googleapis.com/maps/api/j
 const manualTrigger = ref(false)
 const manualPromise = new Promise<void>((resolve) => {
   watch(manualTrigger, (v) => {
-    if (v) resolve()
+    if (v)
+      resolve()
   })
 })
 
@@ -56,8 +57,10 @@ function loadPixel() {
 
 // Status color helper
 function statusColor(status: string) {
-  if (status === 'loaded') return 'success'
-  if (status === 'loading') return 'warning'
+  if (status === 'loaded')
+    return 'success'
+  if (status === 'loading')
+    return 'warning'
   return 'neutral'
 }
 </script>

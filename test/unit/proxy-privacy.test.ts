@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import type { ResolvedProxyPrivacy } from '../../src/runtime/server/utils/privacy'
+import { describe, expect, it } from 'vitest'
+import { mergePrivacy, resolvePrivacy, stripPayloadFingerprinting } from '../../src/runtime/server/utils/privacy'
 import {
-  STRIP_PARAMS,
-  NORMALIZE_PARAMS,
   ALLOWED_PARAMS,
+  NORMALIZE_PARAMS,
+  STRIP_PARAMS,
   stripFingerprintingFromPayload,
 } from '../utils/proxy-privacy'
-import { resolvePrivacy, mergePrivacy, stripPayloadFingerprinting } from '../../src/runtime/server/utils/privacy'
-import type { ResolvedProxyPrivacy } from '../../src/runtime/server/utils/privacy'
 
 /**
  * Test fingerprinting data that analytics scripts commonly collect and send.
@@ -131,7 +131,7 @@ const FINGERPRINT_PAYLOAD = {
 }
 
 describe('proxy privacy - payload analysis', () => {
-  describe('GA payload', () => {
+  describe('gA payload', () => {
     it('identifies fingerprinting params in GA payload', () => {
       const gaPayload = FINGERPRINT_PAYLOAD.ga
       const hardwareParams = Object.keys(gaPayload).filter((key) => {
@@ -178,17 +178,22 @@ describe('proxy privacy - payload analysis', () => {
     })
   })
 
-  describe('Meta pixel payload', () => {
+  describe('meta pixel payload', () => {
     it('identifies fingerprinting params in Meta payload', () => {
       const metaPayload = FINGERPRINT_PAYLOAD.meta
       const hardwareParams: string[] = []
 
       for (const key of Object.keys(metaPayload)) {
-        if (STRIP_PARAMS.ip.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
-        if (STRIP_PARAMS.userId.some(p => key.toLowerCase() === p.toLowerCase())) hardwareParams.push(key)
-        if (STRIP_PARAMS.userData.some(p => key.toLowerCase() === p.toLowerCase())) hardwareParams.push(key)
-        if (STRIP_PARAMS.browserData.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
-        if (STRIP_PARAMS.browserVersion.some(p => key.toLowerCase().includes(p.toLowerCase()))) hardwareParams.push(key)
+        if (STRIP_PARAMS.ip.some(p => key.toLowerCase().includes(p.toLowerCase())))
+          hardwareParams.push(key)
+        if (STRIP_PARAMS.userId.some(p => key.toLowerCase() === p.toLowerCase()))
+          hardwareParams.push(key)
+        if (STRIP_PARAMS.userData.some(p => key.toLowerCase() === p.toLowerCase()))
+          hardwareParams.push(key)
+        if (STRIP_PARAMS.browserData.some(p => key.toLowerCase().includes(p.toLowerCase())))
+          hardwareParams.push(key)
+        if (STRIP_PARAMS.browserVersion.some(p => key.toLowerCase().includes(p.toLowerCase())))
+          hardwareParams.push(key)
       }
 
       expect(hardwareParams).toContain('client_ip_address')
@@ -199,15 +204,17 @@ describe('proxy privacy - payload analysis', () => {
     })
   })
 
-  describe('X/Twitter pixel payload', () => {
+  describe('x/Twitter pixel payload', () => {
     it('identifies fingerprinting params in X pixel payload', () => {
       const xPayload = FINGERPRINT_PAYLOAD.xPixel
       const hardwareParams: string[] = []
 
       for (const key of Object.keys(xPayload)) {
         const lowerKey = key.toLowerCase()
-        if (STRIP_PARAMS.deviceInfo.some(p => lowerKey === p.toLowerCase())) hardwareParams.push(key)
-        if (STRIP_PARAMS.userId.some(p => lowerKey === p.toLowerCase())) hardwareParams.push(key)
+        if (STRIP_PARAMS.deviceInfo.some(p => lowerKey === p.toLowerCase()))
+          hardwareParams.push(key)
+        if (STRIP_PARAMS.userId.some(p => lowerKey === p.toLowerCase()))
+          hardwareParams.push(key)
       }
 
       expect(hardwareParams).toContain('dv') // Device info - contains timezone, screen, platform etc.
@@ -223,20 +230,34 @@ describe('proxy privacy - payload analysis', () => {
       const vectors: string[] = []
 
       // Check each category
-      if (fp.screen) vectors.push('screen')
-      if (fp.viewport) vectors.push('viewport')
-      if (fp.hardwareConcurrency) vectors.push('hardwareConcurrency')
-      if (fp.deviceMemory) vectors.push('deviceMemory')
-      if (fp.platform) vectors.push('platform')
-      if (fp.userAgent) vectors.push('userAgent')
-      if (fp.languages) vectors.push('languages')
-      if (fp.timezone) vectors.push('timezone')
-      if (fp.plugins) vectors.push('plugins')
-      if (fp.canvas) vectors.push('canvas')
-      if (fp.webgl) vectors.push('webgl')
-      if (fp.audioFingerprint) vectors.push('audioFingerprint')
-      if (fp.fonts) vectors.push('fonts')
-      if (fp.connection) vectors.push('connection')
+      if (fp.screen)
+        vectors.push('screen')
+      if (fp.viewport)
+        vectors.push('viewport')
+      if (fp.hardwareConcurrency)
+        vectors.push('hardwareConcurrency')
+      if (fp.deviceMemory)
+        vectors.push('deviceMemory')
+      if (fp.platform)
+        vectors.push('platform')
+      if (fp.userAgent)
+        vectors.push('userAgent')
+      if (fp.languages)
+        vectors.push('languages')
+      if (fp.timezone)
+        vectors.push('timezone')
+      if (fp.plugins)
+        vectors.push('plugins')
+      if (fp.canvas)
+        vectors.push('canvas')
+      if (fp.webgl)
+        vectors.push('webgl')
+      if (fp.audioFingerprint)
+        vectors.push('audioFingerprint')
+      if (fp.fonts)
+        vectors.push('fonts')
+      if (fp.connection)
+        vectors.push('connection')
 
       expect(vectors.length).toBeGreaterThan(10)
     })

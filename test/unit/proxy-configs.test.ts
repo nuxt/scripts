@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs, getProxyConfig, getInterceptRules } from '../../src/proxy-configs'
-import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
 import type { ProxyRewrite } from '../../src/runtime/utils/pure'
+import { describe, expect, it } from 'vitest'
+import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
+import { getAllProxyConfigs, getInterceptRules, getProxyConfig } from '../../src/proxy-configs'
 
 const fn = (c: string, r: ProxyRewrite[]) => rewriteScriptUrlsAST(c, 'test.js', r)
 
@@ -192,6 +192,7 @@ describe('proxy configs', () => {
       expect(output).not.toContain('self.location.origin')
       expect(output).toContain(`"/_scripts/c/gtm/g/collect":function`)
       expect(output).toContain(`"/_scripts/c/ga/g/collect":function`)
+      // eslint-disable-next-line no-new-func
       expect(() => new Function(output)).not.toThrow()
     })
   })
@@ -469,7 +470,12 @@ describe('proxy configs', () => {
 
         if (fullAnonymize.includes(key)) {
           expect(config.privacy, `${key} should be fully anonymized`).toEqual({
-            ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true,
+            ip: true,
+            userAgent: true,
+            language: true,
+            screen: true,
+            timezone: true,
+            hardware: true,
           })
         }
         if (passthrough.includes(key)) {
@@ -601,8 +607,9 @@ describe('proxy configs', () => {
       try {
         const parsed = new URL(url, ORIGIN)
         for (const rule of rules) {
-          if (parsed.hostname === rule.pattern || parsed.hostname.endsWith('.' + rule.pattern)) {
-            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix)) continue
+          if (parsed.hostname === rule.pattern || parsed.hostname.endsWith(`.${rule.pattern}`)) {
+            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix))
+              continue
             const path = rule.pathPrefix ? parsed.pathname.slice(rule.pathPrefix.length) : parsed.pathname
             return ORIGIN + rule.target + (path.startsWith('/') ? '' : '/') + path + parsed.search
           }

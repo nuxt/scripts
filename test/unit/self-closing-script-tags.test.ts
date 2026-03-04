@@ -5,7 +5,8 @@ const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s
 
 function expandTags(content: string): string | null {
   SELF_CLOSING_SCRIPT_RE.lastIndex = 0
-  if (!SELF_CLOSING_SCRIPT_RE.test(content)) return null
+  if (!SELF_CLOSING_SCRIPT_RE.test(content))
+    return null
   SELF_CLOSING_SCRIPT_RE.lastIndex = 0
   return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
 }

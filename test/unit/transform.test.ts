@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { joinURL, withBase, hasProtocol } from 'ufo'
-import { hash } from 'ohash'
-import { $fetch } from 'ofetch'
 import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform'
-import { NuxtScriptBundleTransformer } from '../../src/plugins/transform'
 import type { IntercomInput } from '~/src/runtime/registry/intercom'
 import type { NpmInput } from '~/src/runtime/registry/npm'
+import { $fetch } from 'ofetch'
+import { hash } from 'ohash'
+import { hasProtocol, joinURL, withBase } from 'ufo'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { NuxtScriptBundleTransformer } from '../../src/plugins/transform'
 
 const ohash = (await vi.importActual<typeof import('ohash')>('ohash')).hash
 vi.mock('ohash', async (og) => {
@@ -131,7 +131,7 @@ describe('nuxtScriptTransformer', () => {
 
   it('dynamic src is not transformed', async () => {
     const code = await transform(
-      // eslint-disable-next-line no-useless-escape
+
       `const instance = useScript({ key: 'cloudflareAnalytics', src: \`https://static.cloudflareinsights.com/$\{123\}beacon.min.js\` })`,
     )
     expect(code).toMatchInlineSnapshot(`undefined`)
@@ -798,9 +798,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                 }
                 const url = new URL('https://www.googletagmanager.com/gtm.js')
                 url.searchParams.set('id', options.id)
-                if (options.l) url.searchParams.set('l', options.l)
-                if (options.auth) url.searchParams.set('gtm_auth', options.auth)
-                if (options.debug) url.searchParams.set('gtm_debug', 'x')
+                if (options.l)
+                  url.searchParams.set('l', options.l)
+                if (options.auth)
+                  url.searchParams.set('gtm_auth', options.auth)
+                if (options.debug)
+                  url.searchParams.set('gtm_debug', 'x')
                 return url.toString()
               },
               import: {
@@ -835,9 +838,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
                 }
                 const url = new URL('https://www.googletagmanager.com/gtm.js')
                 url.searchParams.set('id', options.id)
-                if (options.l) url.searchParams.set('l', options.l)
-                if (options.debug) url.searchParams.set('gtm_debug', 'x')
-                if (options.customParam) url.searchParams.set('custom', options.customParam)
+                if (options.l)
+                  url.searchParams.set('l', options.l)
+                if (options.debug)
+                  url.searchParams.set('gtm_debug', 'x')
+                if (options.customParam)
+                  url.searchParams.set('custom', options.customParam)
                 return url.toString()
               },
               import: {

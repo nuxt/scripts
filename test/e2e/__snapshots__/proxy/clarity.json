@@ -5,6 +5,7 @@
       "body": null,
       "query": {},
     },
+    "passthroughBody": false,
     "path": "/_proxy/clarity-scripts/0.8.56/clarity.js",
     "privacy": {
       "hardware": true,

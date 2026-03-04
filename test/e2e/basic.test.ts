@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
-import { getBrowser, url, waitForHydration, setup } from '@nuxt/test-utils/e2e'
+import { getBrowser, setup, url, waitForHydration } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
+import { describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -308,7 +308,6 @@ describe('third-party-capital', () => {
     // Note: Status goes to 'error' for NPM-based scripts, but clientInit still works
     await page.waitForFunction(() => window.posthog !== undefined, { timeout: 10000 })
 
-    // eslint-disable-next-line no-console
     console.log('PostHog initialized successfully')
 
     // Test event capture - verify client-side call is made
@@ -339,9 +338,9 @@ describe('third-party-capital', () => {
     expect(featureFlagPayload).toBeDefined()
 
     // Optional: Log actual values for debugging
-    // eslint-disable-next-line no-console
+
     console.log('Feature flag value:', featureFlagValue)
-    // eslint-disable-next-line no-console
+
     console.log('Feature flag payload:', featureFlagPayload)
   })
 
@@ -374,7 +373,7 @@ describe('third-party-capital', () => {
 })
 
 describe('social-embeds', () => {
-  it('X embed fetches tweet data server-side and renders', {
+  it('x embed fetches tweet data server-side and renders', {
     timeout: 15000,
   }, async () => {
     const { page } = await createPage('/x-embed')
@@ -395,7 +394,7 @@ describe('social-embeds', () => {
     expect(tweetUrl).toContain('/status/')
   })
 
-  it('X embed proxies images through server', {
+  it('x embed proxies images through server', {
     timeout: 15000,
   }, async () => {
     const { page } = await createPage('/x-embed')
@@ -413,7 +412,7 @@ describe('social-embeds', () => {
     expect(hasProxiedImages).toBe(true)
   })
 
-  it('Instagram embed fetches HTML server-side and renders', {
+  it('instagram embed fetches HTML server-side and renders', {
     timeout: 15000,
   }, async () => {
     const { page } = await createPage('/instagram-embed')
@@ -433,7 +432,7 @@ describe('social-embeds', () => {
     expect(hasEmbedHtml).toBe(true)
   })
 
-  it('Instagram embed proxies images through server', {
+  it('instagram embed proxies images through server', {
     timeout: 15000,
   }, async () => {
     const { page } = await createPage('/instagram-embed')

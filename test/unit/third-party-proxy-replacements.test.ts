@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
 import { $fetch } from 'ofetch'
-import { getAllProxyConfigs } from '../../src/proxy-configs'
+import { describe, expect, it } from 'vitest'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
+import { getAllProxyConfigs } from '../../src/proxy-configs'
 import { stripFingerprintingFromPayload } from '../utils/proxy-privacy'
 
 const COLLECT_PREFIX = '/_scripts/c'
@@ -331,7 +331,7 @@ describe('privacy stripping snapshots', () => {
     title: 'Dashboard',
   }
 
-  describe('Google Analytics payload', () => {
+  describe('google Analytics payload', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(gaPayload)
       expect(result).toMatchInlineSnapshot(`
@@ -397,7 +397,7 @@ describe('privacy stripping snapshots', () => {
     })
   })
 
-  describe('Meta Pixel payload', () => {
+  describe('meta Pixel payload', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(metaPayload)
       expect(result).toMatchInlineSnapshot(`
@@ -464,7 +464,7 @@ describe('privacy stripping snapshots', () => {
     })
   })
 
-  describe('Session recording payload (Clarity/Hotjar)', () => {
+  describe('session recording payload (Clarity/Hotjar)', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(sessionPayload)
       expect(result).toMatchInlineSnapshot(`

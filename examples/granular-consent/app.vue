@@ -53,9 +53,12 @@ function declineAll() {
 }
 
 function savePreferences() {
-  if (preferences.analytics) analyticsConsent.accept()
-  if (preferences.marketing) marketingConsent.accept()
-  if (preferences.functional) functionalConsent.accept()
+  if (preferences.analytics)
+    analyticsConsent.accept()
+  if (preferences.marketing)
+    marketingConsent.accept()
+  if (preferences.functional)
+    functionalConsent.accept()
   showPreferences.value = false
   showBanner.value = false
 }

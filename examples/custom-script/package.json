@@ -1,7 +1,7 @@
 {
   "name": "nuxt-scripts-custom-script-example",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",

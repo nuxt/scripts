@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { createApp, defineEventHandler, readBody, readRawBody, getHeaders, toNodeListener } from 'h3'
-import { createServer, type Server } from 'node:http'
+import type { Server } from 'node:http'
+import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
+import { createApp, defineEventHandler, getHeaders, readBody, readRawBody, toNodeListener } from 'h3'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 /**
  * Tests for #618: proxy handler must preserve compressed/binary request bodies.
@@ -85,14 +86,14 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
     proxyPort = (proxyServer.address() as any).port
   })
 
-  afterAll(() => {
-    upstreamServer?.close()
-    proxyServer?.close()
-  })
-
   beforeEach(() => {
     capturedUpstreamBody = null
     capturedUpstreamContentType = undefined
+  })
+
+  afterAll(() => {
+    upstreamServer?.close()
+    proxyServer?.close()
   })
 
   it('preserves gzip-compressed body sent as text/plain (PostHog gzip-js)', async () => {

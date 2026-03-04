@@ -1,5 +1,8 @@
 {
   "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals"]
+  },
   "exclude": [
     "docs",
     "playground",
@@ -12,8 +15,5 @@
     "test/unit",
     "test/benchmark.skip.ts",
     "examples"
-  ],
-  "compilerOptions": {
-    "types": ["vitest/globals"]
-  }
+  ]
 }

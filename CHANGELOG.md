@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.0.0-beta.6...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.6...main)
+
+### 🩹 Fixes
+
+- **posthog:** 'history_change' as a capture_pageview option ([#620](https://github.com/nuxt/scripts/pull/620))
+- Preserve compressed/binary request bodies in proxy handler ([#619](https://github.com/nuxt/scripts/pull/619))
+
+### 🏡 Chore
+
+- Bump deps ([4d79e91](https://github.com/nuxt/scripts/commit/4d79e91))
+- Fix rybbit loogo ([68eeb73](https://github.com/nuxt/scripts/commit/68eeb73))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Kuba ([@zizzfizzix](https://github.com/zizzfizzix))
+
 ## v1.0.0-beta.5...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.5...main)

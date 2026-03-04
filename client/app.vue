@@ -138,7 +138,7 @@ function syncScripts(_scripts: any[]) {
         script.registry = scriptRegistry.find(s => titleToCamelCase(s.label) === script.registryKey)
         if (script.registry) {
           const kebabCaseLabel = script.registry.label.toLowerCase().replace(/ /g, '-')
-          script.docs = `https://scripts.nuxt.com/scripts/${script.registry.category}/${kebabCaseLabel}`
+          script.docs = `https://scripts.nuxt.com/scripts/${kebabCaseLabel}`
         }
         const loadingAt = script.events?.find((e: any) => e.status === 'loading')?.at || 0
         const loadedAt = script.events?.find((e: any) => e.status === 'loaded')?.at || 0
@@ -714,7 +714,7 @@ function viewDocs(docs: string) {
                 </div>
                 <div class="flex flex-col items-end gap-2">
                   <a
-                    :href="`https://scripts.nuxt.com/scripts/${script.category}/${script.label.toLowerCase().replace(/ /g, '-')}`"
+                    :href="`https://scripts.nuxt.com/scripts/${script.label.toLowerCase().replace(/ /g, '-')}`"
                     target="_blank"
                     class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
                   >

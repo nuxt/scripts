@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { templatePlugin, resolveTriggerForTemplate } from '../../src/templates'
+import { describe, expect, it } from 'vitest'
+import { resolveTriggerForTemplate, templatePlugin } from '../../src/templates'
 
 describe('template plugin file', () => {
   // global

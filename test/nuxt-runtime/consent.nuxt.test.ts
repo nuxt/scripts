@@ -1,6 +1,6 @@
-import { ref } from 'vue'
-import { it, expect, describe } from 'vitest'
 import { useScriptTriggerConsent } from '#imports'
+import { describe, expect, it } from 'vitest'
+import { ref } from 'vue'
 
 function getPromiseState(promise: Promise<any>) {
   const temp = {}

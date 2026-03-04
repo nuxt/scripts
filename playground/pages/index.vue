@@ -83,7 +83,7 @@ const analytics = registryScripts
   ])
 
 const pixels = registryScripts
-  .filter(s => s.category === 'tracking')
+  .filter(s => s.category === 'ad')
   .map(s => ({
     name: s.label,
     path: getPlaygroundPath(s),
@@ -93,7 +93,7 @@ const pixels = registryScripts
   .filter(s => s.path)
 
 const marketing = registryScripts
-  .filter(s => s.category === 'marketing' || s.label === 'Hotjar')
+  .filter(s => s.label === 'Hotjar' || s.label === 'Clarity')
   .map(s => ({
     name: s.label,
     path: getPlaygroundPath(s),
@@ -153,7 +153,7 @@ const payments = registryScripts
   ])
 
 const content = registryScripts
-  .filter(s => s.category === 'content')
+  .filter(s => s.category === 'content' || s.category === 'video')
   .map(s => ({
     name: s.label,
     path: getPlaygroundPath(s),
@@ -202,7 +202,7 @@ const content = registryScripts
   ])
 
 const npm = registryScripts
-  .filter(s => s.category === 'utility' && s.label === 'NPM')
+  .filter(s => s.category === 'cdn' && s.label === 'NPM')
   .map(s => ({
     name: 'js-confetti',
     path: getPlaygroundPath(s),

@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
 import { createPage, setup, url } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
+import { describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 

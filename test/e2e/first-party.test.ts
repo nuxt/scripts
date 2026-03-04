@@ -1,8 +1,8 @@
-import { describe, expect, it, beforeAll, afterAll } from 'vitest'
-import { createResolver } from '@nuxt/kit'
-import { readdirSync, readFileSync, rmSync, existsSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { $fetch, getBrowser, url, setup } from '@nuxt/test-utils/e2e'
+import { createResolver } from '@nuxt/kit'
+import { $fetch, getBrowser, setup, url } from '@nuxt/test-utils/e2e'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 const fixtureDir = resolve('../fixtures/first-party')
@@ -72,21 +72,45 @@ const PROVIDER_PATHS: Record<string, string[]> = {
  */
 const ANONYMIZED_FINGERPRINT_PARAMS = [
   // Hardware (generalized to common buckets)
-  'hardwareconcurrency', 'devicememory', 'cpu', 'mem',
+  'hardwareconcurrency',
+  'devicememory',
+  'cpu',
+  'mem',
   // Browser data (replaced with empty value)
-  'plugins', 'fonts',
+  'plugins',
+  'fonts',
   // Location/Timezone (generalized)
-  'tz', 'timezone', 'timezoneoffset',
+  'tz',
+  'timezone',
+  'timezoneoffset',
   // Canvas/WebGL fingerprinting (replaced with empty value)
-  'canvas', 'webgl', 'audiofingerprint',
+  'canvas',
+  'webgl',
+  'audiofingerprint',
   // Combined device fingerprinting (replaced with empty string)
-  'dv', 'device_info', 'deviceinfo',
+  'dv',
+  'device_info',
+  'deviceinfo',
   // Screen/viewport (generalized to device-class buckets)
-  'sr', 'vp', 'sd', 'sh', 'sw', 'screen', 'viewport', 'colordepth', 'pixelratio',
+  'sr',
+  'vp',
+  'sd',
+  'sh',
+  'sw',
+  'screen',
+  'viewport',
+  'colordepth',
+  'pixelratio',
   // Version strings (generalized to major version)
-  'd_os', 'uapv', 'd_bvs', 'uafvl',
+  'd_os',
+  'uapv',
+  'd_bvs',
+  'uafvl',
   // User agent (normalized to family/major version)
-  'ua', 'useragent', 'user_agent', 'client_user_agent',
+  'ua',
+  'useragent',
+  'user_agent',
+  'client_user_agent',
 ]
 
 /**
@@ -96,10 +120,27 @@ const ANONYMIZED_FINGERPRINT_PARAMS = [
  */
 const _PRESERVED_USER_PARAMS = [
   // User identifiers (preserved for analytics)
-  'uid', 'user_id', 'userid', 'external_id', 'cid', '_gid', 'fbp', 'fbc',
-  'sid', 'session_id', 'sessionid', 'pl_id', 'p_user_id', 'anonymousid', 'twclid',
+  'uid',
+  'user_id',
+  'userid',
+  'external_id',
+  'cid',
+  '_gid',
+  'fbp',
+  'fbc',
+  'sid',
+  'session_id',
+  'sessionid',
+  'pl_id',
+  'p_user_id',
+  'anonymousid',
+  'twclid',
   // User data (PII — hashed by SDKs before sending, preserved for analytics)
-  'ud', 'user_data', 'userdata', 'email', 'phone',
+  'ud',
+  'user_data',
+  'userdata',
+  'email',
+  'phone',
 ]
 
 /** Check that a capture has a fully-resolved privacy object with all six boolean flags. */
@@ -125,21 +166,28 @@ function verifyFingerprintingAnonymized(capture: Record<string, any>): string[] 
 
   // Values considered already-anonymized — not a leak even if unchanged
   const isAnonymizedValue = (v: unknown): boolean => {
-    if (v === '' || v === 0 || (Array.isArray(v) && v.length === 0)) return true
-    if (typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length === 0) return true
+    if (v === '' || v === 0 || (Array.isArray(v) && v.length === 0))
+      return true
+    if (typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length === 0)
+      return true
     if (typeof v === 'string') {
       // Screen bucket patterns (e.g. "1920x1080", "1280x720")
-      if (/^\d{3,4}x\d{3,4}$/.test(v)) return true
+      if (/^\d{3,4}x\d{3,4}$/.test(v))
+        return true
       // Normalized UA patterns (e.g. "Mozilla/5.0 (compatible; Chrome/131.0)")
-      if (v.startsWith('Mozilla/5.0 (compatible')) return true
+      if (v.startsWith('Mozilla/5.0 (compatible'))
+        return true
       // Major-only version (e.g. "90", "131.0")
-      if (/^\d+(?:\.\d)?$/.test(v)) return true
+      if (/^\d+(?:\.\d)?$/.test(v))
+        return true
       // Timezone names (IANA zones or UTC)
-      if (v === 'UTC' || /^[A-Z][a-z]+\/[A-Z]/.test(v)) return true
+      if (v === 'UTC' || /^[A-Z][a-z]+\/[A-Z]/.test(v))
+        return true
     }
     if (typeof v === 'number') {
       // Bucketed numeric values (common screen widths, heights, concurrency)
-      if ([320, 375, 414, 768, 1024, 1280, 1366, 1440, 1920, 2560, 3840].includes(v)) return true
+      if ([320, 375, 414, 768, 1024, 1280, 1366, 1440, 1920, 2560, 3840].includes(v))
+        return true
     }
     return false
   }
@@ -187,15 +235,30 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
     // Common timestamps
     ts: '<TS>',
     // Environment-specific (OS version, locale, browser version)
-    uapv: '<UAPV>', ul: '<UL>', uafvl: '<UAFVL>', d_os: '<D_OS>', d_bvs: '<D_BVS>',
+    uapv: '<UAPV>',
+    ul: '<UL>',
+    uafvl: '<UAFVL>',
+    d_os: '<D_OS>',
+    d_bvs: '<D_BVS>',
     ua: '<UA>',
     // GA
-    cid: '<CID>', _p: '<P>', _et: '<ET>', _s: '<S>',
-    sid: '<SID>', tag_exp: '<TAG_EXP>', tfd: '<TFD>', gtm: '<GTM>',
+    cid: '<CID>',
+    _p: '<P>',
+    _et: '<ET>',
+    _s: '<S>',
+    sid: '<SID>',
+    tag_exp: '<TAG_EXP>',
+    tfd: '<TFD>',
+    gtm: '<GTM>',
     // Meta pixel
     it: '<IT>',
     // Snapchat
-    si: '<SI>', sa: '<SA>', sps: '<SPS>', rd: '<RD>', del: '<DEL>', gac: '<GAC>',
+    si: '<SI>',
+    sa: '<SA>',
+    sps: '<SPS>',
+    rd: '<RD>',
+    del: '<DEL>',
+    gac: '<GAC>',
   }
   // Fingerprinting params: masked in original only so stripped proves anonymization worked
   const ORIGINAL_ONLY_VOLATILE: Record<string, string> = {
@@ -209,12 +272,14 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
   const STRIP_KEYS = new Set(['gat', 'exp'])
 
   function normalizeObj(obj: any, isOriginal = false): any {
-    if (Array.isArray(obj)) return obj.map(v => normalizeObj(v, isOriginal))
+    if (Array.isArray(obj))
+      return obj.map(v => normalizeObj(v, isOriginal))
     if (obj !== null && typeof obj === 'object') {
       const result: Record<string, any> = {}
       const seenPrefixes = new Set<string>()
       for (const [k, v] of Object.entries(obj)) {
-        if (STRIP_KEYS.has(k)) continue
+        if (STRIP_KEYS.has(k))
+          continue
         // Collapse volatile prefix keys (e.g. expv2[0], expv2[1]) into single entry
         const matchedPrefix = VOLATILE_PREFIXES.find(p => k.startsWith(p))
         if (matchedPrefix && (typeof v === 'string' || typeof v === 'number')) {
@@ -223,14 +288,18 @@ function normalizeCapture(capture: Record<string, any>): Record<string, any> {
             result[matchedPrefix.replace(/\[/g, '')] = '<VOLATILE>'
           }
         }
-        else if (k in VOLATILE && (typeof v === 'string' || typeof v === 'number'))
+        else if (k in VOLATILE && (typeof v === 'string' || typeof v === 'number')) {
           result[k] = VOLATILE[k]
-        else if (isOriginal && k in ORIGINAL_ONLY_VOLATILE && (typeof v === 'string' || typeof v === 'number'))
+        }
+        else if (isOriginal && k in ORIGINAL_ONLY_VOLATILE && (typeof v === 'string' || typeof v === 'number')) {
           result[k] = ORIGINAL_ONLY_VOLATILE[k]
-        else if (VOLATILE_ARRAYS.has(k) && Array.isArray(v))
+        }
+        else if (VOLATILE_ARRAYS.has(k) && Array.isArray(v)) {
           result[k] = `<${k.toUpperCase()}>`
-        else
+        }
+        else {
           result[k] = normalizeObj(v, isOriginal)
+        }
       }
       return result
     }
@@ -291,10 +360,13 @@ function extractRequestDiff(capture: Record<string, any>): Record<string, any> {
     original: Record<string, unknown> | undefined,
     stripped: Record<string, unknown> | undefined,
   ): Record<string, { original: unknown, anonymized: unknown }> | 'removed' | undefined {
-    if (!original && !stripped) return undefined
+    if (!original && !stripped)
+      return undefined
     // Section existed in original but was entirely removed
-    if (original && !stripped) return 'removed'
-    if (!original || !stripped) return undefined
+    if (original && !stripped)
+      return 'removed'
+    if (!original || !stripped)
+      return undefined
 
     const result: Record<string, { original: unknown, anonymized: unknown }> = {}
     const allKeys = new Set([...Object.keys(original), ...Object.keys(stripped)])
@@ -361,9 +433,12 @@ function extractRequestDiff(capture: Record<string, any>): Record<string, any> {
   }
   const body = diffObjects(origBody, strippedBody)
 
-  if (query) result.query = query
-  if (headers) result.headers = headers
-  if (body) result.body = body
+  if (query)
+    result.query = query
+  if (headers)
+    result.headers = headers
+  if (body)
+    result.body = body
 
   // Normalize volatile values in the diff
   let json = JSON.stringify(result)
@@ -414,10 +489,11 @@ async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Rec
 }
 
 function isAllowedDomain(urlStr: string | undefined, allowedDomain: string) {
-  if (!urlStr) return false
+  if (!urlStr)
+    return false
   try {
     const hostname = new URL(urlStr).hostname
-    return hostname === allowedDomain || hostname.endsWith('.' + allowedDomain)
+    return hostname === allowedDomain || hostname.endsWith(`.${allowedDomain}`)
   }
   catch {
     return false
@@ -425,7 +501,8 @@ function isAllowedDomain(urlStr: string | undefined, allowedDomain: string) {
 }
 
 function readRawCaptures(provider?: string) {
-  if (!existsSync(captureDir)) return []
+  if (!existsSync(captureDir))
+    return []
   const captures = readdirSync(captureDir)
     .filter(f => f.endsWith('.json'))
     .sort()
@@ -471,7 +548,7 @@ describe('first-party privacy stripping', () => {
   })
 
   describe('script bundling', () => {
-    it('GA script is loaded from local path', async () => {
+    it('gA script is loaded from local path', async () => {
       const browser = await getBrowser()
       const page = await browser.newPage()
       page.setDefaultTimeout(5000)
@@ -971,8 +1048,12 @@ describe('first-party privacy stripping', () => {
         const reqUrl = response.url()
         const status = response.status()
         if (!serverOrigin) {
-          try { serverOrigin = new URL(reqUrl).origin }
-          catch {}
+          try {
+            serverOrigin = new URL(reqUrl).origin
+          }
+          catch {
+            // ignore
+          }
         }
         if (status >= 400 && serverOrigin && reqUrl.startsWith(serverOrigin)) {
           failedLocalRequests.push({ url: new URL(reqUrl).pathname, status })
@@ -1013,7 +1094,8 @@ describe('first-party privacy stripping', () => {
   describe('bundled script integrity', () => {
     it('all cached proxy-rewritten scripts are syntactically valid', async () => {
       const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-proxy')
-      if (!existsSync(cacheDir)) return // skip if no cached scripts
+      if (!existsSync(cacheDir))
+        return // skip if no cached scripts
 
       const files = readdirSync(cacheDir).filter(f => f.endsWith('.js'))
       for (const file of files) {
@@ -1080,8 +1162,10 @@ describe('first-party privacy stripping', () => {
       const consoleWarnings: string[] = []
 
       page.on('console', (msg) => {
-        if (msg.type() === 'error') consoleErrors.push(msg.text())
-        if (msg.type() === 'warning') consoleWarnings.push(msg.text())
+        if (msg.type() === 'error')
+          consoleErrors.push(msg.text())
+        if (msg.type() === 'warning')
+          consoleWarnings.push(msg.text())
       })
 
       page.on('response', (response) => {
