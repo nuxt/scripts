@@ -12,6 +12,9 @@ links:
 
 [Cloudflare Web Analytics](https://developers.cloudflare.com/analytics/web-analytics/) with Nuxt is a great privacy analytics solution. It offers free, privacy-centric analytics for your website. It doesn't gather personal data from your visitors, yet provides detailed insights into your web pages' performance as experienced by your visitors.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

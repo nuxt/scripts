@@ -12,6 +12,9 @@ links:
 
 [Plausible Analytics](https://plausible.io/) is a privacy-friendly analytics solution for Nuxt Apps, allowing you to track your website's traffic without compromising your users' privacy.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

@@ -26,6 +26,8 @@ The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component:
 
 ::code-group
 
+:instagram-embed-demo{label="Output"}
+
 ```vue [Basic Usage]
 <template>
   <ScriptInstagramEmbed

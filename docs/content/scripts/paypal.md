@@ -30,6 +30,9 @@ Nuxt Scripts provides multiple PayPal features:
 - `ScriptPayPalMarks` component that allows you to embed [PayPal Marks](https://developer.paypal.com/sdk/js/reference/#marks) on your site.
 - `ScriptPayPalMessages` component that allows you to embed [PayPal Messages](https://developer.paypal.com/studio/checkout/pay-later/us/customize/reference) on your site.
 
+::script-stats
+::
+
 ## Types
 
 To use the PayPal with full TypeScript support, you will need

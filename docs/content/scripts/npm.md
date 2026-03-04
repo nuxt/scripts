@@ -10,6 +10,9 @@ links:
 
 ---
 
+::script-stats
+::
+
 ## Background
 
 When working with NPM files, you'd typically include them as a node_module dependency in the `package.json` file. However,

@@ -18,6 +18,9 @@ links:
 
 Nuxt Scripts provides a [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="ts"} composable and a headless [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} a component to interact with the Vimeo Player.
 
+::script-stats
+::
+
 ## Types
 
 To use Video Player with full TypeScript support, you will need

@@ -18,6 +18,9 @@ Nuxt Scripts provides a registry script composable [`useScriptGoogleRecaptcha()`
 This integration supports reCAPTCHA v3 (score-based, invisible) only. For v2 checkbox, use the standard reCAPTCHA integration.
 ::
 
+::script-stats
+::
+
 ### Loading Globally
 
 ::code-group

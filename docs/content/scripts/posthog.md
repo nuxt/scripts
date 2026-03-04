@@ -22,6 +22,9 @@ You must install the `posthog-js` dependency:
 pnpm add posthog-js
 ```
 
+::script-stats
+::
+
 ::script-docs
 ::
 

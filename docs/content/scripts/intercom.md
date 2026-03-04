@@ -18,6 +18,9 @@ links:
 
 Nuxt Scripts provides a [`useScriptIntercom()`](#usescriptintercom){lang="ts"} composable and a headless Facade Component [`<ScriptIntercom>`](#scriptintercom){lang="html"} component to interact with Intercom.
 
+::script-stats
+::
+
 ## [`<ScriptIntercom>`](/scripts/intercom){lang="html"}
 
 

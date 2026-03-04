@@ -12,6 +12,9 @@ links:
 
 [Databuddy](https://www.databuddy.cc/) is a privacy-first analytics platform focused on performance and minimal data collection.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

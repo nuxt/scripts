@@ -18,6 +18,9 @@ links:
 
 Nuxt Scripts provides a [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composable and a headless Facade Component [`<ScriptCrisp>`](#scriptcrisp){lang="html"} component to interact with crisp.
 
+::script-stats
+::
+
 ## [`<ScriptCrisp>`](/scripts/crisp){lang="html"}
 
 The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component is headless Facade Component wrapping the [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.

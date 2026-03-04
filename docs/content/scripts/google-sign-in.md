@@ -18,6 +18,9 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`](/scripts/google-sign-in){lang="ts"} to easily integrate Google Sign-In in your Nuxt app with optimal performance.
 
+::script-stats
+::
+
 ## Live Demo
 
 ::google-sign-in-demo

@@ -26,6 +26,8 @@ The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless co
 
 ::code-group
 
+:x-embed-demo{label="Output"}
+
 ```vue [Basic Usage]
 <template>
   <ScriptXEmbed tweet-id="1754336034228171055">

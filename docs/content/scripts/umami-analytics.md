@@ -12,6 +12,9 @@ links:
 
 [Umami](https://umami.is/) collects all the metrics you care about to help you make better decisions.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

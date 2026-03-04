@@ -14,6 +14,9 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptSnapchatPixel()`](/scripts/snapchat-pixel){lang="ts"} to easily integrate Snapchat Pixel in your Nuxt app.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

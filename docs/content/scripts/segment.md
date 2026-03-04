@@ -14,6 +14,9 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptSegment()`](/scripts/segment){lang="ts"} to easily integrate Segment in your Nuxt app.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

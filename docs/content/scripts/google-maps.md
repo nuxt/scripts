@@ -18,6 +18,9 @@ links:
 
 Nuxt Scripts provides a [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component to interact with the Google Maps.
 
+::script-stats
+::
+
 ## Types
 
 To use Google Maps with full TypeScript support, you will need

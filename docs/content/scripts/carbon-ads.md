@@ -14,6 +14,9 @@ links:
 
 Nuxt Scripts provides a headless [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"} component to embed Carbon Ads in your Nuxt app.
 
+::script-stats
+::
+
 ## [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"}
 
 The [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"} component works differently to other Nuxt Scripts component and does not rely on [`useScript()`](/docs/api/use-script){lang="ts"}, instead it simply

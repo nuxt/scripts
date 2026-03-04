@@ -14,6 +14,9 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptRedditPixel()`](/scripts/reddit-pixel){lang="ts"} to easily integrate Reddit Pixel in your Nuxt app.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

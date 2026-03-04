@@ -20,6 +20,9 @@ Nuxt Scripts provides two Stripe features:
 - [`useScriptStripe()`](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/v3/`.
 - `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site using `https://js.stripe.com/v3/pricing-table.js`.
 
+::script-stats
+::
+
 ## Types
 
 To use the Stripe with full TypeScript support, you will need

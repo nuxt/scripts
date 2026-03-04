@@ -14,6 +14,9 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptMetaPixel()`](/scripts/meta-pixel){lang="ts"} to easily integrate Meta Pixel in your Nuxt app.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

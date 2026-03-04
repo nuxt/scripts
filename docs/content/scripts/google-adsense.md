@@ -21,6 +21,9 @@ Nuxt Scripts provides:
 - [`useScriptGoogleAdsense()`](/scripts/google-adsense){lang="ts"}: A composable to manage Google AdSense dynamically.
 - `<ScriptGoogleAdsense>`: A headless component to embed ads directly in your Nuxt app.
 
+::script-stats
+::
+
 ## Global Setup
 
 You can configure Google AdSense **globally** in your `nuxt.config.ts` so that the script is automatically loaded on all pages.

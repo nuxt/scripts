@@ -19,6 +19,9 @@ links:
 Nuxt Scripts provides a [`useScriptLemonSqueezy()`](#usescriptlemonsqueezy){lang="ts"} composable and a headless Facade Component [`<ScriptLemonSqueezy>`](#scriptlemonsqueezy){lang="html"} component to interact with lemon squeezy.
 
 
+::script-stats
+::
+
 ## [`<ScriptLemonSqueezy>`](/scripts/lemon-squeezy){lang="html"}
 
 The [`<ScriptLemonSqueezy>`](/scripts/lemon-squeezy){lang="html"} component is headless [Facade Component](/docs/guides/facade-components) wrapping the [`useScriptLemonSqueezy()`](/scripts/lemon-squeezy){lang="ts"} composable, providing a simple, performance optimized way to load Lemon Squeezy in your Nuxt app.

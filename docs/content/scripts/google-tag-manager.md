@@ -18,6 +18,9 @@ Nuxt Scripts provides many features you can easily
 implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the [`useScriptGoogleAnalytics()`](/scripts/google-analytics){lang="ts"} composable instead.
 ::
 
+::script-stats
+::
+
 ::script-docs
 ::
 

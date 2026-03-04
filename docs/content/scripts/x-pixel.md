@@ -14,6 +14,9 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptXPixel()`](/scripts/x-pixel){lang="ts"} to easily integrate X Pixel in your Nuxt app.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

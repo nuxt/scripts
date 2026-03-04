@@ -12,6 +12,9 @@ links:
 
 [Hotjar](https://www.hotjar.com/) is a screen recorder and heatmap tool that helps you understand how users interact with your website.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

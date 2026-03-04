@@ -14,6 +14,9 @@ links:
 
 It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
 
+::script-stats
+::
+
 ::script-docs
 ::
 

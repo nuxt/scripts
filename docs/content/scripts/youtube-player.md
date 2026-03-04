@@ -18,6 +18,9 @@ links:
 
 Nuxt Scripts provides a [`useScriptYouTubePlayer()`](/scripts/youtube-player){lang="ts"} composable and a headless [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"} component to interact with the YouTube Player.
 
+::script-stats
+::
+
 ## Types
 
 To use YouTube with full TypeScript support, you will need

@@ -12,6 +12,9 @@ links:
 
 [Rybbit Analytics](https://www.rybbit.io/) is a privacy-focused analytics solution for tracking user activity on your website without compromising your users' privacy.
 
+::script-stats
+::
+
 ::script-docs
 ::
 
