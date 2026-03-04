@@ -214,7 +214,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     `  parallel: true,`,
     `  setup() {`,
     ...inits.map(i => `    ${i}`),
-    `    return { provide: { $scripts: { ${[...Object.keys(config.globals || {}), ...resolvedRegistryKeys].join(', ')} } } }`,
+    `    return { provide: { scripts: { ${[...Object.keys(config.globals || {}), ...resolvedRegistryKeys].join(', ')} } } }`,
     `  }`,
     `})`,
   ].join('\n')
