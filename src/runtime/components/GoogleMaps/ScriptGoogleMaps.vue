@@ -1,4 +1,5 @@
 <script lang="ts">
+/// <reference types="google.maps" />
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type { QueryObject } from 'ufo'
 import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps, ShallowRef } from 'vue'
@@ -9,7 +10,6 @@ import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { hash } from 'ohash'
 import { withQuery } from 'ufo'
-/// <reference types="google.maps" />
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 

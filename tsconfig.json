@@ -1,7 +1,7 @@
 {
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "types": ["vitest/globals", "youtube"]
+    "types": ["vitest/globals", "youtube", "google.maps"]
   },
   "exclude": [
     "docs",
