@@ -37,4 +37,7 @@ jobs:
       - name: Install Dependencies
         run: pnpm i
 
+      - name: Prepare Nuxt
+        run: npx nuxi prepare
+
       - run: pnpm publish -r --access public --no-git-checks --tag beta
