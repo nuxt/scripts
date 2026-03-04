@@ -520,6 +520,29 @@ function readRawCaptures(provider?: string) {
   return captures
 }
 
+describe('useScript with registry provide', () => {
+  it('useScript works when registry scripts are configured', async () => {
+    // Regression: when registry scripts are provided via plugin provide(),
+    // nuxtApp.$scripts becomes a getter-only property. useScript() must not
+    // try to reassign it, or it throws:
+    // "Cannot set property $scripts of #<Object> which has only a getter"
+    const browser = await getBrowser()
+    const page = await browser.newPage()
+    const errors: string[] = []
+    page.addListener('pageerror', (err) => {
+      errors.push(err.message)
+    })
+    await page.goto(url('/use-script-with-registry'), { waitUntil: 'networkidle' })
+    await page.waitForTimeout(1000)
+    // No errors should have occurred
+    expect(errors.filter(e => e.includes('$scripts'))).toEqual([])
+    // Script status should progress to loaded
+    const status = await page.$eval('#status', el => el.textContent?.trim())
+    expect(status).toBe('loaded')
+    await page.close()
+  })
+})
+
 describe('first-party privacy stripping', () => {
   beforeAll(() => clearCaptures())
   afterAll(() => clearCaptures())

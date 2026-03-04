@@ -5,12 +5,21 @@ import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { logger } from '../logger'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
   $scripts: Record<string, UseScriptContext<any> | undefined>
   _scripts: Record<string, NuxtDevToolsScriptInstance>
+}
+
+function ensureScripts(nuxtApp: NuxtScriptsApp) {
+  // When registry scripts are configured, the plugin provides $scripts via Nuxt's
+  // provide() which creates a getter-only property. We must not reassign it.
+  // When no plugin provides it, we need to initialize it ourselves.
+  if (!nuxtApp.$scripts) {
+    nuxtApp.$scripts = {}
+  }
 }
 
 function useNuxtScriptRuntimeConfig() {
@@ -39,7 +48,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     })
     // Register with nuxtApp.$scripts for DevTools visibility
     const nuxtApp = useNuxtApp() as NuxtScriptsApp
-    nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+    ensureScripts(nuxtApp)
     const status = ref('loaded')
     const stub = {
       id: src,
@@ -74,7 +83,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   if (!options.head) {
     throw new Error('useScript() has been called without Nuxt context.')
   }
-  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+  ensureScripts(nuxtApp)
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
   const err = options._validate?.()

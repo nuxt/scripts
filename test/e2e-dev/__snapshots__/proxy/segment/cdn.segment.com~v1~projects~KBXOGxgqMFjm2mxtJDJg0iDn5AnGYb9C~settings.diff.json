@@ -1,0 +1,10 @@
+{
+  "headers": {
+    "x-forwarded-for": {
+      "anonymized": "127.0.0.1",
+      "original": "<absent>",
+    },
+  },
+  "method": "GET",
+  "target": "cdn.segment.com/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings",
+}
