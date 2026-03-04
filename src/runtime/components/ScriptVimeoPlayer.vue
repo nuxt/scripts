@@ -1,13 +1,13 @@
 <script setup lang="ts">
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck
 
-/// <reference types="vimeo__player" />
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
+import type { ElementScriptTrigger } from '../types'
 import { defu } from 'defu'
 import { useAsyncData, useHead } from 'nuxt/app'
-import type { ElementScriptTrigger } from '../types'
+/// <reference types="vimeo__player" />
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
 import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
@@ -60,8 +60,7 @@ const emits = defineEmits<TEmits>()
 
 type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type TEmits = {
+interface TEmits {
   play: EventMap<'play'>
   playing: EventMap<'playing'>
   pause: EventMap<'pause'>

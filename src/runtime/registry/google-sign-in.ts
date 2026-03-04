@@ -1,6 +1,6 @@
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, string, optional, boolean, array, union, literal } from '#nuxt-scripts-validator'
+import { array, boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '#nuxt-scripts/utils'
 
 // Credential response from One Tap or button flow
 export interface CredentialResponse {
@@ -85,11 +85,8 @@ export interface RevocationResponse {
 }
 
 // Use namespace declaration like google-maps to avoid conflicts
-// eslint-disable-next-line
 declare namespace google {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace accounts {
-    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace id {
       export function initialize(config: IdConfiguration): void
       export function prompt(momentListener?: (notification: MomentNotification) => void): void

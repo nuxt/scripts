@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import { callOnce } from 'nuxt/app'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptGoogleAdsense } from '../registry/google-adsense'
 import { scriptRuntimeConfig } from '../utils'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{
   dataAdClient: string

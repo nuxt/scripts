@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
-import { defu } from 'defu'
-import type { PayPalMarksComponent, PayPalMarksComponentOptions } from '@paypal/paypal-js'
-import { useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { onBeforeUnmount, resolveComponent } from 'vue'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import type { PayPalMarksComponent, PayPalMarksComponentOptions } from '@paypal/paypal-js'
+import type { HTMLAttributes, ReservedProps } from 'vue'
 import type { PayPalInput } from '../registry/paypal'
-
-const el = ref<HTMLDivElement | null>(null)
-const rootEl = ref<HTMLDivElement | null>(null)
+import { defu } from 'defu'
+import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, shallowRef, watch } from 'vue'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { useScriptPayPal } from '../registry/paypal'
 
 const props = withDefaults(defineProps<{
   /**
@@ -38,6 +35,8 @@ const props = withDefaults(defineProps<{
   marksOptions: () => ({}),
   paypalScriptOptions: () => ({}),
 })
+const el = ref<HTMLDivElement | null>(null)
+const rootEl = ref<HTMLDivElement | null>(null)
 
 const ready = ref(false)
 
@@ -50,13 +49,15 @@ const marksInst = shallowRef<PayPalMarksComponent>()
 
 onMounted(() => {
   onLoaded(async ({ paypal }) => {
-    if (!el.value) return
+    if (!el.value)
+      return
     marksInst.value = paypal?.Marks?.(props.marksOptions)
     await marksInst.value?.render(el.value)
     ready.value = true
 
     watch(() => props.marksOptions, async (_options) => {
-      if (!el.value) return
+      if (!el.value)
+        return
       destroy()
       marksInst.value = paypal?.Marks?.(_options)
       await marksInst.value?.render(el.value)
@@ -65,7 +66,8 @@ onMounted(() => {
 })
 
 function destroy() {
-  if (!el.value) return
+  if (!el.value)
+    return
   el.value?.replaceChildren()
 }
 

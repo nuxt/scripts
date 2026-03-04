@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { HTMLAttributes } from 'vue'
-import { useAsyncData } from 'nuxt/app'
 import type { XEmbedTweetData } from '../registry/x-embed'
+import { useAsyncData } from 'nuxt/app'
+import { computed } from 'vue'
 import { formatCount, formatTweetDate, proxyXImageUrl } from '../registry/x-embed'
 
 const props = withDefaults(defineProps<{

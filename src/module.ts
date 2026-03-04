@@ -1,3 +1,14 @@
+import type { FetchOptions } from 'ofetch'
+import type { InterceptRule } from './proxy-configs'
+import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
+import type {
+  NuxtConfigScriptRegistry,
+  NuxtUseScriptInput,
+  NuxtUseScriptOptionsSerializable,
+  RegistryScript,
+  RegistryScripts,
+} from './runtime/types'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import {
   addBuildPlugin,
   addComponentsDir,
@@ -9,29 +20,18 @@ import {
   defineNuxtModule,
   hasNuxtModule,
 } from '@nuxt/kit'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { resolve as resolvePath_ } from 'pathe'
 import { defu } from 'defu'
+import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
-import type { FetchOptions } from 'ofetch'
-import { setupDevToolsUI } from './devtools'
-import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { setupPublicAssetStrategy } from './assets'
-import { logger } from './logger'
+import { setupDevToolsUI } from './devtools'
 import { installNuxtModule } from './kit'
-import { registry } from './registry'
-import type {
-  NuxtConfigScriptRegistry,
-  NuxtUseScriptInput,
-  NuxtUseScriptOptionsSerializable,
-  RegistryScript,
-  RegistryScripts,
-} from './runtime/types'
+import { logger } from './logger'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
-import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
+import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { getAllProxyConfigs, routesToInterceptRules } from './proxy-configs'
-import type { InterceptRule } from './proxy-configs'
-import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
+import { registry } from './registry'
+import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
 declare module '@nuxt/schema' {
   interface NuxtHooks {
@@ -105,24 +105,30 @@ const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s
 function fixSelfClosingScriptComponents(nuxt: any) {
   function expandTags(content: string): string | null {
     SELF_CLOSING_SCRIPT_RE.lastIndex = 0
-    if (!SELF_CLOSING_SCRIPT_RE.test(content)) return null
+    if (!SELF_CLOSING_SCRIPT_RE.test(content))
+      return null
     SELF_CLOSING_SCRIPT_RE.lastIndex = 0
     return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
   }
 
   function fixFile(filePath: string) {
-    if (!existsSync(filePath)) return
+    if (!existsSync(filePath))
+      return
     const content = readFileSync(filePath, 'utf-8')
     const fixed = expandTags(content)
-    if (fixed) nuxt.vfs[filePath] = fixed
+    if (fixed)
+      nuxt.vfs[filePath] = fixed
   }
 
   function scanDir(dir: string) {
-    if (!existsSync(dir)) return
+    if (!existsSync(dir))
+      return
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const fullPath = resolvePath_(dir, entry.name)
-      if (entry.isDirectory()) scanDir(fullPath)
-      else if (entry.name.endsWith('.vue')) fixFile(fullPath)
+      if (entry.isDirectory())
+        scanDir(fullPath)
+      else if (entry.name.endsWith('.vue'))
+        fixFile(fullPath)
     }
   }
 
@@ -138,7 +144,8 @@ function fixSelfClosingScriptComponents(nuxt: any) {
   // Keep VFS entries fresh during dev HMR
   if (nuxt.options.dev) {
     nuxt.hook('builder:watch', (_event: string, relativePath: string) => {
-      if (!relativePath.endsWith('.vue')) return
+      if (!relativePath.endsWith('.vue'))
+        return
       for (const layer of nuxt.options._layers) {
         const fullPath = resolvePath_(layer.config.srcDir, relativePath)
         for (const dir of pagesDirs) {

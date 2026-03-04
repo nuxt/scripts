@@ -1,9 +1,9 @@
-import { existsSync } from 'node:fs'
-import type { Nuxt } from '@nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
-import { extendViteConfig, useNuxt } from '@nuxt/kit'
-import { addCustomTab } from '@nuxt/devtools-kit'
+import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from './module'
+import { existsSync } from 'node:fs'
+import { addCustomTab } from '@nuxt/devtools-kit'
+import { extendViteConfig, useNuxt } from '@nuxt/kit'
 import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
 export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolvePath'], nuxt: Nuxt = useNuxt()) {

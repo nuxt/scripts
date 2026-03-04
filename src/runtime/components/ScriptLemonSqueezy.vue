@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
 import type { ElementScriptTrigger } from '../types'
+import { computed, onMounted, ref } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptLemonSqueezy } from '../registry/lemon-squeezy'
-import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger

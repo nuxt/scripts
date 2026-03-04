@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptCrisp } from '../registry/crisp'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = withDefaults(defineProps<{
   /**

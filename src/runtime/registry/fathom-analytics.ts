@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 export const FathomAnalyticsOptions = object({
   /**

@@ -1,9 +1,6 @@
-<template>
-</template>
-
 <script setup lang="ts">
-import { inject, onUnmounted, shallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
+import { inject, onUnmounted, shallowRef } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './ScriptGoogleMapsAdvancedMarkerElement.vue'
 
@@ -37,7 +34,8 @@ whenever(
     }, {
       deep: true,
     })
-  }, {
+  },
+  {
     immediate: true,
     once: true,
   },
@@ -51,3 +49,6 @@ onUnmounted(() => {
   pinElement.value = undefined
 })
 </script>
+
+<template>
+</template>

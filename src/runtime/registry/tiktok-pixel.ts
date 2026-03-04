@@ -1,7 +1,7 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { object, string, optional, boolean } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 type StandardEvents
   = 'ViewContent'

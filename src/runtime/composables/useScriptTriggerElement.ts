@@ -3,13 +3,13 @@ import type {
   MaybeElement,
   UseIntersectionObserverReturn,
 } from '@vueuse/core'
+import type { ElementScriptTrigger } from '../types'
 import {
   useEventListener,
   useIntersectionObserver,
 } from '@vueuse/core'
-import { tryOnScopeDispose, tryOnMounted } from '@vueuse/shared'
+import { tryOnMounted, tryOnScopeDispose } from '@vueuse/shared'
 import { watch } from 'vue'
-import type { ElementScriptTrigger } from '../types'
 
 export interface ElementScriptTriggerOptions {
   /**

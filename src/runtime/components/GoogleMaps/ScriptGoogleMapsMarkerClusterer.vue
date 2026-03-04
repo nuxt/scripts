@@ -1,10 +1,7 @@
-<template>
-  <slot v-if="markerClusterer" />
-</template>
-
 <script lang="ts">
-import { inject, onUnmounted, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue'
+import type { InjectionKey, ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
+import { inject, onUnmounted, provide, shallowRef } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 
 // Inline types to avoid requiring @googlemaps/markerclusterer as a build-time dependency
@@ -34,15 +31,15 @@ const props = defineProps<{
   options?: Omit<MarkerClustererOptions, 'map'>
 }>()
 
+const emit = defineEmits<{
+  (event: typeof markerClustererEvents[number], payload: MarkerClustererInstance): void
+}>()
+
 const markerClustererEvents = [
   'click',
   'clusteringbegin',
   'clusteringend',
 ] as const
-
-const emit = defineEmits<{
-  (event: typeof markerClustererEvents[number], payload: MarkerClustererInstance): void
-}>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
@@ -97,3 +94,7 @@ function setupMarkerClustererEventListeners(clusterer: MarkerClustererInstance) 
   })
 }
 </script>
+
+<template>
+  <slot v-if="markerClusterer" />
+</template>

@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { array, boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { array, boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 export const RybbitAnalyticsOptions = object({
   siteId: union([string(), number()]), // required
@@ -71,7 +71,8 @@ interface RybbitQueueState {
 }
 
 function getRybbitState(): RybbitQueueState | undefined {
-  if (!import.meta.client) return
+  if (!import.meta.client)
+    return
   const g = globalThis as any
   if (!g[RYBBIT_QUEUE_KEY]) {
     g[RYBBIT_QUEUE_KEY] = { queue: [], flushed: false }
@@ -89,7 +90,8 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
   // Flush queued calls to real implementation
   const flushQueue = () => {
     const state = getRybbitState()
-    if (!state || state.flushed || !isRybbitReady()) return
+    if (!state || state.flushed || !isRybbitReady())
+      return
     state.flushed = true
     while (state.queue.length > 0) {
       const [method, ...args] = state.queue.shift()!

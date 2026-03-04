@@ -1,9 +1,9 @@
-import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
-import { useRegistryScript } from '../utils'
-import { useScriptEventPage } from '../composables/useScriptEventPage'
-import { boolean, object, optional, string, number, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
+import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
+import { useScriptEventPage } from '../composables/useScriptEventPage'
 import { logger } from '../logger'
+import { useRegistryScript } from '../utils'
 
 export const MatomoAnalyticsOptions = object({
   matomoUrl: optional(string()),

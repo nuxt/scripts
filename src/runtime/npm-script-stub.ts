@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
-import { ref } from 'vue'
 import type { NuxtUseScriptOptions } from './types'
+import { ref } from 'vue'
 import { logger } from './logger'
 
 export interface NpmScriptStubOptions {

@@ -1,7 +1,7 @@
-import type { UseScriptInput } from '@unhead/vue'
-import { useRegistryScript } from '../utils'
-import { object, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { UseScriptInput } from '@unhead/vue'
+import { object, string } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 type RdtFns
   = & ((event: 'init', id: string) => void)

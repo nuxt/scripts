@@ -1,7 +1,7 @@
+import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
-import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()

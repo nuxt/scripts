@@ -1,5 +1,5 @@
-import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
 
 export type LemonSqueezyInput = RegistryScriptInput
 

@@ -1,23 +1,24 @@
+import type { RegistryScript } from '#nuxt-scripts/types'
+import type { FetchOptions } from 'ofetch'
+import type { SourceMapInput } from 'rollup'
+import type { InferInput } from 'valibot'
+import type { ProxyRewrite } from '../proxy-configs'
 import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'
-import { createUnplugin } from 'unplugin'
-import MagicString from 'magic-string'
-import type { SourceMapInput } from 'rollup'
-import { parseAndWalk } from 'oxc-walker'
-import type { InferInput } from 'valibot'
-import { hasProtocol, parseURL, joinURL } from 'ufo'
-import { hash as ohash } from 'ohash'
-import { join } from 'pathe'
-import { colors } from 'consola/utils'
 import { tryUseNuxt, useNuxt } from '@nuxt/kit'
-import type { FetchOptions } from 'ofetch'
+import { colors } from 'consola/utils'
+import MagicString from 'magic-string'
 import { $fetch } from 'ofetch'
-import { logger } from '../logger'
+import { hash as ohash } from 'ohash'
+import { parseAndWalk } from 'oxc-walker'
+import { join } from 'pathe'
+import { hasProtocol, joinURL, parseURL } from 'ufo'
+import { createUnplugin } from 'unplugin'
 import { bundleStorage } from '../assets'
-import { getProxyConfig, type ProxyRewrite } from '../proxy-configs'
-import { isJS, isVue } from './util'
+import { logger } from '../logger'
+import { getProxyConfig } from '../proxy-configs'
 import { rewriteScriptUrlsAST } from './rewrite-ast'
-import type { RegistryScript } from '#nuxt-scripts/types'
+import { isJS, isVue } from './util'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -230,7 +231,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
           const s = new MagicString(code)
           const deferredOps: (() => Promise<void>)[] = []
-          parseAndWalk(code, id, function (_node) {
+          parseAndWalk(code, id, (_node) => {
             const calleeName = (_node as any).callee?.name
             if (!calleeName)
               return
@@ -239,7 +240,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
             if (
               _node.type === 'CallExpression'
               && (_node as any).callee.type === 'Identifier'
-              && isValidCallee) {
+              && isValidCallee
+            ) {
             // we're either dealing with useScript or an integration such as useScriptHotjar, we need to handle
             // both cases
               const fnName = (_node as any).callee?.name

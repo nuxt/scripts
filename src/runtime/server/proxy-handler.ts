@@ -1,16 +1,16 @@
-import { defineEventHandler, getHeaders, getRequestIP, readBody, getRequestWebStream, getQuery, setResponseHeader, createError } from 'h3'
+import type { ProxyPrivacyInput } from './utils/privacy'
 import { useRuntimeConfig } from '#imports'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, setResponseHeader } from 'h3'
 import { useNitroApp } from 'nitropack/runtime'
 import {
-  SENSITIVE_HEADERS,
   anonymizeIP,
+  mergePrivacy,
   normalizeLanguage,
   normalizeUserAgent,
-  stripPayloadFingerprinting,
   resolvePrivacy,
-  mergePrivacy,
+  SENSITIVE_HEADERS,
+  stripPayloadFingerprinting,
 } from './utils/privacy'
-import type { ProxyPrivacyInput } from './utils/privacy'
 
 interface ProxyConfig {
   routes: Record<string, string>
@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
   let targetPath = path.slice(matchedPrefix.length)
   // Ensure path starts with /
   if (targetPath && !targetPath.startsWith('/')) {
-    targetPath = '/' + targetPath
+    targetPath = `/${targetPath}`
   }
   let targetUrl = targetBase + targetPath
 
@@ -139,16 +139,19 @@ export default defineEventHandler(async (event) => {
 
   // Process headers based on per-flag privacy
   for (const [key, value] of Object.entries(originalHeaders)) {
-    if (!value) continue
+    if (!value)
+      continue
     const lowerKey = key.toLowerCase()
 
     // SENSITIVE_HEADERS always stripped regardless of privacy flags
-    if (SENSITIVE_HEADERS.includes(lowerKey)) continue
+    if (SENSITIVE_HEADERS.includes(lowerKey))
+      continue
 
     // Skip content-length when body will be modified by privacy transforms
     // (preserved for binary passthrough and no-privacy paths)
     if (lowerKey === 'content-length') {
-      if (anyPrivacy && !isBinaryBody) continue
+      if (anyPrivacy && !isBinaryBody)
+        continue
       headers[lowerKey] = value
       continue
     }
@@ -157,7 +160,8 @@ export default defineEventHandler(async (event) => {
     if (lowerKey === 'x-forwarded-for' || lowerKey === 'x-real-ip' || lowerKey === 'forwarded'
       || lowerKey === 'cf-connecting-ip' || lowerKey === 'true-client-ip'
       || lowerKey === 'x-client-ip' || lowerKey === 'x-cluster-client-ip') {
-      if (privacy.ip) continue // skip — we add anonymized version below
+      if (privacy.ip)
+        continue // skip — we add anonymized version below
       // Use lowercase key to avoid duplicate headers with mixed casing
       headers[lowerKey] = value
       continue
@@ -186,7 +190,8 @@ export default defineEventHandler(async (event) => {
     // High-entropy client hints — strip when hardware flag active
     if (lowerKey === 'sec-ch-ua-platform-version' || lowerKey === 'sec-ch-ua-arch'
       || lowerKey === 'sec-ch-ua-model' || lowerKey === 'sec-ch-ua-bitness') {
-      if (privacy.hardware) continue // strip high-entropy hints
+      if (privacy.hardware)
+        continue // strip high-entropy hints
       headers[lowerKey] = value
       continue
     }
@@ -281,7 +286,8 @@ export default defineEventHandler(async (event) => {
             // to "[object Object]" which corrupts nested objects/arrays
             const stringified: Record<string, string> = {}
             for (const [k, v] of Object.entries(stripped)) {
-              if (v === undefined || v === null) continue
+              if (v === undefined || v === null)
+                continue
               stringified[k] = typeof v === 'string' ? v : JSON.stringify(v)
             }
             body = new URLSearchParams(stringified).toString()

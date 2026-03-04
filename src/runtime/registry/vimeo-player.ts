@@ -1,9 +1,9 @@
-import { watch } from 'vue'
-import type Vimeo from '@vimeo/player'
-import type { UseScriptContext } from '@unhead/vue'
-import { useHead } from '@unhead/vue'
-import { useRegistryScript } from '../utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { UseScriptContext } from '@unhead/vue'
+import type Vimeo from '@vimeo/player'
+import { useHead } from '@unhead/vue'
+import { watch } from 'vue'
+import { useRegistryScript } from '../utils'
 
 type Constructor<T extends new (...args: any) => any> = T extends new (...args: infer A) => infer R ? new (...args: A) => R : never
 

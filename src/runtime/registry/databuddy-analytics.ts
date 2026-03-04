@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { object, optional, string, boolean, number } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { boolean, number, object, optional, string } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 // Options schema based on https://www.databuddy.cc/docs/sdk
 export const DatabuddyAnalyticsOptions = object({

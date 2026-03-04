@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { boolean, minLength, object, optional, pipe, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { boolean, minLength, object, optional, pipe, string } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 /**
  * Sample:

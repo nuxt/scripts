@@ -1,5 +1,5 @@
-import type { ProxyRewrite } from './runtime/utils/pure'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
+import type { ProxyRewrite } from './runtime/utils/pure'
 
 export type { ProxyRewrite }
 

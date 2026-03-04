@@ -1,8 +1,8 @@
-import { withQuery } from 'ufo'
-import type { GTag } from './google-analytics'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
-import { object, string, optional, boolean, union, literal, record, number } from '#nuxt-scripts-validator'
+import type { GTag } from './google-analytics'
+import { boolean, literal, number, object, optional, record, string, union } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { withQuery } from 'ufo'
 
 /**
  * Improved DataLayer type that better reflects GTM's capabilities

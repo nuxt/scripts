@@ -1,5 +1,5 @@
-import { tryOnScopeDispose } from '@vueuse/shared'
 import { useTimeoutFn } from '@vueuse/core'
+import { tryOnScopeDispose } from '@vueuse/shared'
 import { onNuxtReady } from 'nuxt/app'
 
 export interface IdleTimeoutScriptTriggerOptions {

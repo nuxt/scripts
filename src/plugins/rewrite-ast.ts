@@ -1,7 +1,7 @@
+import type { ProxyRewrite } from '../runtime/utils/pure'
 import MagicString from 'magic-string'
 import { parseAndWalk } from 'oxc-walker'
-import { parseURL, joinURL } from 'ufo'
-import type { ProxyRewrite } from '../runtime/utils/pure'
+import { joinURL, parseURL } from 'ufo'
 
 /**
  * Check if a string literal node is in a "key" position (object property key or switch-case test).
@@ -23,7 +23,8 @@ function matchAndRewrite(value: string, rewrites: ProxyRewrite[]): string | null
     const fromHost = fromSlashIdx > 0 ? from.slice(0, fromSlashIdx) : from
     const fromPath = fromSlashIdx > 0 ? from.slice(fromSlashIdx) : ''
 
-    if (!value.includes(fromHost)) continue
+    if (!value.includes(fromHost))
+      continue
 
     const url = parseURL(value)
     let shouldRewrite = false
@@ -87,19 +88,20 @@ function matchAndRewrite(value: string, rewrites: ProxyRewrite[]): string | null
 export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[]): string {
   const s = new MagicString(content)
 
-  parseAndWalk(content, filename, function (node, parent, ctx) {
+  parseAndWalk(content, filename, (node, parent, ctx) => {
     // String literals
     if (node.type === 'Literal' && typeof (node as any).value === 'string') {
       const value = (node as any).value as string
       const rewritten = matchAndRewrite(value, rewrites)
-      if (rewritten === null) return
+      if (rewritten === null)
+        return
 
       const quote = content[node.start] // preserve original quote character
       if (isPropertyKeyAST(parent, ctx)) {
         s.overwrite(node.start, node.end, quote + rewritten + quote)
       }
       else {
-        s.overwrite(node.start, node.end, 'self.location.origin+' + quote + rewritten + quote)
+        s.overwrite(node.start, node.end, `self.location.origin+${quote}${rewritten}${quote}`)
       }
     }
 
@@ -108,15 +110,17 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       const quasis = (node as any).quasis
       if (quasis?.length === 1) {
         const value = quasis[0].value?.cooked ?? quasis[0].value?.raw
-        if (typeof value !== 'string') return
+        if (typeof value !== 'string')
+          return
         const rewritten = matchAndRewrite(value, rewrites)
-        if (rewritten === null) return
+        if (rewritten === null)
+          return
 
         if (isPropertyKeyAST(parent, ctx)) {
-          s.overwrite(node.start, node.end, '`' + rewritten + '`')
+          s.overwrite(node.start, node.end, `\`${rewritten}\``)
         }
         else {
-          s.overwrite(node.start, node.end, 'self.location.origin+`' + rewritten + '`')
+          s.overwrite(node.start, node.end, `self.location.origin+\`${rewritten}\``)
         }
       }
     }

@@ -40,8 +40,10 @@ const NO_PRIVACY: ResolvedProxyPrivacy = { ip: false, userAgent: false, language
  * - `{ ip: true, hardware: true }` → only those active, rest off
  */
 export function resolvePrivacy(input?: ProxyPrivacyInput): ResolvedProxyPrivacy {
-  if (input === true) return { ...FULL_PRIVACY }
-  if (input === false || input === undefined || input === null) return { ...NO_PRIVACY }
+  if (input === true)
+    return { ...FULL_PRIVACY }
+  if (input === false || input === undefined || input === null)
+    return { ...NO_PRIVACY }
   return {
     ip: input.ip ?? false,
     userAgent: input.userAgent ?? false,
@@ -59,9 +61,11 @@ export function resolvePrivacy(input?: ProxyPrivacyInput): ResolvedProxyPrivacy 
  * When `override` is an object, only explicitly-set fields override.
  */
 export function mergePrivacy(base: ResolvedProxyPrivacy, override?: ProxyPrivacyInput): ResolvedProxyPrivacy {
-  if (override === undefined || override === null) return base
+  if (override === undefined || override === null)
+    return base
   // Boolean fully replaces
-  if (typeof override === 'boolean') return resolvePrivacy(override)
+  if (typeof override === 'boolean')
+    return resolvePrivacy(override)
   // Object: only override fields that were explicitly set
   return {
     ip: override.ip !== undefined ? override.ip : base.ip,
@@ -160,7 +164,7 @@ export const NORMALIZE_PARAMS = {
 export function anonymizeIP(ip: string): string {
   if (ip.includes(':')) {
     // IPv6: keep first 3 segments (48 bits) — roughly city/ISP-level aggregation
-    return ip.split(':').slice(0, 3).join(':') + '::'
+    return `${ip.split(':').slice(0, 3).join(':')}::`
   }
   // IPv4: zero last octet (/24 subnet — typically ISP/neighborhood-level precision)
   const parts = ip.split('.')
@@ -218,8 +222,10 @@ const SCREEN_BUCKETS = {
 type DeviceClass = keyof typeof SCREEN_BUCKETS
 
 function getDeviceClass(width: number): DeviceClass {
-  if (width >= 1200) return 'desktop'
-  if (width >= 700) return 'tablet'
+  if (width >= 1200)
+    return 'desktop'
+  if (width >= 700)
+    return 'tablet'
   return 'mobile'
 }
 
@@ -254,10 +260,14 @@ export function generalizeScreen(value: unknown, dimension?: 'width' | 'height')
  */
 export function generalizeHardware(value: unknown): number {
   const num = typeof value === 'number' ? value : Number(value)
-  if (Number.isNaN(num)) return 4
-  if (num >= 16) return 16
-  if (num >= 8) return 8
-  if (num >= 4) return 4
+  if (Number.isNaN(num))
+    return 4
+  if (num >= 16)
+    return 16
+  if (num >= 8)
+    return 8
+  if (num >= 4)
+    return 4
   return 2
 }
 
@@ -266,13 +276,15 @@ export function generalizeHardware(value: unknown): number {
  * "6.17.0" → "6.0.0", "143.0.7499.4" → "143.0.0.0"
  */
 export function generalizeVersion(value: unknown): string {
-  if (typeof value !== 'string') return String(value)
+  if (typeof value !== 'string')
+    return String(value)
   const match = value.match(/^(\d+)(([.\-_])\d+)*/)
-  if (!match) return String(value)
+  if (!match)
+    return String(value)
   const major = match[1]
   const sep = match[3] || '.'
   const segmentCount = value.split(/[.\-_]/).length
-  return major + (sep + '0').repeat(segmentCount - 1)
+  return major + (`${sep}0`).repeat(segmentCount - 1)
 }
 
 /**
@@ -281,7 +293,8 @@ export function generalizeVersion(value: unknown): string {
  * Handles GA uafvl format: HeadlessChrome;143.0.7499.4|Chromium;143.0.7499.4|...
  */
 export function generalizeBrowserVersions(value: unknown): string {
-  if (typeof value !== 'string') return String(value)
+  if (typeof value !== 'string')
+    return String(value)
   const zeroSegments = (ver: string) => {
     const parts = ver.split('.')
     return parts[0] + parts.slice(1).map(() => '.0').join('')
@@ -291,7 +304,7 @@ export function generalizeBrowserVersions(value: unknown): string {
     return value.replace(/("version"\s*:\s*")(\d+(?:\.\d+)*)/g, (_, prefix, ver) => prefix + zeroSegments(ver))
   // GA uafvl: semicolon-separated brand;version pairs, pipe-delimited
   if (value.includes(';'))
-    return value.replace(/;(\d+(?:\.\d+)*)/g, (_, ver) => ';' + zeroSegments(ver))
+    return value.replace(/;(\d+(?:\.\d+)*)/g, (_, ver) => `;${zeroSegments(ver)}`)
   return value
 }
 
@@ -320,7 +333,8 @@ export function generalizeTimezone(value: unknown): string | number {
 export function anonymizeDeviceInfo(value: string): string {
   const sep = value.includes('|') ? '|' : '&'
   const parts = value.split(sep)
-  if (parts.length < 4) return value
+  if (parts.length < 4)
+    return value
 
   const result = [...parts]
   for (let i = 0; i < parts.length; i++) {
@@ -382,7 +396,8 @@ export function stripPayloadFingerprinting(
   for (const [key, value] of Object.entries(payload)) {
     if (key.toLowerCase() === 'sw') {
       const num = typeof value === 'number' ? value : Number(value)
-      if (!Number.isNaN(num)) deviceClass = getDeviceClass(num)
+      if (!Number.isNaN(num))
+        deviceClass = getDeviceClass(num)
     }
   }
 
@@ -393,7 +408,7 @@ export function stripPayloadFingerprinting(
       const lk = key.toLowerCase()
       return params.some((pm) => {
         const lp = pm.toLowerCase()
-        return lk === lp || lk.startsWith(lp + '[')
+        return lk === lp || lk.startsWith(`${lp}[`)
       })
     }
 

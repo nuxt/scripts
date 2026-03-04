@@ -1,8 +1,8 @@
-import { joinURL } from 'ufo'
-import { useRegistryScript } from '../utils'
-import { literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { InferInput } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
+import { joinURL } from 'ufo'
+import { useRegistryScript } from '../utils'
 
 export const IntercomOptions = object({
   app_id: string(),

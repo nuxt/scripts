@@ -1,8 +1,8 @@
-import { withQuery } from 'ufo'
-import type { PayPalNamespace } from '@paypal/paypal-js'
-import { useRegistryScript } from '../utils'
-import { object, string, optional, array, union, boolean } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { PayPalNamespace } from '@paypal/paypal-js'
+import { array, boolean, object, optional, string, union } from '#nuxt-scripts-validator'
+import { withQuery } from 'ufo'
+import { useRegistryScript } from '../utils'
 
 export interface PayPalApi {
   paypal: PayPalNamespace
@@ -42,7 +42,7 @@ export type PayPalInput = RegistryScriptInput<typeof PayPalOptions>
 
 export function useScriptPayPal<T extends PayPalApi>(_options?: PayPalInput) {
   return useRegistryScript<T, typeof PayPalOptions>('paypal', (options) => {
-    let dataMerchantId = undefined
+    let dataMerchantId
 
     if (Array.isArray(options?.merchantId) && options?.merchantId.length > 1) {
       dataMerchantId = JSON.stringify(options.merchantId)

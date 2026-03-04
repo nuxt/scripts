@@ -1,5 +1,5 @@
-import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 
 export const InstagramEmbedOptions = object({
   /**

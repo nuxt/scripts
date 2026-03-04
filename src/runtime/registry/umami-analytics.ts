@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { object, optional, string, boolean, array, union, custom } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { array, boolean, custom, object, optional, string, union } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 export const UmamiAnalyticsOptions = object({
   websiteId: string(), // required

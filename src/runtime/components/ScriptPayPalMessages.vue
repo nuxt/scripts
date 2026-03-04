@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
-import { defu } from 'defu'
-import type { PayPalMessagesComponent, PayPalMessagesComponentOptions } from '@paypal/paypal-js'
-import { useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { onBeforeUnmount, resolveComponent } from 'vue'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import type { PayPalMessagesComponent, PayPalMessagesComponentOptions } from '@paypal/paypal-js'
+import type { HTMLAttributes, ReservedProps } from 'vue'
 import type { PayPalInput } from '../registry/paypal'
-
-const el = ref<HTMLDivElement | null>(null)
-const rootEl = ref<HTMLDivElement | null>(null)
+import { defu } from 'defu'
+import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, shallowRef, watch } from 'vue'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { useScriptPayPal } from '../registry/paypal'
 
 const props = withDefaults(defineProps<{
   /**
@@ -46,6 +43,13 @@ const props = withDefaults(defineProps<{
   paypalScriptOptions: () => ({}),
   messagesOptions: () => ({}),
 })
+const emit = defineEmits<{
+  apply: [data: Record<string, unknown>]
+  clickMessages: [data: Record<string, unknown>]
+  render: [data: Record<string, unknown>]
+}>()
+const el = ref<HTMLDivElement | null>(null)
+const rootEl = ref<HTMLDivElement | null>(null)
 
 const ready = ref(false)
 
@@ -55,12 +59,6 @@ const { onLoaded, status } = useScriptPayPal({
   partnerAttributionId: props.partnerAttributionId,
   ...props.paypalScriptOptions,
 })
-
-const emit = defineEmits<{
-  apply: [data: Record<string, unknown>]
-  clickMessages: [data: Record<string, unknown>]
-  render: [data: Record<string, unknown>]
-}>()
 
 const options = computed(() => {
   const _options: PayPalMessagesComponentOptions = {
@@ -84,13 +82,15 @@ const messageInst = shallowRef<PayPalMessagesComponent>()
 
 onMounted(() => {
   onLoaded(async ({ paypal }) => {
-    if (!el.value) return
+    if (!el.value)
+      return
     messageInst.value = paypal?.Messages?.(options.value)
     await messageInst.value?.render(el.value)
     ready.value = true
 
     watch(() => options.value, async (_options) => {
-      if (!el.value) return
+      if (!el.value)
+        return
       // don't destroy the element
       messageInst.value = paypal?.Messages?.(_options)
       await messageInst.value?.render(el.value)
@@ -99,7 +99,8 @@ onMounted(() => {
 })
 
 function destroy() {
-  if (!el.value) return
+  if (!el.value)
+    return
   el.value?.replaceChildren()
 }
 

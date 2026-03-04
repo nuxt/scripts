@@ -1,7 +1,7 @@
-import { withQuery } from 'ufo'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, string, optional } from '#nuxt-scripts-validator'
+import { object, optional, string } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { withQuery } from 'ufo'
 
 export type GtagCustomParams = Record<string, any>
 
@@ -136,11 +136,11 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
         : () => {
             w[dataLayerName] = w[dataLayerName] || []
             w.gtag = function () {
-              // eslint-disable-next-line
+              // eslint-disable-next-line prefer-rest-params
               w[dataLayerName].push(arguments)
             }
-            // eslint-disable-next-line
-          // @ts-ignore
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore
             _options?.onBeforeGtagStart?.(w.gtag)
             w.gtag('js', new Date())
             if (options?.id) {

@@ -1,13 +1,15 @@
-<template>
-</template>
-
 <script setup lang="ts">
-import { inject, onUnmounted } from 'vue'
 import { whenever } from '@vueuse/core'
+import { inject, onUnmounted } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 
 const props = defineProps<{
   options?: Omit<google.maps.PolygonOptions, 'map'>
+}>()
+
+const emit = defineEmits<{
+  (event: typeof eventsWithPolyMouseEventPayload[number], payload: google.maps.PolyMouseEvent): void
+  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
 const eventsWithPolyMouseEventPayload = [
@@ -27,14 +29,9 @@ const eventsWithMapMouseEventPayload = [
   'dragstart',
 ] as const
 
-const emit = defineEmits<{
-  (event: typeof eventsWithPolyMouseEventPayload[number], payload: google.maps.PolyMouseEvent): void
-  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
-}>()
-
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
-let polygon: google.maps.Polygon | undefined = undefined
+let polygon: google.maps.Polygon | undefined
 
 whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
   polygon = new mapContext!.mapsApi.value!.Polygon({
@@ -74,3 +71,6 @@ function setupPolygonEventListeners(polygon: google.maps.Polygon) {
   })
 }
 </script>
+
+<template>
+</template>

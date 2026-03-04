@@ -1,19 +1,20 @@
-import { defu } from 'defu'
-import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
-import type { UseScriptInput } from '@unhead/vue'
-import { useRuntimeConfig } from 'nuxt/app'
-import { parseURL, withQuery, parseQuery } from 'ufo'
-import { useScript } from './composables/useScript'
-import { createNpmScriptStub } from './npm-script-stub'
-import { parse } from '#nuxt-scripts-validator'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
+  ScriptRegistry,
   UseFunctionType,
-  ScriptRegistry, UseScriptContext,
+  UseScriptContext,
 } from '#nuxt-scripts/types'
+import type { UseScriptInput } from '@unhead/vue'
+import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
+import { parse } from '#nuxt-scripts-validator'
+import { defu } from 'defu'
+import { useRuntimeConfig } from 'nuxt/app'
+import { parseQuery, parseURL, withQuery } from 'ufo'
+import { useScript } from './composables/useScript'
+import { createNpmScriptStub } from './npm-script-stub'
 
 export type MaybePromise<T> = Promise<T> | T
 

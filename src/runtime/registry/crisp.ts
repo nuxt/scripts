@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { object, string, optional, number } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { number, object, optional, string } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 export const CrispOptions = object({
   /**

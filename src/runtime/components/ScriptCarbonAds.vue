@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import { withQuery } from 'ufo'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 
 const props = defineProps<{
   serve: string

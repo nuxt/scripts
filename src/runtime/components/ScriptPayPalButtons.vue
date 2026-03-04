@@ -1,27 +1,24 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
-import { defu } from 'defu'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type {
   OnApproveActions,
   OnApproveData,
   OnCancelledActions,
   OnClickActions,
+  OnInitActions,
   OnShippingAddressChangeActions,
   OnShippingAddressChangeData,
   OnShippingOptionsChangeActions,
   OnShippingOptionsChangeData,
   PayPalButtonsComponent,
   PayPalButtonsComponentOptions,
-  OnInitActions,
 } from '@paypal/paypal-js'
-import { useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { onBeforeUnmount, resolveComponent } from 'vue'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import type { HTMLAttributes, ReservedProps } from 'vue'
 import type { PayPalInput } from '../registry/paypal'
-
-const el = ref<HTMLDivElement | null>(null)
-const rootEl = ref<HTMLDivElement | null>(null)
+import { defu } from 'defu'
+import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, shallowRef, watch } from 'vue'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { useScriptPayPal } from '../registry/paypal'
 
 const props = withDefaults(defineProps<{
   /**
@@ -55,14 +52,6 @@ const props = withDefaults(defineProps<{
   buttonOptions: () => ({}),
   paypalScriptOptions: () => ({}),
 })
-
-const ready = ref(false)
-
-const { onLoaded, status } = useScriptPayPal({
-  clientId: props.clientId,
-  ...props.paypalScriptOptions,
-})
-
 const emit = defineEmits<{
   approve: [data: OnApproveData, actions: OnApproveActions]
   error: [error: Record<string, unknown>]
@@ -78,11 +67,21 @@ const emit = defineEmits<{
   ]
   init: [data: Record<string, unknown>, actions: OnInitActions]
 }>()
+const el = ref<HTMLDivElement | null>(null)
+const rootEl = ref<HTMLDivElement | null>(null)
+
+const ready = ref(false)
+
+const { onLoaded, status } = useScriptPayPal({
+  clientId: props.clientId,
+  ...props.paypalScriptOptions,
+})
 
 const initActions = shallowRef<OnInitActions | null>(null)
 
-const handleDisabled = () => {
-  if (!initActions.value) return
+function handleDisabled() {
+  if (!initActions.value)
+    return
   if (props.disabled) {
     initActions.value.disable()
   }
@@ -134,13 +133,15 @@ const buttonInst = shallowRef<PayPalButtonsComponent>()
 
 onMounted(() => {
   onLoaded(async ({ paypal }) => {
-    if (!el.value) return
+    if (!el.value)
+      return
     buttonInst.value = paypal?.Buttons?.(options.value)
     await buttonInst.value?.render(el.value)
     ready.value = true
 
     watch(() => options.value, async (_options) => {
-      if (!el.value) return
+      if (!el.value)
+        return
       await buttonInst.value?.updateProps(_options)
     })
   })

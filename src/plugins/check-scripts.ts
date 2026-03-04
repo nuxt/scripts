@@ -1,6 +1,6 @@
-import { createUnplugin } from 'unplugin'
-import { parseAndWalk } from 'oxc-walker'
 import type { Node } from 'oxc-parser'
+import { parseAndWalk } from 'oxc-walker'
+import { createUnplugin } from 'unplugin'
 import { isVue } from './util'
 
 export function NuxtScriptsCheckScripts() {
@@ -19,7 +19,7 @@ export function NuxtScriptsCheckScripts() {
 
           let nameNode: Node | undefined
           let errorNode: Node | undefined
-          parseAndWalk(code, id, function (_node) {
+          parseAndWalk(code, id, (_node) => {
             if (_node.type === 'VariableDeclaration' && (_node as any).declarations?.[0]?.id?.type === 'ObjectPattern') {
               const objPattern = (_node as any).declarations[0]?.id
               for (const property of objPattern.properties) {

@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { number, object, string, union } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '../utils'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {

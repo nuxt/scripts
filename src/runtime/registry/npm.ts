@@ -1,7 +1,7 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import { withBase } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { object, optional, string, union, literal } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 const PROVIDERS = ['jsdelivr', 'cdnjs', 'unpkg'] as const
 type Provider = (typeof PROVIDERS)[number]

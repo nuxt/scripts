@@ -1,8 +1,8 @@
-import type { PostHog, PostHogConfig } from 'posthog-js'
-import { any, record, string, object, optional, boolean, union, literal } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { useRegistryScript } from '../utils'
+import type { PostHog, PostHogConfig } from 'posthog-js'
+import { any, boolean, literal, object, optional, record, string, union } from '#nuxt-scripts-validator'
 import { logger } from '../logger'
+import { useRegistryScript } from '../utils'
 
 export const PostHogOptions = object({
   apiKey: string(),

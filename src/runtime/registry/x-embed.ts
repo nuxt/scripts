@@ -1,5 +1,5 @@
-import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { object, optional, string } from '#nuxt-scripts-validator'
 
 export interface XEmbedTweetData {
   id_str: string
