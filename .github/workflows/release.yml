@@ -17,22 +17,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v6
+      - name: Set node
+        uses: actions/setup-node@v6
         with:
-          node-version: lts/*
+          node-version: latest
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Force Set pnpm Registry
+        run: pnpm config set registry https://registry.npmjs.org
 
       - run: npx changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - run: pnpm i
+      - name: Install Dependencies
+        run: pnpm i
 
-      - run: pnpm build
-
-      - run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - run: pnpm publish -r --access public --no-git-checks --tag beta
