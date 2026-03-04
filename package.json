@@ -46,7 +46,7 @@
   ],
   "scripts": {
     "build": "pnpm dev:prepare && pnpm prepack",
-    "prepack": "nuxt-module-build prepare && nuxt-module-build build && pnpm client:build",
+    "prepack": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxt-module-build build && pnpm client:build",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",
     "dev": "nuxi dev playground",
@@ -59,7 +59,7 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:e2e-dev": "vitest run -c vitest.e2e-dev.config.ts",
+    "test:e2e-dev": "vitest run --project e2e-dev",
     "test:types": "vitest run --project typecheck"
   },
   "build": {

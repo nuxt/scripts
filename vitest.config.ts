@@ -65,6 +65,18 @@ export default defineConfig({
           ],
         },
       }),
+      // e2e-dev: local-only e2e tests (excluded from CI)
+      defineProject({
+        test: {
+          name: 'e2e-dev',
+          include: [
+            './test/e2e-dev/**/*.test.ts',
+          ],
+          exclude: [
+            '**/node_modules/**',
+          ],
+        },
+      }),
     ],
   },
 })
