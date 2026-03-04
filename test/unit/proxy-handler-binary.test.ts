@@ -18,7 +18,6 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
   let upstreamPort: number
   let proxyPort: number
   let capturedUpstreamBody: Buffer | null = null
-  let capturedUpstreamContentType: string | undefined
 
   beforeAll(async () => {
     // Mock upstream: captures raw request bytes exactly as received
