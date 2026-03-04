@@ -29,6 +29,7 @@ export default defineConfig({
           ],
           exclude: [
             './test/e2e/**/*.test.ts',
+            './test/e2e-dev/**/*.test.ts',
             '**/*.nuxt.test.ts',
             '**/node_modules/**',
           ],
@@ -58,6 +59,7 @@ export default defineConfig({
           exclude: [
             // exclude other tests
             './test/e2e/**/*.test.ts',
+            './test/e2e-dev/**/*.test.ts',
             './test/unit/**/*.test.ts',
             '**/node_modules/**',
           ],
