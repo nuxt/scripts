@@ -407,6 +407,18 @@ describe('proxy configs', () => {
       expect(config?.privacy.ip).toBe(true)
     })
 
+    it('returns proxy config for vercelAnalytics', () => {
+      const config = getProxyConfig('vercelAnalytics', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'va.vercel-scripts.com',
+        to: '/_scripts/c/vercel',
+      })
+      expect(config?.routes?.['/_scripts/c/vercel/**']).toEqual({
+        proxy: 'https://va.vercel-scripts.com/**',
+      })
+    })
+
     it('returns undefined for unsupported scripts', () => {
       const config = getProxyConfig('unknownScript', '/_scripts/c')
       expect(config).toBeUndefined()
@@ -448,6 +460,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('fathom')
       expect(configs).toHaveProperty('intercom')
       expect(configs).toHaveProperty('crisp')
+      expect(configs).toHaveProperty('vercelAnalytics')
     })
 
     it('all configs have valid structure', () => {

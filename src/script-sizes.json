@@ -509,5 +509,21 @@
         "protocol": "unknown"
       }
     ]
+  },
+  "vercelAnalytics": {
+    "totalTransferKb": 1.5,
+    "totalDecodedKb": 3.8,
+    "loadTimeMs": 80,
+    "scripts": [
+      {
+        "url": "https://va.vercel-scripts.com/v1/script.js",
+        "transferKb": 1.5,
+        "decodedKb": 3.8,
+        "encoding": "gzip",
+        "durationMs": 80,
+        "initiatorType": "script",
+        "protocol": "h2"
+      }
+    ]
   }
 }
