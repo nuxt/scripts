@@ -1,30 +1,6 @@
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, optional, number, string } from '#nuxt-scripts-validator'
-
-export const GravatarOptions = object({
-  /**
-   * Cache duration for proxied avatar images in seconds.
-   * @default 3600
-   */
-  cacheMaxAge: optional(number()),
-  /**
-   * Default image to show when no Gravatar exists.
-   * @see https://docs.gravatar.com/general/images/#default-image
-   * @default 'mp'
-   */
-  default: optional(string()),
-  /**
-   * Avatar size in pixels (1-2048).
-   * @default 80
-   */
-  size: optional(number()),
-  /**
-   * Content rating filter.
-   * @default 'g'
-   */
-  rating: optional(string()),
-})
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { GravatarOptions } from './schemas'
 
 export type GravatarInput = RegistryScriptInput<typeof GravatarOptions>
 
