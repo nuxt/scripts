@@ -6,7 +6,13 @@ import { PostHogOptions } from './schemas'
 
 export { PostHogOptions }
 
-export type PostHogInput = RegistryScriptInput<typeof PostHogOptions, false, true>
+export type PostHogInput = Omit<RegistryScriptInput<typeof PostHogOptions, false, true>, 'config'> & {
+  /**
+   * Additional PostHog configuration options passed directly to `posthog.init()`.
+   * @see https://posthog.com/docs/libraries/js/config
+   */
+  config?: Partial<PostHogConfig>
+}
 
 export interface PostHogApi {
   posthog: PostHog
