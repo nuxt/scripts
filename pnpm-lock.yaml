@@ -58,8 +58,8 @@ catalogs:
       specifier: ^10.0.2
       version: 10.0.2
     eslint-plugin-harlanzw:
-      specifier: ^0.3.0
-      version: 0.3.0
+      specifier: ^0.4.0
+      version: 0.4.0
     h3:
       specifier: ^1.15.5
       version: 1.15.5
@@ -97,8 +97,8 @@ catalogs:
       specifier: ^1.58.2
       version: 1.58.2
     posthog-js:
-      specifier: ^1.358.0
-      version: 1.358.0
+      specifier: ^1.358.1
+      version: 1.358.1
     shiki:
       specifier: ^4.0.1
       version: 4.0.1
@@ -257,7 +257,7 @@ importers:
         version: 10.0.2(jiti@2.6.1)
       eslint-plugin-harlanzw:
         specifier: 'catalog:'
-        version: 0.3.0(eslint@10.0.2(jiti@2.6.1))
+        version: 0.4.0(eslint@10.0.2(jiti@2.6.1))
       happy-dom:
         specifier: 'catalog:'
         version: 20.8.3
@@ -272,7 +272,7 @@ importers:
         version: 1.58.2
       posthog-js:
         specifier: 'catalog:'
-        version: 1.358.0
+        version: 1.358.1
       shiki:
         specifier: 'catalog:'
         version: 4.0.1
@@ -2014,8 +2014,8 @@ packages:
   '@posthog/core@1.23.2':
     resolution: {integrity: sha512-zTDdda9NuSHrnwSOfFMxX/pyXiycF4jtU1kTr8DL61dHhV+7LF6XF1ndRZZTuaGGbfbb/GJYkEsjEX9SXfNZeQ==}
 
-  '@posthog/types@1.358.0':
-    resolution: {integrity: sha512-dxe+uc18n9EUWfhSsnf48WSO9sNzrHG00KgG8SwZYkj0csK2mT2PC7oY3Vu0bEGeqkvHehMxrJGLgYtUWEhvYQ==}
+  '@posthog/types@1.358.1':
+    resolution: {integrity: sha512-SFfhm+NHYqsk+SAxx5FlSg9FuvqsEPZidfTjPP5TYYM24fif//L+pAzxVGqaxJcnyZojIfF66NRZ3NfM5Jd+eg==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -4143,8 +4143,8 @@ packages:
     peerDependencies:
       eslint: '>=8'
 
-  eslint-plugin-harlanzw@0.3.0:
-    resolution: {integrity: sha512-Oeba7VJ6NOpvgrV7/hLLz4GsRhDln3cM6DUI3ONcCGfPZw8LAOcPkt8ZHyP12KWynH5jQP9G3A6iSVJY3bP3zA==}
+  eslint-plugin-harlanzw@0.4.0:
+    resolution: {integrity: sha512-tdhB+0i1dzolR4nDtAaa4PLBM3c7DXdPmvyK7xc7BYKl021LGbRbidzeRjMecPR6DD1E0SXs7Pewv2dGogT0eA==}
     peerDependencies:
       eslint: '>=9.0.0'
 
@@ -6014,8 +6014,8 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.358.0:
-    resolution: {integrity: sha512-cu6pmruexTTuYuf23ZiTHj4lPbhcN+tTP9jkt0C1vu4EZn84+9ckXM3tZsBfRqe6eXD9OXF9pJ+TnbfvsvBDpw==}
+  posthog-js@1.358.1:
+    resolution: {integrity: sha512-teipwLZtfErKDrURiUlLMnmpjgjGlni15JxyJ7oRaSlT3sX4E/mgvNatHIbWnp+7z1zYm3Jz5BYwGqwgyesRnw==}
 
   preact@10.28.4:
     resolution: {integrity: sha512-uKFfOHWuSNpRFVTnljsCluEFq57OKT+0QdOiQo8XWnQ/pSvg7OpX5eNOejELXJMWy+BwM2nobz0FkvzmnpCNsQ==}
@@ -9613,7 +9613,7 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  '@posthog/types@1.358.0': {}
+  '@posthog/types@1.358.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -11998,7 +11998,7 @@ snapshots:
       eslint: 10.0.2(jiti@2.6.1)
       eslint-compat-utils: 0.5.1(eslint@10.0.2(jiti@2.6.1))
 
-  eslint-plugin-harlanzw@0.3.0(eslint@10.0.2(jiti@2.6.1)):
+  eslint-plugin-harlanzw@0.4.0(eslint@10.0.2(jiti@2.6.1)):
     dependencies:
       '@eslint/plugin-kit': 0.6.0
       eslint: 10.0.2(jiti@2.6.1)
@@ -14622,7 +14622,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.358.0:
+  posthog-js@1.358.1:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/api-logs': 0.208.0
@@ -14630,7 +14630,7 @@ snapshots:
       '@opentelemetry/resources': 2.5.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.0)
       '@posthog/core': 1.23.2
-      '@posthog/types': 1.358.0
+      '@posthog/types': 1.358.1
       core-js: 3.48.0
       dompurify: 3.3.1
       fflate: 0.4.8
