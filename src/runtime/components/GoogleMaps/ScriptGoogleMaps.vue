@@ -477,7 +477,7 @@ const placeholder = computed(() => {
       .join('|'),
   })
 
-  const baseUrl = proxyConfig?.enabled
+  const baseUrl = proxyConfig
     ? '/_scripts/google-static-maps-proxy'
     : 'https://maps.googleapis.com/maps/api/staticmap'
 

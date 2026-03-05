@@ -8,13 +8,6 @@ export default defineEventHandler(async (event) => {
   const publicConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
   const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleStaticMapsProxy
 
-  if (!publicConfig?.enabled) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Google Static Maps proxy is not enabled',
-    })
-  }
-
   // Get API key from private config (server-side only, not exposed to client)
   const apiKey = privateConfig?.apiKey
   if (!apiKey) {
