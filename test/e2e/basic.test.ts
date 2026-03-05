@@ -390,7 +390,8 @@ describe('third-party-capital', () => {
     // Verify the script tag has correct attributes
     const scriptAttrs = await page.evaluate(() => {
       const script = document.querySelector('script[data-sdkn="@nuxt/scripts"]')
-      if (!script) return null
+      if (!script)
+        return null
       return {
         src: script.getAttribute('src'),
         sdkn: script.getAttribute('data-sdkn'),
