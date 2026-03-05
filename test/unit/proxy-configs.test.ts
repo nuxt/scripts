@@ -407,6 +407,18 @@ describe('proxy configs', () => {
       expect(config?.privacy.ip).toBe(true)
     })
 
+    it('returns proxy config for vercelAnalytics', () => {
+      const config = getProxyConfig('vercelAnalytics', '/_scripts/c')
+      expect(config).toBeDefined()
+      expect(config?.rewrite).toContainEqual({
+        from: 'va.vercel-scripts.com',
+        to: '/_scripts/c/vercel',
+      })
+      expect(config?.routes?.['/_scripts/c/vercel/**']).toEqual({
+        proxy: 'https://va.vercel-scripts.com/**',
+      })
+    })
+
     it('returns undefined for unsupported scripts', () => {
       const config = getProxyConfig('unknownScript', '/_scripts/c')
       expect(config).toBeUndefined()
@@ -448,13 +460,14 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('fathom')
       expect(configs).toHaveProperty('intercom')
       expect(configs).toHaveProperty('crisp')
+      expect(configs).toHaveProperty('vercelAnalytics')
       expect(configs).toHaveProperty('gravatar')
     })
 
     it('all configs have valid structure', () => {
       const configs = getAllProxyConfigs('/_scripts/c')
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
-      const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausible', 'cloudflareWebAnalytics', 'rybbit', 'umami', 'databuddy', 'fathom']
+      const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausible', 'cloudflareWebAnalytics', 'rybbit', 'umami', 'databuddy', 'fathom', 'vercelAnalytics']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have routes`).toHaveProperty('routes')
         expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')

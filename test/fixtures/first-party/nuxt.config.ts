@@ -35,6 +35,7 @@ export default defineNuxtConfig({
         posthog: { apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W' },
         intercom: { app_id: 'test-app' },
         crisp: { id: 'test-id' },
+        vercelAnalytics: true,
       },
     },
   },
@@ -72,6 +73,7 @@ export default defineNuxtConfig({
       posthog: [{ apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W' }, manual],
       intercom: [{ app_id: 'test-app' }, manual],
       crisp: [{ id: 'test-id' }, manual],
+      vercelAnalytics: [true, manual],
     },
   },
 })

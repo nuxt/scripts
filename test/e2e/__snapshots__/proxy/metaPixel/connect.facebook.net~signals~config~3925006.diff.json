@@ -10,5 +10,5 @@
     },
   },
   "method": "GET",
-  "target": "connect.facebook.net/signals/config/3925006",
+  "target": "connect.facebook.net/en_US/fbevents.js",
 }
