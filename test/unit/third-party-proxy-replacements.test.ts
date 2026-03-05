@@ -211,6 +211,21 @@ describe('third-party script proxy replacements', () => {
       `,
     }
 
+    it('does not merge keywords with self.location.origin in minified code', () => {
+      // In minified JS, `return"url"` is valid because `"` is not an identifier char.
+      // But replacing the string with `self.location.origin+...` would create `returnself`
+      // which is parsed as an identifier, not `return self`.
+      const minified = `function f(x){switch(x){case 1:return"https://www.google-analytics.com/collect";case 2:return"https://stats.g.doubleclick.net/g/collect"}}`
+      const config = proxyConfigs.googleAnalytics
+      const rewritten = rewriteScriptUrlsAST(minified, 'script.js', config.rewrite!)
+
+      // Must have a space between `return` and `self`
+      expect(rewritten).not.toContain('returnself')
+      expect(rewritten).toContain('return self.location.origin')
+      // Verify it's still valid JS
+      expect(() => new Function(rewritten)).not.toThrow()
+    })
+
     it.each(Object.entries(syntheticScripts))('%s synthetic script rewrites correctly', (key, content) => {
       const config = proxyConfigs[key]
       expect(config, `Missing config for ${key}`).toBeDefined()
