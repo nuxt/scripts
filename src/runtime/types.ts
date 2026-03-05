@@ -32,6 +32,7 @@ import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { StripeInput } from './registry/stripe'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
+import type { VercelAnalyticsInput } from './registry/vercel-analytics'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XPixelInput } from './registry/x-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
@@ -185,6 +186,7 @@ export interface ScriptRegistry {
   xPixel?: XPixelInput
   snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
+  vercelAnalytics?: VercelAnalyticsInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
   [key: `${string}-npm`]: NpmInput

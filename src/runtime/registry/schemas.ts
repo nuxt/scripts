@@ -879,6 +879,36 @@ export const XEmbedOptions = object({
   imageProxyEndpoint: optional(string()),
 })
 
+export const VercelAnalyticsOptions = object({
+  /**
+   * The DSN of the project to send events to.
+   * Only required when self-hosting or deploying outside of Vercel.
+   */
+  dsn: optional(string()),
+  /**
+   * Whether to disable automatic page view tracking on route changes.
+   * Set to true if you want to manually call pageview().
+   */
+  disableAutoTrack: optional(boolean()),
+  /**
+   * The mode to use for the analytics script.
+   * - `auto` - Automatically detect the environment (default)
+   * - `production` - Always use production script
+   * - `development` - Always use development script (logs to console)
+   */
+  mode: optional(union([literal('auto'), literal('development'), literal('production')])),
+  /**
+   * Whether to enable debug logging.
+   * Automatically enabled in development/test environments.
+   */
+  debug: optional(boolean()),
+  /**
+   * Custom endpoint for data collection.
+   * Useful for self-hosted or proxied setups.
+   */
+  endpoint: optional(string()),
+})
+
 export const XPixelOptions = object({
   /**
    * Your X (Twitter) Pixel ID.

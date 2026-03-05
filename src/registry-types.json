@@ -778,6 +778,18 @@
       "code": "const ScriptYouTubePlayerDefaults = {\n  \"cookies\": \"false\",\n  \"trigger\": \"'mousedown'\",\n  \"thumbnailSize\": \"'hq720'\",\n  \"webp\": \"true\",\n  \"playerVars\": \"{ autoplay: 0, playsinline: 1 }\",\n  \"width\": \"640\",\n  \"height\": \"360\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'cover'\"\n}"
     }
   ],
+  "vercel-analytics": [
+    {
+      "name": "VercelAnalyticsOptions",
+      "kind": "const",
+      "code": "export const VercelAnalyticsOptions = object({\n  /**\n   * The DSN of the project to send events to.\n   * Only required when self-hosting or deploying outside of Vercel.\n   */\n  dsn: optional(string()),\n  /**\n   * Whether to disable automatic page view tracking on route changes.\n   * Set to true if you want to manually call pageview().\n   */\n  disableAutoTrack: optional(boolean()),\n  /**\n   * The mode to use for the analytics script.\n   * - `auto` - Automatically detect the environment (default)\n   * - `production` - Always use production script\n   * - `development` - Always use development script (logs to console)\n   */\n  mode: optional(union([literal('auto'), literal('development'), literal('production')])),\n  /**\n   * Whether to enable debug logging.\n   * Automatically enabled in development/test environments.\n   */\n  debug: optional(boolean()),\n  /**\n   * Custom endpoint for data collection.\n   * Useful for self-hosted or proxied setups.\n   */\n  endpoint: optional(string()),\n})"
+    },
+    {
+      "name": "VercelAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface VercelAnalyticsApi {\n  va: (event: string, properties?: unknown) => void\n  track: (name: string, properties?: Record<string, AllowedPropertyValues>) => void\n  pageview: (options?: { route?: string | null, path?: string }) => void\n}"
+    }
+  ],
   "carbon-ads": [
     {
       "name": "ScriptCarbonAdsProps",

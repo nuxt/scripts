@@ -64,6 +64,7 @@ const PROVIDER_PATHS: Record<string, string[]> = {
   ],
   tiktokPixel: ['/_proxy/tiktok'],
   redditPixel: ['/_proxy/reddit'],
+  vercelAnalytics: ['/_proxy/vercel'],
 }
 
 /**
@@ -1016,6 +1017,29 @@ describe('first-party privacy stripping', () => {
       }
       // No captures acceptable - Reddit behavior varies in headless
     }, 30000)
+
+    // Note: Vercel Analytics uses relative paths (/_vercel/insights/*) for data collection,
+    // not absolute URLs. First-party mode only proxies the script CDN, so no data
+    // captures are expected through the proxy.
+    it('vercelAnalytics', async () => {
+      clearCaptures()
+      const browser = await getBrowser()
+      const page = await browser.newPage()
+      page.setDefaultTimeout(5000)
+
+      await page.goto(url('/vercel-analytics'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+      await page.waitForSelector('#status', { timeout: 5000 }).catch(() => {})
+      await page.waitForTimeout(2000)
+
+      // Verify queue was initialized (clientInit sets up window.va)
+      const hasQueue = await page.evaluate(() => typeof window.va === 'function')
+      expect(hasQueue).toBe(true)
+
+      await page.close()
+
+      // No proxy data captures expected — Vercel Analytics sends data to
+      // relative /_vercel/insights/* paths handled by Vercel infrastructure
+    }, 30000)
   })
 
   /**
@@ -1079,7 +1103,11 @@ describe('first-party privacy stripping', () => {
           }
         }
         if (status >= 400 && serverOrigin && reqUrl.startsWith(serverOrigin)) {
-          failedLocalRequests.push({ url: new URL(reqUrl).pathname, status })
+          const pathname = new URL(reqUrl).pathname
+          // Upstream collection endpoints return 4xx with test/fake tokens — expected
+          if (pathname.includes('/cdn-cgi/rum'))
+            return
+          failedLocalRequests.push({ url: pathname, status })
         }
       })
 

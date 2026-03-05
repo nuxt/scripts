@@ -307,6 +307,17 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/crisp/**`]: { proxy: 'https://client.crisp.chat/**' },
       },
     },
+
+    vercelAnalytics: {
+      // Vercel Analytics: trusted first-party analytics — minimal privacy needed
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'va.vercel-scripts.com', to: `${collectPrefix}/vercel` },
+      ],
+      routes: {
+        [`${collectPrefix}/vercel/**`]: { proxy: 'https://va.vercel-scripts.com/**' },
+      },
+    },
   } satisfies Record<string, ProxyConfig>
 }
 
