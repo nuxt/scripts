@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, useAttrs } from 'vue'
+import { computed, onMounted, ref, useAttrs } from 'vue'
 import { useScriptGravatar } from '../registry/gravatar'
 
 const props = withDefaults(defineProps<{
@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<{
 const attrs = useAttrs()
 const imgSrc = ref('')
 
-const { $script } = useScriptGravatar()
+const { onLoaded } = useScriptGravatar()
 
 const queryOverrides = computed(() => ({
   size: props.size,
@@ -34,7 +34,7 @@ const queryOverrides = computed(() => ({
 }))
 
 onMounted(() => {
-  $script.then((api) => {
+  onLoaded((api) => {
     if (props.email) {
       imgSrc.value = api.getAvatarUrlFromEmail(props.email, queryOverrides.value)
     }
