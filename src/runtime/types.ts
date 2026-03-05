@@ -3,7 +3,7 @@ import type {
   Script,
 } from '@unhead/vue/types'
 import type { Import } from 'unimport'
-import type { InferInput, ObjectSchema, ValiError } from 'valibot'
+import type { InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import type { ComputedRef, Ref } from 'vue'
 import type { ClarityInput } from './registry/clarity'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
@@ -205,7 +205,7 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = Script
 
-export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
+export type InferIfSchema<T> = T extends ObjectSchema<any, any> | UnionSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
   T = EmptyOptionsSchema,
   Bundelable extends boolean = true,

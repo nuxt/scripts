@@ -1,13 +1,12 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import type { PayPalNamespace } from '@paypal/paypal-js'
-import { withQuery } from 'ufo'
+import type { PayPalV6Namespace } from '@paypal/paypal-js/sdk-v6'
 import { useRegistryScript } from '../utils'
 import { PayPalOptions } from './schemas'
 
 export { PayPalOptions }
 
 export interface PayPalApi {
-  paypal: PayPalNamespace
+  paypal: PayPalV6Namespace
 }
 
 declare global {
@@ -19,61 +18,17 @@ export type PayPalInput = RegistryScriptInput<typeof PayPalOptions>
 
 export function useScriptPayPal<T extends PayPalApi>(_options?: PayPalInput) {
   return useRegistryScript<T, typeof PayPalOptions>('paypal', (options) => {
-    let dataMerchantId
-
-    if (Array.isArray(options?.merchantId) && options?.merchantId.length > 1) {
-      dataMerchantId = JSON.stringify(options.merchantId)
-      options.merchantId = '*'
-    }
-
-    if (Array.isArray(options?.components)) {
-      options.components = options.components.join(',')
-    }
-
-    if (Array.isArray(options?.disableFunding)) {
-      options.disableFunding = options.disableFunding.join(',')
-    }
-
-    if (Array.isArray(options?.enableFunding)) {
-      options.enableFunding = options.enableFunding.join(',')
-    }
-
     if (options?.sandbox === undefined) {
       options.sandbox = import.meta.dev
     }
 
-    let components = ['buttons', 'messages', 'marks', 'card-fields', 'funding-eligibility'].join(',')
-
-    if (options.components) {
-      if (Array.isArray(options.components)) {
-        components = options.components.join(',')
-      }
-      else {
-        components = options.components
-      }
-    }
-
     return {
       scriptInput: {
-        'src': withQuery(options.sandbox ? 'https://www.sandbox.paypal.com/sdk/js' : 'https://www.paypal.com/sdk/js', {
-          'client-id': options.clientId,
-          'buyer-country': options.buyerCountry,
-          'commit': options.commit,
-          'components': components,
-          'currency': options.currency,
-          'debug': options.debug,
-          'disable-funding': options.disableFunding,
-          'enable-funding': options.enableFunding,
-          'integration-date': options.integrationDate,
-          'intent': options.intent,
-          'locale': options.locale,
-          'vault': options.vault,
-        }),
-        'data-merchant-id': dataMerchantId,
-        'data-partner-attribution-id': options.partnerAttributionId, // TODO: maybe nuxt specific default
+        src: options.sandbox
+          ? 'https://www.sandbox.paypal.com/web-sdk/v6/core'
+          : 'https://www.paypal.com/web-sdk/v6/core',
       },
       schema: import.meta.dev ? PayPalOptions : undefined,
-      // trigger: 'client',
       scriptOptions: {
         use() {
           return {

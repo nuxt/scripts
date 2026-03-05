@@ -236,7 +236,6 @@ const componentToSlug: Record<string, string> = {
   ScriptLemonSqueezy: 'lemon-squeezy',
   ScriptStripePricingTable: 'stripe',
   ScriptPayPalButtons: 'paypal',
-  ScriptPayPalMarks: 'paypal',
   ScriptPayPalMessages: 'paypal',
 }
 

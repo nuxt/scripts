@@ -584,87 +584,32 @@ export const NpmOptions = object({
   provider: optional(union([literal('jsdelivr'), literal('cdnjs'), literal('unpkg')])),
 })
 
-export const PayPalOptions = object({
-  /**
-   * Your PayPal client ID.
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#client-id
-   */
-  clientId: string(),
-  /**
-   * The buyer's country code (for testing with sandbox).
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#buyer-country
-   */
-  buyerCountry: optional(string()),
-  /**
-   * Set to `true` to show a "Pay Now" button instead of "Continue".
-   * @default 'true'
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#commit
-   */
-  commit: optional(string()),
-  /**
-   * The PayPal SDK components to load.
-   * @default 'buttons,messages,marks,card-fields,funding-eligibility'
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#components
-   */
-  components: optional(union([string(), array(string())])),
-  /**
-   * The currency code for the transaction.
-   * @default 'USD'
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#currency
-   */
-  currency: optional(string()),
-  /**
-   * Enable debug mode for the PayPal SDK.
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#debug
-   */
-  debug: optional(union([string(), boolean()])),
-  /**
-   * Funding sources to disable (e.g., `'credit'`, `'card'`).
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#disable-funding
-   */
-  disableFunding: optional(union([string(), array(string())])),
-  /**
-   * Funding sources to enable (e.g., `'venmo'`, `'paylater'`).
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#enable-funding
-   */
-  enableFunding: optional(union([string(), array(string())])),
-  /**
-   * The date of integration to ensure backwards-compatible defaults.
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#integration-date
-   */
-  integrationDate: optional(string()),
-  /**
-   * The transaction intent.
-   * @default 'capture'
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#intent
-   */
-  intent: optional(string()),
-  /**
-   * The locale for the PayPal buttons (e.g., `'en_US'`).
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#locale
-   */
-  locale: optional(string()),
-  /**
-   * The merchant ID(s). For multiple merchants, pass an array and the SDK
-   * will automatically set `merchant-id` to `*` and use `data-merchant-id`.
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#merchant-id
-   */
-  merchantId: optional(union([string(), array(string())])),
-  /**
-   * The partner attribution ID for revenue sharing.
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#data-partner-attribution-id
-   */
-  partnerAttributionId: optional(string()),
-  /**
-   * Enable vault mode to save payment methods for future transactions.
-   * @see https://developer.paypal.com/docs/checkout/reference/customize-sdk/#vault
-   */
-  vault: optional(union([string(), boolean()])),
-  /**
-   * Use the PayPal sandbox environment. Defaults to `true` in development.
-   */
-  sandbox: optional(boolean()),
-})
+export const PayPalOptions = union([
+  object({
+    /**
+     * Your PayPal client ID.
+     * @see https://developer.paypal.com/sdk/js/reference/
+     */
+    clientId: string(),
+    clientToken: optional(string()),
+    /**
+     * Use the PayPal sandbox environment. Defaults to `true` in development.
+     */
+    sandbox: optional(boolean()),
+  }),
+  object({
+    clientId: optional(string()),
+    /**
+     * A server-generated client token for authentication.
+     * @see https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
+     */
+    clientToken: string(),
+    /**
+     * Use the PayPal sandbox environment. Defaults to `true` in development.
+     */
+    sandbox: optional(boolean()),
+  }),
+])
 
 export const PostHogOptions = object({
   /**
