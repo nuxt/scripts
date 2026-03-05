@@ -143,10 +143,10 @@ const rootAttrs = computed(() => {
     <div v-show="ready" ref="el">
       <slot name="default" :messages-session="messagesSession" />
     </div>
-    <slot v-if="!ready && !failed" name="placeholder">
+    <slot v-if="status !== 'error' && !ready && !failed" name="placeholder">
       placeholder
     </slot>
-    <slot v-if="status !== 'awaitingLoad' && !ready && !failed" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && status !== 'error' && !ready && !failed" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
