@@ -31,63 +31,8 @@ useScriptPlausibleAnalytics({
 })
 ```
 
-### PlausibleAnalyticsApi
-
-```ts
-export interface PlausibleAnalyticsApi {
-  plausible: ((event: '404', options: Record<string, any>) => void) &
-  ((event: 'event', options: Record<string, any>) => void) &
-  ((...params: any[]) => void) & {
-    q: any[]
-  }
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export interface PlausibleAnalyticsOptions {
-  /**
-   * Unique script ID for your site (recommended - new format as of October 2025)
-   * Extract from: <script src="https://plausible.io/js/pa-{scriptId}.js"></script>
-   */
-  scriptId?: string
-  /** Custom properties to track with every pageview */
-  customProperties?: Record<string, any>
-  /** Custom tracking endpoint URL */
-  endpoint?: string
-  /** Configure file download tracking */
-  fileDownloads?: {
-    fileExtensions?: string[]
-  }
-  /** Enable hash-based routing for single-page apps */
-  hashBasedRouting?: boolean
-  /** Set to false to manually trigger pageviews */
-  autoCapturePageviews?: boolean
-  /** Enable tracking on localhost */
-  captureOnLocalhost?: boolean
-  /** Enable form submission tracking */
-  trackForms?: boolean
-}
-```
-
-```ts
-export interface PlausibleAnalyticsDeprecatedOptions {
-  /**
-   * Your site domain
-   * @deprecated Use `scriptId` instead (new October 2025 format)
-   */
-  domain?: string
-  /**
-   * Script extensions for additional features
-   * @deprecated Use init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead
-   */
-  extension?: 'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual'
-}
-
-```
+::script-types
+::
 
 **Note:** The `scriptId` is found in your Plausible dashboard under **Site Installation** in your site settings.
 

@@ -20,26 +20,5 @@ Nuxt Scripts provides a registry script composable [`useScriptSegment()`](/scrip
 ::script-docs
 ::
 
-### SegmentApi
-
-```ts
-interface SegmentApi {
-  track: (event: string, properties?: Record<string, any>) => void
-  page: (name?: string, properties?: Record<string, any>) => void
-  identify: (userId: string, traits?: Record<string, any>, options?: Record<string, any>) => void
-  group: (groupId: string, traits?: Record<string, any>, options?: Record<string, any>) => void
-  alias: (userId: string, previousId: string, options?: Record<string, any>) => void
-  reset: () => void
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const SegmentOptions = object({
-  writeKey: string(),
-  analyticsKey: optional(string()),
-})
-```
+::script-types
+::

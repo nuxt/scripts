@@ -98,17 +98,6 @@ const isLoaded = ref(false)
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-### Props
-
-- `trigger`: The trigger event to load crisp. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `id`: Crisp ID.
-- `runtimeConfig`: Extra configuration options. Used to configure the locale. Same as CRISP_RUNTIME_CONFIG.
-- `tokenId`: Associated a session, equivalent to using CRISP_TOKEN_ID variable. Same as CRISP_TOKEN_ID.
-- `cookieDomain`: Restrict the domain that crisp cookie is set on. Same as CRISP_COOKIE_DOMAIN.
-- `cookieExpiry`: The cookie expiry in seconds. Same as CRISP_COOKIE_EXPIRATION.
-
-See the [Config Schema](#config-schema) for full details.
-
 #### With Environment Variables
 
 If you prefer to configure your id using environment variables.
@@ -205,59 +194,8 @@ export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### Config Schema
-
-```ts
-export const CrispOptions = object({
-  /**
-   * Crisp ID.
-   */
-  id: string(),
-  /**
-   * Extra configuration options. Used to configure the locale.
-   * Same as CRISP_RUNTIME_CONFIG.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/language-customization/
-   */
-  runtimeConfig: optional(object({
-    locale: optional(string()),
-  })),
-  /**
-   * Associated a session, equivalent to using CRISP_TOKEN_ID variable.
-   * Same as CRISP_TOKEN_ID.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/session-continuity/
-   */
-  tokenId: optional(string()),
-  /**
-   * Restrict the domain that crisp cookie is set on.
-   * Same as CRISP_COOKIE_DOMAIN.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/
-   */
-  cookieDomain: optional(string()),
-  /**
-   * The cookie expiry in seconds.
-   * Same as CRISP_COOKIE_EXPIRATION.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/#change-cookie-expiration-date
-   */
-  cookieExpiry: optional(number()),
-})
-```
-
-### CrispApi
-
-```ts
-export interface CrispApi {
-  push: (...args: any[]) => void
-  is: (name: 'chat:opened' | 'chat:closed' | 'chat:visible' | 'chat:hidden' | 'chat:small' | 'chat:large' | 'session:ongoing' | 'website:available' | 'overlay:opened' | 'overlay:closed' | string) => boolean
-  set: (name: 'message:text' | 'session:data' | 'session:segments' | 'session:event' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company' | string, value: any) => void
-  get: (name: 'chat:unread:count' | 'message:text' | 'session:identifier' | 'session:data' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company' | string) => any
-  do: (name: 'chat:open' | 'chat:close' | 'chat:toggle' | 'chat:show' | 'chat:hide' | 'helpdesk:search' | 'helpdesk:article:open' | 'helpdesk:query' | 'overlay:open' | 'overlay:close' | 'message:send' | 'message:show' | 'message:read' | 'message:thread:start' | 'message:thread:end' | 'session:reset' | 'trigger:run' | string, arg2?: any) => any
-  on: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | string, callback: (...args: any[]) => any) => void
-  off: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | string, callback: (...args: any[]) => any) => void
-  config: (options: any) => void
-  help: () => void
-  [key: string]: any
-}
-```
+::script-types
+::
 
 For more information, please refer to the [Crisp API documentation](https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/dollar-crisp/).
 

@@ -5,6 +5,7 @@ export default defineBuildConfig({
   entries: [
     './src/registry',
     './src/stats',
+    './src/types-source',
   ],
   externals: [
     'nuxt',

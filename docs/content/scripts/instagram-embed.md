@@ -76,16 +76,8 @@ The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component:
 
 ::
 
-### Props
-
-The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component accepts the following props:
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `postUrl` | `string` | Required | The Instagram post URL (e.g., `https://www.instagram.com/p/ABC123/`) |
-| `captions` | `boolean` | `true` | Whether to include captions in the embed |
-| `apiEndpoint` | `string` | `/api/_scripts/instagram-embed` | Custom API endpoint for fetching embed HTML |
-| `rootAttrs` | `HTMLAttributes` | `{}` | Root element attributes |
+::script-types
+::
 
 ### Slot Props
 

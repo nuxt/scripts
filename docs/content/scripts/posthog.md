@@ -28,30 +28,8 @@ pnpm add posthog-js
 ::script-docs
 ::
 
-### PostHogApi
-
-```ts
-import type { PostHog } from 'posthog-js'
-
-export interface PostHogApi {
-  posthog: PostHog
-}
-```
-
-### Config Schema
-
-```ts
-export const PostHogOptions = object({
-  apiKey: string(),
-  region: optional(union([literal('us'), literal('eu')])),
-  apiHost: optional(string()), // Custom API host URL (e.g. '/ph' for reverse proxy)
-  autocapture: optional(boolean()),
-  capturePageview: optional(union([boolean(), literal('history_change')])),
-  capturePageleave: optional(boolean()),
-  disableSessionRecording: optional(boolean()),
-  config: optional(record(string(), any())), // Full PostHogConfig passthrough
-})
-```
+::script-types
+::
 
 ## EU Hosting
 

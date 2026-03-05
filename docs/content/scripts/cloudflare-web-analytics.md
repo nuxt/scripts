@@ -21,35 +21,8 @@ links:
 The composable comes with the following defaults:
 - **Trigger: Client** Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
 
-### CloudflareWebAnalyticsInput
-
-```ts
-export const CloudflareWebAnalyticsOptions = object({
-  /**
-   * The Cloudflare Web Analytics token.
-   */
-  token: string([minLength(32)]),
-  /**
-   * Cloudflare Web Analytics enables measuring SPAs automatically by overriding the History API's pushState function
-   * and listening to the onpopstate. Hash-based router is not supported.
-   *
-   * @default true
-   */
-  spa: optional(boolean()),
-})
-```
-
-### CloudflareWebAnalyticsApi
-
-```ts
-export interface CloudflareWebAnalyticsApi {
-  __cfBeacon: {
-    load: 'single'
-    spa: boolean
-    token: string
-  }
-}
-```
+::script-types
+::
 
 ## Loading in app.vue
 

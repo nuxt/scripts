@@ -141,48 +141,6 @@ function handleReady({ map }) {
 
 ::
 
-### Props
-
-The [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component accepts the following props.
-
-You must provide a `center` prop for the map to load correctly, alternatively you should provide `mapOptions` and configure 
-the `center` option there.
-
-**Map**
-
-- `center`: Where to center the map. You can provide a string with the location or use a `{ lat: 0, lng: 0 }` object.
-- `apiKey`: The Google Maps API key. Must have access to the Static Maps API as well. You can optionally provide this as runtime config using the `public.scripts.googleMaps.apiKey` key.
-- `centerMarker`: Whether to display a marker at the center position. Default is `true`.
-- `mapOptions`: Options for the map. See [MapOptions](https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions).
-
-**Placeholder**
-
-You can customize the placeholder image using the following props, alternatively, you can use the `#placeholder` slot to customize the placeholder image.
-
-- `placeholderOptions`: Customize the placeholder image attributes. See [Static Maps API](https://developers.google.com/maps/documentation/maps-static/start).
-- `placeholderAttrs`: Customize the placeholder image attributes.
-
-**Sizing**
-
-If you want to render a map larger than 640x640 you should provide your own placeholder as the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/start)
-does not support rendering maps larger than this.
-
-- `width`: The width of the map. Default is `640`.
-- `height`: The height of the map. Default is `400`.
-
-**Optimizations**
-
-- `trigger`: The trigger event to load the Google Maps. Default is `mouseover`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
-
-**Markers**
-
-You can add markers to the static and interactive map by providing an array of `MarkerOptions`. See [MarkerOptions](https://developers.google.com/maps/documentation/javascript/reference/marker#MarkerOptions).
-
-- `markers`: An array of markers to display on the map.
-
-See the [markers](https://github.com/nuxt/scripts/blob/main/playground/pages/third-parties/google-maps/markers.vue) example for more information.
-
 #### With Environment Variables
 
 If you prefer to configure your API key using environment variables.
@@ -695,14 +653,8 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### GoogleMapsApi
-
-```ts
-export interface GoogleMapsApi {
-  // @types/google.maps
-  maps: typeof google.maps
-}
-```
+::script-types
+::
 
 ## Example
 

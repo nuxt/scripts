@@ -32,51 +32,8 @@ proxy.gtag('event', 'page_view')
 
 The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
 
-### GoogleAnalyticsApi
-
-```ts
-export interface GTag {
-  // Initialize gtag.js with timestamp
-  (command: 'js', value: Date): void
-
-  // Configure a GA4 property
-  (command: 'config', targetId: string, configParams?: ConfigParams): void
-
-  // Get a value from gtag
-  (command: 'get', targetId: string, fieldName: string, callback?: (field: any) => void): void
-
-  // Send an event to GA4
-  (command: 'event', eventName: DefaultEventName, eventParams?: EventParameters): void
-
-  // Set default parameters for all subsequent events
-  (command: 'set', params: GtagCustomParams): void
-
-  // Update consent state
-  (command: 'consent', consentArg: 'default' | 'update', consentParams: ConsentOptions): void
-}
-
-interface GoogleAnalyticsApi {
-  dataLayer: Record<string, any>[]
-  gtag: GTag
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const GoogleAnalyticsOptions = object({
-  /**
-   * The Google Analytics ID. Optional - allows loading gtag.js without initial configuration.
-   */
-  id: optional(string()),
-  /**
-   * The datalayer's name you want it to be associated with
-   */
-  l: optional(string())
-})
-```
+::script-types
+::
 
 ### Customer/Consumer ID Tracking
 

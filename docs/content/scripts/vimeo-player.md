@@ -77,50 +77,6 @@ async function play() {
 
 ::
 
-### Props
-
-The [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} component accepts the following props:
-
-- `trigger`: The trigger event to load the Vimeo Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
-- `rootAttrs`: Override the root attributes that are automatically set.
-- `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
-- `id`: Shorthand for `vimeoOptions.id`.
-- `url`: Shorthand for `vimeoOptions.url`.
-- `vimeoOptions`: All options from the Player SDK are supported, please consult the [Embed Options](https://developer.vimeo.com/player/sdk/embed)
-for full documentation.
-
-```ts
-interface VimeoPlayerProps {
-  id: number | undefined
-  url?: string | undefined
-  autopause?: boolean | undefined
-  autoplay?: boolean | undefined
-  background?: boolean | undefined
-  byline?: boolean | undefined
-  color?: string | undefined
-  controls?: boolean | undefined
-  dnt?: boolean | undefined
-  height?: number | undefined
-  interactive_params?: string | undefined
-  keyboard?: boolean | undefined
-  loop?: boolean | undefined
-  maxheight?: number | undefined
-  maxwidth?: number | undefined
-  muted?: boolean | undefined
-  pip?: boolean | undefined
-  playsinline?: boolean | undefined
-  portrait?: boolean | undefined
-  responsive?: boolean | undefined
-  speed?: boolean | undefined
-  quality?: VimeoVideoQuality | undefined
-  texttrack?: string | undefined
-  title?: boolean | undefined
-  transparent?: boolean | undefined
-  width?: number | undefined
-}
-```
-
 #### Eager Loading Placeholder
 
 The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
@@ -255,15 +211,8 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### VimeoPlayerApi
-
-```ts
-export interface VimeoPlayerApi {
-  Vimeo: {
-    Player: ScriptVimeoPlayer
-  }
-}
-```
+::script-types
+::
 
 ## Example
 

@@ -20,40 +20,8 @@ Nuxt Scripts provides a registry script composable [`useScriptTikTokPixel()`](/s
 ::script-docs
 ::
 
-### TikTokPixelApi
-
-```ts
-export interface TikTokPixelApi {
-  ttq: TtqFns & {
-    push: TtqFns
-    loaded: boolean
-    queue: any[]
-  }
-}
-
-type TtqFns =
-  & ((cmd: 'track', event: StandardEvents | string, properties?: EventProperties) => void)
-  & ((cmd: 'page') => void)
-  & ((cmd: 'identify', properties: IdentifyProperties) => void)
-  & ((cmd: string, ...args: any[]) => void)
-
-type StandardEvents =
-  | 'ViewContent' | 'ClickButton' | 'Search' | 'AddToWishlist'
-  | 'AddToCart' | 'InitiateCheckout' | 'AddPaymentInfo' | 'CompletePayment'
-  | 'PlaceAnOrder' | 'Contact' | 'Download' | 'SubmitForm'
-  | 'CompleteRegistration' | 'Subscribe'
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const TikTokPixelOptions = object({
-  id: string(),
-  trackPageView: optional(boolean()), // default: true
-})
-```
+::script-types
+::
 
 ## Identifying Users
 

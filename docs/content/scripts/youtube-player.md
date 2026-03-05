@@ -80,28 +80,6 @@ function stateChange(event) {
 
 ::
 
-### Props
-
-The [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"} component accepts the following props:
-
-- `trigger`: The trigger event to load the YouTube Player. Default is `mousedown`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
-- `aboveTheFold`: Optimizes the placeholder image for above-the-fold content. Default is `false`.
-- `placeholderObjectFit`: The `object-fit` CSS property for the placeholder image. Default is `cover`. Useful for non-16:9 videos like YouTube Shorts.
-
-All script options from the [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference) are supported on the `playerVars` prop, please consult the [Supported paramters](https://developers.google.com/youtube/player_parameters#Parameters) for full documentation.
-
-```ts
-export interface YouTubeProps {
-  // YouTube Player
-  videoId: string
-  playerVars?: YT.PlayerVars
-  width?: number
-  height?: number
-  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
-}
-```
-
 ### Privacy
 
 The `<ScriptYouTubePlayer>` component is privacy-friendly by default and sets the video host to `https://www.youtube-nocookie.com`. 
@@ -241,14 +219,8 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options?: Yo
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### YouTubePlayerApi
-
-```ts
-/// <reference types="youtube" />
-export interface YouTubePlayerApi {
-  YT: typeof YT
-}
-```
+::script-types
+::
 
 ## Example
 

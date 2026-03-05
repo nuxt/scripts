@@ -211,32 +211,8 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(
 
 See the [Registry Scripts Guide](/docs/guides/registry-scripts) for advanced usage.
 
-## GoogleAdsenseApi Interface
-
-This interface defines the structure of the Google Adsense API for better TypeScript support.
-
-```ts
-export interface GoogleAdsenseApi {
-  adsbygoogle: any[] & { loaded: boolean };
-}
-```
-
-## GoogleAdsenseInput
-
-You can define the input options for the [`useScriptGoogleAdsense()`](/scripts/google-adsense){lang="ts"} composable using the following structure:
-
-```ts
-export const GoogleAdsenseOptions = object({
-  /**
-   * The Google Adsense Publisher ID.
-   */
-  client: optional(string()),
-  /**
-   * Enable or disable Auto Ads.
-   */
-  autoAds: optional(boolean()),
-});
-```
+::script-types
+::
 
 ::callout{icon="i-heroicons-light-bulb" to="https://support.google.com/adsense" target="_blank"}
 Need more help? Check out the official **Google AdSense Guide**

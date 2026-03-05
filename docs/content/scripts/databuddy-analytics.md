@@ -29,57 +29,5 @@ useScriptDatabuddyAnalytics({
 })
 ```
 
-### DatabuddyAnalyticsApi
-
-```ts
-export interface DatabuddyAnalyticsApi {
-  track: (eventName: string, properties?: Record<string, any>) => Promise<any> | any | void
-  screenView: (path?: string, properties?: Record<string, any>) => void
-  setGlobalProperties: (properties: Record<string, any>) => void
-  trackCustomEvent: (eventName: string, properties?: Record<string, any>) => void
-  clear: () => void
-  flush: () => void
-}
-```
-
-### Config Schema
-
-You must provide a `clientId` when configuring the registry for the first time. The registry supports a large set of Databuddy options which are passed to the script via `data-` attributes.
-
-```ts
-export const DatabuddyAnalyticsOptions = object({
-  clientId: string(),
-  scriptUrl: optional(string()),
-  apiUrl: optional(string()),
-  disabled: optional(boolean()),
-  trackScreenViews: optional(boolean()),
-  trackPerformance: optional(boolean()),
-  trackSessions: optional(boolean()),
-  trackWebVitals: optional(boolean()),
-  trackErrors: optional(boolean()),
-  trackOutgoingLinks: optional(boolean()),
-  trackScrollDepth: optional(boolean()),
-  trackEngagement: optional(boolean()),
-  trackInteractions: optional(boolean()),
-  trackAttributes: optional(boolean()),
-  trackHashChanges: optional(boolean()),
-  trackExitIntent: optional(boolean()),
-  trackBounceRate: optional(boolean()),
-  enableBatching: optional(boolean()),
-  batchSize: optional(number()),
-  batchTimeout: optional(number()),
-  enableRetries: optional(boolean()),
-  maxRetries: optional(number()),
-  initialRetryDelay: optional(number()),
-  samplingRate: optional(number()),
-  sdk: optional(string()),
-  sdkVersion: optional(string()),
-  enableObservability: optional(boolean()),
-  observabilityService: optional(string()),
-  observabilityEnvironment: optional(string()),
-  observabilityVersion: optional(string()),
-  enableLogging: optional(boolean()),
-  enableTracing: optional(boolean()),
-  enableErrorTracking: optional(boolean()),
-})
-```
+::script-types
+::

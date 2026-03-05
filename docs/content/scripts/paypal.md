@@ -41,6 +41,10 @@ to install the `@paypal/paypal-js` dependency.
 ```bash
 pnpm add -D @paypal/paypal-js
 ```
+
+::script-types
+::
+
 ### Demo
 
 ::code-group

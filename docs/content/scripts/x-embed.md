@@ -88,16 +88,8 @@ The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless co
 
 ::
 
-### Props
-
-The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component accepts the following props:
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `tweetId` | `string` | Required | The ID of the tweet to embed |
-| `apiEndpoint` | `string` | `/api/_scripts/x-embed` | Custom API endpoint for fetching tweet data |
-| `imageProxyEndpoint` | `string` | `/api/_scripts/x-embed-image` | Custom endpoint for proxying images |
-| `rootAttrs` | `HTMLAttributes` | `{}` | Root element attributes |
+::script-types
+::
 
 ### Slot Props
 

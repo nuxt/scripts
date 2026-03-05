@@ -44,64 +44,8 @@ useScriptEventPage(({ title, path }) => {
 })
 ```
 
-### GoogleTagManagerApi
-
-```ts
-interface GoogleTagManagerApi {
-  dataLayer: Record<string, any>[]
-  google_tag_manager: GoogleTagManager
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-/**
- * GTM configuration options with improved documentation
- */
-export const GoogleTagManagerOptions = object({
-    /** GTM container ID (format: GTM-XXXXXX) */
-    id: string(),
-
-    /** Optional dataLayer variable name */
-    l: optional(string()),
-
-    /** Authentication token for environment-specific container versions */
-    auth: optional(string()),
-
-    /** Preview environment name */
-    preview: optional(string()),
-
-    /** Forces GTM cookies to take precedence when true */
-    cookiesWin: optional(union([boolean(), literal('x')])),
-
-    /** Enables debug mode when true */
-    debug: optional(union([boolean(), literal('x')])),
-
-    /** No Personal Advertising - disables advertising features when true */
-    npa: optional(union([boolean(), literal('1')])),
-
-    /** Custom dataLayer name (alternative to "l" property) */
-    dataLayer: optional(string()),
-
-    /** Environment name for environment-specific container */
-    envName: optional(string()),
-
-    /** Referrer policy for analytics requests */
-    authReferrerPolicy: optional(string()),
-
-    /** Default consent settings for GTM */
-    defaultConsent: optional(record(string(), union([string(), number()]))),
-  })
-```
-
-### Options types
-
-```ts
-type GoogleTagManagerInput = typeof GoogleTagManagerOptions & { onBeforeGtmStart?: (gtag: Gtag) => void }
-```
+::script-types
+::
 
 ## Examples
 

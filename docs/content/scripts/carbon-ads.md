@@ -171,11 +171,5 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 Note: The Carbon Ads script _does not_ extend the [`useScript()`](/docs/api/use-script){lang="ts"} composable. Accessing the script will return the `HTMLScriptElement`.
 
-### Props
-
-The [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"} component accepts the following props:
-
-- `serve`: The serve URL provided by Carbon Ads.
-- `placement`: The placement ID provided by Carbon Ads.
-- `format`: Format provided by Carbon Ads.
-
+::script-types
+::

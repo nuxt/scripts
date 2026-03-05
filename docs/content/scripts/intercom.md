@@ -78,20 +78,6 @@ const isLoaded = ref(false)
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-### Props
-
-- `trigger`: The trigger event to load intercom. Default is `click`. See [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) for more information.
-- `app-id`: The Intercom app id.
-- `api-base`: The Intercom API base URL.
-- `name`: The name of the user.
-- `email`: The email of the user.
-- `user-id`: The user id.
-- `alignment`: The alignment of the messenger `left` or `right`. Default is `right`.
-- `horizontal-padding`: The horizontal padding of the messenger. Default is `20`.
-- `vertical-padding`: The vertical padding of the messenger. Default is `20`.
-
-See the [Config Schema](#config-schema) for full details.
-
 #### With Environment Variables
 
 If you prefer to configure your app ID using environment variables.
@@ -218,50 +204,8 @@ proxy.Intercom('update', { name: 'John Doe' })
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### IntercomApi
-
-```ts
-export interface IntercomApi {
-  Intercom: ((event: 'boot', data?: Input<typeof IntercomOptions>) => void)
-  & ((event: 'shutdown') => void)
-  & ((event: 'update', options?: Input<typeof IntercomOptions>) => void)
-  & ((event: 'hide') => void)
-  & ((event: 'show') => void)
-  & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)
-  & ((event: 'showMessages') => void)
-  & ((event: 'showNewMessage', content?: string) => void)
-  & ((event: 'onHide', fn: () => void) => void)
-  & ((event: 'onShow', fn: () => void) => void)
-  & ((event: 'onUnreadCountChange', fn: () => void) => void)
-  & ((event: 'trackEvent', eventName: string, metadata?: Record<string, any>) => void)
-  & ((event: 'getVisitorId') => Promise<string>)
-  & ((event: 'startTour', tourId: string | number) => void)
-  & ((event: 'showArticle', articleId: string | number) => void)
-  & ((event: 'showNews', newsItemId: string | number) => void)
-  & ((event: 'startSurvey', surveyId: string | number) => void)
-  & ((event: 'startChecklist', checklistId: string | number) => void)
-  & ((event: 'showTicket', ticketId: string | number) => void)
-  & ((event: 'showConversation', conversationId: string | number) => void)
-  & ((event: 'onUserEmailSupplied', fn: () => void) => void)
-  & ((event: string, ...params: any[]) => void)
-}
-```
-
-### Config Schema
-
-```ts
-export const IntercomOptions = object({
-  app_id: string(),
-  api_base: optional(union([literal('https://api-iam.intercom.io'), literal('https://api-iam.eu.intercom.io'), literal('https://api-iam.au.intercom.io')])),
-  name: optional(string()),
-  email: optional(string()),
-  user_id: optional(string()),
-  // customizing the messenger
-  alignment: optional(union([literal('left'), literal('right')])),
-  horizontal_padding: optional(number()),
-  vertical_padding: optional(number()),
-})
-```
+::script-types
+::
 
 ## Example
 

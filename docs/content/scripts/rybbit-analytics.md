@@ -31,65 +31,8 @@ useScriptRybbitAnalytics({
 })
 ```
 
-### RybbitAnalyticsApi
-
-```ts
-export interface RybbitAnalyticsApi {
-  /**
-   * Tracks a page view
-   */
-  pageview: () => void
-
-  /**
-   * Tracks a custom event
-   * @param name Name of the event
-   * @param properties Optional properties for the event
-   */
-  event: (name: string, properties?: Record<string, any>) => void
-
-  /**
-   * Sets a custom user ID for tracking logged-in users
-   * @param userId The user ID to set (will be stored in localStorage)
-   */
-  identify: (userId: string) => void
-
-  /**
-   * Clears the stored user ID
-   */
-  clearUserId: () => void
-
-  /**
-   * Gets the currently set user ID
-   * @returns The current user ID or null if not set
-   */
-  getUserId: () => string | null
-  /**
-   * @deprecated use top level functions instead
-   */
-  rybbit: RybbitAnalyticsApi
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const RybbitAnalyticsOptions = object({
-  siteId: union([string(), number()]), // required
-  autoTrackPageview: optional(boolean()),
-  trackSpa: optional(boolean()),
-  trackQuery: optional(boolean()),
-  trackOutbound: optional(boolean()),
-  trackErrors: optional(boolean()),
-  sessionReplay: optional(boolean()),
-  webVitals: optional(boolean()),
-  skipPatterns: optional(array(string())),
-  maskPatterns: optional(array(string())),
-  debounce: optional(number()),
-  apiKey: optional(string()),
-})
-```
+::script-types
+::
 
 #### Configuration Options
 

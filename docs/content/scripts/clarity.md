@@ -18,40 +18,5 @@ links:
 ::script-docs
 ::
 
-### ClarityApi
-
-```ts
-type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)
-  & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{
-  id: string
-  session: string
-  page: string
-  userHint: string
-}>)
-  & ((fn: 'consent') => void)
-  & ((fn: 'set', key: any, value: any) => void)
-  & ((fn: 'event', value: any) => void)
-  & ((fn: 'upgrade', upgradeReason: any) => void)
-  & ((fn: string, ...args: any[]) => void)
-
-export interface ClarityApi {
-  clarity: ClarityFunctions & {
-    q: any[]
-    v: string
-  }
-}
-
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const ClarityOptions = object({
-  /**
-   * The Clarity token.
-   */
-  id: pipe(string(), minLength(10)),
-})
-```
+::script-types
+::

@@ -20,26 +20,5 @@ Nuxt Scripts provides a registry script composable [`useScriptRedditPixel()`](/s
 ::script-docs
 ::
 
-### RedditPixelApi
-
-```ts
-export interface RedditPixelApi {
-  rdt: RdtFns & {
-    sendEvent: (rdt: RedditPixelApi['rdt'], args: unknown[]) => void
-    callQueue: unknown[]
-  }
-}
-type RdtFns
-  = & ((event: 'init', id: string) => void)
-    & ((event: 'track', eventName: string) => void)
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const RedditPixelOptions = object({
-  id: string(),
-})
-```
+::script-types
+::

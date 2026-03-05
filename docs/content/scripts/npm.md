@@ -62,16 +62,8 @@ function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
-### NpmOptions
-
-```ts
-export const NpmOptions = object({
-  packageName: string(),
-  file: optional(string()),
-  version: optional(string()),
-  type: optional(string()),
-})
-```
+::script-types
+::
 
 ### Return
 

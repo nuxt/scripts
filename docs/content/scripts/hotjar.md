@@ -18,27 +18,5 @@ links:
 ::script-docs
 ::
 
-### HotjarApi
-
-```ts
-export interface HotjarApi {
-  hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void)
-  & ((event: 'stateChange', path: string) => void)
-  & ((event: 'event', eventName: string) => void)
-  & ((event: string, arg?: string) => void)
-  & ((...params: any[]) => void) & {
-    q: any[]
-  }
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-export const HotjarOptions = object({
-  id: number(),
-  sv: optional(number()),
-})
-```
+::script-types
+::

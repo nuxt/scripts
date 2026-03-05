@@ -3,15 +3,13 @@ import { literal, object, optional, string, union } from '#nuxt-scripts-validato
 import { withBase } from 'ufo'
 import { useRegistryScript } from '../utils'
 
-const PROVIDERS = ['jsdelivr', 'cdnjs', 'unpkg'] as const
-type Provider = (typeof PROVIDERS)[number]
-const providerValidator = union(PROVIDERS.map(provider => literal(provider)))
+type Provider = 'jsdelivr' | 'cdnjs' | 'unpkg'
 
 export const NpmOptions = object({
   packageName: string(),
   file: optional(string()),
   version: optional(string()),
-  provider: optional(providerValidator),
+  provider: optional(union([literal('jsdelivr'), literal('cdnjs'), literal('unpkg')])),
 })
 
 export type NpmInput = RegistryScriptInput<typeof NpmOptions, true, true, false>

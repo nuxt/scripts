@@ -22,56 +22,8 @@ links:
 
 - **Trigger**: Script will load when Nuxt is hydrated.
 
-## Options
-
-```ts
-export const FathomAnalyticsOptions = object({
-  /**
-   * The Fathom Analytics site ID.
-   */
-  site: string(),
-  /**
-   * The Fathom Analytics tracking mode.
-   */
-  spa: optional(union([literal('auto'), literal('history'), literal('hash')])),
-  /**
-   * Automatically track page views.
-   */
-  auto: optional(boolean()),
-  /**
-   * Enable canonical URL tracking.
-   */
-  canonical: optional(boolean()),
-  /**
-   * Honor Do Not Track requests.
-   */
-  honorDnt: optional(boolean()),
-})
-```
-
-Additionally like all registry scripts you can provide extra configuration:
-
-- `scriptInput` - HTML attributes to add to the script tag.
-- `scriptOptions` - See [Script Options]. Bundling is not supported, `bundle: true` will not do anything.
-
-## Return values
-
-The Fathom Analytics composable injects a `window.fathom` object into the global scope.
-
-```ts
-export interface FathomAnalyticsApi {
-  beacon: (ctx: { url: string, referrer?: string }) => void
-  blockTrackingForMe: () => void
-  enableTrackingForMe: () => void
-  isTrackingEnabled: () => boolean
-  send: (type: string, data: unknown) => void
-  setSite: (siteId: string) => void
-  sideId: string
-  trackPageview: (ctx?: { url: string, referrer?: string }) => void
-  trackGoal: (goalId: string, cents: number) => void
-  trackEvent: (eventName: string, value: { _value: number }) => void
-}
-```
+::script-types
+::
 
 You can access the `fathom` object as a proxy directly or await the `$script` promise to access the object. It's recommended
 to use the proxy for any void functions.

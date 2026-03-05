@@ -98,28 +98,5 @@ const matomoAnalytics = useScriptMatomoAnalytics({
 })
 ```
 
-### MatomoAnalyticsApi
-
-```ts
-interface MatomoAnalyticsApi {
-  _paq: unknown[]
-}
-```
-
-### Config Schema
-
-You must provide the options when setting up the script for the first time.
-
-```ts
-// matomoUrl and site are required
-export const MatomoAnalyticsOptions = object({
-  matomoUrl: optional(string()),
-  siteId: optional(union([string(), number()])),
-  cloudId: optional(string()),
-  trackerUrl: optional(string()),
-  trackPageView: optional(boolean()), // deprecated - use watch instead
-  enableLinkTracking: optional(boolean()),
-  disableCookies: optional(boolean()),
-  watch: optional(boolean()), // default: true
-})
-```
+::script-types
+::
