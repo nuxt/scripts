@@ -1,18 +1,11 @@
+import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
-import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
-  const publicConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.gravatarProxy
-
-  if (!publicConfig?.enabled) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Gravatar proxy is not enabled',
-    })
-  }
+  const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.gravatarProxy
 
   // Validate referer to prevent external abuse
   const referer = getHeader(event, 'referer')
@@ -70,7 +63,7 @@ export default defineEventHandler(async (event) => {
     })
   })
 
-  const cacheMaxAge = publicConfig.cacheMaxAge || 3600
+  const cacheMaxAge = proxyConfig?.cacheMaxAge || 3600
   setHeader(event, 'Content-Type', response.headers.get('content-type') || 'image/jpeg')
   setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
   setHeader(event, 'Vary', 'Accept-Encoding')

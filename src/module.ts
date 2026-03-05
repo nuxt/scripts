@@ -273,23 +273,6 @@ export interface ModuleOptions {
     cacheMaxAge?: number
   }
   /**
-   * Gravatar proxy configuration.
-   * Proxies avatar images through your server for privacy (hides email hashes and IPs from Gravatar).
-   * Supports server-side email hashing so the hash never appears in client HTML.
-   */
-  gravatarProxy?: {
-    /**
-     * Enable proxying Gravatar avatars through your own origin.
-     * @default false
-     */
-    enabled?: boolean
-    /**
-     * Cache duration for avatar images in seconds.
-     * @default 3600 (1 hour)
-     */
-    cacheMaxAge?: number
-  }
-  /**
    * Whether the module is enabled.
    *
    * @default true
@@ -331,10 +314,6 @@ export default defineNuxtModule<ModuleOptions>({
       enabled: false,
       cacheMaxAge: 3600,
     },
-    gravatarProxy: {
-      enabled: false,
-      cacheMaxAge: 3600,
-    },
     enabled: true,
     debug: false,
   },
@@ -370,9 +349,6 @@ export default defineNuxtModule<ModuleOptions>({
       // Only expose enabled and cacheMaxAge to client, not apiKey
       googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
         ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
-        : undefined,
-      gravatarProxy: config.gravatarProxy?.enabled
-        ? { enabled: true, cacheMaxAge: config.gravatarProxy.cacheMaxAge }
         : undefined,
     } as any
 
@@ -727,8 +703,15 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
-    // Add Gravatar proxy handler if enabled
-    if (config.gravatarProxy?.enabled) {
+    // Add Gravatar proxy handler when registry.gravatar is enabled
+    if (config.registry?.gravatar) {
+      const gravatarConfig = typeof config.registry.gravatar === 'object' && !Array.isArray(config.registry.gravatar)
+        ? config.registry.gravatar as Record<string, any>
+        : {}
+      nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+        { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge || 3600 } },
+        nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+      ) as any
       addServerHandler({
         route: '/_scripts/gravatar-proxy',
         handler: await resolvePath('./runtime/server/gravatar-proxy'),
