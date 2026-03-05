@@ -350,7 +350,7 @@ export default defineNuxtModule<ModuleOptions>({
       googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
         ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
         : undefined,
-    }
+    } as any
 
     // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
     // Both scripts.registry and runtimeConfig.public.scripts should be supported
@@ -428,7 +428,7 @@ export default defineNuxtModule<ModuleOptions>({
         const partytownConfig = (nuxt.options as any).partytown || {}
         const existingForwards = partytownConfig.forward || []
         const newForwards = [...new Set([...existingForwards, ...requiredForwards])]
-        ;(nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
+          ; (nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
         logger.info(`[partytown] Auto-configured forwards: ${requiredForwards.join(', ')}`)
       }
     }
@@ -700,6 +700,21 @@ export default defineNuxtModule<ModuleOptions>({
       addServerHandler({
         route: '/_scripts/google-static-maps-proxy',
         handler: await resolvePath('./runtime/server/google-static-maps-proxy'),
+      })
+    }
+
+    // Add Gravatar proxy handler when registry.gravatar is enabled
+    if (config.registry?.gravatar) {
+      const gravatarConfig = typeof config.registry.gravatar === 'object' && !Array.isArray(config.registry.gravatar)
+        ? config.registry.gravatar as Record<string, any>
+        : {}
+      nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+        { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
+        nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+      ) as any
+      addServerHandler({
+        route: '/_scripts/gravatar-proxy',
+        handler: await resolvePath('./runtime/server/gravatar-proxy'),
       })
     }
 

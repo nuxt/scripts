@@ -336,6 +336,13 @@
       "code": "export const GoogleTagManagerOptions = object({\n  /**\n   * GTM container ID (format: GTM-XXXXXX)\n   * @see https://developers.google.com/tag-platform/tag-manager/web#install-the-container\n   */\n  id: string(),\n\n  /**\n   * Optional dataLayer variable name\n   * @default 'dataLayer'\n   * @see https://developers.google.com/tag-platform/tag-manager/web/datalayer#rename_the_data_layer\n   */\n  l: optional(string()),\n\n  /**\n   * Authentication token for environment-specific container versions\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  auth: optional(string()),\n\n  /**\n   * Preview environment name\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  preview: optional(string()),\n\n  /** Forces GTM cookies to take precedence when true */\n  cookiesWin: optional(union([boolean(), literal('x')])),\n\n  /**\n   * Enables debug mode when true\n   * @see https://support.google.com/tagmanager/answer/6107056\n   */\n  debug: optional(union([boolean(), literal('x')])),\n\n  /**\n   * No Personal Advertising - disables advertising features when true\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  npa: optional(union([boolean(), literal('1')])),\n\n  /** Custom dataLayer name (alternative to \"l\" property) */\n  dataLayer: optional(string()),\n\n  /**\n   * Environment name for environment-specific container\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  envName: optional(string()),\n\n  /** Referrer policy for analytics requests */\n  authReferrerPolicy: optional(string()),\n\n  /**\n   * Default consent settings for GTM\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  defaultConsent: optional(record(string(), union([string(), number()]))),\n})"
     }
   ],
+  "gravatar": [
+    {
+      "name": "GravatarApi",
+      "kind": "interface",
+      "code": "export interface GravatarApi {\n  /**\n   * Get a proxied avatar URL for a given SHA256 email hash.\n   * When firstParty mode is enabled, this routes through your server.\n   */\n  getAvatarUrl: (hash: string, options?: { size?: number, default?: string, rating?: string }) => string\n  /**\n   * Get a proxied avatar URL using the server-side hashing endpoint.\n   * The email is sent to YOUR server (not Gravatar) for hashing.\n   * Only available when the gravatar proxy is enabled.\n   */\n  getAvatarUrlFromEmail: (email: string, options?: { size?: number, default?: string, rating?: string }) => string\n}"
+    }
+  ],
   "hotjar": [
     {
       "name": "HotjarOptions",
@@ -690,6 +697,38 @@
       "code": "export interface UmamiAnalyticsApi {\n  track: ((payload?: Record<string, any>) => void) & ((event_name: string, event_data: Record<string, any>) => void)\n  identify: (session_data?: Record<string, any> | string) => void\n}"
     }
   ],
+  "vercel-analytics": [
+    {
+      "name": "VercelAnalyticsOptions",
+      "kind": "const",
+      "code": "export const VercelAnalyticsOptions = object({\n  /**\n   * The DSN of the project to send events to.\n   * Only required when self-hosting or deploying outside of Vercel.\n   */\n  dsn: optional(string()),\n  /**\n   * Whether to disable automatic page view tracking on route changes.\n   * Set to true if you want to manually call pageview().\n   */\n  disableAutoTrack: optional(boolean()),\n  /**\n   * The mode to use for the analytics script.\n   * - `auto` - Automatically detect the environment (default)\n   * - `production` - Always use production script\n   * - `development` - Always use development script (logs to console)\n   */\n  mode: optional(union([literal('auto'), literal('development'), literal('production')])),\n  /**\n   * Whether to enable debug logging.\n   * Automatically enabled in development/test environments.\n   */\n  debug: optional(boolean()),\n  /**\n   * Custom endpoint for data collection.\n   * Useful for self-hosted or proxied setups.\n   */\n  endpoint: optional(string()),\n})"
+    },
+    {
+      "name": "AllowedPropertyValues",
+      "kind": "type",
+      "code": "export type AllowedPropertyValues = string | number | boolean | null"
+    },
+    {
+      "name": "VercelAnalyticsMode",
+      "kind": "type",
+      "code": "export type VercelAnalyticsMode = 'auto' | 'development' | 'production'"
+    },
+    {
+      "name": "BeforeSendEvent",
+      "kind": "interface",
+      "code": "export interface BeforeSendEvent {\n  type: 'pageview' | 'event'\n  url: string\n}"
+    },
+    {
+      "name": "BeforeSend",
+      "kind": "type",
+      "code": "export type BeforeSend = (event: BeforeSendEvent) => BeforeSendEvent | null"
+    },
+    {
+      "name": "VercelAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface VercelAnalyticsApi {\n  va: (event: string, properties?: unknown) => void\n  track: (name: string, properties?: Record<string, AllowedPropertyValues>) => void\n  pageview: (options?: { route?: string | null, path?: string }) => void\n}"
+    }
+  ],
   "vimeo-player": [
     {
       "name": "Constructor",
@@ -776,18 +815,6 @@
       "name": "ScriptYouTubePlayerDefaults",
       "kind": "const",
       "code": "const ScriptYouTubePlayerDefaults = {\n  \"cookies\": \"false\",\n  \"trigger\": \"'mousedown'\",\n  \"thumbnailSize\": \"'hq720'\",\n  \"webp\": \"true\",\n  \"playerVars\": \"{ autoplay: 0, playsinline: 1 }\",\n  \"width\": \"640\",\n  \"height\": \"360\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'cover'\"\n}"
-    }
-  ],
-  "vercel-analytics": [
-    {
-      "name": "VercelAnalyticsOptions",
-      "kind": "const",
-      "code": "export const VercelAnalyticsOptions = object({\n  /**\n   * The DSN of the project to send events to.\n   * Only required when self-hosting or deploying outside of Vercel.\n   */\n  dsn: optional(string()),\n  /**\n   * Whether to disable automatic page view tracking on route changes.\n   * Set to true if you want to manually call pageview().\n   */\n  disableAutoTrack: optional(boolean()),\n  /**\n   * The mode to use for the analytics script.\n   * - `auto` - Automatically detect the environment (default)\n   * - `production` - Always use production script\n   * - `development` - Always use development script (logs to console)\n   */\n  mode: optional(union([literal('auto'), literal('development'), literal('production')])),\n  /**\n   * Whether to enable debug logging.\n   * Automatically enabled in development/test environments.\n   */\n  debug: optional(boolean()),\n  /**\n   * Custom endpoint for data collection.\n   * Useful for self-hosted or proxied setups.\n   */\n  endpoint: optional(string()),\n})"
-    },
-    {
-      "name": "VercelAnalyticsApi",
-      "kind": "interface",
-      "code": "export interface VercelAnalyticsApi {\n  va: (event: string, properties?: unknown) => void\n  track: (name: string, properties?: Record<string, AllowedPropertyValues>) => void\n  pageview: (options?: { route?: string | null, path?: string }) => void\n}"
     }
   ],
   "carbon-ads": [

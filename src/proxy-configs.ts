@@ -318,6 +318,19 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/vercel/**`]: { proxy: 'https://va.vercel-scripts.com/**' },
       },
     },
+
+    gravatar: {
+      // Gravatar: avatar proxy — IP anonymized, rest not needed
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'secure.gravatar.com', to: `${collectPrefix}/gravatar` },
+        { from: 'gravatar.com/avatar', to: `${collectPrefix}/gravatar-avatar` },
+      ],
+      routes: {
+        [`${collectPrefix}/gravatar/**`]: { proxy: 'https://secure.gravatar.com/**' },
+        [`${collectPrefix}/gravatar-avatar/**`]: { proxy: 'https://gravatar.com/avatar/**' },
+      },
+    },
   } satisfies Record<string, ProxyConfig>
 }
 

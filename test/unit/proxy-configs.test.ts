@@ -461,6 +461,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('intercom')
       expect(configs).toHaveProperty('crisp')
       expect(configs).toHaveProperty('vercelAnalytics')
+      expect(configs).toHaveProperty('gravatar')
     })
 
     it('all configs have valid structure', () => {

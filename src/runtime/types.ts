@@ -16,6 +16,7 @@ import type { GoogleMapsInput } from './registry/google-maps'
 import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
 import type { GoogleSignInInput } from './registry/google-sign-in'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
+import type { GravatarInput } from './registry/gravatar'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
@@ -189,6 +190,7 @@ export interface ScriptRegistry {
   vercelAnalytics?: VercelAnalyticsInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
+  gravatar?: GravatarInput
   [key: `${string}-npm`]: NpmInput
 }
 
