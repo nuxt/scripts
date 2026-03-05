@@ -599,8 +599,9 @@ export default defineNuxtModule<ModuleOptions>({
         // Auto-inject apiHost for PostHog when first-party proxy is enabled
         // PostHog uses NPM mode so URL rewrites don't apply - we set api_host via config instead
         if (config.registry?.posthog && typeof config.registry.posthog === 'object') {
-          const phConfig = config.registry.posthog as Record<string, any>
-          if (!phConfig.apiHost) {
+          // Registry entries can be in array form [inputOptions, scriptOptions] — unwrap to get the actual PostHog input options
+          const phConfig = (Array.isArray(config.registry.posthog) ? config.registry.posthog[0] : config.registry.posthog) as Record<string, any>
+          if (phConfig && !phConfig.apiHost) {
             const region = phConfig.region || 'us'
             phConfig.apiHost = region === 'eu'
               ? `${firstPartyCollectPrefix}/ph-eu`
