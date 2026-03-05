@@ -46,13 +46,17 @@ function parseComments(code: string): Record<string, { description?: string, def
   let def = ''
 
   for (const line of lines) {
-    if (/^\s*\/\*\*/.test(line)) { desc = ''; def = ''; continue }
+    if (/^\s*\/\*\*/.test(line)) {
+      desc = ''
+      def = ''
+      continue
+    }
     if (/^\s*\*\//.test(line))
       continue
 
     const docLine = line.match(/^\s*\*\s?(.*)/)
     if (docLine) {
-      const content = docLine[1].trim()
+      const content = docLine[1]!.trim()
       if (content.startsWith('@default'))
         def = content.replace(/^@default\s*/, '')
       else if (!content.startsWith('@') && content)
@@ -61,19 +65,26 @@ function parseComments(code: string): Record<string, { description?: string, def
     }
 
     // Inline comment: field: ..., // description
-    const inlineMatch = line.match(/^\s*(\w+)\s*:.*?\/\/\s*(.+)$/)
-    if (inlineMatch) {
-      result[inlineMatch[1]] = { description: desc || inlineMatch[2].trim(), defaultValue: def || undefined }
-      desc = ''; def = ''
-      continue
+    const colonIdx = line.indexOf(':')
+    const commentIdx = colonIdx > 0 ? line.indexOf('//', colonIdx) : -1
+    if (colonIdx > 0 && commentIdx > colonIdx) {
+      const nameMatch = line.match(/^\s*(\w+)/)
+      if (nameMatch) {
+        const comment = line.slice(commentIdx + 2).trim()
+        result[nameMatch[1]!] = { description: desc || comment, defaultValue: def || undefined }
+        desc = ''
+        def = ''
+        continue
+      }
     }
 
     // Plain field
     const fieldMatch = line.match(/^\s*(\w+)\s*:/)
     if (fieldMatch) {
       if (desc || def)
-        result[fieldMatch[1]] = { description: desc || undefined, defaultValue: def || undefined }
-      desc = ''; def = ''
+        result[fieldMatch[1]!] = { description: desc || undefined, defaultValue: def || undefined }
+      desc = ''
+      def = ''
     }
   }
 
