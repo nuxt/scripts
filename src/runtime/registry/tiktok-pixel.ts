@@ -1,7 +1,7 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
+import { TikTokPixelOptions } from './schemas'
 
 type StandardEvents
   = 'ViewContent'
@@ -57,10 +57,7 @@ declare global {
   }
 }
 
-export const TikTokPixelOptions = object({
-  id: string(),
-  trackPageView: optional(boolean()), // default true
-})
+export { TikTokPixelOptions }
 
 export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, true, false, false>
 

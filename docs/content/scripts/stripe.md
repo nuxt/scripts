@@ -23,6 +23,9 @@ Nuxt Scripts provides two Stripe features:
 ::script-stats
 ::
 
+::script-types
+::
+
 ## Types
 
 To use the Stripe with full TypeScript support, you will need
@@ -104,9 +107,6 @@ export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {}
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 ## Example
 

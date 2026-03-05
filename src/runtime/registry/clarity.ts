@@ -1,6 +1,8 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { minLength, object, pipe, string } from '#nuxt-scripts-validator'
 import { useRegistryScript } from '../utils'
+import { ClarityOptions } from './schemas'
+
+export { ClarityOptions }
 
 type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)
   & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{
@@ -25,13 +27,6 @@ export interface ClarityApi {
 declare global {
   interface Window extends ClarityApi {}
 }
-
-export const ClarityOptions = object({
-  /**
-   * The Clarity token.
-   */
-  id: pipe(string(), minLength(10)),
-})
 
 export type ClarityInput = RegistryScriptInput<typeof ClarityOptions>
 

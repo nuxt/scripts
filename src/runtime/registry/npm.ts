@@ -1,16 +1,11 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import { withBase } from 'ufo'
 import { useRegistryScript } from '../utils'
+import { NpmOptions } from './schemas'
+
+export { NpmOptions }
 
 type Provider = 'jsdelivr' | 'cdnjs' | 'unpkg'
-
-export const NpmOptions = object({
-  packageName: string(),
-  file: optional(string()),
-  version: optional(string()),
-  provider: optional(union([literal('jsdelivr'), literal('cdnjs'), literal('unpkg')])),
-})
 
 export type NpmInput = RegistryScriptInput<typeof NpmOptions, true, true, false>
 

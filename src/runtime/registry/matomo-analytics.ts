@@ -1,20 +1,11 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
 import { useScriptEventPage } from '../composables/useScriptEventPage'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
+import { MatomoAnalyticsOptions } from './schemas'
 
-export const MatomoAnalyticsOptions = object({
-  matomoUrl: optional(string()),
-  siteId: optional(union([string(), number()])),
-  cloudId: optional(string()),
-  trackerUrl: optional(string()),
-  trackPageView: optional(boolean()),
-  enableLinkTracking: optional(boolean()),
-  disableCookies: optional(boolean()),
-  watch: optional(boolean()),
-})
+export { MatomoAnalyticsOptions }
 
 export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false, false>
 

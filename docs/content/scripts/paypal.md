@@ -33,6 +33,9 @@ Nuxt Scripts provides multiple PayPal features:
 ::script-stats
 ::
 
+::script-types
+::
+
 ## Types
 
 To use the PayPal with full TypeScript support, you will need
@@ -41,9 +44,6 @@ to install the `@paypal/paypal-js` dependency.
 ```bash
 pnpm add -D @paypal/paypal-js
 ```
-
-::script-types
-::
 
 ### Demo
 

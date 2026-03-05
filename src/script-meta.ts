@@ -31,7 +31,7 @@ export const scriptMeta: Record<string, ScriptMeta> = {
     trackedData: ['page-views', 'events', 'conversions'],
   },
   matomoAnalytics: {
-    urls: [], // Self-hosted, no canonical CDN
+    urls: ['https://cdn.matomo.cloud/demo.matomo.cloud/matomo.js'],
     trackedData: ['page-views', 'events', 'conversions', 'user-identity', 'heatmaps', 'ab-testing'],
   },
   rybbitAnalytics: {
@@ -43,7 +43,7 @@ export const scriptMeta: Record<string, ScriptMeta> = {
     trackedData: ['page-views', 'events'],
   },
   segment: {
-    urls: [], // Dynamic URL based on writeKey
+    urls: ['https://cdn.segment.com/analytics.js/v1/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/analytics.min.js'],
     trackedData: ['page-views', 'events', 'conversions', 'user-identity'],
   },
   googleAnalytics: {
@@ -81,7 +81,7 @@ export const scriptMeta: Record<string, ScriptMeta> = {
     trackedData: ['page-views', 'retargeting', 'audiences'],
   },
   carbonAds: {
-    urls: [], // Dynamic script per site
+    urls: ['https://cdn.carbonads.com/carbon.js?serve=CW7DTKJL&placement=unlighthousedev&format=cover'],
     trackedData: ['page-views'],
   },
 
@@ -121,7 +121,7 @@ export const scriptMeta: Record<string, ScriptMeta> = {
     trackedData: ['transactions'],
   },
   payPal: {
-    urls: [], // Dynamic URL with client-id
+    urls: ['https://www.paypal.com/sdk/js?client-id=AbFpjEMbYxL5HLLTyiOXSXp1VMwRRHWpQp3x-P8tPQVSCC-nNFINJ-_v-d8VVyy2nJfW2XuivLY0ITeO'],
     trackedData: ['transactions'],
   },
 

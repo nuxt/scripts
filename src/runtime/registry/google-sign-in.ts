@@ -1,6 +1,6 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { array, boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import { useRegistryScript } from '#nuxt-scripts/utils'
+import { GoogleSignInOptions } from './schemas'
 
 // Credential response from One Tap or button flow
 export interface CredentialResponse {
@@ -103,27 +103,7 @@ export interface GoogleSignInApi {
   accounts: AccountsNamespace
 }
 
-export const GoogleSignInOptions = object({
-  clientId: string(),
-  // Auto-select credentials if only one is available
-  autoSelect: optional(boolean()),
-  // Context for One Tap (signin, signup, or use)
-  context: optional(union([literal('signin'), literal('signup'), literal('use')])),
-  // FedCM API support (Privacy Sandbox) - mandatory from August 2025
-  useFedcmForPrompt: optional(boolean()),
-  // Cancel One Tap if user clicks outside
-  cancelOnTapOutside: optional(boolean()),
-  // UX mode: popup or redirect
-  uxMode: optional(union([literal('popup'), literal('redirect')])),
-  // Login URI for redirect flow
-  loginUri: optional(string()),
-  // ITP (Intelligent Tracking Prevention) support
-  itpSupport: optional(boolean()),
-  // Allowed parent origins for iframe embedding
-  allowedParentOrigin: optional(union([string(), array(string())])),
-  // Hosted domain - restrict to specific Google Workspace domain
-  hd: optional(string()),
-})
+export { GoogleSignInOptions }
 
 export type GoogleSignInInput = RegistryScriptInput<typeof GoogleSignInOptions>
 

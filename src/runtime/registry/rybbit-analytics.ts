@@ -1,21 +1,8 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { array, boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import { useRegistryScript } from '../utils'
+import { RybbitAnalyticsOptions } from './schemas'
 
-export const RybbitAnalyticsOptions = object({
-  siteId: union([string(), number()]), // required
-  autoTrackPageview: optional(boolean()),
-  trackSpa: optional(boolean()),
-  trackQuery: optional(boolean()),
-  trackOutbound: optional(boolean()),
-  trackErrors: optional(boolean()),
-  sessionReplay: optional(boolean()),
-  webVitals: optional(boolean()),
-  skipPatterns: optional(array(string())),
-  maskPatterns: optional(array(string())),
-  debounce: optional(number()),
-  apiKey: optional(string()),
-})
+export { RybbitAnalyticsOptions }
 
 export type RybbitAnalyticsInput = RegistryScriptInput<typeof RybbitAnalyticsOptions, false>
 

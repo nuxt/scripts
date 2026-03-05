@@ -14,6 +14,12 @@ links:
 
 Nuxt Scripts provides a [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component that fetches tweet data server-side and exposes it via slots for complete styling control. All data is proxied through your server - no client-side API calls to X.
 
+::script-stats
+::
+
+::script-types
+::
+
 ## [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"}
 
 The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless component that:
@@ -86,9 +92,6 @@ The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless co
 </template>
 ```
 
-::
-
-::script-types
 ::
 
 ### Slot Props

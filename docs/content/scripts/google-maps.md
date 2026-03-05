@@ -21,6 +21,9 @@ Nuxt Scripts provides a [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts
 ::script-stats
 ::
 
+::script-types
+::
+
 ## Types
 
 To use Google Maps with full TypeScript support, you will need
@@ -652,9 +655,6 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 ## Example
 

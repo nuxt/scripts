@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   tweetId: string
   /**
    * Custom API endpoint for fetching tweet data
-   * @default '/_scripts/x-embed'
+   * @default '/api/_scripts/x-embed'
    */
   apiEndpoint?: string
   /**

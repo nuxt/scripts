@@ -21,6 +21,9 @@ Nuxt Scripts provides a [`useScriptIntercom()`](#usescriptintercom){lang="ts"} c
 ::script-stats
 ::
 
+::script-types
+::
+
 ## [`<ScriptIntercom>`](/scripts/intercom){lang="html"}
 
 
@@ -203,9 +206,6 @@ proxy.Intercom('update', { name: 'John Doe' })
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 ## Example
 

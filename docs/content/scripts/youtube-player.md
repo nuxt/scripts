@@ -21,6 +21,9 @@ Nuxt Scripts provides a [`useScriptYouTubePlayer()`](/scripts/youtube-player){la
 ::script-stats
 ::
 
+::script-types
+::
+
 ## Types
 
 To use YouTube with full TypeScript support, you will need
@@ -218,9 +221,6 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options?: Yo
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 ## Example
 

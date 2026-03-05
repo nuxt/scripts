@@ -22,6 +22,9 @@ Nuxt Scripts provides a [`useScriptLemonSqueezy()`](#usescriptlemonsqueezy){lang
 ::script-stats
 ::
 
+::script-types
+::
+
 ## [`<ScriptLemonSqueezy>`](/scripts/lemon-squeezy){lang="html"}
 
 The [`<ScriptLemonSqueezy>`](/scripts/lemon-squeezy){lang="html"} component is headless [Facade Component](/docs/guides/facade-components) wrapping the [`useScriptLemonSqueezy()`](/scripts/lemon-squeezy){lang="ts"} composable, providing a simple, performance optimized way to load Lemon Squeezy in your Nuxt app.
@@ -111,9 +114,6 @@ export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: Lemo
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 ## Example
 

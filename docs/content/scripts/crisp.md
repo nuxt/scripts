@@ -21,6 +21,9 @@ Nuxt Scripts provides a [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composa
 ::script-stats
 ::
 
+::script-types
+::
+
 ## [`<ScriptCrisp>`](/scripts/crisp){lang="html"}
 
 The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component is headless Facade Component wrapping the [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.
@@ -193,9 +196,6 @@ export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 For more information, please refer to the [Crisp API documentation](https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/dollar-crisp/).
 

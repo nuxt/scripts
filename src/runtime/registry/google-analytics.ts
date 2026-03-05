@@ -1,7 +1,7 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, optional, string } from '#nuxt-scripts-validator'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import { withQuery } from 'ufo'
+import { GoogleAnalyticsOptions } from './schemas'
 
 export type GtagCustomParams = Record<string, any>
 
@@ -107,10 +107,7 @@ export interface GoogleAnalyticsApi {
   dataLayer: DataLayer
 }
 
-export const GoogleAnalyticsOptions = object({
-  id: optional(string()), // The GA4 measurement ID (format: G-XXXXXXXX)
-  l: optional(string()), // Optional global name for dataLayer (defaults to 'dataLayer')
-})
+export { GoogleAnalyticsOptions }
 
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 

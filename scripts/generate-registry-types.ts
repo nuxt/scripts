@@ -6,7 +6,6 @@ import { walk } from 'oxc-walker'
 const registryDir = join(import.meta.dirname, '..', 'src', 'runtime', 'registry')
 const componentsDir = join(import.meta.dirname, '..', 'src', 'runtime', 'components')
 const outputPath = join(import.meta.dirname, '..', 'src', 'registry-types.json')
-const schemasOutputPath = join(import.meta.dirname, '..', 'src', 'registry-schemas.ts')
 
 interface ExtractedDeclaration {
   name: string
@@ -39,6 +38,20 @@ function getKind(node: any): ExtractedDeclaration['kind'] {
 
 // --- Registry type extraction ---
 
+// Pre-parse schemas.ts to look up re-exported schema declarations
+const schemasSource = readFileSync(join(registryDir, 'schemas.ts'), 'utf-8')
+const schemaDeclarations = new Map<string, string>()
+{
+  const { program } = parseSync('schemas.ts', schemasSource)
+  for (const node of program.body) {
+    if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
+      const name = node.declaration.declarations[0]?.id?.name
+      if (name)
+        schemaDeclarations.set(name, schemasSource.slice(node.start, node.end))
+    }
+  }
+}
+
 function extractDeclarations(source: string, fileName: string): ExtractedDeclaration[] {
   const { program } = parseSync(fileName, source)
   const declarations: ExtractedDeclaration[] = []
@@ -66,6 +79,19 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
         code: source.slice(node.start, node.end),
       })
     }
+    // Handle re-exports like `export { XxxOptions } from './schemas'`
+    else if (node.type === 'ExportNamedDeclaration' && !node.declaration && node.specifiers?.length) {
+      for (const spec of node.specifiers) {
+        const name = spec.exported?.name || spec.local?.name
+        if (name && schemaDeclarations.has(name)) {
+          declarations.push({
+            name,
+            kind: 'const',
+            code: schemaDeclarations.get(name)!,
+          })
+        }
+      }
+    }
     else if (node.type === 'TSInterfaceDeclaration' || node.type === 'TSTypeAliasDeclaration') {
       const name = getName(node)
       if (!name || name.endsWith('Input'))
@@ -80,72 +106,6 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
   }
 
   return declarations
-}
-
-// --- Schema extraction ---
-
-function extractSchemas(source: string, fileName: string): { schemas: string[], localDeps: string[], valibotImports: Set<string> } {
-  const { program } = parseSync(fileName, source)
-  const schemas: string[] = []
-  const allLocalDeps: { name: string, code: string }[] = []
-  const valibotImports = new Set<string>()
-
-  for (const node of program.body) {
-    if (node.type === 'ImportDeclaration' && source.slice(node.source.start, node.source.end).includes('nuxt-scripts-validator')) {
-      for (const spec of node.specifiers || []) {
-        if (spec.type === 'ImportSpecifier')
-          valibotImports.add(spec.imported?.name || spec.local.name)
-      }
-    }
-  }
-
-  for (const node of program.body) {
-    if (node.type === 'ImportDeclaration' || node.type === 'TSModuleDeclaration')
-      continue
-
-    if (node.type === 'ExportNamedDeclaration' && node.declaration) {
-      const decl = node.declaration
-      if (decl.type === 'FunctionDeclaration')
-        continue
-      if (decl.type === 'TSTypeAliasDeclaration')
-        continue
-      if (decl.type === 'VariableDeclaration') {
-        schemas.push(source.slice(node.start, node.end))
-      }
-    }
-    else if (node.type === 'VariableDeclaration') {
-      const name = node.declarations[0]?.id?.name
-      if (name)
-        allLocalDeps.push({ name, code: source.slice(node.start, node.end) })
-    }
-  }
-
-  // Only include local deps actually referenced by schemas (with transitive resolution)
-  const referenced = new Set<string>()
-  const allCode = schemas.join('\n')
-  for (const dep of allLocalDeps) {
-    if (allCode.includes(dep.name))
-      referenced.add(dep.name)
-  }
-  // Resolve transitive deps
-  let changed = true
-  while (changed) {
-    changed = false
-    for (const dep of allLocalDeps) {
-      if (referenced.has(dep.name))
-        continue
-      for (const ref of referenced) {
-        const refDep = allLocalDeps.find(d => d.name === ref)
-        if (refDep && refDep.code.includes(dep.name)) {
-          referenced.add(dep.name)
-          changed = true
-        }
-      }
-    }
-  }
-
-  const localDeps = allLocalDeps.filter(d => referenced.has(d.name)).map(d => d.code)
-  return { schemas, localDeps, valibotImports }
 }
 
 // --- Component props extraction ---
@@ -211,7 +171,7 @@ function extractComponentProps(scriptSource: string, fileName: string): Extracte
 // --- Main ---
 
 // 1. Generate registry-types.json
-const registryFiles = readdirSync(registryDir).filter(f => f.endsWith('.ts'))
+const registryFiles = readdirSync(registryDir).filter(f => f.endsWith('.ts') && f !== 'schemas.ts')
 const types: Record<string, ExtractedDeclaration[]> = {}
 
 for (const file of registryFiles) {
@@ -309,36 +269,3 @@ for (const [componentName, props] of Object.entries(componentProps)) {
 
 writeFileSync(outputPath, JSON.stringify(types, null, 2))
 console.log(`Generated registry types for ${Object.keys(types).length} scripts (${Object.keys(componentProps).length} with component props)`)
-
-// 3. Generate registry-schemas.ts
-const allValibotImports = new Set<string>()
-const schemaBlocks: string[] = []
-
-for (const file of registryFiles) {
-  const source = readFileSync(join(registryDir, file), 'utf-8')
-  const { schemas, localDeps, valibotImports } = extractSchemas(source, file)
-  if (!schemas.length)
-    continue
-
-  for (const name of valibotImports)
-    allValibotImports.add(name)
-
-  const slug = file.replace('.ts', '')
-  const block = [`// ${slug}`]
-  if (localDeps.length)
-    block.push(...localDeps)
-  block.push(...schemas)
-  schemaBlocks.push(block.join('\n'))
-}
-
-allValibotImports.delete('InferInput')
-
-const schemasFile = [
-  `// Generated by scripts/generate-registry-types.ts — DO NOT EDIT`,
-  `import { ${[...allValibotImports].sort().join(', ')} } from 'valibot'`,
-  ``,
-  ...schemaBlocks.map(b => `${b}\n`),
-].join('\n')
-
-writeFileSync(schemasOutputPath, schemasFile)
-console.log(`Generated registry-schemas.ts with ${schemaBlocks.length} schema blocks`)

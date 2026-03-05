@@ -1,18 +1,9 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import { useHead } from 'nuxt/app'
 import { useRegistryScript } from '../utils'
+import { GoogleAdsenseOptions } from './schemas'
 
-export const GoogleAdsenseOptions = object({
-  /**
-   * The Google Adsense ID.
-   */
-  client: optional(string()),
-  /**
-   * Enable or disable Auto Ads.
-   */
-  autoAds: optional(boolean()),
-})
+export { GoogleAdsenseOptions }
 
 export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions, true, false, false>
 

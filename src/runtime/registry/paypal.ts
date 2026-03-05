@@ -1,8 +1,10 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { PayPalNamespace } from '@paypal/paypal-js'
-import { array, boolean, object, optional, string, union } from '#nuxt-scripts-validator'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
+import { PayPalOptions } from './schemas'
+
+export { PayPalOptions }
 
 export interface PayPalApi {
   paypal: PayPalNamespace
@@ -12,31 +14,6 @@ declare global {
   interface Window extends PayPalApi {
   }
 }
-
-export const PayPalOptions = object({
-  clientId: string(),
-  buyerCountry: optional(string()),
-  commit: optional(string()),
-  components: optional(union([string(), array(string())])),
-  currency: optional(string()),
-  debug: optional(union([string(), boolean()])),
-  disableFunding: optional(union([string(), array(string())])),
-  enableFunding: optional(union([string(), array(string())])),
-  integrationDate: optional(string()),
-  intent: optional(string()),
-  locale: optional(string()),
-  /**
-   * loadScript() supports an array for merchantId, even though
-   * merchant-id technically may not contain multiple values.
-   * For an array with a length of > 1 it automatically sets
-   * merchantId to "*" and moves the actual values to dataMerchantId
-   */
-  merchantId: optional(union([string(), array(string())])),
-  partnerAttributionId: optional(string()),
-  vault: optional(union([string(), boolean()])),
-  // own props
-  sandbox: optional(boolean()),
-})
 
 export type PayPalInput = RegistryScriptInput<typeof PayPalOptions>
 

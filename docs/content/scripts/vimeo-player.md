@@ -21,6 +21,9 @@ Nuxt Scripts provides a [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="
 ::script-stats
 ::
 
+::script-types
+::
+
 ## Types
 
 To use Video Player with full TypeScript support, you will need
@@ -210,9 +213,6 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-::script-types
-::
 
 ## Example
 

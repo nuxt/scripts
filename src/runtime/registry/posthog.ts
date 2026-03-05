@@ -1,19 +1,10 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { PostHog, PostHogConfig } from 'posthog-js'
-import { any, boolean, literal, object, optional, record, string, union } from '#nuxt-scripts-validator'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
+import { PostHogOptions } from './schemas'
 
-export const PostHogOptions = object({
-  apiKey: string(),
-  region: optional(union([literal('us'), literal('eu')])),
-  apiHost: optional(string()),
-  autocapture: optional(boolean()),
-  capturePageview: optional(union([boolean(), literal('history_change')])),
-  capturePageleave: optional(boolean()),
-  disableSessionRecording: optional(boolean()),
-  config: optional(record(string(), any())),
-})
+export { PostHogOptions }
 
 export type PostHogInput = RegistryScriptInput<typeof PostHogOptions, false, true>
 

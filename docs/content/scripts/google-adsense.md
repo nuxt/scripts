@@ -24,6 +24,9 @@ Nuxt Scripts provides:
 ::script-stats
 ::
 
+::script-types
+::
+
 ## Global Setup
 
 You can configure Google AdSense **globally** in your `nuxt.config.ts` so that the script is automatically loaded on all pages.
@@ -210,9 +213,6 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(
 ```
 
 See the [Registry Scripts Guide](/docs/guides/registry-scripts) for advanced usage.
-
-::script-types
-::
 
 ::callout{icon="i-heroicons-light-bulb" to="https://support.google.com/adsense" target="_blank"}
 Need more help? Check out the official **Google AdSense Guide**

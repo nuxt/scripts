@@ -20,6 +20,9 @@ It provides detailed insights into how your website is performing, how users are
 ::script-docs
 ::
 
+::script-types
+::
+
 By default, a `siteId` of `1` is used and page tracking is **automatically enabled** via the `watch` option.
 
 ```ts
@@ -97,6 +100,3 @@ const matomoAnalytics = useScriptMatomoAnalytics({
   },
 })
 ```
-
-::script-types
-::

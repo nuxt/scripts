@@ -14,6 +14,12 @@ links:
 
 Nuxt Scripts provides a [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component that fetches Instagram embed HTML server-side and proxies all assets through your server - no client-side API calls to Instagram.
 
+::script-stats
+::
+
+::script-types
+::
+
 ## [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"}
 
 The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component:
@@ -74,9 +80,6 @@ The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component:
 </template>
 ```
 
-::
-
-::script-types
 ::
 
 ### Slot Props

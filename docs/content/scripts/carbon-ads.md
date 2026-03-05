@@ -17,6 +17,9 @@ Nuxt Scripts provides a headless [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang
 ::script-stats
 ::
 
+::script-types
+::
+
 ## [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"}
 
 The [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"} component works differently to other Nuxt Scripts component and does not rely on [`useScript()`](/docs/api/use-script){lang="ts"}, instead it simply
@@ -170,6 +173,3 @@ use this example from nuxt.com.
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
 Note: The Carbon Ads script _does not_ extend the [`useScript()`](/docs/api/use-script){lang="ts"} composable. Accessing the script will return the `HTMLScriptElement`.
-
-::script-types
-::

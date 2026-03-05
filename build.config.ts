@@ -7,6 +7,9 @@ export default defineBuildConfig({
     './src/stats',
     './src/types-source',
   ],
+  alias: {
+    '#nuxt-scripts-validator': 'valibot',
+  },
   externals: [
     'nuxt',
     'nuxt/schema',
@@ -26,7 +29,7 @@ export default defineBuildConfig({
     'esbuild',
     'unimport',
     '#nuxt-scripts/types',
-    '#nuxt-scripts-validator',
+    '#nuxt-scripts/utils',
     'posthog-js',
     '#build/modules/nuxt-scripts-gtm',
     '#build/modules/nuxt-scripts-ga',
