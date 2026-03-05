@@ -119,5 +119,5 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
           return window.__posthogInitPromise
         },
     }
-  }, _options)
+  }, _options as RegistryScriptInput<typeof PostHogOptions>)
 }

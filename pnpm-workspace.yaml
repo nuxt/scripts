@@ -1,3 +1,6 @@
+shellEmulator: true
+
+trustPolicy: no-downgrade
 packages:
   - playground
   - client
@@ -50,7 +53,3 @@ catalog:
 
 ignoredBuiltDependencies:
   - esbuild
-
-shellEmulator: true
-
-trustPolicy: no-downgrade
