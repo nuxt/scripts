@@ -223,6 +223,7 @@ describe('third-party script proxy replacements', () => {
       expect(rewritten).not.toContain('returnself')
       expect(rewritten).toContain('return self.location.origin')
       // Verify it's still valid JS
+      // eslint-disable-next-line no-new-func
       expect(() => new Function(rewritten)).not.toThrow()
     })
 
