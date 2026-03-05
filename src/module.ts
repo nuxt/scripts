@@ -709,7 +709,7 @@ export default defineNuxtModule<ModuleOptions>({
         ? config.registry.gravatar as Record<string, any>
         : {}
       nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
-        { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge || 3600 } },
+        { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
         nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
       ) as any
       addServerHandler({

@@ -11,8 +11,12 @@ export default defineEventHandler(async (event) => {
   const referer = getHeader(event, 'referer')
   const host = getHeader(event, 'host')
   if (referer && host) {
-    const refererUrl = new URL(referer).host
-    if (refererUrl !== host) {
+    let refererHost: string | undefined
+    try {
+      refererHost = new URL(referer).host
+    }
+    catch {}
+    if (refererHost && refererHost !== host) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Invalid referer',
@@ -46,13 +50,14 @@ export default defineEventHandler(async (event) => {
   const defaultImg = query.d as string || 'mp'
   const rating = query.r as string || 'g'
 
-  const gravatarUrl = withQuery(`https://gravatar.com/avatar/${hash}`, {
+  const gravatarUrl = withQuery(`https://www.gravatar.com/avatar/${hash}`, {
     s: size,
     d: defaultImg,
     r: rating,
   })
 
   const response = await $fetch.raw(gravatarUrl, {
+    responseType: 'arrayBuffer',
     headers: {
       'User-Agent': 'Nuxt Scripts Gravatar Proxy',
     },
@@ -63,7 +68,7 @@ export default defineEventHandler(async (event) => {
     })
   })
 
-  const cacheMaxAge = proxyConfig?.cacheMaxAge || 3600
+  const cacheMaxAge = proxyConfig?.cacheMaxAge ?? 3600
   setHeader(event, 'Content-Type', response.headers.get('content-type') || 'image/jpeg')
   setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
   setHeader(event, 'Vary', 'Accept-Encoding')

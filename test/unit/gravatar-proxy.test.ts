@@ -41,7 +41,11 @@ describe('gravatar proxy config', () => {
       from: 'secure.gravatar.com',
       to: '/_custom/proxy/gravatar',
     })
-    expect(config?.routes).toHaveProperty('/_custom/proxy/gravatar/**')
-    expect(config?.routes).toHaveProperty('/_custom/proxy/gravatar-avatar/**')
+    expect(config?.routes?.['/_custom/proxy/gravatar/**']).toEqual({
+      proxy: 'https://secure.gravatar.com/**',
+    })
+    expect(config?.routes?.['/_custom/proxy/gravatar-avatar/**']).toEqual({
+      proxy: 'https://gravatar.com/avatar/**',
+    })
   })
 })

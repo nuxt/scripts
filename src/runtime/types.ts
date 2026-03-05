@@ -190,8 +190,8 @@ export interface ScriptRegistry {
   vercelAnalytics?: VercelAnalyticsInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
-  [key: `${string}-npm`]: NpmInput
   gravatar?: GravatarInput
+  [key: `${string}-npm`]: NpmInput
 }
 
 export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]

@@ -3,7 +3,7 @@ import { computed, onMounted, ref, useAttrs } from 'vue'
 import { useScriptGravatar } from '../registry/gravatar'
 
 const props = withDefaults(defineProps<{
-  /** Email address — hashed server-side, never exposed in client HTML */
+  /** Email address — sent to your server proxy for hashing, not sent to Gravatar */
   email?: string
   /** Pre-computed SHA256 hash of the email */
   hash?: string
