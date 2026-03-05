@@ -53,9 +53,16 @@ const props = withDefaults(defineProps<{
   id?: number | undefined
   url?: string | undefined
   ratio?: string
+  /**
+   * Object-fit for the placeholder image.
+   *
+   * @default 'contain'
+   */
+  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 }>(), {
   trigger: 'mousedown',
   ratio: '16/9',
+  placeholderObjectFit: 'contain',
 })
 
 const emits = defineEmits<TEmits>()
@@ -250,12 +257,12 @@ const rootAttrs = computed(() => {
     'role': 'application',
     'style': {
       '--vimeo-ratio': props.ratio,
-      maxWidth: '100%',
-      width: `auto`,
-      height: 'auto',
-      aspectRatio: props.ratio,
-      position: 'relative',
-      backgroundColor: 'black',
+      'maxWidth': '100%',
+      'width': `auto`,
+      'height': 'auto',
+      'aspectRatio': props.ratio,
+      'position': 'relative',
+      'backgroundColor': 'black',
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
@@ -271,7 +278,7 @@ const placeholderAttrs = computed(() => {
     style: {
       cursor: 'pointer',
       width: '100%',
-      objectFit: 'contain',
+      objectFit: props.placeholderObjectFit,
       height: '100%',
     },
   } satisfies ImgHTMLAttributes)
