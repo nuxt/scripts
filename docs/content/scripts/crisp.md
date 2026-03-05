@@ -28,7 +28,7 @@ Nuxt Scripts provides a [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composa
 
 The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component is headless Facade Component wrapping the [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.
 
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading crisp when specific elements events happen.
+It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading crisp when specific elements events happen.
 
 By default, it will load on the `click` DOM event.
 
@@ -44,22 +44,22 @@ const isLoaded = ref(false)
 </script>
 
 <template>
-<div class="not-prose">
-  <div class="flex items-center justify-center p-5">
-    <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp">
-      <template #awaitingLoad>
-        <div class="crisp-icon" />
-      </template>
-      <template #loading>
-        <ScriptLoadingIndicator color="black" />
-      </template>
-    </ScriptCrisp>
+  <div class="not-prose">
+    <div class="flex items-center justify-center p-5">
+      <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp">
+        <template #awaitingLoad>
+          <div class="crisp-icon" />
+        </template>
+        <template #loading>
+          <ScriptLoadingIndicator color="black" />
+        </template>
+      </ScriptCrisp>
+    </div>
+    <div class="text-center">
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load crisp script" />
+      <UAlert v-else color="green" variant="soft" title="Crisp is loaded" description="The Crisp Facade component is no longer being displayed." />
+    </div>
   </div>
-  <div class="text-center">
-    <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load crisp script" />
-    <UAlert v-else color="green" variant="soft" title="Crisp is loaded" description="The Crisp Facade component is no longer being displayed." />
-  </div>
-</div>
 </template>
 
 <style>
@@ -131,7 +131,7 @@ NUXT_PUBLIC_SCRIPTS_CRISP_ID=<YOUR_ID>
 
 ### Events
 
-The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component emits a single `ready` event when crisp is loaded.
+The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component emits a single `ready` event when Crisp loads.
 
 ```ts
 const emits = defineEmits<{
@@ -155,15 +155,15 @@ function onReady(crisp) {
 
 **awaitingLoad**
 
-The slot is used to display content while crisp is loading.
+This slot displays content while Crisp is loading.
 
 ```vue
 <template>
   <ScriptCrisp>
     <template #awaitingLoad>
-    <div style="width: 54px; height: 54px; border-radius: 54px; cursor: pointer; background-color: #1972F5;">
-      chat!
-    </div>
+      <div style="width: 54px; height: 54px; border-radius: 54px; cursor: pointer; background-color: #1972F5;">
+        chat!
+      </div>
     </template>
   </ScriptCrisp>
 </template>
@@ -171,7 +171,7 @@ The slot is used to display content while crisp is loading.
 
 **loading**
 
-The slot is used to display content while crisp is loading.
+This slot displays content while Crisp is loading.
 
 Tip: You should use the `ScriptLoadingIndicator` by default for accessibility and UX.
 

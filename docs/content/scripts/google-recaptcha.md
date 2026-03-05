@@ -67,14 +67,18 @@ async function onSubmit() {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <input v-model="name" placeholder="Name" required />
-    <input v-model="email" type="email" placeholder="Email" required />
+    <input v-model="name" placeholder="Name" required>
+    <input v-model="email" type="email" placeholder="Email" required>
     <textarea v-model="message" placeholder="Message" required />
     <button type="submit" :disabled="status === 'loading'">
       {{ status === 'loading' ? 'Sending...' : 'Submit' }}
     </button>
-    <p v-if="status === 'success'">Message sent!</p>
-    <p v-if="status === 'error'">Failed to send. Please try again.</p>
+    <p v-if="status === 'success'">
+      Message sent!
+    </p>
+    <p v-if="status === 'error'">
+      Failed to send. Please try again.
+    </p>
   </form>
 </template>
 ```

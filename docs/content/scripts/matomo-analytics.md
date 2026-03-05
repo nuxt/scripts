@@ -23,7 +23,7 @@ It provides detailed insights into how your website is performing, how users are
 ::script-types
 ::
 
-By default, a `siteId` of `1` is used and page tracking is **automatically enabled** via the `watch` option.
+By default, Nuxt uses a `siteId` of `1` and automatically enables page tracking via the `watch` option.
 
 ```ts
 const matomoAnalytics = useScriptMatomoAnalytics({
@@ -50,7 +50,7 @@ Please see the [Config Schema](#config-schema) for all available options.
 
 ## Custom Page Tracking
 
-By default, all pages are tracked automatically, to disable the automatic tracking you can provide `watch: false`.
+By default, Nuxt tracks all pages automatically; provide `watch: false` to disable automatic tracking.
 
 ```ts
 import { useScriptEventPage } from '#nuxt-scripts'

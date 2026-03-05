@@ -49,6 +49,37 @@ The v6 types are available from `@paypal/paypal-js/sdk-v6`.
 :pay-pal-demo{label="Output"}
 
 ```vue [Input]
+<script setup lang="ts">
+import type { Components, SdkInstance } from '@paypal/paypal-js/sdk-v6'
+
+const clientId = 'YOUR_CLIENT_ID'
+
+function onSdkReady(instance: SdkInstance<Components[]>) {
+  console.log('PayPal SDK v6 ready', instance)
+}
+
+async function startPayment(instance?: SdkInstance<Components[]>) {
+  if (!instance)
+    return
+
+  const eligibility = await instance.findEligibleMethods()
+  if (eligibility.isEligible('paypal')) {
+    const session = instance.createPayPalOneTimePaymentSession({
+      onApprove: async (data) => {
+        console.log('Payment approved:', data.orderId)
+      },
+      onError: (error) => {
+        console.error('Payment error:', error)
+      },
+    })
+    await session.start(
+      { presentationMode: 'auto' },
+      fetch('/api/create-order').then(r => r.json()),
+    )
+  }
+}
+</script>
+
 <template>
   <div>
     <ScriptPayPalButtons
@@ -65,37 +96,6 @@ The v6 types are available from `@paypal/paypal-js/sdk-v6`.
     </ScriptPayPalButtons>
   </div>
 </template>
-
-<script setup lang="ts">
-  import type { SdkInstance, Components } from '@paypal/paypal-js/sdk-v6'
-
-  const clientId = 'YOUR_CLIENT_ID'
-
-  function onSdkReady(instance: SdkInstance<Components[]>) {
-    console.log('PayPal SDK v6 ready', instance)
-  }
-
-  async function startPayment(instance?: SdkInstance<Components[]>) {
-    if (!instance)
-      return
-
-    const eligibility = await instance.findEligibleMethods()
-    if (eligibility.isEligible('paypal')) {
-      const session = instance.createPayPalOneTimePaymentSession({
-        onApprove: async (data) => {
-          console.log('Payment approved:', data.orderId)
-        },
-        onError: (error) => {
-          console.error('Payment error:', error)
-        },
-      })
-      await session.start(
-        { presentationMode: 'auto' },
-        fetch('/api/create-order').then(r => r.json()),
-      )
-    }
-  }
-</script>
 ```
 
 ::

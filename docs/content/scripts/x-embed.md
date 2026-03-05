@@ -39,19 +39,23 @@ The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless co
   <ScriptXEmbed tweet-id="1754336034228171055">
     <template #default="{ userName, userHandle, text, datetime, likesFormatted }">
       <div class="border rounded-lg p-4 max-w-md">
-        <p class="font-bold">{{ userName }} (@{{ userHandle }})</p>
+        <p class="font-bold">
+          {{ userName }} (@{{ userHandle }})
+        </p>
         <p>{{ text }}</p>
-        <p class="text-gray-500 text-sm">{{ datetime }} - {{ likesFormatted }} likes</p>
+        <p class="text-gray-500 text-sm">
+          {{ datetime }} - {{ likesFormatted }} likes
+        </p>
       </div>
     </template>
   </ScriptXEmbed>
 </template>
 ```
 
-```vue [Styled Tweet Card]
+<template [Styled Tweet Card]>
 <template>
   <ScriptXEmbed tweet-id="1754336034228171055">
-    <template #default="{ userName, userHandle, userAvatar, text, datetime, likesFormatted, repliesFormatted, tweetUrl, photos, isVerified }">
+    <template #default="{ userName, userHandle, userAvatar, text, datetime, likesFormatted, repliesFormatted, photos, isVerified }">
       <div class="max-w-lg bg-white dark:bg-gray-800 rounded-xl border p-4">
         <!-- Header -->
         <div class="flex items-start gap-3 mb-3">
@@ -59,14 +63,18 @@ The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless co
           <div>
             <span class="font-bold">{{ userName }}</span>
             <span v-if="isVerified" class="text-blue-500 ml-1">✓</span>
-            <p class="text-gray-500">@{{ userHandle }}</p>
+            <p class="text-gray-500">
+              @{{ userHandle }}
+            </p>
           </div>
         </div>
         <!-- Content -->
-        <p class="mb-3 whitespace-pre-wrap">{{ text }}</p>
+        <p class="mb-3 whitespace-pre-wrap">
+          {{ text }}
+        </p>
         <!-- Photos -->
         <div v-if="photos?.length" class="mb-3 rounded-xl overflow-hidden">
-          <img v-for="photo in photos" :key="photo.url" :src="photo.proxiedUrl" class="w-full">
+          <img v-for="photo in photos" :key="photo.URL" :src="photo.proxiedURL" class="w-full">
         </div>
         <!-- Footer -->
         <div class="flex items-center gap-4 text-gray-500 text-sm">
@@ -119,26 +127,26 @@ interface SlotProps {
   repliesFormatted: string // "234"
   // Media
   photos?: Array<{
-    url: string
-    proxiedUrl: string
+    URL: string
+    proxiedURL: string
     width: number
     height: number
   }>
   video?: {
     poster: string
     posterProxied: string
-    variants: Array<{ type: string; src: string }>
+    variants: Array<{ type: string, src: string }>
   }
   // Links
-  tweetUrl: string
-  userUrl: string
+  tweetURL: string
+  userURL: string
   // Quote tweet
   quotedTweet?: XEmbedTweetData
   // Reply context
   isReply: boolean
   replyToUser?: string
   // Helpers
-  proxyImage: (url: string) => string
+  proxyImage: (URL: string) => string
 }
 ```
 

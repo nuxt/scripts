@@ -19,7 +19,7 @@ links:
 Nuxt Scripts provides:
 
 - [`useScriptGoogleAdsense()`](/scripts/google-adsense){lang="ts"}: A composable to manage Google AdSense dynamically.
-- `<ScriptGoogleAdsense>`: A headless component to embed ads directly in your Nuxt app.
+- `<ScriptGoogleAdsense>`{lang="html"}: A headless component to embed ads directly in your Nuxt app.
 
 ::script-stats
 ::
@@ -29,29 +29,29 @@ Nuxt Scripts provides:
 
 ## Global Setup
 
-You can configure Google AdSense **globally** in your `nuxt.config.ts` so that the script is automatically loaded on all pages.
+You can configure Google AdSense **globally** in your `nuxt.config.ts` so that Nuxt automatically loads the script on all pages.
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({
   scripts: {
     registry: {
       googleAdsense: {
-        client: "ca-pub-<your-id>", // Your Google AdSense Publisher ID
+        client: 'ca-pub-<your-id>', // Your Google AdSense Publisher ID
         autoAds: true, // Enable Auto Ads
       },
     },
   },
-});
+})
 ```
 
-## Where to Find `<your-id>` (Publisher ID)
+## Where to Find `<your-id>`{lang="html"} (Publisher ID)
 
-Your **Google AdSense Publisher ID** (also known as `ca-pub-XXXXXXX`) can be found in your **Google AdSense Account**:
+Find your **Google AdSense Publisher ID** (also known as `ca-pub-XXXXXXX`) in your **Google AdSense Account**:
 
 1. Log in to your **Google AdSense** account.
 2. Navigate to **Account > Settings** (click on your profile icon > "Account information").
 3. Locate the **Publisher ID** under **Account Information**.
-4. Replace `<your-id>` in the config above with your actual ID.
+4. Replace `<your-id>`{lang="html"} in the config above with your actual ID.
 
 ::callout{icon="i-heroicons-light-bulb" to="https://adsense.google.com/start/" target="_blank"}
 You can also manage **Auto Ads settings** from your **Google AdSense Dashboard** to control *ad types, placements, and revenue optimization*.
@@ -61,7 +61,7 @@ You can also manage **Auto Ads settings** from your **Google AdSense Dashboard**
 
 ### Automatic Meta Tag Insertion
 
-If a `client` is provided, a **meta tag** will be inserted on the page **automatically** for Google to verify your site ownership.
+If you provide a `client`, Nuxt automatically inserts a **meta tag** on the page for Google to verify your site ownership.
 
 ::tabs
   ::div
@@ -72,13 +72,13 @@ If a `client` is provided, a **meta tag** will be inserted on the page **automat
   ```ts [nuxt.config.ts]
   export default defineNuxtConfig({
     scripts: {
-        registry: {
-          googleAdsense: {
-            client: "ca-pub-<your-id>", // AdSense Publisher ID
-          },
+      registry: {
+        googleAdsense: {
+          client: 'ca-pub-<your-id>', // AdSense Publisher ID
         },
+      },
     },
-  });
+  })
   ```
   ::
   ::div
@@ -103,7 +103,7 @@ Google recommends adding an `ads.txt` file for **ad revenue eligibility**.
    ```plaintext
    google.com, pub-<your-id>, DIRECT, f08c47fec0942fa0
    ```
-3. Replace `<your-id>` with your **AdSense Publisher ID**.
+3. Replace `<your-id>`{lang="html"} with your **AdSense Publisher ID**.
 
 ::callout{icon="i-heroicons-light-bulb"}
 **Why use `ads.txt`?** It helps **prevent ad fraud** and ensures that **only your site** can display your ads.
@@ -124,12 +124,12 @@ Auto Ads allow Google to **automatically** place ads for **better optimization**
     scripts: {
       registry: {
         googleAdsense: {
-          client: "ca-pub-<your-id>", // AdSense Publisher ID
+          client: 'ca-pub-<your-id>', // AdSense Publisher ID
           autoAds: true, // Enable Auto Ads
         },
       },
     },
-  });
+  })
   ```
   ::
   ::div

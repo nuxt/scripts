@@ -37,7 +37,7 @@ pnpm add -D @types/vimeo__player
 
 The [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} component is a wrapper around the [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="ts"} composable. It provides a simple way to embed Vimeo videos in your Nuxt app.
 
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Vimeo Player when the specific elements events happen.
+It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Vimeo Player when the specific elements events happen.
 
 By default, it will load on the `mousedown` event.
 
@@ -141,11 +141,11 @@ const emits = defineEmits<{
 
 ### Slots
 
-As the component is provided headless, there are a number of slots for you to customize the player however you like before it's loaded in.
+As Nuxt provides the component headless, you can use slots to customize the player however you like before it loads.
 
 **default**
 
-The default slot is used to display content that will always be visible.
+The default slot displays content that will always be visible.
 
 ```vue
 <template>
@@ -159,7 +159,7 @@ The default slot is used to display content that will always be visible.
 
 **awaitingLoad**
 
-The slot is used to display content while the video is loading.
+This slot displays content while the video is loading.
 
 ```vue
 <template>
@@ -175,7 +175,7 @@ The slot is used to display content while the video is loading.
 
 **loading**
 
-The slot is used to display content while the video is loading.
+This slot displays content while the video is loading.
 
 ```vue
 <template>
@@ -191,7 +191,7 @@ The slot is used to display content while the video is loading.
 
 **placeholder**
 
-The slot is used to display a placeholder image before the video is loaded. By default, this will show the
+This slot displays a placeholder image before the video loads. By default, this will show the
 vimeo thumbnail for the video. You can display it however you like.
 
 ```vue

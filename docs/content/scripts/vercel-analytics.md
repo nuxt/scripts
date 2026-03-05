@@ -10,7 +10,7 @@ links:
 
 ---
 
-[Vercel Analytics](https://vercel.com/docs/analytics) provides lightweight, privacy-friendly web analytics for your Nuxt app. It tracks page views and custom events with zero configuration when deployed on Vercel.
+[Vercel Analytics](https://vercel.com/docs/analytics) provides lightweight, privacy-friendly web analytics for your Nuxt app. It tracks page views and custom events with zero configuration when deployed on [Vercel](https://vercel.com).
 
 ::script-stats
 ::
@@ -30,7 +30,7 @@ useScriptVercelAnalytics({
 
 ### First-Party Mode
 
-When `scripts.firstParty` is enabled, the analytics script is bundled locally and data collection requests are proxied through your server. This prevents ad blockers from blocking analytics and removes sensitive data from third-party requests.
+When you enable `scripts.firstParty`, Nuxt bundles the analytics script locally and proxies data collection requests through your server. This prevents ad blockers from blocking analytics and removes sensitive data from third-party requests.
 
 ```ts
 export default defineNuxtConfig({
@@ -112,7 +112,8 @@ Use `beforeSend` to filter or modify events before they reach Vercel. Return `nu
 const { proxy } = useScriptVercelAnalytics({
   beforeSend(event) {
     // Ignore admin pages
-    if (event.url.includes('/admin')) return null
+    if (event.url.includes('/admin'))
+      return null
     return event
   },
 })

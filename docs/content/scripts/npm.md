@@ -18,12 +18,11 @@ links:
 
 ## Background
 
-When working with NPM files, you'd typically include them as a node_module dependency in the `package.json` file. However,
+When working with [npm](https://npmjs.com) files, you'd typically include them as a node_module dependency in the `package.json` file. However,
 optimizing the script loading of these scripts can be difficult, requiring a dynamic import of the module from a separate chunk and
 loading it only when needed. It also slows down your build as the module needs to be transpiled.
 
-The [`useScriptNpm()`](/scripts/npm){lang="ts"} registry script abstracts this process, allowing you to load scripts that have been exported as immediately invokable functions,
-with a single line of code .
+The [`useScriptNpm()`](/scripts/npm){lang="ts"} registry script abstracts this process, allowing you to load scripts that export immediately invokable functions with a single line of code.
 
 In many instances it will still make more sense to include the script as a dependency in the `package.json` file, but for scripts that are not used often or
 are not critical to the application, this can be a great alternative.
@@ -57,7 +56,7 @@ useHead({
 
 ## [`useScriptNpm()`](/scripts/npm){lang="ts"}
 
-The [`useScriptNpm()`](/scripts/npm){lang="ts"} composable lets you have fine-grain control over when and how NPM scripts are loaded on your site.
+The [`useScriptNpm()`](/scripts/npm){lang="ts"} composable lets you have fine-grain control over when and how npm scripts load on your site.
 
 ```ts
 function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput) {}

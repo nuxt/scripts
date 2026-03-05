@@ -10,7 +10,6 @@ export default antfu(
       'test/fixtures/**',
       'playground/**',
       'client/**',
-      'docs/**',
       'examples/**',
     ],
     rules: {
@@ -49,9 +48,9 @@ export default antfu(
     },
   },
   {
-    files: ['pnpm-workspace.yaml'],
+    files: ['docs/**'],
     rules: {
-      'pnpm/yaml-no-unused-catalog-item': 'off',
+      'no-new': 'off',
     },
   },
 )

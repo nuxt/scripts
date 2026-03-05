@@ -29,7 +29,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 Loading third-party IIFE scripts using `useHead` composable is easy. However,
 things start getting more complicated quickly around SSR, lazy loading, and type safety.
 
-Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts more performant,
+Nuxt Scripts solves these issues and more with the goal of making third-party scripts more performant,
 have better privacy and be better DX overall.
 
 ## 🚀 Quick Start
@@ -46,11 +46,11 @@ npx nuxi@latest module add scripts
 > npx skilld add @nuxt/scripts
 > ```
 
-That's it! The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
+That's it. The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
 
 ## 📦 Examples
 
-Explore live examples on StackBlitz:
+Explore live examples on [StackBlitz](https://stackblitz.com):
 
 - [Cookie Consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) - Google Consent Mode v2 with GTM
 - [Granular Consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) - Per-category consent management

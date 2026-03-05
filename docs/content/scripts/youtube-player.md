@@ -26,7 +26,7 @@ Nuxt Scripts provides a [`useScriptYouTubePlayer()`](/scripts/youtube-player){la
 
 ## Types
 
-To use YouTube with full TypeScript support, you will need
+To use [YouTube](https://youtube.com) with full TypeScript support, you will need
 to install the `@types/youtube` dependency.
 
 ```bash
@@ -37,7 +37,7 @@ pnpm add -D @types/youtube
 
 The [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"} component is a wrapper around the [`useScriptYouTubePlayer()`](/scripts/youtube-player){lang="ts"} composable. It provides a simple way to embed YouTube videos in your Nuxt app.
 
-It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the YouTube Player when the specific elements events happen.
+It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the YouTube Player when the specific elements events happen.
 
 By default, it will load on the `mousedown` event.
 
@@ -85,7 +85,7 @@ function stateChange(event) {
 
 ### Privacy
 
-The `<ScriptYouTubePlayer>` component is privacy-friendly by default and sets the video host to `https://www.youtube-nocookie.com`. 
+The `<ScriptYouTubePlayer>`{lang="html"} component is privacy-friendly by default and sets the video host to `https://www.youtube-nocookie.com`.
 
 To modify this behavior, you can set the `host` prop to `https://www.youtube.com`.
 
@@ -104,7 +104,7 @@ to use a `jpg` you can pass the `webp` prop as `false`.
 <ScriptYouTubePlayer video-id="d_IFKP1Ofq0" thumbnail-size="maxresdefault" />
 ```
 
-If you need fine control over the placeholder you can set `placeholderAttrs` prop or completely override it using
+If you need fine control over the placeholder you can set `placeholderAttrs` prop or override it using
 the `#placeholder` slot.
 
 #### Eager Loading
@@ -149,11 +149,11 @@ const emits = defineEmits<{
 
 ### Slots
 
-As the component is provided headless, there are a number of slots for you to customize the player however you like before it's loaded in.
+As Nuxt provides the component headless, you can use slots to customize the player however you like before it loads.
 
 **default**
 
-The default slot is used to display content that will always be visible.
+The default slot displays content that will always be visible.
 
 ```vue
 <template>
@@ -167,7 +167,7 @@ The default slot is used to display content that will always be visible.
 
 **awaitingLoad**
 
-The slot is used to display content while the video is loading.
+This slot displays content while the video is loading.
 
 ```vue
 <template>
@@ -183,7 +183,7 @@ The slot is used to display content while the video is loading.
 
 **loading**
 
-The slot is used to display content while the video is loading.
+This slot displays content while the video is loading.
 
 ```vue
 <template>
@@ -199,8 +199,8 @@ The slot is used to display content while the video is loading.
 
 **placeholder**
 
-The slot is used to display a placeholder image before the video is loaded. By default, this will show the
-youtube thumbnail for the video. You can display it however you like.
+This slot displays a placeholder image before the video loads. By default, this will show the
+YouTube thumbnail for the video. You can display it however you like.
 
 ```vue
 <template>

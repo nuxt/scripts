@@ -27,7 +27,7 @@ implement within your Nuxt app. If you're using GTM for Google Analytics, you ca
 ### Guide: Sending Page Events
 
 If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [`useScriptEventPage()`](/docs/api/use-script-event-page){lang="ts"} composable.
-This composable will trigger the provided function on route change after the page title has been updated.
+This composable triggers the provided function on route change after Nuxt updates the page title.
 
 ```ts
 const { proxy } = useScriptGoogleTagManager({
@@ -108,7 +108,7 @@ If you're calling [`useScriptGoogleTagManager()`](/scripts/google-tag-manager){l
 ::
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
-Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) or [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) on StackBlitz.
+Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) or [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) on [StackBlitz](https://stackblitz.com).
 ::
 
 #### Consent Mode v2 Signals
@@ -122,7 +122,7 @@ Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts
 
 #### Updating Consent
 
-When the user accepts, call `gtag('consent', 'update', ...)`:
+When the user accepts, call `gtag('consent', 'update', ...)`{lang="ts"}:
 
 ```ts
 function acceptCookies() {
@@ -135,7 +135,7 @@ function acceptCookies() {
 }
 ```
 
-To block GTM entirely until consent, combine with [`useScriptTriggerConsent()`](/docs/guides/consent){lang="ts"}.
+To block GTM until consent, combine with [`useScriptTriggerConsent()`](/docs/guides/consent){lang="ts"}.
 
 ```vue
 <script setup lang="ts">
@@ -145,11 +145,11 @@ const { proxy } = useScriptGoogleTagManager({
   onBeforeGtmStart: (gtag) => {
     // set default consent state to denied
     gtag('consent', 'default', {
-      'ad_user_data': 'denied',
-      'ad_personalization': 'denied',
-      'ad_storage': 'denied',
-      'analytics_storage': 'denied',
-      'wait_for_update': 500,
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      ad_storage: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500,
     })
 
     // if consent was already given, update gtag accordingly

@@ -36,7 +36,7 @@ Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`](/
 
 ### One Tap Sign-In
 
-The One Tap prompt provides a streamlined sign-in experience:
+The One Tap prompt provides a simplified sign-in experience:
 
 ```vue
 <script setup lang="ts">
@@ -59,7 +59,7 @@ onMounted(() => {
       ux_mode: 'popup',
       use_fedcm_for_prompt: true // Use Privacy Sandbox FedCM API
     })
-    
+
     // Show One Tap
     accounts.id.prompt()
   })
@@ -85,7 +85,7 @@ onMounted(() => {
       client_id: 'YOUR_CLIENT_ID',
       callback: handleCredentialResponse
     })
-    
+
     const buttonDiv = document.getElementById('g-signin-button')
     if (buttonDiv) {
       accounts.id.renderButton(buttonDiv, {
@@ -118,15 +118,16 @@ onLoaded(({ accounts }) => {
     if (notification.isDisplayMoment()) {
       if (notification.isDisplayed()) {
         console.log('One Tap displayed')
-      } else {
+      }
+      else {
         console.log('Not displayed:', notification.getNotDisplayedReason())
       }
     }
-    
+
     if (notification.isSkippedMoment()) {
       console.log('Skipped:', notification.getSkippedReason())
     }
-    
+
     if (notification.isDismissedMoment()) {
       console.log('Dismissed:', notification.getDismissedReason())
     }
@@ -141,17 +142,17 @@ Always verify the credential token on your server:
 ```ts [server/api/auth/google.post.ts]
 export default defineEventHandler(async (event) => {
   const { credential } = await readBody(event)
-  
+
   // Verify the token with Google
   const response = await $fetch(`https://oauth2.googleapis.com/tokeninfo`, {
     params: { id_token: credential }
   })
-  
+
   // Verify the client ID matches
   if (response.aud !== 'YOUR_CLIENT_ID') {
     throw createError({ statusCode: 401, message: 'Invalid token' })
   }
-  
+
   // Create session with user info
   const user = {
     email: response.email,
@@ -159,7 +160,7 @@ export default defineEventHandler(async (event) => {
     picture: response.picture,
     sub: response.sub
   }
-  
+
   return { user }
 })
 ```
@@ -205,7 +206,8 @@ function revokeAccess(userId: string) {
     accounts.id.revoke(userId, (response) => {
       if (response.successful) {
         console.log('Access revoked')
-      } else {
+      }
+      else {
         console.error('Revocation failed:', response.error)
       }
     })
@@ -217,7 +219,7 @@ function revokeAccess(userId: string) {
 
 ### Logout Handling
 
-Always call `disableAutoSelect()` when the user signs out to prevent automatic re-authentication:
+Always call `disableAutoSelect()`{lang="ts"} when the user signs out to prevent automatic re-authentication:
 
 ```ts
 function signOut() {
@@ -255,7 +257,7 @@ To test Google Sign-In locally:
 4. Save and copy your Client ID
 
 ::note
-Google requires `http://localhost` (not `127.0.0.1`) for local development. No redirect URI is needed when using popup mode.
+Google requires `http://localhost` (not `127.0.0.1`) for local development. You don't need a redirect URI when using popup mode.
 ::
 
 Then configure your environment:

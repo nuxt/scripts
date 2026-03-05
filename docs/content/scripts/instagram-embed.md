@@ -72,7 +72,7 @@ The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component:
         <a :href="postUrl" target="_blank" class="text-sm text-gray-500 mb-2 block">
           View on Instagram ({{ shortcode }})
         </a>
-        <!-- eslint-disable-next-line vue/no-v-html -->
+
         <div v-html="html" />
       </div>
     </template>
@@ -88,9 +88,9 @@ The default slot receives:
 
 ```ts
 interface SlotProps {
-  html: string      // The processed embed HTML
+  html: string // The processed embed HTML
   shortcode: string // The post shortcode (e.g., "C3Sk6d2MTjI")
-  postUrl: string   // The original post URL
+  postUrl: string // The original post URL
 }
 ```
 
@@ -110,10 +110,10 @@ interface SlotProps {
 
 ## How It Works
 
-1. **Server-side fetch**: The Instagram embed HTML is fetched from `{postUrl}/embed/`
+1. **Server-side fetch**: Nuxt fetches the Instagram embed HTML from `{postUrl}/embed/`
 2. **Asset proxying**: All images from `scontent.cdninstagram.com` and assets from `static.cdninstagram.com` are rewritten to proxy through your server
-3. **Script removal**: Instagram's `embed.js` is removed (not needed for static rendering)
-4. **Caching**: Responses are cached for 10 minutes at the server level
+3. **Script removal**: Nuxt removes Instagram's `embed.js` (not needed for static rendering)
+4. **Caching**: Nuxt caches responses for 10 minutes at the server level
 
 This approach is inspired by [Cloudflare Zaraz's embed implementation](https://blog.cloudflare.com/zaraz-supports-server-side-rendering-of-embeds/).
 

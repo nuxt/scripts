@@ -43,7 +43,7 @@ useScriptRybbitAnalytics({
 - `trackOutbound`: Set to `false` to disable automatic tracking of outbound link clicks. Default: `true`
 - `trackErrors`: Set to `true` to enable automatic tracking of JavaScript errors and unhandled promise rejections. Only tracks errors from the same origin to avoid noise from third-party scripts. Default: `false`
 - `sessionReplay`: Set to `true` to enable session replay recording. Captures user interactions, mouse movements, and DOM changes for debugging and user experience analysis. Default: `false`
-- `webVitals`: Set to `true` to enable Web Vitals performance metrics collection (LCP, CLS, INP, FCP, TTFB). Web Vitals are disabled by default to reduce script size and network requests. Default: `false`
+- `webVitals`: Set to `true` to enable Web Vitals performance metrics collection (LCP, CLS, INP, FCP, TTFB). Nuxt disables Web Vitals by default to reduce script size and network requests. Default: `false`
 - `skipPatterns`: Array of URL path patterns to ignore
 - `maskPatterns`: Array of URL path patterns to mask for privacy
 - `debounce`: Delay in milliseconds before tracking a pageview after URL changes

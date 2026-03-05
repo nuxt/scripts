@@ -20,8 +20,7 @@ links:
 
 ### Self-hosted Umami
 
-If you are using a self-hosted version of Umami, you will need to provide an explicit src for the script so that
-the API events are sent to the correct endpoint.
+If you use a self-hosted version of Umami, provide an explicit src for the script so that the browser sends API events to the correct endpoint.
 
 ```ts
 useScriptUmamiAnalytics({

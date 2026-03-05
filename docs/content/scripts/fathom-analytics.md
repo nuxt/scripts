@@ -10,7 +10,7 @@ links:
 
 ---
 
-[Fathom Analytics](https://usefathom.com/) is a great privacy analytics solution for your Nuxt app. It doesn't gather personal data from your visitors, yet provides detailed insights into how your site is used.
+[Fathom Analytics](https://usefathom.com/) is a great privacy analytics solution for your Nuxt app. It doesn't gather personal data from your visitors, yet provides detailed insights into how visitors use your site.
 
 ::script-stats
 ::

@@ -20,8 +20,7 @@ links:
 
 ### Self-hosted Plausible
 
-If you are using a self-hosted version of Plausible, you will need to provide an explicit src for the script so that
-the API events are sent to the correct endpoint.
+If you use a self-hosted version of Plausible, provide an explicit src for the script so that the browser sends API events to the correct endpoint.
 
 ```ts
 useScriptPlausibleAnalytics({
@@ -34,7 +33,7 @@ useScriptPlausibleAnalytics({
 ::script-types
 ::
 
-**Note:** The `scriptId` is found in your Plausible dashboard under **Site Installation** in your site settings.
+**Note:** Find the `scriptId` in your Plausible dashboard under **Site Installation** in your site settings.
 
 **Extracting your Script ID:**
 

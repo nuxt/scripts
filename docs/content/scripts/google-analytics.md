@@ -83,8 +83,8 @@ proxy.gtag('set', 'user_properties', {
 proxy.gtag('event', 'purchase', {
   transaction_id: 'T12345',
   value: 99.99,
-  payment_method: 'credit_card',  // custom dimension
-  discount_code: 'SAVE10'         // custom dimension
+  payment_method: 'credit_card', // custom dimension
+  discount_code: 'SAVE10' // custom dimension
 })
 
 // Default params for all future events
@@ -120,7 +120,7 @@ proxy.gtag('event', 'cta_click', { button_id: 'hero-signup' })
 
 // Need return value? Wait for load
 onLoaded(({ gtag }) => {
-  gtag('get', 'G-XXXXXXXX', 'client_id', (id) => console.log(id))
+  gtag('get', 'G-XXXXXXXX', 'client_id', id => console.log(id))
 })
 ```
 
