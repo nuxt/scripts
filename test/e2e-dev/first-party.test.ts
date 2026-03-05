@@ -1103,7 +1103,11 @@ describe('first-party privacy stripping', () => {
           }
         }
         if (status >= 400 && serverOrigin && reqUrl.startsWith(serverOrigin)) {
-          failedLocalRequests.push({ url: new URL(reqUrl).pathname, status })
+          const pathname = new URL(reqUrl).pathname
+          // Upstream collection endpoints return 4xx with test/fake tokens — expected
+          if (pathname.includes('/cdn-cgi/rum'))
+            return
+          failedLocalRequests.push({ url: pathname, status })
         }
       })
 

@@ -83,7 +83,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   }
 
   const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
-  const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
+  const scriptOptions = Object.assign({}, options.scriptOptions || {}, userOptions?.scriptOptions || {})
   if (import.meta.dev) {
     // Capture where the component was loaded from
     const error = new Error('Stack trace for component location')
