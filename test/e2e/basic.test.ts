@@ -402,9 +402,8 @@ describe('third-party-capital', () => {
         endpoint: script.getAttribute('data-endpoint'),
       }
     })
-    // Production build uses production script
-    expect(scriptAttrs?.src).toContain('script.js')
-    expect(scriptAttrs?.src).not.toContain('script.debug.js')
+    // Production build proxies script through /_scripts/
+    expect(scriptAttrs?.src).toContain('/_scripts/')
     expect(scriptAttrs?.sdkn).toBe('@nuxt/scripts')
     expect(scriptAttrs?.endpoint).toBe('/custom/collect')
 
