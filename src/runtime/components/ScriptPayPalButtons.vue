@@ -71,6 +71,7 @@ const emit = defineEmits<{
 const el = ref<HTMLDivElement | null>(null)
 const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
+const failed = ref(false)
 const sdkInstance = shallowRef<SdkInstance<Components[]>>()
 
 const { onLoaded, status } = useScriptPayPal({
@@ -99,6 +100,8 @@ onMounted(() => {
       emit('ready', sdkInstance.value)
     }
     catch (err) {
+      sdkInstance.value = undefined
+      failed.value = true
       emit('error', err)
     }
   })
@@ -137,13 +140,13 @@ const rootAttrs = computed(() => {
     <div v-show="ready" ref="el">
       <slot name="default" :sdk-instance="sdkInstance" />
     </div>
-    <slot v-if="!ready" name="placeholder">
+    <slot v-if="!ready && !failed" name="placeholder">
       placeholder
     </slot>
-    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && !ready && !failed" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'error'" name="error" />
+    <slot v-else-if="status === 'error' || failed" name="error" />
   </div>
 </template>

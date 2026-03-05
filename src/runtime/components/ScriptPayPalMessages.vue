@@ -72,12 +72,11 @@ const emit = defineEmits<{
 const el = ref<HTMLDivElement | null>(null)
 const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
+const failed = ref(false)
 const messagesSession = shallowRef<PayPalMessagesSession>()
 
 const { onLoaded, status } = useScriptPayPal({
   ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
-  ...(props.merchantId && { merchantId: props.merchantId }),
-  ...(props.partnerAttributionId && { partnerAttributionId: props.partnerAttributionId }),
   ...props.paypalScriptOptions,
 })
 
@@ -105,6 +104,8 @@ onMounted(() => {
       emit('ready', messagesSession.value)
     }
     catch (err) {
+      messagesSession.value = undefined
+      failed.value = true
       emit('error', err)
     }
   })
@@ -142,14 +143,14 @@ const rootAttrs = computed(() => {
     <div v-show="ready" ref="el">
       <slot name="default" :messages-session="messagesSession" />
     </div>
-    <slot v-if="!ready" name="placeholder">
+    <slot v-if="!ready && !failed" name="placeholder">
       placeholder
     </slot>
-    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && !ready && !failed" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'error'" name="error" />
+    <slot v-else-if="status === 'error' || failed" name="error" />
     <slot />
   </div>
 </template>

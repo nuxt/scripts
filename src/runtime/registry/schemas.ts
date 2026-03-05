@@ -584,22 +584,32 @@ export const NpmOptions = object({
   provider: optional(union([literal('jsdelivr'), literal('cdnjs'), literal('unpkg')])),
 })
 
-export const PayPalOptions = object({
-  /**
-   * Your PayPal client ID. Required if `clientToken` is not provided.
-   * @see https://developer.paypal.com/sdk/js/reference/
-   */
-  clientId: optional(string()),
-  /**
-   * A server-generated client token for authentication. Required if `clientId` is not provided.
-   * @see https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
-   */
-  clientToken: optional(string()),
-  /**
-   * Use the PayPal sandbox environment. Defaults to `true` in development.
-   */
-  sandbox: optional(boolean()),
-})
+export const PayPalOptions = union([
+  object({
+    /**
+     * Your PayPal client ID.
+     * @see https://developer.paypal.com/sdk/js/reference/
+     */
+    clientId: string(),
+    clientToken: optional(string()),
+    /**
+     * Use the PayPal sandbox environment. Defaults to `true` in development.
+     */
+    sandbox: optional(boolean()),
+  }),
+  object({
+    clientId: optional(string()),
+    /**
+     * A server-generated client token for authentication.
+     * @see https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
+     */
+    clientToken: string(),
+    /**
+     * Use the PayPal sandbox environment. Defaults to `true` in development.
+     */
+    sandbox: optional(boolean()),
+  }),
+])
 
 export const PostHogOptions = object({
   /**
