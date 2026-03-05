@@ -87,6 +87,7 @@ The [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} component accept
 - `placeholderAttrs`: The attributes for the placeholder image. Default is `{ loading: 'lazy' }`.
 - `id`: Shorthand for `vimeoOptions.id`.
 - `url`: Shorthand for `vimeoOptions.url`.
+- `ratio`: Sets the video aspect ratio (e.g. `16/9`, `4/3`, `9/16`). Default is `16/9`.
 - `vimeoOptions`: All options from the Player SDK are supported, please consult the [Embed Options](https://developer.vimeo.com/player/sdk/embed)
 for full documentation.
 

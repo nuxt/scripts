@@ -52,8 +52,10 @@ const props = withDefaults(defineProps<{
   vimeoOptions?: VimeoOptions
   id?: number | undefined
   url?: string | undefined
+  ratio?: string
 }>(), {
   trigger: 'mousedown',
+  ratio: '16/9',
 })
 
 const emits = defineEmits<TEmits>()
@@ -247,10 +249,11 @@ const rootAttrs = computed(() => {
     'aria-live': 'polite',
     'role': 'application',
     'style': {
+      '--vimeo-ratio': props.ratio,
       maxWidth: '100%',
       width: `auto`,
       height: 'auto',
-      aspectRatio: `16/9`,
+      aspectRatio: props.ratio,
       position: 'relative',
       backgroundColor: 'black',
     },
@@ -295,7 +298,7 @@ onBeforeUnmount(() => player?.unload())
 <style>
 .vimeo-player iframe {
   height: auto;
-  aspect-ratio: 16/9;
+  aspect-ratio: var(--vimeo-ratio, 16/9);
   width: 100%;
   max-width: 100% !important;
 }
