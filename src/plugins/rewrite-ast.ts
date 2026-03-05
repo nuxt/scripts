@@ -88,6 +88,15 @@ function matchAndRewrite(value: string, rewrites: ProxyRewrite[]): string | null
 export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[]): string {
   const s = new MagicString(content)
 
+  // In minified JS, keywords like `return` can directly precede string literals
+  // (e.g. `return"url"`). When we replace the string with an expression like
+  // `self.location.origin+"..."`, we must avoid creating `returnself` which
+  // would be parsed as a single identifier instead of `return self`.
+  function needsLeadingSpace(start: number): string {
+    const prev = content[start - 1]
+    return prev && /[\w$]/.test(prev) ? ' ' : ''
+  }
+
   parseAndWalk(content, filename, (node, parent, ctx) => {
     // String literals
     if (node.type === 'Literal' && typeof (node as any).value === 'string') {
@@ -101,7 +110,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
         s.overwrite(node.start, node.end, quote + rewritten + quote)
       }
       else {
-        s.overwrite(node.start, node.end, `self.location.origin+${quote}${rewritten}${quote}`)
+        s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+${quote}${rewritten}${quote}`)
       }
     }
 
@@ -120,7 +129,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
           s.overwrite(node.start, node.end, `\`${rewritten}\``)
         }
         else {
-          s.overwrite(node.start, node.end, `self.location.origin+\`${rewritten}\``)
+          s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+\`${rewritten}\``)
         }
       }
     }
@@ -155,12 +164,12 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
   const gaRewrite = rewrites.find(r => r.from.includes('google-analytics.com/g/collect'))
   if (gaRewrite) {
     output = output.replace(
-      /"https:\/\/"\+\(.*?\)\+"\.google-analytics\.com\/g\/collect"/g,
-      `self.location.origin+"${gaRewrite.to}"`,
+      /([\w$])?"https:\/\/"\+\(.*?\)\+"\.google-analytics\.com\/g\/collect"/g,
+      (_, prevChar) => `${prevChar ? `${prevChar} ` : ''}self.location.origin+"${gaRewrite.to}"`,
     )
     output = output.replace(
-      /"https:\/\/"\+\(.*?\)\+"\.analytics\.google\.com\/g\/collect"/g,
-      `self.location.origin+"${gaRewrite.to}"`,
+      /([\w$])?"https:\/\/"\+\(.*?\)\+"\.analytics\.google\.com\/g\/collect"/g,
+      (_, prevChar) => `${prevChar ? `${prevChar} ` : ''}self.location.origin+"${gaRewrite.to}"`,
     )
   }
 

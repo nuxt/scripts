@@ -51,4 +51,4 @@ jobs:
         run: pnpm build
 
       - name: Test
-        run: pnpm test:run
+        run: pnpm vitest run --project typecheck --project unit --project e2e --project nuxt-runtime
