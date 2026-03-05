@@ -139,9 +139,9 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <div v-bind="rootAttrs">
-    <div v-show="ready" ref="el">
-      <slot name="default" :messages-session="messagesSession" />
+  <div ref="rootEl" v-bind="rootAttrs">
+    <div ref="el">
+      <slot v-if="ready" name="default" :messages-session="messagesSession" />
     </div>
     <slot v-if="status !== 'error' && !ready && !failed" name="placeholder">
       placeholder
@@ -151,6 +151,5 @@ const rootAttrs = computed(() => {
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'error' || failed" name="error" />
-    <slot />
   </div>
 </template>

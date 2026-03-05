@@ -136,9 +136,9 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <div v-bind="rootAttrs">
-    <div v-show="ready" ref="el">
-      <slot name="default" :sdk-instance="sdkInstance" />
+  <div ref="rootEl" v-bind="rootAttrs">
+    <div ref="el">
+      <slot v-if="ready" name="default" :sdk-instance="sdkInstance" />
     </div>
     <slot v-if="status !== 'error' && !ready && !failed" name="placeholder">
       placeholder
