@@ -14,6 +14,7 @@ import type { GoogleAdsenseInput } from './registry/google-adsense'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
 import type { GoogleMapsInput } from './registry/google-maps'
 import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
+import type { GoogleSignInInput } from './registry/google-sign-in'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
@@ -168,6 +169,7 @@ export interface ScriptRegistry {
   googleAnalytics?: GoogleAnalyticsInput
   googleMaps?: GoogleMapsInput
   googleRecaptcha?: GoogleRecaptchaInput
+  googleSignIn?: GoogleSignInInput
   lemonSqueezy?: LemonSqueezyInput
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
