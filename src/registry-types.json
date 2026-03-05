@@ -338,11 +338,6 @@
   ],
   "gravatar": [
     {
-      "name": "GravatarOptions",
-      "kind": "const",
-      "code": "export const GravatarOptions = object({\n  /**\n   * Cache duration for proxied avatar images in seconds.\n   * @default 3600\n   */\n  cacheMaxAge: optional(number()),\n  /**\n   * Default image to show when no Gravatar exists.\n   * @see https://docs.gravatar.com/general/images/#default-image\n   * @default 'mp'\n   */\n  default: optional(string()),\n  /**\n   * Avatar size in pixels (1-2048).\n   * @default 80\n   */\n  size: optional(number()),\n  /**\n   * Content rating filter.\n   * @default 'g'\n   */\n  rating: optional(string()),\n})"
-    },
-    {
       "name": "GravatarApi",
       "kind": "interface",
       "code": "export interface GravatarApi {\n  /**\n   * Get a proxied avatar URL for a given SHA256 email hash.\n   * When firstParty mode is enabled, this routes through your server.\n   */\n  getAvatarUrl: (hash: string, options?: { size?: number, default?: string, rating?: string }) => string\n  /**\n   * Get a proxied avatar URL using the server-side hashing endpoint.\n   * The email is sent to YOUR server (not Gravatar) for hashing.\n   * Only available when the gravatar proxy is enabled.\n   */\n  getAvatarUrlFromEmail: (email: string, options?: { size?: number, default?: string, rating?: string }) => string\n}"
@@ -702,6 +697,38 @@
       "code": "export interface UmamiAnalyticsApi {\n  track: ((payload?: Record<string, any>) => void) & ((event_name: string, event_data: Record<string, any>) => void)\n  identify: (session_data?: Record<string, any> | string) => void\n}"
     }
   ],
+  "vercel-analytics": [
+    {
+      "name": "VercelAnalyticsOptions",
+      "kind": "const",
+      "code": "export const VercelAnalyticsOptions = object({\n  /**\n   * The DSN of the project to send events to.\n   * Only required when self-hosting or deploying outside of Vercel.\n   */\n  dsn: optional(string()),\n  /**\n   * Whether to disable automatic page view tracking on route changes.\n   * Set to true if you want to manually call pageview().\n   */\n  disableAutoTrack: optional(boolean()),\n  /**\n   * The mode to use for the analytics script.\n   * - `auto` - Automatically detect the environment (default)\n   * - `production` - Always use production script\n   * - `development` - Always use development script (logs to console)\n   */\n  mode: optional(union([literal('auto'), literal('development'), literal('production')])),\n  /**\n   * Whether to enable debug logging.\n   * Automatically enabled in development/test environments.\n   */\n  debug: optional(boolean()),\n  /**\n   * Custom endpoint for data collection.\n   * Useful for self-hosted or proxied setups.\n   */\n  endpoint: optional(string()),\n})"
+    },
+    {
+      "name": "AllowedPropertyValues",
+      "kind": "type",
+      "code": "export type AllowedPropertyValues = string | number | boolean | null"
+    },
+    {
+      "name": "VercelAnalyticsMode",
+      "kind": "type",
+      "code": "export type VercelAnalyticsMode = 'auto' | 'development' | 'production'"
+    },
+    {
+      "name": "BeforeSendEvent",
+      "kind": "interface",
+      "code": "export interface BeforeSendEvent {\n  type: 'pageview' | 'event'\n  url: string\n}"
+    },
+    {
+      "name": "BeforeSend",
+      "kind": "type",
+      "code": "export type BeforeSend = (event: BeforeSendEvent) => BeforeSendEvent | null"
+    },
+    {
+      "name": "VercelAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface VercelAnalyticsApi {\n  va: (event: string, properties?: unknown) => void\n  track: (name: string, properties?: Record<string, AllowedPropertyValues>) => void\n  pageview: (options?: { route?: string | null, path?: string }) => void\n}"
+    }
+  ],
   "vimeo-player": [
     {
       "name": "Constructor",
@@ -788,18 +815,6 @@
       "name": "ScriptYouTubePlayerDefaults",
       "kind": "const",
       "code": "const ScriptYouTubePlayerDefaults = {\n  \"cookies\": \"false\",\n  \"trigger\": \"'mousedown'\",\n  \"thumbnailSize\": \"'hq720'\",\n  \"webp\": \"true\",\n  \"playerVars\": \"{ autoplay: 0, playsinline: 1 }\",\n  \"width\": \"640\",\n  \"height\": \"360\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'cover'\"\n}"
-    }
-  ],
-  "vercel-analytics": [
-    {
-      "name": "VercelAnalyticsOptions",
-      "kind": "const",
-      "code": "export const VercelAnalyticsOptions = object({\n  /**\n   * The DSN of the project to send events to.\n   * Only required when self-hosting or deploying outside of Vercel.\n   */\n  dsn: optional(string()),\n  /**\n   * Whether to disable automatic page view tracking on route changes.\n   * Set to true if you want to manually call pageview().\n   */\n  disableAutoTrack: optional(boolean()),\n  /**\n   * The mode to use for the analytics script.\n   * - `auto` - Automatically detect the environment (default)\n   * - `production` - Always use production script\n   * - `development` - Always use development script (logs to console)\n   */\n  mode: optional(union([literal('auto'), literal('development'), literal('production')])),\n  /**\n   * Whether to enable debug logging.\n   * Automatically enabled in development/test environments.\n   */\n  debug: optional(boolean()),\n  /**\n   * Custom endpoint for data collection.\n   * Useful for self-hosted or proxied setups.\n   */\n  endpoint: optional(string()),\n})"
-    },
-    {
-      "name": "VercelAnalyticsApi",
-      "kind": "interface",
-      "code": "export interface VercelAnalyticsApi {\n  va: (event: string, properties?: unknown) => void\n  track: (name: string, properties?: Record<string, AllowedPropertyValues>) => void\n  pageview: (options?: { route?: string | null, path?: string }) => void\n}"
     }
   ],
   "carbon-ads": [
