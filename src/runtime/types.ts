@@ -1,40 +1,41 @@
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue'
 import type {
   Script,
 } from '@unhead/vue/types'
-import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
-import type { ComputedRef, Ref } from 'vue'
-import type { InferInput, ObjectSchema, ValiError } from 'valibot'
 import type { Import } from 'unimport'
-import type { SegmentInput } from './registry/segment'
+import type { InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
+import type { ComputedRef, Ref } from 'vue'
+import type { ClarityInput } from './registry/clarity'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
+import type { CrispInput } from './registry/crisp'
 import type { DatabuddyAnalyticsInput } from './registry/databuddy-analytics'
-import type { MetaPixelInput } from './registry/meta-pixel'
 import type { FathomAnalyticsInput } from './registry/fathom-analytics'
+import type { GoogleAdsenseInput } from './registry/google-adsense'
+import type { GoogleAnalyticsInput } from './registry/google-analytics'
+import type { GoogleMapsInput } from './registry/google-maps'
+import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
+import type { GoogleSignInInput } from './registry/google-sign-in'
+import type { GoogleTagManagerInput } from './registry/google-tag-manager'
+import type { GravatarInput } from './registry/gravatar'
 import type { HotjarInput } from './registry/hotjar'
 import type { IntercomInput } from './registry/intercom'
-import type { GoogleMapsInput } from './registry/google-maps'
+import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
+import type { MetaPixelInput } from './registry/meta-pixel'
+import type { NpmInput } from './registry/npm'
+import type { PayPalInput } from './registry/paypal'
+import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
+import type { PostHogInput } from './registry/posthog'
+import type { RedditPixelInput } from './registry/reddit-pixel'
+import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
+import type { SegmentInput } from './registry/segment'
+import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { StripeInput } from './registry/stripe'
+import type { TikTokPixelInput } from './registry/tiktok-pixel'
+import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XPixelInput } from './registry/x-pixel'
-import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
-import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
-import type { NpmInput } from './registry/npm'
-import type { LemonSqueezyInput } from './registry/lemon-squeezy'
-import type { GoogleAdsenseInput } from './registry/google-adsense'
-import type { ClarityInput } from './registry/clarity'
-import type { CrispInput } from './registry/crisp'
-import type { GoogleAnalyticsInput } from './registry/google-analytics'
-import type { GoogleTagManagerInput } from './registry/google-tag-manager'
-import type { UmamiAnalyticsInput } from './registry/umami-analytics'
-import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
-import type { RedditPixelInput } from './registry/reddit-pixel'
-import type { PayPalInput } from './registry/paypal'
-import type { PostHogInput } from './registry/posthog'
-import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
-import type { TikTokPixelInput } from './registry/tiktok-pixel'
-import type { GravatarInput } from './registry/gravatar'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
@@ -169,6 +170,7 @@ export interface ScriptRegistry {
   googleAnalytics?: GoogleAnalyticsInput
   googleMaps?: GoogleMapsInput
   googleRecaptcha?: GoogleRecaptchaInput
+  googleSignIn?: GoogleSignInInput
   lemonSqueezy?: LemonSqueezyInput
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
@@ -205,7 +207,7 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = Script
 
-export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
+export type InferIfSchema<T> = T extends ObjectSchema<any, any> | UnionSchema<any, any> ? InferInput<T> : T
 export type RegistryScriptInput<
   T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
@@ -221,7 +223,7 @@ export type RegistryScriptInput<
       scriptInput?: ScriptInput
       scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
     })
-  | Partial<InferIfSchema<T>> & (
+    | Partial<InferIfSchema<T>> & (
     CanBypassOptions extends true ? {
       /**
        * A unique key to use for the script, this can be used to load multiple of the same script with different options.

@@ -1,13 +1,15 @@
-<template>
-</template>
-
 <script setup lang="ts">
-import { inject, onUnmounted } from 'vue'
 import { whenever } from '@vueuse/core'
+import { inject, onUnmounted } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 
 const props = defineProps<{
   options?: Omit<google.maps.RectangleOptions, 'map'>
+}>()
+
+const emit = defineEmits<{
+  (event: typeof eventsWithoutPayload[number]): void
+  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
 const eventsWithoutPayload = [
@@ -28,14 +30,9 @@ const eventsWithMapMouseEventPayload = [
   'mouseup',
 ] as const
 
-const emit = defineEmits<{
-  (event: typeof eventsWithoutPayload[number]): void
-  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
-}>()
-
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
-let rectangle: google.maps.Rectangle | undefined = undefined
+let rectangle: google.maps.Rectangle | undefined
 
 whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
   rectangle = new mapContext!.mapsApi.value!.Rectangle({
@@ -75,3 +72,6 @@ function setupRectangleEventListeners(rectangle: google.maps.Rectangle) {
   })
 }
 </script>
+
+<template>
+</template>

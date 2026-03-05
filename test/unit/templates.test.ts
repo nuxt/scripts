@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { templatePlugin, resolveTriggerForTemplate } from '../../src/templates'
+import { describe, expect, it } from 'vitest'
+import { resolveTriggerForTemplate, templatePlugin } from '../../src/templates'
 
 describe('template plugin file', () => {
   // global
@@ -17,7 +17,7 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
-          return { provide: { $scripts: {  } } }
+          return { provide: { scripts: {  } } }
         }
       })"
     `)
@@ -96,7 +96,7 @@ describe('template plugin file', () => {
           const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
           const stripe2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe2: window.stripe2 }) })
           const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
-          return { provide: { $scripts: { stripe1, stripe2, stripe3 } } }
+          return { provide: { scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
     `)

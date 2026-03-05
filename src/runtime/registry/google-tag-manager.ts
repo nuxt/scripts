@@ -1,8 +1,8 @@
-import { withQuery } from 'ufo'
+import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
 import type { GTag } from './google-analytics'
 import { useRegistryScript } from '#nuxt-scripts/utils'
-import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
-import { object, string, optional, boolean, union, literal, record, number } from '#nuxt-scripts-validator'
+import { withQuery } from 'ufo'
+import { GoogleTagManagerOptions } from './schemas'
 
 /**
  * Improved DataLayer type that better reflects GTM's capabilities
@@ -76,43 +76,7 @@ declare global {
   interface Window extends GoogleTagManagerApi {}
 }
 
-/**
- * GTM configuration options with improved documentation
- */
-export const GoogleTagManagerOptions = object({
-  /** GTM container ID (format: GTM-XXXXXX) */
-  id: string(),
-
-  /** Optional dataLayer variable name */
-  l: optional(string()),
-
-  /** Authentication token for environment-specific container versions */
-  auth: optional(string()),
-
-  /** Preview environment name */
-  preview: optional(string()),
-
-  /** Forces GTM cookies to take precedence when true */
-  cookiesWin: optional(union([boolean(), literal('x')])),
-
-  /** Enables debug mode when true */
-  debug: optional(union([boolean(), literal('x')])),
-
-  /** No Personal Advertising - disables advertising features when true */
-  npa: optional(union([boolean(), literal('1')])),
-
-  /** Custom dataLayer name (alternative to "l" property) */
-  dataLayer: optional(string()),
-
-  /** Environment name for environment-specific container */
-  envName: optional(string()),
-
-  /** Referrer policy for analytics requests */
-  authReferrerPolicy: optional(string()),
-
-  /** Default consent settings for GTM */
-  defaultConsent: optional(record(string(), union([string(), number()]))),
-})
+export { GoogleTagManagerOptions }
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 

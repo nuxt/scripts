@@ -1,5 +1,7 @@
-import { object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { XEmbedOptions } from './schemas'
+
+export { XEmbedOptions }
 
 export interface XEmbedTweetData {
   id_str: string
@@ -42,23 +44,6 @@ export interface XEmbedTweetData {
     }
   }
 }
-
-export const XEmbedOptions = object({
-  /**
-   * The tweet ID to embed
-   */
-  tweetId: string(),
-  /**
-   * Optional: Custom API endpoint for fetching tweet data
-   * @default '/api/_scripts/x-embed'
-   */
-  apiEndpoint: optional(string()),
-  /**
-   * Optional: Custom image proxy endpoint
-   * @default '/api/_scripts/x-embed-image'
-   */
-  imageProxyEndpoint: optional(string()),
-})
 
 export type XEmbedInput = RegistryScriptInput<typeof XEmbedOptions, false, false, false>
 

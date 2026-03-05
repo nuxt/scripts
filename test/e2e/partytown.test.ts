@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
-import { getBrowser, url, waitForHydration, setup } from '@nuxt/test-utils/e2e'
+import { getBrowser, setup, url, waitForHydration } from '@nuxt/test-utils/e2e'
+import { describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 

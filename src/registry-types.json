@@ -1,0 +1,788 @@
+{
+  "clarity": [
+    {
+      "name": "ClarityOptions",
+      "kind": "const",
+      "code": "export const ClarityOptions = object({\n  /**\n   * The Clarity token.\n   * @see https://learn.microsoft.com/en-us/clarity/setup-clarity\n   */\n  id: pipe(string(), minLength(10)),\n})"
+    },
+    {
+      "name": "ClarityFunctions",
+      "kind": "type",
+      "code": "type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)\n  & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{\n    id: string\n    session: string\n    page: string\n    userHint: string\n  }>)\n  & ((fn: 'consent', enabled?: boolean) => void)\n  & ((fn: 'set', key: any, value: any) => void)\n  & ((fn: 'event', value: any) => void)\n  & ((fn: 'upgrade', upgradeReason: any) => void)\n  & ((fn: string, ...args: any[]) => void)"
+    },
+    {
+      "name": "ClarityApi",
+      "kind": "interface",
+      "code": "export interface ClarityApi {\n  clarity: ClarityFunctions & {\n    q: any[]\n    v: string\n  }\n}"
+    }
+  ],
+  "cloudflare-web-analytics": [
+    {
+      "name": "CloudflareWebAnalyticsOptions",
+      "kind": "const",
+      "code": "export const CloudflareWebAnalyticsOptions = object({\n  /**\n   * The Cloudflare Web Analytics token.\n   * @see https://developers.cloudflare.com/analytics/web-analytics/get-started/\n   */\n  token: pipe(string(), minLength(32)),\n  /**\n   * Cloudflare Web Analytics enables measuring SPAs automatically by overriding the History API's pushState function\n   * and listening to the onpopstate. Hash-based router is not supported.\n   *\n   * @default true\n   * @see https://developers.cloudflare.com/analytics/web-analytics/get-started/#spa-tracking\n   */\n  spa: optional(boolean()),\n})"
+    },
+    {
+      "name": "CloudflareWebAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface CloudflareWebAnalyticsApi {\n  __cfBeacon: {\n    load: 'single'\n    spa: boolean\n    token: string\n  }\n}"
+    }
+  ],
+  "crisp": [
+    {
+      "name": "CrispOptions",
+      "kind": "const",
+      "code": "export const CrispOptions = object({\n  /**\n   * The Crisp ID.\n   */\n  id: string(),\n  /**\n   * Extra configuration options. Used to configure the locale.\n   * Same as CRISP_RUNTIME_CONFIG.\n   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/language-customization/\n   */\n  runtimeConfig: optional(object({\n    locale: optional(string()),\n  })),\n  /**\n   * Associated a session, equivalent to using CRISP_TOKEN_ID variable.\n   * Same as CRISP_TOKEN_ID.\n   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/session-continuity/\n   */\n  tokenId: optional(string()),\n  /**\n   * Restrict the domain that the Crisp cookie is set on.\n   * Same as CRISP_COOKIE_DOMAIN.\n   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/\n   */\n  cookieDomain: optional(string()),\n  /**\n   * The cookie expiry in seconds.\n   * Same as CRISP_COOKIE_EXPIRATION.\n   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/#change-cookie-expiration-date\n   */\n  cookieExpiry: optional(number()),\n})"
+    },
+    {
+      "name": "CrispApi",
+      "kind": "interface",
+      "code": "export interface CrispApi {\n  push: (...args: any[]) => void\n  is: (name: 'chat:opened' | 'chat:closed' | 'chat:visible' | 'chat:hidden' | 'chat:small' | 'chat:large' | 'session:ongoing' | 'website:available' | 'overlay:opened' | 'overlay:closed' | string) => boolean\n  set: (name: 'message:text' | 'session:data' | 'session:segments' | 'session:event' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company' | string, value: any) => void\n  get: (name: 'chat:unread:count' | 'message:text' | 'session:identifier' | 'session:data' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company' | string) => any\n  do: (name: 'chat:open' | 'chat:close' | 'chat:toggle' | 'chat:show' | 'chat:hide' | 'helpdesk:search' | 'helpdesk:article:open' | 'helpdesk:query' | 'overlay:open' | 'overlay:close' | 'message:send' | 'message:show' | 'message:read' | 'message:thread:start' | 'message:thread:end' | 'session:reset' | 'trigger:run' | string, arg2?: any) => any\n  on: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | string, callback: (...args: any[]) => any) => void\n  off: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | string, callback: (...args: any[]) => any) => void\n  config: (options: any) => void\n  help: () => void\n  [key: string]: any\n}"
+    },
+    {
+      "name": "ScriptCrispProps",
+      "kind": "interface",
+      "code": "interface ScriptCrispProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  id: string\n  runtimeConfig?: {\n    locale: string\n  }\n  tokenId?: string\n  cookieDomain?: string\n  cookieExpiry?: number\n}"
+    },
+    {
+      "name": "ScriptCrispDefaults",
+      "kind": "const",
+      "code": "const ScriptCrispDefaults = {\n  \"trigger\": \"'click'\"\n}"
+    }
+  ],
+  "databuddy-analytics": [
+    {
+      "name": "DatabuddyAnalyticsOptions",
+      "kind": "const",
+      "code": "export const DatabuddyAnalyticsOptions = object({\n  /**\n   * Your Databuddy client ID.\n   */\n  clientId: string(),\n\n  /**\n   * Custom script URL for the Databuddy SDK.\n   * @default 'https://cdn.databuddy.cc/databuddy.js'\n   */\n  scriptUrl: optional(string()),\n  /**\n   * Custom API URL for sending analytics data.\n   * @default 'https://basket.databuddy.cc'\n   */\n  apiUrl: optional(string()),\n  /**\n   * Disable all tracking when set to `true`.\n   */\n  disabled: optional(boolean()),\n\n  /**\n   * Track screen/page views automatically.\n   * @default true\n   * @see https://www.databuddy.cc/docs/sdk#track-screen-views\n   */\n  trackScreenViews: optional(boolean()),\n  /**\n   * Track page performance metrics.\n   * @default true\n   * @see https://www.databuddy.cc/docs/sdk#track-performance\n   */\n  trackPerformance: optional(boolean()),\n  /**\n   * Track user sessions.\n   * @default true\n   * @see https://www.databuddy.cc/docs/sdk#track-sessions\n   */\n  trackSessions: optional(boolean()),\n\n  /**\n   * Track Web Vitals (LCP, FID, CLS, etc.).\n   */\n  trackWebVitals: optional(boolean()),\n  /**\n   * Track JavaScript errors.\n   */\n  trackErrors: optional(boolean()),\n  /**\n   * Track outgoing link clicks.\n   */\n  trackOutgoingLinks: optional(boolean()),\n  /**\n   * Track scroll depth.\n   */\n  trackScrollDepth: optional(boolean()),\n  /**\n   * Track user engagement time.\n   */\n  trackEngagement: optional(boolean()),\n  /**\n   * Track user interactions (clicks, form submissions, etc.).\n   */\n  trackInteractions: optional(boolean()),\n  /**\n   * Track element attributes for detailed interaction context.\n   */\n  trackAttributes: optional(boolean()),\n  /**\n   * Track hash changes in the URL.\n   */\n  trackHashChanges: optional(boolean()),\n  /**\n   * Track exit intent behavior.\n   */\n  trackExitIntent: optional(boolean()),\n  /**\n   * Track bounce rate metrics.\n   */\n  trackBounceRate: optional(boolean()),\n\n  /**\n   * Enable event batching for better performance.\n   */\n  enableBatching: optional(boolean()),\n  /**\n   * Maximum number of events per batch.\n   */\n  batchSize: optional(number()),\n  /**\n   * Timeout (in ms) before flushing a batch.\n   */\n  batchTimeout: optional(number()),\n  /**\n   * Enable automatic retries for failed requests.\n   */\n  enableRetries: optional(boolean()),\n  /**\n   * Maximum number of retry attempts.\n   */\n  maxRetries: optional(number()),\n  /**\n   * Initial delay (in ms) before the first retry.\n   */\n  initialRetryDelay: optional(number()),\n  /**\n   * Sampling rate (0 to 1). Set to `0.5` to track ~50% of sessions.\n   */\n  samplingRate: optional(number()),\n\n  /**\n   * Custom SDK identifier.\n   */\n  sdk: optional(string()),\n  /**\n   * Custom SDK version string.\n   */\n  sdkVersion: optional(string()),\n\n  /**\n   * Enable observability/monitoring features.\n   */\n  enableObservability: optional(boolean()),\n  /**\n   * The service name for observability reporting.\n   */\n  observabilityService: optional(string()),\n  /**\n   * The environment name for observability (e.g., `'production'`, `'staging'`).\n   */\n  observabilityEnvironment: optional(string()),\n  /**\n   * The version string for observability reporting.\n   */\n  observabilityVersion: optional(string()),\n  /**\n   * Enable console logging for debugging.\n   */\n  enableLogging: optional(boolean()),\n  /**\n   * Enable request tracing.\n   */\n  enableTracing: optional(boolean()),\n  /**\n   * Enable error tracking via observability.\n   */\n  enableErrorTracking: optional(boolean()),\n})"
+    },
+    {
+      "name": "DatabuddyAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface DatabuddyAnalyticsApi {\n  /**\n   * Track a custom event.\n   * @param eventName Name of the event (use snake_case)\n   * @param properties Optional event properties\n   */\n  track: (eventName: string, properties?: Record<string, any>) => Promise<any> | any | void\n\n  /**\n   * Manually record a page / screen view. Useful for SPA route changes.\n   * @param path Optional path to record (defaults to current location)\n   * @param properties Optional additional properties for the screen view\n   */\n  screenView: (path?: string, properties?: Record<string, any>) => void\n\n  /**\n   * Set properties that will be attached to all future events (e.g. user_id).\n   * @param properties Key/value map of properties to attach globally\n   */\n  setGlobalProperties: (properties: Record<string, any>) => void\n\n  /**\n   * Track a custom event alias (compatibility helper present on the global)\n   * @param eventName Name of the event\n   * @param properties Optional event properties\n   */\n  trackCustomEvent: (eventName: string, properties?: Record<string, any>) => void\n\n  /**\n   * Clears session and anonymous identifiers (useful on logout).\n   */\n  clear: () => void\n\n  /**\n   * Force immediate sending of any queued/batched events.\n   */\n  flush: () => void\n}"
+    }
+  ],
+  "fathom-analytics": [
+    {
+      "name": "FathomAnalyticsOptions",
+      "kind": "const",
+      "code": "export const FathomAnalyticsOptions = object({\n  /**\n   * The Fathom Analytics site ID.\n   * @see https://usefathom.com/docs/script/script-settings\n   */\n  site: string(),\n  /**\n   * The Fathom Analytics tracking mode.\n   * @default 'auto'\n   */\n  spa: optional(union([literal('auto'), literal('history'), literal('hash')])),\n  /**\n   * Automatically track page views.\n   * @default true\n   */\n  auto: optional(boolean()),\n  /**\n   * Enable canonical URL tracking.\n   * @default true\n   */\n  canonical: optional(boolean()),\n  /**\n   * Honor Do Not Track requests.\n   * @default false\n   */\n  honorDnt: optional(boolean()),\n})"
+    },
+    {
+      "name": "FathomAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface FathomAnalyticsApi {\n  beacon: (ctx: { url: string, referrer?: string }) => void\n  blockTrackingForMe: () => void\n  enableTrackingForMe: () => void\n  isTrackingEnabled: () => boolean\n  send: (type: string, data: unknown) => void\n  setSite: (siteId: string) => void\n  sideId: string\n  trackPageview: (ctx?: { url: string, referrer?: string }) => void\n  trackGoal: (goalId: string, cents: number) => void\n  trackEvent: (eventName: string, value: { _value: number }) => void\n}"
+    }
+  ],
+  "google-adsense": [
+    {
+      "name": "GoogleAdsenseOptions",
+      "kind": "const",
+      "code": "export const GoogleAdsenseOptions = object({\n  /**\n   * The Google Adsense ID.\n   * @example 'ca-pub-XXXXXXXXXXXXXXXX'\n   */\n  client: optional(string()),\n  /**\n   * Enable or disable Auto Ads.\n   * @default false\n   * @see https://support.google.com/adsense/answer/9261805\n   */\n  autoAds: optional(boolean()),\n})"
+    },
+    {
+      "name": "GoogleAdsenseApi",
+      "kind": "interface",
+      "code": "export interface GoogleAdsenseApi {\n  /**\n   * The Google Adsense API.\n   */\n  adsbygoogle: any[] & { loaded?: boolean }\n}"
+    },
+    {
+      "name": "ScriptGoogleAdsenseProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+    },
+    {
+      "name": "ScriptGoogleAdsenseDefaults",
+      "kind": "const",
+      "code": "const ScriptGoogleAdsenseDefaults = {\n  \"dataFullWidthResponsive\": \"true\",\n  \"dataAdFormat\": \"undefined\"\n}"
+    }
+  ],
+  "google-analytics": [
+    {
+      "name": "GtagCustomParams",
+      "kind": "type",
+      "code": "export type GtagCustomParams = Record<string, any>"
+    },
+    {
+      "name": "ConsentStatus",
+      "kind": "type",
+      "code": "export type ConsentStatus = 'granted' | 'denied'"
+    },
+    {
+      "name": "ConsentOptions",
+      "kind": "interface",
+      "code": "export interface ConsentOptions {\n  ad_user_data?: ConsentStatus\n  ad_personalization?: ConsentStatus\n  ad_storage?: ConsentStatus\n  analytics_storage?: ConsentStatus\n  functionality_storage?: ConsentStatus\n  personalization_storage?: ConsentStatus\n  security_storage?: ConsentStatus\n  wait_for_update?: number\n  region?: string[]\n}"
+    },
+    {
+      "name": "ConfigParams",
+      "kind": "interface",
+      "code": "export interface ConfigParams extends GtagCustomParams {\n  send_page_view?: boolean\n  transport_url?: string\n  cookie_domain?: string\n  cookie_prefix?: string\n  cookie_expires?: number\n  cookie_update?: boolean\n  cookie_flags?: string\n  user_id?: string\n}"
+    },
+    {
+      "name": "EventParameters",
+      "kind": "interface",
+      "code": "export interface EventParameters extends GtagCustomParams {\n  value?: number\n  currency?: string\n  transaction_id?: string\n  items?: Array<{\n    item_id?: string\n    item_name?: string\n    item_category?: string\n    item_variant?: string\n    price?: number\n    quantity?: number\n    [key: string]: any\n  }>\n  [key: string]: any\n}"
+    },
+    {
+      "name": "DefaultEventName",
+      "kind": "type",
+      "code": "export type DefaultEventName\n  = | 'add_payment_info'\n    | 'add_shipping_info'\n    | 'add_to_cart'\n    | 'add_to_wishlist'\n    | 'begin_checkout'\n    | 'purchase'\n    | 'refund'\n    | 'remove_from_cart'\n    | 'select_item'\n    | 'select_promotion'\n    | 'view_cart'\n    | 'view_item'\n    | 'view_item_list'\n    | 'view_promotion'\n    | 'login'\n    | 'sign_up'\n    | 'search'\n    | 'page_view'\n    | 'screen_view'\n    | string"
+    },
+    {
+      "name": "GTag",
+      "kind": "interface",
+      "code": "export interface GTag {\n  // Initialize gtag.js with timestamp\n  (command: 'js', value: Date): void\n\n  // Configure a GA4 property\n  (command: 'config', targetId: string, configParams?: ConfigParams): void\n\n  // Get a value from gtag\n  (command: 'get', targetId: string, fieldName: string, callback?: (field: any) => void): void\n\n  // Send an event to GA4\n  (command: 'event', eventName: DefaultEventName, eventParams?: EventParameters): void\n\n  // Set default parameters for all subsequent events\n  (command: 'set', params: GtagCustomParams): void\n\n  // Update consent state\n  (command: 'consent', consentArg: 'default' | 'update', consentParams: ConsentOptions): void\n}"
+    },
+    {
+      "name": "DataLayerObject",
+      "kind": "interface",
+      "code": "export interface DataLayerObject {\n  event?: string\n  [key: string]: any\n}"
+    },
+    {
+      "name": "DataLayer",
+      "kind": "type",
+      "code": "export type DataLayer = Array<DataLayerObject>"
+    },
+    {
+      "name": "GoogleAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface GoogleAnalyticsApi {\n  gtag: GTag\n  dataLayer: DataLayer\n}"
+    },
+    {
+      "name": "GoogleAnalyticsOptions",
+      "kind": "const",
+      "code": "export const GoogleAnalyticsOptions = object({\n  /**\n   * The GA4 measurement ID.\n   * @example 'G-XXXXXXXX'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs\n   */\n  id: optional(string()),\n  /**\n   * Global name for the dataLayer variable.\n   * @default 'dataLayer'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer\n   */\n  l: optional(string()),\n})"
+    }
+  ],
+  "google-maps": [
+    {
+      "name": "GoogleMapsOptions",
+      "kind": "const",
+      "code": "export const GoogleMapsOptions = object({\n  /**\n   * Your Google Maps API key.\n   */\n  apiKey: string(),\n  /**\n   * The Google Maps libraries to load.\n   * @default ['places']\n   * @see https://developers.google.com/maps/documentation/javascript/libraries\n   */\n  libraries: optional(array(string())),\n  /**\n   * The language code for the map UI and geocoding results.\n   * @see https://developers.google.com/maps/faq#languagesupport\n   */\n  language: optional(string()),\n  /**\n   * The region code to bias geocoding results.\n   * @see https://developers.google.com/maps/documentation/javascript/localization#Region\n   */\n  region: optional(string()),\n  /**\n   * The Google Maps JS API version to load.\n   * @default 'weekly'\n   * @see https://developers.google.com/maps/documentation/javascript/versions\n   */\n  v: optional(union([literal('weekly'), literal('quarterly'), literal('beta'), literal('alpha'), string()])),\n})"
+    },
+    {
+      "name": "MapsNamespace",
+      "kind": "type",
+      "code": "type MapsNamespace = typeof window.google.maps"
+    },
+    {
+      "name": "GoogleMapsApi",
+      "kind": "interface",
+      "code": "export interface GoogleMapsApi {\n  maps: Promise<MapsNamespace>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Is Google Maps being rendered above the fold?\n   * This will load the placeholder image with higher priority.\n   */\n  aboveTheFold?: boolean\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Should a marker be displayed on the map where the centre is.\n   */\n  centerMarker?: boolean\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map\n   */\n  height?: number | string\n  /**\n   * Customize the placeholder image attributes.\n   *\n   * @see https://developers.google.com/maps/documentation/maps-static/start.\n   */\n  placeholderOptions?: PlaceholderOptions\n  /**\n   * Customize the placeholder image attributes.\n   */\n  placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Extra Markers to add to the map.\n   */\n  markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light', 'dark', or a reactive ref.\n   */\n  colorMode?: 'light' | 'dark'\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsDefaults",
+      "kind": "const",
+      "code": "const ScriptGoogleMapsDefaults = {\n  \"trigger\": \"['mouseenter', 'mouseover', 'mousedown']\",\n  \"width\": \"640\",\n  \"height\": \"400\",\n  \"centerMarker\": \"true\"\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsAdvancedMarkerElementProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsAdvancedMarkerElementProps {\n  options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsCircleProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsCircleProps {\n  options?: Omit<google.maps.CircleOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsHeatmapLayerProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsHeatmapLayerProps {\n  options?: Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsInfoWindowProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsInfoWindowProps {\n  options?: google.maps.InfoWindowOptions\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsMarkerProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsMarkerProps {\n  options?: Omit<google.maps.MarkerOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsMarkerClustererProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsMarkerClustererProps {\n  options?: Omit<MarkerClustererOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsPinElementProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsPinElementProps {\n  options?: Omit<google.maps.marker.PinElementOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsPolygonProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsPolygonProps {\n  options?: Omit<google.maps.PolygonOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsPolylineProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsPolylineProps {\n  options?: Omit<google.maps.PolylineOptions, 'map'>\n}"
+    },
+    {
+      "name": "ScriptGoogleMapsRectangleProps",
+      "kind": "interface",
+      "code": "interface ScriptGoogleMapsRectangleProps {\n  options?: Omit<google.maps.RectangleOptions, 'map'>\n}"
+    }
+  ],
+  "google-recaptcha": [
+    {
+      "name": "GoogleRecaptchaOptions",
+      "kind": "const",
+      "code": "export const GoogleRecaptchaOptions = object({\n  /**\n   * Your reCAPTCHA site key.\n   * @see https://developers.google.com/recaptcha/docs/display#render_param\n   */\n  siteKey: string(),\n  /**\n   * Use the Enterprise version of reCAPTCHA (enterprise.js instead of api.js).\n   * @see https://cloud.google.com/recaptcha-enterprise/docs/introduction\n   */\n  enterprise: optional(boolean()),\n  /**\n   * Use recaptcha.net instead of google.com domain. Useful for regions where google.com is blocked.\n   */\n  recaptchaNet: optional(boolean()),\n  /**\n   * Language code for the reCAPTCHA widget.\n   * @see https://developers.google.com/recaptcha/docs/language\n   */\n  hl: optional(string()),\n})"
+    },
+    {
+      "name": "GoogleRecaptchaApi",
+      "kind": "interface",
+      "code": "export interface GoogleRecaptchaApi {\n  grecaptcha: {\n    ready: (callback: () => void) => void\n    execute: (siteKey: string, options: { action: string }) => Promise<string>\n    enterprise?: {\n      ready: (callback: () => void) => void\n      execute: (siteKey: string, options: { action: string }) => Promise<string>\n    }\n  }\n}"
+    }
+  ],
+  "google-sign-in": [
+    {
+      "name": "CredentialResponse",
+      "kind": "interface",
+      "code": "export interface CredentialResponse {\n  credential: string // JWT token\n  select_by: 'auto' | 'user' | 'user_1tap' | 'user_2tap' | 'btn' | 'btn_confirm' | 'btn_add_session' | 'btn_confirm_add_session'\n  clientId?: string\n}"
+    },
+    {
+      "name": "IdConfiguration",
+      "kind": "interface",
+      "code": "export interface IdConfiguration {\n  client_id: string\n  auto_select?: boolean\n  callback?: (response: CredentialResponse) => void\n  login_uri?: string\n  native_callback?: (response: CredentialResponse) => void\n  cancel_on_tap_outside?: boolean\n  prompt_parent_id?: string\n  nonce?: string\n  context?: 'signin' | 'signup' | 'use'\n  state_cookie_domain?: string\n  ux_mode?: 'popup' | 'redirect'\n  allowed_parent_origin?: string | string[]\n  intermediate_iframe_close_callback?: () => void\n  itp_support?: boolean\n  login_hint?: string\n  hd?: string\n  use_fedcm_for_prompt?: boolean\n}"
+    },
+    {
+      "name": "GsiButtonConfiguration",
+      "kind": "interface",
+      "code": "export interface GsiButtonConfiguration {\n  type?: 'standard' | 'icon'\n  theme?: 'outline' | 'filled_blue' | 'filled_black'\n  size?: 'large' | 'medium' | 'small'\n  text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin'\n  shape?: 'rectangular' | 'pill' | 'circle' | 'square'\n  logo_alignment?: 'left' | 'center'\n  width?: string | number\n  locale?: string\n  click_listener?: () => void\n  // FedCM support for button flow (mandatory from August 2025)\n  use_fedcm?: boolean\n}"
+    },
+    {
+      "name": "MomentType",
+      "kind": "type",
+      "code": "export type MomentType\n  = | 'display'\n    | 'skipped'\n    | 'dismissed'"
+    },
+    {
+      "name": "MomentNotification",
+      "kind": "interface",
+      "code": "export interface MomentNotification {\n  isDisplayMoment: () => boolean\n  isDisplayed: () => boolean\n  isNotDisplayed: () => boolean\n  getNotDisplayedReason: () =>\n    | 'browser_not_supported'\n    | 'invalid_client'\n    | 'missing_client_id'\n    | 'opt_out_or_no_session'\n    | 'secure_http_required'\n    | 'suppressed_by_user'\n    | 'unregistered_origin'\n    | 'unknown_reason'\n  isSkippedMoment: () => boolean\n  getSkippedReason: () =>\n    | 'auto_cancel'\n    | 'user_cancel'\n    | 'tap_outside'\n    | 'issuing_failed'\n  isDismissedMoment: () => boolean\n  getDismissedReason: () =>\n    | 'credential_returned'\n    | 'cancel_called'\n    | 'flow_restarted'\n  getMomentType: () => MomentType\n}"
+    },
+    {
+      "name": "RevocationResponse",
+      "kind": "interface",
+      "code": "export interface RevocationResponse {\n  successful: boolean\n  error?: string\n}"
+    },
+    {
+      "name": "AccountsNamespace",
+      "kind": "type",
+      "code": "type AccountsNamespace = typeof google.accounts"
+    },
+    {
+      "name": "GoogleSignInApi",
+      "kind": "interface",
+      "code": "export interface GoogleSignInApi {\n  accounts: AccountsNamespace\n}"
+    },
+    {
+      "name": "GoogleSignInOptions",
+      "kind": "const",
+      "code": "export const GoogleSignInOptions = object({\n  /**\n   * Your Google API client ID.\n   * @example 'XXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com'\n   * @see https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid\n   */\n  clientId: string(),\n  /**\n   * Auto-select credentials when only one Google account is available.\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#auto_select\n   */\n  autoSelect: optional(boolean()),\n  /**\n   * The context text for the One Tap prompt.\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#context\n   */\n  context: optional(union([literal('signin'), literal('signup'), literal('use')])),\n  /**\n   * Enable FedCM (Federated Credential Management) API support. Mandatory from August 2025.\n   * @see https://developers.google.com/identity/gsi/web/guides/fedcm-migration\n   */\n  useFedcmForPrompt: optional(boolean()),\n  /**\n   * Cancel the One Tap prompt if the user clicks outside.\n   * @default true\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#cancel_on_tap_outside\n   */\n  cancelOnTapOutside: optional(boolean()),\n  /**\n   * The UX mode for the sign-in flow.\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#ux_mode\n   */\n  uxMode: optional(union([literal('popup'), literal('redirect')])),\n  /**\n   * The URI to redirect to after sign-in when using redirect UX mode.\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#login_uri\n   */\n  loginUri: optional(string()),\n  /**\n   * Enable Intelligent Tracking Prevention (ITP) support for Safari.\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#itp_support\n   */\n  itpSupport: optional(boolean()),\n  /**\n   * Allowed parent origin(s) for iframe embedding.\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#allowed_parent_origin\n   */\n  allowedParentOrigin: optional(union([string(), array(string())])),\n  /**\n   * Restrict sign-in to a specific Google Workspace hosted domain.\n   * @example 'example.com'\n   * @see https://developers.google.com/identity/gsi/web/reference/js-reference#hd\n   */\n  hd: optional(string()),\n})"
+    }
+  ],
+  "google-tag-manager": [
+    {
+      "name": "DataLayerItem",
+      "kind": "type",
+      "code": "export type DataLayerItem = Parameters<GTag> | Record<string, unknown>"
+    },
+    {
+      "name": "DataLayer",
+      "kind": "type",
+      "code": "export type DataLayer = Array<DataLayerItem>"
+    },
+    {
+      "name": "DataLayerPush",
+      "kind": "interface",
+      "code": "export interface DataLayerPush {\n  (...args: Parameters<GTag>): void\n  (obj: Record<string, unknown> | any[]): void\n}"
+    },
+    {
+      "name": "GoogleTagManagerDataLayerApi",
+      "kind": "interface",
+      "code": "export interface GoogleTagManagerDataLayerApi {\n  name: string\n  push: DataLayerPush\n  set: (config: Record<string, unknown>) => void\n  get: <T = unknown>(key: string) => T\n  reset: () => void\n  listeners: Array<() => void>\n}"
+    },
+    {
+      "name": "GoogleTagManagerDataLayerStatus",
+      "kind": "interface",
+      "code": "export interface GoogleTagManagerDataLayerStatus {\n  dataLayer: {\n    gtmDom: boolean\n    gtmLoad: boolean\n    subscribers: number\n    [key: string]: unknown\n  }\n}"
+    },
+    {
+      "name": "GoogleTagManagerContainer",
+      "kind": "interface",
+      "code": "export interface GoogleTagManagerContainer {\n  callback: () => void\n  dataLayer: GoogleTagManagerDataLayerApi\n  state: Record<string, unknown>\n}"
+    },
+    {
+      "name": "GoogleTagManagerInstance",
+      "kind": "interface",
+      "code": "export interface GoogleTagManagerInstance extends GoogleTagManagerDataLayerStatus {\n  [containerId: string]: GoogleTagManagerContainer | any\n}"
+    },
+    {
+      "name": "GoogleTagManagerApi",
+      "kind": "interface",
+      "code": "export interface GoogleTagManagerApi {\n  google_tag_manager: GoogleTagManagerInstance\n  dataLayer: DataLayer & {\n    push: DataLayerPush\n  }\n}"
+    },
+    {
+      "name": "GoogleTagManagerOptions",
+      "kind": "const",
+      "code": "export const GoogleTagManagerOptions = object({\n  /**\n   * GTM container ID (format: GTM-XXXXXX)\n   * @see https://developers.google.com/tag-platform/tag-manager/web#install-the-container\n   */\n  id: string(),\n\n  /**\n   * Optional dataLayer variable name\n   * @default 'dataLayer'\n   * @see https://developers.google.com/tag-platform/tag-manager/web/datalayer#rename_the_data_layer\n   */\n  l: optional(string()),\n\n  /**\n   * Authentication token for environment-specific container versions\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  auth: optional(string()),\n\n  /**\n   * Preview environment name\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  preview: optional(string()),\n\n  /** Forces GTM cookies to take precedence when true */\n  cookiesWin: optional(union([boolean(), literal('x')])),\n\n  /**\n   * Enables debug mode when true\n   * @see https://support.google.com/tagmanager/answer/6107056\n   */\n  debug: optional(union([boolean(), literal('x')])),\n\n  /**\n   * No Personal Advertising - disables advertising features when true\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  npa: optional(union([boolean(), literal('1')])),\n\n  /** Custom dataLayer name (alternative to \"l\" property) */\n  dataLayer: optional(string()),\n\n  /**\n   * Environment name for environment-specific container\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  envName: optional(string()),\n\n  /** Referrer policy for analytics requests */\n  authReferrerPolicy: optional(string()),\n\n  /**\n   * Default consent settings for GTM\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  defaultConsent: optional(record(string(), union([string(), number()]))),\n})"
+    }
+  ],
+  "hotjar": [
+    {
+      "name": "HotjarOptions",
+      "kind": "const",
+      "code": "export const HotjarOptions = object({\n  /**\n   * Your Hotjar Site ID.\n   * @see https://help.hotjar.com/hc/en-us/articles/115012039247-Hotjar-Tracking-Code\n   */\n  id: number(),\n  /**\n   * The Hotjar snippet version.\n   * @default 6\n   */\n  sv: optional(number()),\n})"
+    },
+    {
+      "name": "HotjarApi",
+      "kind": "interface",
+      "code": "export interface HotjarApi {\n  hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void) & ((event: 'stateChange', path: string) => void) & ((event: 'event', eventName: string) => void) & ((event: string, arg?: string) => void) & ((...params: any[]) => void) & {\n    q: any[]\n  }\n}"
+    }
+  ],
+  "instagram-embed": [
+    {
+      "name": "InstagramEmbedOptions",
+      "kind": "const",
+      "code": "export const InstagramEmbedOptions = object({\n  /**\n   * The Instagram post URL to embed.\n   * @example 'https://www.instagram.com/p/C_XXXXXXXXX/'\n   * @see https://developers.facebook.com/docs/instagram/oembed/\n   */\n  postUrl: string(),\n  /**\n   * Whether to include captions in the embed.\n   * @default true\n   */\n  captions: optional(boolean()),\n  /**\n   * Custom API endpoint for fetching embed HTML.\n   * @default '/api/_scripts/instagram-embed'\n   */\n  apiEndpoint: optional(string()),\n})"
+    },
+    {
+      "name": "ScriptInstagramEmbedProps",
+      "kind": "interface",
+      "code": "interface ScriptInstagramEmbedProps {\n  /**\n   * The Instagram post URL to embed\n   * e.g., https://www.instagram.com/p/ABC123/\n   */\n  postUrl: string\n  /**\n   * Whether to include captions in the embed\n   * @default true\n   */\n  captions?: boolean\n  /**\n   * Custom API endpoint for fetching embed HTML\n   * @default '/api/_scripts/instagram-embed'\n   */\n  apiEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+    },
+    {
+      "name": "ScriptInstagramEmbedDefaults",
+      "kind": "const",
+      "code": "const ScriptInstagramEmbedDefaults = {\n  \"captions\": \"true\",\n  \"apiEndpoint\": \"'/api/_scripts/instagram-embed'\"\n}"
+    }
+  ],
+  "intercom": [
+    {
+      "name": "IntercomOptions",
+      "kind": "const",
+      "code": "export const IntercomOptions = object({\n  /**\n   * Your Intercom app ID.\n   * @see https://developers.intercom.com/installing-intercom/docs/javascript-api-attributes-objects\n   */\n  app_id: string(),\n  /**\n   * The regional API base URL. Choose based on your Intercom data hosting region.\n   */\n  api_base: optional(union([literal('https://api-iam.intercom.io'), literal('https://api-iam.eu.intercom.io'), literal('https://api-iam.au.intercom.io')])),\n  /**\n   * The name of the logged-in user.\n   */\n  name: optional(string()),\n  /**\n   * The email address of the logged-in user.\n   */\n  email: optional(string()),\n  /**\n   * A unique identifier for the logged-in user.\n   */\n  user_id: optional(string()),\n  /**\n   * The horizontal alignment of the Intercom messenger launcher.\n   * @default 'right'\n   */\n  alignment: optional(union([literal('left'), literal('right')])),\n  /**\n   * The horizontal padding (in px) of the messenger launcher from the edge of the page.\n   * @default 20\n   */\n  horizontal_padding: optional(number()),\n  /**\n   * The vertical padding (in px) of the messenger launcher from the bottom of the page.\n   * @default 20\n   */\n  vertical_padding: optional(number()),\n})"
+    },
+    {
+      "name": "IntercomApi",
+      "kind": "interface",
+      "code": "export interface IntercomApi {\n  Intercom: ((event: 'boot', data?: InferInput<typeof IntercomOptions>) => void)\n    & ((event: 'shutdown') => void)\n    & ((event: 'update', options?: InferInput<typeof IntercomOptions>) => void)\n    & ((event: 'hide') => void)\n    & ((event: 'show') => void)\n    & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)\n    & ((event: 'showMessages') => void)\n    & ((event: 'showNewMessage', content?: string) => void)\n    & ((event: 'onHide', fn: () => void) => void)\n    & ((event: 'onShow', fn: () => void) => void)\n    & ((event: 'onUnreadCountChange', fn: () => void) => void)\n    & ((event: 'trackEvent', eventName: string, metadata?: Record<string, any>) => void)\n    & ((event: 'getVisitorId') => Promise<string>)\n    & ((event: 'startTour', tourId: string | number) => void)\n    & ((event: 'showArticle', articleId: string | number) => void)\n    & ((event: 'showNews', newsItemId: string | number) => void)\n    & ((event: 'startSurvey', surveyId: string | number) => void)\n    & ((event: 'startChecklist', checklistId: string | number) => void)\n    & ((event: 'showTicket', ticketId: string | number) => void)\n    & ((event: 'showConversation', conversationId: string | number) => void)\n    & ((event: 'onUserEmailSupplied', fn: () => void) => void)\n    & ((event: string, ...params: any[]) => void)\n}"
+    },
+    {
+      "name": "ScriptIntercomProps",
+      "kind": "interface",
+      "code": "interface ScriptIntercomProps {\n  appId: string\n  apiBase?: string\n  name?: string\n  email?: string\n  userId?: string\n  // customizing the messenger\n  alignment?: 'left' | 'right'\n  horizontalPadding?: number\n  verticalPadding?: number\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+    },
+    {
+      "name": "ScriptIntercomDefaults",
+      "kind": "const",
+      "code": "const ScriptIntercomDefaults = {\n  \"trigger\": \"'click'\"\n}"
+    }
+  ],
+  "lemon-squeezy": [
+    {
+      "name": "LemonSqueezyEventPayload",
+      "kind": "type",
+      "code": "export type LemonSqueezyEventPayload = { event: 'Checkout.Success', data: Record<string, any> }\n  & { event: 'Checkout.ViewCart', data: Record<string, any> }\n  & { event: 'GA.ViewCart', data: Record<string, any> }\n  & { event: 'PaymentMethodUpdate.Mounted' }\n  & { event: 'PaymentMethodUpdate.Closed' }\n  & { event: 'PaymentMethodUpdate.Updated' }\n  & { event: string }"
+    },
+    {
+      "name": "LemonSqueezyApi",
+      "kind": "interface",
+      "code": "export interface LemonSqueezyApi {\n  /**\n   * Initialises Lemon.js on your page.\n   */\n  Setup: (options: {\n    eventHandler: (event: LemonSqueezyEventPayload) => void\n  }) => void\n  /**\n   * Refreshes `lemonsqueezy-button` listeners on the page.\n   */\n  Refresh: () => void\n\n  Url: {\n    /**\n     * Opens a given Lemon Squeezy URL, typically these are Checkout or Payment Details Update overlays.\n     * @param url - The URL to open.\n     */\n    Open: (url: string) => void\n\n    /**\n     * Closes the current opened Lemon Squeezy overlay checkout window.\n     */\n    Close: () => void\n  }\n  Affiliate: {\n    /**\n     * Retrieve the affiliate tracking ID\n     */\n    GetID: () => string\n\n    /**\n     * Append the affiliate tracking parameter to the given URL\n     * @param url - The URL to append the affiliate tracking parameter to.\n     */\n    Build: (url: string) => string\n  }\n  Loader: {\n    /**\n     * Show the Lemon.js loader.\n     */\n    Show: () => void\n\n    /**\n     * Hide the Lemon.js loader.\n     */\n    Hide: () => void\n  }\n}"
+    },
+    {
+      "name": "ScriptLemonSqueezyProps",
+      "kind": "interface",
+      "code": "interface ScriptLemonSqueezyProps {\n  trigger?: ElementScriptTrigger\n}"
+    },
+    {
+      "name": "ScriptLemonSqueezyDefaults",
+      "kind": "const",
+      "code": "const ScriptLemonSqueezyDefaults = {\n  \"trigger\": \"'visible'\"\n}"
+    }
+  ],
+  "matomo-analytics": [
+    {
+      "name": "MatomoAnalyticsOptions",
+      "kind": "const",
+      "code": "export const MatomoAnalyticsOptions = object({\n  /**\n   * The URL of your self-hosted Matomo instance.\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'https://matomo.example.com'\n   * @see https://developer.matomo.org/guides/tracking-javascript-guide\n   */\n  matomoUrl: optional(string()),\n  /**\n   * Your Matomo site ID.\n   * @default '1'\n   */\n  siteId: optional(union([string(), number()])),\n  /**\n   * Your Matomo Cloud ID (the subdomain portion of your `*.matomo.cloud` URL).\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'mysite.matomo.cloud'\n   */\n  cloudId: optional(string()),\n  /**\n   * A custom tracker URL. Overrides the default tracker endpoint derived from `matomoUrl` or `cloudId`.\n   */\n  trackerUrl: optional(string()),\n  /**\n   * Whether to track the initial page view on load.\n   * @deprecated Use `watch: true` (default) for automatic page view tracking.\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Enable download and outlink tracking.\n   */\n  enableLinkTracking: optional(boolean()),\n  /**\n   * Disable all tracking cookies for cookieless analytics.\n   */\n  disableCookies: optional(boolean()),\n  /**\n   * Automatically track page views on route change.\n   * @default true\n   */\n  watch: optional(boolean()),\n})"
+    },
+    {
+      "name": "MatomoAnalyticsApi",
+      "kind": "interface",
+      "code": "interface MatomoAnalyticsApi {\n  _paq: unknown[]\n}"
+    }
+  ],
+  "meta-pixel": [
+    {
+      "name": "StandardEvents",
+      "kind": "type",
+      "code": "type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'"
+    },
+    {
+      "name": "EventObjectProperties",
+      "kind": "interface",
+      "code": "interface EventObjectProperties {\n  content_category?: string\n  content_ids?: string[]\n  content_name?: string\n  content_type?: string\n  contents?: { id: string, quantity: number }[]\n  currency?: string\n  delivery_category?: 'in_store' | 'curbside' | 'home_delivery'\n  num_items?: number\n  predicted_ltv?: number\n  search_string?: string\n  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | string\n  value?: number\n  [key: string]: any\n}"
+    },
+    {
+      "name": "ConsentAction",
+      "kind": "type",
+      "code": "type ConsentAction = 'grant' | 'revoke'"
+    },
+    {
+      "name": "FbqArgs",
+      "kind": "type",
+      "code": "type FbqArgs\n  = | ['track', StandardEvents, EventObjectProperties?]\n    | ['trackCustom', string, EventObjectProperties?]\n    | ['trackSingle', string, StandardEvents, EventObjectProperties?]\n    | ['trackSingleCustom', string, string, EventObjectProperties?]\n    | ['init', string]\n    | ['init', number, Record<string, any>?]\n    | ['consent', ConsentAction]\n  // fallback: allow any fbq call signature not covered above\n    | [string, ...any[]]"
+    },
+    {
+      "name": "FbqFns",
+      "kind": "type",
+      "code": "type FbqFns = (...args: FbqArgs) => void"
+    },
+    {
+      "name": "MetaPixelApi",
+      "kind": "interface",
+      "code": "export interface MetaPixelApi {\n  fbq: FbqFns & {\n    push: FbqFns\n    loaded: boolean\n    version: string\n    queue: any[]\n  }\n  _fbq: MetaPixelApi['fbq']\n  callMethod?: FbqFns\n}"
+    },
+    {
+      "name": "MetaPixelOptions",
+      "kind": "const",
+      "code": "export const MetaPixelOptions = object({\n  /**\n   * Your Meta (Facebook) Pixel ID.\n   * @see https://developers.facebook.com/docs/meta-pixel/get-started\n   */\n  id: union([string(), number()]),\n})"
+    }
+  ],
+  "npm": [
+    {
+      "name": "NpmOptions",
+      "kind": "const",
+      "code": "export const NpmOptions = object({\n  /**\n   * The npm package name to load.\n   * @example 'lodash'\n   */\n  packageName: string(),\n  /**\n   * The specific file path within the package to load.\n   * @example '/dist/lodash.min.js'\n   */\n  file: optional(string()),\n  /**\n   * The package version to load.\n   * @default 'latest'\n   */\n  version: optional(string()),\n  /**\n   * The CDN provider to use for loading the package.\n   * @default 'unpkg'\n   * @see https://unpkg.com\n   * @see https://www.jsdelivr.com\n   * @see https://cdnjs.com\n   */\n  provider: optional(union([literal('jsdelivr'), literal('cdnjs'), literal('unpkg')])),\n})"
+    },
+    {
+      "name": "Provider",
+      "kind": "type",
+      "code": "type Provider = 'jsdelivr' | 'cdnjs' | 'unpkg'"
+    }
+  ],
+  "paypal": [
+    {
+      "name": "PayPalOptions",
+      "kind": "const",
+      "code": "export const PayPalOptions = union([\n  object({\n    /**\n     * Your PayPal client ID.\n     * @see https://developer.paypal.com/sdk/js/reference/\n     */\n    clientId: string(),\n    clientToken: optional(string()),\n    /**\n     * Use the PayPal sandbox environment. Defaults to `true` in development.\n     */\n    sandbox: optional(boolean()),\n  }),\n  object({\n    clientId: optional(string()),\n    /**\n     * A server-generated client token for authentication.\n     * @see https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout\n     */\n    clientToken: string(),\n    /**\n     * Use the PayPal sandbox environment. Defaults to `true` in development.\n     */\n    sandbox: optional(boolean()),\n  }),\n])"
+    },
+    {
+      "name": "PayPalApi",
+      "kind": "interface",
+      "code": "export interface PayPalApi {\n  paypal: PayPalV6Namespace\n}"
+    },
+    {
+      "name": "ScriptPayPalButtonsProps",
+      "kind": "interface",
+      "code": "interface ScriptPayPalButtonsProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The v6 SDK components to load.\n   * @default ['paypal-payments']\n   */\n  components?: Components[]\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * The merchant ID(s).\n   */\n  merchantId?: string | string[]\n  /**\n   * Partner attribution ID for revenue sharing.\n   */\n  partnerAttributionId?: string\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
+    },
+    {
+      "name": "ScriptPayPalButtonsDefaults",
+      "kind": "const",
+      "code": "const ScriptPayPalButtonsDefaults = {\n  \"trigger\": \"'visible'\",\n  \"clientId\": \"'test'\",\n  \"components\": \"() => ['paypal-payments'] as Components[]\",\n  \"paypalScriptOptions\": \"() => ({})\"\n}"
+    },
+    {
+      "name": "ScriptPayPalMessagesProps",
+      "kind": "interface",
+      "code": "interface ScriptPayPalMessagesProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The merchant ID for the paypal script.\n   */\n  merchantId?: string | string[]\n  /**\n   * The partner attribution ID.\n   */\n  partnerAttributionId?: string\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * Options for the PayPal Messages session.\n   */\n  messagesOptions?: PayPalMessagesOptions\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
+    },
+    {
+      "name": "ScriptPayPalMessagesDefaults",
+      "kind": "const",
+      "code": "const ScriptPayPalMessagesDefaults = {\n  \"trigger\": \"'visible'\",\n  \"clientId\": \"'test'\",\n  \"paypalScriptOptions\": \"() => ({})\",\n  \"messagesOptions\": \"() => ({})\"\n}"
+    }
+  ],
+  "plausible-analytics": [
+    {
+      "name": "PlausibleAnalyticsOptions",
+      "kind": "interface",
+      "code": "export interface PlausibleAnalyticsOptions {\n  /**\n   * Unique script ID for your site (recommended - new format as of October 2025)\n   * Get this from your Plausible dashboard under Site Installation\n   *\n   * Extract it from your Plausible script URL:\n   * ```\n   * <script src=\"https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js\"></script>\n   *                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n   *                                       scriptId: 'gYyxvZhkMzdzXBAtSeSNz'\n   * ```\n   * @example 'gYyxvZhkMzdzXBAtSeSNz'\n   */\n  scriptId?: string\n  /**\n   * Your site domain\n   * @deprecated Use `scriptId` instead (new October 2025 format)\n   * @example 'example.com'\n   */\n  domain?: string\n  /**\n   * Script extensions for additional features\n   * @deprecated Use init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead (new October 2025 format)\n   */\n  extension?: 'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual' | Array<'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual'>\n  /** Custom properties to track with every pageview */\n  customProperties?: Record<string, any>\n  /** Custom tracking endpoint URL */\n  endpoint?: string\n  /** Configure file download tracking */\n  fileDownloads?: {\n    /** File extensions to track (default: pdf, xlsx, docx, txt, rtf, csv, exe, key, pps, ppt, pptx, 7z, pkg, rar, gz, zip, avi, mov, mp4, mpeg, wmv, midi, mp3, wav, wma, dmg) */\n    fileExtensions?: string[]\n  }\n  /** Enable hash-based routing for single-page apps */\n  hashBasedRouting?: boolean\n  /** Set to false to manually trigger pageviews */\n  autoCapturePageviews?: boolean\n  /** Enable tracking on localhost */\n  captureOnLocalhost?: boolean\n  /** Enable form submission tracking */\n  trackForms?: boolean\n}"
+    },
+    {
+      "name": "PlausibleInitOptions",
+      "kind": "interface",
+      "code": "export interface PlausibleInitOptions {\n  customProperties?: Record<string, any>\n  endpoint?: string\n  fileDownloads?: {\n    fileExtensions?: string[]\n  }\n  hashBasedRouting?: boolean\n  autoCapturePageviews?: boolean\n  captureOnLocalhost?: boolean\n}"
+    },
+    {
+      "name": "PlausibleFunction",
+      "kind": "type",
+      "code": "export type PlausibleFunction = ((event: '404', options: Record<string, any>) => void)\n  & ((event: 'event', options: Record<string, any>) => void)\n  & ((...params: any[]) => void) & {\n    q: any[]\n    init: (options: PlausibleInitOptions) => void\n  }"
+    },
+    {
+      "name": "PlausibleAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface PlausibleAnalyticsApi {\n  plausible: PlausibleFunction\n}"
+    }
+  ],
+  "posthog": [
+    {
+      "name": "PostHogOptions",
+      "kind": "const",
+      "code": "export const PostHogOptions = object({\n  /**\n   * Your PostHog project API key.\n   * @see https://posthog.com/docs/libraries/js#usage\n   */\n  apiKey: string(),\n  /**\n   * Your PostHog data region.\n   * @default 'us'\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  region: optional(union([literal('us'), literal('eu')])),\n  /**\n   * Custom API host URL. Overrides the default derived from `region`.\n   * Useful for self-hosted instances or reverse proxies.\n   */\n  apiHost: optional(string()),\n  /**\n   * Enable autocapture of clicks, form submissions, and page views.\n   * @default true\n   */\n  autocapture: optional(boolean()),\n  /**\n   * Capture page views automatically. Set to `'history_change'` to only capture on history changes.\n   * @default true\n   */\n  capturePageview: optional(union([boolean(), literal('history_change')])),\n  /**\n   * Capture page leave events automatically.\n   * @default true\n   */\n  capturePageleave: optional(boolean()),\n  /**\n   * Disable session recording.\n   */\n  disableSessionRecording: optional(boolean()),\n  /**\n   * Additional PostHog configuration options passed directly to `posthog.init()`.\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  config: optional(record(string(), any())),\n})"
+    },
+    {
+      "name": "PostHogApi",
+      "kind": "interface",
+      "code": "export interface PostHogApi {\n  posthog: PostHog\n}"
+    }
+  ],
+  "reddit-pixel": [
+    {
+      "name": "RdtFns",
+      "kind": "type",
+      "code": "type RdtFns\n  = & ((event: 'init', id: string) => void)\n    & ((event: 'track', eventName: string) => void)"
+    },
+    {
+      "name": "RedditPixelApi",
+      "kind": "interface",
+      "code": "export interface RedditPixelApi {\n  rdt: RdtFns & {\n    sendEvent: (rdt: RedditPixelApi['rdt'], args: unknown[]) => void\n    callQueue: unknown[]\n  }\n}"
+    },
+    {
+      "name": "RedditPixelOptions",
+      "kind": "const",
+      "code": "export const RedditPixelOptions = object({\n  /**\n   * Your Reddit Pixel advertiser ID.\n   * @see https://reddithelp.com/en/categories/advertising/managing-ads/installing-reddit-pixel\n   */\n  id: string(),\n})"
+    }
+  ],
+  "rybbit-analytics": [
+    {
+      "name": "RybbitAnalyticsOptions",
+      "kind": "const",
+      "code": "export const RybbitAnalyticsOptions = object({\n  /**\n   * Your Rybbit site ID.\n   * @see https://rybbit.io/docs\n   */\n  siteId: union([string(), number()]),\n  /**\n   * Automatically track page views.\n   * @default true\n   */\n  autoTrackPageview: optional(boolean()),\n  /**\n   * Enable SPA (single-page app) route tracking.\n   * @default true\n   */\n  trackSpa: optional(boolean()),\n  /**\n   * Include query parameters in tracked URLs.\n   */\n  trackQuery: optional(boolean()),\n  /**\n   * Track outbound link clicks.\n   */\n  trackOutbound: optional(boolean()),\n  /**\n   * Track JavaScript errors.\n   */\n  trackErrors: optional(boolean()),\n  /**\n   * Enable session replay recording.\n   */\n  sessionReplay: optional(boolean()),\n  /**\n   * Enable Web Vitals tracking (LCP, FID, CLS, etc.).\n   */\n  webVitals: optional(boolean()),\n  /**\n   * URL patterns to skip from tracking (glob syntax).\n   */\n  skipPatterns: optional(array(string())),\n  /**\n   * URL patterns to mask in tracked data (glob syntax).\n   */\n  maskPatterns: optional(array(string())),\n  /**\n   * Debounce interval (in ms) for page view tracking.\n   */\n  debounce: optional(number()),\n  /**\n   * API key for authenticated tracking.\n   */\n  apiKey: optional(string()),\n})"
+    },
+    {
+      "name": "RybbitAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface RybbitAnalyticsApi {\n  /**\n   * Tracks a page view\n   */\n  pageview: () => void\n\n  /**\n   * Tracks a custom event\n   * @param name Name of the event\n   * @param properties Optional properties for the event\n   */\n  event: (name: string, properties?: Record<string, any>) => void\n\n  /**\n   * Sets a custom user ID for tracking logged-in users\n   * @param userId The user ID to set (will be stored in localStorage)\n   */\n  identify: (userId: string) => void\n\n  /**\n   * Clears the stored user ID\n   */\n  clearUserId: () => void\n\n  /**\n   * Gets the currently set user ID\n   * @returns The current user ID or null if not set\n   */\n  getUserId: () => string | null\n  /**\n   * @deprecated use top level functions instead\n   */\n  rybbit: RybbitAnalyticsApi\n}"
+    },
+    {
+      "name": "RybbitQueueState",
+      "kind": "interface",
+      "code": "interface RybbitQueueState {\n  queue: Array<[string, ...any[]]>\n  flushed: boolean\n}"
+    }
+  ],
+  "segment": [
+    {
+      "name": "SegmentOptions",
+      "kind": "const",
+      "code": "export const SegmentOptions = object({\n  /**\n   * Your Segment write key.\n   * @see https://segment.com/docs/connections/sources/catalog/libraries/website/javascript/quickstart/\n   */\n  writeKey: string(),\n  /**\n   * The global variable name for the analytics instance.\n   * @default 'analytics'\n   */\n  analyticsKey: optional(string()),\n})"
+    },
+    {
+      "name": "AnalyticsApi",
+      "kind": "interface",
+      "code": "interface AnalyticsApi {\n  track: (event: string, properties?: Record<string, any>) => void\n  page: (name?: string, properties?: Record<string, any>) => void\n  identify: (userId: string, traits?: Record<string, any>, options?: Record<string, any>) => void\n  group: (groupId: string, traits?: Record<string, any>, options?: Record<string, any>) => void\n  alias: (userId: string, previousId: string, options?: Record<string, any>) => void\n  reset: () => void\n  /**\n   * @internal\n   */\n  methods: string[]\n  /**\n   * @internal\n   */\n  factory: (method: string) => (...args: any[]) => AnalyticsApi\n  /**\n   * @internal\n   */\n  push: (args: any[]) => void\n}"
+    },
+    {
+      "name": "SegmentApi",
+      "kind": "type",
+      "code": "export type SegmentApi = Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'>"
+    }
+  ],
+  "snapchat-pixel": [
+    {
+      "name": "InitObjectPropertiesSchema",
+      "kind": "const",
+      "code": "export const InitObjectPropertiesSchema = object({\n  /**\n   * The user's email address (for matching).\n   */\n  user_email: optional(string()),\n  /**\n   * The user's IP address.\n   */\n  ip_address: optional(string()),\n  /**\n   * The user's phone number (for matching).\n   */\n  user_phone_number: optional(string()),\n  /**\n   * SHA-256 hashed email address.\n   */\n  user_hashed_email: optional(string()),\n  /**\n   * SHA-256 hashed phone number.\n   */\n  user_hashed_phone_number: optional(string()),\n  /**\n   * The user's first name.\n   */\n  firstname: optional(string()),\n  /**\n   * The user's last name.\n   */\n  lastname: optional(string()),\n  /**\n   * The user's city.\n   */\n  geo_city: optional(string()),\n  /**\n   * The user's region/state.\n   */\n  geo_region: optional(string()),\n  /**\n   * The user's postal/zip code.\n   */\n  geo_postal_code: optional(string()),\n  /**\n   * The user's country code.\n   */\n  geo_country: optional(string()),\n  /**\n   * The user's age.\n   */\n  age: optional(string()),\n})"
+    },
+    {
+      "name": "SnapTrPixelOptions",
+      "kind": "const",
+      "code": "export const SnapTrPixelOptions = object({\n  /**\n   * Your Snapchat Pixel ID.\n   * @see https://businesshelp.snapchat.com/s/article/pixel-website-install\n   */\n  id: string(),\n  /**\n   * Whether to automatically track a `PAGE_VIEW` event on initialization.\n   */\n  trackPageView: optional(boolean()),\n  ...(InitObjectPropertiesSchema?.entries || {}),\n})"
+    },
+    {
+      "name": "StandardEvents",
+      "kind": "type",
+      "code": "type StandardEvents = 'PAGE_VIEW' | 'VIEW_CONTENT' | 'ADD_CART' | 'SIGN_UP' | 'SAVE' | 'START_CHECKOUT' | 'APP_OPEN' | 'ADD_BILLING' | 'SEARCH' | 'SUBSCRIBE' | 'AD_CLICK' | 'AD_VIEW' | 'COMPLETE_TUTORIAL' | 'LEVEL_COMPLETE' | 'INVITE' | 'LOGIN' | 'SHARE' | 'RESERVE' | 'ACHIEVEMENT_UNLOCKED' | 'ADD_TO_WISHLIST' | 'SPENT_CREDITS' | 'RATE' | 'START_TRIAL' | 'LIST_VIEW'"
+    },
+    {
+      "name": "EventObjectProperties",
+      "kind": "interface",
+      "code": "interface EventObjectProperties {\n  price?: number\n  client_dedup_id?: string\n  currency?: string\n  transaction_id?: string\n  item_ids?: string[]\n  item_category?: string\n  description?: string\n  search_string?: string\n  number_items?: number\n  payment_info_available?: 0 | 1\n  sign_up_method?: string\n  success?: 0 | 1\n  brands?: string[]\n  delivery_method?: 'in_store' | 'curbside' | 'delivery'\n  customer_status?: 'new' | 'returning' | 'reactivated'\n  event_tag?: string\n  [key: string]: any\n}"
+    },
+    {
+      "name": "InitObjectProperties",
+      "kind": "type",
+      "code": "type InitObjectProperties = InferInput<typeof InitObjectPropertiesSchema>"
+    },
+    {
+      "name": "SnapTrFns",
+      "kind": "type",
+      "code": "type SnapTrFns\n  = ((event: 'track', eventName: StandardEvents | '', data?: EventObjectProperties) => void)\n    & ((event: 'init', id: string, data?: Record<string, any>) => void)\n    & ((event: 'init', id: string, data?: InitObjectProperties) => void)\n    & ((event: string, ...params: any[]) => void)"
+    },
+    {
+      "name": "SnapPixelApi",
+      "kind": "interface",
+      "code": "export interface SnapPixelApi {\n  snaptr: SnapTrFns & {\n    push: SnapTrFns\n    loaded: boolean\n    version: string\n    queue: any[]\n  }\n  _snaptr: SnapPixelApi['snaptr']\n  handleRequest?: SnapTrFns\n}"
+    }
+  ],
+  "stripe": [
+    {
+      "name": "StripeOptions",
+      "kind": "const",
+      "code": "export const StripeOptions = object({\n  /**\n   * Whether to load Stripe's advanced fraud detection signals.\n   * Set to `false` to opt out.\n   * @default true\n   * @see https://docs.stripe.com/disputes/prevention/advanced-fraud-detection\n   */\n  advancedFraudSignals: optional(boolean()),\n})"
+    },
+    {
+      "name": "StripeApi",
+      "kind": "interface",
+      "code": "export interface StripeApi {\n  Stripe: StripeConstructor\n}"
+    },
+    {
+      "name": "ScriptStripePricingTableProps",
+      "kind": "interface",
+      "code": "interface ScriptStripePricingTableProps {\n  trigger?: ElementScriptTrigger\n  publishableKey: string\n  pricingTableId: string\n  clientReferenceId?: string\n  customerEmail?: string\n  customerSessionClientSecret?: string\n}"
+    },
+    {
+      "name": "ScriptStripePricingTableDefaults",
+      "kind": "const",
+      "code": "const ScriptStripePricingTableDefaults = {\n  \"trigger\": \"'visible'\"\n}"
+    }
+  ],
+  "tiktok-pixel": [
+    {
+      "name": "StandardEvents",
+      "kind": "type",
+      "code": "type StandardEvents\n  = 'ViewContent'\n    | 'ClickButton'\n    | 'Search'\n    | 'AddToWishlist'\n    | 'AddToCart'\n    | 'InitiateCheckout'\n    | 'AddPaymentInfo'\n    | 'CompletePayment'\n    | 'PlaceAnOrder'\n    | 'Contact'\n    | 'Download'\n    | 'SubmitForm'\n    | 'CompleteRegistration'\n    | 'Subscribe'"
+    },
+    {
+      "name": "EventProperties",
+      "kind": "interface",
+      "code": "interface EventProperties {\n  content_id?: string\n  content_type?: string\n  content_name?: string\n  contents?: Array<{ content_id: string, content_type?: string, content_name?: string, price?: number, quantity?: number }>\n  currency?: string\n  value?: number\n  description?: string\n  query?: string\n  [key: string]: any\n}"
+    },
+    {
+      "name": "IdentifyProperties",
+      "kind": "interface",
+      "code": "interface IdentifyProperties {\n  email?: string\n  phone_number?: string\n  external_id?: string\n}"
+    },
+    {
+      "name": "TtqFns",
+      "kind": "type",
+      "code": "type TtqFns\n  = ((cmd: 'track', event: StandardEvents | string, properties?: EventProperties) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: string, ...args: any[]) => void)"
+    },
+    {
+      "name": "TikTokPixelApi",
+      "kind": "interface",
+      "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n  }\n}"
+    },
+    {
+      "name": "TikTokPixelOptions",
+      "kind": "const",
+      "code": "export const TikTokPixelOptions = object({\n  /**\n   * Your TikTok Pixel ID.\n   * @see https://ads.tiktok.com/help/article/get-started-pixel\n   */\n  id: string(),\n  /**\n   * Whether to automatically track a page view on initialization.\n   * @default true\n   */\n  trackPageView: optional(boolean()),\n})"
+    }
+  ],
+  "umami-analytics": [
+    {
+      "name": "UmamiAnalyticsOptions",
+      "kind": "const",
+      "code": "export const UmamiAnalyticsOptions = object({\n  /**\n   * Your Umami website ID.\n   * @see https://umami.is/docs/tracker-config\n   */\n  websiteId: string(), // required\n  /**\n   * By default, Umami will send data to wherever the script is located.\n   * You can override this to send data to another location.\n   * @see https://umami.is/docs/tracker-config#data-host-url\n   */\n  hostUrl: optional(string()),\n  /**\n   * By default, Umami tracks all pageviews and events for you automatically.\n   * You can disable this behavior and track events yourself using the tracker functions.\n   * @default true\n   * @see https://umami.is/docs/tracker-functions\n   */\n  autoTrack: optional(boolean()),\n  /**\n   * If you want the tracker to only run on specific domains, you can add them to your tracker script.\n   * This is a comma delimited list of domain names.\n   * Helps if you are working in a staging/development environment.\n   * @see https://umami.is/docs/tracker-config#data-domains\n   */\n  domains: optional(array(string())),\n  /**\n   * If you want the tracker to collect events under a specific tag.\n   * Events can be filtered in the dashboard by a specific tag.\n   * @see https://umami.is/docs/tracker-config#data-tag\n   */\n  tag: optional(string()),\n  /**\n   * Function that will be called before data is sent to Umami.\n   * The function takes two parameters: type and payload.\n   * Return the payload to continue sending, or return a falsy value to cancel.\n   * @see https://umami.is/docs/tracker-config#data-before-send\n   */\n  beforeSend: optional(union([\n    custom<(type: string, payload: Record<string, any>) => Record<string, any> | null | false>(input => typeof input === 'function'),\n    string(),\n  ])),\n})"
+    },
+    {
+      "name": "UmamiAnalyticsApi",
+      "kind": "interface",
+      "code": "export interface UmamiAnalyticsApi {\n  track: ((payload?: Record<string, any>) => void) & ((event_name: string, event_data: Record<string, any>) => void)\n  identify: (session_data?: Record<string, any> | string) => void\n}"
+    }
+  ],
+  "vimeo-player": [
+    {
+      "name": "Constructor",
+      "kind": "type",
+      "code": "type Constructor<T extends new (...args: any) => any> = T extends new (...args: infer A) => infer R ? new (...args: A) => R : never"
+    },
+    {
+      "name": "VimeoPlayerApi",
+      "kind": "interface",
+      "code": "export interface VimeoPlayerApi {\n  Vimeo: {\n    Player: Constructor<typeof Vimeo>\n  }\n}"
+    },
+    {
+      "name": "ScriptVimeoPlayerProps",
+      "kind": "interface",
+      "code": "interface ScriptVimeoPlayerProps {\n  // custom\n  trigger?: ElementScriptTrigger\n  placeholderAttrs?: ImgHTMLAttributes\n  rootAttrs?: HTMLAttributes\n  aboveTheFold?: boolean\n  vimeoOptions?: VimeoOptions\n  id?: number | undefined\n  url?: string | undefined\n  ratio?: string\n  /**\n   * Object-fit for the placeholder image.\n   *\n   * @default 'contain'\n   */\n  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'\n}"
+    },
+    {
+      "name": "ScriptVimeoPlayerDefaults",
+      "kind": "const",
+      "code": "const ScriptVimeoPlayerDefaults = {\n  \"trigger\": \"'mousedown'\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'contain'\"\n}"
+    }
+  ],
+  "x-embed": [
+    {
+      "name": "XEmbedOptions",
+      "kind": "const",
+      "code": "export const XEmbedOptions = object({\n  /**\n   * The tweet ID to embed.\n   * @example '1754336034228171055'\n   * @see https://developer.x.com/en/docs/twitter-for-websites/embedded-tweets/overview\n   */\n  tweetId: string(),\n  /**\n   * Optional: Custom API endpoint for fetching tweet data.\n   * @default '/api/_scripts/x-embed'\n   */\n  apiEndpoint: optional(string()),\n  /**\n   * Optional: Custom image proxy endpoint.\n   * @default '/api/_scripts/x-embed-image'\n   */\n  imageProxyEndpoint: optional(string()),\n})"
+    },
+    {
+      "name": "XEmbedTweetData",
+      "kind": "interface",
+      "code": "export interface XEmbedTweetData {\n  id_str: string\n  text: string\n  created_at: string\n  favorite_count: number\n  conversation_count: number\n  user: {\n    name: string\n    screen_name: string\n    profile_image_url_https: string\n    verified?: boolean\n    is_blue_verified?: boolean\n  }\n  entities?: {\n    media?: Array<{\n      media_url_https: string\n      type: string\n      sizes: Record<string, { w: number, h: number }>\n    }>\n    urls?: Array<{\n      url: string\n      expanded_url: string\n      display_url: string\n    }>\n  }\n  photos?: Array<{\n    url: string\n    width: number\n    height: number\n  }>\n  video?: {\n    poster: string\n    variants: Array<{ type: string, src: string }>\n  }\n  quoted_tweet?: XEmbedTweetData\n  parent?: {\n    user: {\n      screen_name: string\n    }\n  }\n}"
+    },
+    {
+      "name": "ScriptXEmbedProps",
+      "kind": "interface",
+      "code": "interface ScriptXEmbedProps {\n  /**\n   * The tweet ID to embed\n   */\n  tweetId: string\n  /**\n   * Custom API endpoint for fetching tweet data\n   * @default '/api/_scripts/x-embed'\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   * @default '/_scripts/x-embed-image'\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+    },
+    {
+      "name": "ScriptXEmbedDefaults",
+      "kind": "const",
+      "code": "const ScriptXEmbedDefaults = {\n  \"apiEndpoint\": \"'/api/_scripts/x-embed'\",\n  \"imageProxyEndpoint\": \"'/api/_scripts/x-embed-image'\"\n}"
+    }
+  ],
+  "x-pixel": [
+    {
+      "name": "ContentProperties",
+      "kind": "interface",
+      "code": "interface ContentProperties {\n  content_type?: string | null\n  content_id?: string | number | null\n  content_name?: string | null\n  content_price?: string | number | null\n  num_items?: string | number | null\n  content_group_id?: string | number | null\n}"
+    },
+    {
+      "name": "EventObjectProperties",
+      "kind": "interface",
+      "code": "interface EventObjectProperties {\n  // this is the same as Twitter events\n  value?: string | number | null\n  currency?: string | null\n  conversion_id?: string | number | null\n  email_address?: string | null\n  phone_number?: string | null\n  contents: ContentProperties[]\n}"
+    },
+    {
+      "name": "TwqFns",
+      "kind": "type",
+      "code": "type TwqFns\n  = ((event: 'event', eventId: string, data?: EventObjectProperties) => void)\n    & ((event: 'config', id: string) => void)\n    & ((event: string, ...params: any[]) => void)"
+    },
+    {
+      "name": "XPixelApi",
+      "kind": "interface",
+      "code": "export interface XPixelApi {\n  twq: TwqFns & {\n    loaded: boolean\n    version: string\n    queue: any[]\n  }\n}"
+    },
+    {
+      "name": "XPixelOptions",
+      "kind": "const",
+      "code": "export const XPixelOptions = object({\n  /**\n   * Your X (Twitter) Pixel ID.\n   * @see https://business.twitter.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites.html\n   */\n  id: string(),\n  /**\n   * The X Pixel script version.\n   * @default '1.1'\n   */\n  version: optional(string()),\n})"
+    }
+  ],
+  "youtube-player": [
+    {
+      "name": "YouTubePlayerApi",
+      "kind": "interface",
+      "code": "export interface YouTubePlayerApi {\n  YT: MaybePromise<{\n    Player: YT.Player\n    PlayerState: YT.PlayerState\n    get: (k: string) => any\n    loaded: 0 | 1\n    loading: 0 | 1\n    ready: (f: () => void) => void\n    scan: () => void\n    setConfig: (config: YT.PlayerOptions) => void\n    subscribe: <EventName extends keyof YT.Events>(\n      event: EventName,\n      listener: YT.Events[EventName],\n      context?: any,\n    ) => void\n    unsubscribe: <EventName extends keyof YT.Events>(\n      event: EventName,\n      listener: YT.Events[EventName],\n      context?: any,\n    ) => void\n  }>\n}"
+    },
+    {
+      "name": "ScriptYouTubePlayerProps",
+      "kind": "interface",
+      "code": "interface ScriptYouTubePlayerProps {\n  placeholderAttrs?: ImgHTMLAttributes\n  rootAttrs?: HTMLAttributes\n  aboveTheFold?: boolean\n  trigger?: ElementScriptTrigger\n  videoId: string\n  playerVars?: YT.PlayerVars\n  width?: number\n  height?: number\n  ratio?: string\n  /**\n   * Whether to use youtube-nocookie.com for embedding.\n   *\n   * @default false\n   */\n  cookies?: boolean\n  playerOptions?: YT.PlayerOptions\n  thumbnailSize?: YoutubeThumbnailSize\n  webp?: boolean\n  /**\n   * Object-fit for the placeholder image.\n   *\n   * @default 'cover'\n   */\n  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'\n}"
+    },
+    {
+      "name": "ScriptYouTubePlayerDefaults",
+      "kind": "const",
+      "code": "const ScriptYouTubePlayerDefaults = {\n  \"cookies\": \"false\",\n  \"trigger\": \"'mousedown'\",\n  \"thumbnailSize\": \"'hq720'\",\n  \"webp\": \"true\",\n  \"playerVars\": \"{ autoplay: 0, playsinline: 1 }\",\n  \"width\": \"640\",\n  \"height\": \"360\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'cover'\"\n}"
+    }
+  ],
+  "carbon-ads": [
+    {
+      "name": "ScriptCarbonAdsProps",
+      "kind": "interface",
+      "code": "interface ScriptCarbonAdsProps {\n  serve: string\n  placement: string\n  format: string\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+    }
+  ]
+}

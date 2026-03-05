@@ -1,17 +1,9 @@
-import { withQuery } from 'ufo'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, string, optional, boolean } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { withQuery } from 'ufo'
+import { GoogleRecaptchaOptions } from './schemas'
 
-export const GoogleRecaptchaOptions = object({
-  siteKey: string(),
-  // Use enterprise.js instead of api.js
-  enterprise: optional(boolean()),
-  // Use recaptcha.net (works in China)
-  recaptchaNet: optional(boolean()),
-  // Language code
-  hl: optional(string()),
-})
+export { GoogleRecaptchaOptions }
 
 export type GoogleRecaptchaInput = RegistryScriptInput<typeof GoogleRecaptchaOptions>
 

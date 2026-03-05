@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
-import { defu } from 'defu'
-import type { PayPalMessagesComponent, PayPalMessagesComponentOptions } from '@paypal/paypal-js'
-import { useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { onBeforeUnmount, resolveComponent } from 'vue'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import type {
+  Components,
+  CreateInstanceOptions,
+  PageTypes,
+  PayPalMessagesOptions,
+  PayPalMessagesSession,
+  PayPalV6Namespace,
+  SdkInstance,
+} from '@paypal/paypal-js/sdk-v6'
+import type { HTMLAttributes, ReservedProps } from 'vue'
 import type { PayPalInput } from '../registry/paypal'
-
-const el = ref<HTMLDivElement | null>(null)
-const rootEl = ref<HTMLDivElement | null>(null)
+import { defu } from 'defu'
+import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, shallowRef } from 'vue'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { useScriptPayPal } from '../registry/paypal'
 
 const props = withDefaults(defineProps<{
   /**
@@ -21,23 +26,35 @@ const props = withDefaults(defineProps<{
    */
   trigger?: ElementScriptTrigger
   /**
-   * The client id for the paypal script.
+   * Client ID or client token for PayPal SDK v6 authentication.
    */
   clientId?: string
   /**
-   * The options for the paypal buttons.
+   * Server-generated client token for SDK v6.
    */
-  messagesOptions?: PayPalMessagesComponentOptions
+  clientToken?: string
   /**
-   * The merchant id for the paypal script.
+   * The merchant ID for the paypal script.
    */
-  merchantId?: string
+  merchantId?: string | string[]
   /**
-   * The partner attribution id for the paypal script.
+   * The partner attribution ID.
    */
   partnerAttributionId?: string
   /**
-   * The options for the paypal scipt.
+   * The page type context hint.
+   */
+  pageType?: PageTypes
+  /**
+   * The locale for the SDK (BCP-47 code).
+   */
+  locale?: string
+  /**
+   * Options for the PayPal Messages session.
+   */
+  messagesOptions?: PayPalMessagesOptions
+  /**
+   * The paypal script options.
    */
   paypalScriptOptions?: Partial<PayPalInput>
 }>(), {
@@ -47,64 +64,59 @@ const props = withDefaults(defineProps<{
   messagesOptions: () => ({}),
 })
 
+const emit = defineEmits<{
+  ready: [session: PayPalMessagesSession]
+  error: [error: unknown]
+}>()
+
+const el = ref<HTMLDivElement | null>(null)
+const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
+const failed = ref(false)
+const messagesSession = shallowRef<PayPalMessagesSession>()
 
 const { onLoaded, status } = useScriptPayPal({
-  clientId: props.clientId,
-  merchantId: props.merchantId,
-  partnerAttributionId: props.partnerAttributionId,
+  ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
   ...props.paypalScriptOptions,
 })
 
-const emit = defineEmits<{
-  apply: [data: Record<string, unknown>]
-  clickMessages: [data: Record<string, unknown>]
-  render: [data: Record<string, unknown>]
-}>()
-
-const options = computed(() => {
-  const _options: PayPalMessagesComponentOptions = {
-    onApply: (data) => {
-      emit('apply', data)
-      return props.messagesOptions?.onApply?.(data)
-    },
-    onClick: (data) => {
-      emit('clickMessages', data)
-      return props.messagesOptions?.onClick?.(data)
-    },
-    onRender: (data) => {
-      emit('render', data)
-      return props.messagesOptions?.onRender?.(data)
-    },
-  }
-  return defu(_options, props.messagesOptions)
-})
-
-const messageInst = shallowRef<PayPalMessagesComponent>()
-
 onMounted(() => {
-  onLoaded(async ({ paypal }) => {
-    if (!el.value) return
-    messageInst.value = paypal?.Messages?.(options.value)
-    await messageInst.value?.render(el.value)
-    ready.value = true
+  onLoaded(async ({ paypal }: { paypal: PayPalV6Namespace }) => {
+    if (!el.value)
+      return
 
-    watch(() => options.value, async (_options) => {
-      if (!el.value) return
-      // don't destroy the element
-      messageInst.value = paypal?.Messages?.(_options)
-      await messageInst.value?.render(el.value)
-    })
+    const components: Components[] = ['paypal-messages']
+    const instanceOptions = {
+      ...(props.clientToken
+        ? { clientToken: props.clientToken }
+        : { clientId: props.clientId }),
+      components,
+      ...(props.pageType && { pageType: props.pageType }),
+      ...(props.locale && { locale: props.locale }),
+      ...(props.merchantId && { merchantId: props.merchantId }),
+      ...(props.partnerAttributionId && { partnerAttributionId: props.partnerAttributionId }),
+    } as CreateInstanceOptions<['paypal-messages']>
+
+    try {
+      const instance = await paypal.createInstance(instanceOptions) as SdkInstance<['paypal-messages']>
+      messagesSession.value = instance.createPayPalMessages(props.messagesOptions)
+      ready.value = true
+      emit('ready', messagesSession.value)
+    }
+    catch (err) {
+      messagesSession.value = undefined
+      failed.value = true
+      emit('error', err)
+    }
   })
 })
 
-function destroy() {
-  if (!el.value) return
-  el.value?.replaceChildren()
-}
-
 onBeforeUnmount(() => {
-  destroy()
+  messagesSession.value = undefined
+})
+
+defineExpose({
+  messagesSession,
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
@@ -117,8 +129,8 @@ const rootAttrs = computed(() => {
     'aria-label': status.value === 'awaitingLoad'
       ? 'PayPal Script Placeholder'
       : status.value === 'loading'
-        ? 'PayPal Buttons Loading'
-        : 'PayPal Buttons',
+        ? 'PayPal Messages Loading'
+        : 'PayPal Messages',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
@@ -127,16 +139,17 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <div v-bind="rootAttrs" id="test">
-    <div v-show="ready" ref="el" />
-    <slot v-if="!ready" name="placeholder">
+  <div ref="rootEl" v-bind="rootAttrs">
+    <div ref="el">
+      <slot v-if="ready" name="default" :messages-session="messagesSession" />
+    </div>
+    <slot v-if="status !== 'error' && !ready && !failed" name="placeholder">
       placeholder
     </slot>
-    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && status !== 'error' && !ready && !failed" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'error'" name="error" />
-    <slot />
+    <slot v-else-if="status === 'error' || failed" name="error" />
   </div>
 </template>

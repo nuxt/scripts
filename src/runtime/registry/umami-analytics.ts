@@ -1,41 +1,8 @@
-import { useRegistryScript } from '../utils'
-import { object, optional, string, boolean, array, union, custom } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { UmamiAnalyticsOptions } from './schemas'
 
-export const UmamiAnalyticsOptions = object({
-  websiteId: string(), // required
-  /**
-   * By default, Umami will send data to wherever the script is located.
-   * You can override this to send data to another location.
-   */
-  hostUrl: optional(string()),
-  /**
-   * By default, Umami tracks all pageviews and events for you automatically.
-   * You can disable this behavior and track events yourself using the tracker functions.
-   * https://umami.is/docs/tracker-functions
-   */
-  autoTrack: optional(boolean()),
-  /**
-   * If you want the tracker to only run on specific domains, you can add them to your tracker script.
-   * This is a comma delimited list of domain names.
-   * Helps if you are working in a staging/development environment.
-   */
-  domains: optional(array(string())),
-  /**
-   * If you want the tracker to collect events under a specific tag.
-   * Events can be filtered in the dashboard by a specific tag.
-   */
-  tag: optional(string()),
-  /**
-   * Function that will be called before data is sent to Umami.
-   * The function takes two parameters: type and payload.
-   * Return the payload to continue sending, or return a falsy value to cancel.
-   */
-  beforeSend: optional(union([
-    custom<(type: string, payload: Record<string, any>) => Record<string, any> | null | false>(input => typeof input === 'function'),
-    string(),
-  ])),
-})
+export { UmamiAnalyticsOptions }
 
 export type UmamiAnalyticsInput = RegistryScriptInput<typeof UmamiAnalyticsOptions, false>
 

@@ -1,21 +1,23 @@
+import type { createMockGoogleMapsAPI } from '../__mocks__/google-maps-api'
 import { vi } from 'vitest'
 import { ref } from 'vue'
-import type { createMockGoogleMapsAPI } from '../__mocks__/google-maps-api'
 
 export type MocksType = ReturnType<typeof createMockGoogleMapsAPI>
 
 /**
  * Creates a mock map context that components would inject
  */
-export const createMockMapContext = (mocks: MocksType) => ({
-  map: ref({}),
-  mapsApi: ref(mocks.mockMapsApi),
-})
+export function createMockMapContext(mocks: MocksType) {
+  return {
+    map: ref({}),
+    mapsApi: ref(mocks.mockMapsApi),
+  }
+}
 
 /**
  * Simulates the component lifecycle for markers
  */
-export const simulateMarkerLifecycle = (mocks: MocksType, options: any) => {
+export function simulateMarkerLifecycle(mocks: MocksType, options: any) {
   // Creation
   const marker = new mocks.mockMapsApi.Marker(options)
 
@@ -40,7 +42,7 @@ export const simulateMarkerLifecycle = (mocks: MocksType, options: any) => {
 /**
  * Simulates the component lifecycle for advanced markers
  */
-export const simulateAdvancedMarkerLifecycle = async (mocks: MocksType, options: any) => {
+export async function simulateAdvancedMarkerLifecycle(mocks: MocksType, options: any) {
   // Library import (required for advanced markers)
   await mocks.mockMapsApi.importLibrary('marker')
 
@@ -68,7 +70,7 @@ export const simulateAdvancedMarkerLifecycle = async (mocks: MocksType, options:
 /**
  * Simulates info window lifecycle and attachment patterns
  */
-export const simulateInfoWindowLifecycle = (mocks: MocksType, options: any) => {
+export function simulateInfoWindowLifecycle(mocks: MocksType, options: any) {
   // Create DOM element for content
   const contentElement = document.createElement('div')
   contentElement.innerHTML = '<p>Test content</p>'
@@ -96,7 +98,7 @@ export const simulateInfoWindowLifecycle = (mocks: MocksType, options: any) => {
 /**
  * Simulates marker clusterer with multiple markers
  */
-export const simulateMarkerClustererLifecycle = async (mocks: MocksType, options: any = {}) => {
+export async function simulateMarkerClustererLifecycle(mocks: MocksType, options: any = {}) {
   const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
 
   // Create clusterer

@@ -3,6 +3,8 @@ import { defineConfig, defineProject } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    globals: true,
+    reporters: 'dot',
     projects: [
       // type tests using vitest typecheck
       defineProject({
@@ -27,6 +29,7 @@ export default defineConfig({
           ],
           exclude: [
             './test/e2e/**/*.test.ts',
+            './test/e2e-dev/**/*.test.ts',
             '**/*.nuxt.test.ts',
             '**/node_modules/**',
           ],
@@ -56,7 +59,20 @@ export default defineConfig({
           exclude: [
             // exclude other tests
             './test/e2e/**/*.test.ts',
+            './test/e2e-dev/**/*.test.ts',
             './test/unit/**/*.test.ts',
+            '**/node_modules/**',
+          ],
+        },
+      }),
+      // e2e-dev: local-only e2e tests (excluded from CI)
+      defineProject({
+        test: {
+          name: 'e2e-dev',
+          include: [
+            './test/e2e-dev/**/*.test.ts',
+          ],
+          exclude: [
             '**/node_modules/**',
           ],
         },

@@ -1,21 +1,8 @@
-import { useRegistryScript } from '../utils'
-import { array, boolean, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { RybbitAnalyticsOptions } from './schemas'
 
-export const RybbitAnalyticsOptions = object({
-  siteId: union([string(), number()]), // required
-  autoTrackPageview: optional(boolean()),
-  trackSpa: optional(boolean()),
-  trackQuery: optional(boolean()),
-  trackOutbound: optional(boolean()),
-  trackErrors: optional(boolean()),
-  sessionReplay: optional(boolean()),
-  webVitals: optional(boolean()),
-  skipPatterns: optional(array(string())),
-  maskPatterns: optional(array(string())),
-  debounce: optional(number()),
-  apiKey: optional(string()),
-})
+export { RybbitAnalyticsOptions }
 
 export type RybbitAnalyticsInput = RegistryScriptInput<typeof RybbitAnalyticsOptions, false>
 
@@ -71,7 +58,8 @@ interface RybbitQueueState {
 }
 
 function getRybbitState(): RybbitQueueState | undefined {
-  if (!import.meta.client) return
+  if (!import.meta.client)
+    return
   const g = globalThis as any
   if (!g[RYBBIT_QUEUE_KEY]) {
     g[RYBBIT_QUEUE_KEY] = { queue: [], flushed: false }
@@ -89,7 +77,8 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
   // Flush queued calls to real implementation
   const flushQueue = () => {
     const state = getRybbitState()
-    if (!state || state.flushed || !isRybbitReady()) return
+    if (!state || state.flushed || !isRybbitReady())
+      return
     state.flushed = true
     while (state.queue.length > 0) {
       const [method, ...args] = state.queue.shift()!

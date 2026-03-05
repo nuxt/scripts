@@ -1,9 +1,6 @@
-<template>
-</template>
-
 <script setup lang="ts">
-import { inject, onUnmounted } from 'vue'
 import { whenever } from '@vueuse/core'
+import { inject, onUnmounted } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 
 const props = defineProps<{
@@ -12,7 +9,7 @@ const props = defineProps<{
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 
-let heatmapLayer: google.maps.visualization.HeatmapLayer | undefined = undefined
+let heatmapLayer: google.maps.visualization.HeatmapLayer | undefined
 
 whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
   await mapContext!.mapsApi.value!.importLibrary('visualization')
@@ -36,3 +33,6 @@ onUnmounted(() => {
   heatmapLayer?.setMap(null)
 })
 </script>
+
+<template>
+</template>

@@ -1,14 +1,19 @@
-import { addDevServerHandler, useNuxt, tryUseNuxt } from '@nuxt/kit'
+import type { NitroConfig } from 'nitropack'
+import type { ModuleOptions } from './module'
+import { addDevServerHandler, extendRouteRules, tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { createError, eventHandler, lazyEventHandler } from 'h3'
 import { fetch } from 'ofetch'
-import { defu } from 'defu'
-import type { NitroConfig } from 'nitropack'
-import { joinURL } from 'ufo'
 import { join, resolve } from 'pathe'
+import { joinURL } from 'ufo'
 import { createStorage } from 'unstorage'
+
 import fsDriver from 'unstorage/drivers/fs-lite'
 
-import type { ModuleOptions } from './module'
+declare module '@nuxt/schema' {
+  interface NuxtHooks {
+    'nitro:config': (config: NitroConfig) => void | Promise<void>
+  }
+}
 
 const renderedScript = new Map<string, {
   content: Buffer
@@ -28,7 +33,7 @@ const renderedScript = new Map<string, {
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 // TODO: refactor to use nitro storage when it can be cached between builds
-export const bundleStorage = () => {
+export function bundleStorage() {
   const nuxt = tryUseNuxt()
   return createStorage({
     driver: fsDriver({
@@ -72,27 +77,25 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
   })
 
   if (nuxt.options.dev) {
-    nuxt.options.routeRules ||= {}
-    nuxt.options.routeRules[joinURL(assetsBaseURL, '**')] = {
+    extendRouteRules(joinURL(assetsBaseURL, '**'), {
       cache: {
         maxAge: ONE_YEAR_IN_SECONDS,
       },
-    }
+    })
   }
 
-  nuxt.options.nitro.publicAssets ||= []
   const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
-  nuxt.options.nitro.publicAssets.push()
-  nuxt.options.nitro = defu(nuxt.options.nitro, {
-    publicAssets: [{
+  nuxt.hook('nitro:config', (nitroConfig) => {
+    nitroConfig.publicAssets ||= []
+    nitroConfig.publicAssets.push({
       dir: cacheDir,
       maxAge: ONE_YEAR_IN_SECONDS,
       baseURL: assetsBaseURL,
-    }],
-    prerender: {
-      ignore: [assetsBaseURL],
-    },
-  } satisfies NitroConfig)
+    })
+    nitroConfig.prerender ||= {}
+    nitroConfig.prerender.ignore ||= []
+    nitroConfig.prerender.ignore.push(assetsBaseURL)
+  })
 
   return {
     renderedScript,

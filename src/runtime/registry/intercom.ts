@@ -1,20 +1,10 @@
-import { joinURL } from 'ufo'
-import { useRegistryScript } from '../utils'
-import { literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { InferInput } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { joinURL } from 'ufo'
+import { useRegistryScript } from '../utils'
+import { IntercomOptions } from './schemas'
 
-export const IntercomOptions = object({
-  app_id: string(),
-  api_base: optional(union([literal('https://api-iam.intercom.io'), literal('https://api-iam.eu.intercom.io'), literal('https://api-iam.au.intercom.io')])),
-  name: optional(string()),
-  email: optional(string()),
-  user_id: optional(string()),
-  // customizing the messenger
-  alignment: optional(union([literal('left'), literal('right')])),
-  horizontal_padding: optional(number()),
-  vertical_padding: optional(number()),
-})
+export { IntercomOptions }
 
 export type IntercomInput = RegistryScriptInput<typeof IntercomOptions, true, false, false>
 

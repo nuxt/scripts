@@ -1,27 +1,18 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, onMounted, ref, type ReservedProps, shallowRef, watch } from 'vue'
-import { defu } from 'defu'
-import type {
-  OnApproveActions,
-  OnApproveData,
-  OnCancelledActions,
-  OnClickActions,
-  OnShippingAddressChangeActions,
-  OnShippingAddressChangeData,
-  OnShippingOptionsChangeActions,
-  OnShippingOptionsChangeData,
-  PayPalButtonsComponent,
-  PayPalButtonsComponentOptions,
-  OnInitActions,
-} from '@paypal/paypal-js'
-import { useScriptPayPal } from '../registry/paypal'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
-import { onBeforeUnmount, resolveComponent } from 'vue'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import type {
+  Components,
+  CreateInstanceOptions,
+  PageTypes,
+  PayPalV6Namespace,
+  SdkInstance,
+} from '@paypal/paypal-js/sdk-v6'
+import type { HTMLAttributes, ReservedProps } from 'vue'
 import type { PayPalInput } from '../registry/paypal'
-
-const el = ref<HTMLDivElement | null>(null)
-const rootEl = ref<HTMLDivElement | null>(null)
+import { defu } from 'defu'
+import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, shallowRef } from 'vue'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { useScriptPayPal } from '../registry/paypal'
 
 const props = withDefaults(defineProps<{
   /**
@@ -33,127 +24,96 @@ const props = withDefaults(defineProps<{
    */
   trigger?: ElementScriptTrigger
   /**
-   * The client id for the paypal script.
+   * Client ID or client token for PayPal SDK v6 authentication.
    */
   clientId?: string
   /**
-   * The options for the paypal buttons.
+   * Server-generated client token for SDK v6.
    */
-  buttonOptions?: PayPalButtonsComponentOptions
+  clientToken?: string
+  /**
+   * The v6 SDK components to load.
+   * @default ['paypal-payments']
+   */
+  components?: Components[]
+  /**
+   * The page type context hint.
+   */
+  pageType?: PageTypes
+  /**
+   * The locale for the SDK (BCP-47 code).
+   */
+  locale?: string
+  /**
+   * The merchant ID(s).
+   */
+  merchantId?: string | string[]
+  /**
+   * Partner attribution ID for revenue sharing.
+   */
+  partnerAttributionId?: string
   /**
    * The paypal script options.
    */
   paypalScriptOptions?: Partial<PayPalInput>
-  /**
-   * Disables the paypal buttons.
-   */
-  disabled?: boolean
 }>(), {
   trigger: 'visible',
   clientId: 'test',
-  disabled: false,
-  buttonOptions: () => ({}),
+  components: () => ['paypal-payments'] as Components[],
   paypalScriptOptions: () => ({}),
 })
 
+const emit = defineEmits<{
+  ready: [instance: SdkInstance<Components[]>]
+  error: [error: unknown]
+}>()
+
+const el = ref<HTMLDivElement | null>(null)
+const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
+const failed = ref(false)
+const sdkInstance = shallowRef<SdkInstance<Components[]>>()
 
 const { onLoaded, status } = useScriptPayPal({
-  clientId: props.clientId,
+  ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
   ...props.paypalScriptOptions,
 })
 
-const emit = defineEmits<{
-  approve: [data: OnApproveData, actions: OnApproveActions]
-  error: [error: Record<string, unknown>]
-  cancel: [data: Record<string, unknown>, actions: OnCancelledActions]
-  clickButtons: [data: Record<string, unknown>, actions: OnClickActions]
-  shippingOptionsChange: [
-    data: OnShippingOptionsChangeData,
-    actions: OnShippingOptionsChangeActions,
-  ]
-  shippingAddressChange: [
-    data: OnShippingAddressChangeData,
-    actions: OnShippingAddressChangeActions,
-  ]
-  init: [data: Record<string, unknown>, actions: OnInitActions]
-}>()
-
-const initActions = shallowRef<OnInitActions | null>(null)
-
-const handleDisabled = () => {
-  if (!initActions.value) return
-  if (props.disabled) {
-    initActions.value.disable()
-  }
-  else {
-    initActions.value.enable()
-  }
-}
-
-const options = computed(() => {
-  const _options: PayPalButtonsComponentOptions = {
-    onApprove: async (data, actions) => {
-      emit('approve', data, actions)
-      return props.buttonOptions?.onApprove?.(data, actions)
-    },
-    onError: (err) => {
-      emit('error', err)
-      return props.buttonOptions?.onError?.(err)
-    },
-    onCancel: (data, actions) => {
-      emit('cancel', data, actions)
-      return props.buttonOptions?.onCancel?.(data, actions)
-    },
-    onClick: (data, actions) => {
-      emit('clickButtons', data, actions)
-      return props.buttonOptions?.onClick?.(data, actions)
-    },
-    onShippingOptionsChange: async (data, actions) => {
-      emit('shippingOptionsChange', data, actions)
-      return props.buttonOptions?.onShippingOptionsChange?.(data, actions)
-    },
-    onShippingAddressChange: async (data, actions) => {
-      emit('shippingAddressChange', data, actions)
-      return props.buttonOptions?.onShippingAddressChange?.(data, actions)
-    },
-    onInit: (data, actions) => {
-      initActions.value = actions
-      actions.disable()
-      handleDisabled()
-      emit('init', data, actions)
-      return props.buttonOptions?.onInit?.(data, actions)
-    },
-  }
-  return defu(_options, props.buttonOptions)
-})
-
-watch(() => props.disabled, handleDisabled)
-
-const buttonInst = shallowRef<PayPalButtonsComponent>()
-
 onMounted(() => {
-  onLoaded(async ({ paypal }) => {
-    if (!el.value) return
-    buttonInst.value = paypal?.Buttons?.(options.value)
-    await buttonInst.value?.render(el.value)
-    ready.value = true
+  onLoaded(async ({ paypal }: { paypal: PayPalV6Namespace }) => {
+    if (!el.value)
+      return
+    const instanceOptions = {
+      ...(props.clientToken
+        ? { clientToken: props.clientToken }
+        : { clientId: props.clientId }),
+      components: props.components,
+      ...(props.pageType && { pageType: props.pageType }),
+      ...(props.locale && { locale: props.locale }),
+      ...(props.merchantId && { merchantId: props.merchantId }),
+      ...(props.partnerAttributionId && { partnerAttributionId: props.partnerAttributionId }),
+    } as CreateInstanceOptions<Components[]>
 
-    watch(() => options.value, async (_options) => {
-      if (!el.value) return
-      await buttonInst.value?.updateProps(_options)
-    })
+    try {
+      sdkInstance.value = await paypal.createInstance(instanceOptions)
+      ready.value = true
+      emit('ready', sdkInstance.value)
+    }
+    catch (err) {
+      sdkInstance.value = undefined
+      failed.value = true
+      emit('error', err)
+    }
   })
 })
 
-async function destroy() {
-  if (buttonInst.value) {
-    await buttonInst.value?.close()
-  }
-}
+onBeforeUnmount(() => {
+  sdkInstance.value = undefined
+})
 
-onBeforeUnmount(async () => {
-  await destroy()
+defineExpose({
+  /** The PayPal SDK v6 instance for creating payment sessions, checking eligibility, etc. */
+  sdkInstance,
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
@@ -166,8 +126,8 @@ const rootAttrs = computed(() => {
     'aria-label': status.value === 'awaitingLoad'
       ? 'PayPal Script Placeholder'
       : status.value === 'loading'
-        ? 'PayPal Buttons Loading'
-        : 'PayPal Buttons',
+        ? 'PayPal Loading'
+        : 'PayPal',
     'aria-live': 'polite',
     'role': 'application',
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
@@ -176,16 +136,17 @@ const rootAttrs = computed(() => {
 </script>
 
 <template>
-  <div v-bind="rootAttrs" id="test">
-    <div v-show="ready" ref="el" />
-    <slot v-if="!ready" name="placeholder">
+  <div ref="rootEl" v-bind="rootAttrs">
+    <div ref="el">
+      <slot v-if="ready" name="default" :sdk-instance="sdkInstance" />
+    </div>
+    <slot v-if="status !== 'error' && !ready && !failed" name="placeholder">
       placeholder
     </slot>
-    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+    <slot v-if="status !== 'awaitingLoad' && status !== 'error' && !ready && !failed" name="loading">
       <ScriptLoadingIndicator color="black" />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'error'" name="error" />
-    <slot />
+    <slot v-else-if="status === 'error' || failed" name="error" />
   </div>
 </template>

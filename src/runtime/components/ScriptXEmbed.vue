@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { HTMLAttributes } from 'vue'
-import { useAsyncData } from 'nuxt/app'
 import type { XEmbedTweetData } from '../registry/x-embed'
+import { useAsyncData } from 'nuxt/app'
+import { computed } from 'vue'
 import { formatCount, formatTweetDate, proxyXImageUrl } from '../registry/x-embed'
 
 const props = withDefaults(defineProps<{
@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   tweetId: string
   /**
    * Custom API endpoint for fetching tweet data
-   * @default '/_scripts/x-embed'
+   * @default '/api/_scripts/x-embed'
    */
   apiEndpoint?: string
   /**

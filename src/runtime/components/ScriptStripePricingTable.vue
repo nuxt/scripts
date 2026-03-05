@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import type { ElementScriptTrigger } from '../types'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useScript } from '../composables/useScript'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 
 const props = withDefaults(defineProps<{
   trigger?: ElementScriptTrigger

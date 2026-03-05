@@ -1,11 +1,7 @@
-<template>
-  <slot v-if="advancedMarkerElement" />
-</template>
-
 <script lang="ts">
 import type { InjectionKey, ShallowRef } from 'vue'
-import { inject, onUnmounted, provide, shallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
+import { inject, onUnmounted, provide, shallowRef } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 
@@ -17,6 +13,11 @@ export const ADVANCED_MARKER_ELEMENT_INJECTION_KEY = Symbol('marker') as Injecti
 <script setup lang="ts">
 const props = defineProps<{
   options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>
+}>()
+
+const emit = defineEmits<{
+  (event: typeof eventsWithoutPayload[number]): void
+  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
 const eventsWithoutPayload = [
@@ -45,11 +46,6 @@ const eventsWithMapMouseEventPayload = [
   'mouseover',
   'mouseup',
 ] as const
-
-const emit = defineEmits<{
-  (event: typeof eventsWithoutPayload[number]): void
-  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
-}>()
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
@@ -109,3 +105,7 @@ function setupAdvancedMarkerElementEventListeners(advancedMarkerElement: google.
   })
 }
 </script>
+
+<template>
+  <slot v-if="advancedMarkerElement" />
+</template>

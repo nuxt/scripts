@@ -1,13 +1,13 @@
 <script setup lang="ts">
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck
 
-/// <reference types="youtube" />
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes, Ref } from 'vue'
+import type { ElementScriptTrigger } from '../types'
 import { defu } from 'defu'
 import { useHead } from 'nuxt/app'
-import type { ElementScriptTrigger } from '../types'
+/// <reference types="youtube" />
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptYouTubePlayer } from '../registry/youtube-player'
 import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
@@ -134,11 +134,13 @@ onMounted(() => {
     // Wait for THIS player's trigger before creating iframe (fixes #339)
     if (!isTriggered.value && trigger instanceof Promise) {
       const triggered = await trigger
-      if (!triggered) return // Component was disposed
+      if (!triggered)
+        return // Component was disposed
     }
 
     // Guard against stale refs during layout transitions (fixes #297)
-    if (!youtubeEl.value) return
+    if (!youtubeEl.value)
+      return
 
     const YouTube = instance.YT instanceof Promise ? await instance.YT : instance.YT
     await new Promise<void>((resolve) => {
@@ -149,7 +151,8 @@ onMounted(() => {
     })
 
     // Double-check ref is still valid after async operations
-    if (!youtubeEl.value) return
+    if (!youtubeEl.value)
+      return
 
     player.value = new YT.Player(youtubeEl.value, {
       host: !props.cookies ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com',
@@ -234,6 +237,8 @@ const placeholderAttrs = computed(() => {
     src: isFallbackPlaceHolder.value ? fallbackPlaceHolder.value : placeholder.value,
     alt: '',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
+    // @ts-expect-error untyped
+    fetchpriority: props.aboveTheFold ? 'high' : undefined,
     style: {
       width: '100%',
       objectFit: props.placeholderObjectFit,

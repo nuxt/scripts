@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
-import { computed } from 'vue'
 import { useAsyncData } from 'nuxt/app'
+import { computed } from 'vue'
 import { extractInstagramShortcode } from '../registry/instagram-embed'
 
 const props = withDefaults(defineProps<{

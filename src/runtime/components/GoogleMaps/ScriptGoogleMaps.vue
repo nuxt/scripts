@@ -1,16 +1,16 @@
 <script lang="ts">
 /// <reference types="google.maps" />
-import { computed, onBeforeUnmount, onMounted, ref, watch, toRaw, provide, shallowRef } from 'vue'
-import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps, ShallowRef } from 'vue'
-import { withQuery } from 'ufo'
-import type { QueryObject } from 'ufo'
-import { defu } from 'defu'
-import { hash } from 'ohash'
-import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
+import type { QueryObject } from 'ufo'
+import type { HTMLAttributes, ImgHTMLAttributes, InjectionKey, Ref, ReservedProps, ShallowRef } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
+import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
+import { defu } from 'defu'
+import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
+import { hash } from 'ohash'
+import { withQuery } from 'ufo'
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 
 export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{

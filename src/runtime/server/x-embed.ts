@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Generate random token like Zaraz does
-  const randomToken = [...Array(11)]
+  const randomToken = [...Array.from({ length: 11 })]
     .map(() => (Math.random() * 36).toString(36)[2])
     .join('')
 

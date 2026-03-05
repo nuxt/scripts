@@ -1,29 +1,8 @@
-import { useRegistryScript } from '../utils'
-import { boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { FathomAnalyticsOptions } from './schemas'
 
-export const FathomAnalyticsOptions = object({
-  /**
-   * The Fathom Analytics site ID.
-   */
-  site: string(),
-  /**
-   * The Fathom Analytics tracking mode.
-   */
-  spa: optional(union([literal('auto'), literal('history'), literal('hash')])),
-  /**
-   * Automatically track page views.
-   */
-  auto: optional(boolean()),
-  /**
-   * Enable canonical URL tracking.
-   */
-  canonical: optional(boolean()),
-  /**
-   * Honor Do Not Track requests.
-   */
-  honorDnt: optional(boolean()),
-})
+export { FathomAnalyticsOptions }
 
 export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false, false>
 

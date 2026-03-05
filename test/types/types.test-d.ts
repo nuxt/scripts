@@ -1,4 +1,3 @@
-import { describe, expectTypeOf, it } from 'vitest'
 import type { ModuleOptions } from '../../src/module'
 import type {
   NuxtUseScriptOptions,
@@ -6,6 +5,7 @@ import type {
   ScriptRegistry,
   UseScriptContext,
 } from '../../src/runtime/types'
+import { describe, expectTypeOf, it } from 'vitest'
 
 describe('module options registry', () => {
   it('registry entries are typed', () => {

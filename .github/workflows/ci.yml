@@ -1,50 +1,54 @@
-name: ci
+name: Test
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    paths-ignore:
+      - '**/README.md'
+      - 'docs/**'
 
-permissions: {contents: read}
+permissions:
+  contents: read
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - uses: pnpm/action-setup@v4
-        name: Install pnpm
-      - name: Install Node.js
-        uses: actions/setup-node@v6
+
+      - uses: actions/setup-node@v6
         with:
-          node-version: 24
-          cache: 'pnpm'
-      - run: pnpm install
+          node-version: lts/*
+          cache: pnpm
+
+      - run: pnpm i
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Prepare
+        run: pnpm dev:prepare
+
       # https://github.com/vitejs/vite/blob/main/.github/workflows/ci.yml#L62
       # Install playwright's binary under custom directory to cache
-      - name: Set Playwright path (non-windows)
-        if: runner.os != 'Windows'
+      - name: Set Playwright path
         run: echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/playwright-bin" >> $GITHUB_ENV
-      - name: Set Playwright path (windows)
-        if: runner.os == 'Windows'
-        run: echo "PLAYWRIGHT_BROWSERS_PATH=$HOME\.cache\playwright-bin" >> $env:GITHUB_ENV
 
       - name: Cache Playwright's binary
         uses: actions/cache@v5
         with:
-          # Playwright removes unused browsers automatically
-          # So does not need to add playwright version to key
           key: ${{ runner.os }}-playwright-bin-v1
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
 
       - name: Install Playwright
-        # does not need to explicitly set chromium after https://github.com/microsoft/playwright/issues/14862 is solved
         run: pnpm playwright-core install chromium
 
-      - run: pnpm dev:prepare
-      - run: pnpm test
-      - run: pnpm build
-      - run: pnpm typecheck
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm vitest run --project typecheck --project unit --project e2e --project nuxt-runtime

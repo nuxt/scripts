@@ -1,0 +1,684 @@
+---
+
+title: Google Maps
+description: Show performance-optimized Google Maps in your Nuxt app.
+links:
+  - label: useScriptGoogleMaps
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-maps.ts
+    size: xs
+  - label: "<ScriptGoogleMaps>"
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGoogleMaps.vue
+    size: xs
+
+---
+
+[Google Maps](https://maps.google.com/) allows you to embed maps in your website and customize them with your content.
+
+Nuxt Scripts provides a [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component to interact with the Google Maps.
+
+::script-stats
+::
+
+::script-types
+::
+
+## Types
+
+To use Google Maps with full TypeScript support, you will need
+to install the `@types/google.maps` dependency.
+
+```bash
+pnpm add -D @types/google.maps
+```
+
+## [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"}
+
+The [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component is a wrapper around the [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable. It provides a simple way to embed Google Maps in your Nuxt app.
+
+It's optimized for performance by leveraging the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Google Maps when specific elements events happen.
+
+Before Google Maps is loaded, it shows a placeholder using [Maps Static API](https://developers.google.com/maps/documentation/maps-static).
+
+By default, it will load on the `mouseover` and `mouseclick` events.
+
+### Billing & Permissions
+
+::callout
+You'll need an API key with permissions to access the [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/cloud-setup).
+
+Optionally, you can provide permissions to the [Static Maps API](https://developers.google.com/maps/documentation/maps-static/cloud-setup) (required when lazy loading and using the placeholder map) and [Places API](https://developers.google.com/maps/documentation/places/web-service/cloud-setup) (required when searching using a query, i.e "New York").
+::
+
+Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
+- $7 per 1000 loads for the Maps JavaScript API (default for using Google Maps)
+- $2 per 1000 loads for the Static Maps API - Only used when you don't provide a `placeholder` slot.
+- $5 per 1000 loads for the Geocoding API - Only used when you don't provide a `google.maps.LatLng` object instead of a query string for the `center` prop
+
+However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged, assuming you're using it.
+
+Billing will be optimized in a [future update](https://github.com/nuxt/scripts/issues/83).
+
+You should consider using the [Iframe Embed](https://developers.google.com/maps/documentation/embed/get-started) instead if you want to avoid these costs
+and are okay with a less interactive map.
+
+### Demo
+
+::code-group
+
+:google-maps-demo{label="Output"}
+
+```vue [Input]
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const isLoaded = ref(false)
+const center = ref()
+const maps = ref()
+
+const query = ref({
+  lat:  -37.7995487,
+  lng: 144.9867841,
+})
+
+const markers = ref([])
+
+let increment = 1
+function addMarker() {
+  // push to markers, we want to add a marker from the center but randomize the position by a bit
+  const _center = center.value || query.value
+  // lat and lng may be a function
+  const _lat = typeof _center.lat === 'function' ? _center.lat() : _center.lat
+  const _lng = typeof _center.lng === 'function' ? _center.lng() : _center.lng
+  const lat = (1000 * _lat + increment) / 1000
+  const lng = (1000 * _lng + increment) / 1000
+  increment += 1
+
+  markers.value.push(`${lat},${lng}`)
+}
+
+function removeMarkers() {
+  markers.value = []
+  increment = 1
+}
+function handleReady({ map }) {
+  center.value = map.value.getCenter()
+  map.value.addListener('center_changed', () => {
+    center.value = map.value.getCenter()
+  })
+  isLoaded.value = true
+}
+</script>
+
+<template>
+<div class="not-prose">
+  <div class="flex items-center justify-center p-5">
+    <ScriptGoogleMaps
+      ref="maps"
+      :center="query"
+      :markers="markers"
+      api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
+      class="group"
+      above-the-fold
+      @ready="handleReady"
+    />
+  </div>
+  <div class="text-center">
+    <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Static Image: Hover to load interactive" description="Hovering the map will trigger the Google Maps script to load and init the map." />
+    <UAlert v-if="isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Interactive Map">
+      <template #description>
+      Center: {{ center }}
+      </template>
+    </UAlert>
+    <UButton @click="addMarker" type="button" class="">
+      Add Marker
+    </UButton>
+    <UButton v-if="markers.length" @click="removeMarkers" type="button" color="gray" variant="ghost" class="">
+      Remove Markers
+    </UButton>
+  </div>
+</div>
+</template>
+```
+
+::
+
+#### With Environment Variables
+
+If you prefer to configure your API key using environment variables.
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleMaps: true,
+    }
+  },
+  // you need to provide a runtime config to access the environment variables
+  runtimeConfig: {
+    public: {
+      scripts: {
+        googleMaps: {
+          apiKey: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY
+        },
+      },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY=<YOUR_API_KEY>
+```
+
+### Guides
+
+#### Eager Loading Placeholder
+
+The Google Maps placeholder image is lazy-loaded by default. You should change this behavior if your map is above the fold
+or consider using the `#placeholder` slot to customize the placeholder image.
+
+::code-group
+
+```vue [Placeholder Attrs]
+<ScriptGoogleMaps above-the-fold />
+```
+
+```vue [Placeholder Slot]
+<ScriptGoogleMaps>
+  <template #placeholder="{ placeholder }">
+    <img :src="placeholder" alt="Map Placeholder">
+  </template>
+</ScriptGoogleMaps>
+```
+
+::
+
+#### Advanced Marker Control
+
+If you need more control over the markers on the map, you can use the exposed `createAdvancedMapMarker` function which 
+will return the marker instance.
+
+```vue
+<script lang="ts" setup>
+const googleMapsRef = ref()
+onMounted(() => {
+  const marker = googleMapsRef.value.createAdvancedMapMarker({
+    position: { }
+  })
+})
+</script>
+<template>
+    <ScriptGoogleMaps ref="googleMapsRef" />
+</template>
+```
+
+
+#### Advanced Map Control
+
+The component exposes all internal APIs, so you can customize your map as needed.
+
+```vue
+<script lang="ts" setup>
+const googleMapsRef = ref()
+onMounted(async () => {
+  const api = googleMapsRef.value
+  
+  // Access internal APIs
+  const googleMaps = api.googleMaps.value // google.maps api
+  const mapInstance = api.map.value // google.maps.Map instance
+  
+  // Convert a query to lat/lng
+  const query = await api.resolveQueryToLatLang('Space Needle, Seattle, WA') // { lat: 0, lng: 0 }
+  
+  // Import a Google Maps library
+  const geometry = await api.importLibrary('geometry')
+  const distance = new googleMaps.geometry.spherical.computeDistanceBetween(
+    new googleMaps.LatLng(0, 0),
+    new googleMaps.LatLng(0, 0)
+  )
+})
+</script>
+<template>
+    <ScriptGoogleMaps ref="googleMapsRef" />
+</template>
+```
+
+#### Loading immediately
+
+If you want to load the Google Maps immediately, you can use the `trigger` prop.
+
+```vue
+<template>
+<ScriptGoogleMaps trigger="immediate">
+</ScriptGoogleMaps>
+</template>
+```
+
+#### Map Styling
+
+You can style the map by using the `mapOptions.styles` prop. You can find pre-made styles on [Snazzy Maps](https://snazzymaps.com/).
+
+This will automatically work for both the static map placeholder and the interactive map.
+
+```vue
+<script setup lang="ts">
+const mapOptions = {
+  styles: [{ elementType: 'labels', stylers: [{ visibility: 'off' }, { color: '#f49f53' }] }, { featureType: 'landscape', stylers: [{ color: '#f9ddc5' }, { lightness: -7 }] }, { featureType: 'road', stylers: [{ color: '#813033' }, { lightness: 43 }] }, { featureType: 'poi.business', stylers: [{ color: '#645c20' }, { lightness: 38 }] }, { featureType: 'water', stylers: [{ color: '#1994bf' }, { saturation: -69 }, { gamma: 0.99 }, { lightness: 43 }] }, { featureType: 'road.local', elementType: 'geometry.fill', stylers: [{ color: '#f19f53' }, { weight: 1.3 }, { visibility: 'on' }, { lightness: 16 }] }, { featureType: 'poi.business' }, { featureType: 'poi.park', stylers: [{ color: '#645c20' }, { lightness: 39 }] }, { featureType: 'poi.school', stylers: [{ color: '#a95521' }, { lightness: 35 }] }, {}, { featureType: 'poi.medical', elementType: 'geometry.fill', stylers: [{ color: '#813033' }, { lightness: 38 }, { visibility: 'off' }] },
+}
+</script>
+<template>
+<ScriptGoogleMaps :mapOptions="mapOptions" />
+</template>
+```
+
+### Component API
+
+See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
+
+### Events
+
+The [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component emits a single `ready` event when the Google Maps is loaded.
+
+```ts
+const emits = defineEmits<{
+  ready: [map: google.maps.Map]
+}>()
+```
+
+To subscribe to Google Map events, you can use the `ready` event.
+
+```vue
+<script setup lang="ts">
+function handleReady({ map }) {
+  map.addListener('center_changed', () => {
+    console.log('Center changed', map.getCenter())
+  })
+}
+</script>
+
+<template>
+  <ScriptGoogleMaps @ready="handleReady" />
+</template>
+```
+
+### Slots
+
+The component provides minimal UI by default, only enough to be functional and accessible. There are a number of slots for you to customize the maps however you like.
+
+**default**
+
+The default slot is used to display content that will always be visible.
+
+```vue
+<template>
+  <ScriptGoogleMaps>
+    <div class="absolute top-0 left-0 right-0 p-5 bg-white text-black">
+      <h1 class="text-xl font-bold">
+        My Custom Map
+      </h1>
+    </div>
+  </ScriptGoogleMaps>
+</template>
+```
+
+**awaitingLoad**
+
+The slot is used to display content while the Google Maps is loading.
+
+```vue
+<template>
+  <ScriptGoogleMaps>
+    <template #awaitingLoad>
+      <div class="bg-blue-500 text-white p-5">
+        Click to load the map!
+      </div>
+    </template>
+  </ScriptGoogleMaps>
+</template>
+```
+
+**loading**
+
+The slot is used to display content while the Google Maps is loading.
+
+Note: This shows a `ScriptLoadingIndicator` by default for accessibility and UX, by providing a slot you will
+override this component. Make sure you provide a loading indicator.
+
+```vue
+<template>
+  <ScriptGoogleMaps>
+    <template #loading>
+      <div class="bg-blue-500 text-white p-5">
+        Loading...
+      </div>
+    </template>
+  </ScriptGoogleMaps>
+</template>
+```
+
+**placeholder**
+
+The slot is used to display a placeholder image before the Google Maps is loaded. By default, this will show the Google Maps Static API image for the map. 
+
+By providing your own placeholder slot you will disable the default placeholder image from being used and will not be charged for the Static Maps API usage.
+
+```vue
+<template>
+  <ScriptGoogleMaps>
+    <template #placeholder="{ placeholder }">
+      <img :src="placeholder">
+    </template>
+  </ScriptGoogleMaps>
+</template>
+```
+
+## Google Maps SFC Components
+
+Nuxt Scripts provides individual Single File Components (SFCs) for different Google Maps elements. These components allow you to declaratively compose complex maps using Vue's template syntax.
+
+### Installation
+
+To use marker clustering functionality, you'll need to install the required peer dependency:
+
+```bash
+npm install @googlemaps/markerclusterer
+# or
+yarn add @googlemaps/markerclusterer
+# or
+pnpm add @googlemaps/markerclusterer
+```
+
+### Available Components
+
+All Google Maps SFC components must be used within a `<ScriptGoogleMaps>` component:
+
+- `<ScriptGoogleMapsMarker>` - Classic markers with icon support
+- `<ScriptGoogleMapsAdvancedMarkerElement>` - Modern advanced markers with HTML content
+- `<ScriptGoogleMapsPinElement>` - Customizable pin markers (use within AdvancedMarkerElement)
+- `<ScriptGoogleMapsInfoWindow>` - Information windows that appear on click
+- `<ScriptGoogleMapsMarkerClusterer>` - Groups nearby markers into clusters
+- `<ScriptGoogleMapsCircle>` - Circular overlays
+- `<ScriptGoogleMapsPolygon>` - Polygon shapes
+- `<ScriptGoogleMapsPolyline>` - Line paths
+- `<ScriptGoogleMapsRectangle>` - Rectangular overlays
+- `<ScriptGoogleMapsHeatmapLayer>` - Heatmap visualization
+
+### Basic Usage
+
+```vue
+<template>
+  <ScriptGoogleMaps
+    :center="{ lat: -34.397, lng: 150.644 }"
+    :zoom="8"
+    api-key="your-api-key"
+  >
+    <!-- Add markers -->
+    <ScriptGoogleMapsMarker
+      :options="{ position: { lat: -34.397, lng: 150.644 } }"
+    >
+      <!-- Info window appears on marker click -->
+      <ScriptGoogleMapsInfoWindow>
+        <div>
+          <h3>Sydney, Australia</h3>
+          <p>A great city!</p>
+        </div>
+      </ScriptGoogleMapsInfoWindow>
+    </ScriptGoogleMapsMarker>
+
+    <!-- Advanced marker with custom pin -->
+    <ScriptGoogleMapsAdvancedMarkerElement
+      :options="{ position: { lat: -34.407, lng: 150.654 } }"
+    >
+      <ScriptGoogleMapsPinElement
+        :options="{ scale: 1.5, background: '#FF0000' }"
+      />
+    </ScriptGoogleMapsAdvancedMarkerElement>
+
+    <!-- Circle overlay -->
+    <ScriptGoogleMapsCircle
+      :options="{
+        center: { lat: -34.397, lng: 150.644 },
+        radius: 1000,
+        fillColor: '#FF0000',
+        fillOpacity: 0.35
+      }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
+### Component Composition Patterns
+
+**Marker Clustering**
+
+```vue
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <ScriptGoogleMapsMarkerClusterer>
+      <ScriptGoogleMapsMarker
+        v-for="location in locations"
+        :key="location.id"
+        :options="{ position: location.position }"
+      >
+        <ScriptGoogleMapsInfoWindow>
+          <div>{{ location.name }}</div>
+        </ScriptGoogleMapsInfoWindow>
+      </ScriptGoogleMapsMarker>
+    </ScriptGoogleMapsMarkerClusterer>
+  </ScriptGoogleMaps>
+</template>
+```
+
+**Heatmap with Data Points**
+
+```vue
+<script setup>
+const heatmapData = ref([])
+
+onMounted(() => {
+  // Populate heatmap data with google.maps.LatLng objects
+})
+</script>
+
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <ScriptGoogleMapsHeatmapLayer
+      :options="{ data: heatmapData }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
+**See the [SFC Playground Example](https://nuxt-scripts-playground.stackblitz.io/third-parties/google-maps/sfcs) for a comprehensive demonstration.**
+
+### Component Details
+
+#### ScriptGoogleMapsMarker
+
+Classic Google Maps marker with icon support.
+
+**Props:**
+- `options` - `google.maps.MarkerOptions` (excluding `map`)
+
+**Events:**
+- Standard marker events: `click`, `mousedown`, `mouseover`, etc.
+
+#### ScriptGoogleMapsAdvancedMarkerElement
+
+Modern advanced markers that support HTML content and better customization.
+
+**Props:**
+- `options` - `google.maps.marker.AdvancedMarkerElementOptions` (excluding `map`)
+
+**Events:**
+- Standard marker events: `click`, `drag`, `position_changed`, etc.
+
+#### ScriptGoogleMapsInfoWindow
+
+Information windows that display content when triggered.
+
+**Props:**
+- `options` - `google.maps.InfoWindowOptions`
+
+**Behavior:**
+- Automatically opens on parent marker click
+- Can be used standalone with explicit position
+- Supports custom HTML content via default slot
+
+#### ScriptGoogleMapsMarkerClusterer
+
+Groups nearby markers into clusters for better performance and UX.
+
+**Props:**
+- `options` - `MarkerClustererOptions` (excluding `map`)
+
+**Dependencies:**
+- Requires `@googlemaps/markerclusterer` peer dependency
+
+#### Other Components
+
+- **ScriptGoogleMapsPinElement**: Use within AdvancedMarkerElement for customizable pins
+- **ScriptGoogleMapsCircle**: Circular overlays with radius and styling
+- **ScriptGoogleMapsPolygon/Polyline**: Shape and line overlays
+- **ScriptGoogleMapsRectangle**: Rectangular overlays
+- **ScriptGoogleMapsHeatmapLayer**: Data visualization with heatmaps
+
+All components support:
+- Reactive `options` prop that updates the underlying Google Maps object
+- Automatic cleanup on component unmount
+- TypeScript support with Google Maps types
+
+### Best Practices
+
+#### Performance Considerations
+
+**Use MarkerClusterer for Many Markers**
+```vue
+<!-- ✅ Good: Use clusterer for >10 markers -->
+<ScriptGoogleMapsMarkerClusterer>
+  <ScriptGoogleMapsMarker v-for="marker in manyMarkers" />
+</ScriptGoogleMapsMarkerClusterer>
+
+<!-- ❌ Avoid: Many individual markers -->
+<ScriptGoogleMapsMarker v-for="marker in manyMarkers" />
+```
+
+**Prefer AdvancedMarkerElement for Modern Apps**
+```vue
+<!-- ✅ Recommended: Better performance and styling -->
+<ScriptGoogleMapsAdvancedMarkerElement :options="options">
+  <ScriptGoogleMapsPinElement :options="{ background: '#FF0000' }" />
+</ScriptGoogleMapsAdvancedMarkerElement>
+
+<!-- ⚠️ Legacy: Use only when advanced markers aren't supported -->
+<ScriptGoogleMapsMarker :options="options" />
+```
+
+#### Component Hierarchy
+
+Components must follow this nesting structure:
+
+```
+ScriptGoogleMaps (root)
+├── ScriptGoogleMapsMarkerClusterer (optional)
+│   └── ScriptGoogleMapsMarker/AdvancedMarkerElement
+│       └── ScriptGoogleMapsInfoWindow (optional)
+├── ScriptGoogleMapsAdvancedMarkerElement
+│   ├── ScriptGoogleMapsPinElement (optional)
+│   └── ScriptGoogleMapsInfoWindow (optional)
+└── Other overlays (Circle, Polygon, etc.)
+```
+
+#### Reactive Data Patterns
+
+**Reactive Marker Updates**
+```vue
+<script setup>
+const markers = ref([
+  { id: 1, position: { lat: -34.397, lng: 150.644 }, title: 'Sydney' }
+])
+
+// Markers automatically update when data changes
+function addMarker() {
+  markers.value.push({
+    id: Date.now(),
+    position: getRandomPosition(),
+    title: 'New Location'
+  })
+}
+</script>
+
+<template>
+  <ScriptGoogleMaps>
+    <ScriptGoogleMapsMarker
+      v-for="marker in markers"
+      :key="marker.id"
+      :options="{ position: marker.position, title: marker.title }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
+#### Error Handling
+
+Always provide error fallbacks and loading states:
+
+```vue
+<script setup>
+const mapError = ref(false)
+</script>
+
+<template>
+  <ScriptGoogleMaps
+    @error="mapError = true"
+    api-key="your-api-key"
+  >
+    <template #error>
+      <div class="p-4 bg-red-100">
+        Failed to load Google Maps
+      </div>
+    </template>
+
+    <!-- Your components -->
+  </ScriptGoogleMaps>
+</template>
+```
+
+## [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"}
+
+The [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable lets you have fine-grain control over the Google Maps SDK. It provides a way to load the Google Maps SDK and interact with it programmatically.
+
+```ts
+export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {}
+```
+
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+## Example
+
+Loading the Google Maps SDK and interacting with it programmatically.
+
+```vue
+<script setup lang="ts">
+/// <reference types="google.maps" />
+const { onLoaded } = useScriptGoogleMaps({
+  apiKey: 'key'
+})
+const map = ref()
+onMounted(() => {
+  onLoaded(async (instance) => {
+    const maps = await instance.maps as any as typeof google.maps // upstream google type issue
+    new maps.Map(map.value, {
+      center: { lat: -34.397, lng: 150.644 },
+      zoom: 8
+    })
+    // Do something with the map
+  })
+})
+</script>
+<template>
+    <div ref="map" />
+</template>
+```

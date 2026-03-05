@@ -1,20 +1,16 @@
-<template>
-  <div class="info-window-container">
-    <div ref="info-window-container">
-      <slot />
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { inject, onUnmounted, useTemplateRef } from 'vue'
 import { whenever } from '@vueuse/core'
-import { MARKER_INJECTION_KEY } from './ScriptGoogleMapsMarker.vue'
+import { inject, onUnmounted, useTemplateRef } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './ScriptGoogleMapsAdvancedMarkerElement.vue'
+import { MARKER_INJECTION_KEY } from './ScriptGoogleMapsMarker.vue'
 
 const props = defineProps<{
   options?: google.maps.InfoWindowOptions
+}>()
+
+const emit = defineEmits<{
+  (event: typeof infoWindowEvents[number]): void
 }>()
 
 const infoWindowEvents = [
@@ -29,17 +25,13 @@ const infoWindowEvents = [
   'zindex_changed',
 ] as const
 
-const emit = defineEmits<{
-  (event: typeof infoWindowEvents[number]): void
-}>()
-
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
 const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
 
 const infoWindowContainer = useTemplateRef('info-window-container')
 
-let infoWindow: google.maps.InfoWindow | undefined = undefined
+let infoWindow: google.maps.InfoWindow | undefined
 
 whenever(
   () => mapContext?.map.value
@@ -80,10 +72,12 @@ whenever(
     }, {
       deep: true,
     })
-  }, {
+  },
+  {
     immediate: true,
     once: true,
-  })
+  },
+)
 
 onUnmounted(() => {
   if (!infoWindow || !mapContext?.mapsApi.value) {
@@ -101,6 +95,14 @@ function setupInfoWindowEventListeners(infoWindow: google.maps.InfoWindow) {
   })
 }
 </script>
+
+<template>
+  <div class="info-window-container">
+    <div ref="info-window-container">
+      <slot />
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .info-window-container {

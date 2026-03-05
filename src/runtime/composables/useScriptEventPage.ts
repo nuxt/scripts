@@ -1,6 +1,6 @@
-import { useNuxtApp, useRoute, injectHead } from 'nuxt/app'
-import { ref, onScopeDispose } from 'vue'
 import type { TrackedPage } from '#nuxt-scripts/types'
+import { injectHead, useNuxtApp, useRoute } from 'nuxt/app'
+import { onScopeDispose, ref } from 'vue'
 
 export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
   const nuxt = useNuxtApp()

@@ -1,19 +1,20 @@
-import { defu } from 'defu'
-import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
-import type { UseScriptInput } from '@unhead/vue'
-import { useRuntimeConfig } from 'nuxt/app'
-import { parseURL, withQuery, parseQuery } from 'ufo'
-import { useScript } from './composables/useScript'
-import { createNpmScriptStub } from './npm-script-stub'
-import { parse } from '#nuxt-scripts-validator'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
+  ScriptRegistry,
   UseFunctionType,
-  ScriptRegistry, UseScriptContext,
+  UseScriptContext,
 } from '#nuxt-scripts/types'
+import type { UseScriptInput } from '@unhead/vue'
+import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
+import { parse } from '#nuxt-scripts-validator'
+import { defu } from 'defu'
+import { useRuntimeConfig } from 'nuxt/app'
+import { parseQuery, parseURL, withQuery } from 'ufo'
+import { useScript } from './composables/useScript'
+import { createNpmScriptStub } from './npm-script-stub'
 
 export type MaybePromise<T> = Promise<T> | T
 
@@ -32,7 +33,7 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
 type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptInput & { src?: string } }) => ({
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
-  schema?: O extends ObjectSchema<any, any> ? O : undefined
+  schema?: O extends ObjectSchema<any, any> | UnionSchema<any, any> ? O : undefined
   clientInit?: () => void | Promise<any>
   scriptMode?: 'external' | 'npm' // NEW: external = CDN script (default), npm = NPM package only
 })
@@ -121,8 +122,9 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom })
     if (options.schema) {
       const registryMeta: Record<string, string> = {}
-      for (const k in options.schema.entries) {
-        if (options.schema.entries[k].type !== 'optional') {
+      const entries = 'entries' in options.schema ? options.schema.entries as Record<string, { type: string }> : undefined
+      for (const k in entries) {
+        if (entries[k]?.type !== 'optional') {
           registryMeta[k] = String(userOptions[k as any as keyof typeof userOptions])
         }
       }

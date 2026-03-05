@@ -1,0 +1,14 @@
+{
+  "headers": {
+    "cookie": {
+      "anonymized": "<removed>",
+      "original": "_rdt_uuid=<dynamic>; _scid=<dynamic>; _scid_r=<dynamic>",
+    },
+    "x-forwarded-for": {
+      "anonymized": "127.0.0.1",
+      "original": "<absent>",
+    },
+  },
+  "method": "GET",
+  "target": "www.googletagmanager.com/gtag/js",
+}

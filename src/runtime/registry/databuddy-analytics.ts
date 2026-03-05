@@ -1,56 +1,8 @@
-import { useRegistryScript } from '../utils'
-import { object, optional, string, boolean, number } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { DatabuddyAnalyticsOptions } from './schemas'
 
-// Options schema based on https://www.databuddy.cc/docs/sdk
-export const DatabuddyAnalyticsOptions = object({
-  // Required
-  clientId: string(),
-
-  // Advanced
-  scriptUrl: optional(string()), // defaults to https://cdn.databuddy.cc/databuddy.js
-  apiUrl: optional(string()), // defaults to https://basket.databuddy.cc
-  disabled: optional(boolean()),
-
-  // Core tracking (enabled by default by SDK)
-  trackScreenViews: optional(boolean()),
-  trackPerformance: optional(boolean()),
-  trackSessions: optional(boolean()),
-
-  // Optional tracking
-  trackWebVitals: optional(boolean()),
-  trackErrors: optional(boolean()),
-  trackOutgoingLinks: optional(boolean()),
-  trackScrollDepth: optional(boolean()),
-  trackEngagement: optional(boolean()),
-  trackInteractions: optional(boolean()),
-  trackAttributes: optional(boolean()),
-  trackHashChanges: optional(boolean()),
-  trackExitIntent: optional(boolean()),
-  trackBounceRate: optional(boolean()),
-
-  // Performance options
-  enableBatching: optional(boolean()),
-  batchSize: optional(number()),
-  batchTimeout: optional(number()),
-  enableRetries: optional(boolean()),
-  maxRetries: optional(number()),
-  initialRetryDelay: optional(number()),
-  samplingRate: optional(number()),
-
-  // SDK metadata
-  sdk: optional(string()),
-  sdkVersion: optional(string()),
-
-  // Observability & logging (accepted by SDK config)
-  enableObservability: optional(boolean()),
-  observabilityService: optional(string()),
-  observabilityEnvironment: optional(string()),
-  observabilityVersion: optional(string()),
-  enableLogging: optional(boolean()),
-  enableTracing: optional(boolean()),
-  enableErrorTracking: optional(boolean()),
-})
+export { DatabuddyAnalyticsOptions }
 
 export type DatabuddyAnalyticsInput = RegistryScriptInput<typeof DatabuddyAnalyticsOptions, false>
 

@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { MetaPixelOptions } from './schemas'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
@@ -47,9 +47,7 @@ declare global {
   interface Window extends MetaPixelApi {}
 }
 
-export const MetaPixelOptions = object({
-  id: union([string(), number()]),
-})
+export { MetaPixelOptions }
 export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false, false>
 
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {

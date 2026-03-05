@@ -1,12 +1,9 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { joinURL } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { object, optional, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { SegmentOptions } from './schemas'
 
-export const SegmentOptions = object({
-  writeKey: string(),
-  analyticsKey: optional(string()),
-})
+export { SegmentOptions }
 
 export type SegmentInput = RegistryScriptInput<typeof SegmentOptions>
 

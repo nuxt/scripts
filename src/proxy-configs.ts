@@ -1,4 +1,5 @@
-import { rewriteScriptUrls, type ProxyRewrite } from './runtime/utils/pure'
+import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
+import type { ProxyRewrite } from './runtime/utils/pure'
 
 export type { ProxyRewrite }
 
@@ -11,6 +12,15 @@ export interface ProxyConfig {
   rewrite?: ProxyRewrite[]
   /** Nitro route rules to inject for proxying requests */
   routes?: Record<string, { proxy: string }>
+  /**
+   * Per-script privacy controls. Each script declares what it needs.
+   * - `true` (default) = full anonymize: IP, UA, language, screen, timezone, hardware fingerprints
+   * - `false` = passthrough (still strips sensitive auth headers)
+   * - `{ ip: false }` = selective (unset flags default to `false`)
+   *
+   * Users can override per-script defaults via `firstParty.privacy` in nuxt.config.
+   */
+  privacy: ProxyPrivacyInput
 }
 
 /**
@@ -19,6 +29,8 @@ export interface ProxyConfig {
 function buildProxyConfig(collectPrefix: string) {
   return {
     googleAnalytics: {
+      // GA4: screen/timezone/UA needed for device, time, and OS reports; rest anonymized safely
+      privacy: { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true },
       rewrite: [
         // Modern gtag.js uses www.google.com/g/collect
         { from: 'www.google.com/g/collect', to: `${collectPrefix}/ga/g/collect` },
@@ -50,6 +62,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     googleTagManager: {
+      // GTM: container only, passes data through — downstream tags have their own privacy
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       rewrite: [
         { from: 'www.googletagmanager.com', to: `${collectPrefix}/gtm` },
       ],
@@ -59,6 +73,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     metaPixel: {
+      // Meta: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         // SDK script loading
         { from: 'connect.facebook.net', to: `${collectPrefix}/meta` },
@@ -78,6 +94,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     tiktokPixel: {
+      // TikTok: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'analytics.tiktok.com', to: `${collectPrefix}/tiktok` },
       ],
@@ -87,6 +105,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     segment: {
+      // Segment: trusted data pipeline — needs maximum fidelity for downstream destinations
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       rewrite: [
         { from: 'api.segment.io', to: `${collectPrefix}/segment` },
         { from: 'cdn.segment.com', to: `${collectPrefix}/segment-cdn` },
@@ -98,6 +118,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     xPixel: {
+      // X/Twitter: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'analytics.twitter.com', to: `${collectPrefix}/x` },
         { from: 't.co', to: `${collectPrefix}/x-t` },
@@ -109,6 +131,8 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     snapchatPixel: {
+      // Snapchat: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'tr.snapchat.com', to: `${collectPrefix}/snap` },
       ],
@@ -118,15 +142,21 @@ function buildProxyConfig(collectPrefix: string) {
     },
 
     redditPixel: {
+      // Reddit: untrusted ad network — full anonymization
+      privacy: { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true },
       rewrite: [
         { from: 'alb.reddit.com', to: `${collectPrefix}/reddit` },
+        { from: 'pixel-config.reddit.com', to: `${collectPrefix}/reddit-cfg` },
       ],
       routes: {
         [`${collectPrefix}/reddit/**`]: { proxy: 'https://alb.reddit.com/**' },
+        [`${collectPrefix}/reddit-cfg/**`]: { proxy: 'https://pixel-config.reddit.com/**' },
       },
     },
 
     clarity: {
+      // Clarity: screen/UA/timezone needed for heatmaps and device filtering; rest anonymized
+      privacy: { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true },
       rewrite: [
         // Main clarity domain
         { from: 'www.clarity.ms', to: `${collectPrefix}/clarity` },
@@ -145,7 +175,23 @@ function buildProxyConfig(collectPrefix: string) {
       },
     },
 
+    posthog: {
+      // No rewrites needed - PostHog uses NPM mode, SDK URLs are set via api_host config
+      // PostHog: needs real IP for GeoIP enrichment + feature flag targeting
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      routes: {
+        // US region
+        [`${collectPrefix}/ph/static/**`]: { proxy: 'https://us-assets.i.posthog.com/static/**' },
+        [`${collectPrefix}/ph/**`]: { proxy: 'https://us.i.posthog.com/**' },
+        // EU region
+        [`${collectPrefix}/ph-eu/static/**`]: { proxy: 'https://eu-assets.i.posthog.com/static/**' },
+        [`${collectPrefix}/ph-eu/**`]: { proxy: 'https://eu.i.posthog.com/**' },
+      },
+    },
+
     hotjar: {
+      // Hotjar: screen/UA/timezone needed for heatmaps and device segmentation; rest anonymized
+      privacy: { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true },
       rewrite: [
         // Static assets
         { from: 'static.hotjar.com', to: `${collectPrefix}/hotjar` },
@@ -172,12 +218,101 @@ function buildProxyConfig(collectPrefix: string) {
         [`${collectPrefix}/hotjar-insights/**`]: { proxy: 'https://insights.hotjar.com/**' },
       },
     },
+    plausible: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'plausible.io', to: `${collectPrefix}/plausible` },
+      ],
+      routes: {
+        [`${collectPrefix}/plausible/**`]: { proxy: 'https://plausible.io/**' },
+      },
+    },
+
+    cloudflareWebAnalytics: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'static.cloudflareinsights.com', to: `${collectPrefix}/cfwa` },
+        { from: 'cloudflareinsights.com', to: `${collectPrefix}/cfwa-beacon` },
+      ],
+      routes: {
+        [`${collectPrefix}/cfwa/**`]: { proxy: 'https://static.cloudflareinsights.com/**' },
+        [`${collectPrefix}/cfwa-beacon/**`]: { proxy: 'https://cloudflareinsights.com/**' },
+      },
+    },
+
+    rybbit: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'app.rybbit.io', to: `${collectPrefix}/rybbit` },
+      ],
+      routes: {
+        [`${collectPrefix}/rybbit/**`]: { proxy: 'https://app.rybbit.io/**' },
+      },
+    },
+
+    umami: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cloud.umami.is', to: `${collectPrefix}/umami` },
+      ],
+      routes: {
+        [`${collectPrefix}/umami/**`]: { proxy: 'https://cloud.umami.is/**' },
+      },
+    },
+
+    databuddy: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cdn.databuddy.cc', to: `${collectPrefix}/databuddy` },
+        { from: 'basket.databuddy.cc', to: `${collectPrefix}/databuddy-api` },
+      ],
+      routes: {
+        [`${collectPrefix}/databuddy/**`]: { proxy: 'https://cdn.databuddy.cc/**' },
+        [`${collectPrefix}/databuddy-api/**`]: { proxy: 'https://basket.databuddy.cc/**' },
+      },
+    },
+
+    fathom: {
+      privacy: { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'cdn.usefathom.com', to: `${collectPrefix}/fathom` },
+      ],
+      routes: {
+        [`${collectPrefix}/fathom/**`]: { proxy: 'https://cdn.usefathom.com/**' },
+      },
+    },
+
+    intercom: {
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'widget.intercom.io', to: `${collectPrefix}/intercom` },
+        { from: 'api-iam.intercom.io', to: `${collectPrefix}/intercom-api` },
+        { from: 'api-iam.eu.intercom.io', to: `${collectPrefix}/intercom-api-eu` },
+        { from: 'api-iam.au.intercom.io', to: `${collectPrefix}/intercom-api-au` },
+      ],
+      routes: {
+        [`${collectPrefix}/intercom/**`]: { proxy: 'https://widget.intercom.io/**' },
+        [`${collectPrefix}/intercom-api/**`]: { proxy: 'https://api-iam.intercom.io/**' },
+        [`${collectPrefix}/intercom-api-eu/**`]: { proxy: 'https://api-iam.eu.intercom.io/**' },
+        [`${collectPrefix}/intercom-api-au/**`]: { proxy: 'https://api-iam.au.intercom.io/**' },
+      },
+    },
+
+    crisp: {
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
+      rewrite: [
+        { from: 'client.crisp.chat', to: `${collectPrefix}/crisp` },
+      ],
+      routes: {
+        [`${collectPrefix}/crisp/**`]: { proxy: 'https://client.crisp.chat/**' },
+      },
+    },
 
     gravatar: {
+      // Gravatar: avatar proxy — IP anonymized, rest not needed
+      privacy: { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       rewrite: [
-        // Hovercards JS and related scripts
         { from: 'secure.gravatar.com', to: `${collectPrefix}/gravatar` },
-        // Avatar images (used by hovercards internally)
         { from: 'gravatar.com/avatar', to: `${collectPrefix}/gravatar-avatar` },
       ],
       routes: {
@@ -205,8 +340,8 @@ export function getAllProxyConfigs(collectPrefix: string): Record<string, ProxyC
   return buildProxyConfig(collectPrefix)
 }
 
-export interface SWInterceptRule {
-  /** Domain pattern to match (supports wildcards like *.google-analytics.com) */
+export interface InterceptRule {
+  /** Domain to match (exact match or implicit subdomain suffix match, e.g. google-analytics.com matches *.google-analytics.com) */
   pattern: string
   /** Path prefix to match and strip from the original URL (e.g., /tr for www.facebook.com/tr) */
   pathPrefix: string
@@ -215,34 +350,36 @@ export interface SWInterceptRule {
 }
 
 /**
- * Get service worker intercept rules from all proxy configs.
- * These rules are used by the SW to intercept and rewrite outbound requests.
+ * Convert route definitions into intercept rules for client-side URL rewriting.
  */
-export function getSWInterceptRules(collectPrefix: string): SWInterceptRule[] {
-  const configs = buildProxyConfig(collectPrefix)
-  const rules: SWInterceptRule[] = []
-
-  // Extract unique domain -> target mappings from route rules
-  for (const config of Object.values(configs)) {
-    if (!config.routes)
-      continue
-    for (const [localPath, { proxy }] of Object.entries(config.routes)) {
-      // Extract domain and path prefix from proxy URL
-      // e.g., "https://www.facebook.com/tr/**" -> domain="www.facebook.com", pathPrefix="/tr"
-      // e.g., "https://connect.facebook.net/**" -> domain="connect.facebook.net", pathPrefix=""
-      const match = proxy.match(/^https?:\/\/([^/]+)(\/.*)?\/\*\*$/)
-      if (match?.[1]) {
-        const domain = match[1]
-        // Path prefix is everything between domain and /** (e.g., /tr), empty if none
-        const pathPrefix = match[2] || ''
-        // Extract target prefix: "/_proxy/meta-tr/**" -> "/_proxy/meta-tr"
-        const target = localPath.replace(/\/\*\*$/, '')
-        rules.push({ pattern: domain, pathPrefix, target })
-      }
+export function routesToInterceptRules(routes: Record<string, { proxy: string }>): InterceptRule[] {
+  const rules: InterceptRule[] = []
+  for (const [localPath, { proxy }] of Object.entries(routes)) {
+    // Extract domain and path prefix from proxy URL
+    // e.g., "https://www.facebook.com/tr/**" -> domain="www.facebook.com", pathPrefix="/tr"
+    // e.g., "https://connect.facebook.net/**" -> domain="connect.facebook.net", pathPrefix=""
+    const match = proxy.match(/^https?:\/\/([^/]+)(\/.*)?\/\*\*$/)
+    if (match?.[1]) {
+      const domain = match[1]
+      const pathPrefix = match[2] || ''
+      const target = localPath.replace(/\/\*\*$/, '')
+      rules.push({ pattern: domain, pathPrefix, target })
     }
   }
-
   return rules
 }
 
-export { rewriteScriptUrls }
+/**
+ * Get intercept rules from all proxy configs.
+ * These rules are embedded in the __nuxtScripts client plugin to rewrite
+ * outbound fetch/sendBeacon URLs through the first-party proxy.
+ */
+export function getInterceptRules(collectPrefix: string): InterceptRule[] {
+  const configs = buildProxyConfig(collectPrefix)
+  const allRoutes: Record<string, { proxy: string }> = {}
+  for (const config of Object.values(configs)) {
+    if (config.routes)
+      Object.assign(allRoutes, config.routes)
+  }
+  return routesToInterceptRules(allRoutes)
+}

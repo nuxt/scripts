@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
 import { $fetch } from 'ofetch'
-import { getAllProxyConfigs, rewriteScriptUrls } from '../../src/proxy-configs'
+import { describe, expect, it } from 'vitest'
+import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
+import { getAllProxyConfigs } from '../../src/proxy-configs'
 import { stripFingerprintingFromPayload } from '../utils/proxy-privacy'
 
 const COLLECT_PREFIX = '/_scripts/c'
@@ -105,7 +106,7 @@ describe('third-party script proxy replacements', () => {
       }
 
       // Apply rewrites
-      const rewritten = rewriteScriptUrls(content, proxyConfig.rewrite!)
+      const rewritten = rewriteScriptUrlsAST(content, 'script.js', proxyConfig.rewrite!)
 
       // Check that forbidden domains are replaced
       for (const forbidden of forbiddenAfterRewrite) {
@@ -210,11 +211,27 @@ describe('third-party script proxy replacements', () => {
       `,
     }
 
+    it('does not merge keywords with self.location.origin in minified code', () => {
+      // In minified JS, `return"url"` is valid because `"` is not an identifier char.
+      // But replacing the string with `self.location.origin+...` would create `returnself`
+      // which is parsed as an identifier, not `return self`.
+      const minified = `function f(x){switch(x){case 1:return"https://www.google-analytics.com/collect";case 2:return"https://stats.g.doubleclick.net/g/collect"}}`
+      const config = proxyConfigs.googleAnalytics
+      const rewritten = rewriteScriptUrlsAST(minified, 'script.js', config.rewrite!)
+
+      // Must have a space between `return` and `self`
+      expect(rewritten).not.toContain('returnself')
+      expect(rewritten).toContain('return self.location.origin')
+      // Verify it's still valid JS
+      // eslint-disable-next-line no-new-func
+      expect(() => new Function(rewritten)).not.toThrow()
+    })
+
     it.each(Object.entries(syntheticScripts))('%s synthetic script rewrites correctly', (key, content) => {
       const config = proxyConfigs[key]
       expect(config, `Missing config for ${key}`).toBeDefined()
 
-      const rewritten = rewriteScriptUrls(content, config.rewrite!)
+      const rewritten = rewriteScriptUrlsAST(content, 'script.js', config.rewrite!)
 
       // Should have proxy paths
       expect(rewritten).toContain(COLLECT_PREFIX)
@@ -330,7 +347,7 @@ describe('privacy stripping snapshots', () => {
     title: 'Dashboard',
   }
 
-  describe('Google Analytics payload', () => {
+  describe('google Analytics payload', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(gaPayload)
       expect(result).toMatchInlineSnapshot(`
@@ -396,7 +413,7 @@ describe('privacy stripping snapshots', () => {
     })
   })
 
-  describe('Meta Pixel payload', () => {
+  describe('meta Pixel payload', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(metaPayload)
       expect(result).toMatchInlineSnapshot(`
@@ -463,7 +480,7 @@ describe('privacy stripping snapshots', () => {
     })
   })
 
-  describe('Session recording payload (Clarity/Hotjar)', () => {
+  describe('session recording payload (Clarity/Hotjar)', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(sessionPayload)
       expect(result).toMatchInlineSnapshot(`

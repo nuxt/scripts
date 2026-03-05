@@ -1,12 +1,12 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 /// <reference types="google.maps" />
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
-import { array, literal, object, optional, string, union } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { GoogleMapsOptions } from './schemas'
 
-// eslint-disable-next-line
+export { GoogleMapsOptions }
+
 declare namespace google {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace maps {
     /**
      * @internal
@@ -14,14 +14,6 @@ declare namespace google {
     export function __ib__(): void
   }
 }
-
-export const GoogleMapsOptions = object({
-  apiKey: string(),
-  libraries: optional(array(string())),
-  language: optional(string()),
-  region: optional(string()),
-  v: optional(union([literal('weekly'), literal('quarterly'), literal('beta'), literal('alpha'), string()])),
-})
 
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
@@ -34,7 +26,7 @@ declare global {
   interface Window {
     google: {
       maps: {
-        __ib__(): void
+        __ib__: () => void
       }
     }
   }

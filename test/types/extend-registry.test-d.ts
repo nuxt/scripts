@@ -1,16 +1,16 @@
-import { describe, expectTypeOf, it } from 'vitest'
-
-// Import from the generated augments file to test it's a valid module
-// This tests the fix for issue #570 - the file must have `export {}`
-// to be treated as a module, otherwise the augmentations break base exports
-import type {} from '../../test/fixtures/extend-registry/.nuxt/types/nuxt-scripts-augments'
-
 // Import base types to verify they're still accessible after augmentation
 import type {
   NuxtUseScriptOptions,
   ScriptRegistry,
   UseScriptContext,
 } from '../../src/runtime/types'
+
+// Import from the generated augments file to test it's a valid module
+// This tests the fix for issue #570 - the file must have `export {}`
+// to be treated as a module, otherwise the augmentations break base exports
+import type {} from '../../test/fixtures/extend-registry/.nuxt/types/nuxt-scripts-augments'
+
+import { describe, expectTypeOf, it } from 'vitest'
 
 // Issue #570: When adding a new script to registry via hooks, the generated
 // nuxt-scripts-augments.d.ts was missing `export {}`, causing TypeScript to

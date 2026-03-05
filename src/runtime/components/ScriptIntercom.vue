@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount, computed } from 'vue'
-import { useScriptIntercom } from '../registry/intercom'
-import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
+import { useScriptIntercom } from '../registry/intercom'
 
 const props = withDefaults(defineProps<{
   appId: string
@@ -70,8 +70,9 @@ onMounted(() => {
       })
       observer.observe(document.body, { childList: true, subtree: true })
     }
-    else if (status === 'error')
+    else if (status === 'error') {
       emits('error')
+    }
   })
 })
 onBeforeUnmount(() => {

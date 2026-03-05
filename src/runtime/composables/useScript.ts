@@ -1,12 +1,26 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
-import { defu } from 'defu'
-import { useScript as _useScript } from '@unhead/vue/scripts'
-import { reactive, ref } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead, useHead } from 'nuxt/app'
-import { logger } from '../logger'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
+import { useScript as _useScript } from '@unhead/vue/scripts'
+import { defu } from 'defu'
+import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
+import { ref } from 'vue'
+import { logger } from '../logger'
+
+type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
+  $scripts: Record<string, UseScriptContext<any> | undefined>
+  _scripts: Record<string, NuxtDevToolsScriptInstance>
+}
+
+function ensureScripts(nuxtApp: NuxtScriptsApp) {
+  // When registry scripts are configured, the plugin provides $scripts via Nuxt's
+  // provide() which creates a getter-only property. We must not reassign it.
+  // When no plugin provides it, we need to initialize it ourselves.
+  if (!nuxtApp.$scripts) {
+    nuxtApp.$scripts = {}
+  }
+}
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -33,8 +47,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       script: [{ src, type: 'text/partytown' }],
     })
     // Register with nuxtApp.$scripts for DevTools visibility
-    const nuxtApp = useNuxtApp()
-    nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+    const nuxtApp = useNuxtApp() as NuxtScriptsApp
+    ensureScripts(nuxtApp)
     const status = ref('loaded')
     const stub = {
       id: src,
@@ -63,13 +77,13 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
 
   // browser hint optimizations
-  const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
-  const nuxtApp = useNuxtApp()
+  const nuxtApp = useNuxtApp() as NuxtScriptsApp
+  const id = String(resolveScriptKey(input))
   options.head = options.head || injectHead()
   if (!options.head) {
     throw new Error('useScript() has been called without Nuxt context.')
   }
-  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+  ensureScripts(nuxtApp)
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
   const err = options._validate?.()
@@ -139,7 +153,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
     function syncScripts() {
       nuxtApp._scripts[instance.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts })
+      nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
     }
 
     if (!nuxtApp._scripts[instance.id]) {

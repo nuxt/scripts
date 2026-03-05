@@ -1,23 +1,24 @@
+import type { MocksType } from './__helpers__/google-maps-test-utils'
 /**
  * @vitest-environment happy-dom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import {
-  createMockGoogleMapsAPI,
-  MARKER_EVENTS_WITHOUT_PAYLOAD,
-  MARKER_EVENTS_WITH_MOUSE_EVENT,
-  INFO_WINDOW_EVENTS,
-  MARKER_CLUSTERER_EVENTS,
-} from './__mocks__/google-maps-api'
-import {
-  simulateMarkerLifecycle,
+
   simulateAdvancedMarkerLifecycle,
   simulateInfoWindowLifecycle,
   simulateMarkerClustererLifecycle,
+  simulateMarkerLifecycle,
   TEST_OPTIONS,
-  type MocksType,
 } from './__helpers__/google-maps-test-utils'
+import {
+  createMockGoogleMapsAPI,
+  INFO_WINDOW_EVENTS,
+  MARKER_CLUSTERER_EVENTS,
+  MARKER_EVENTS_WITH_MOUSE_EVENT,
+  MARKER_EVENTS_WITHOUT_PAYLOAD,
+} from './__mocks__/google-maps-api'
 
 // Mock @googlemaps/markerclusterer module
 vi.mock('@googlemaps/markerclusterer', async () => {
@@ -25,7 +26,7 @@ vi.mock('@googlemaps/markerclusterer', async () => {
   return mockMarkerClusterer
 })
 
-describe('Google Maps SFC Components Logic', () => {
+describe('google Maps SFC Components Logic', () => {
   let mocks: MocksType
 
   beforeEach(() => {
@@ -33,7 +34,7 @@ describe('Google Maps SFC Components Logic', () => {
     vi.clearAllMocks()
   })
 
-  describe('Google Maps API Integration', () => {
+  describe('google Maps API Integration', () => {
     it('should create marker with provided options', () => {
       const options = TEST_OPTIONS.marker
 
@@ -80,13 +81,14 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Marker Clustering Logic', () => {
+  describe('marker Clustering Logic', () => {
     it('should create marker clusterer with map and options', async () => {
       const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
       const mockMap = ref({})
       const options = { gridSize: 60 }
 
       // Simulate what ScriptGoogleMapsMarkerClusterer component does
+      // eslint-disable-next-line no-new
       new MarkerClusterer({
         map: mockMap.value,
         ...options,
@@ -109,7 +111,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Event Handling Patterns', () => {
+  describe('event Handling Patterns', () => {
     it('should register standard marker events without payload', () => {
       const marker = mocks.mockMarker
 
@@ -171,7 +173,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Component Lifecycle Patterns', () => {
+  describe('component Lifecycle Patterns', () => {
     it('should clean up event listeners on unmount', () => {
       const marker = mocks.mockMarker
 
@@ -194,7 +196,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Component Composition Patterns', () => {
+  describe('component Composition Patterns', () => {
     it('should attach info window to marker', () => {
       const marker = mocks.mockMarker
       const infoWindow = mocks.mockInfoWindow
@@ -236,7 +238,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Google Maps API Types and Integration', () => {
+  describe('google Maps API Types and Integration', () => {
     it('should work with LatLng objects', () => {
       const lat = -33.8688
       const lng = 151.2093
@@ -258,7 +260,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Component Lifecycle Simulations', () => {
+  describe('component Lifecycle Simulations', () => {
     it('should simulate complete marker lifecycle', () => {
       const marker = simulateMarkerLifecycle(mocks, TEST_OPTIONS.marker)
 

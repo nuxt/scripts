@@ -1,0 +1,24 @@
+{
+  "headers": {
+    "content-length": {
+      "anonymized": "<removed>",
+      "original": "0",
+    },
+    "cookie": {
+      "anonymized": "<removed>",
+      "original": "_rdt_uuid=<dynamic>; _scid=<dynamic>; _scid_r=<dynamic>; _ga_TR58L0EF8P=<dynamic>; _ga=<dynamic>",
+    },
+    "x-forwarded-for": {
+      "anonymized": "127.0.0.0",
+      "original": "<absent>",
+    },
+  },
+  "method": "POST",
+  "query": {
+    "uafvl": {
+      "anonymized": "Not%3AA-Brand;99.0.0.0|HeadlessChrome;145.0.0.0|Chromium;145.0.0.0",
+      "original": "Not%3AA-Brand;99.0.0.0|HeadlessChrome;145.0.7632.6|Chromium;145.0.7632.6",
+    },
+  },
+  "target": "www.google-analytics.com/g/collect",
+}

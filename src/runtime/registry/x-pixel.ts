@@ -1,7 +1,7 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { UseScriptInput } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
-import { object, optional, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { XPixelOptions } from './schemas'
 
 interface ContentProperties {
   content_type?: string | null
@@ -39,10 +39,7 @@ declare global {
   interface Window extends XPixelApi {}
 }
 
-export const XPixelOptions = object({
-  id: string(),
-  version: optional(string()),
-})
+export { XPixelOptions }
 export type XPixelInput = RegistryScriptInput<typeof XPixelOptions, true, false, false>
 
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {

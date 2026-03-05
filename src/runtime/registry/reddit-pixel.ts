@@ -1,7 +1,7 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { UseScriptInput } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
-import { object, string } from '#nuxt-scripts-validator'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { RedditPixelOptions } from './schemas'
 
 type RdtFns
   = & ((event: 'init', id: string) => void)
@@ -18,9 +18,7 @@ declare global {
   interface Window extends RedditPixelApi {}
 }
 
-export const RedditPixelOptions = object({
-  id: string(),
-})
+export { RedditPixelOptions }
 export type RedditPixelInput = RegistryScriptInput<typeof RedditPixelOptions, true, false, false>
 
 export function useScriptRedditPixel<T extends RedditPixelApi>(_options?: RedditPixelInput) {

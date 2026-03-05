@@ -1,39 +1,8 @@
-import { useRegistryScript } from '../utils'
-import { object, string, optional, number } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { CrispOptions } from './schemas'
 
-export const CrispOptions = object({
-  /**
-   * The Crisp ID.
-   */
-  id: string(),
-  /**
-   * Extra configuration options. Used to configure the locale.
-   * Same as CRISP_RUNTIME_CONFIG.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/language-customization/
-   */
-  runtimeConfig: optional(object({
-    locale: optional(string()),
-  })),
-  /**
-   * Associated a session, equivalent to using CRISP_TOKEN_ID variable.
-   * Same as CRISP_TOKEN_ID.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/session-continuity/
-   */
-  tokenId: optional(string()),
-  /**
-   * Restrict the domain that the Crisp cookie is set on.
-   * Same as CRISP_COOKIE_DOMAIN.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/
-   */
-  cookieDomain: optional(string()),
-  /**
-   * The cookie expiry in seconds.
-   * Same as CRISP_COOKIE_EXPIRATION.
-   * @see https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/cookie-policies/#change-cookie-expiration-date
-   */
-  cookieExpiry: optional(number()),
-})
+export { CrispOptions }
 
 export type CrispInput = RegistryScriptInput<typeof CrispOptions, false, false, false>
 
