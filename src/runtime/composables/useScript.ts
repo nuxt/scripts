@@ -137,6 +137,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     return reloaded.load()
   }
   nuxtApp.$scripts[id] = instance
+  // When a deduped script was registered with manual trigger but this call
+  // wants to load it (e.g., page composable overriding plugin's manual trigger),
+  // trigger the load
+  if (exists && options.trigger !== 'manual' && instance.status.value === 'awaitingLoad') {
+    instance.load()
+  }
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     if (exists) {
