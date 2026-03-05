@@ -4,7 +4,7 @@ import { VercelAnalyticsOptions } from './schemas'
 
 export { VercelAnalyticsOptions }
 
-export type AllowedPropertyValues = string | number | boolean | null | undefined
+export type AllowedPropertyValues = string | number | boolean | null
 
 export type VercelAnalyticsMode = 'auto' | 'development' | 'production'
 
@@ -61,6 +61,9 @@ function parseProperties(
 export function useScriptVercelAnalytics<T extends VercelAnalyticsApi>(_options?: VercelAnalyticsInput) {
   const beforeSend = _options?.beforeSend
   return useRegistryScript<T, typeof VercelAnalyticsOptions>('vercelAnalytics', (options) => {
+    // import.meta.dev is evaluated at build time, so it determines which script file
+    // is bundled (script.debug.js vs script.js). The runtime `mode` option (window.vam)
+    // controls runtime behavior but does not change which script is loaded.
     const scriptInput: { 'src': string, 'defer': boolean, 'data-sdkn': string, 'data-dsn'?: string, 'data-disable-auto-track'?: string, 'data-debug'?: string, 'data-endpoint'?: string } = {
       'src': import.meta.dev
         ? 'https://va.vercel-scripts.com/v1/script.debug.js'

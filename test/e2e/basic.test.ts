@@ -374,7 +374,11 @@ describe('third-party-capital', () => {
   it('expect Vercel Analytics to initialize queue and handle events', {
     timeout: 10000,
   }, async () => {
-    const { page } = await createPage('/tpc/vercel-analytics')
+    // Create page without navigating, block the CDN script so it doesn't drain window.vaq
+    const { page } = await createPage('')
+    await page.route('**/va.vercel-scripts.com/**', route => route.abort())
+    // @ts-expect-error untyped
+    await page.goto(url('/tpc/vercel-analytics'), { waitUntil: 'hydration' })
     await page.waitForTimeout(500)
 
     // Verify the queue was initialized (clientInit sets up window.va)
