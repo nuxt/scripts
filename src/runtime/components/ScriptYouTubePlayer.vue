@@ -237,6 +237,8 @@ const placeholderAttrs = computed(() => {
     src: isFallbackPlaceHolder.value ? fallbackPlaceHolder.value : placeholder.value,
     alt: '',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
+    // @ts-expect-error untyped
+    fetchpriority: props.aboveTheFold ? 'high' : undefined,
     style: {
       width: '100%',
       objectFit: props.placeholderObjectFit,
