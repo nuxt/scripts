@@ -121,7 +121,7 @@ export const scriptMeta: Record<string, ScriptMeta> = {
     trackedData: ['transactions'],
   },
   payPal: {
-    urls: ['https://www.paypal.com/sdk/js?client-id=AbFpjEMbYxL5HLLTyiOXSXp1VMwRRHWpQp3x-P8tPQVSCC-nNFINJ-_v-d8VVyy2nJfW2XuivLY0ITeO'],
+    urls: ['https://www.paypal.com/web-sdk/v6/core'],
     trackedData: ['transactions'],
   },
 
