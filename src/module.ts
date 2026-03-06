@@ -659,6 +659,13 @@ export default defineNuxtModule<ModuleOptions>({
             phConfig.apiHost = region === 'eu'
               ? `${firstPartyCollectPrefix}/ph-eu`
               : `${firstPartyCollectPrefix}/ph`
+            // Propagate to runtimeConfig (already built from a defu copy during setup)
+            const rtScripts = nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined
+            if (rtScripts?.posthog && typeof rtScripts.posthog === 'object') {
+              const rtPhConfig = Array.isArray(rtScripts.posthog) ? rtScripts.posthog[0] : rtScripts.posthog
+              if (rtPhConfig)
+                rtPhConfig.apiHost = phConfig.apiHost
+            }
           }
         }
 
@@ -669,6 +676,13 @@ export default defineNuxtModule<ModuleOptions>({
           const paConfig = (Array.isArray(config.registry.plausibleAnalytics) ? config.registry.plausibleAnalytics[0] : config.registry.plausibleAnalytics) as Record<string, any>
           if (paConfig && !paConfig.endpoint) {
             paConfig.endpoint = `${firstPartyCollectPrefix}/plausible/api/event`
+            // Propagate to runtimeConfig (already built from a defu copy during setup)
+            const rtScripts = nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined
+            if (rtScripts?.plausibleAnalytics && typeof rtScripts.plausibleAnalytics === 'object') {
+              const rtPaConfig = Array.isArray(rtScripts.plausibleAnalytics) ? rtScripts.plausibleAnalytics[0] : rtScripts.plausibleAnalytics
+              if (rtPaConfig)
+                rtPaConfig.endpoint = paConfig.endpoint
+            }
           }
         }
 
