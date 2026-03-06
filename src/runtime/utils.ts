@@ -1,13 +1,13 @@
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
+  NuxtUseScriptInput,
   NuxtUseScriptOptions,
   RegistryScriptInput,
   ScriptRegistry,
   UseFunctionType,
   UseScriptContext,
 } from '#nuxt-scripts/types'
-import type { UseScriptInput } from '@unhead/vue'
 import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import { parse } from '#nuxt-scripts-validator'
 import { defu } from 'defu'
@@ -35,8 +35,8 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
   return null
 }
 
-type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptInput & { src?: string } }) => ({
-  scriptInput?: UseScriptInput
+type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: NuxtUseScriptInput & { src?: string } }) => ({
+  scriptInput?: NuxtUseScriptInput
   scriptOptions?: NuxtUseScriptOptions
   schema?: O extends ObjectSchema<any, any> | UnionSchema<any, any> ? O : undefined
   clientInit?: () => void | Promise<any>
@@ -60,7 +60,7 @@ export function requireRegistryEndpoint(componentName: string, registryKey: stri
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
   const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
-  const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
+  const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as NuxtUseScriptInput & { src?: string } })
 
   // NEW: Handle NPM-only scripts differently
   if (options.scriptMode === 'npm') {
@@ -97,7 +97,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     }
   }
 
-  const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
+  const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as NuxtUseScriptInput
   const scriptOptions = { ...userOptions?.scriptOptions, ...options.scriptOptions }
   if (import.meta.dev) {
     // Capture where the component was loaded from

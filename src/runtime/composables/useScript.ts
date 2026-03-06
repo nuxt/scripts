@@ -1,5 +1,5 @@
-import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
-import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
+import type { UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
+import type { NuxtDevToolsScriptInstance, NuxtUseScriptInput, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { useScript as _useScript } from '@unhead/vue/scripts'
@@ -32,7 +32,7 @@ export function resolveScriptKey(input: any): string {
   return input.key || input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : '')
 }
 
-export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
+export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: NuxtUseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
 
