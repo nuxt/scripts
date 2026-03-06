@@ -1,7 +1,24 @@
 import { useRuntimeConfig } from '#imports'
-import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getHeader, getQuery, getRequestIP, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+
+const MAX_INPUT_LENGTH = 200
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX = 30
+
+const requestCounts = new Map<string, { count: number, resetAt: number }>()
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = requestCounts.get(ip)
+  if (!entry || now > entry.resetAt) {
+    requestCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+  entry.count++
+  return entry.count <= RATE_LIMIT_MAX
+}
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
@@ -20,6 +37,15 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 500,
       statusMessage: 'Google Maps API key not configured for geocode proxy',
+    })
+  }
+
+  // Rate limit by IP
+  const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
+  if (!checkRateLimit(ip)) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: 'Too many geocode requests',
     })
   }
 
@@ -47,6 +73,13 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing "input" query parameter',
+    })
+  }
+
+  if (input.length > MAX_INPUT_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Input too long (max ${MAX_INPUT_LENGTH} characters)`,
     })
   }
 

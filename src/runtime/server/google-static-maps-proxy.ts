@@ -1,7 +1,29 @@
 import { useRuntimeConfig } from '#imports'
-import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getHeader, getQuery, getRequestIP, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX = 60
+
+const ALLOWED_PARAMS = new Set([
+  'center', 'zoom', 'size', 'scale', 'format', 'maptype',
+  'language', 'region', 'markers', 'path', 'visible',
+  'style', 'map_id', 'signature',
+])
+
+const requestCounts = new Map<string, { count: number, resetAt: number }>()
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = requestCounts.get(ip)
+  if (!entry || now > entry.resetAt) {
+    requestCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+  entry.count++
+  return entry.count <= RATE_LIMIT_MAX
+}
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
@@ -24,12 +46,25 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Rate limit by IP
+  const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
+  if (!checkRateLimit(ip)) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: 'Too many static map requests',
+    })
+  }
+
   // Validate referer to prevent external abuse
   const referer = getHeader(event, 'referer')
   const host = getHeader(event, 'host')
   if (referer && host) {
-    const refererUrl = new URL(referer).host
-    if (refererUrl !== host) {
+    let refererHost: string | undefined
+    try {
+      refererHost = new URL(referer).host
+    }
+    catch {}
+    if (refererHost && refererHost !== host) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Invalid referer',
@@ -39,8 +74,12 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event)
 
-  // Remove any client-provided key and use server-side key
-  const { key: _clientKey, ...safeQuery } = query
+  // Only allow known Static Maps API parameters
+  const safeQuery: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(query)) {
+    if (ALLOWED_PARAMS.has(k))
+      safeQuery[k] = v
+  }
 
   const googleMapsUrl = withQuery('https://maps.googleapis.com/maps/api/staticmap', {
     ...safeQuery,
