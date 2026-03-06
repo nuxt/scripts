@@ -122,7 +122,7 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
 
 export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' | { idleTimeout: number } | { interaction: string[] } | { serviceWorker: true } }
 
-export type NuxtUseScriptInput = UseScriptInput & Record<string & {}, any>
+export type NuxtUseScriptInput = UseScriptInput & Record<string & {}, string | boolean | number | undefined>
 
 export interface TrackedPage {
   title?: string
