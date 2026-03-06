@@ -739,6 +739,11 @@ export default defineNuxtModule<ModuleOptions>({
         route: '/_scripts/google-maps-geocode-proxy',
         handler: await resolvePath('./runtime/server/google-maps-geocode-proxy'),
       })
+      // CSRF cookie middleware for geocode proxy protection
+      addServerHandler({
+        middleware: true,
+        handler: await resolvePath('./runtime/server/middleware/proxy-csrf'),
+      })
     }
 
     // Add Gravatar proxy handler when registry.gravatar is enabled

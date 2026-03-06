@@ -7,9 +7,20 @@ const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX = 60
 
 const ALLOWED_PARAMS = new Set([
-  'center', 'zoom', 'size', 'scale', 'format', 'maptype',
-  'language', 'region', 'markers', 'path', 'visible',
-  'style', 'map_id', 'signature',
+  'center',
+  'zoom',
+  'size',
+  'scale',
+  'format',
+  'maptype',
+  'language',
+  'region',
+  'markers',
+  'path',
+  'visible',
+  'style',
+  'map_id',
+  'signature',
 ])
 
 const requestCounts = new Map<string, { count: number, resetAt: number }>()

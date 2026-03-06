@@ -53,8 +53,8 @@ Optionally, you can provide permissions to the [Static Maps API](https://develop
 
 Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
 - $7 per 1000 loads for the Maps JavaScript API (default for using Google Maps)
-- $2 per 1000 loads for the Static Maps API - Only used when you don't provide a `placeholder` slot. **Can be cached** with `googleStaticMapsProxy`.
-- $5 per 1000 loads for the Geocoding API - Only used when you don't provide a `google.maps.LatLng` object instead of a query string for the `center` prop. **Can be cached** with `googleGeocodeProxy`.
+- $2 per 1000 loads for the Static Maps API - Only used when you don't provide a `placeholder` slot. The `googleStaticMapsProxy` **caches these** automatically.
+- $5 per 1000 loads for the Geocoding API - Only used when you don't provide a `google.maps.LatLng` object instead of a query string for the `center` prop. The `googleGeocodeProxy` **caches these** automatically.
 
 However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged, assuming you're using it.
 
@@ -84,7 +84,7 @@ export default defineNuxtConfig({
 | `googleStaticMapsProxy` | Static Maps ($2/1k) | 1 hour | Caches placeholder images, hides API key |
 | `googleGeocodeProxy` | Places ($5/1k) | 24 hours | Caches place name → coordinate lookups |
 
-**Security:** Both proxies include IP-based rate limiting, referer validation, and CSRF token protection (geocode proxy). API keys are injected server-side and never exposed to the client.
+**Security:** Both proxies include IP-based rate limiting, referer validation, and CSRF token protection (geocode proxy). The server injects API keys at request time, keeping them hidden from the client.
 
 ### Demo
 

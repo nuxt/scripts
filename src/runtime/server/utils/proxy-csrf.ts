@@ -1,5 +1,5 @@
-import { createError, getCookie, getHeader, setCookie } from 'h3'
 import type { H3Event } from 'h3'
+import { createError, getCookie, getHeader, setCookie } from 'h3'
 
 const COOKIE_NAME = '__nuxt_scripts_proxy'
 const HEADER_NAME = 'x-nuxt-scripts-token'

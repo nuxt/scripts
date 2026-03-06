@@ -7,8 +7,8 @@ import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTrig
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
+import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { $fetch } from 'ofetch'
-import { tryUseNuxtApp, useHead, useRequestEvent, useRuntimeConfig } from 'nuxt/app'
 import { hash } from 'ohash'
 import { withQuery } from 'ufo'
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, watch } from 'vue'
@@ -135,18 +135,10 @@ const runtimeConfig = useRuntimeConfig()
 const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
 const geocodeProxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleGeocodeProxy
 
-// Set CSRF cookie during SSR for geocode proxy protection
-if (import.meta.server && geocodeProxyConfig?.enabled) {
-  const event = useRequestEvent()
-  if (event) {
-    const { setProxyCsrfCookie } = await import('../../server/utils/proxy-csrf')
-    setProxyCsrfCookie(event)
-  }
-}
-
 // Read CSRF token from cookie on client for geocode proxy requests
 function getCsrfToken(): string {
-  if (import.meta.server) return ''
+  if (import.meta.server)
+    return ''
   return document.cookie.split('; ').find(c => c.startsWith('__nuxt_scripts_proxy='))?.split('=')[1] || ''
 }
 
