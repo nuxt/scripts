@@ -7,6 +7,7 @@ import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTrig
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
+import { $fetch } from 'ofetch'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { hash } from 'ohash'
 import { withQuery } from 'ufo'
@@ -132,6 +133,7 @@ const emits = defineEmits<{
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 const runtimeConfig = useRuntimeConfig()
 const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
+const geocodeProxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleGeocodeProxy
 
 // Color mode support - try to auto-detect from @nuxtjs/color-mode
 const nuxtApp = tryUseNuxtApp()
@@ -249,7 +251,18 @@ async function resolveQueryToLatLang(query: string) {
   if (queryToLatLngCache.has(query)) {
     return Promise.resolve(queryToLatLngCache.get(query))
   }
-  // only if the query is a string we need to do a lookup
+  // Use server-side geocode proxy when enabled to save Places API costs
+  if (geocodeProxyConfig?.enabled) {
+    const data = await $fetch<{ lat: number, lng: number }>('/_scripts/google-maps-geocode-proxy', {
+      query: { input: query },
+    }).catch(() => null)
+    if (data) {
+      const latLng = new mapsApi.value!.LatLng(data.lat, data.lng)
+      queryToLatLngCache.set(query, latLng)
+      return latLng
+    }
+  }
+  // Fallback to client-side Places API
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<google.maps.LatLng>(async (resolve, reject) => {
     if (!mapsApi.value) {
