@@ -12,7 +12,7 @@ links:
 
 [Google reCAPTCHA](https://www.google.com/recaptcha/about/) protects your site from spam and abuse using advanced risk analysis.
 
-Nuxt Scripts provides a registry script composable [`useScriptGoogleRecaptcha()`](/scripts/google-recaptcha){lang="ts"} to easily integrate reCAPTCHA v3 in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptGoogleRecaptcha()`{lang="ts"}](/scripts/google-recaptcha){lang="ts"} to easily integrate reCAPTCHA v3 in your Nuxt app.
 
 ::callout
 This integration supports reCAPTCHA v3 (score-based, invisible) only. For v2 checkbox, use the standard reCAPTCHA integration.

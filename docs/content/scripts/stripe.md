@@ -17,7 +17,7 @@ links:
 [Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.
 
 Nuxt Scripts provides two Stripe features:
-- [`useScriptStripe()`](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/v3/`.
+- [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/v3/`.
 - `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site using `https://js.stripe.com/v3/pricing-table.js`.
 
 ::script-stats
@@ -98,9 +98,9 @@ You'll need to create your own [Pricing Table](https://dashboard.stripe.com/pric
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-## [`useScriptStripe()`](/scripts/stripe){lang="ts"}
+## [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"}
 
-The [`useScriptStripe()`](/scripts/stripe){lang="ts"} composable lets you have fine-grain control over the Stripe SDK. It provides a way to load the Stripe SDK and interact with it programmatically.
+The [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable lets you have fine-grain control over the Stripe SDK. It provides a way to load the Stripe SDK and interact with it programmatically.
 
 ```ts
 export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {}

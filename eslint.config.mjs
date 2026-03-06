@@ -34,7 +34,7 @@ export default antfu(
       'no-console': 'off',
     },
   },
-  ...harlanzw({ link: true, nuxt: true, vue: true }),
+  ...harlanzw({ link: true, nuxt: true, vue: true, content: true }),
   {
     rules: {
       'harlanzw/vue-no-faux-composables': 'off',

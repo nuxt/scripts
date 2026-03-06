@@ -12,7 +12,7 @@ links:
 
 [PostHog](https://posthog.com) is an open-source product analytics platform that provides analytics, session replay, feature flags, A/B testing, and more.
 
-Nuxt Scripts provides a registry script composable [`useScriptPostHog()`](/scripts/posthog){lang="ts"} to easily integrate PostHog in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptPostHog()`{lang="ts"}](/scripts/posthog){lang="ts"} to easily integrate PostHog in your Nuxt app.
 
 ## Installation
 

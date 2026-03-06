@@ -12,7 +12,7 @@ links:
 
 [X (formerly Twitter)](https://x.com) is a social media platform for sharing posts.
 
-Nuxt Scripts provides a [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component that fetches tweet data server-side and exposes it via slots for complete styling control. All data is proxied through your server - no client-side API calls to X.
+Nuxt Scripts provides a [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component that fetches tweet data server-side and exposes it via slots for complete styling control. All data is proxied through your server - no client-side API calls to X.
 
 ::script-stats
 ::
@@ -20,9 +20,9 @@ Nuxt Scripts provides a [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} compon
 ::script-types
 ::
 
-## [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"}
+## [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"}
 
-The [`<ScriptXEmbed>`](/scripts/x-embed){lang="html"} component is a headless component that:
+The [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component is a headless component that:
 - Fetches tweet data server-side via the X syndication API
 - Proxies all images through your server for privacy
 - Exposes tweet data via scoped slots for custom rendering

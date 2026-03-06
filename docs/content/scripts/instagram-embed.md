@@ -12,7 +12,7 @@ links:
 
 [Instagram](https://instagram.com) is a photo and video sharing social media platform.
 
-Nuxt Scripts provides a [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component that fetches Instagram embed HTML server-side and proxies all assets through your server - no client-side API calls to Instagram.
+Nuxt Scripts provides a [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"} component that fetches Instagram embed HTML server-side and proxies all assets through your server - no client-side API calls to Instagram.
 
 ::script-stats
 ::
@@ -20,9 +20,9 @@ Nuxt Scripts provides a [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lan
 ::script-types
 ::
 
-## [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"}
+## [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"}
 
-The [`<ScriptInstagramEmbed>`](/scripts/instagram-embed){lang="html"} component:
+The [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"} component:
 - Fetches the official Instagram embed HTML server-side
 - Rewrites all image and asset URLs to proxy through your server
 - Removes Instagram's embed.js script (not needed)

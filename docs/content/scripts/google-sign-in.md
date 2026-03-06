@@ -16,7 +16,7 @@ links:
 
 [Google Sign-In](https://developers.google.com/identity/gsi/web) provides a secure and convenient way for users to sign in to your app using their Google Account with One Tap, personalized buttons, and automatic sign-in.
 
-Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`](/scripts/google-sign-in){lang="ts"} to easily integrate Google Sign-In in your Nuxt app with optimal performance.
+Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`{lang="ts"}](/scripts/google-sign-in){lang="ts"} to easily integrate Google Sign-In in your Nuxt app with optimal performance.
 
 ::script-stats
 ::

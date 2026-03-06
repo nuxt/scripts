@@ -12,7 +12,7 @@ links:
 
 [Reddit Pixel](https://advertising.reddithelp.com/en/categories/custom-audiences-and-conversion-tracking/reddit-pixel) helps you track conversions and build audiences for your Reddit advertising campaigns.
 
-Nuxt Scripts provides a registry script composable [`useScriptRedditPixel()`](/scripts/reddit-pixel){lang="ts"} to easily integrate Reddit Pixel in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptRedditPixel()`{lang="ts"}](/scripts/reddit-pixel){lang="ts"} to easily integrate Reddit Pixel in your Nuxt app.
 
 ::script-stats
 ::

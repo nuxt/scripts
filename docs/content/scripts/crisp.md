@@ -16,7 +16,7 @@ links:
 
 [Crisp](https://crisp.chat/) is a customer messaging platform that lets you communicate with your customers through chat, email, and more.
 
-Nuxt Scripts provides a [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composable and a headless Facade Component [`<ScriptCrisp>`](#scriptcrisp){lang="html"} component to interact with crisp.
+Nuxt Scripts provides a [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="ts"} composable and a headless Facade Component [`<ScriptCrisp>`{lang="html"}](#scriptcrisp){lang="html"} component to interact with crisp.
 
 ::script-stats
 ::
@@ -24,9 +24,9 @@ Nuxt Scripts provides a [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composa
 ::script-types
 ::
 
-## [`<ScriptCrisp>`](/scripts/crisp){lang="html"}
+## [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"}
 
-The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component is headless Facade Component wrapping the [`useScriptCrisp()`](#usescriptcrisp){lang="ts"} composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.
+The [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"} component is headless Facade Component wrapping the [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="ts"} composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.
 
 It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading crisp when specific elements events happen.
 
@@ -131,7 +131,7 @@ NUXT_PUBLIC_SCRIPTS_CRISP_ID=<YOUR_ID>
 
 ### Events
 
-The [`<ScriptCrisp>`](/scripts/crisp){lang="html"} component emits a single `ready` event when Crisp loads.
+The [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"} component emits a single `ready` event when Crisp loads.
 
 ```ts
 const emits = defineEmits<{
@@ -187,9 +187,9 @@ Tip: You should use the `ScriptLoadingIndicator` by default for accessibility an
 </template>
 ```
 
-## [`useScriptCrisp()`](/scripts/crisp){lang="ts"}
+## [`useScriptCrisp()`{lang="ts"}](/scripts/crisp){lang="ts"}
 
-The [`useScriptCrisp()`](/scripts/crisp){lang="ts"} composable lets you have fine-grain control over Crisp SDK. It provides a way to load crisp SDK and interact with it programmatically.
+The [`useScriptCrisp()`{lang="ts"}](/scripts/crisp){lang="ts"} composable lets you have fine-grain control over Crisp SDK. It provides a way to load crisp SDK and interact with it programmatically.
 
 ```ts
 export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}

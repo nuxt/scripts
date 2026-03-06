@@ -16,7 +16,7 @@ links:
 
 [Intercom](https://www.intercom.com/) is a customer messaging platform that helps you build better customer relationships.
 
-Nuxt Scripts provides a [`useScriptIntercom()`](#usescriptintercom){lang="ts"} composable and a headless Facade Component [`<ScriptIntercom>`](#scriptintercom){lang="html"} component to interact with Intercom.
+Nuxt Scripts provides a [`useScriptIntercom()`{lang="ts"}](#usescriptintercom){lang="ts"} composable and a headless Facade Component [`<ScriptIntercom>`{lang="html"}](#scriptintercom){lang="html"} component to interact with Intercom.
 
 ::script-stats
 ::
@@ -24,10 +24,10 @@ Nuxt Scripts provides a [`useScriptIntercom()`](#usescriptintercom){lang="ts"} c
 ::script-types
 ::
 
-## [`<ScriptIntercom>`](/scripts/intercom){lang="html"}
+## [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"}
 
 
-The [`<ScriptIntercom>`](/scripts/intercom){lang="html"} component is headless Facade Component wrapping the [`useScriptIntercom()`](#usescriptintercom){lang="ts"} composable, providing a simple, performance optimized way to load Intercom in your Nuxt app.
+The [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"} component is headless Facade Component wrapping the [`useScriptIntercom()`{lang="ts"}](#usescriptintercom){lang="ts"} composable, providing a simple, performance optimized way to load Intercom in your Nuxt app.
 
 It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading Intercom when specific elements events happen.
 
@@ -111,7 +111,7 @@ NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID=<YOUR_APP_ID>
 
 ### Events
 
-The [`<ScriptIntercom>`](/scripts/intercom){lang="html"} component emits a single `ready` event when Intercom loads.
+The [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"} component emits a single `ready` event when Intercom loads.
 
 ```ts
 const emits = defineEmits<{
@@ -191,9 +191,9 @@ Tip: You should use the `ScriptLoadingIndicator` by default for accessibility an
 ```
 
 
-## [`useScriptIntercom()`](/scripts/intercom){lang="ts"}
+## [`useScriptIntercom()`{lang="ts"}](/scripts/intercom){lang="ts"}
 
-The [`useScriptIntercom()`](/scripts/intercom){lang="ts"} composable lets you have fine-grain control over when and how Intercom loads on your site.
+The [`useScriptIntercom()`{lang="ts"}](/scripts/intercom){lang="ts"} composable lets you have fine-grain control over when and how Intercom loads on your site.
 
 ```ts
 const { proxy } = useScriptIntercom({

@@ -16,7 +16,7 @@ links:
 
 [YouTube](https://youtube.com/) is a video hosting platform that allows you to upload and share videos.
 
-Nuxt Scripts provides a [`useScriptYouTubePlayer()`](/scripts/youtube-player){lang="ts"} composable and a headless [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"} component to interact with the YouTube Player.
+Nuxt Scripts provides a [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable and a headless [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component to interact with the YouTube Player.
 
 ::script-stats
 ::
@@ -33,9 +33,9 @@ to install the `@types/youtube` dependency.
 pnpm add -D @types/youtube
 ```
 
-## [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"}
+## [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"}
 
-The [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"} component is a wrapper around the [`useScriptYouTubePlayer()`](/scripts/youtube-player){lang="ts"} composable. It provides a simple way to embed YouTube videos in your Nuxt app.
+The [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component is a wrapper around the [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable. It provides a simple way to embed YouTube videos in your Nuxt app.
 
 It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the YouTube Player when the specific elements events happen.
 
@@ -134,7 +134,7 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ### Events
 
-The [`<ScriptYouTubePlayer>`](/scripts/youtube-player){lang="html"} component emits all events from the YouTube Player SDK. Please consult the [Player Events](https://developers.google.com/youtube/iframe_api_reference#Events) for full documentation.
+The [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component emits all events from the YouTube Player SDK. Please consult the [Player Events](https://developers.google.com/youtube/iframe_api_reference#Events) for full documentation.
 
 ```ts
 const emits = defineEmits<{
@@ -212,9 +212,9 @@ YouTube thumbnail for the video. You can display it however you like.
 </template>
 ```
 
-## [`useScriptYouTubePlayer()`](/scripts/youtube-player){lang="ts"}
+## [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"}
 
-The [`useScriptYouTubePlayer()`](/scripts/youtube-player){lang="ts"} composable lets you have fine-grain control over the YouTube Player SDK. It provides a way to load the YouTube Player SDK and interact with it programmatically.
+The [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable lets you have fine-grain control over the YouTube Player SDK. It provides a way to load the YouTube Player SDK and interact with it programmatically.
 
 ```ts
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options?: YouTubePlayerInput) {}

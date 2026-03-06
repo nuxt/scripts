@@ -58,8 +58,8 @@ catalogs:
       specifier: ^10.0.2
       version: 10.0.2
     eslint-plugin-harlanzw:
-      specifier: ^0.5.15
-      version: 0.5.15
+      specifier: ^0.5.16
+      version: 0.5.16
     h3:
       specifier: ^1.15.5
       version: 1.15.5
@@ -257,7 +257,7 @@ importers:
         version: 10.0.2(jiti@2.6.1)
       eslint-plugin-harlanzw:
         specifier: 'catalog:'
-        version: 0.5.15(eslint@10.0.2(jiti@2.6.1))
+        version: 0.5.16(eslint@10.0.2(jiti@2.6.1))
       happy-dom:
         specifier: 'catalog:'
         version: 20.8.3
@@ -4153,8 +4153,8 @@ packages:
     peerDependencies:
       eslint: '>=8'
 
-  eslint-plugin-harlanzw@0.5.15:
-    resolution: {integrity: sha512-cf6FXAGiRA4/elQoMAXvET5qrovQEMG2xL5K4gMX6CjFNe9Kk7K9Pv3yCXdEDyeOYi+s0jFWTwCscBpTiO9paQ==}
+  eslint-plugin-harlanzw@0.5.16:
+    resolution: {integrity: sha512-IkhutXgjTiEnWOZ2B5O8AxlNjBOy1sxZ3/niMERoqy9/8vJ05x3a1IOlGZdH59eAuPPmT9D9DCE+AA19EpSB6w==}
     peerDependencies:
       eslint: '>=9.0.0'
 
@@ -12009,7 +12009,7 @@ snapshots:
       eslint: 10.0.2(jiti@2.6.1)
       eslint-compat-utils: 0.5.1(eslint@10.0.2(jiti@2.6.1))
 
-  eslint-plugin-harlanzw@0.5.15(eslint@10.0.2(jiti@2.6.1)):
+  eslint-plugin-harlanzw@0.5.16(eslint@10.0.2(jiti@2.6.1)):
     dependencies:
       '@eslint/plugin-kit': 0.6.0
       eslint: 10.0.2(jiti@2.6.1)

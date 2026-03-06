@@ -16,7 +16,7 @@ links:
 
 [Vimeo](https://vimeo.com/) is a video hosting platform that allows you to upload and share videos.
 
-Nuxt Scripts provides a [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="ts"} composable and a headless [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} a component to interact with the Vimeo Player.
+Nuxt Scripts provides a [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable and a headless [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} a component to interact with the Vimeo Player.
 
 ::script-stats
 ::
@@ -33,9 +33,9 @@ to install the `@types/vimeo__player` dependency.
 pnpm add -D @types/vimeo__player
 ```
 
-## [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"}
+## [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"}
 
-The [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} component is a wrapper around the [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="ts"} composable. It provides a simple way to embed Vimeo videos in your Nuxt app.
+The [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} component is a wrapper around the [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable. It provides a simple way to embed Vimeo videos in your Nuxt app.
 
 It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Vimeo Player when the specific elements events happen.
 
@@ -107,7 +107,7 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ### Events
 
-The [`<ScriptVimeoPlayer>`](/scripts/vimeo-player){lang="html"} component emits all events from the Vimeo Player SDK. Please consult the [Player Events](https://developer.vimeo.com/player/sdk/reference#about-player-events) for full documentation.
+The [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} component emits all events from the Vimeo Player SDK. Please consult the [Player Events](https://developer.vimeo.com/player/sdk/reference#about-player-events) for full documentation.
 
 ```ts
 const emits = defineEmits<{
@@ -204,9 +204,9 @@ vimeo thumbnail for the video. You can display it however you like.
 </template>
 ```
 
-## [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="ts"}
+## [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"}
 
-The [`useScriptVimeoPlayer()`](/scripts/vimeo-player){lang="ts"} composable lets you have fine-grain control over the Vimeo Player SDK. It provides a way to load the Vimeo Player SDK and interact with it programmatically.
+The [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable lets you have fine-grain control over the Vimeo Player SDK. It provides a way to load the Vimeo Player SDK and interact with it programmatically.
 
 ```ts
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {}

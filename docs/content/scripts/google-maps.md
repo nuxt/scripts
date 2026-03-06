@@ -16,7 +16,7 @@ links:
 
 [Google Maps](https://maps.google.com/) allows you to embed maps in your website and customize them with your content.
 
-Nuxt Scripts provides a [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component to interact with the Google Maps.
+Nuxt Scripts provides a [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"} component to interact with the Google Maps.
 
 ::script-stats
 ::
@@ -33,9 +33,9 @@ to install the `@types/google.maps` dependency.
 pnpm add -D @types/google.maps
 ```
 
-## [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"}
+## [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"}
 
-The [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component is a wrapper around the [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable. It provides a simple way to embed Google Maps in your Nuxt app.
+The [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"} component is a wrapper around the [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"} composable. It provides a simple way to embed Google Maps in your Nuxt app.
 
 It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Google Maps when specific elements events happen.
 
@@ -293,7 +293,7 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ### Events
 
-The [`<ScriptGoogleMaps>`](/scripts/google-maps){lang="html"} component emits a single `ready` event when Google Maps loads.
+The [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"} component emits a single `ready` event when Google Maps loads.
 
 ```ts
 const emits = defineEmits<{
@@ -660,9 +660,9 @@ const mapError = ref(false)
 </template>
 ```
 
-## [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"}
+## [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"}
 
-The [`useScriptGoogleMaps()`](/scripts/google-maps){lang="ts"} composable lets you have fine-grain control over the Google Maps SDK. It provides a way to load the Google Maps SDK and interact with it programmatically.
+The [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"} composable lets you have fine-grain control over the Google Maps SDK. It provides a way to load the Google Maps SDK and interact with it programmatically.
 
 ```ts
 export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {}

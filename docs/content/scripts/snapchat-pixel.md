@@ -12,7 +12,7 @@ links:
 
 [Snapchat Pixel](https://businesshelp.snapchat.com/s/article/snap-pixel-about){:target="_blank"} lets you measure the crossdevice impact for your Snapchat ad campaigns.
 
-Nuxt Scripts provides a registry script composable [`useScriptSnapchatPixel()`](/scripts/snapchat-pixel){lang="ts"} to easily integrate Snapchat Pixel in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptSnapchatPixel()`{lang="ts"}](/scripts/snapchat-pixel){lang="ts"} to easily integrate Snapchat Pixel in your Nuxt app.
 
 ::script-stats
 ::

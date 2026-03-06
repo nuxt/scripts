@@ -12,7 +12,7 @@ links:
 
 [Carbon Ads](https://www.carbonads.net/) is an ad service that provides a performance friendly way to show ads on your site.
 
-Nuxt Scripts provides a headless [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"} component to embed Carbon Ads in your Nuxt app.
+Nuxt Scripts provides a headless [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"} component to embed Carbon Ads in your Nuxt app.
 
 ::script-stats
 ::
@@ -20,9 +20,9 @@ Nuxt Scripts provides a headless [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang
 ::script-types
 ::
 
-## [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"}
+## [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"}
 
-The [`<ScriptCarbonAds>`](/scripts/carbon-ads){lang="html"} component works differently to other Nuxt Scripts component and does not rely on [`useScript()`](/docs/api/use-script){lang="ts"}, instead it simply
+The [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"} component works differently to other Nuxt Scripts component and does not rely on [`useScript()`{lang="ts"}](/docs/api/use-script){lang="ts"}, instead it simply
 inserts a script tag into the div of the component on mount.
 
 By default, the component uses CarbonAds best practices which is to load immediately on mount. You can make use of [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) if you
@@ -172,4 +172,4 @@ use this example from nuxt.com.
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-Note: The Carbon Ads script _does not_ extend the [`useScript()`](/docs/api/use-script){lang="ts"} composable. Accessing the script will return the `HTMLScriptElement`.
+Note: The Carbon Ads script _does not_ extend the [`useScript()`{lang="ts"}](/docs/api/use-script){lang="ts"} composable. Accessing the script will return the `HTMLScriptElement`.

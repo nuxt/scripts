@@ -15,7 +15,7 @@ links:
 ::callout
 You may not need Google Tag Manager with Nuxt Scripts. GTM is 82kb and will slow down your site.
 Nuxt Scripts provides many features you can easily
-implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the [`useScriptGoogleAnalytics()`](/scripts/google-analytics){lang="ts"} composable instead.
+implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the [`useScriptGoogleAnalytics()`{lang="ts"}](/scripts/google-analytics){lang="ts"} composable instead.
 ::
 
 ::script-stats
@@ -26,7 +26,7 @@ implement within your Nuxt app. If you're using GTM for Google Analytics, you ca
 
 ### Guide: Sending Page Events
 
-If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [`useScriptEventPage()`](/docs/api/use-script-event-page){lang="ts"} composable.
+If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [`useScriptEventPage()`{lang="ts"}](/docs/api/use-script-event-page){lang="ts"} composable.
 This composable triggers the provided function on route change after Nuxt updates the page title.
 
 ```ts
@@ -91,7 +91,7 @@ For infrastructure setup, see [Cloud Run](https://developers.google.com/tag-plat
 
 ## Configuring GTM before it starts
 
-[`useScriptGoogleTagManager()`](/scripts/google-tag-manager){lang="ts"} initializes Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
+[`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"} initializes Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
 
 If you need to configure GTM before it starts, for example [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic), you have two options:
 
@@ -101,10 +101,10 @@ If you're configuring GTM in `nuxt.config`, use the `defaultConsent` option. See
 
 ### Option 2: Using `onBeforeGtmStart` callback
 
-If you're calling [`useScriptGoogleTagManager()`](/scripts/google-tag-manager){lang="ts"} with the ID directly in a component (not in nuxt.config), use the `onBeforeGtmStart` hook which runs right before the `gtm.start` event is pushed.
+If you're calling [`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"} with the ID directly in a component (not in nuxt.config), use the `onBeforeGtmStart` hook which runs right before the `gtm.start` event is pushed.
 
 ::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
-`onBeforeGtmStart` only works when the GTM ID is passed directly to [`useScriptGoogleTagManager()`](/scripts/google-tag-manager){lang="ts"}, not when configured globally in nuxt.config. For global config, use the `defaultConsent` option instead.
+`onBeforeGtmStart` only works when the GTM ID is passed directly to [`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"}, not when configured globally in nuxt.config. For global config, use the `defaultConsent` option instead.
 ::
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
@@ -135,7 +135,7 @@ function acceptCookies() {
 }
 ```
 
-To block GTM until consent, combine with [`useScriptTriggerConsent()`](/docs/guides/consent){lang="ts"}.
+To block GTM until consent, combine with [`useScriptTriggerConsent()`{lang="ts"}](/docs/guides/consent){lang="ts"}.
 
 ```vue
 <script setup lang="ts">

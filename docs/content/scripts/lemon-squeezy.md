@@ -16,7 +16,7 @@ links:
 
 [Lemon Squeezy](https://www.lemonsqueezy.com/) is a popular payment gateway that allows you to accept payments online.
 
-Nuxt Scripts provides a [`useScriptLemonSqueezy()`](#usescriptlemonsqueezy){lang="ts"} composable and a headless Facade Component [`<ScriptLemonSqueezy>`](#scriptlemonsqueezy){lang="html"} component to interact with lemon squeezy.
+Nuxt Scripts provides a [`useScriptLemonSqueezy()`{lang="ts"}](#usescriptlemonsqueezy){lang="ts"} composable and a headless Facade Component [`<ScriptLemonSqueezy>`{lang="html"}](#scriptlemonsqueezy){lang="html"} component to interact with lemon squeezy.
 
 
 ::script-stats
@@ -25,9 +25,9 @@ Nuxt Scripts provides a [`useScriptLemonSqueezy()`](#usescriptlemonsqueezy){lang
 ::script-types
 ::
 
-## [`<ScriptLemonSqueezy>`](/scripts/lemon-squeezy){lang="html"}
+## [`<ScriptLemonSqueezy>`{lang="html"}](/scripts/lemon-squeezy){lang="html"}
 
-The [`<ScriptLemonSqueezy>`](/scripts/lemon-squeezy){lang="html"} component is headless [Facade Component](/docs/guides/facade-components) wrapping the [`useScriptLemonSqueezy()`](/scripts/lemon-squeezy){lang="ts"} composable, providing a simple, performance optimized way to load Lemon Squeezy in your Nuxt app.
+The [`<ScriptLemonSqueezy>`{lang="html"}](/scripts/lemon-squeezy){lang="html"} component is headless [Facade Component](/docs/guides/facade-components) wrapping the [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"} composable, providing a simple, performance optimized way to load Lemon Squeezy in your Nuxt app.
 
 ```vue
 <template>
@@ -105,9 +105,9 @@ export type LemonSqueezyEventPayload = { event: 'Checkout.Success', data: Record
   & { event: string }
   ```
 
-## [`useScriptLemonSqueezy()`](/scripts/lemon-squeezy){lang="ts"}
+## [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"}
 
-The [`useScriptLemonSqueezy()`](/scripts/lemon-squeezy){lang="ts"} composable lets you have fine-grain control over the Lemon Squeezy SDK. It provides a way to load the Lemon Squeezy SDK and interact with it programmatically.
+The [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"} composable lets you have fine-grain control over the Lemon Squeezy SDK. It provides a way to load the Lemon Squeezy SDK and interact with it programmatically.
 
 ```ts
 export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: LemonSqueezyInput) {}

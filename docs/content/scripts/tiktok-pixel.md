@@ -12,7 +12,7 @@ links:
 
 [TikTok Pixel](https://ads.tiktok.com/help/article/tiktok-pixel) lets you measure, optimize and build audiences for your TikTok ad campaigns.
 
-Nuxt Scripts provides a registry script composable [`useScriptTikTokPixel()`](/scripts/tiktok-pixel){lang="ts"} to easily integrate TikTok Pixel in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptTikTokPixel()`{lang="ts"}](/scripts/tiktok-pixel){lang="ts"} to easily integrate TikTok Pixel in your Nuxt app.
 
 ::script-stats
 ::

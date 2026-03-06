@@ -12,7 +12,7 @@ links:
 
 [Segment](https://segment.com/) lets you collect, clean, and control your customer data. Segment helps you to understand your customers and personalize their experience.
 
-Nuxt Scripts provides a registry script composable [`useScriptSegment()`](/scripts/segment){lang="ts"} to easily integrate Segment in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptSegment()`{lang="ts"}](/scripts/segment){lang="ts"} to easily integrate Segment in your Nuxt app.
 
 ::script-stats
 ::

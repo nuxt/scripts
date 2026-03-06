@@ -18,7 +18,7 @@ links:
 
 Nuxt Scripts provides:
 
-- [`useScriptGoogleAdsense()`](/scripts/google-adsense){lang="ts"}: A composable to manage Google AdSense dynamically.
+- [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"}: A composable to manage Google AdSense dynamically.
 - `<ScriptGoogleAdsense>`{lang="html"}: A headless component to embed ads directly in your Nuxt app.
 
 ::script-stats
@@ -148,7 +148,7 @@ Auto Ads allow Google to **automatically** place ads for **better optimization**
   ::
 ::
 
-## Using [`<ScriptGoogleAdsense>`](/scripts/google-adsense){lang="html"} Component
+## Using [`<ScriptGoogleAdsense>`{lang="html"}](/scripts/google-adsense){lang="html"} Component
 
 It provides a simple way to **embed ads** in your Nuxt app.
 
@@ -202,9 +202,9 @@ If a user has an **ad-blocker enabled**, you can show **fallback content**.
 </template>
 ```
 
-## Using [`useScriptGoogleAdsense()`](/scripts/google-adsense){lang="ts"} Composable
+## Using [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} Composable
 
-The [`useScriptGoogleAdsense()`](/scripts/google-adsense){lang="ts"} composable allows **fine-grain control** over the AdSense script.
+The [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} composable allows **fine-grain control** over the AdSense script.
 
 ```ts
 export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(
