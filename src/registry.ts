@@ -22,6 +22,8 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       proxy: 'plausible',
       category: 'analytics',
       scriptBundling: (options?: PlausibleAnalyticsInput) => {
+        if (options?.scriptId)
+          return `https://plausible.io/js/pa-${options.scriptId}.js`
         const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
         return options?.extension ? `https://plausible.io/js/script.${extensions}.js` : 'https://plausible.io/js/script.js'
       },
