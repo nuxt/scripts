@@ -14,6 +14,21 @@ vi.mock('#nuxt-scripts-validator', () => ({
   parse: vi.fn(),
 }))
 
+describe('useRegistryScript scriptOptions', () => {
+  it('should not mutate user-provided scriptOptions', () => {
+    const mockOptionsFunction = vi.fn((_opts, _ctx) => ({
+      scriptInput: { src: 'https://example.com/script.js' },
+      scriptOptions: { use: () => ({ test: true }) },
+    }))
+
+    const userScriptOptions = { trigger: 'onNuxtReady' as const }
+    const userOptions = { scriptOptions: userScriptOptions }
+    useRegistryScript('test', mockOptionsFunction, userOptions)
+
+    expect(userScriptOptions).not.toHaveProperty('use')
+  })
+})
+
 describe('useRegistryScript query param merging', () => {
   it('should merge query params when user provides custom src', () => {
     const mockOptionsFunction = vi.fn((_opts, _ctx) => ({
