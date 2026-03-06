@@ -400,7 +400,7 @@ export default defineNuxtModule<ModuleOptions>({
             registryWithDefaults[key] = defu(value, envDefaults)
           }
           else if (Array.isArray(value)) {
-            registryWithDefaults[key] = [defu(value[0] || {}, envDefaults), value[1]]
+            registryWithDefaults[key] = defu(value[0] || {}, envDefaults)
           }
           else {
             registryWithDefaults[key] = value
