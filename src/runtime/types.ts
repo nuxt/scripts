@@ -192,13 +192,12 @@ export interface ScriptRegistry {
   umamiAnalytics?: UmamiAnalyticsInput
   gravatar?: GravatarInput
   [key: `${string}-npm`]: NpmInput
-  [key: string]: any
 }
 
 export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
-}>
+}> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
 
 export type UseFunctionType<T, U> = T extends {
   use: infer V
