@@ -192,6 +192,7 @@ export interface ScriptRegistry {
   umamiAnalytics?: UmamiAnalyticsInput
   gravatar?: GravatarInput
   [key: `${string}-npm`]: NpmInput
+  [key: string]: any
 }
 
 export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
