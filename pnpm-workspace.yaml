@@ -7,7 +7,7 @@ packages:
   - '!examples/**'
 
 catalog:
-  '@antfu/eslint-config': ^7.6.1
+  '@antfu/eslint-config': ^7.7.0
   '@nuxt/devtools-kit': ^3.2.2
   '@nuxt/devtools-ui-kit': ^3.2.2
   '@nuxt/kit': ^4.3.1
@@ -23,7 +23,7 @@ catalog:
   bumpp: ^10.4.1
   consola: ^3.4.2
   defu: ^6.1.4
-  eslint: ^10.0.2
+  eslint: ^10.0.3
   eslint-plugin-harlanzw: ^0.5.16
   h3: ^1.15.5
   happy-dom: ^20.8.3
@@ -37,7 +37,7 @@ catalog:
   pathe: ^2.0.3
   pkg-types: ^2.3.0
   playwright-core: ^1.58.2
-  posthog-js: ^1.359.0
+  posthog-js: ^1.359.1
   shiki: ^4.0.1
   sirv: ^3.0.2
   std-env: ^3.10.0
