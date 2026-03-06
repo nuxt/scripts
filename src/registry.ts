@@ -125,6 +125,16 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      label: 'Mixpanel',
+      src: 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js',
+      category: 'analytics',
+      logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#7856FF" d="M128 0C57.308 0 0 57.308 0 128s57.308 128 128 128s128-57.308 128-128S198.692 0 128 0m-26.461 176.882c-14.478 0-26.221-11.743-26.221-26.221s11.743-26.221 26.221-26.221s26.221 11.743 26.221 26.221s-11.743 26.221-26.221 26.221m52.922 0c-14.478 0-26.221-11.743-26.221-26.221s11.743-26.221 26.221-26.221s26.221 11.743 26.221 26.221s-11.743 26.221-26.221 26.221m0-52.442c-14.478 0-26.221-11.743-26.221-26.221s11.743-26.221 26.221-26.221s26.221 11.743 26.221 26.221s-11.743 26.221-26.221 26.221"/></svg>`,
+      import: {
+        name: 'useScriptMixpanelAnalytics',
+        from: await resolve('./runtime/registry/mixpanel-analytics'),
+      },
+    },
+    {
       label: 'Meta Pixel',
       proxy: 'metaPixel',
       src: 'https://connect.facebook.net/en_US/fbevents.js',
