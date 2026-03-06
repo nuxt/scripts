@@ -662,6 +662,16 @@ export default defineNuxtModule<ModuleOptions>({
           }
         }
 
+        // Auto-inject endpoint for Plausible when first-party proxy is enabled
+        // Plausible constructs its event URL as `new URL('/api/event', scriptEl.src)` which resolves
+        // to origin + '/api/event', bypassing the proxy prefix. We override the endpoint to route through the proxy.
+        if (config.registry?.plausibleAnalytics && typeof config.registry.plausibleAnalytics === 'object') {
+          const paConfig = (Array.isArray(config.registry.plausibleAnalytics) ? config.registry.plausibleAnalytics[0] : config.registry.plausibleAnalytics) as Record<string, any>
+          if (paConfig && !paConfig.endpoint) {
+            paConfig.endpoint = `${firstPartyCollectPrefix}/plausible/api/event`
+          }
+        }
+
         // Warn about scripts that don't support first-party mode
         if (unsupportedScripts.length && nuxt.options.dev) {
           logger.warn(

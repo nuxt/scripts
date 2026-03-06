@@ -171,14 +171,12 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
       initOptions.captureOnLocalhost = options.captureOnLocalhost
 
     // Build script input
-    const scriptInput = !useNewScript && options?.domain
-      ? {
-          'src': scriptSrc,
-          'data-domain': options.domain,
-        }
-      : {
-          src: scriptSrc,
-        }
+    const scriptInput: Record<string, string> = { src: scriptSrc }
+    if (!useNewScript && options?.domain)
+      scriptInput['data-domain'] = options.domain
+    // Legacy script uses data-api attribute for custom endpoint
+    if (!useNewScript && options?.endpoint)
+      scriptInput['data-api'] = options.endpoint
 
     return {
       scriptInput,
