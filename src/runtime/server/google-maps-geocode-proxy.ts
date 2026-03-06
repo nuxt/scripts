@@ -2,26 +2,11 @@ import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getHeader, getQuery, getRequestIP, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { validateProxyCsrf } from './utils/proxy-csrf'
 
+const MAX_INPUT_LENGTH = 200
 const RATE_LIMIT_WINDOW_MS = 60_000
-const RATE_LIMIT_MAX = 60
-
-const ALLOWED_PARAMS = new Set([
-  'center',
-  'zoom',
-  'size',
-  'scale',
-  'format',
-  'maptype',
-  'language',
-  'region',
-  'markers',
-  'path',
-  'visible',
-  'style',
-  'map_id',
-  'signature',
-])
+const RATE_LIMIT_MAX = 30
 
 const requestCounts = new Map<string, { count: number, resetAt: number }>()
 
@@ -38,31 +23,33 @@ function checkRateLimit(ip: string): boolean {
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
-  const publicConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
-  const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleStaticMapsProxy
+  const publicConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleGeocodeProxy
+  const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleGeocodeProxy
 
   if (!publicConfig?.enabled) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Google Static Maps proxy is not enabled',
+      statusMessage: 'Google Geocode proxy is not enabled',
     })
   }
 
-  // Get API key from private config (server-side only, not exposed to client)
   const apiKey = privateConfig?.apiKey
   if (!apiKey) {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Google Maps API key not configured for proxy',
+      statusMessage: 'Google Maps API key not configured for geocode proxy',
     })
   }
+
+  // CSRF validation (double-submit cookie pattern)
+  validateProxyCsrf(event)
 
   // Rate limit by IP
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   if (!checkRateLimit(ip)) {
     throw createError({
       statusCode: 429,
-      statusMessage: 'Too many static map requests',
+      statusMessage: 'Too many geocode requests',
     })
   }
 
@@ -84,34 +71,54 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
+  const input = query.input as string
 
-  // Only allow known Static Maps API parameters
-  const safeQuery: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(query)) {
-    if (ALLOWED_PARAMS.has(k))
-      safeQuery[k] = v
+  if (!input) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Missing "input" query parameter',
+    })
   }
 
-  const googleMapsUrl = withQuery('https://maps.googleapis.com/maps/api/staticmap', {
-    ...safeQuery,
+  if (input.length > MAX_INPUT_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Input too long (max ${MAX_INPUT_LENGTH} characters)`,
+    })
+  }
+
+  const googleUrl = withQuery('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', {
+    input,
+    inputtype: 'textquery',
+    fields: 'name,geometry',
     key: apiKey,
   })
 
-  const response = await $fetch.raw(googleMapsUrl, {
+  const data = await $fetch<{ candidates: Array<{ geometry: { location: { lat: number, lng: number } }, name: string }>, status: string }>(googleUrl, {
     headers: {
-      'User-Agent': 'Nuxt Scripts Google Static Maps Proxy',
+      'User-Agent': 'Nuxt Scripts Google Geocode Proxy',
     },
   }).catch((error: any) => {
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to fetch static map',
+      statusMessage: error.statusMessage || 'Failed to geocode query',
     })
   })
 
-  const cacheMaxAge = publicConfig.cacheMaxAge || 3600
-  setHeader(event, 'Content-Type', response.headers.get('content-type') || 'image/png')
+  if (data.status !== 'OK' || !data.candidates?.[0]?.geometry?.location) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `No location found for "${input}"`,
+    })
+  }
+
+  const location = data.candidates[0].geometry.location
+
+  // Cache aggressively - place names rarely change coordinates
+  const cacheMaxAge = publicConfig.cacheMaxAge || 86400
+  setHeader(event, 'Content-Type', 'application/json')
   setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
   setHeader(event, 'Vary', 'Accept-Encoding')
 
-  return response._data
+  return { lat: location.lat, lng: location.lng, name: data.candidates[0].name }
 })

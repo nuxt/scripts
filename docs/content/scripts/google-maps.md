@@ -53,15 +53,38 @@ Optionally, you can provide permissions to the [Static Maps API](https://develop
 
 Showing an interactive JS map requires the Maps JavaScript API, which is a paid service. If a user interacts with the map, the following costs will be incurred:
 - $7 per 1000 loads for the Maps JavaScript API (default for using Google Maps)
-- $2 per 1000 loads for the Static Maps API - Only used when you don't provide a `placeholder` slot.
-- $5 per 1000 loads for the Geocoding API - Only used when you don't provide a `google.maps.LatLng` object instead of a query string for the `center` prop
+- $2 per 1000 loads for the Static Maps API - Only used when you don't provide a `placeholder` slot. The `googleStaticMapsProxy` **caches these** automatically.
+- $5 per 1000 loads for the Geocoding API - Only used when you don't provide a `google.maps.LatLng` object instead of a query string for the `center` prop. The `googleGeocodeProxy` **caches these** automatically.
 
 However, if the user never engages with the map, only the Static Maps API usage ($2 per 1000 loads) will be charged, assuming you're using it.
 
-Billing will be optimized in a [future update](https://github.com/nuxt/scripts/issues/83).
-
 You should consider using the [Iframe Embed](https://developers.google.com/maps/documentation/embed/get-started) instead if you want to avoid these costs
 and are okay with a less interactive map.
+
+#### Cost Optimization Proxies
+
+When `googleMaps` is in your registry config, server-side proxies are **automatically enabled** to cache API responses, hide your API key, and reduce billing. You can customize cache durations or disable them:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleMaps: { apiKey: 'YOUR_KEY' }, // auto-enables proxies
+    },
+    // Optional: customize cache durations
+    googleStaticMapsProxy: { cacheMaxAge: 7200 },
+    googleGeocodeProxy: { cacheMaxAge: 172800 },
+    // Or disable: googleGeocodeProxy: { enabled: false },
+  },
+})
+```
+
+| Proxy | API Saved | Cache Default | What It Does |
+|-------|-----------|---------------|--------------|
+| `googleStaticMapsProxy` | Static Maps ($2/1k) | 1 hour | Caches placeholder images, hides API key |
+| `googleGeocodeProxy` | Places ($5/1k) | 24 hours | Caches place name → coordinate lookups |
+
+**Security:** Both proxies include IP-based rate limiting, referer validation, and CSRF token protection (geocode proxy). The server injects API keys at request time, keeping them hidden from the client.
 
 ### Demo
 
