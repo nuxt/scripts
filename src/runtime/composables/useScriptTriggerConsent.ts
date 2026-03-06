@@ -8,7 +8,9 @@ interface UseConsentScriptTriggerApi extends Promise<void> {
    */
   accept: () => void
   /**
-   * A function that can be called to revoke the consent and unload the script.
+   * A function that can be called to revoke consent. Since the trigger promise is already resolved
+   * once accepted, revocation is signaled via the reactive `consented` ref rather than promise rejection.
+   * Consumers should `watch(consent.consented, ...)` to react to revocation.
    */
   revoke: () => void
   /**
@@ -19,7 +21,7 @@ interface UseConsentScriptTriggerApi extends Promise<void> {
 
 /**
  * Load a script once consent has been provided either through a resolvable `consent` or calling the `accept` method.
- * Supports revoking consent which will unload the script by rejecting the trigger promise.
+ * Supports revoking consent via the reactive `consented` ref. Consumers should watch `consented` to react to revocation.
  * @param options
  */
 export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): UseConsentScriptTriggerApi {
@@ -49,7 +51,7 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
     }
   }
 
-  const promise = new Promise<void>((resolve, reject) => {
+  const promise = new Promise<void>((resolve) => {
     watch(consented, (newValue, oldValue) => {
       if (newValue && !oldValue) {
         // Consent granted - load script
@@ -75,10 +77,8 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
         // other trigger not supported
         runner(resolve)
       }
-      else if (!newValue && oldValue) {
-        // Consent revoked - trigger rejection to signal script should be unloaded
-        reject(new Error('Consent revoked'))
-      }
+      // Revocation is handled via the reactive `consented` ref, not promise rejection.
+      // Once resolved, a promise cannot be rejected — consumers should watch `consented` instead.
     })
   }) as UseConsentScriptTriggerApi
 
