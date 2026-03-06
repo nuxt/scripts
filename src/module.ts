@@ -159,6 +159,36 @@ function fixSelfClosingScriptComponents(nuxt: any) {
   }
 }
 
+const REGISTRY_ENV_DEFAULTS: Record<string, Record<string, string>> = {
+  clarity: { id: '' },
+  cloudflareWebAnalytics: { token: '' },
+  crisp: { id: '' },
+  databuddyAnalytics: { clientId: '' },
+  fathomAnalytics: { site: '' },
+  googleAdsense: { client: '' },
+  googleAnalytics: { id: '' },
+  googleMaps: { apiKey: '' },
+  googleRecaptcha: { siteKey: '' },
+  googleSignIn: { clientId: '' },
+  googleTagManager: { id: '' },
+  hotjar: { id: '' },
+  intercom: { app_id: '' },
+  matomoAnalytics: { matomoUrl: '' },
+  metaPixel: { id: '' },
+  paypal: { clientId: '' },
+  plausibleAnalytics: { domain: '' },
+  posthog: { apiKey: '' },
+  redditPixel: { id: '' },
+  rybbitAnalytics: { siteId: '' },
+  segment: { writeKey: '' },
+  snapchatPixel: { id: '' },
+  stripe: {},
+  tiktokPixel: { id: '' },
+  umamiAnalytics: { websiteId: '' },
+  vercelAnalytics: {},
+  xPixel: { id: '' },
+}
+
 const PARTYTOWN_FORWARDS: Record<string, string[]> = {
   googleAnalytics: ['dataLayer.push', 'gtag'],
   plausible: ['plausible'],
@@ -355,12 +385,35 @@ export default defineNuxtModule<ModuleOptions>({
     // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
     // Both scripts.registry and runtimeConfig.public.scripts should be supported
     if (config.registry) {
-      // Ensure runtimeConfig.public exists
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
+
+      // Auto-populate env var defaults for enabled registry scripts so that
+      // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig
+      const registryWithDefaults: Record<string, any> = {}
+      for (const [key, value] of Object.entries(config.registry)) {
+        if (value && REGISTRY_ENV_DEFAULTS[key]) {
+          const envDefaults = REGISTRY_ENV_DEFAULTS[key]
+          if (value === true || value === 'mock') {
+            registryWithDefaults[key] = { ...envDefaults }
+          }
+          else if (typeof value === 'object' && !Array.isArray(value)) {
+            registryWithDefaults[key] = defu(value, envDefaults)
+          }
+          else if (Array.isArray(value)) {
+            registryWithDefaults[key] = defu(value[0] || {}, envDefaults)
+          }
+          else {
+            registryWithDefaults[key] = value
+          }
+        }
+        else {
+          registryWithDefaults[key] = value
+        }
+      }
 
       nuxt.options.runtimeConfig.public.scripts = defu(
         nuxt.options.runtimeConfig.public.scripts || {},
-        config.registry,
+        registryWithDefaults,
       )
     }
 
