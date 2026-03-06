@@ -2,6 +2,7 @@ import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getHeader, getQuery, getRequestIP, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { validateProxyCsrf } from './utils/proxy-csrf'
 
 const MAX_INPUT_LENGTH = 200
 const RATE_LIMIT_WINDOW_MS = 60_000
@@ -39,6 +40,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Google Maps API key not configured for geocode proxy',
     })
   }
+
+  // CSRF validation (double-submit cookie pattern)
+  validateProxyCsrf(event)
 
   // Rate limit by IP
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'

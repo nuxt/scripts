@@ -328,11 +328,9 @@ export default defineNuxtModule<ModuleOptions>({
       },
     },
     googleStaticMapsProxy: {
-      enabled: false,
       cacheMaxAge: 3600,
     },
     googleGeocodeProxy: {
-      enabled: false,
       cacheMaxAge: 86400,
     },
     enabled: true,
@@ -357,13 +355,18 @@ export default defineNuxtModule<ModuleOptions>({
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
     const mapsApiKey = (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey
+    // Auto-enable Google Maps proxies when googleMaps is in the registry
+    const hasGoogleMaps = !!config.registry?.googleMaps
+    const staticMapsEnabled = config.googleStaticMapsProxy?.enabled ?? hasGoogleMaps
+    const geocodeEnabled = config.googleGeocodeProxy?.enabled ?? hasGoogleMaps
+
     nuxt.options.runtimeConfig['nuxt-scripts'] = {
       version: version!,
       // Private proxy config with API key (server-side only)
-      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+      googleStaticMapsProxy: staticMapsEnabled
         ? { apiKey: mapsApiKey }
         : undefined,
-      googleGeocodeProxy: config.googleGeocodeProxy?.enabled
+      googleGeocodeProxy: geocodeEnabled
         ? { apiKey: mapsApiKey }
         : undefined,
     } as any
@@ -372,11 +375,11 @@ export default defineNuxtModule<ModuleOptions>({
       version: nuxt.options.dev ? version : undefined,
       defaultScriptOptions: config.defaultScriptOptions as any,
       // Only expose enabled and cacheMaxAge to client, not apiKey
-      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
-        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
+      googleStaticMapsProxy: staticMapsEnabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge }
         : undefined,
-      googleGeocodeProxy: config.googleGeocodeProxy?.enabled
-        ? { enabled: true, cacheMaxAge: config.googleGeocodeProxy.cacheMaxAge }
+      googleGeocodeProxy: geocodeEnabled
+        ? { enabled: true, cacheMaxAge: config.googleGeocodeProxy?.cacheMaxAge }
         : undefined,
     } as any
 
@@ -723,16 +726,15 @@ export default defineNuxtModule<ModuleOptions>({
       })
     })
 
-    // Add Google Static Maps proxy handler if enabled
-    if (config.googleStaticMapsProxy?.enabled) {
+    // Add Google Maps proxy handlers (auto-enabled when googleMaps is in registry)
+    if (staticMapsEnabled) {
       addServerHandler({
         route: '/_scripts/google-static-maps-proxy',
         handler: await resolvePath('./runtime/server/google-static-maps-proxy'),
       })
     }
 
-    // Add Google Geocode proxy handler if enabled
-    if (config.googleGeocodeProxy?.enabled) {
+    if (geocodeEnabled) {
       addServerHandler({
         route: '/_scripts/google-maps-geocode-proxy',
         handler: await resolvePath('./runtime/server/google-maps-geocode-proxy'),

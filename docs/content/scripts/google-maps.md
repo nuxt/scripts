@@ -63,21 +63,18 @@ and are okay with a less interactive map.
 
 #### Cost Optimization Proxies
 
-Enable server-side proxies to cache API responses, hide your API key from clients, and reduce billing:
+When `googleMaps` is in your registry config, server-side proxies are **automatically enabled** to cache API responses, hide your API key, and reduce billing. You can customize cache durations or disable them:
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({
   scripts: {
-    // Proxy and cache static map placeholder images (default: 1 hour)
-    googleStaticMapsProxy: {
-      enabled: true,
-      cacheMaxAge: 3600,
+    registry: {
+      googleMaps: { apiKey: 'YOUR_KEY' }, // auto-enables proxies
     },
-    // Proxy and cache geocoding lookups for string-based centers (default: 24 hours)
-    googleGeocodeProxy: {
-      enabled: true,
-      cacheMaxAge: 86400,
-    },
+    // Optional: customize cache durations
+    googleStaticMapsProxy: { cacheMaxAge: 7200 },
+    googleGeocodeProxy: { cacheMaxAge: 172800 },
+    // Or disable: googleGeocodeProxy: { enabled: false },
   },
 })
 ```
@@ -87,7 +84,7 @@ export default defineNuxtConfig({
 | `googleStaticMapsProxy` | Static Maps ($2/1k) | 1 hour | Caches placeholder images, hides API key |
 | `googleGeocodeProxy` | Places ($5/1k) | 24 hours | Caches place name → coordinate lookups |
 
-Both proxies validate the request referer to prevent external abuse and inject the API key server-side so it's never exposed to the client.
+**Security:** Both proxies include IP-based rate limiting, referer validation, and CSRF token protection (geocode proxy). API keys are injected server-side and never exposed to the client.
 
 ### Demo
 
