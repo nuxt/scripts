@@ -1,5 +1,9 @@
 {
   "headers": {
+    "host": {
+      "anonymized": "<removed>",
+      "original": "127.0.0.1:<PORT>",
+    },
     "x-forwarded-for": {
       "anonymized": "127.0.0.1",
       "original": "<absent>",

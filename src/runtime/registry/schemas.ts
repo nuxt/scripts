@@ -714,6 +714,12 @@ export const RybbitAnalyticsOptions = object({
    * API key for authenticated tracking.
    */
   apiKey: optional(string()),
+  /**
+   * Override the analytics host URL. When first-party mode is enabled, this is
+   * auto-injected to route through the proxy. The SDK derives its API endpoint
+   * from the script src, so this changes the script src to `${analyticsHost}/script.js`.
+   */
+  analyticsHost: optional(string()),
 })
 
 export const SegmentOptions = object({

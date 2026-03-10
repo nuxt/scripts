@@ -2,7 +2,7 @@
 import { useHead, useScriptCloudflareWebAnalytics } from '#imports'
 
 useHead({ title: 'Cloudflare WA - First Party' })
-const { status } = useScriptCloudflareWebAnalytics({ token: 'test-token' })
+const { status } = useScriptCloudflareWebAnalytics({ token: 'ade278253a19413c9bd923b079870902' })
 </script>
 
 <template>

@@ -106,6 +106,26 @@ export function useScriptDatabuddyAnalytics<T extends DatabuddyAnalyticsApi>(_op
           // Prefer the lightweight proxy (db) if available, else raw tracker instance
           return (window.db || window.databuddy || null) as unknown as T
         },
+        // The SDK finds config by searching for a <script> with src containing
+        // "/databuddy.js". When first-party bundling rewrites the src to
+        // /_scripts/<hash>.js, the lookup fails. Set window.databuddyConfig
+        // so the SDK picks up the config regardless of script src.
+        clientInit: import.meta.server
+          ? undefined
+          : () => {
+              const cfg: Record<string, unknown> = { clientId: options.clientId }
+              if (options?.apiUrl)
+                cfg.apiUrl = options.apiUrl
+              if (options?.disabled)
+                cfg.disabled = options.disabled
+              if (options?.trackScreenViews)
+                cfg.trackScreenViews = options.trackScreenViews
+              if (options?.trackPerformance)
+                cfg.trackPerformance = options.trackPerformance
+              if (options?.trackSessions)
+                cfg.trackSessions = options.trackSessions
+              ;(window as any).databuddyConfig = cfg
+            },
       },
     }
   }, _options)

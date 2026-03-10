@@ -28,7 +28,7 @@ declare global {
 export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?: FathomAnalyticsInput) {
   return useRegistryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
     scriptInput: {
-      src: 'https://cdn.usefathom.com/script.js', // can't be bundled
+      src: 'https://cdn.usefathom.com/script.js',
       // append the data attr's
       ...Object.entries(options)
         .filter(([key]) => ['site', 'spa', 'auto', 'canonical', 'honorDnt'].includes(key))

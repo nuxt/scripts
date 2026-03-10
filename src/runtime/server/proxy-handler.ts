@@ -1,4 +1,4 @@
-import type { ProxyPrivacyInput } from './utils/privacy'
+import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
 import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, setResponseHeader } from 'h3'
 import { useNitroApp } from 'nitropack/runtime'
@@ -22,13 +22,31 @@ interface ProxyConfig {
   debug?: boolean
 }
 
+const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
+const ROUTE_WILDCARD_RE = /\/\*\*$/
+const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
+const SKIP_RESPONSE_HEADERS = new Set(['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length'])
+
+/** Pre-sorted route cache keyed by stringified routes object */
+let sortedRoutesCache: { key: string, sorted: [string, string][] } | undefined
+
+function getSortedRoutes(routes: Record<string, string>): [string, string][] {
+  const key = JSON.stringify(routes)
+  if (sortedRoutesCache?.key === key)
+    return sortedRoutesCache.sorted
+  const sorted = Object.entries(routes).sort((a, b) => b[0].length - a[0].length)
+  sortedRoutesCache = { key, sorted }
+  return sorted
+}
+
 /**
  * Strip fingerprinting from URL query string.
+ * Returns both the query string and the stripped record (to avoid re-computing for hooks).
  */
 function stripQueryFingerprinting(
   query: Record<string, unknown>,
-  privacy?: import('./utils/privacy').ResolvedProxyPrivacy,
-): string {
+  privacy: ResolvedProxyPrivacy,
+): { queryString: string, stripped: Record<string, unknown> } {
   const stripped = stripPayloadFingerprinting(query, privacy)
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(stripped)) {
@@ -36,7 +54,7 @@ function stripQueryFingerprinting(
       params.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
     }
   }
-  return params.toString()
+  return { queryString: params.toString(), stripped }
 }
 
 /**
@@ -45,7 +63,6 @@ function stripQueryFingerprinting(
  */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const nitro = useNitroApp()
   const proxyConfig = config['nuxt-scripts-proxy'] as unknown as ProxyConfig | undefined
 
   if (!proxyConfig) {
@@ -64,17 +81,16 @@ export default defineEventHandler(async (event) => {
       }
     : () => {}
 
-  // Find matching route (sort by length descending to match longest/most specific first)
+  // Find matching route (pre-sorted by length descending to match longest/most specific first)
   let targetBase: string | undefined
   let matchedPrefix: string | undefined
   let matchedRoutePattern: string | undefined
 
-  const sortedRoutes = Object.entries(routes).sort((a, b) => b[0].length - a[0].length)
-  for (const [routePattern, target] of sortedRoutes) {
+  for (const [routePattern, target] of getSortedRoutes(routes)) {
     // Convert route pattern to prefix (remove /** suffix)
-    const prefix = routePattern.replace(/\/\*\*$/, '')
+    const prefix = routePattern.replace(ROUTE_WILDCARD_RE, '')
     if (path.startsWith(prefix)) {
-      targetBase = target.replace(/\/\*\*$/, '')
+      targetBase = target.replace(ROUTE_WILDCARD_RE, '')
       matchedPrefix = prefix
       matchedRoutePattern = routePattern
       log('[proxy] Matched:', prefix, '->', targetBase)
@@ -108,12 +124,13 @@ export default defineEventHandler(async (event) => {
   // - application/octet-stream: explicitly binary content
   // - ?compression=gzip-js: client-side compression (e.g. PostHog sends gzip bytes as text/plain)
   const originalHeaders = getHeaders(event)
+  const originalQuery = getQuery(event)
   const contentType = originalHeaders['content-type'] || ''
-  const compressionParam = new URL(event.path, 'http://localhost').searchParams.get('compression')
+  const compressionParam = (originalQuery.compression as string) || ''
   const isBinaryBody = Boolean(
     originalHeaders['content-encoding']
     || contentType.includes('octet-stream')
-    || (compressionParam && /gzip|deflate|br|compress|base64/i.test(compressionParam)),
+    || (compressionParam && COMPRESSION_RE.test(compressionParam)),
   )
 
   // Build target URL with stripped query params
@@ -125,13 +142,14 @@ export default defineEventHandler(async (event) => {
   let targetUrl = targetBase + targetPath
 
   // Strip fingerprinting from query string when any privacy flag is active
+  let strippedQueryRecord: Record<string, unknown> | undefined
   if (anyPrivacy) {
-    const query = getQuery(event)
-    if (Object.keys(query).length > 0) {
-      const strippedQuery = stripQueryFingerprinting(query, privacy)
+    if (Object.keys(originalQuery).length > 0) {
+      const { queryString, stripped } = stripQueryFingerprinting(originalQuery, privacy)
+      strippedQueryRecord = stripped
       // Replace query string in URL
       const basePath = targetUrl.split('?')[0] || targetUrl
-      targetUrl = strippedQuery ? `${basePath}?${strippedQuery}` : basePath
+      targetUrl = queryString ? `${basePath}?${queryString}` : basePath
     }
   }
 
@@ -142,6 +160,10 @@ export default defineEventHandler(async (event) => {
     if (!value)
       continue
     const lowerKey = key.toLowerCase()
+
+    // host header — fetch derives it from URL, don't forward the first-party host
+    if (lowerKey === 'host')
+      continue
 
     // SENSITIVE_HEADERS always stripped regardless of privacy flags
     if (SENSITIVE_HEADERS.includes(lowerKey))
@@ -182,7 +204,7 @@ export default defineEventHandler(async (event) => {
     // Client Hints (hardware flag)
     if (lowerKey === 'sec-ch-ua' || lowerKey === 'sec-ch-ua-full-version-list') {
       headers[lowerKey] = privacy.hardware
-        ? value.replace(/;v="(\d+)\.[^"]*"/g, ';v="$1"')
+        ? value.replace(CLIENT_HINT_VERSION_RE, ';v="$1"')
         : value
       continue
     }
@@ -226,7 +248,6 @@ export default defineEventHandler(async (event) => {
   // When true, body is not read — the raw request stream is piped directly to upstream
   let passthroughBody = false
   const method = event.method?.toUpperCase()
-  const originalQuery = getQuery(event)
   const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
 
   if (isWriteMethod) {
@@ -303,7 +324,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Emit hook for E2E testing - allows capturing before/after data
+  // Emit hook for E2E testing — allows capturing before/after data
+  const nitro = useNitroApp()
   await (nitro.hooks.callHook as (name: string, ctx: any) => Promise<void>)('nuxt-scripts:proxy', {
     timestamp: Date.now(),
     path: event.path,
@@ -318,7 +340,7 @@ export default defineEventHandler(async (event) => {
     },
     stripped: {
       headers,
-      query: anyPrivacy ? stripPayloadFingerprinting(originalQuery, privacy) : originalQuery,
+      query: strippedQueryRecord ?? originalQuery,
       body: passthroughBody ? '<passthrough>' : (body ?? null),
     },
   })
@@ -350,32 +372,24 @@ export default defineEventHandler(async (event) => {
       duplex: passthroughBody ? 'half' : undefined,
     })
   }
-  catch (err: unknown) {
+  catch (err) {
     clearTimeout(timeoutId)
-    log('[proxy] Fetch error:', err instanceof Error ? err.message : err)
-
-    // For analytics endpoints, return a graceful 204 No Content instead of a noisy 5xx error
-    // this avoids cluttering the user's console with errors for non-critical tracking requests
-    if (path.includes('/collect') || path.includes('/tr') || path.includes('/events')) {
-      event.node.res.statusCode = 204
-      return ''
-    }
-
-    const isTimeout = err instanceof Error && (err.message.includes('aborted') || err.message.includes('timeout'))
+    log('[proxy] Upstream error:', err)
     throw createError({
-      statusCode: isTimeout ? 504 : 502,
-      statusMessage: isTimeout ? 'Upstream timeout' : 'Bad Gateway',
-      message: 'Failed to reach upstream',
+      statusCode: 502,
+      statusMessage: 'Bad Gateway',
+      message: `Proxy upstream request failed: ${targetUrl}`,
     })
   }
+  finally {
+    clearTimeout(timeoutId)
+  }
 
-  clearTimeout(timeoutId)
   log('[proxy] Response:', response.status, response.statusText)
 
   // Forward response headers (except problematic ones)
-  const skipHeaders = ['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length']
   response.headers.forEach((value, key) => {
-    if (!skipHeaders.includes(key.toLowerCase())) {
+    if (!SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) {
       setResponseHeader(event, key, value)
     }
   })

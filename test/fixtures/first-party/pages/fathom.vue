@@ -2,7 +2,7 @@
 import { useHead, useScriptFathomAnalytics } from '#imports'
 
 useHead({ title: 'Fathom - First Party' })
-const { status } = useScriptFathomAnalytics({ site: 'TEST' })
+const { status } = useScriptFathomAnalytics({ site: 'BRDEJWKJ' })
 </script>
 
 <template>

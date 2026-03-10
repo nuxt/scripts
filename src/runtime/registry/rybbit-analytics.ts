@@ -105,7 +105,7 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
   return useRegistryScript<T, typeof RybbitAnalyticsOptions>('rybbitAnalytics', (options) => {
     return {
       scriptInput: {
-        'src': 'https://app.rybbit.io/api/script.js',
+        'src': options?.analyticsHost ? `${options.analyticsHost}/script.js` : 'https://app.rybbit.io/api/script.js',
         'data-site-id': String(options?.siteId),
         'data-auto-track-pageview': options?.autoTrackPageview,
         'data-track-spa': options?.trackSpa,

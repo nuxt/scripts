@@ -2,7 +2,7 @@
 import { useHead, useScriptIntercom } from '#imports'
 
 useHead({ title: 'Intercom - First Party' })
-const { status } = useScriptIntercom({ app_id: 'test-app' })
+const { status } = useScriptIntercom({ app_id: 'akg5rmxb' })
 </script>
 
 <template>

@@ -2,7 +2,7 @@
 import { useHead, useScriptPlausibleAnalytics } from '#imports'
 
 useHead({ title: 'Plausible - First Party' })
-const { status } = useScriptPlausibleAnalytics({ domain: 'example.com' })
+const { status } = useScriptPlausibleAnalytics({ domain: 'scripts.nuxt.com' })
 </script>
 
 <template>

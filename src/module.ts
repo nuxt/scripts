@@ -1,6 +1,5 @@
 import type { FetchOptions } from 'ofetch'
-import type { InterceptRule } from './proxy-configs'
-import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
+import type { FirstPartyOptions, FirstPartyPrivacy, InterceptRule } from './first-party'
 import type {
   NuxtConfigScriptRegistry,
   NuxtUseScriptInput,
@@ -25,11 +24,11 @@ import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { setupDevToolsUI } from './devtools'
+import { finalizeFirstParty, resolveFirstPartyConfig, setupFirstPartyHandlers } from './first-party'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
-import { getAllProxyConfigs, routesToInterceptRules } from './proxy-configs'
 import { registry } from './registry'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
@@ -39,55 +38,7 @@ declare module '@nuxt/schema' {
   }
 }
 
-/**
- * Global privacy override for all first-party proxy requests.
- *
- * By default (`undefined`), each script uses its own privacy controls declared in the registry.
- * Setting this overrides all per-script defaults:
- *
- * - `true` - Full anonymize: anonymizes IP, normalizes User-Agent/language,
- *   generalizes screen/hardware/canvas/timezone data.
- *
- * - `false` - Passthrough: forwards headers and data, but strips sensitive
- *   auth/session headers (cookie, authorization).
- *
- * - `{ ip: false }` - Selective: override individual flags. Unset flags inherit
- *   from the per-script default.
- */
-export type FirstPartyPrivacy = ProxyPrivacyInput
-
-export interface FirstPartyOptions {
-  /**
-   * Path prefix for serving bundled scripts.
-   *
-   * This is where the downloaded and rewritten script files are served from.
-   * @default '/_scripts'
-   * @example '/_analytics'
-   */
-  prefix?: string
-  /**
-   * Path prefix for collection/tracking proxy endpoints.
-   *
-   * Analytics collection requests are proxied through these paths.
-   * For example, Google Analytics collection goes to `/_scripts/c/ga/g/collect`.
-   * @default '/_proxy'
-   * @example '/_tracking'
-   */
-  collectPrefix?: string
-  /**
-   * Global privacy override for all proxied scripts.
-   *
-   * By default, each script uses its own privacy controls from the registry.
-   * Set this to override all scripts at once:
-   *
-   * - `true` - Full anonymize for all scripts
-   * - `false` - Passthrough for all scripts (still strips sensitive auth headers)
-   * - `{ ip: false }` - Selective override (unset flags inherit per-script defaults)
-   *
-   * @default undefined
-   */
-  privacy?: FirstPartyPrivacy
-}
+export type { FirstPartyOptions, FirstPartyPrivacy }
 
 /**
  * Partytown forward config for registry scripts.
@@ -426,19 +377,8 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Resolve first-party configuration
-    const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static']
-    const preset = process.env.NITRO_PRESET || ''
-    const isStaticPreset = staticPresets.includes(preset)
-
-    const firstPartyEnabled = !!config.firstParty
-    const firstPartyPrefix = typeof config.firstParty === 'object' ? config.firstParty.prefix : undefined
-    const firstPartyCollectPrefix = typeof config.firstParty === 'object'
-      ? config.firstParty.collectPrefix || '/_proxy'
-      : '/_proxy'
-    const firstPartyPrivacy: ProxyPrivacyInput | undefined = typeof config.firstParty === 'object'
-      ? config.firstParty.privacy
-      : undefined
-    const assetsPrefix = firstPartyPrefix || config.assets?.prefix || '/_scripts'
+    const firstParty = resolveFirstPartyConfig(config)
+    const assetsPrefix = firstParty.assetsPrefix
 
     // Process partytown shorthand - add partytown: true to specified registry scripts
     // and auto-configure @nuxtjs/partytown forward array
@@ -524,62 +464,12 @@ export default defineNuxtModule<ModuleOptions>({
       },
     })
 
-    logger.debug('[nuxt-scripts] First-party config:', { firstPartyEnabled, firstPartyPrivacy, firstPartyCollectPrefix })
-
-    // Populated inside modules:done with only the configured scripts' routes
-    let interceptRules: InterceptRule[] = []
+    logger.debug('[nuxt-scripts] First-party config:', firstParty)
 
     // Setup first-party proxy mode (must be before modules:done)
-    if (firstPartyEnabled) {
-      // Register __nuxtScripts runtime helper — provides sendBeacon/fetch wrappers
-      // that route matching URLs through the first-party proxy. AST rewriting transforms
-      // navigator.sendBeacon/fetch calls to use these wrappers at build time.
-      addPluginTemplate({
-        filename: 'nuxt-scripts-intercept.client.mjs',
-        getContents() {
-          const rulesJson = JSON.stringify(interceptRules)
-          return `export default defineNuxtPlugin({
-  name: 'nuxt-scripts:intercept',
-  enforce: 'pre',
-  setup() {
-    const rules = ${rulesJson};
-    const origBeacon = typeof navigator !== 'undefined' && navigator.sendBeacon
-      ? navigator.sendBeacon.bind(navigator)
-      : () => false;
-    const origFetch = globalThis.fetch.bind(globalThis);
-
-    function rewriteUrl(url) {
-      try {
-        const parsed = new URL(url, location.origin);
-        for (const rule of rules) {
-          if (parsed.hostname === rule.pattern || parsed.hostname.endsWith('.' + rule.pattern)) {
-            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix)) continue;
-            const path = rule.pathPrefix ? parsed.pathname.slice(rule.pathPrefix.length) : parsed.pathname;
-            return location.origin + rule.target + (path.startsWith('/') ? '' : '/') + path + parsed.search;
-          }
-        }
-      } catch {}
-      return url;
-    }
-
-    globalThis.__nuxtScripts = {
-      sendBeacon: (url, data) => origBeacon(rewriteUrl(url), data),
-      fetch: (url, opts) => origFetch(typeof url === 'string' ? rewriteUrl(url) : url, opts),
-    };
-  },
-})
-`
-        },
-      })
-
-      // Register proxy handler for both privacy modes (must be before modules:done)
-      // Both modes need the handler: 'proxy' strips sensitive headers, 'anonymize' also strips fingerprinting
-      const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
-      logger.debug('[nuxt-scripts] Registering proxy handler:', `${firstPartyCollectPrefix}/**`, '->', proxyHandlerPath)
-      addServerHandler({
-        route: `${firstPartyCollectPrefix}/**`,
-        handler: proxyHandlerPath,
-      })
+    let interceptRules: InterceptRule[] = []
+    if (firstParty.enabled) {
+      interceptRules = await setupFirstPartyHandlers(firstParty, resolvePath)
     }
 
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
@@ -619,127 +509,15 @@ export default defineNuxtModule<ModuleOptions>({
       }
       const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
-      // Inject proxy route rules if first-party mode is enabled
-      if (firstPartyEnabled) {
-        const proxyConfigs = getAllProxyConfigs(firstPartyCollectPrefix)
-        const registryKeys = Object.keys(config.registry || {})
-
-        // Collect routes for all configured registry scripts that support proxying
-        const neededRoutes: Record<string, { proxy: string }> = {}
-        const routePrivacyOverrides: Record<string, ProxyPrivacyInput> = {}
-        const unsupportedScripts: string[] = []
-        for (const key of registryKeys) {
-          // Find the registry script definition
-          const script = registryScriptsWithImport.find(s => s.import.name.toLowerCase() === `usescript${key.toLowerCase()}`)
-          // Only proxy scripts that explicitly opt in with a proxy field
-          const proxyKey = script?.proxy || undefined
-          if (proxyKey) {
-            const proxyConfig = proxyConfigs[proxyKey]
-            if (proxyConfig?.routes) {
-              Object.assign(neededRoutes, proxyConfig.routes)
-              // Record per-script privacy for each route
-              for (const routePath of Object.keys(proxyConfig.routes)) {
-                routePrivacyOverrides[routePath] = proxyConfig.privacy
-              }
-            }
-            else {
-              // Track scripts without proxy support
-              unsupportedScripts.push(key)
-            }
-          }
-        }
-
-        // Auto-inject apiHost for PostHog when first-party proxy is enabled
-        // PostHog uses NPM mode so URL rewrites don't apply - we set api_host via config instead
-        if (config.registry?.posthog && typeof config.registry.posthog === 'object') {
-          // Registry entries can be in array form [inputOptions, scriptOptions] — unwrap to get the actual PostHog input options
-          const phConfig = (Array.isArray(config.registry.posthog) ? config.registry.posthog[0] : config.registry.posthog) as Record<string, any>
-          if (phConfig && !phConfig.apiHost) {
-            const region = phConfig.region || 'us'
-            phConfig.apiHost = region === 'eu'
-              ? `${firstPartyCollectPrefix}/ph-eu`
-              : `${firstPartyCollectPrefix}/ph`
-            // Propagate to runtimeConfig (already built from a defu copy during setup)
-            const rtScripts = nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined
-            if (rtScripts?.posthog && typeof rtScripts.posthog === 'object') {
-              const rtPhConfig = Array.isArray(rtScripts.posthog) ? rtScripts.posthog[0] : rtScripts.posthog
-              if (rtPhConfig)
-                rtPhConfig.apiHost = phConfig.apiHost
-            }
-          }
-        }
-
-        // Auto-inject endpoint for Plausible when first-party proxy is enabled
-        // Plausible constructs its event URL as `new URL('/api/event', scriptEl.src)` which resolves
-        // to origin + '/api/event', bypassing the proxy prefix. We override the endpoint to route through the proxy.
-        if (config.registry?.plausibleAnalytics && typeof config.registry.plausibleAnalytics === 'object') {
-          const paConfig = (Array.isArray(config.registry.plausibleAnalytics) ? config.registry.plausibleAnalytics[0] : config.registry.plausibleAnalytics) as Record<string, any>
-          if (paConfig && !paConfig.endpoint) {
-            paConfig.endpoint = `${firstPartyCollectPrefix}/plausible/api/event`
-            // Propagate to runtimeConfig (already built from a defu copy during setup)
-            const rtScripts = nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined
-            if (rtScripts?.plausibleAnalytics && typeof rtScripts.plausibleAnalytics === 'object') {
-              const rtPaConfig = Array.isArray(rtScripts.plausibleAnalytics) ? rtScripts.plausibleAnalytics[0] : rtScripts.plausibleAnalytics
-              if (rtPaConfig)
-                rtPaConfig.endpoint = paConfig.endpoint
-            }
-          }
-        }
-
-        // Warn about scripts that don't support first-party mode
-        if (unsupportedScripts.length && nuxt.options.dev) {
-          logger.warn(
-            `First-party mode is enabled but these scripts don't support it yet: ${unsupportedScripts.join(', ')}.\n`
-            + 'They will load directly from third-party servers. Request support at https://github.com/nuxt/scripts/issues',
-          )
-        }
-
-        // Compute intercept rules from only the configured scripts' routes
-        interceptRules = routesToInterceptRules(neededRoutes)
-
-        // Expose first-party status via runtime config (for DevTools and status endpoint)
-        const flatRoutes: Record<string, string> = {}
-        for (const [path, config] of Object.entries(neededRoutes)) {
-          flatRoutes[path] = config.proxy
-        }
-
-        // Server-side config for proxy privacy handling
-        nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
-          routes: flatRoutes,
-          privacy: firstPartyPrivacy, // undefined = use per-script defaults, set = global override
-          routePrivacy: routePrivacyOverrides, // per-script privacy from registry
-        } as any
-
-        // Proxy handler is registered before modules:done for both privacy modes
-        if (Object.keys(neededRoutes).length) {
-          // Log active proxy routes in dev
-          if (nuxt.options.dev) {
-            const routeCount = Object.keys(neededRoutes).length
-            const scriptsCount = registryKeys.length
-            const privacyLabel = firstPartyPrivacy === undefined ? 'per-script' : typeof firstPartyPrivacy === 'boolean' ? (firstPartyPrivacy ? 'anonymize' : 'passthrough') : 'custom'
-            logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${privacyLabel})`)
-            if (logger.level >= 4) {
-              for (const [path, config] of Object.entries(neededRoutes)) {
-                logger.debug(`  ${path} → ${config.proxy}`)
-              }
-            }
-          }
-        }
-
-        // Warn for static presets with actionable guidance
-        if (isStaticPreset) {
-          logger.warn(
-            `First-party collection endpoints require a server runtime (detected: ${preset || 'static'}).\n`
-            + 'Scripts will be bundled, but collection requests will not be proxied.\n'
-            + '\n'
-            + 'Options:\n'
-            + '  1. Configure platform rewrites (Vercel, Netlify, Cloudflare)\n'
-            + '  2. Switch to server-rendered mode (ssr: true)\n'
-            + '  3. Disable with firstParty: false\n'
-            + '\n'
-            + 'See: https://scripts.nuxt.com/docs/guides/first-party#static-hosting',
-          )
-        }
+      // Finalize first-party proxy setup
+      if (firstParty.enabled) {
+        finalizeFirstParty({
+          firstParty,
+          interceptRules,
+          registry: config.registry,
+          registryScriptsWithImport,
+          nuxtOptions: nuxt.options,
+        })
       }
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
@@ -750,9 +528,9 @@ export default defineNuxtModule<ModuleOptions>({
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
-        defaultBundle: firstPartyEnabled || config.defaultScriptOptions?.bundle,
-        firstPartyEnabled,
-        firstPartyCollectPrefix,
+        defaultBundle: firstParty.enabled || config.defaultScriptOptions?.bundle,
+        firstPartyEnabled: firstParty.enabled,
+        firstPartyCollectPrefix: firstParty.collectPrefix,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
@@ -766,7 +544,7 @@ export default defineNuxtModule<ModuleOptions>({
       }))
 
       nuxt.hooks.hook('build:done', async () => {
-        const initPromise = Array.from(moduleInstallPromises.values())
+        const initPromise = [...moduleInstallPromises.values()]
         for (const p of initPromise)
           await p?.()
       })

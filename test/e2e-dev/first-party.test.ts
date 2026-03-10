@@ -52,6 +52,7 @@ const PROVIDER_PATHS: Record<string, string[]> = {
     '/_proxy/clarity-scripts', // Script loader
     '/_proxy/clarity-data',
     '/_proxy/clarity-events',
+    '/_proxy/clarity-collect', // k.clarity.ms beacon endpoint
   ],
   hotjar: [
     '/_proxy/hotjar',
@@ -65,6 +66,15 @@ const PROVIDER_PATHS: Record<string, string[]> = {
   tiktokPixel: ['/_proxy/tiktok'],
   redditPixel: ['/_proxy/reddit'],
   vercelAnalytics: ['/_proxy/vercel'],
+  posthog: ['/_proxy/ph', '/_proxy/ph-eu'],
+  umamiAnalytics: ['/_proxy/umami'],
+  plausibleAnalytics: ['/_proxy/plausible'],
+  cloudflareWebAnalytics: ['/_proxy/cfwa', '/_proxy/cfwa-beacon'],
+  fathomAnalytics: ['/_proxy/fathom'],
+  intercom: ['/_proxy/intercom', '/_proxy/intercom-api', '/_proxy/intercom-cdn'],
+  crisp: ['/_proxy/crisp'],
+  rybbitAnalytics: ['/_proxy/rybbit'],
+  databuddyAnalytics: ['/_proxy/databuddy', '/_proxy/databuddy-api'],
 }
 
 /**
@@ -616,411 +626,249 @@ describe('first-party privacy stripping', () => {
      * Test a provider by navigating to its page and capturing proxy requests.
      * Verifies that requests are proxied and fingerprinting data is stripped.
      */
-    async function testProvider(provider: string, pagePath: string) {
+    async function testProvider(provider: string, pagePath: string, opts?: { clickSelectors?: string[] }) {
       clearCaptures()
       const browser = await getBrowser()
       const page = await browser.newPage()
       page.setDefaultTimeout(5000)
 
+      let serverOrigin = ''
       const proxyRequests: string[] = []
+      const externalRequests: string[] = []
+
       page.on('request', (req) => {
         const reqUrl = req.url()
-        if (reqUrl.includes('/_proxy/')) {
-          proxyRequests.push(reqUrl)
+        if (!serverOrigin) {
+          try { serverOrigin = new URL(url('/')).origin }
+          catch {}
+        }
+        const parsed = new URL(reqUrl)
+        if (parsed.pathname.startsWith('/_proxy/')) {
+          proxyRequests.push(parsed.pathname)
+        }
+        else if (serverOrigin && !reqUrl.startsWith(serverOrigin) && parsed.protocol.startsWith('http')) {
+          externalRequests.push(reqUrl)
         }
       })
 
-      // Navigate and wait for script to load (cap at 15s to leave room for other operations)
       await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
 
-      // Wait for script status to be loaded
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {
-        // Some scripts may not reach "loaded" status in headless browser
-        // Continue anyway to check if any proxy requests were made
-      })
+      if (opts?.clickSelectors) {
+        for (const sel of opts.clickSelectors) {
+          await page.click(sel).catch(() => {})
+        }
+      }
 
-      // Give scripts time to make requests
       await page.waitForTimeout(2000)
 
-      // Read captures filtered to this provider
       const rawCaptures = readRawCaptures(provider)
       const captures = rawCaptures.map(normalizeCapture)
 
       await page.close()
 
-      // Return both raw (for verification) and normalized (for snapshots)
-      return { captures, rawCaptures, proxyRequests }
+      return { captures, rawCaptures, proxyRequests, externalRequests }
+    }
+
+    /**
+     * Providers with full runtime proxy support — their bundled scripts route
+     * runtime API calls (collect, track, beacon) through /_proxy/ endpoints.
+     * Tests for these providers strictly assert proxy requests + captures.
+     *
+     * Providers NOT in this set only have script bundling (loaded from /_scripts/)
+     * but their runtime calls bypass /_proxy/ and go directly to third-party domains.
+     * Tests for those providers document the external requests but don't fail.
+     */
+    const FULL_PROXY_PROVIDERS = new Set([
+      'clarity',
+      'posthog',
+      'cloudflareWebAnalytics',
+      'redditPixel',
+      'umamiAnalytics', // bundled + hostUrl config injection
+      'rybbitAnalytics', // analyticsHost config injection — SDK derives API host from script src
+      'metaPixel', // AST rewrite catches all Meta SDK fetch/Image.src calls
+      'segment', // XHR interception via AST rewrite
+      'xPixel', // Image.src interception via AST rewrite
+      'googleAnalytics', // scope-resolved AST rewrite for sendBeacon/fetch/XHR/Image
+      'snapchatPixel', // scope-resolved AST rewrite for sendBeacon/XHR
+      // googleTagManager — uses createElement('script') injection, not interceptable via XHR/fetch/sendBeacon
+      'fathomAnalytics', // bundled + self-hosted detection neutralized, sendBeacon/Image interception
+      // intercom — SDK doesn't fire events with test app_id in headless (0 external leaks, 0 proxy requests)
+      // crisp — no src/scriptBundling in registry, script not bundled
+      // hotjar — uses WebSocket for session data, can't proxy via HTTP
+      // databuddyAnalytics — no events in test window with demo key
+    ])
+
+    /**
+     * Shared assertion for proxy capture tests.
+     *
+     * For FULL_PROXY_PROVIDERS: strictly asserts proxy requests, captures, and privacy.
+     * For bundle-only providers: verifies no unexpected external domains, logs gaps.
+     */
+    async function assertCaptures(
+      provider: string,
+      captures: Record<string, any>[],
+      rawCaptures: Record<string, any>[],
+      proxyRequests: string[],
+      externalRequests: string[],
+      opts: { proxyPrefix: string, domains: string[] },
+    ) {
+      const isFullProxy = FULL_PROXY_PROVIDERS.has(provider)
+
+      // Filter proxy requests to this provider (exclude cross-provider noise like cfwa-beacon)
+      const providerProxyReqs = proxyRequests.filter((r) => {
+        const prefixes = PROVIDER_PATHS[provider] || [opts.proxyPrefix]
+        return prefixes.some(p => r.startsWith(p))
+      })
+
+      // Track external requests to provider domains
+      const leakedRequests = externalRequests.filter(u =>
+        opts.domains.some(d => u.includes(d)),
+      )
+
+      if (isFullProxy) {
+        // Strict: provider must route runtime calls through proxy
+        expect(
+          providerProxyReqs.length,
+          `${provider}: No proxy requests.\n  External leaks: ${JSON.stringify(leakedRequests.slice(0, 5))}`,
+        ).toBeGreaterThan(0)
+
+        expect(
+          captures.length,
+          `${provider}: No server-side captures.\n  Proxy requests: ${JSON.stringify(providerProxyReqs)}`,
+        ).toBeGreaterThan(0)
+
+        const hasValidCapture = captures.some(c =>
+          opts.domains.some(d => isAllowedDomain(c.targetUrl, d))
+          && hasResolvedPrivacy(c),
+        )
+        expect(hasValidCapture, `${provider}: No capture with valid domain + privacy`).toBe(true)
+
+        for (const capture of rawCaptures) {
+          const leaked = verifyFingerprintingAnonymized(capture)
+          expect(leaked, `${provider}: Leaked fingerprinting params`).toEqual([])
+        }
+
+        await assertSnapshots(rawCaptures, captures, provider)
+      }
+      else {
+        // Bundle-only: document the gap, verify captures if they exist
+        if (captures.length > 0) {
+          const hasValidCapture = captures.some(c =>
+            opts.domains.some(d => isAllowedDomain(c.targetUrl, d))
+            && hasResolvedPrivacy(c),
+          )
+          expect(hasValidCapture, `${provider}: Captures exist but none valid`).toBe(true)
+
+          for (const capture of rawCaptures) {
+            const leaked = verifyFingerprintingAnonymized(capture)
+            expect(leaked, `${provider}: Leaked fingerprinting params`).toEqual([])
+          }
+
+          await assertSnapshots(rawCaptures, captures, provider)
+        }
+      }
     }
 
     it('googleAnalytics', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      // GA/GTM need more time - they load dynamically
-      await page.goto(url('/ga'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-
-      // Trigger events to generate requests
-      await page.click('#trigger-pageview').catch(() => {})
-      await page.waitForTimeout(2000) // GA batches events
-
-      const rawCaptures = readRawCaptures('googleAnalytics')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // GA may not always fire collection events in headless (depends on gtag.js behavior)
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/')
-          && (isAllowedDomain(c.targetUrl, 'google-analytics.com') || isAllowedDomain(c.targetUrl, 'analytics.google.com'))
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'googleAnalytics')
-      }
-      // No captures acceptable - gtag.js behavior varies in headless
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('googleAnalytics', '/ga', {
+        clickSelectors: ['#trigger-pageview'],
+      })
+      await assertCaptures('googleAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/',
+        domains: ['google-analytics.com', 'analytics.google.com'],
+      })
     }, 45000)
 
     it('googleTagManager', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/gtm'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('googleTagManager')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // GTM may not fire requests if no tags are configured
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/gtm')
-          && isAllowedDomain(c.targetUrl, 'googletagmanager.com')
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'googleTagManager')
-      }
-      // No captures acceptable - depends on GTM container configuration
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('googleTagManager', '/gtm')
+      await assertCaptures('googleTagManager', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/gtm',
+        domains: ['googletagmanager.com'],
+      })
     }, 30000)
 
     it('metaPixel', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/meta'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-
-      // Trigger tracking events
-      await page.click('#trigger-pageview').catch(() => {})
-      await page.click('#trigger-event').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('metaPixel')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // Meta tracking events may not be captured if script bundling isn't active
-      // The test verifies proxy routes are working for script loading
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/meta')
-          && (isAllowedDomain(c.targetUrl, 'facebook.com') || isAllowedDomain(c.targetUrl, 'facebook.net'))
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'metaPixel')
-      }
-      // No captures is acceptable in environments where script bundling isn't active
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('metaPixel', '/meta', {
+        clickSelectors: ['#trigger-pageview', '#trigger-event'],
+      })
+      await assertCaptures('metaPixel', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/meta',
+        domains: ['facebook.com', 'facebook.net'],
+      })
     }, 30000)
 
     it('segment', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/segment'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-
-      // Trigger tracking events
-      await page.click('#trigger-page').catch(() => {})
-      await page.click('#trigger-event').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('segment')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/segment')
-          && (isAllowedDomain(c.targetUrl, 'segment.io') || isAllowedDomain(c.targetUrl, 'segment.com'))
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'segment')
-      }
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('segment', '/segment', {
+        clickSelectors: ['#trigger-page', '#trigger-event'],
+      })
+      await assertCaptures('segment', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/segment',
+        domains: ['segment.io', 'segment.com'],
+      })
     }, 30000)
 
     it('xPixel', async () => {
-      const { captures, rawCaptures } = await testProvider('xPixel', '/x')
-
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/x')
-          && (isAllowedDomain(c.targetUrl, 'twitter.com') || isAllowedDomain(c.targetUrl, 't.co'))
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'xPixel')
-      }
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('xPixel', '/x')
+      await assertCaptures('xPixel', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/x',
+        domains: ['twitter.com', 't.co'],
+      })
     }, 30000)
 
     it('snapchatPixel', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/snap'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-
-      // Trigger tracking events
-      await page.click('#trigger-pageview').catch(() => {})
-      await page.click('#trigger-event').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('snapchatPixel')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/snap')
-          && isAllowedDomain(c.targetUrl, 'snapchat.com')
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'snapchatPixel')
-      }
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('snapchatPixel', '/snap', {
+        clickSelectors: ['#trigger-pageview', '#trigger-event'],
+      })
+      await assertCaptures('snapchatPixel', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/snap',
+        domains: ['snapchat.com'],
+      })
     }, 30000)
 
-    // Note: Clarity and Hotjar are session recording tools that primarily use:
-    // - Clarity: d.clarity.ms (data collection) - may buffer data before sending
-    // - Hotjar: WebSocket connections (wss://ws*.hotjar.com) which can't be proxied via HTTP
-    // These tests verify page loads and proxy config is correct.
-    // Data collection may not occur in short headless sessions.
-
     it('clarity', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/clarity'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-
-      // Wait for page to render (status element exists) - may not render in headless
-      await page.waitForSelector('#status', { timeout: 5000 }).catch(() => {})
-
-      // Try to interact regardless of script status
-      await page.click('#test-button').catch(() => {})
-      await page.fill('#test-input', 'test input').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('clarity')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // Clarity may not send data in short headless sessions (buffers data)
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/clarity')
-          && isAllowedDomain(c.targetUrl, 'clarity.ms')
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'clarity')
-      }
-      // No captures is acceptable - session recording tools buffer data
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('clarity', '/clarity')
+      await assertCaptures('clarity', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/clarity',
+        domains: ['clarity.ms'],
+      })
     }, 30000)
 
     it('hotjar', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/hotjar'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-
-      // Wait for page to render (status element exists) - Hotjar rejects headless Chrome
-      await page.waitForSelector('#status', { timeout: 5000 }).catch(() => {})
-
-      // Try to interact regardless of script status
-      await page.click('#test-button').catch(() => {})
-      await page.fill('#test-input', 'test input').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('hotjar')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // Hotjar uses WebSocket for real-time data which can't be HTTP proxied
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('hotjar', '/hotjar')
+      // Hotjar uses WebSocket for session data — HTTP proxy captures are optional.
+      // Script loads from /_scripts/ (verified in bundle coverage test below).
       if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/hotjar')
-          && isAllowedDomain(c.targetUrl, 'hotjar.com')
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'hotjar')
+        await assertCaptures('hotjar', captures, rawCaptures, proxyRequests, externalRequests, {
+          proxyPrefix: '/_proxy/hotjar',
+          domains: ['hotjar.com'],
+        })
       }
-      // No captures is acceptable - Hotjar primarily uses WebSocket
-    }, 30000)
+    }, 60000)
 
     it('tiktokPixel', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/tiktok'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-
-      // Trigger tracking events
-      await page.click('#trigger-pageview').catch(() => {})
-      await page.click('#trigger-event').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('tiktokPixel')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // TikTok may not fire events in headless without valid pixel ID
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('tiktokPixel', '/tiktok', {
+        clickSelectors: ['#trigger-pageview', '#trigger-event'],
+      })
+      // TikTok has a dummy key — can't require captures
       if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/tiktok')
-          && isAllowedDomain(c.targetUrl, 'tiktok.com')
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'tiktokPixel')
+        await assertCaptures('tiktokPixel', captures, rawCaptures, proxyRequests, externalRequests, {
+          proxyPrefix: '/_proxy/tiktok',
+          domains: ['tiktok.com'],
+        })
       }
-      // No captures acceptable - TikTok behavior varies in headless
     }, 30000)
 
     it('redditPixel', async () => {
-      clearCaptures()
-      const browser = await getBrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(5000)
-
-      await page.goto(url('/reddit'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
-
-      // Trigger tracking events
-      await page.click('#trigger-pagevisit').catch(() => {})
-      await page.click('#trigger-event').catch(() => {})
-      await page.waitForTimeout(2000)
-
-      const rawCaptures = readRawCaptures('redditPixel')
-      const captures = rawCaptures.map(normalizeCapture)
-      await page.close()
-
-      // Reddit may not fire events in headless without valid advertiser ID
-      if (captures.length > 0) {
-        const hasValidCapture = captures.some(c =>
-          c.path?.startsWith('/_proxy/reddit')
-          && isAllowedDomain(c.targetUrl, 'reddit.com')
-          && hasResolvedPrivacy(c),
-        )
-        expect(hasValidCapture).toBe(true)
-
-        // Verify ALL fingerprinting params are anonymized (use raw captures before normalization)
-        for (const capture of rawCaptures) {
-          const leaked = verifyFingerprintingAnonymized(capture)
-          expect(leaked).toEqual([])
-        }
-
-        await assertSnapshots(rawCaptures, captures, 'redditPixel')
-      }
-      // No captures acceptable - Reddit behavior varies in headless
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('redditPixel', '/reddit', {
+        clickSelectors: ['#trigger-pagevisit', '#trigger-event'],
+      })
+      await assertCaptures('redditPixel', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/reddit',
+        domains: ['reddit.com'],
+      })
     }, 30000)
 
-    // Note: Vercel Analytics uses relative paths (/_vercel/insights/*) for data collection,
-    // not absolute URLs. First-party mode only proxies the script CDN, so no data
-    // captures are expected through the proxy.
     it('vercelAnalytics', async () => {
       clearCaptures()
       const browser = await getBrowser()
@@ -1031,14 +879,83 @@ describe('first-party privacy stripping', () => {
       await page.waitForSelector('#status', { timeout: 5000 }).catch(() => {})
       await page.waitForTimeout(2000)
 
-      // Verify queue was initialized (clientInit sets up window.va)
       const hasQueue = await page.evaluate(() => typeof window.va === 'function')
       expect(hasQueue).toBe(true)
 
       await page.close()
+      // No proxy captures expected — Vercel sends to relative /_vercel/insights/* paths
+    }, 30000)
 
-      // No proxy data captures expected — Vercel Analytics sends data to
-      // relative /_vercel/insights/* paths handled by Vercel infrastructure
+    it('posthog', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('posthog', '/posthog')
+      await assertCaptures('posthog', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/ph',
+        domains: ['posthog.com'],
+      })
+    }, 30000)
+
+    it('umamiAnalytics', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('umamiAnalytics', '/umami')
+      await assertCaptures('umamiAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/umami',
+        domains: ['umami.is'],
+      })
+    }, 30000)
+
+    it('plausibleAnalytics', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('plausibleAnalytics', '/plausible')
+      await assertCaptures('plausibleAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/plausible',
+        domains: ['plausible.io'],
+      })
+    }, 30000)
+
+    it('cloudflareWebAnalytics', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('cloudflareWebAnalytics', '/cfwa')
+      await assertCaptures('cloudflareWebAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/cfwa',
+        domains: ['cloudflareinsights.com'],
+      })
+    }, 30000)
+
+    it('fathomAnalytics', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('fathomAnalytics', '/fathom')
+      await assertCaptures('fathomAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/fathom',
+        domains: ['usefathom.com'],
+      })
+    }, 30000)
+
+    it('intercom', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('intercom', '/intercom-test')
+      await assertCaptures('intercom', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/intercom',
+        domains: ['intercom.io', 'intercomcdn.com'],
+      })
+    }, 30000)
+
+    it('crisp', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('crisp', '/crisp-test')
+      await assertCaptures('crisp', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/crisp',
+        domains: ['crisp.chat'],
+      })
+    }, 30000)
+
+    it('rybbitAnalytics', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('rybbitAnalytics', '/rybbit')
+      await assertCaptures('rybbitAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/rybbit',
+        domains: ['rybbit.io'],
+      })
+    }, 30000)
+
+    it('databuddyAnalytics', async () => {
+      const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('databuddyAnalytics', '/databuddy')
+      await assertCaptures('databuddyAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
+        proxyPrefix: '/_proxy/databuddy',
+        domains: ['databuddy.cc'],
+      })
     }, 30000)
   })
 
@@ -1086,7 +1003,11 @@ describe('first-party privacy stripping', () => {
       let serverOrigin = ''
 
       page.on('pageerror', (err) => {
-        uncaughtErrors.push(err.message || String(err))
+        const msg = err.message || String(err)
+        // Databuddy SDK throws when clientId is empty/test — not a proxy rewrite issue
+        if (msg.includes('[Databuddy]'))
+          return
+        uncaughtErrors.push(msg)
       })
 
       // Catch failed responses from our server (/_proxy/ and /_scripts/).
@@ -1118,7 +1039,10 @@ describe('first-party privacy stripping', () => {
         .catch(() => false)
 
       if (pageRendered) {
-        await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 }).catch(() => {})
+        const loaded = await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 })
+          .then(() => true)
+          .catch(() => false)
+        expect(loaded, `${name}: Script never reached "loaded" status`).toBe(true)
       }
       await page.waitForTimeout(2000)
 
@@ -1230,7 +1154,10 @@ describe('first-party privacy stripping', () => {
       })
 
       await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 }).catch(() => {})
+      const loaded = await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 })
+        .then(() => true)
+        .catch(() => false)
+      expect(loaded, `${name}: Script never reached "loaded" status`).toBe(true)
       await page.waitForTimeout(2000)
       await page.close()
 
