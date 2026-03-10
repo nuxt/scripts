@@ -242,10 +242,10 @@ describe('proxy configs', () => {
       expect(output).toBe(input)
     })
 
-    it('does not rewrite computed navigator["sendBeacon"]', () => {
+    it('rewrites computed navigator["sendBeacon"] via scope resolution', () => {
       const input = `navigator["sendBeacon"]("url", data)`
       const output = fn(input, [])
-      expect(output).toBe(input)
+      expect(output).toBe(`__nuxtScripts.sendBeacon("url", data)`)
     })
 
     it('does not rewrite fetch as a reference (not a call)', () => {
