@@ -69,8 +69,8 @@ function extractDomains(routes: Record<string, { proxy: string }>): string[] {
     if (match?.[1])
       domains.add(match[1])
   }
-  // @ts-expect-error untyped
-  return domains.toSorted()
+  // eslint-disable-next-line e18e/prefer-array-to-sorted
+  return [...domains].sort()
 }
 
 /**
