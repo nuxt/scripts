@@ -14,7 +14,7 @@ export interface IntercomApi {
     & ((event: 'update', options?: InferInput<typeof IntercomOptions>) => void)
     & ((event: 'hide') => void)
     & ((event: 'show') => void)
-    & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)
+    & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | (string & {})) => void)
     & ((event: 'showMessages') => void)
     & ((event: 'showNewMessage', content?: string) => void)
     & ((event: 'onHide', fn: () => void) => void)
@@ -30,7 +30,7 @@ export interface IntercomApi {
     & ((event: 'showTicket', ticketId: string | number) => void)
     & ((event: 'showConversation', conversationId: string | number) => void)
     & ((event: 'onUserEmailSupplied', fn: () => void) => void)
-    & ((event: string, ...params: any[]) => void)
+    & ((event: (string & {}), ...params: any[]) => void)
 }
 
 declare global {

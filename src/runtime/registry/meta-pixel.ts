@@ -14,7 +14,7 @@ interface EventObjectProperties {
   num_items?: number
   predicted_ltv?: number
   search_string?: string
-  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | string
+  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | (string & {})
   value?: number
   [key: string]: any
 }

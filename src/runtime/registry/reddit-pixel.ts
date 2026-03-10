@@ -3,9 +3,11 @@ import type { UseScriptInput } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import { RedditPixelOptions } from './schemas'
 
+type StandardEvents = 'PageVisit' | 'ViewContent' | 'Search' | 'AddToCart' | 'AddToWishlist' | 'Purchase' | 'Lead' | 'SignUp'
+
 type RdtFns
   = & ((event: 'init', id: string) => void)
-    & ((event: 'track', eventName: string) => void)
+    & ((event: 'track', eventName: StandardEvents | (string & {}), properties?: Record<string, any>) => void)
 
 export interface RedditPixelApi {
   rdt: RdtFns & {

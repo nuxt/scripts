@@ -1,4 +1,5 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { UseScriptInput } from '@unhead/vue'
 import { any, array, boolean, literal, object, optional, record, string, union } from '#nuxt-scripts-validator'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
@@ -171,7 +172,7 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
       initOptions.captureOnLocalhost = options.captureOnLocalhost
 
     // Build script input
-    const scriptInput: Record<string, string> = { src: scriptSrc }
+    const scriptInput: UseScriptInput = { src: scriptSrc }
     if (!useNewScript && options?.domain)
       scriptInput['data-domain'] = options.domain
     // Legacy script uses data-api attribute for custom endpoint

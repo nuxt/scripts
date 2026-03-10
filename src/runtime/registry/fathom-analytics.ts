@@ -13,10 +13,10 @@ export interface FathomAnalyticsApi {
   isTrackingEnabled: () => boolean
   send: (type: string, data: unknown) => void
   setSite: (siteId: string) => void
-  sideId: string
+  siteId: string
   trackPageview: (ctx?: { url: string, referrer?: string }) => void
   trackGoal: (goalId: string, cents: number) => void
-  trackEvent: (eventName: string, value: { _value: number }) => void
+  trackEvent: (eventName: string, value?: { _value?: number, _site_id?: string }) => void
 }
 
 declare global {

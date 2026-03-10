@@ -38,10 +38,10 @@ interface IdentifyProperties {
 }
 
 type TtqFns
-  = ((cmd: 'track', event: StandardEvents | string, properties?: EventProperties) => void)
+  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties) => void)
     & ((cmd: 'page') => void)
     & ((cmd: 'identify', properties: IdentifyProperties) => void)
-    & ((cmd: string, ...args: any[]) => void)
+    & ((cmd: (string & {}), ...args: any[]) => void)
 
 export interface TikTokPixelApi {
   ttq: TtqFns & {

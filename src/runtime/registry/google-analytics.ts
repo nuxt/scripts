@@ -70,7 +70,7 @@ export type DefaultEventName
     | 'search'
     | 'page_view'
     | 'screen_view'
-    | string // Allow custom event names
+    | (string & {}) // Allow custom event names
 
 // Define the GTag function interface with proper overloads
 export interface GTag {

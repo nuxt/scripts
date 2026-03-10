@@ -4,18 +4,18 @@ import { ClarityOptions } from './schemas'
 
 export { ClarityOptions }
 
-type ClarityFunctions = ((fn: 'start', options: { content: boolean, cookies: string[], dob: number, expire: number, projectId: string, upload: string }) => void)
+type ClarityFunctions = ((fn: 'start', options?: { content?: boolean, cookies?: string[], dob?: number, expire?: number, projectId?: string, upload?: string }) => void)
   & ((fn: 'identify', id: string, session?: string, page?: string, userHint?: string) => Promise<{
     id: string
     session: string
     page: string
     userHint: string
   }>)
-  & ((fn: 'consent', enabled?: boolean) => void)
-  & ((fn: 'set', key: any, value: any) => void)
-  & ((fn: 'event', value: any) => void)
-  & ((fn: 'upgrade', upgradeReason: any) => void)
-  & ((fn: string, ...args: any[]) => void)
+  & ((fn: 'consent', enabled?: boolean | Record<string, string>) => void)
+  & ((fn: 'set', key: string, value: string | string[]) => void)
+  & ((fn: 'event', value: string) => void)
+  & ((fn: 'upgrade', upgradeReason: string) => void)
+  & ((fn: (string & {}), ...args: any[]) => void)
 
 export interface ClarityApi {
   clarity: ClarityFunctions & {

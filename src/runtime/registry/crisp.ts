@@ -8,13 +8,23 @@ export type CrispInput = RegistryScriptInput<typeof CrispOptions, false, false, 
 
 export interface CrispApi {
   push: (...args: any[]) => void
-  is: (name: 'chat:opened' | 'chat:closed' | 'chat:visible' | 'chat:hidden' | 'chat:small' | 'chat:large' | 'session:ongoing' | 'website:available' | 'overlay:opened' | 'overlay:closed' | string) => boolean
-  set: (name: 'message:text' | 'session:data' | 'session:segments' | 'session:event' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company' | string, value: any) => void
-  get: (name: 'chat:unread:count' | 'message:text' | 'session:identifier' | 'session:data' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company' | string) => any
-  do: (name: 'chat:open' | 'chat:close' | 'chat:toggle' | 'chat:show' | 'chat:hide' | 'helpdesk:search' | 'helpdesk:article:open' | 'helpdesk:query' | 'overlay:open' | 'overlay:close' | 'message:send' | 'message:show' | 'message:read' | 'message:thread:start' | 'message:thread:end' | 'session:reset' | 'trigger:run' | string, arg2?: any) => any
-  on: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | string, callback: (...args: any[]) => any) => void
-  off: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | string, callback: (...args: any[]) => any) => void
-  config: (options: any) => void
+  is: (name: 'chat:opened' | 'chat:closed' | 'chat:visible' | 'chat:hidden' | 'chat:small' | 'chat:large' | 'session:ongoing' | 'website:available' | 'overlay:opened' | 'overlay:closed' | (string & {})) => boolean
+  set: ((name: 'message:text' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company', value: string) => void)
+    & ((name: 'session:data', value: [[string, string | number | boolean], ...[string, string | number | boolean][]]) => void)
+    & ((name: 'session:segments', value: string[]) => void)
+    & ((name: 'session:event', value: [[string, Record<string, any>?, string?]]) => void)
+    & ((name: (string & {}), value: any) => void)
+  get: ((name: 'chat:unread:count') => number)
+    & ((name: 'message:text' | 'session:identifier' | 'user:email' | 'user:phone' | 'user:nickname' | 'user:avatar' | 'user:company') => string)
+    & ((name: 'session:data', key: string) => string | number | boolean)
+    & ((name: (string & {})) => any)
+  do: (name: 'chat:open' | 'chat:close' | 'chat:toggle' | 'chat:show' | 'chat:hide' | 'helpdesk:search' | 'helpdesk:article:open' | 'helpdesk:query' | 'overlay:open' | 'overlay:close' | 'message:send' | 'message:show' | 'message:read' | 'message:thread:start' | 'message:thread:end' | 'session:reset' | 'trigger:run', arg2?: any) => any
+  on: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | (string & {}), callback: (...args: any[]) => any) => void
+  off: (name: 'session:loaded' | 'chat:initiated' | 'chat:opened' | 'chat:closed' | 'message:sent' | 'message:received' | 'message:compose:sent' | 'message:compose:received' | 'user:email:changed' | 'user:phone:changed' | 'user:nickname:changed' | 'user:avatar:changed' | 'website:availability:changed' | 'helpdesk:queried' | (string & {}), callback: (...args: any[]) => any) => void
+  config: ((name: 'container:index', value: number) => void)
+    & ((name: 'color:theme', value: 'default' | 'amber' | 'black' | 'blue' | 'blue_grey' | 'light_blue' | 'brown' | 'cyan' | 'green' | 'light_green' | 'grey' | 'indigo' | 'orange' | 'deep_orange' | 'pink' | 'purple' | 'deep_purple' | 'red' | 'teal') => void)
+    & ((name: 'position:reverse' | 'hide:on:mobile' | 'hide:on:away' | 'lock:maximized' | 'lock:fullview' | 'show:operator:count' | 'sound:mute', value: boolean) => void)
+    & ((name: (string & {}), value: any) => void)
   help: () => void
   [key: string]: any
 }
