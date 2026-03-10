@@ -26,7 +26,7 @@ It provides detailed insights into how your website is performing, how users are
 By default, Nuxt uses a `siteId` of `1` and automatically enables page tracking via the `watch` option.
 
 ```ts
-const matomoAnalytics = useScriptMatomoAnalytics({
+useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID', // e.g. nuxt.matomo.cloud
   siteId: 2,
   // watch: true, // enabled by default - automatic page tracking!
@@ -82,7 +82,7 @@ useScriptEventPage((payload) => {
 For self-hosted Matomo, set `matomoUrl` to customize tracking, you may need to set the `trackerUrl` if you've customized this.
 
 ```ts
-const matomoAnalytics = useScriptMatomoAnalytics({
+useScriptMatomoAnalytics({
   // e.g. https://your-url.com/tracker.js & https://your-url.com//matomo.php both exists
   matomoUrl: 'https://your-url.com',
 })
@@ -93,7 +93,7 @@ const matomoAnalytics = useScriptMatomoAnalytics({
 For Matomo Whitelabel, set `trackerUrl` and `scriptInput.src` to customize tracking.
 
 ```ts
-const matomoAnalytics = useScriptMatomoAnalytics({
+useScriptMatomoAnalytics({
   trackerUrl: 'https://c.staging.cookie3.co/lake',
   scriptInput: {
     src: 'https://cdn.cookie3.co/scripts/latest/cookie3.analytics.min.js',
