@@ -32,6 +32,7 @@ export default antfu(
     rules: {
       'ts/no-unsafe-function-type': 'off',
       'no-console': 'off',
+      'e18e/prefer-static-regex': 'off',
     },
   },
   ...harlanzw({ link: true, nuxt: true, vue: true, content: true }),

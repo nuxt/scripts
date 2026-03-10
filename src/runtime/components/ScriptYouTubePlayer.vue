@@ -80,6 +80,8 @@ const events: (keyof YT.Events)[] = [
   'onError',
   'onApiChange',
 ]
+const CAMEL_CASE_RE = /([A-Z])/g
+
 const rootEl = ref()
 const youtubeEl = ref()
 const ready = ref(false)
@@ -162,7 +164,7 @@ onMounted(() => {
       playerVars: props.playerVars,
       ...props.playerOptions,
       events: Object.fromEntries(events.map(event => [event, (e: any) => {
-        const emitEventName = event.replace(/([A-Z])/g, '-$1').replace('on-', '').toLowerCase()
+        const emitEventName = event.replace(CAMEL_CASE_RE, '-$1').replace('on-', '').toLowerCase()
         // @ts-expect-error untyped
         emits(emitEventName, e)
         if (event === 'onReady') {

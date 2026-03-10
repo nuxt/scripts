@@ -110,9 +110,11 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
 
 // --- Component props extraction ---
 
+const SCRIPT_SETUP_RE = /<script\s[^>]*\bsetup\b[^>]*>([\s\S]*?)<\/script>/
+
 function extractScriptSetup(vueSource: string): string | null {
   // Match <script setup> or <script lang="ts" setup> — handles attribute order variations
-  const match = vueSource.match(/<script\s[^>]*\bsetup\b[^>]*>([\s\S]*?)<\/script>/)
+  const match = vueSource.match(SCRIPT_SETUP_RE)
   return match?.[1] ?? null
 }
 

@@ -1,10 +1,12 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 
+const AMP_RE = /&amp;/g
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   // Decode HTML entities (&amp; -> &) that may be in the URL
-  const url = (query.url as string)?.replace(/&amp;/g, '&')
+  const url = (query.url as string)?.replace(AMP_RE, '&')
 
   if (!url) {
     throw createError({

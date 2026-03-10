@@ -16,6 +16,11 @@ import { parseQuery, parseURL, withQuery } from 'ufo'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
 
+const URL_MATCH_RE = /https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/
+const URL_PAREN_MATCH_RE = /\(https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)\)/
+const VUE_MATCH_RE = /([^/\s]+\.vue):(\d+):(\d+)/
+const CLEAN_CALLER_RE = /^\s*at\s+/
+
 export type MaybePromise<T> = Promise<T> | T
 
 function validateScriptInputSchema<T extends GenericSchema>(key: string, schema: T, options?: InferInput<T>) {
@@ -98,8 +103,8 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     if (callerLine) {
       // Extract URL pattern like "https://localhost:3000/_nuxt/pages/features/custom-registry.vue?t=1758609859248:14:31"
       // Handle both with and without query parameters
-      const urlMatch = callerLine.match(/https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/)
-        || callerLine.match(/\(https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)\)/)
+      const urlMatch = callerLine.match(URL_MATCH_RE)
+        || callerLine.match(URL_PAREN_MATCH_RE)
 
       if (urlMatch) {
         const [, filePath, line, column] = urlMatch
@@ -107,14 +112,14 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       }
       else {
         // Try to extract any .vue file path with line:column
-        const vueMatch = callerLine.match(/([^/\s]+\.vue):(\d+):(\d+)/)
+        const vueMatch = callerLine.match(VUE_MATCH_RE)
         if (vueMatch) {
           const [, fileName, line, column] = vueMatch
           loadedFrom = `./${fileName}:${line}:${column}`
         }
         else {
           // Fallback to original cleaning
-          loadedFrom = callerLine.trim().replace(/^\s*at\s+/, '')
+          loadedFrom = callerLine.trim().replace(CLEAN_CALLER_RE, '')
         }
       }
     }

@@ -488,7 +488,7 @@ describe('social-embeds', () => {
       if (!photos)
         return true // No photos is OK, some tweets don't have them
       const imgs = photos.querySelectorAll('img')
-      return Array.from(imgs).every(img => img.src.includes('/api/_scripts/x-embed-image'))
+      return [...imgs].every(img => img.src.includes('/api/_scripts/x-embed-image'))
     })
     expect(hasProxiedImages).toBe(true)
   })
@@ -528,7 +528,7 @@ describe('social-embeds', () => {
       const imgs = embedDiv.querySelectorAll('img')
       if (imgs.length === 0)
         return true // No images yet is OK (might be lazy loaded)
-      return Array.from(imgs).every(img =>
+      return [...imgs].every(img =>
         img.src.includes('/api/_scripts/instagram-embed-image')
         || img.src.includes('/api/_scripts/instagram-embed-asset'),
       )

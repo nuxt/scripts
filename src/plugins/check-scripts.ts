@@ -3,13 +3,15 @@ import { parseAndWalk } from 'oxc-walker'
 import { createUnplugin } from 'unplugin'
 import { isVue } from './util'
 
+const VUE_RE = /\.vue/
+
 export function NuxtScriptsCheckScripts() {
   return createUnplugin(() => {
     return {
       name: 'nuxt-scripts:check-scripts',
       transform: {
         filter: {
-          id: /\.vue/,
+          id: VUE_RE,
         },
         handler(code, id) {
           if (!isVue(id, { type: ['script'] }))

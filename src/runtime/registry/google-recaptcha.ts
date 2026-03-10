@@ -50,7 +50,7 @@ export function useScriptGoogleRecaptcha<T extends GoogleRecaptchaApi>(_options?
             w.grecaptcha = w.grecaptcha || {}
             const readyFn = function (cb: () => void) {
               (w.___grecaptcha_cfg = w.___grecaptcha_cfg || {}).fns
-                = (w.___grecaptcha_cfg.fns || []).concat([cb])
+                = [...w.___grecaptcha_cfg.fns || [], ...[cb]]
             }
             w.grecaptcha.ready = w.grecaptcha.ready || readyFn
             // Enterprise mode uses grecaptcha.enterprise.ready

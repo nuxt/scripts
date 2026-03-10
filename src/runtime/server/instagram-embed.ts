@@ -1,6 +1,18 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 
+const LINK_RE = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["'][^>]*>/gi
+const LINK_RE_2 = /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']stylesheet["'][^>]*>/gi
+const RSRC_RE = /url\(\/rsrc\.php([^)]+)\)/g
+const SCRIPT_RE = /<script[\s\S]*?<\/script>/gi
+const STYLESHEET_RE = /<link[^>]+rel=["']stylesheet["'][^>]*>/gi
+const CSS_RE = /<link[^>]+href=["'][^"']+\.css[^"']*["'][^>]*>/gi
+const NOSCRIPT_RE = /<noscript>[\s\S]*?<\/noscript>/gi
+const SCONTENT_RE = /https:\/\/scontent[^"'\s),]+\.cdninstagram\.com[^"'\s),]+/g
+const STATIC_CDN_RE = /https:\/\/static\.cdninstagram\.com[^"'\s),]+/g
+const LOOKASIDE_RE = /https:\/\/lookaside\.instagram\.com[^"'\s),]+/g
+const AMP_RE = /&amp;/g
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const postUrl = query.url as string
@@ -51,15 +63,13 @@ export default defineEventHandler(async (event) => {
 
   // Extract CSS URLs from link tags
   const cssUrls: string[] = []
-  const linkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["'][^>]*>/gi
   let match
-  while ((match = linkRegex.exec(html)) !== null) {
+  while ((match = LINK_RE.exec(html)) !== null) {
     if (match[1])
       cssUrls.push(match[1])
   }
   // Also check href before rel
-  const linkRegex2 = /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']stylesheet["'][^>]*>/gi
-  while ((match = linkRegex2.exec(html)) !== null) {
+  while ((match = LINK_RE_2.exec(html)) !== null) {
     if (match[1])
       cssUrls.push(match[1])
   }
@@ -76,7 +86,7 @@ export default defineEventHandler(async (event) => {
   // Combine CSS and rewrite image URLs inside CSS
   let combinedCss = cssContents.join('\n')
   combinedCss = combinedCss.replace(
-    /url\(\/rsrc\.php([^)]+)\)/g,
+    RSRC_RE,
     (_m, path) => `url(/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
   )
 
@@ -90,26 +100,26 @@ export default defineEventHandler(async (event) => {
 
   let rewrittenHtml = html
     // Remove all scripts - embed works without JS via Googlebot UA
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(SCRIPT_RE, '')
     // Remove link tags (we're inlining CSS)
-    .replace(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi, '')
-    .replace(/<link[^>]+href=["'][^"']+\.css[^"']*["'][^>]*>/gi, '')
+    .replace(STYLESHEET_RE, '')
+    .replace(CSS_RE, '')
     // Remove noscript redirect
-    .replace(/<noscript>[\s\S]*?<\/noscript>/gi, '')
+    .replace(NOSCRIPT_RE, '')
     // Rewrite scontent CDN images (decode &amp; entities before encoding)
     .replace(
-      /https:\/\/scontent[^"'\s),]+\.cdninstagram\.com[^"'\s),]+/g,
-      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
+      SCONTENT_RE,
+      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m.replace(AMP_RE, '&'))}`,
     )
     // Rewrite static CDN assets
     .replace(
-      /https:\/\/static\.cdninstagram\.com[^"'\s),]+/g,
-      m => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
+      STATIC_CDN_RE,
+      m => `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(m.replace(AMP_RE, '&'))}`,
     )
     // Rewrite lookaside Instagram images (SEO/crawler images)
     .replace(
-      /https:\/\/lookaside\.instagram\.com[^"'\s),]+/g,
-      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m.replace(/&amp;/g, '&'))}`,
+      LOOKASIDE_RE,
+      m => `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(m.replace(AMP_RE, '&'))}`,
     )
 
   // Inject inlined CSS into head

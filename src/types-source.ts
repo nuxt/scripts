@@ -17,6 +17,13 @@ export interface SchemaFieldMeta {
   defaultValue?: string
 }
 
+const JSDOC_START_RE = /^\s*\/\*\*/
+const JSDOC_END_RE = /^\s*\*\//
+const DOC_LINE_RE = /^\s*\*\s?(.*)/
+const DEFAULT_TAG_RE = /^@default\s*/
+const NAME_MATCH_RE = /^\s*(\w+)/
+const FIELD_MATCH_RE = /^\s*(\w+)\s*:/
+
 export function getRegistryTypes(): Record<string, ExtractedDeclaration[]> {
   return registryTypes as Record<string, ExtractedDeclaration[]>
 }
@@ -46,19 +53,19 @@ function parseComments(code: string): Record<string, { description?: string, def
   let def = ''
 
   for (const line of lines) {
-    if (/^\s*\/\*\*/.test(line)) {
+    if (JSDOC_START_RE.test(line)) {
       desc = ''
       def = ''
       continue
     }
-    if (/^\s*\*\//.test(line))
+    if (JSDOC_END_RE.test(line))
       continue
 
-    const docLine = line.match(/^\s*\*\s?(.*)/)
+    const docLine = line.match(DOC_LINE_RE)
     if (docLine) {
       const content = docLine[1]!.trim()
       if (content.startsWith('@default'))
-        def = content.replace(/^@default\s*/, '')
+        def = content.replace(DEFAULT_TAG_RE, '')
       else if (!content.startsWith('@') && content)
         desc += (desc ? ' ' : '') + content
       continue
@@ -68,7 +75,7 @@ function parseComments(code: string): Record<string, { description?: string, def
     const colonIdx = line.indexOf(':')
     const commentIdx = colonIdx > 0 ? line.indexOf('//', colonIdx) : -1
     if (colonIdx > 0 && commentIdx > colonIdx) {
-      const nameMatch = line.match(/^\s*(\w+)/)
+      const nameMatch = line.match(NAME_MATCH_RE)
       if (nameMatch) {
         const comment = line.slice(commentIdx + 2).trim()
         result[nameMatch[1]!] = { description: desc || comment, defaultValue: def || undefined }
@@ -79,7 +86,7 @@ function parseComments(code: string): Record<string, { description?: string, def
     }
 
     // Plain field
-    const fieldMatch = line.match(/^\s*(\w+)\s*:/)
+    const fieldMatch = line.match(FIELD_MATCH_RE)
     if (fieldMatch) {
       if (desc || def)
         result[fieldMatch[1]!] = { description: desc || undefined, defaultValue: def || undefined }

@@ -639,8 +639,12 @@ describe('first-party privacy stripping', () => {
       page.on('request', (req) => {
         const reqUrl = req.url()
         if (!serverOrigin) {
-          try { serverOrigin = new URL(url('/')).origin }
-          catch {}
+          try {
+            serverOrigin = new URL(url('/')).origin
+          }
+          catch {
+            // ignore
+          }
         }
         const parsed = new URL(reqUrl)
         if (parsed.pathname.startsWith('/_proxy/')) {

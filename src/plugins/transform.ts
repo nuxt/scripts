@@ -22,6 +22,13 @@ import { isJS, isVue } from './util'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
+const PROTOCOL_RELATIVE_RE = /^\/\//
+const VUE_RE = /\.vue/
+const JS_RE = /\.[cm]?[jt]sx?$/
+const TEST_RE = /\.(?:test|spec)\./
+const UPPERCASE_RE = /^[A-Z]$/
+const USE_SCRIPT_RE = /^useScript/
+
 export type IntegrityAlgorithm = 'sha256' | 'sha384' | 'sha512'
 
 function calculateIntegrity(content: Buffer, algorithm: IntegrityAlgorithm = 'sha384'): string {
@@ -82,7 +89,7 @@ export interface AssetBundlerTransformerOptions {
 
 function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): { url: string, filename?: string } {
   if (hasProtocol(src, { acceptRelative: true })) {
-    src = src.replace(/^\/\//, 'https://')
+    src = src.replace(PROTOCOL_RELATIVE_RE, 'https://')
     const url = parseURL(src)
     const h = ohash(url)
     // Prefix hashes starting with '-' — Nitro's publicAssets handler cannot serve
@@ -219,8 +226,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       transform: {
         filter: {
           id: {
-            include: [/\.vue/, /\.[cm]?[jt]sx?$/],
-            exclude: [/\.(?:test|spec)\./],
+            include: [VUE_RE, JS_RE],
+            exclude: [TEST_RE],
           },
         },
         async handler(code, id) {
@@ -236,7 +243,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
             if (!calleeName)
               return
             // check it starts with useScriptX where X must be a A-Z alphabetical letter
-            const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && /^[A-Z]$/.test(calleeName?.charAt(9)) && !calleeName.startsWith('useScriptTrigger') && !calleeName.startsWith('useScriptEvent'))
+            const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && UPPERCASE_RE.test(calleeName?.charAt(9)) && !calleeName.startsWith('useScriptTrigger') && !calleeName.startsWith('useScriptEvent'))
             if (
               _node.type === 'CallExpression'
               && (_node as any).callee.type === 'Identifier'
@@ -251,7 +258,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               // Compute registryKey for proxy config lookup
               let registryKey: string | undefined
               if (fnName !== 'useScript') {
-                const baseName = fnName.replace(/^useScript/, '')
+                const baseName = fnName.replace(USE_SCRIPT_RE, '')
                 registryKey = baseName.length > 0 ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : undefined
               }
               if (fnName === 'useScript') {

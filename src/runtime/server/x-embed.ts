@@ -43,11 +43,13 @@ interface TweetData {
   }
 }
 
+const TWEET_ID_RE = /^\d+$/
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const tweetId = query.id as string
 
-  if (!tweetId || !/^\d+$/.test(tweetId)) {
+  if (!tweetId || !TWEET_ID_RE.test(tweetId)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Valid Tweet ID is required',
@@ -55,8 +57,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Generate random token like Zaraz does
-  const randomToken = [...Array.from({ length: 11 })]
-    .map(() => (Math.random() * 36).toString(36)[2])
+  const randomToken = Array.from(Array.from({ length: 11 }), () => (Math.random() * 36).toString(36)[2])
     .join('')
 
   const params = new URLSearchParams({ id: tweetId, token: randomToken })

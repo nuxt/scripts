@@ -31,6 +31,14 @@ const FULL_PRIVACY: ResolvedProxyPrivacy = { ip: true, userAgent: true, language
 /** Passthrough — all flags false. */
 const NO_PRIVACY: ResolvedProxyPrivacy = { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
 
+const MAJOR_VERSION_RE = /^(\d+)/
+const VERSION_RE = /^(\d+)(([.\-_])\d+)*/
+const VERSION_SPLIT_RE = /[.\-_]/
+const SNAPCHAT_VERSION_RE = /("version"\s*:\s*")(\d+(?:\.\d+)*)/g
+const GA_VERSION_RE = /;(\d+(?:\.\d+)*)/g
+const UPPERCASE_RE = /^[A-Z]/
+const LANG_CODE_RE = /^[a-z]{2}(?:-[a-z]{2,})?$/i
+
 /**
  * Normalize a privacy input to a fully-resolved object.
  * Privacy is opt-in: unset object flags default to `false`.
@@ -193,7 +201,7 @@ export function normalizeUserAgent(ua: string): string {
     const idx = ua.indexOf(pattern)
     if (idx !== -1) {
       const versionStart = idx + pattern.length
-      const majorVersion = ua.slice(versionStart).match(/^(\d+)/)?.[1]
+      const majorVersion = ua.slice(versionStart).match(MAJOR_VERSION_RE)?.[1]
       if (majorVersion)
         return `Mozilla/5.0 (compatible; ${family}/${majorVersion}.0)`
     }
@@ -278,12 +286,12 @@ export function generalizeHardware(value: unknown): number {
 export function generalizeVersion(value: unknown): string {
   if (typeof value !== 'string')
     return String(value)
-  const match = value.match(/^(\d+)(([.\-_])\d+)*/)
+  const match = value.match(VERSION_RE)
   if (!match)
     return String(value)
   const major = match[1]
   const sep = match[3] || '.'
-  const segmentCount = value.split(/[.\-_]/).length
+  const segmentCount = value.split(VERSION_SPLIT_RE).length
   return major + (`${sep}0`).repeat(segmentCount - 1)
 }
 
@@ -301,10 +309,10 @@ export function generalizeBrowserVersions(value: unknown): string {
   }
   // Snapchat d_bvs: JSON with version fields
   if (value.includes('"version"'))
-    return value.replace(/("version"\s*:\s*")(\d+(?:\.\d+)*)/g, (_, prefix, ver) => prefix + zeroSegments(ver))
+    return value.replace(SNAPCHAT_VERSION_RE, (_, prefix, ver) => prefix + zeroSegments(ver))
   // GA uafvl: semicolon-separated brand;version pairs, pipe-delimited
   if (value.includes(';'))
-    return value.replace(/;(\d+(?:\.\d+)*)/g, (_, ver) => `;${zeroSegments(ver)}`)
+    return value.replace(GA_VERSION_RE, (_, ver) => `;${zeroSegments(ver)}`)
   return value
 }
 
@@ -340,12 +348,12 @@ export function anonymizeDeviceInfo(value: string): string {
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i]!
     // IANA timezone (contains /)
-    if (part.includes('/') && /^[A-Z]/.test(part)) {
+    if (part.includes('/') && UPPERCASE_RE.test(part)) {
       result[i] = String(generalizeTimezone(part))
       continue
     }
     // Language code
-    if (/^[a-z]{2}(?:-[a-z]{2,})?$/i.test(part)) {
+    if (LANG_CODE_RE.test(part)) {
       result[i] = normalizeLanguage(part)
       continue
     }

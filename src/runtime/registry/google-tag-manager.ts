@@ -144,7 +144,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
 
               // Push the standard GTM initialization event
               ;(window as any)[dataLayerName].push({
-                'gtm.start': new Date().getTime(),
+                'gtm.start': Date.now(),
                 'event': 'gtm.js',
               })
             },

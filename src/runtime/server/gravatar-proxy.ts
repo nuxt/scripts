@@ -33,8 +33,7 @@ export default defineEventHandler(async (event) => {
     const encoder = new TextEncoder()
     const data = encoder.encode(email.trim().toLowerCase())
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    hash = Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
+    hash = Array.from(new Uint8Array(hashBuffer), b => b.toString(16).padStart(2, '0'))
       .join('')
   }
 

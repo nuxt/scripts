@@ -521,7 +521,7 @@ const rootAttrs = computed(() => {
 })
 
 onBeforeUnmount(async () => {
-  await Promise.all([...mapMarkers.value.entries()].map(([,marker]) => resetMapMarkerMap(marker)))
+  await Promise.all(Array.from(mapMarkers.value.entries(), ([,marker]) => resetMapMarkerMap(marker)))
   mapMarkers.value.clear()
   map.value?.unbindAll()
   map.value = undefined
