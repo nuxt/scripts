@@ -51,14 +51,25 @@ export function autoInjectProxyEndpoints(
 ): void {
   for (const def of AUTO_INJECT_DEFS) {
     const entry = registry[def.registryKey]
-    if (!entry || typeof entry !== 'object')
+    if (!entry)
       continue
 
-    const config = (Array.isArray(entry) ? entry[0] : entry) as Record<string, any>
+    let config: Record<string, any> | undefined
+    if (entry === true || entry === 'mock') {
+      config = {}
+    }
+    else if (typeof entry === 'object') {
+      config = (Array.isArray(entry) ? entry[0] : entry) as Record<string, any>
+    }
+
     if (!config || config[def.configField])
       continue
 
-    config[def.configField] = def.computeValue(collectPrefix, config)
+    const value = def.computeValue(collectPrefix, config)
+
+    if (typeof entry === 'object') {
+      config[def.configField] = value
+    }
 
     // Propagate to runtimeConfig
     const rtScripts = runtimeConfig.public?.scripts as Record<string, any> | undefined
@@ -66,7 +77,7 @@ export function autoInjectProxyEndpoints(
     if (rtEntry && typeof rtEntry === 'object') {
       const rtConfig = Array.isArray(rtEntry) ? rtEntry[0] : rtEntry
       if (rtConfig)
-        rtConfig[def.configField] = config[def.configField]
+        rtConfig[def.configField] = value
     }
   }
 }
