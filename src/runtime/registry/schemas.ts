@@ -722,6 +722,14 @@ export const RybbitAnalyticsOptions = object({
   analyticsHost: optional(string()),
 })
 
+export const MixpanelAnalyticsOptions = object({
+  /**
+   * Your Mixpanel project token.
+   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library
+   */
+  token: string(),
+})
+
 export const SegmentOptions = object({
   /**
    * Your Segment write key.

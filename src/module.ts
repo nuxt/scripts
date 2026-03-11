@@ -147,6 +147,7 @@ const PARTYTOWN_FORWARDS: Record<string, string[]> = {
   umami: ['umami', 'umami.track'],
   matomo: ['_paq.push'],
   segment: ['analytics', 'analytics.track', 'analytics.page', 'analytics.identify'],
+  mixpanelAnalytics: ['mixpanel', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register'],
   metaPixel: ['fbq'],
   xPixel: ['twq'],
   tiktokPixel: ['ttq.track', 'ttq.page', 'ttq.identify'],
