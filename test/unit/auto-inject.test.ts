@@ -79,6 +79,15 @@ describe('autoInjectProxyEndpoints', () => {
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
     })
 
+    it('uses EU prefix for posthog: true when runtime region is eu', () => {
+      const registry: any = { posthog: true }
+      const rt = makeRuntimeConfig({ posthog: { apiKey: '', region: 'eu' } })
+
+      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph-eu')
+    })
+
     it('injects into runtimeConfig for plausibleAnalytics: true', () => {
       const registry: any = { plausibleAnalytics: true }
       const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: '' } })
