@@ -18,6 +18,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
 
   return [
     {
+      registryKey: 'plausibleAnalytics',
       label: 'Plausible Analytics',
       proxy: 'plausible',
       category: 'analytics',
@@ -34,6 +35,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'cloudflareWebAnalytics',
       label: 'Cloudflare Web Analytics',
       proxy: 'cloudflareWebAnalytics',
       src: 'https://static.cloudflareinsights.com/beacon.min.js',
@@ -45,6 +47,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'vercelAnalytics',
       label: 'Vercel Analytics',
       src: 'https://va.vercel-scripts.com/v1/script.js',
       proxy: 'vercelAnalytics',
@@ -56,6 +59,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'posthog',
       label: 'PostHog',
       src: false,
       proxy: 'posthog',
@@ -68,6 +72,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'fathomAnalytics',
       label: 'Fathom Analytics',
       proxy: 'fathom',
       src: 'https://cdn.usefathom.com/script.js',
@@ -79,6 +84,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'matomoAnalytics',
       label: 'Matomo Analytics',
       scriptBundling: false, // breaks script
       category: 'analytics',
@@ -89,6 +95,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'rybbitAnalytics',
       label: 'Rybbit Analytics',
       proxy: 'rybbit',
       scriptBundling: false, // SDK reads document.currentScript.src to derive API host — analyticsHost config injection handles proxy instead
@@ -103,6 +110,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'databuddyAnalytics',
       label: 'Databuddy Analytics',
       proxy: 'databuddy',
       scriptBundling: () => 'https://cdn.databuddy.cc/databuddy.js',
@@ -114,6 +122,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'segment',
       label: 'Segment',
       proxy: 'segment',
       scriptBundling: (options?: SegmentInput) => {
@@ -127,6 +136,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'metaPixel',
       label: 'Meta Pixel',
       proxy: 'metaPixel',
       src: 'https://connect.facebook.net/en_US/fbevents.js',
@@ -138,6 +148,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'xPixel',
       label: 'X Pixel',
       proxy: 'xPixel',
       src: 'https://static.ads-twitter.com/uwt.js',
@@ -152,6 +163,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'tiktokPixel',
       label: 'TikTok Pixel',
       proxy: 'tiktokPixel',
       category: 'ad',
@@ -167,6 +179,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'snapchatPixel',
       label: 'Snapchat Pixel',
       proxy: 'snapchatPixel',
       src: 'https://sc-static.net/scevent.min.js',
@@ -178,6 +191,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'redditPixel',
       label: 'Reddit Pixel',
       proxy: 'redditPixel',
       src: 'https://www.redditstatic.com/ads/pixel.js',
@@ -190,6 +204,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     // ad
     {
+      registryKey: 'googleAdsense',
       label: 'Google Adsense',
       proxy: 'googleAnalytics',
       scriptBundling: (options?: GoogleAdsenseInput) => {
@@ -208,6 +223,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'carbonAds',
       label: 'Carbon Ads',
       scriptBundling: false,
       category: 'ad',
@@ -215,6 +231,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     // support
     {
+      registryKey: 'intercom',
       label: 'Intercom',
       proxy: 'intercom',
       scriptBundling(options?: IntercomInput) {
@@ -231,6 +248,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'hotjar',
       label: 'Hotjar',
       proxy: 'hotjar',
       scriptBundling(options?: HotjarInput) {
@@ -249,6 +267,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'clarity',
       label: 'Clarity',
       proxy: 'clarity',
       scriptBundling(options?: ClarityInput) {
@@ -266,6 +285,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     // payments
     {
+      registryKey: 'stripe',
       label: 'Stripe',
       scriptBundling: false,
       category: 'payments',
@@ -276,6 +296,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'lemonSqueezy',
       label: 'Lemon Squeezy',
       src: false, // should not be bundled
       category: 'payments',
@@ -286,6 +307,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'paypal',
       label: 'PayPal',
       src: false, // should not be bundled
       category: 'payments',
@@ -297,6 +319,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     // video
     {
+      registryKey: 'vimeoPlayer',
       label: 'Vimeo Player',
       category: 'video',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="36.74" height="32" viewBox="0 0 256 223"><path fill="#32B8E8" d="M255.876 51.662c-1.139 24.968-18.545 59.157-52.209 102.55c-34.806 45.327-64.254 67.989-88.343 67.989c-14.918 0-27.551-13.799-37.863-41.406c-6.892-25.306-13.775-50.61-20.664-75.915c-7.663-27.592-15.878-41.406-24.661-41.406c-1.915 0-8.617 4.038-20.091 12.081L0 60.008a3257.325 3257.325 0 0 0 37.36-33.38C54.21 12.038 66.86 4.366 75.29 3.59c19.925-1.917 32.187 11.728 36.79 40.938c4.974 31.514 8.415 51.116 10.35 58.788c5.742 26.145 12.06 39.201 18.965 39.201c5.358 0 13.407-8.478 24.138-25.436c10.722-16.963 16.464-29.868 17.24-38.733c1.525-14.638-4.22-21.975-17.24-21.975c-6.128 0-12.447 1.413-18.946 4.206c12.58-41.29 36.618-61.343 72.1-60.199c26.304.773 38.705 17.867 37.19 51.282"/></svg>`,
@@ -306,6 +329,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'youtubePlayer',
       label: 'YouTube Player',
       category: 'video',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="45.52" height="32" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134"/><path fill="#FFF" d="m102.421 128.06l66.328-38.418l-66.328-38.418z"/></svg>`,
@@ -315,6 +339,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'googleMaps',
       label: 'Google Maps',
       category: 'content',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="22.33" height="32" viewBox="0 0 256 367"><path fill="#34A853" d="M70.585 271.865a370.712 370.712 0 0 1 28.911 42.642c7.374 13.982 10.448 23.463 15.837 40.31c3.305 9.308 6.292 12.086 12.714 12.086c6.998 0 10.173-4.726 12.626-12.035c5.094-15.91 9.091-28.052 15.397-39.525c12.374-22.15 27.75-41.833 42.858-60.75c4.09-5.354 30.534-36.545 42.439-61.156c0 0 14.632-27.035 14.632-64.792c0-35.318-14.43-59.813-14.43-59.813l-41.545 11.126l-25.23 66.451l-6.242 9.163l-1.248 1.66l-1.66 2.078l-2.914 3.319l-4.164 4.163l-22.467 18.304l-56.17 32.432z"/><path fill="#FBBC04" d="M12.612 188.892c13.709 31.313 40.145 58.839 58.031 82.995l95.001-112.534s-13.384 17.504-37.662 17.504c-27.043 0-48.89-21.595-48.89-48.825c0-18.673 11.234-31.501 11.234-31.501l-64.489 17.28z"/><path fill="#4285F4" d="M166.705 5.787c31.552 10.173 58.558 31.53 74.893 63.023l-75.925 90.478s11.234-13.06 11.234-31.617c0-27.864-23.463-48.68-48.81-48.68c-23.969 0-37.735 17.475-37.735 17.475v-57z"/><path fill="#1A73E8" d="M30.015 45.765C48.86 23.218 82.02 0 127.736 0c22.18 0 38.89 5.823 38.89 5.823L90.29 96.516H36.205z"/><path fill="#EA4335" d="M12.612 188.892S0 164.194 0 128.414c0-33.817 13.146-63.377 30.015-82.649l60.318 50.759z"/></svg>`,
@@ -324,11 +349,13 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'instagramEmbed',
       label: 'Instagram Embed',
       category: 'content',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><g fill="none"><rect width="256" height="256" fill="url(#skillIconsInstagram0)" rx="60"/><rect width="256" height="256" fill="url(#skillIconsInstagram1)" rx="60"/><path fill="#fff" d="M128.009 28c-27.158 0-30.567.119-41.233.604c-10.646.488-17.913 2.173-24.271 4.646c-6.578 2.554-12.157 5.971-17.716 11.531c-5.563 5.559-8.98 11.138-11.542 17.713c-2.48 6.36-4.167 13.63-4.646 24.271c-.477 10.667-.602 14.077-.602 41.236s.12 30.557.604 41.223c.49 10.646 2.175 17.913 4.646 24.271c2.556 6.578 5.973 12.157 11.533 17.716c5.557 5.563 11.136 8.988 17.709 11.542c6.363 2.473 13.631 4.158 24.275 4.646c10.668.485 14.073.604 41.23.604c27.161 0 30.559-.119 41.225-.604c10.646-.488 17.921-2.173 24.284-4.646c6.575-2.554 12.146-5.979 17.702-11.542c5.563-5.559 8.98-11.138 11.542-17.716c2.458-6.358 4.145-13.625 4.646-24.271c.48-10.666.604-14.066.604-41.223s-.124-30.569-.604-41.236c-.501-10.646-2.188-17.911-4.646-24.271c-2.562-6.575-5.979-12.154-11.542-17.713c-5.559-5.56-11.13-8.977-17.716-11.531c-6.375-2.473-13.646-4.158-24.292-4.646C158.57 28.119 155.164 28 128.009 28m-8.868 18.021h8.868c26.695 0 29.855.103 40.41.582c9.751.446 15.042 2.079 18.567 3.454c4.667 1.813 7.992 3.979 11.492 7.48c3.5 3.5 5.666 6.829 7.483 11.496c1.375 3.525 3.012 8.813 3.454 18.563c.479 10.558.588 13.719.588 40.413s-.109 29.854-.588 40.412c-.446 9.75-2.079 15.042-3.454 18.563c-1.813 4.667-3.983 7.992-7.483 11.492a30.94 30.94 0 0 1-11.492 7.479c-3.521 1.379-8.812 3.013-18.567 3.458c-10.554.48-13.711.589-40.41.589c-26.702 0-29.859-.109-40.413-.589c-9.75-.449-15.046-2.079-18.571-3.458c-4.667-1.813-8-3.979-11.5-7.479s-5.666-6.825-7.483-11.496c-1.375-3.521-3.012-8.813-3.454-18.563c-.479-10.558-.583-13.715-.583-40.42c0-26.704.104-29.856.583-40.413c.446-9.75 2.079-15.042 3.454-18.567c1.813-4.667 3.983-7.996 11.5-11.5a30.804 30.804 0 0 1 11.496-7.479c3.525-1.375 8.821-3.013 18.571-3.458c9.238-.421 12.82-.546 31.505-.563zm62.496 16.604c-6.625 0-12 5.37-12 12c0 6.625 5.375 12 12 12c6.625 0 12-5.375 12-12s-5.375-12-12-12m-53.628 14.021c-28.272 0-51.196 22.924-51.196 51.196s22.924 51.2 51.196 51.2c28.271 0 51.2-22.929 51.2-51.2c0-28.272-22.929-51.196-51.2-51.196m0 18.021c18.334 0 33.183 14.846 33.183 33.175c0 18.334-14.849 33.184-33.183 33.184c-18.33 0-33.175-14.85-33.175-33.184c0-18.329 14.845-33.175 33.175-33.175"/><defs><radialGradient id="skillIconsInstagram0" cx="0" cy="0" r="1" gradientTransform="matrix(0 -253.715 235.975 0 68 275.717)" gradientUnits="userSpaceOnUse"><stop stop-color="#FD5"/><stop offset=".1" stop-color="#FD5"/><stop offset=".5" stop-color="#FF543E"/><stop offset="1" stop-color="#C837AB"/></radialGradient><radialGradient id="skillIconsInstagram1" cx="0" cy="0" r="1" gradientTransform="matrix(22.25952 111.2976 -458.39518 91.75449 -42.881 18.441)" gradientUnits="userSpaceOnUse"><stop stop-color="#3771C8"/><stop offset=".128" stop-color="#3771C8"/><stop offset="1" stop-color="#60F" stop-opacity="0"/></radialGradient></defs></g></svg>`,
     },
     {
+      registryKey: 'xEmbed',
       label: 'X Embed',
       category: 'content',
       logo: {
@@ -338,6 +365,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     // chat
     {
+      registryKey: 'crisp',
       label: 'Crisp',
       proxy: 'crisp',
       category: 'support',
@@ -352,6 +380,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     },
     // cdn
     {
+      registryKey: 'npm',
       label: 'NPM',
       scriptBundling(options?: NpmInput) {
         return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
@@ -365,6 +394,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'googleRecaptcha',
       label: 'Google reCAPTCHA',
       category: 'utility',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><path fill="#1c3aa9" d="M64 32a32 32 0 1 1-64 0 32 32 0 0 1 64 0"/><path fill="#4285f4" d="m32 14-2 18 2 2 18-2V14z"/><path fill="#efefef" d="M14 32v18h18l2-2-2-16-16-2z"/><path fill="#f1f1f1" d="M32 32h18v18H32z"/><path fill="#e1e1e1" d="M14 14h18v18H14z"/><path fill="#1c3aa9" d="M32 14v18H14V14z"/><path fill="#4285f4" d="M32 32v18h18V32z"/><path d="M14 32h18v18H14z" fill="#f1f1f1"/><path d="M32 14h18v18H32z" fill="#fff"/></svg>`,
@@ -383,6 +413,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'googleSignIn',
       label: 'Google Sign-In',
       src: 'https://accounts.google.com/gsi/client',
       scriptBundling: false, // CORS prevents bundling
@@ -394,6 +425,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'googleTagManager',
       label: 'Google Tag Manager',
       category: 'tag-manager',
       proxy: 'googleTagManager',
@@ -421,6 +453,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'googleAnalytics',
       label: 'Google Analytics',
       category: 'analytics',
       proxy: 'googleAnalytics',
@@ -437,6 +470,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'umamiAnalytics',
       label: 'Umami Analytics',
       proxy: 'umami',
       scriptBundling: () => 'https://cloud.umami.is/script.js',
@@ -448,6 +482,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'gravatar',
       label: 'Gravatar',
       proxy: 'gravatar',
       src: 'https://secure.gravatar.com/js/gprofiles.js',

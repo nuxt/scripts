@@ -84,12 +84,27 @@ export function finalizeFirstParty(opts: {
   const proxyConfigs = getAllProxyConfigs(firstParty.collectPrefix)
   const registryKeys = Object.keys(opts.registry || {})
 
+  // Build lookup map: registryKey → RegistryScript (explicit key preferred, fallback to import name convention)
+  const scriptByKey = new Map<string, (typeof registryScriptsWithImport)[number]>()
+  for (const script of registryScriptsWithImport) {
+    if (script.registryKey) {
+      scriptByKey.set(script.registryKey, script)
+    }
+  }
+
   // Collect routes for all configured registry scripts that support proxying
   const neededRoutes: Record<string, { proxy: string }> = {}
   const routePrivacyOverrides: Record<string, ProxyPrivacyInput> = {}
   const unsupportedScripts: string[] = []
+  const unmatchedScripts: string[] = []
   for (const key of registryKeys) {
-    const script = registryScriptsWithImport.find(s => s.import.name.toLowerCase() === `usescript${key.toLowerCase()}`)
+    // Direct lookup by registryKey (robust), fallback to import name convention (legacy)
+    const script = scriptByKey.get(key)
+      || registryScriptsWithImport.find(s => s.import.name.toLowerCase() === `usescript${key.toLowerCase()}`)
+    if (!script) {
+      unmatchedScripts.push(key)
+      continue
+    }
     const proxyKey = script?.proxy || undefined
     if (proxyKey) {
       const proxyConfig = proxyConfigs[proxyKey]
@@ -108,6 +123,14 @@ export function finalizeFirstParty(opts: {
   // Auto-inject proxy endpoints for scripts that need explicit config
   if (opts.registry) {
     autoInjectProxyEndpoints(opts.registry, nuxtOptions.runtimeConfig, firstParty.collectPrefix)
+  }
+
+  // Warn about scripts that couldn't be matched to a registry entry
+  if (unmatchedScripts.length) {
+    logger.warn(
+      `First-party mode: could not find registry scripts for: ${unmatchedScripts.join(', ')}.\n`
+      + 'These scripts will not have proxy routes registered. Check that the registry key matches a known script.',
+    )
   }
 
   // Warn about scripts that don't support first-party mode

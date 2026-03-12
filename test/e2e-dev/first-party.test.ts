@@ -15,6 +15,14 @@ await setup({
   rootDir: fixtureDir,
   browser: true,
   build: true,
+  browserOptions: {
+    type: 'chromium',
+    launch: {
+      // Prevent navigator.webdriver=true so analytics SDKs (Plausible, etc.)
+      // treat the browser as a real user instead of skipping event collection.
+      args: ['--disable-blink-features=AutomationControlled'],
+    },
+  },
 })
 
 function clearCaptures() {
@@ -477,6 +485,8 @@ function captureToSnapshotName(capture: Record<string, any>): string {
   }
 }
 
+const STRICT_SNAPSHOTS = process.env.NUXT_SCRIPTS_STRICT_SNAPSHOTS === '1'
+
 async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Record<string, any>[], provider: string) {
   // File snapshots document the exact request shape for review purposes.
   // Real analytics scripts produce non-deterministic request counts, cookies, and timing
@@ -494,8 +504,10 @@ async function assertSnapshots(rawCaptures: Record<string, any>[], captures: Rec
       await expect(diff).toMatchFileSnapshot(`__snapshots__/proxy/${provider}/${fileName}.diff.json`)
     }
   }
-  catch {
-    // Snapshot mismatch due to non-deterministic analytics behavior — not a test failure
+  catch (err) {
+    if (STRICT_SNAPSHOTS)
+      throw err
+    console.warn(`[snapshot] ${provider}: mismatch (run with -u to update)`)
   }
 }
 
@@ -697,9 +709,10 @@ describe('first-party privacy stripping', () => {
       'snapchatPixel', // scope-resolved AST rewrite for sendBeacon/XHR
       // googleTagManager — uses createElement('script') injection, not interceptable via XHR/fetch/sendBeacon
       'fathomAnalytics', // bundled + self-hosted detection neutralized, sendBeacon/Image interception
+      'plausibleAnalytics', // bundled + auto-inject endpoint, sendBeacon interception (needs extension: 'local' + __plausible flag for headless)
       // intercom — SDK doesn't fire events with test app_id in headless (0 external leaks, 0 proxy requests)
       // crisp — no src/scriptBundling in registry, script not bundled
-      // hotjar — uses WebSocket for session data, can't proxy via HTTP
+      // hotjar — SDK doesn't fire HTTP events in headless (WebSocket-only session data)
       // databuddyAnalytics — no events in test window with demo key
     ])
 
@@ -840,7 +853,7 @@ describe('first-party privacy stripping', () => {
 
     it('hotjar', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('hotjar', '/hotjar')
-      // Hotjar uses WebSocket for session data — HTTP proxy captures are optional.
+      // Hotjar SDK doesn't fire HTTP events in headless — WebSocket-only session data.
       // Script loads from /_scripts/ (verified in bundle coverage test below).
       if (captures.length > 0) {
         await assertCaptures('hotjar', captures, rawCaptures, proxyRequests, externalRequests, {

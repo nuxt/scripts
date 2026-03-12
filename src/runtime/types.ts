@@ -236,6 +236,11 @@ export type RegistryScriptInput<
     } : never)
 
 export interface RegistryScript {
+  /**
+   * The config key used in `scripts.registry` in nuxt.config (e.g., 'googleAnalytics', 'plausibleAnalytics').
+   * Used for direct lookup from config to script — avoids fragile import name convention matching.
+   */
+  registryKey?: string
   import?: Import // might just be a component
   scriptBundling?: false | ((options?: any) => string | false)
   /**
