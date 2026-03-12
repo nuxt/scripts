@@ -32,12 +32,12 @@ catalog:
   nuxt: ^4.3.1
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.117.0
+  oxc-parser: ^0.118.0
   oxc-walker: ^0.7.0
   pathe: ^2.0.3
   pkg-types: ^2.3.0
   playwright-core: ^1.58.2
-  posthog-js: ^1.360.0
+  posthog-js: ^1.360.1
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.0.0
