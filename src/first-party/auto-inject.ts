@@ -60,9 +60,13 @@ export function autoInjectProxyEndpoints(
       ? (Array.isArray(rtEntry) ? rtEntry[0] : rtEntry)
       : undefined
 
+    // For boolean/mock entries, read config from runtimeConfig (populated by REGISTRY_ENV_DEFAULTS in module.ts).
+    // For object entries, read from the registry entry directly.
     let config: Record<string, any> | undefined
     if (entry === true || entry === 'mock') {
-      config = rtConfig || {}
+      if (!rtConfig)
+        continue
+      config = rtConfig
     }
     else if (typeof entry === 'object') {
       config = (Array.isArray(entry) ? entry[0] : entry) as Record<string, any>
@@ -73,14 +77,15 @@ export function autoInjectProxyEndpoints(
 
     const value = def.computeValue(collectPrefix, config)
 
+    // For object entries, mutate the registry config and propagate to runtimeConfig.
+    // For boolean/mock, config already points to rtConfig so only one write is needed.
     if (typeof entry === 'object') {
       config[def.configField] = value
-    }
-
-    // Propagate to runtimeConfig
-    if (rtEntry && typeof rtEntry === 'object') {
       if (rtConfig)
         rtConfig[def.configField] = value
+    }
+    else {
+      config[def.configField] = value
     }
   }
 }
