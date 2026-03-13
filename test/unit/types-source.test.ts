@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from 'vitest'
 // Mock registry-types.json before importing the module
 vi.mock('../../src/registry-types.json', () => ({
   default: {
-    'test-script': [
-      {
-        name: 'TestOptions',
-        kind: 'const',
-        code: `export const TestOptions = object({
+    types: {
+      'test-script': [
+        {
+          name: 'TestOptions',
+          kind: 'const',
+          code: `export const TestOptions = object({
   /**
    * The API key.
    *
@@ -16,34 +17,31 @@ vi.mock('../../src/registry-types.json', () => ({
   apiKey: string(),
   enabled: optional(boolean()), // Whether tracking is enabled
 })`,
-      },
-      {
-        name: 'TestApi',
-        kind: 'interface',
-        code: 'export interface TestApi { track: (event: string) => void }',
-      },
-      {
-        name: 'TestDefaults',
-        kind: 'const',
-        code: 'const TestDefaults = { "trigger": "\'click\'" }',
-      },
-    ],
-    'empty-script': [
-      {
-        name: 'EmptyApi',
-        kind: 'interface',
-        code: 'export interface EmptyApi {}',
-      },
-    ],
-  },
-}))
-
-// Mock registry-schemas with matching schema for TestOptions
-vi.mock('../../src/registry-schemas', () => ({
-  TestOptions: {
-    entries: {
-      apiKey: { type: 'string' },
-      enabled: { type: 'optional', wrapped: { type: 'boolean' } },
+        },
+        {
+          name: 'TestApi',
+          kind: 'interface',
+          code: 'export interface TestApi { track: (event: string) => void }',
+        },
+        {
+          name: 'TestDefaults',
+          kind: 'const',
+          code: 'const TestDefaults = { "trigger": "\'click\'" }',
+        },
+      ],
+      'empty-script': [
+        {
+          name: 'EmptyApi',
+          kind: 'interface',
+          code: 'export interface EmptyApi {}',
+        },
+      ],
+    },
+    schemaFields: {
+      TestOptions: [
+        { name: 'apiKey', type: 'string', required: true, description: 'The API key.', defaultValue: '\'abc\'' },
+        { name: 'enabled', type: 'boolean', required: false, description: 'Whether tracking is enabled' },
+      ],
     },
   },
 }))
@@ -66,7 +64,7 @@ describe('getRegistryTypes', () => {
 })
 
 describe('getRegistrySchemaFields', () => {
-  it('extracts fields from const declarations with matching schemas', () => {
+  it('returns pre-computed schema fields', () => {
     const fields = getRegistrySchemaFields()
     expect(fields.TestOptions).toBeDefined()
     expect(fields.TestOptions).toHaveLength(2)
@@ -84,7 +82,7 @@ describe('getRegistrySchemaFields', () => {
     expect(enabled.required).toBe(false)
   })
 
-  it('extracts JSDoc description and @default', () => {
+  it('includes JSDoc description and @default', () => {
     const fields = getRegistrySchemaFields()
     const apiKey = fields.TestOptions.find(f => f.name === 'apiKey')!
 
@@ -92,186 +90,44 @@ describe('getRegistrySchemaFields', () => {
     expect(apiKey.defaultValue).toBe('\'abc\'')
   })
 
-  it('extracts inline comment as description', () => {
+  it('includes inline comment as description', () => {
     const fields = getRegistrySchemaFields()
     const enabled = fields.TestOptions.find(f => f.name === 'enabled')!
 
     expect(enabled.description).toBe('Whether tracking is enabled')
   })
 
-  it('skips declarations ending with Defaults', () => {
-    const fields = getRegistrySchemaFields()
-    expect(fields.TestDefaults).toBeUndefined()
-  })
+  it('returns empty object when no schema fields exist', async () => {
+    vi.resetModules()
+    vi.doMock('../../src/registry-types.json', () => ({
+      default: {
+        types: {},
+      },
+    }))
 
-  it('skips non-const declarations', () => {
-    const fields = getRegistrySchemaFields()
-    expect(fields.TestApi).toBeUndefined()
-  })
-
-  it('skips consts without matching schemas', () => {
-    const fields = getRegistrySchemaFields()
-    // Only TestOptions should be present, not TestDefaults or anything from empty-script
-    expect(Object.keys(fields)).toEqual(['TestOptions'])
+    const mod = await import('../../src/types-source')
+    expect(mod.getRegistrySchemaFields()).toEqual({})
   })
 })
 
-describe('resolveType coverage', () => {
-  it('handles all type variants', async () => {
+describe('backwards compatibility', () => {
+  it('handles legacy JSON format without types/schemaFields wrapper', async () => {
     vi.resetModules()
     vi.doMock('../../src/registry-types.json', () => ({
       default: {
-        'type-test': [
+        'test-script': [
           {
-            name: 'TypeTestOptions',
+            name: 'TestOptions',
             kind: 'const',
-            code: `export const TypeTestOptions = object({
-  a: number(),
-  b: array(string()),
-  c: object({}),
-  d: union([literal('x'), literal(42)]),
-  e: record(string(), any()),
-  f: custom(() => true),
-  g: any(),
-})`,
+            code: 'export const TestOptions = object({})',
           },
         ],
       },
     }))
 
-    vi.doMock('../../src/registry-schemas', () => ({
-      TypeTestOptions: {
-        entries: {
-          a: { type: 'number' },
-          b: { type: 'array', item: { type: 'string' } },
-          c: { type: 'object' },
-          d: {
-            type: 'union',
-            options: [
-              { type: 'literal', literal: 'x' },
-              { type: 'literal', literal: 42 },
-            ],
-          },
-          e: { type: 'record', key: { type: 'string' }, value: { type: 'any' } },
-          f: { type: 'custom' },
-          g: { type: 'any' },
-          h: { type: 'optional', wrapped: { type: 'unknown_type' } },
-        },
-      },
-    }))
-
     const mod = await import('../../src/types-source')
-    const fields = mod.getRegistrySchemaFields()
-    const byName = Object.fromEntries(fields.TypeTestOptions.map(f => [f.name, f]))
-
-    expect(byName.a.type).toBe('number')
-    expect(byName.b.type).toBe('string[]')
-    expect(byName.c.type).toBe('object')
-    expect(byName.d.type).toBe('\'x\' | 42')
-    expect(byName.e.type).toBe('Record<string, any>')
-    expect(byName.f.type).toBe('Function')
-    expect(byName.g.type).toBe('any')
-    // unknown schema type falls through to default
-    expect(byName.h.type).toBe('unknown_type')
-  })
-})
-
-describe('parseComments edge cases', () => {
-  it('handles fields with no comments', async () => {
-    vi.resetModules()
-    vi.doMock('../../src/registry-types.json', () => ({
-      default: {
-        'no-comments': [
-          {
-            name: 'NoCommentsOptions',
-            kind: 'const',
-            code: `export const NoCommentsOptions = object({
-  plain: string(),
-})`,
-          },
-        ],
-      },
-    }))
-
-    vi.doMock('../../src/registry-schemas', () => ({
-      NoCommentsOptions: {
-        entries: {
-          plain: { type: 'string' },
-        },
-      },
-    }))
-
-    const mod = await import('../../src/types-source')
-    const fields = mod.getRegistrySchemaFields()
-    const plain = fields.NoCommentsOptions.find(f => f.name === 'plain')!
-
-    expect(plain.description).toBeUndefined()
-    expect(plain.defaultValue).toBeUndefined()
-  })
-
-  it('handles multi-line JSDoc descriptions', async () => {
-    vi.resetModules()
-    vi.doMock('../../src/registry-types.json', () => ({
-      default: {
-        'multi-doc': [
-          {
-            name: 'MultiDocOptions',
-            kind: 'const',
-            code: `export const MultiDocOptions = object({
-  /**
-   * First line of description.
-   * Second line of description.
-   */
-  field: string(),
-})`,
-          },
-        ],
-      },
-    }))
-
-    vi.doMock('../../src/registry-schemas', () => ({
-      MultiDocOptions: {
-        entries: {
-          field: { type: 'string' },
-        },
-      },
-    }))
-
-    const mod = await import('../../src/types-source')
-    const fields = mod.getRegistrySchemaFields()
-    const field = fields.MultiDocOptions.find(f => f.name === 'field')!
-
-    expect(field.description).toBe('First line of description. Second line of description.')
-  })
-
-  it('handles union with no options', async () => {
-    vi.resetModules()
-    vi.doMock('../../src/registry-types.json', () => ({
-      default: {
-        'empty-union': [
-          {
-            name: 'EmptyUnionOptions',
-            kind: 'const',
-            code: `export const EmptyUnionOptions = object({
-  val: union([]),
-})`,
-          },
-        ],
-      },
-    }))
-
-    vi.doMock('../../src/registry-schemas', () => ({
-      EmptyUnionOptions: {
-        entries: {
-          val: { type: 'union' },
-        },
-      },
-    }))
-
-    const mod = await import('../../src/types-source')
-    const fields = mod.getRegistrySchemaFields()
-    const val = fields.EmptyUnionOptions.find(f => f.name === 'val')!
-
-    expect(val.type).toBe('unknown')
+    const types = mod.getRegistryTypes()
+    expect(types['test-script']).toHaveLength(1)
+    expect(mod.getRegistrySchemaFields()).toEqual({})
   })
 })

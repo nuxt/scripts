@@ -36,18 +36,163 @@ function getKind(node: any): ExtractedDeclaration['kind'] {
   return 'const'
 }
 
+// --- Schema field extraction (static AST-based) ---
+
+interface SchemaFieldMeta {
+  name: string
+  type: string
+  required: boolean
+  description?: string
+  defaultValue?: string
+}
+
+const JSDOC_START_RE = /^\s*\/\*\*/
+const JSDOC_END_RE = /^\s*\*\//
+const DOC_LINE_RE = /^\s*\*\s?(.*)/
+const DEFAULT_TAG_RE = /^@default\s*/
+const FIELD_MATCH_RE = /^\s*(\w+)\s*:/
+
+function resolveAstType(node: any, source: string): string {
+  if (!node)
+    return 'unknown'
+  if (node.type === 'CallExpression') {
+    const callee = node.callee?.name
+    if (callee === 'string')
+      return 'string'
+    if (callee === 'number')
+      return 'number'
+    if (callee === 'boolean')
+      return 'boolean'
+    if (callee === 'any')
+      return 'any'
+    if (callee === 'object')
+      return 'object'
+    if (callee === 'optional')
+      return resolveAstType(node.arguments?.[0], source)
+    if (callee === 'pipe')
+      return resolveAstType(node.arguments?.[0], source)
+    if (callee === 'array')
+      return `${resolveAstType(node.arguments?.[0], source)}[]`
+    if (callee === 'record')
+      return `Record<${resolveAstType(node.arguments?.[0], source)}, ${resolveAstType(node.arguments?.[1], source)}>`
+    if (callee === 'literal') {
+      const arg = node.arguments?.[0]
+      if (arg?.type === 'StringLiteral')
+        return `'${arg.value}'`
+      if (arg?.type === 'NumericLiteral')
+        return String(arg.value)
+      if (arg?.type === 'BooleanLiteral')
+        return String(arg.value)
+      return source.slice(arg?.start, arg?.end)
+    }
+    if (callee === 'union') {
+      const arrArg = node.arguments?.[0]
+      if (arrArg?.type === 'ArrayExpression') {
+        return arrArg.elements.map((e: any) => resolveAstType(e, source)).join(' | ')
+      }
+      return 'unknown'
+    }
+    if (callee === 'custom')
+      return 'Function'
+  }
+  return 'unknown'
+}
+
+function isOptionalCall(node: any): boolean {
+  return node?.type === 'CallExpression' && node.callee?.name === 'optional'
+}
+
+function parseSchemaComments(code: string): Record<string, { description?: string, defaultValue?: string }> {
+  const result: Record<string, { description?: string, defaultValue?: string }> = {}
+  const lines = code.split('\n')
+  let desc = ''
+  let def = ''
+
+  for (const line of lines) {
+    if (JSDOC_START_RE.test(line)) {
+      desc = ''
+      def = ''
+      continue
+    }
+    if (JSDOC_END_RE.test(line))
+      continue
+
+    const docLine = line.match(DOC_LINE_RE)
+    if (docLine) {
+      const content = docLine[1]!.trim()
+      if (content.startsWith('@default'))
+        def = content.replace(DEFAULT_TAG_RE, '')
+      else if (!content.startsWith('@') && content)
+        desc += (desc ? ' ' : '') + content
+      continue
+    }
+
+    const fieldMatch = line.match(FIELD_MATCH_RE)
+    if (fieldMatch) {
+      if (desc || def)
+        result[fieldMatch[1]!] = { description: desc || undefined, defaultValue: def || undefined }
+      desc = ''
+      def = ''
+    }
+  }
+
+  return result
+}
+
+function extractSchemaFields(node: any, source: string, code: string): SchemaFieldMeta[] | null {
+  // node is the init of the VariableDeclarator, should be CallExpression with callee "object"
+  if (node?.type !== 'CallExpression' || node.callee?.name !== 'object')
+    return null
+  const objArg = node.arguments?.[0]
+  if (objArg?.type !== 'ObjectExpression')
+    return null
+
+  const comments = parseSchemaComments(code)
+  const fields: SchemaFieldMeta[] = []
+
+  for (const prop of objArg.properties || []) {
+    if (prop.type === 'SpreadElement')
+      continue
+    const key = prop.key?.name || prop.key?.value
+    if (!key)
+      continue
+
+    const isOpt = isOptionalCall(prop.value)
+    const typeNode = isOpt ? prop.value.arguments?.[0] : prop.value
+
+    fields.push({
+      name: key,
+      type: resolveAstType(typeNode, source),
+      required: !isOpt,
+      description: comments[key]?.description,
+      defaultValue: comments[key]?.defaultValue,
+    })
+  }
+
+  return fields.length ? fields : null
+}
+
 // --- Registry type extraction ---
 
 // Pre-parse schemas.ts to look up re-exported schema declarations
 const schemasSource = readFileSync(join(registryDir, 'schemas.ts'), 'utf-8')
 const schemaDeclarations = new Map<string, string>()
+const schemaFields: Record<string, SchemaFieldMeta[]> = {}
 {
   const { program } = parseSync('schemas.ts', schemasSource)
   for (const node of program.body) {
     if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
-      const name = node.declaration.declarations[0]?.id?.name
-      if (name)
+      const declarator = node.declaration.declarations[0]
+      const name = declarator?.id?.name
+      if (name) {
         schemaDeclarations.set(name, schemasSource.slice(node.start, node.end))
+        // Extract field metadata for pre-computed schema fields
+        if (!name.endsWith('Defaults')) {
+          const fields = extractSchemaFields(declarator.init, schemasSource, schemasSource.slice(node.start, node.end))
+          if (fields)
+            schemaFields[name] = fields
+        }
+      }
     }
   }
 }
@@ -233,6 +378,7 @@ const componentToSlug: Record<string, string> = {
   ScriptCrisp: 'crisp',
   ScriptIntercom: 'intercom',
   ScriptGoogleAdsense: 'google-adsense',
+  ScriptBlueskyEmbed: 'bluesky-embed',
   ScriptInstagramEmbed: 'instagram-embed',
   ScriptXEmbed: 'x-embed',
   ScriptLemonSqueezy: 'lemon-squeezy',
@@ -268,5 +414,10 @@ for (const [componentName, props] of Object.entries(componentProps)) {
   }
 }
 
-writeFileSync(outputPath, JSON.stringify(types, null, 2))
-console.log(`Generated registry types for ${Object.keys(types).length} scripts (${Object.keys(componentProps).length} with component props)`)
+const output = {
+  types,
+  schemaFields,
+}
+
+writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`)
+console.log(`Generated registry types for ${Object.keys(types).length} scripts (${Object.keys(componentProps).length} with component props, ${Object.keys(schemaFields).length} schema fields)`)
