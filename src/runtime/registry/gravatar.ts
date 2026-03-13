@@ -40,10 +40,10 @@ export function useScriptGravatar<T extends GravatarApi>(_options?: GravatarInpu
       scriptOptions: {
         use: () => ({
           getAvatarUrl: (hash: string, overrides?: { size?: number, default?: string, rating?: string }) => {
-            return `/_scripts/gravatar-proxy?hash=${encodeURIComponent(hash)}&${buildQuery(overrides)}`
+            return `/_scripts/proxy/gravatar?hash=${encodeURIComponent(hash)}&${buildQuery(overrides)}`
           },
           getAvatarUrlFromEmail: (email: string, overrides?: { size?: number, default?: string, rating?: string }) => {
-            return `/_scripts/gravatar-proxy?email=${encodeURIComponent(email)}&${buildQuery(overrides)}`
+            return `/_scripts/proxy/gravatar?email=${encodeURIComponent(email)}&${buildQuery(overrides)}`
           },
         }),
       },

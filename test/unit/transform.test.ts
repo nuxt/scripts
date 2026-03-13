@@ -115,7 +115,7 @@ describe('nuxtScriptTransformer', () => {
     })`,
 
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
   })
 
   it('options arg', async () => {
@@ -126,7 +126,7 @@ describe('nuxtScriptTransformer', () => {
     })`,
 
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript({ defer: true, src: '/_scripts/beacon.min.js' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript({ defer: true, src: '/_scripts/assets/beacon.min.js' }, )"`)
   })
 
   it('dynamic src is not transformed', async () => {
@@ -163,7 +163,7 @@ describe('nuxtScriptTransformer', () => {
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ src: '/_scripts/custom.js.js' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ src: '/_scripts/assets/custom.js.js' }, )"`)
   })
 
   it('registry script with scriptOptions.bundle - correct usage', async () => {
@@ -191,7 +191,7 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/analytics.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/analytics.js' }, 
               id: 'GA_MEASUREMENT_ID',
               scriptOptions: {
                 bundle: true
@@ -224,7 +224,7 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/gtag/js.js' }, 
               id: 'GA_MEASUREMENT_ID'
             }, )"
     `)
@@ -248,7 +248,7 @@ describe('nuxtScriptTransformer', () => {
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ scriptInput: { src: '/_scripts/script.js.js' },  site: '123' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ scriptInput: { src: '/_scripts/assets/script.js.js' },  site: '123' }, )"`)
   })
 
   it('static src integration is transformed - opt-out', async () => {
@@ -293,7 +293,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' })"`)
   })
 
   it('dynamic src integration can be opted-out explicit', async () => {
@@ -338,7 +338,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' }, )"`)
   })
 
   it('can re-use opt-in once it\'s loaded', async () => {
@@ -360,7 +360,7 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/widget/123.js' },  app_id: '123' }, )
+      "const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' }, )
       const instance2 = useScriptIntercom()"
     `)
   })
@@ -385,7 +385,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/jKysJQD_rnWtMaRpo62kJcIJ4PsW_O2f1NXNqksJbMk.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/assets/jKysJQD_rnWtMaRpo62kJcIJ4PsW_O2f1NXNqksJbMk.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
   })
 
   it('useScript broken #1', async () => {
@@ -414,7 +414,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });`,
     )
-    expect(code.includes('useScript(\'/_scripts/vFJ41_fzYQOTRPr3v6G1PkI0hc5tMy0HGrgFjhaJhOI.js\', {')).toBeTruthy()
+    expect(code.includes('useScript(\'/_scripts/assets/vFJ41_fzYQOTRPr3v6G1PkI0hc5tMy0HGrgFjhaJhOI.js\', {')).toBeTruthy()
   })
 
   it('uses baseURL without cdnURL', async () => {
@@ -425,12 +425,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       bundle: true,
     })`,
       {
-        assetsBaseURL: '/_scripts',
+        assetsBaseURL: '/_scripts/assets',
       },
     )
 
     // Without cdnURL configured, it should use baseURL
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
   })
 
   it('bundle: "force" works the same as bundle: true', async () => {
@@ -441,7 +441,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     })`,
 
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
   })
 
   it('registry script with scriptOptions.bundle: "force"', async () => {
@@ -469,7 +469,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/analytics.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/analytics.js' }, 
               id: 'GA_MEASUREMENT_ID',
               scriptOptions: {
                 bundle: 'force'
@@ -502,7 +502,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/gtag/js.js' }, 
               id: 'GA_MEASUREMENT_ID'
             }, )"
     `)
@@ -522,7 +522,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     )
 
     // Verify transformation still works with custom cache duration
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
   })
 
   describe('cache invalidation', () => {
@@ -626,7 +626,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 
       // Verify the script was fetched (not just cached)
       expect(fetch).toHaveBeenCalled()
-      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
     })
 
     it('should store bundle metadata with timestamp on download', async () => {
@@ -653,7 +653,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
 
-      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
 
       // Verify metadata was stored
       const metadataCall = mockBundleStorage.setItem.mock.calls.find(call =>
@@ -689,7 +689,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
 
-      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/beacon.min.js', )"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
 
       // Verify fetch was not called (used cache)
       expect(fetch).not.toHaveBeenCalled()
@@ -701,7 +701,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 
       // Verify the cached content was used (check both possible keys)
       const scriptEntry = renderedScript.get('https://static.cloudflareinsights.com/beacon.min.js')
-        || renderedScript.get('/_scripts/beacon.min.js')
+        || renderedScript.get('/_scripts/assets/beacon.min.js')
       expect(scriptEntry).toBeDefined()
       expect(scriptEntry?.content).toBe(cachedContent)
       expect(scriptEntry?.size).toBe(cachedContent.length / 1024)
@@ -735,7 +735,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' } })"`)
   })
 
   describe('configuration merging', () => {
@@ -773,7 +773,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' } })"`)
     })
 
     it('merges multiple properties from registry config', async () => {
@@ -814,7 +814,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' } })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' } })"`)
     })
 
     it('function arguments override merged registry config', async () => {
@@ -855,7 +855,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
       // Function args take precedence: id from function, debug and l from registry
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' },  id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' },  id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })"`)
     })
 
     it('works with empty registry config', async () => {
@@ -947,7 +947,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/gtag/js.js' } })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/gtag/js.js' } })"`)
     })
   })
 
@@ -984,7 +984,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/gtm.js.js' },  id: 'GTM-FUNCTION-ARG' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' },  id: 'GTM-FUNCTION-ARG' })"`)
   })
 
   describe('integrity', () => {
@@ -1269,7 +1269,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   },
 })`, { fallbackOnSrcOnBundleFail: true, scripts })
       expect(code).toMatchInlineSnapshot(`
-        "const instance = useScriptNpm({ scriptInput: { src: '/_scripts/U6Ua8p1giF.js' },
+        "const instance = useScriptNpm({ scriptInput: { src: '/_scripts/assets/U6Ua8p1giF.js' },
           packageName: 'js-confetti',
           file: 'dist/js-confetti.browser.js',
           version: '0.12.0',

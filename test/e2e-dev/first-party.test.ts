@@ -585,7 +585,7 @@ describe('first-party privacy stripping', () => {
       }))
 
       // Should return JS content (or at least not 404)
-      if (typeof response === 'object' && 'error' in response && response.error) {
+      if (typeof response === 'object' && response && 'error' in response && response.error) {
         writeFileSync(join(fixtureDir, 'proxy-test.json'), JSON.stringify(response, null, 2))
         console.warn('[test] Proxy error:', response)
       }
@@ -612,8 +612,8 @@ describe('first-party privacy stripping', () => {
       // Wait for script to load
       await page.waitForTimeout(5000)
 
-      // Verify bundled script is loaded from local /_scripts path
-      const localScript = scriptUrls.find(u => u.includes('/_scripts/'))
+      // Verify bundled script is loaded from local /_scripts/assets path
+      const localScript = scriptUrls.find(u => u.includes('/_scripts/assets/'))
       expect(localScript).toBeDefined()
     }, 30000)
 
@@ -691,7 +691,7 @@ describe('first-party privacy stripping', () => {
      * runtime API calls (collect, track, beacon) through /_proxy/ endpoints.
      * Tests for these providers strictly assert proxy requests + captures.
      *
-     * Providers NOT in this set only have script bundling (loaded from /_scripts/)
+     * Providers NOT in this set only have script bundling (loaded from /_scripts/assets/)
      * but their runtime calls bypass /_proxy/ and go directly to third-party domains.
      * Tests for those providers document the external requests but don't fail.
      */
@@ -854,7 +854,7 @@ describe('first-party privacy stripping', () => {
     it('hotjar', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('hotjar', '/hotjar')
       // Hotjar SDK doesn't fire HTTP events in headless — WebSocket-only session data.
-      // Script loads from /_scripts/ (verified in bundle coverage test below).
+      // Script loads from /_scripts/assets/ (verified in bundle coverage test below).
       if (captures.length > 0) {
         await assertCaptures('hotjar', captures, rawCaptures, proxyRequests, externalRequests, {
           proxyPrefix: '/_proxy/hotjar',
@@ -1143,7 +1143,7 @@ describe('first-party privacy stripping', () => {
       { name: 'posthog', path: '/posthog' },
     ]
 
-    it.each(allProviders)('$name loads bundled script from /_scripts/', async ({ name, path: pagePath }) => {
+    it.each(allProviders)('$name loads bundled script from /_scripts/assets/', async ({ name, path: pagePath }) => {
       const browser = await getBrowser()
       const page = await browser.newPage()
       page.setDefaultTimeout(5000)
@@ -1164,7 +1164,7 @@ describe('first-party privacy stripping', () => {
         const reqUrl = response.url()
         const status = response.status()
         const pathname = new URL(reqUrl).pathname
-        if (pathname.startsWith('/_scripts/'))
+        if (pathname.startsWith('/_scripts/assets/'))
           scriptRequests.push({ url: pathname, status })
         if (pathname.startsWith('/_proxy/'))
           proxyRequests.push({ url: pathname, status })
@@ -1178,7 +1178,7 @@ describe('first-party privacy stripping', () => {
       await page.waitForTimeout(2000)
       await page.close()
 
-      // Every provider should load at least one bundled script from /_scripts/
+      // Every provider should load at least one bundled script from /_scripts/assets/
       const okScripts = scriptRequests.filter(r => r.status < 400)
       expect(
         okScripts.length,

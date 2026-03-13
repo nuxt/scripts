@@ -1,57 +1,10 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { $fetch } from 'ofetch'
+import { createImageProxyHandler } from './utils/image-proxy'
 
-const AMP_RE = /&amp;/g
-
-export default defineEventHandler(async (event) => {
-  const query = getQuery(event)
-  // Decode HTML entities (&amp; -> &) that may be in the URL
-  const url = (query.url as string)?.replace(AMP_RE, '&')
-
-  if (!url) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Asset URL is required',
-    })
-  }
-
-  // Parse and validate URL
-  let parsedUrl: URL
-  try {
-    parsedUrl = new URL(url)
-  }
-  catch {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid asset URL',
-    })
-  }
-
-  // Only allow Instagram static CDN
-  if (parsedUrl.hostname !== 'static.cdninstagram.com') {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'Domain not allowed',
-    })
-  }
-
-  const response = await $fetch.raw(url, {
-    headers: {
-      'Accept': '*/*',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-    },
-  }).catch((error: any) => {
-    throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to fetch asset',
-    })
-  })
-
-  const contentType = response.headers.get('content-type') || 'application/octet-stream'
-
-  // Cache assets for 1 day (they're versioned)
-  setHeader(event, 'Content-Type', contentType)
-  setHeader(event, 'Cache-Control', 'public, max-age=86400, s-maxage=86400')
-
-  return response._data
+export default createImageProxyHandler({
+  allowedDomains: ['static.cdninstagram.com'],
+  accept: '*/*',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  cacheMaxAge: 86400,
+  contentType: 'application/octet-stream',
+  decodeAmpersands: true,
 })

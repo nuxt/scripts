@@ -33,6 +33,22 @@ to install the `@types/google.maps` dependency.
 pnpm add -D @types/google.maps
 ```
 
+## Setup
+
+To use the Google Maps component with server-side features (static map proxy, geocode proxy), enable it in your `nuxt.config`:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleMaps: true,
+    },
+  },
+})
+```
+
+This registers server API routes for the static maps image proxy (`/_scripts/proxy/google-static-maps`) and geocode proxy (`/_scripts/proxy/google-maps-geocode`), keeping your API key server-side.
+
 ## [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"}
 
 The [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"} component is a wrapper around the [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"} composable. It provides a simple way to embed Google Maps in your Nuxt app.

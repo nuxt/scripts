@@ -20,6 +20,22 @@ Nuxt Scripts provides a [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="
 ::script-types
 ::
 
+## Setup
+
+To use the X embed component, you must enable it in your `nuxt.config`:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      xEmbed: true,
+    },
+  },
+})
+```
+
+This registers the required server API routes (`/_scripts/embed/x` and `/_scripts/embed/x-image`) that handle fetching tweet data and proxying images.
+
 ## [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"}
 
 The [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component is a headless component that:
@@ -161,7 +177,7 @@ interface SlotProps {
 ## How It Works
 
 1. **Server-side fetch**: Tweet data is fetched from `cdn.syndication.twimg.com` during SSR
-2. **Image proxying**: All images are rewritten to proxy through `/api/_scripts/x-embed-image`
+2. **Image proxying**: All images are rewritten to proxy through `/_scripts/embed/x-image`
 3. **Caching**: Responses are cached for 10 minutes at the server level
 4. **No client-side API calls**: The user's browser never contacts X directly
 

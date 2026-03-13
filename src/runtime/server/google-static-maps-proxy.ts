@@ -1,5 +1,5 @@
 import { useRuntimeConfig } from '#imports'
-import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
 
@@ -22,19 +22,6 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       statusMessage: 'Google Maps API key not configured for proxy',
     })
-  }
-
-  // Validate referer to prevent external abuse
-  const referer = getHeader(event, 'referer')
-  const host = getHeader(event, 'host')
-  if (referer && host) {
-    const refererUrl = new URL(referer).host
-    if (refererUrl !== host) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Invalid referer',
-      })
-    }
   }
 
   const query = getQuery(event)

@@ -1,28 +1,11 @@
 import { useRuntimeConfig } from '#imports'
-import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.gravatarProxy
-
-  // Validate referer to prevent external abuse
-  const referer = getHeader(event, 'referer')
-  const host = getHeader(event, 'host')
-  if (referer && host) {
-    let refererHost: string | undefined
-    try {
-      refererHost = new URL(referer).host
-    }
-    catch {}
-    if (refererHost && refererHost !== host) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Invalid referer',
-      })
-    }
-  }
 
   const query = getQuery(event)
   let hash = query.hash as string | undefined

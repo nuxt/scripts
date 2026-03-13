@@ -241,7 +241,7 @@ async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMar
   return p
 }
 
-const queryToLatLngCache = new Map<string, google.maps.LatLng>()
+const queryToLatLngCache = new Map<string, google.maps.LatLng | google.maps.LatLngLiteral>()
 
 async function resolveQueryToLatLang(query: string) {
   if (query && typeof query === 'object')
@@ -249,7 +249,23 @@ async function resolveQueryToLatLang(query: string) {
   if (queryToLatLngCache.has(query)) {
     return Promise.resolve(queryToLatLngCache.get(query))
   }
-  // only if the query is a string we need to do a lookup
+
+  // Use geocode proxy if available (avoids loading Places library client-side)
+  const endpoints = (runtimeConfig.public['nuxt-scripts'] as any)?.endpoints
+  if (endpoints?.googleMaps) {
+    const data = await $fetch<{ results: Array<{ geometry: { location: { lat: number, lng: number } } }>, status: string }>('/_scripts/proxy/google-maps-geocode', {
+      params: { address: query },
+    })
+    if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
+      const loc = data.results[0].geometry.location
+      const latLng = { lat: loc.lat, lng: loc.lng }
+      queryToLatLngCache.set(query, latLng)
+      return latLng
+    }
+    throw new Error(`No location found for ${query}`)
+  }
+
+  // Fallback: use Places API client-side
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<google.maps.LatLng>(async (resolve, reject) => {
     if (!mapsApi.value) {
@@ -478,7 +494,7 @@ const placeholder = computed(() => {
   })
 
   const baseUrl = proxyConfig?.enabled
-    ? '/_scripts/google-static-maps-proxy'
+    ? '/_scripts/proxy/google-static-maps'
     : 'https://maps.googleapis.com/maps/api/staticmap'
 
   return withQuery(baseUrl, placeholderOptions as QueryObject)

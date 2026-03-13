@@ -11,7 +11,7 @@ import type { UseScriptInput } from '@unhead/vue'
 import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import { parse } from '#nuxt-scripts-validator'
 import { defu } from 'defu'
-import { useRuntimeConfig } from 'nuxt/app'
+import { createError, useRuntimeConfig } from 'nuxt/app'
 import { parseQuery, parseURL, withQuery } from 'ufo'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
@@ -45,6 +45,16 @@ type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptIn
 
 export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
+}
+
+export function requireRegistryEndpoint(componentName: string, registryKey: string): void {
+  const endpoints = (useRuntimeConfig().public['nuxt-scripts'] as any)?.endpoints
+  if (!endpoints?.[registryKey]) {
+    throw createError({
+      message: `${componentName} requires \`scripts.registry.${registryKey}\` to be enabled in nuxt.config`,
+      fatal: import.meta.dev,
+    })
+  }
 }
 
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {

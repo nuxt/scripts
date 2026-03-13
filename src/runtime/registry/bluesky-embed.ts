@@ -82,13 +82,13 @@ export function extractBlueskyPostId(url: string): { actor: string, rkey: string
   const match = url.match(BSKY_POST_URL_RE)
   if (!match)
     return undefined
-  return { actor: match[1], rkey: match[2] }
+  return { actor: match[1]!, rkey: match[2]! }
 }
 
 /**
  * Proxy a Bluesky image URL through the server
  */
-export function proxyBlueskyImageUrl(url: string, proxyEndpoint = '/api/_scripts/bluesky-embed-image'): string {
+export function proxyBlueskyImageUrl(url: string, proxyEndpoint = '/_scripts/embed/bluesky-image'): string {
   const separator = proxyEndpoint.includes('?') ? '&' : '?'
   return `${proxyEndpoint}${separator}url=${encodeURIComponent(url)}`
 }

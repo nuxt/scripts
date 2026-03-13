@@ -96,7 +96,7 @@ function deriveMetaKey(importName?: string, label?: string): string {
 export async function getScriptStats(): Promise<ScriptStats[]> {
   const { registry } = await import('./registry')
   const entries = await registry()
-  const proxyConfigs = getAllProxyConfigs('/_scripts')
+  const proxyConfigs = getAllProxyConfigs('/_scripts/assets')
   const sizes = scriptSizes as Record<string, { totalTransferKb: number, totalDecodedKb: number, loadTimeMs: number, scripts: ScriptSizeDetail[] }>
 
   return entries.map((entry) => {

@@ -18,11 +18,11 @@ const MULTI_SPACE_RE = /\s+/g
 const SRCSET_SPLIT_RE = /\s+/
 
 export function proxyImageUrl(url: string): string {
-  return `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
+  return `/_scripts/embed/instagram-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
 
 export function proxyAssetUrl(url: string): string {
-  return `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
+  return `/_scripts/embed/instagram-asset?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
 
 export function rewriteUrl(url: string): string {
@@ -307,7 +307,7 @@ export default defineEventHandler(async (event) => {
   let combinedCss = cssContents.join('\n')
   combinedCss = combinedCss.replace(
     RSRC_RE,
-    (_m, path) => `url(/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
+    (_m, path) => `url(/_scripts/embed/instagram-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
   )
   combinedCss = rewriteUrlsInText(combinedCss)
   combinedCss = scopeCss(combinedCss, '.instagram-embed-root')

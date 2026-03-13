@@ -50,7 +50,7 @@ export type XEmbedInput = RegistryScriptInput<typeof XEmbedOptions, false, false
 /**
  * Proxy an X/Twitter image URL through the server
  */
-export function proxyXImageUrl(url: string, proxyEndpoint = '/api/_scripts/x-embed-image'): string {
+export function proxyXImageUrl(url: string, proxyEndpoint = '/_scripts/embed/x-image'): string {
   const separator = proxyEndpoint.includes('?') ? '&' : '?'
   return `${proxyEndpoint}${separator}url=${encodeURIComponent(url)}`
 }

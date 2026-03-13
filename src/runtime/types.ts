@@ -237,6 +237,12 @@ export type RegistryScriptInput<
       scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
     } : never)
 
+export interface RegistryScriptServerHandler {
+  route: string
+  handler: string
+  middleware?: boolean
+}
+
 export interface RegistryScript {
   /**
    * The config key used in `scripts.registry` in nuxt.config (e.g., 'googleAnalytics', 'plausibleAnalytics').
@@ -260,6 +266,10 @@ export interface RegistryScript {
   src?: string | false
   category?: string
   logo?: string | { light: string, dark: string }
+  /**
+   * Server handlers (routes/middleware) to register when this script is enabled via registry config.
+   */
+  serverHandlers?: RegistryScriptServerHandler[]
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false

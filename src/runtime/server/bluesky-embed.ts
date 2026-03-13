@@ -41,13 +41,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const [, actor, rkey] = match
+  const [, actor, rkey] = match as RegExpMatchArray
 
   // Resolve handle to DID if needed
-  let did = actor
-  if (!actor.startsWith('did:')) {
+  let did = actor!
+  if (!actor!.startsWith('did:')) {
     const profile = await $fetch<{ did: string }>(
-      `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`,
+      `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor!)}`,
     ).catch((error: any) => {
       throw createError({
         statusCode: error.statusCode || 500,

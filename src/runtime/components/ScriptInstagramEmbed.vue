@@ -3,6 +3,7 @@ import type { HTMLAttributes } from 'vue'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
 import { extractInstagramShortcode } from '../registry/instagram-embed'
+import { requireRegistryEndpoint } from '../utils'
 
 const props = withDefaults(defineProps<{
   /**
@@ -17,7 +18,7 @@ const props = withDefaults(defineProps<{
   captions?: boolean
   /**
    * Custom API endpoint for fetching embed HTML
-   * @default '/api/_scripts/instagram-embed'
+   * @default '/_scripts/embed/instagram'
    */
   apiEndpoint?: string
   /**
@@ -26,8 +27,10 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes
 }>(), {
   captions: true,
-  apiEndpoint: '/api/_scripts/instagram-embed',
+  apiEndpoint: '/_scripts/embed/instagram',
 })
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/instagram')
+  requireRegistryEndpoint('ScriptInstagramEmbed', 'instagramEmbed')
 
 const shortcode = computed(() => extractInstagramShortcode(props.postUrl))
 

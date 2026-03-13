@@ -8,12 +8,12 @@ export const BlueskyEmbedOptions = object({
   postUrl: string(),
   /**
    * Custom API endpoint for fetching post data.
-   * @default '/api/_scripts/bluesky-embed'
+   * @default '/_scripts/embed/bluesky'
    */
   apiEndpoint: optional(string()),
   /**
    * Custom image proxy endpoint.
-   * @default '/api/_scripts/bluesky-embed-image'
+   * @default '/_scripts/embed/bluesky-image'
    */
   imageProxyEndpoint: optional(string()),
 })
@@ -481,7 +481,7 @@ export const InstagramEmbedOptions = object({
   captions: optional(boolean()),
   /**
    * Custom API endpoint for fetching embed HTML.
-   * @default '/api/_scripts/instagram-embed'
+   * @default '/_scripts/embed/instagram'
    */
   apiEndpoint: optional(string()),
 })
@@ -893,12 +893,12 @@ export const XEmbedOptions = object({
   tweetId: string(),
   /**
    * Optional: Custom API endpoint for fetching tweet data.
-   * @default '/api/_scripts/x-embed'
+   * @default '/_scripts/embed/x'
    */
   apiEndpoint: optional(string()),
   /**
    * Optional: Custom image proxy endpoint.
-   * @default '/api/_scripts/x-embed-image'
+   * @default '/_scripts/embed/x-image'
    */
   imageProxyEndpoint: optional(string()),
 })
