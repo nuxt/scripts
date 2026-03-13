@@ -1,7 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
-import { validateSameOrigin } from './utils/same-origin'
 
 export const RSRC_RE = /url\(\/rsrc\.php([^)]+)\)/g
 export const AMP_RE = /&amp;/g
@@ -187,8 +186,6 @@ function extractBlock(css: string, openBrace: number): { content: string, end: n
 }
 
 export default defineEventHandler(async (event) => {
-  validateSameOrigin(event)
-
   const query = getQuery(event)
   const postUrl = query.url as string
   const captions = query.captions === 'true'

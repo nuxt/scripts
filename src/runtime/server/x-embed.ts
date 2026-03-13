@@ -1,6 +1,5 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
-import { validateSameOrigin } from './utils/same-origin'
 
 interface TweetData {
   id_str: string
@@ -47,8 +46,6 @@ interface TweetData {
 const TWEET_ID_RE = /^\d+$/
 
 export default defineEventHandler(async (event) => {
-  validateSameOrigin(event)
-
   const query = getQuery(event)
   const tweetId = query.id as string
 

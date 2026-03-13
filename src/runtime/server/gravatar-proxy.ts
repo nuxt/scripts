@@ -2,11 +2,8 @@ import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
-import { validateSameOrigin } from './utils/same-origin'
 
 export default defineEventHandler(async (event) => {
-  validateSameOrigin(event)
-
   const runtimeConfig = useRuntimeConfig()
   const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.gravatarProxy
 

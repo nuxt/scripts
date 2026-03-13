@@ -1,6 +1,5 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
-import { validateSameOrigin } from './utils/same-origin'
 
 interface PostThreadResponse {
   thread: {
@@ -24,8 +23,6 @@ interface PostThreadResponse {
 const BSKY_POST_URL_RE = /^https:\/\/bsky\.app\/profile\/([^/]+)\/post\/([^/?]+)$/
 
 export default defineEventHandler(async (event) => {
-  validateSameOrigin(event)
-
   const query = getQuery(event)
   const postUrl = query.url as string
 

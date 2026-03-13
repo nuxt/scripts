@@ -1,6 +1,5 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
-import { validateSameOrigin } from './same-origin'
 
 const AMP_RE = /&amp;/g
 
@@ -27,8 +26,6 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
   } = config
 
   return defineEventHandler(async (event) => {
-    validateSameOrigin(event)
-
     const query = getQuery(event)
     let url = query.url as string
 

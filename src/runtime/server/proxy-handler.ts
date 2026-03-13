@@ -11,7 +11,6 @@ import {
   SENSITIVE_HEADERS,
   stripPayloadFingerprinting,
 } from './utils/privacy'
-import { validateSameOrigin } from './utils/same-origin'
 
 interface ProxyConfig {
   routes: Record<string, string>
@@ -63,8 +62,6 @@ function stripQueryFingerprinting(
  * Routes requests to third-party analytics while protecting user privacy.
  */
 export default defineEventHandler(async (event) => {
-  validateSameOrigin(event)
-
   const config = useRuntimeConfig()
   const proxyConfig = config['nuxt-scripts-proxy'] as unknown as ProxyConfig | undefined
 
