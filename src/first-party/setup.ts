@@ -77,16 +77,17 @@ export function finalizeFirstParty(opts: {
   firstParty: FirstPartyConfig
   interceptRules: InterceptRule[]
   registry: NuxtConfigScriptRegistry | undefined
+  registryScripts: RegistryScript[]
   registryScriptsWithImport: (RegistryScript & { import: NonNullable<RegistryScript['import']> })[]
   nuxtOptions: { dev: boolean, runtimeConfig: Record<string, any> }
 }): void {
-  const { firstParty, interceptRules, registryScriptsWithImport, nuxtOptions } = opts
+  const { firstParty, interceptRules, registryScripts, registryScriptsWithImport, nuxtOptions } = opts
   const proxyConfigs = getAllProxyConfigs(firstParty.collectPrefix)
   const registryKeys = Object.keys(opts.registry || {})
 
-  // Build lookup map: registryKey → RegistryScript (explicit key preferred, fallback to import name convention)
-  const scriptByKey = new Map<string, (typeof registryScriptsWithImport)[number]>()
-  for (const script of registryScriptsWithImport) {
+  // Build lookup map: registryKey → RegistryScript (all scripts, not just those with imports)
+  const scriptByKey = new Map<string, RegistryScript>()
+  for (const script of registryScripts) {
     if (script.registryKey) {
       scriptByKey.set(script.registryKey, script)
     }

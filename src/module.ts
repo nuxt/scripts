@@ -516,6 +516,7 @@ export default defineNuxtModule<ModuleOptions>({
           firstParty,
           interceptRules,
           registry: config.registry,
+          registryScripts,
           registryScriptsWithImport,
           nuxtOptions: nuxt.options,
         })
