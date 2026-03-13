@@ -1143,7 +1143,7 @@ describe('first-party privacy stripping', () => {
       { name: 'posthog', path: '/posthog' },
     ]
 
-    it.each(allProviders)('$name loads bundled script from /_scripts/', async ({ name, path: pagePath }) => {
+    it.each(allProviders)('$name loads bundled script from /_scripts/assets/', async ({ name, path: pagePath }) => {
       const browser = await getBrowser()
       const page = await browser.newPage()
       page.setDefaultTimeout(5000)
@@ -1164,7 +1164,7 @@ describe('first-party privacy stripping', () => {
         const reqUrl = response.url()
         const status = response.status()
         const pathname = new URL(reqUrl).pathname
-        if (pathname.startsWith('/_scripts/'))
+        if (pathname.startsWith('/_scripts/assets/'))
           scriptRequests.push({ url: pathname, status })
         if (pathname.startsWith('/_proxy/'))
           proxyRequests.push({ url: pathname, status })
@@ -1178,7 +1178,7 @@ describe('first-party privacy stripping', () => {
       await page.waitForTimeout(2000)
       await page.close()
 
-      // Every provider should load at least one bundled script from /_scripts/
+      // Every provider should load at least one bundled script from /_scripts/assets/
       const okScripts = scriptRequests.filter(r => r.status < 400)
       expect(
         okScripts.length,
