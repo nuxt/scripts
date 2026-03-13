@@ -535,4 +535,46 @@ describe('social-embeds', () => {
     })
     expect(hasProxiedImages).toBe(true)
   })
+
+  it('bluesky embed fetches post data server-side and renders', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/bluesky-embed')
+
+    // Wait for content to load
+    await page.waitForSelector('#bluesky-content', { timeout: 10000 })
+
+    // Verify post data was fetched and rendered
+    const displayName = await page.$eval('#display-name', el => el.textContent?.trim())
+    const handle = await page.$eval('#handle', el => el.textContent?.trim())
+    const text = await page.$eval('#text', el => el.textContent?.trim())
+    const postUrl = await page.$eval('#post-url', el => el.getAttribute('href'))
+
+    expect(displayName).toBeTruthy()
+    expect(handle).toBeTruthy()
+    expect(text).toBeTruthy()
+    expect(postUrl).toContain('bsky.app')
+  })
+
+  it('bluesky embed proxies images through server', {
+    timeout: 15000,
+  }, async () => {
+    const { page } = await createPage('/bluesky-embed')
+
+    await page.waitForSelector('#bluesky-content', { timeout: 10000 })
+
+    // Check avatar uses the proxy endpoint
+    const avatarProxied = await page.$eval('#avatar', el => el.getAttribute('src')?.includes('/api/_scripts/bluesky-embed-image'))
+    expect(avatarProxied).toBe(true)
+
+    // Check if there are any images and they use the proxy endpoint
+    const hasProxiedImages = await page.evaluate(() => {
+      const images = document.querySelector('#images')
+      if (!images)
+        return true // No images is OK, some posts don't have them
+      const imgs = images.querySelectorAll('img')
+      return [...imgs].every(img => img.src.includes('/api/_scripts/bluesky-embed-image'))
+    })
+    expect(hasProxiedImages).toBe(true)
+  })
 })

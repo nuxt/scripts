@@ -5,6 +5,7 @@ import type {
 import type { Import } from 'unimport'
 import type { InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import type { ComputedRef, Ref } from 'vue'
+import type { BlueskyEmbedInput } from './registry/bluesky-embed'
 import type { ClarityInput } from './registry/clarity'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
 import type { CrispInput } from './registry/crisp'
@@ -160,6 +161,7 @@ export interface NuxtDevToolsScriptInstance {
 }
 
 export interface ScriptRegistry {
+  blueskyEmbed?: BlueskyEmbedInput
   crisp?: CrispInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput

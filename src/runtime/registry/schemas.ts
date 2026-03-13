@@ -1,5 +1,23 @@
 import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from '#nuxt-scripts-validator'
 
+export const BlueskyEmbedOptions = object({
+  /**
+   * The Bluesky post URL to embed.
+   * @example 'https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a'
+   */
+  postUrl: string(),
+  /**
+   * Custom API endpoint for fetching post data.
+   * @default '/api/_scripts/bluesky-embed'
+   */
+  apiEndpoint: optional(string()),
+  /**
+   * Custom image proxy endpoint.
+   * @default '/api/_scripts/bluesky-embed-image'
+   */
+  imageProxyEndpoint: optional(string()),
+})
+
 export const ClarityOptions = object({
   /**
    * The Clarity token.

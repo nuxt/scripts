@@ -597,6 +597,16 @@ export default defineNuxtModule<ModuleOptions>({
       handler: await resolvePath('./runtime/server/instagram-embed-asset'),
     })
 
+    // Add Bluesky embed proxy handlers
+    addServerHandler({
+      route: '/api/_scripts/bluesky-embed',
+      handler: await resolvePath('./runtime/server/bluesky-embed'),
+    })
+    addServerHandler({
+      route: '/api/_scripts/bluesky-embed-image',
+      handler: await resolvePath('./runtime/server/bluesky-embed-image'),
+    })
+
     if (nuxt.options.dev) {
       setupDevToolsUI(config, resolvePath)
     }

@@ -1,4 +1,16 @@
 {
+  "bluesky-embed": [
+    {
+      "name": "BlueskyEmbedOptions",
+      "kind": "const",
+      "code": "export const BlueskyEmbedOptions = object({\n  /**\n   * The Bluesky post URL to embed.\n   * @example 'https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a'\n   */\n  postUrl: string(),\n  /**\n   * Custom API endpoint for fetching post data.\n   * @default '/api/_scripts/bluesky-embed'\n   */\n  apiEndpoint: optional(string()),\n  /**\n   * Custom image proxy endpoint.\n   * @default '/api/_scripts/bluesky-embed-image'\n   */\n  imageProxyEndpoint: optional(string()),\n})"
+    },
+    {
+      "name": "BlueskyEmbedPostData",
+      "kind": "interface",
+      "code": "export interface BlueskyEmbedPostData {\n  uri: string\n  cid: string\n  author: {\n    did: string\n    handle: string\n    displayName: string\n    avatar: string\n    labels: Array<{ val: string }>\n    verification?: {\n      verifiedStatus: string\n    }\n  }\n  record: {\n    $type: string\n    createdAt: string\n    text: string\n    langs?: string[]\n    facets?: Array<{\n      features: Array<{\n        $type: string\n        uri?: string\n        did?: string\n        tag?: string\n      }>\n      index: {\n        byteStart: number\n        byteEnd: number\n      }\n    }>\n    embed?: {\n      $type: string\n      images?: Array<{\n        alt: string\n        image: { ref: { $link: string }, mimeType: string, size: number }\n        aspectRatio?: { width: number, height: number }\n      }>\n      external?: {\n        uri: string\n        title: string\n        description: string\n        thumb?: { ref: { $link: string }, mimeType: string, size: number }\n      }\n    }\n  }\n  embed?: {\n    $type: string\n    images?: Array<{\n      thumb: string\n      fullsize: string\n      alt: string\n      aspectRatio?: { width: number, height: number }\n    }>\n    external?: {\n      uri: string\n      title: string\n      description: string\n      thumb?: string\n    }\n  }\n  likeCount: number\n  repostCount: number\n  replyCount: number\n  quoteCount: number\n  indexedAt: string\n  labels: Array<{ val: string }>\n}"
+    }
+  ],
   "clarity": [
     {
       "name": "ClarityOptions",
