@@ -585,7 +585,7 @@ describe('first-party privacy stripping', () => {
       }))
 
       // Should return JS content (or at least not 404)
-      if (typeof response === 'object' && 'error' in response && response.error) {
+      if (typeof response === 'object' && response && 'error' in response && response.error) {
         writeFileSync(join(fixtureDir, 'proxy-test.json'), JSON.stringify(response, null, 2))
         console.warn('[test] Proxy error:', response)
       }

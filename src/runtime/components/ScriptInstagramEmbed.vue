@@ -29,7 +29,8 @@ const props = withDefaults(defineProps<{
   captions: true,
   apiEndpoint: '/_scripts/instagram-embed',
 })
-requireRegistryEndpoint('ScriptInstagramEmbed', 'instagramEmbed')
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/instagram-embed')
+  requireRegistryEndpoint('ScriptInstagramEmbed', 'instagramEmbed')
 
 const shortcode = computed(() => extractInstagramShortcode(props.postUrl))
 

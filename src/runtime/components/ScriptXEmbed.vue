@@ -29,7 +29,8 @@ const props = withDefaults(defineProps<{
   apiEndpoint: '/_scripts/x-embed',
   imageProxyEndpoint: '/_scripts/x-embed-image',
 })
-requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/x-embed')
+  requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
 
 const cacheKey = computed(() => `x-embed-${props.tweetId}`)
 

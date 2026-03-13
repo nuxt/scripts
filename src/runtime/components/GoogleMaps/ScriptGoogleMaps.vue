@@ -241,7 +241,7 @@ async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMar
   return p
 }
 
-const queryToLatLngCache = new Map<string, google.maps.LatLng>()
+const queryToLatLngCache = new Map<string, google.maps.LatLng | google.maps.LatLngLiteral>()
 
 async function resolveQueryToLatLang(query: string) {
   if (query && typeof query === 'object')
@@ -259,7 +259,7 @@ async function resolveQueryToLatLang(query: string) {
     if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
       const loc = data.results[0].geometry.location
       const latLng = { lat: loc.lat, lng: loc.lng }
-      queryToLatLngCache.set(query, latLng as any)
+      queryToLatLngCache.set(query, latLng)
       return latLng
     }
     throw new Error(`No location found for ${query}`)

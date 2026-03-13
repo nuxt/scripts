@@ -78,6 +78,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     const response = await $fetch.raw(url, {
       timeout: 5000,
       redirect: followRedirects ? 'follow' : 'manual',
+      ignoreResponseError: !followRedirects,
       headers,
     }).catch((error: any) => {
       throw createError({

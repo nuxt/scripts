@@ -30,7 +30,8 @@ const props = withDefaults(defineProps<{
   apiEndpoint: '/_scripts/bluesky-embed',
   imageProxyEndpoint: '/_scripts/bluesky-embed-image',
 })
-requireRegistryEndpoint('ScriptBlueskyEmbed', 'blueskyEmbed')
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/bluesky-embed')
+  requireRegistryEndpoint('ScriptBlueskyEmbed', 'blueskyEmbed')
 
 const postId = computed(() => extractBlueskyPostId(props.postUrl))
 const cacheKey = computed(() => `bluesky-embed-${postId.value?.actor}-${postId.value?.rkey}`)
