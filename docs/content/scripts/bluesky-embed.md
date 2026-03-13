@@ -34,7 +34,7 @@ export default defineNuxtConfig({
 })
 ```
 
-This registers the required server API routes (`/_scripts/bluesky-embed` and `/_scripts/bluesky-embed-image`) that handle fetching post data and proxying images.
+This registers the required server API routes (`/_scripts/embed/bluesky` and `/_scripts/embed/bluesky-image`) that handle fetching post data and proxying images.
 
 ## [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"}
 
@@ -269,7 +269,7 @@ interface SlotProps {
 
 1. **Server-side fetch**: The server fetches post data from `public.api.bsky.app` (AT Protocol) during SSR
 2. **Handle resolution**: The server resolves handles to DIDs for reliable post lookup
-3. **Image proxying**: The server rewrites all images to proxy through `/_scripts/bluesky-embed-image`
+3. **Image proxying**: The server rewrites all images to proxy through `/_scripts/embed/bluesky-image`
 4. **Rich text**: The component converts Bluesky facets (links, mentions, hashtags) to HTML
 5. **Caching**: The server caches responses for 10 minutes
 6. **No client-side API calls**: The user's browser never contacts Bluesky directly

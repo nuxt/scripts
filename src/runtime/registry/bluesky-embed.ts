@@ -88,7 +88,7 @@ export function extractBlueskyPostId(url: string): { actor: string, rkey: string
 /**
  * Proxy a Bluesky image URL through the server
  */
-export function proxyBlueskyImageUrl(url: string, proxyEndpoint = '/_scripts/bluesky-embed-image'): string {
+export function proxyBlueskyImageUrl(url: string, proxyEndpoint = '/_scripts/embed/bluesky-image'): string {
   const separator = proxyEndpoint.includes('?') ? '&' : '?'
   return `${proxyEndpoint}${separator}url=${encodeURIComponent(url)}`
 }

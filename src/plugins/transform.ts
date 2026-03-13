@@ -87,7 +87,7 @@ export interface AssetBundlerTransformerOptions {
   renderedScript?: Map<string, RenderedScriptMeta | Error>
 }
 
-function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts'): { url: string, filename?: string } {
+function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts/assets'): { url: string, filename?: string } {
   if (hasProtocol(src, { acceptRelative: true })) {
     src = src.replace(PROTOCOL_RELATIVE_RE, 'https://')
     const url = parseURL(src)

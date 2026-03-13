@@ -253,7 +253,7 @@ async function resolveQueryToLatLang(query: string) {
   // Use geocode proxy if available (avoids loading Places library client-side)
   const endpoints = (runtimeConfig.public['nuxt-scripts'] as any)?.endpoints
   if (endpoints?.googleMaps) {
-    const data = await $fetch<{ results: Array<{ geometry: { location: { lat: number, lng: number } } }>, status: string }>('/_scripts/google-maps-geocode-proxy', {
+    const data = await $fetch<{ results: Array<{ geometry: { location: { lat: number, lng: number } } }>, status: string }>('/_scripts/proxy/google-maps-geocode', {
       params: { address: query },
     })
     if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
@@ -494,7 +494,7 @@ const placeholder = computed(() => {
   })
 
   const baseUrl = proxyConfig?.enabled
-    ? '/_scripts/google-static-maps-proxy'
+    ? '/_scripts/proxy/google-static-maps'
     : 'https://maps.googleapis.com/maps/api/staticmap'
 
   return withQuery(baseUrl, placeholderOptions as QueryObject)

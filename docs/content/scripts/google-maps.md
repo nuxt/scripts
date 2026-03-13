@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 })
 ```
 
-This registers server API routes for the static maps image proxy (`/_scripts/google-static-maps-proxy`) and geocode proxy (`/_scripts/google-maps-geocode-proxy`), keeping your API key server-side.
+This registers server API routes for the static maps image proxy (`/_scripts/proxy/google-static-maps`) and geocode proxy (`/_scripts/proxy/google-maps-geocode`), keeping your API key server-side.
 
 ## [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"}
 

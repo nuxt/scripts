@@ -34,7 +34,7 @@ export default defineNuxtConfig({
 })
 ```
 
-This registers the required server API routes (`/_scripts/x-embed` and `/_scripts/x-embed-image`) that handle fetching tweet data and proxying images.
+This registers the required server API routes (`/_scripts/embed/x` and `/_scripts/embed/x-image`) that handle fetching tweet data and proxying images.
 
 ## [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"}
 
@@ -177,7 +177,7 @@ interface SlotProps {
 ## How It Works
 
 1. **Server-side fetch**: Tweet data is fetched from `cdn.syndication.twimg.com` during SSR
-2. **Image proxying**: All images are rewritten to proxy through `/_scripts/x-embed-image`
+2. **Image proxying**: All images are rewritten to proxy through `/_scripts/embed/x-image`
 3. **Caching**: Responses are cached for 10 minutes at the server level
 4. **No client-side API calls**: The user's browser never contacts X directly
 

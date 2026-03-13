@@ -47,6 +47,10 @@ export default defineNuxtConfig({
     debug: true,
     registry: {
       googleSignIn: true,
+      blueskyEmbed: true,
+      xEmbed: true,
+      instagramEmbed: true,
+      googleMaps: true,
     },
   },
 })

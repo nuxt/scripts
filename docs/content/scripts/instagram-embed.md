@@ -34,7 +34,7 @@ export default defineNuxtConfig({
 })
 ```
 
-This registers the required server API routes (`/_scripts/instagram-embed`, `/_scripts/instagram-embed-image`, and `/_scripts/instagram-embed-asset`) that handle fetching embed HTML and proxying images/assets.
+This registers the required server API routes (`/_scripts/embed/instagram`, `/_scripts/embed/instagram-image`, and `/_scripts/embed/instagram-asset`) that handle fetching embed HTML and proxying images/assets.
 
 ## [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"}
 

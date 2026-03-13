@@ -14,12 +14,12 @@ const props = withDefaults(defineProps<{
   postUrl: string
   /**
    * Custom API endpoint for fetching post data
-   * @default '/_scripts/bluesky-embed'
+   * @default '/_scripts/embed/bluesky'
    */
   apiEndpoint?: string
   /**
    * Custom image proxy endpoint
-   * @default '/_scripts/bluesky-embed-image'
+   * @default '/_scripts/embed/bluesky-image'
    */
   imageProxyEndpoint?: string
   /**
@@ -27,10 +27,10 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes
 }>(), {
-  apiEndpoint: '/_scripts/bluesky-embed',
-  imageProxyEndpoint: '/_scripts/bluesky-embed-image',
+  apiEndpoint: '/_scripts/embed/bluesky',
+  imageProxyEndpoint: '/_scripts/embed/bluesky-image',
 })
-if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/bluesky-embed')
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/bluesky')
   requireRegistryEndpoint('ScriptBlueskyEmbed', 'blueskyEmbed')
 
 const postId = computed(() => extractBlueskyPostId(props.postUrl))

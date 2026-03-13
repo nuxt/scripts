@@ -24,7 +24,7 @@ export interface FirstPartyOptions {
    * Path prefix for serving bundled scripts.
    *
    * This is where the downloaded and rewritten script files are served from.
-   * @default '/_scripts'
+   * @default '/_scripts/assets'
    * @example '/_analytics'
    */
   prefix?: string

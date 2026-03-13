@@ -3,7 +3,7 @@
     {
       "name": "BlueskyEmbedOptions",
       "kind": "const",
-      "code": "export const BlueskyEmbedOptions = object({\n  /**\n   * The Bluesky post URL to embed.\n   * @example 'https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a'\n   */\n  postUrl: string(),\n  /**\n   * Custom API endpoint for fetching post data.\n   * @default '/_scripts/bluesky-embed'\n   */\n  apiEndpoint: optional(string()),\n  /**\n   * Custom image proxy endpoint.\n   * @default '/_scripts/bluesky-embed-image'\n   */\n  imageProxyEndpoint: optional(string()),\n})"
+      "code": "export const BlueskyEmbedOptions = object({\n  /**\n   * The Bluesky post URL to embed.\n   * @example 'https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a'\n   */\n  postUrl: string(),\n  /**\n   * Custom API endpoint for fetching post data.\n   * @default '/_scripts/embed/bluesky'\n   */\n  apiEndpoint: optional(string()),\n  /**\n   * Custom image proxy endpoint.\n   * @default '/_scripts/embed/bluesky-image'\n   */\n  imageProxyEndpoint: optional(string()),\n})"
     },
     {
       "name": "BlueskyEmbedPostData",
@@ -371,17 +371,17 @@
     {
       "name": "InstagramEmbedOptions",
       "kind": "const",
-      "code": "export const InstagramEmbedOptions = object({\n  /**\n   * The Instagram post URL to embed.\n   * @example 'https://www.instagram.com/p/C_XXXXXXXXX/'\n   * @see https://developers.facebook.com/docs/instagram/oembed/\n   */\n  postUrl: string(),\n  /**\n   * Whether to include captions in the embed.\n   * @default true\n   */\n  captions: optional(boolean()),\n  /**\n   * Custom API endpoint for fetching embed HTML.\n   * @default '/_scripts/instagram-embed'\n   */\n  apiEndpoint: optional(string()),\n})"
+      "code": "export const InstagramEmbedOptions = object({\n  /**\n   * The Instagram post URL to embed.\n   * @example 'https://www.instagram.com/p/C_XXXXXXXXX/'\n   * @see https://developers.facebook.com/docs/instagram/oembed/\n   */\n  postUrl: string(),\n  /**\n   * Whether to include captions in the embed.\n   * @default true\n   */\n  captions: optional(boolean()),\n  /**\n   * Custom API endpoint for fetching embed HTML.\n   * @default '/_scripts/embed/instagram'\n   */\n  apiEndpoint: optional(string()),\n})"
     },
     {
       "name": "ScriptInstagramEmbedProps",
       "kind": "interface",
-      "code": "interface ScriptInstagramEmbedProps {\n  /**\n   * The Instagram post URL to embed\n   * e.g., https://www.instagram.com/p/ABC123/\n   */\n  postUrl: string\n  /**\n   * Whether to include captions in the embed\n   * @default true\n   */\n  captions?: boolean\n  /**\n   * Custom API endpoint for fetching embed HTML\n   * @default '/_scripts/instagram-embed'\n   */\n  apiEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+      "code": "interface ScriptInstagramEmbedProps {\n  /**\n   * The Instagram post URL to embed\n   * e.g., https://www.instagram.com/p/ABC123/\n   */\n  postUrl: string\n  /**\n   * Whether to include captions in the embed\n   * @default true\n   */\n  captions?: boolean\n  /**\n   * Custom API endpoint for fetching embed HTML\n   * @default '/_scripts/embed/instagram'\n   */\n  apiEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
     },
     {
       "name": "ScriptInstagramEmbedDefaults",
       "kind": "const",
-      "code": "const ScriptInstagramEmbedDefaults = {\n  \"captions\": \"true\",\n  \"apiEndpoint\": \"'/_scripts/instagram-embed'\"\n}"
+      "code": "const ScriptInstagramEmbedDefaults = {\n  \"captions\": \"true\",\n  \"apiEndpoint\": \"'/_scripts/embed/instagram'\"\n}"
     }
   ],
   "intercom": [
@@ -772,7 +772,7 @@
     {
       "name": "XEmbedOptions",
       "kind": "const",
-      "code": "export const XEmbedOptions = object({\n  /**\n   * The tweet ID to embed.\n   * @example '1754336034228171055'\n   * @see https://developer.x.com/en/docs/twitter-for-websites/embedded-tweets/overview\n   */\n  tweetId: string(),\n  /**\n   * Optional: Custom API endpoint for fetching tweet data.\n   * @default '/_scripts/x-embed'\n   */\n  apiEndpoint: optional(string()),\n  /**\n   * Optional: Custom image proxy endpoint.\n   * @default '/_scripts/x-embed-image'\n   */\n  imageProxyEndpoint: optional(string()),\n})"
+      "code": "export const XEmbedOptions = object({\n  /**\n   * The tweet ID to embed.\n   * @example '1754336034228171055'\n   * @see https://developer.x.com/en/docs/twitter-for-websites/embedded-tweets/overview\n   */\n  tweetId: string(),\n  /**\n   * Optional: Custom API endpoint for fetching tweet data.\n   * @default '/_scripts/embed/x'\n   */\n  apiEndpoint: optional(string()),\n  /**\n   * Optional: Custom image proxy endpoint.\n   * @default '/_scripts/embed/x-image'\n   */\n  imageProxyEndpoint: optional(string()),\n})"
     },
     {
       "name": "XEmbedTweetData",
@@ -782,12 +782,12 @@
     {
       "name": "ScriptXEmbedProps",
       "kind": "interface",
-      "code": "interface ScriptXEmbedProps {\n  /**\n   * The tweet ID to embed\n   */\n  tweetId: string\n  /**\n   * Custom API endpoint for fetching tweet data\n   * @default '/_scripts/x-embed'\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   * @default '/_scripts/x-embed-image'\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+      "code": "interface ScriptXEmbedProps {\n  /**\n   * The tweet ID to embed\n   */\n  tweetId: string\n  /**\n   * Custom API endpoint for fetching tweet data\n   * @default '/_scripts/embed/x'\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   * @default '/_scripts/embed/x-image'\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
     },
     {
       "name": "ScriptXEmbedDefaults",
       "kind": "const",
-      "code": "const ScriptXEmbedDefaults = {\n  \"apiEndpoint\": \"'/_scripts/x-embed'\",\n  \"imageProxyEndpoint\": \"'/_scripts/x-embed-image'\"\n}"
+      "code": "const ScriptXEmbedDefaults = {\n  \"apiEndpoint\": \"'/_scripts/embed/x'\",\n  \"imageProxyEndpoint\": \"'/_scripts/embed/x-image'\"\n}"
     }
   ],
   "x-pixel": [

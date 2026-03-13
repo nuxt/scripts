@@ -13,12 +13,12 @@ const props = withDefaults(defineProps<{
   tweetId: string
   /**
    * Custom API endpoint for fetching tweet data
-   * @default '/_scripts/x-embed'
+   * @default '/_scripts/embed/x'
    */
   apiEndpoint?: string
   /**
    * Custom image proxy endpoint
-   * @default '/_scripts/x-embed-image'
+   * @default '/_scripts/embed/x-image'
    */
   imageProxyEndpoint?: string
   /**
@@ -26,10 +26,10 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes
 }>(), {
-  apiEndpoint: '/_scripts/x-embed',
-  imageProxyEndpoint: '/_scripts/x-embed-image',
+  apiEndpoint: '/_scripts/embed/x',
+  imageProxyEndpoint: '/_scripts/embed/x-image',
 })
-if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/x-embed')
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/x')
   requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
 
 const cacheKey = computed(() => `x-embed-${props.tweetId}`)
