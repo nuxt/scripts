@@ -10,6 +10,13 @@ export const LOOKASIDE_RE = /https:\/\/lookaside\.instagram\.com[^"'\s),]+/g
 export const INSTAGRAM_IMAGE_HOSTS = ['scontent.cdninstagram.com', 'lookaside.instagram.com']
 export const INSTAGRAM_ASSET_HOST = 'static.cdninstagram.com'
 
+const CHARSET_RE = /@charset\s[^;]+;/gi
+const IMPORT_RE = /@import\s[^;]+;/gi
+const WHITESPACE_RE = /\s/
+const AT_RULE_NAME_RE = /@([\w-]+)/
+const MULTI_SPACE_RE = /\s+/g
+const SRCSET_SPLIT_RE = /\s+/
+
 export function proxyImageUrl(url: string): string {
   return `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
@@ -55,8 +62,8 @@ function removeNode(node: any): void {
  */
 export function scopeCss(css: string, scopeSelector: string): string {
   // Remove @charset and @import at-rules
-  let result = css.replace(/@charset\s[^;]+;/gi, '')
-  result = result.replace(/@import\s[^;]+;/gi, '')
+  let result = css.replace(CHARSET_RE, '')
+  result = result.replace(IMPORT_RE, '')
 
   // Process the CSS rule by rule using a simple state machine
   return processRules(result, scopeSelector)
@@ -68,7 +75,7 @@ function processRules(css: string, scopeSelector: string): string {
 
   while (i < css.length) {
     // Skip whitespace
-    while (i < css.length && /\s/.test(css[i]!)) i++
+    while (i < css.length && WHITESPACE_RE.test(css[i]!)) i++
     if (i >= css.length)
       break
 
@@ -78,7 +85,7 @@ function processRules(css: string, scopeSelector: string): string {
       if (atRule) {
         // Skip @charset, @import (already removed above)
         // For @media, @supports, @keyframes etc., include as-is
-        const atName = atRule.content.match(/@([\w-]+)/)?.[1]?.toLowerCase()
+        const atName = atRule.content.match(AT_RULE_NAME_RE)?.[1]?.toLowerCase()
         if (atName === 'media' || atName === 'supports' || atName === 'layer') {
           // Scope the inner rules
           const braceStart = atRule.content.indexOf('{')
@@ -115,7 +122,7 @@ function processRules(css: string, scopeSelector: string): string {
     // Strip rules targeting :root, html, body (page-level selectors)
     const selectors = selector.split(',').map(s => s.trim())
     const filteredSelectors = selectors.filter((s) => {
-      const normalized = s.replace(/\s+/g, ' ').trim().toLowerCase()
+      const normalized = s.replace(MULTI_SPACE_RE, ' ').trim().toLowerCase()
       return normalized !== ':root'
         && normalized !== 'html'
         && normalized !== 'body'
@@ -257,7 +264,7 @@ export default defineEventHandler(async (event) => {
       node.attributes.srcset = node.attributes.srcset
         .split(',')
         .map((entry: string) => {
-          const parts = entry.trim().split(/\s+/)
+          const parts = entry.trim().split(SRCSET_SPLIT_RE)
           const url = parts[0]
           const descriptor = parts.slice(1).join(' ')
           return url ? `${rewriteUrl(url)}${descriptor ? ` ${descriptor}` : ''}` : entry

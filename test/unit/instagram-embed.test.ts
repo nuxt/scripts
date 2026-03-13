@@ -1,7 +1,6 @@
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { describe, expect, it } from 'vitest'
 import {
-  proxyAssetUrl,
   proxyImageUrl,
   rewriteUrl,
   rewriteUrlsInText,
