@@ -316,10 +316,11 @@ export default defineNuxtModule<ModuleOptions>({
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
+    const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
     nuxt.options.runtimeConfig['nuxt-scripts'] = {
       version: version!,
       // Private proxy config with API key (server-side only)
-      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
+      googleStaticMapsProxy: googleMapsEnabled
         ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
         : undefined,
     } as any
@@ -328,8 +329,8 @@ export default defineNuxtModule<ModuleOptions>({
       version: nuxt.options.dev ? version : undefined,
       defaultScriptOptions: config.defaultScriptOptions as any,
       // Only expose enabled and cacheMaxAge to client, not apiKey
-      googleStaticMapsProxy: config.googleStaticMapsProxy?.enabled
-        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy.cacheMaxAge }
+      googleStaticMapsProxy: googleMapsEnabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge ?? 3600 }
         : undefined,
     } as any
 
@@ -550,62 +551,52 @@ export default defineNuxtModule<ModuleOptions>({
       })
     })
 
-    // Add Google Static Maps proxy handler if enabled
-    if (config.googleStaticMapsProxy?.enabled) {
-      addServerHandler({
-        route: '/_scripts/google-static-maps-proxy',
-        handler: await resolvePath('./runtime/server/google-static-maps-proxy'),
-      })
+    // Register server handlers for enabled registry scripts
+    const enabledEndpoints: Record<string, boolean> = {}
+    for (const script of scripts) {
+      if (!script.serverHandlers?.length || !script.registryKey)
+        continue
+
+      // googleMaps uses googleStaticMapsProxy config for backward compat
+      const isEnabled = script.registryKey === 'googleMaps'
+        ? config.googleStaticMapsProxy?.enabled || config.registry?.googleMaps
+        : config.registry?.[script.registryKey as keyof typeof config.registry]
+
+      if (!isEnabled)
+        continue
+
+      enabledEndpoints[script.registryKey] = true
+      for (const handler of script.serverHandlers) {
+        addServerHandler({
+          route: handler.route,
+          handler: handler.handler,
+          middleware: handler.middleware,
+        })
+      }
+
+      // Script-specific runtimeConfig setup
+      if (script.registryKey === 'gravatar') {
+        const gravatarConfig = typeof config.registry?.gravatar === 'object' && !Array.isArray(config.registry.gravatar)
+          ? config.registry.gravatar as Record<string, any>
+          : {}
+        nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+          { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
+          nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+        ) as any
+      }
+      if (script.registryKey === 'googleMaps') {
+        nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
+          { googleMapsGeocodeProxy: { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey } },
+          nuxt.options.runtimeConfig['nuxt-scripts'] as any,
+        ) as any
+      }
     }
 
-    // Add Gravatar proxy handler when registry.gravatar is enabled
-    if (config.registry?.gravatar) {
-      const gravatarConfig = typeof config.registry.gravatar === 'object' && !Array.isArray(config.registry.gravatar)
-        ? config.registry.gravatar as Record<string, any>
-        : {}
-      nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
-        { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
-        nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
-      ) as any
-      addServerHandler({
-        route: '/_scripts/gravatar-proxy',
-        handler: await resolvePath('./runtime/server/gravatar-proxy'),
-      })
-    }
-
-    // Add X/Twitter embed proxy handlers
-    addServerHandler({
-      route: '/api/_scripts/x-embed',
-      handler: await resolvePath('./runtime/server/x-embed'),
-    })
-    addServerHandler({
-      route: '/api/_scripts/x-embed-image',
-      handler: await resolvePath('./runtime/server/x-embed-image'),
-    })
-
-    // Add Instagram embed proxy handlers
-    addServerHandler({
-      route: '/api/_scripts/instagram-embed',
-      handler: await resolvePath('./runtime/server/instagram-embed'),
-    })
-    addServerHandler({
-      route: '/api/_scripts/instagram-embed-image',
-      handler: await resolvePath('./runtime/server/instagram-embed-image'),
-    })
-    addServerHandler({
-      route: '/api/_scripts/instagram-embed-asset',
-      handler: await resolvePath('./runtime/server/instagram-embed-asset'),
-    })
-
-    // Add Bluesky embed proxy handlers
-    addServerHandler({
-      route: '/api/_scripts/bluesky-embed',
-      handler: await resolvePath('./runtime/server/bluesky-embed'),
-    })
-    addServerHandler({
-      route: '/api/_scripts/bluesky-embed-image',
-      handler: await resolvePath('./runtime/server/bluesky-embed-image'),
-    })
+    // Publish enabled endpoints to client for component opt-in checks
+    nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+      { endpoints: enabledEndpoints },
+      nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+    ) as any
 
     if (nuxt.options.dev) {
       setupDevToolsUI(config, resolvePath)

@@ -253,7 +253,7 @@ interface SlotProps {
 
 1. **Server-side fetch**: The server fetches post data from `public.api.bsky.app` (AT Protocol) during SSR
 2. **Handle resolution**: The server resolves handles to DIDs for reliable post lookup
-3. **Image proxying**: The server rewrites all images to proxy through `/api/_scripts/bluesky-embed-image`
+3. **Image proxying**: The server rewrites all images to proxy through `/_scripts/bluesky-embed-image`
 4. **Rich text**: The component converts Bluesky facets (links, mentions, hashtags) to HTML
 5. **Caching**: The server caches responses for 10 minutes
 6. **No client-side API calls**: The user's browser never contacts Bluesky directly

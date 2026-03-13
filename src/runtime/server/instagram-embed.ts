@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
+import { validateSameOrigin } from './utils/same-origin'
 
 export const RSRC_RE = /url\(\/rsrc\.php([^)]+)\)/g
 export const AMP_RE = /&amp;/g
@@ -18,11 +19,11 @@ const MULTI_SPACE_RE = /\s+/g
 const SRCSET_SPLIT_RE = /\s+/
 
 export function proxyImageUrl(url: string): string {
-  return `/api/_scripts/instagram-embed-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
+  return `/_scripts/instagram-embed-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
 
 export function proxyAssetUrl(url: string): string {
-  return `/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
+  return `/_scripts/instagram-embed-asset?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
 
 export function rewriteUrl(url: string): string {
@@ -186,6 +187,8 @@ function extractBlock(css: string, openBrace: number): { content: string, end: n
 }
 
 export default defineEventHandler(async (event) => {
+  validateSameOrigin(event)
+
   const query = getQuery(event)
   const postUrl = query.url as string
   const captions = query.captions === 'true'
@@ -307,7 +310,7 @@ export default defineEventHandler(async (event) => {
   let combinedCss = cssContents.join('\n')
   combinedCss = combinedCss.replace(
     RSRC_RE,
-    (_m, path) => `url(/api/_scripts/instagram-embed-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
+    (_m, path) => `url(/_scripts/instagram-embed-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
   )
   combinedCss = rewriteUrlsInText(combinedCss)
   combinedCss = scopeCss(combinedCss, '.instagram-embed-root')

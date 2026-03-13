@@ -4,6 +4,7 @@ import type { XEmbedTweetData } from '../registry/x-embed'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
 import { formatCount, formatTweetDate, proxyXImageUrl } from '../registry/x-embed'
+import { requireRegistryEndpoint } from '../utils'
 
 const props = withDefaults(defineProps<{
   /**
@@ -12,7 +13,7 @@ const props = withDefaults(defineProps<{
   tweetId: string
   /**
    * Custom API endpoint for fetching tweet data
-   * @default '/api/_scripts/x-embed'
+   * @default '/_scripts/x-embed'
    */
   apiEndpoint?: string
   /**
@@ -25,9 +26,10 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes
 }>(), {
-  apiEndpoint: '/api/_scripts/x-embed',
-  imageProxyEndpoint: '/api/_scripts/x-embed-image',
+  apiEndpoint: '/_scripts/x-embed',
+  imageProxyEndpoint: '/_scripts/x-embed-image',
 })
+requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
 
 const cacheKey = computed(() => `x-embed-${props.tweetId}`)
 

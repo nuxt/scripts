@@ -1,9 +1,12 @@
 import { useRuntimeConfig } from '#imports'
-import { createError, defineEventHandler, getHeader, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { validateSameOrigin } from './utils/same-origin'
 
 export default defineEventHandler(async (event) => {
+  validateSameOrigin(event)
+
   const runtimeConfig = useRuntimeConfig()
   const publicConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
   const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleStaticMapsProxy
@@ -22,19 +25,6 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       statusMessage: 'Google Maps API key not configured for proxy',
     })
-  }
-
-  // Validate referer to prevent external abuse
-  const referer = getHeader(event, 'referer')
-  const host = getHeader(event, 'host')
-  if (referer && host) {
-    const refererUrl = new URL(referer).host
-    if (refererUrl !== host) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Invalid referer',
-      })
-    }
   }
 
   const query = getQuery(event)

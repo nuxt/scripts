@@ -161,7 +161,7 @@ interface SlotProps {
 ## How It Works
 
 1. **Server-side fetch**: Tweet data is fetched from `cdn.syndication.twimg.com` during SSR
-2. **Image proxying**: All images are rewritten to proxy through `/api/_scripts/x-embed-image`
+2. **Image proxying**: All images are rewritten to proxy through `/_scripts/x-embed-image`
 3. **Caching**: Responses are cached for 10 minutes at the server level
 4. **No client-side API calls**: The user's browser never contacts X directly
 

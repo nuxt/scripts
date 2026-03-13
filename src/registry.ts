@@ -347,18 +347,31 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
         name: 'useScriptGoogleMaps',
         from: await resolve('./runtime/registry/google-maps'),
       },
+      serverHandlers: [
+        { route: '/_scripts/google-static-maps-proxy', handler: await resolve('./runtime/server/google-static-maps-proxy') },
+        { route: '/_scripts/google-maps-geocode-proxy', handler: await resolve('./runtime/server/google-maps-geocode-proxy') },
+      ],
     },
     {
       registryKey: 'blueskyEmbed',
       label: 'Bluesky Embed',
       category: 'content',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 568 501"><path fill="#1185FE" d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555c-20.275 72.453-94.155 90.933-159.875 79.748c114.875 19.831 144.097 85.561 81.022 151.291C363.929 569.326 289.18 462.062 284 449.7c-.36-.86-.36-.86 0 0c-5.18 12.362-79.929 119.626-189.369 5.84c-63.075-65.729-33.853-131.46 81.022-151.29c-65.72 11.184-139.6-7.296-159.875-79.749C9.945 203.659 0 75.291 0 57.946C0-28.906 76.134-1.612 123.121 33.664"/></svg>`,
+      serverHandlers: [
+        { route: '/_scripts/bluesky-embed', handler: await resolve('./runtime/server/bluesky-embed') },
+        { route: '/_scripts/bluesky-embed-image', handler: await resolve('./runtime/server/bluesky-embed-image') },
+      ],
     },
     {
       registryKey: 'instagramEmbed',
       label: 'Instagram Embed',
       category: 'content',
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><g fill="none"><rect width="256" height="256" fill="url(#skillIconsInstagram0)" rx="60"/><rect width="256" height="256" fill="url(#skillIconsInstagram1)" rx="60"/><path fill="#fff" d="M128.009 28c-27.158 0-30.567.119-41.233.604c-10.646.488-17.913 2.173-24.271 4.646c-6.578 2.554-12.157 5.971-17.716 11.531c-5.563 5.559-8.98 11.138-11.542 17.713c-2.48 6.36-4.167 13.63-4.646 24.271c-.477 10.667-.602 14.077-.602 41.236s.12 30.557.604 41.223c.49 10.646 2.175 17.913 4.646 24.271c2.556 6.578 5.973 12.157 11.533 17.716c5.557 5.563 11.136 8.988 17.709 11.542c6.363 2.473 13.631 4.158 24.275 4.646c10.668.485 14.073.604 41.23.604c27.161 0 30.559-.119 41.225-.604c10.646-.488 17.921-2.173 24.284-4.646c6.575-2.554 12.146-5.979 17.702-11.542c5.563-5.559 8.98-11.138 11.542-17.716c2.458-6.358 4.145-13.625 4.646-24.271c.48-10.666.604-14.066.604-41.223s-.124-30.569-.604-41.236c-.501-10.646-2.188-17.911-4.646-24.271c-2.562-6.575-5.979-12.154-11.542-17.713c-5.559-5.56-11.13-8.977-17.716-11.531c-6.375-2.473-13.646-4.158-24.292-4.646C158.57 28.119 155.164 28 128.009 28m-8.868 18.021h8.868c26.695 0 29.855.103 40.41.582c9.751.446 15.042 2.079 18.567 3.454c4.667 1.813 7.992 3.979 11.492 7.48c3.5 3.5 5.666 6.829 7.483 11.496c1.375 3.525 3.012 8.813 3.454 18.563c.479 10.558.588 13.719.588 40.413s-.109 29.854-.588 40.412c-.446 9.75-2.079 15.042-3.454 18.563c-1.813 4.667-3.983 7.992-7.483 11.492a30.94 30.94 0 0 1-11.492 7.479c-3.521 1.379-8.812 3.013-18.567 3.458c-10.554.48-13.711.589-40.41.589c-26.702 0-29.859-.109-40.413-.589c-9.75-.449-15.046-2.079-18.571-3.458c-4.667-1.813-8-3.979-11.5-7.479s-5.666-6.825-7.483-11.496c-1.375-3.521-3.012-8.813-3.454-18.563c-.479-10.558-.583-13.715-.583-40.42c0-26.704.104-29.856.583-40.413c.446-9.75 2.079-15.042 3.454-18.567c1.813-4.667 3.983-7.996 11.5-11.5a30.804 30.804 0 0 1 11.496-7.479c3.525-1.375 8.821-3.013 18.571-3.458c9.238-.421 12.82-.546 31.505-.563zm62.496 16.604c-6.625 0-12 5.37-12 12c0 6.625 5.375 12 12 12c6.625 0 12-5.375 12-12s-5.375-12-12-12m-53.628 14.021c-28.272 0-51.196 22.924-51.196 51.196s22.924 51.2 51.196 51.2c28.271 0 51.2-22.929 51.2-51.2c0-28.272-22.929-51.196-51.2-51.196m0 18.021c18.334 0 33.183 14.846 33.183 33.175c0 18.334-14.849 33.184-33.183 33.184c-18.33 0-33.175-14.85-33.175-33.184c0-18.329 14.845-33.175 33.175-33.175"/><defs><radialGradient id="skillIconsInstagram0" cx="0" cy="0" r="1" gradientTransform="matrix(0 -253.715 235.975 0 68 275.717)" gradientUnits="userSpaceOnUse"><stop stop-color="#FD5"/><stop offset=".1" stop-color="#FD5"/><stop offset=".5" stop-color="#FF543E"/><stop offset="1" stop-color="#C837AB"/></radialGradient><radialGradient id="skillIconsInstagram1" cx="0" cy="0" r="1" gradientTransform="matrix(22.25952 111.2976 -458.39518 91.75449 -42.881 18.441)" gradientUnits="userSpaceOnUse"><stop stop-color="#3771C8"/><stop offset=".128" stop-color="#3771C8"/><stop offset="1" stop-color="#60F" stop-opacity="0"/></radialGradient></defs></g></svg>`,
+      serverHandlers: [
+        { route: '/_scripts/instagram-embed', handler: await resolve('./runtime/server/instagram-embed') },
+        { route: '/_scripts/instagram-embed-image', handler: await resolve('./runtime/server/instagram-embed-image') },
+        { route: '/_scripts/instagram-embed-asset', handler: await resolve('./runtime/server/instagram-embed-asset') },
+      ],
     },
     {
       registryKey: 'xEmbed',
@@ -368,6 +381,10 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
         light: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#000" d="M18.205 2.25h3.308l-7.227 8.26l8.502 11.24H16.13l-5.214-6.817L4.95 21.75H1.64l7.73-8.835L1.215 2.25H8.04l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z"/></svg>`,
         dark: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#fff" d="M18.205 2.25h3.308l-7.227 8.26l8.502 11.24H16.13l-5.214-6.817L4.95 21.75H1.64l7.73-8.835L1.215 2.25H8.04l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z"/></svg>`,
       },
+      serverHandlers: [
+        { route: '/_scripts/x-embed', handler: await resolve('./runtime/server/x-embed') },
+        { route: '/_scripts/x-embed-image', handler: await resolve('./runtime/server/x-embed-image') },
+      ],
     },
     // chat
     {
@@ -498,6 +515,9 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
         name: 'useScriptGravatar',
         from: await resolve('./runtime/registry/gravatar'),
       },
+      serverHandlers: [
+        { route: '/_scripts/gravatar-proxy', handler: await resolve('./runtime/server/gravatar-proxy') },
+      ],
     },
   ]
 }

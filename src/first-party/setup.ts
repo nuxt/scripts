@@ -27,8 +27,8 @@ export function resolveFirstPartyConfig(config: ModuleFirstPartyOptions): FirstP
   const enabled = !!config.firstParty
   const prefix = typeof config.firstParty === 'object' ? config.firstParty.prefix : undefined
   const collectPrefix = typeof config.firstParty === 'object'
-    ? config.firstParty.collectPrefix || '/_proxy'
-    : '/_proxy'
+    ? config.firstParty.collectPrefix || '/_scripts/c'
+    : '/_scripts/c'
   const privacy: ProxyPrivacyInput | undefined = typeof config.firstParty === 'object'
     ? config.firstParty.privacy
     : undefined

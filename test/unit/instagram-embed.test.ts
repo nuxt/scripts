@@ -10,18 +10,18 @@ import {
 describe('instagram-embed: URL rewriting', () => {
   it('proxies scontent CDN image URLs', () => {
     const url = 'https://scontent-lax3-1.cdninstagram.com/v/t51.2885-15/photo.jpg?stp=dst-jpg'
-    expect(rewriteUrl(url)).toContain('/api/_scripts/instagram-embed-image?url=')
+    expect(rewriteUrl(url)).toContain('/_scripts/instagram-embed-image?url=')
     expect(rewriteUrl(url)).toContain(encodeURIComponent(url))
   })
 
   it('proxies lookaside image URLs', () => {
     const url = 'https://lookaside.instagram.com/seo/photo.jpg'
-    expect(rewriteUrl(url)).toContain('/api/_scripts/instagram-embed-image?url=')
+    expect(rewriteUrl(url)).toContain('/_scripts/instagram-embed-image?url=')
   })
 
   it('proxies static CDN asset URLs', () => {
     const url = 'https://static.cdninstagram.com/rsrc.php/v3/some-asset.css'
-    expect(rewriteUrl(url)).toContain('/api/_scripts/instagram-embed-asset?url=')
+    expect(rewriteUrl(url)).toContain('/_scripts/instagram-embed-asset?url=')
   })
 
   it('returns non-instagram URLs unchanged', () => {
@@ -44,15 +44,15 @@ describe('instagram-embed: rewriteUrlsInText', () => {
   it('rewrites scontent URLs in CSS text', () => {
     const css = 'background: url(https://scontent-lax3-1.cdninstagram.com/photo.jpg);'
     const result = rewriteUrlsInText(css)
-    expect(result).toContain('/api/_scripts/instagram-embed-image?url=')
+    expect(result).toContain('/_scripts/instagram-embed-image?url=')
     // The original hostname is still present but URL-encoded inside the proxy query param
-    expect(result).toMatch(/\/api\/_scripts\/instagram-embed-image\?url=/)
+    expect(result).toMatch(/\/_scripts\/instagram-embed-image\?url=/)
   })
 
   it('rewrites static CDN URLs in text', () => {
     const text = 'src: url(https://static.cdninstagram.com/rsrc.php/font.woff2);'
     const result = rewriteUrlsInText(text)
-    expect(result).toContain('/api/_scripts/instagram-embed-asset?url=')
+    expect(result).toContain('/_scripts/instagram-embed-asset?url=')
   })
 
   it('rewrites multiple URLs in same text', () => {
@@ -89,7 +89,7 @@ describe('instagram-embed: srcset rewriting', () => {
     expect(result).toContain('640w')
     expect(result).toContain('1080w')
     // Should have two separate proxy URLs
-    const proxyMatches = result.match(/\/api\/_scripts\/instagram-embed-image/g)
+    const proxyMatches = result.match(/\/_scripts\/instagram-embed-image/g)
     expect(proxyMatches).toHaveLength(2)
   })
 

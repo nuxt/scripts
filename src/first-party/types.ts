@@ -33,7 +33,7 @@ export interface FirstPartyOptions {
    *
    * Analytics collection requests are proxied through these paths.
    * For example, Google Analytics collection goes to `/_scripts/c/ga/g/collect`.
-   * @default '/_proxy'
+   * @default '/_scripts/c'
    * @example '/_tracking'
    */
   collectPrefix?: string

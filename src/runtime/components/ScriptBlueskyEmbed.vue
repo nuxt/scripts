@@ -4,6 +4,7 @@ import type { BlueskyEmbedPostData } from '../registry/bluesky-embed'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
 import { extractBlueskyPostId, facetsToHtml, formatBlueskyDate, formatCount, proxyBlueskyImageUrl } from '../registry/bluesky-embed'
+import { requireRegistryEndpoint } from '../utils'
 
 const props = withDefaults(defineProps<{
   /**
@@ -13,12 +14,12 @@ const props = withDefaults(defineProps<{
   postUrl: string
   /**
    * Custom API endpoint for fetching post data
-   * @default '/api/_scripts/bluesky-embed'
+   * @default '/_scripts/bluesky-embed'
    */
   apiEndpoint?: string
   /**
    * Custom image proxy endpoint
-   * @default '/api/_scripts/bluesky-embed-image'
+   * @default '/_scripts/bluesky-embed-image'
    */
   imageProxyEndpoint?: string
   /**
@@ -26,9 +27,10 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes
 }>(), {
-  apiEndpoint: '/api/_scripts/bluesky-embed',
-  imageProxyEndpoint: '/api/_scripts/bluesky-embed-image',
+  apiEndpoint: '/_scripts/bluesky-embed',
+  imageProxyEndpoint: '/_scripts/bluesky-embed-image',
 })
+requireRegistryEndpoint('ScriptBlueskyEmbed', 'blueskyEmbed')
 
 const postId = computed(() => extractBlueskyPostId(props.postUrl))
 const cacheKey = computed(() => `bluesky-embed-${postId.value?.actor}-${postId.value?.rkey}`)

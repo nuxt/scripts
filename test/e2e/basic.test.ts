@@ -488,7 +488,7 @@ describe('social-embeds', () => {
       if (!photos)
         return true // No photos is OK, some tweets don't have them
       const imgs = photos.querySelectorAll('img')
-      return [...imgs].every(img => img.src.includes('/api/_scripts/x-embed-image'))
+      return [...imgs].every(img => img.src.includes('/_scripts/x-embed-image'))
     })
     expect(hasProxiedImages).toBe(true)
   })
@@ -529,8 +529,8 @@ describe('social-embeds', () => {
       if (imgs.length === 0)
         return true // No images yet is OK (might be lazy loaded)
       return [...imgs].every(img =>
-        img.src.includes('/api/_scripts/instagram-embed-image')
-        || img.src.includes('/api/_scripts/instagram-embed-asset'),
+        img.src.includes('/_scripts/instagram-embed-image')
+        || img.src.includes('/_scripts/instagram-embed-asset'),
       )
     })
     expect(hasProxiedImages).toBe(true)
@@ -564,7 +564,7 @@ describe('social-embeds', () => {
     await page.waitForSelector('#bluesky-content', { timeout: 10000 })
 
     // Check avatar uses the proxy endpoint
-    const avatarProxied = await page.$eval('#avatar', el => el.getAttribute('src')?.includes('/api/_scripts/bluesky-embed-image'))
+    const avatarProxied = await page.$eval('#avatar', el => el.getAttribute('src')?.includes('/_scripts/bluesky-embed-image'))
     expect(avatarProxied).toBe(true)
 
     // Check if there are any images and they use the proxy endpoint
@@ -573,7 +573,7 @@ describe('social-embeds', () => {
       if (!images)
         return true // No images is OK, some posts don't have them
       const imgs = images.querySelectorAll('img')
-      return [...imgs].every(img => img.src.includes('/api/_scripts/bluesky-embed-image'))
+      return [...imgs].every(img => img.src.includes('/_scripts/bluesky-embed-image'))
     })
     expect(hasProxiedImages).toBe(true)
   })
