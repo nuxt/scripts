@@ -46,7 +46,7 @@ describe('instagram-embed: rewriteUrlsInText', () => {
     const result = rewriteUrlsInText(css)
     expect(result).toContain('/_scripts/embed/instagram-image?url=')
     // The original hostname is still present but URL-encoded inside the proxy query param
-    expect(result).toMatch(/\/_scripts\/instagram-embed-image\?url=/)
+    expect(result).toMatch(/\/_scripts\/embed\/instagram-image\?url=/)
   })
 
   it('rewrites static CDN URLs in text', () => {
@@ -58,8 +58,8 @@ describe('instagram-embed: rewriteUrlsInText', () => {
   it('rewrites multiple URLs in same text', () => {
     const text = 'url(https://scontent-a.cdninstagram.com/a.jpg) url(https://static.cdninstagram.com/b.css)'
     const result = rewriteUrlsInText(text)
-    expect(result).toContain('instagram-embed-image')
-    expect(result).toContain('instagram-embed-asset')
+    expect(result).toContain('embed/instagram-image')
+    expect(result).toContain('embed/instagram-asset')
   })
 })
 
@@ -84,12 +84,12 @@ describe('instagram-embed: srcset rewriting', () => {
 
     const result = renderSync(ast)
     // Each entry should be individually proxied
-    expect(result).toContain('instagram-embed-image')
+    expect(result).toContain('embed/instagram-image')
     // Descriptors preserved
     expect(result).toContain('640w')
     expect(result).toContain('1080w')
     // Should have two separate proxy URLs
-    const proxyMatches = result.match(/\/_scripts\/instagram-embed-image/g)
+    const proxyMatches = result.match(/\/_scripts\/embed\/instagram-image/g)
     expect(proxyMatches).toHaveLength(2)
   })
 
@@ -104,7 +104,7 @@ describe('instagram-embed: srcset rewriting', () => {
     expect(entries).toHaveLength(2)
     expect(entries[0]).toContain('640w')
     expect(entries[1]).toContain('1080w')
-    expect(entries.every(e => e.includes('instagram-embed-image'))).toBe(true)
+    expect(entries.every(e => e.includes('embed/instagram-image'))).toBe(true)
   })
 })
 

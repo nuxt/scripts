@@ -612,8 +612,8 @@ describe('first-party privacy stripping', () => {
       // Wait for script to load
       await page.waitForTimeout(5000)
 
-      // Verify bundled script is loaded from local /_scripts path
-      const localScript = scriptUrls.find(u => u.includes('/_scripts/'))
+      // Verify bundled script is loaded from local /_scripts/assets path
+      const localScript = scriptUrls.find(u => u.includes('/_scripts/assets/'))
       expect(localScript).toBeDefined()
     }, 30000)
 
@@ -691,7 +691,7 @@ describe('first-party privacy stripping', () => {
      * runtime API calls (collect, track, beacon) through /_proxy/ endpoints.
      * Tests for these providers strictly assert proxy requests + captures.
      *
-     * Providers NOT in this set only have script bundling (loaded from /_scripts/)
+     * Providers NOT in this set only have script bundling (loaded from /_scripts/assets/)
      * but their runtime calls bypass /_proxy/ and go directly to third-party domains.
      * Tests for those providers document the external requests but don't fail.
      */
@@ -854,7 +854,7 @@ describe('first-party privacy stripping', () => {
     it('hotjar', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('hotjar', '/hotjar')
       // Hotjar SDK doesn't fire HTTP events in headless — WebSocket-only session data.
-      // Script loads from /_scripts/ (verified in bundle coverage test below).
+      // Script loads from /_scripts/assets/ (verified in bundle coverage test below).
       if (captures.length > 0) {
         await assertCaptures('hotjar', captures, rawCaptures, proxyRequests, externalRequests, {
           proxyPrefix: '/_proxy/hotjar',

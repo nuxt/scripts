@@ -178,7 +178,7 @@ describe('basic', () => {
     await page.waitForTimeout(500)
     // get content of #script-src
     const text = await page.$eval('#script-src', el => el.textContent)
-    expect(text).toMatchInlineSnapshot(`"/_scripts/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
+    expect(text).toMatchInlineSnapshot(`"/_scripts/assets/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
   })
   it('partytown adds type attribute', async () => {
     const { page } = await createPage('/partytown')
