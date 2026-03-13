@@ -20,6 +20,22 @@ Nuxt Scripts provides a [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-e
 ::script-types
 ::
 
+## Setup
+
+To use the Bluesky embed component, you must enable it in your `nuxt.config`:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      blueskyEmbed: true,
+    },
+  },
+})
+```
+
+This registers the required server API routes (`/_scripts/bluesky-embed` and `/_scripts/bluesky-embed-image`) that handle fetching post data and proxying images.
+
 ## [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"}
 
 The [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"} component is a headless component that:

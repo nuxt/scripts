@@ -20,6 +20,22 @@ Nuxt Scripts provides a [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="
 ::script-types
 ::
 
+## Setup
+
+To use the X embed component, you must enable it in your `nuxt.config`:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      xEmbed: true,
+    },
+  },
+})
+```
+
+This registers the required server API routes (`/_scripts/x-embed` and `/_scripts/x-embed-image`) that handle fetching tweet data and proxying images.
+
 ## [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"}
 
 The [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component is a headless component that:
