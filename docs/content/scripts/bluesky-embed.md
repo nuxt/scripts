@@ -55,7 +55,7 @@ The [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"} c
 ```vue [Bluesky Card (Tailwind)]
 <template>
   <ScriptBlueskyEmbed post-url="https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a">
-    <template #default="{ displayName, handle, avatar, text, richText, datetime, createdAt, likes, likesFormatted, reposts, repostsFormatted, replies, images, externalEmbed, postUrl, authorUrl }">
+    <template #default="{ displayName, handle, avatar, richText, datetime, likes, likesFormatted, reposts, repostsFormatted, replies, images, externalEmbed, postUrl, authorUrl }">
       <div class="max-w-[600px] bg-white dark:bg-[#151d28] rounded-2xl border border-gray-200 dark:border-[#2c3a4e] font-sans text-[15px]">
         <!-- Header -->
         <div class="flex items-center gap-3 px-4 pt-4 pb-3">
@@ -251,11 +251,11 @@ interface SlotProps {
 
 ## How It Works
 
-1. **Server-side fetch**: Post data is fetched from `public.api.bsky.app` (AT Protocol) during SSR
-2. **Handle resolution**: Handles are resolved to DIDs server-side for reliable post lookup
-3. **Image proxying**: All images are rewritten to proxy through `/api/_scripts/bluesky-embed-image`
-4. **Rich text**: Bluesky facets (links, mentions, hashtags) are converted to HTML
-5. **Caching**: Responses are cached for 10 minutes at the server level
+1. **Server-side fetch**: The server fetches post data from `public.api.bsky.app` (AT Protocol) during SSR
+2. **Handle resolution**: The server resolves handles to DIDs for reliable post lookup
+3. **Image proxying**: The server rewrites all images to proxy through `/api/_scripts/bluesky-embed-image`
+4. **Rich text**: The component converts Bluesky facets (links, mentions, hashtags) to HTML
+5. **Caching**: The server caches responses for 10 minutes
 6. **No client-side API calls**: The user's browser never contacts Bluesky directly
 
 ## Privacy Benefits
@@ -268,4 +268,4 @@ interface SlotProps {
 
 ## Author Opt-Out
 
-The component respects Bluesky's `!no-unauthenticated` label. If a post author has opted out of external embedding, the API will return a 403 error, and the error slot will be displayed.
+The component respects Bluesky's `!no-unauthenticated` label. If a post author has opted out of external embedding, the API returns a 403 error and the component shows the error slot.
