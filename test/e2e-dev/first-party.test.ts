@@ -102,9 +102,7 @@ const ANONYMIZED_FINGERPRINT_PARAMS = [
   'tz',
   'timezone',
   'timezoneoffset',
-  // Canvas/WebGL fingerprinting (replaced with empty value)
-  'canvas',
-  'webgl',
+  // Audio fingerprinting (replaced with empty value; canvas/webgl neutralized at build time)
   'audiofingerprint',
   // Combined device fingerprinting (replaced with empty string)
   'dv',

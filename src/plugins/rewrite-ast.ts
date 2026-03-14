@@ -1,9 +1,12 @@
 import type { ProxyRewrite } from '../runtime/utils/pure'
 import MagicString from 'magic-string'
-import { parseAndWalk, ScopeTracker, ScopeTrackerFunctionParam, ScopeTrackerVariable, walk } from 'oxc-walker'
+import { parseAndWalk, ScopeTracker, ScopeTrackerFunction, ScopeTrackerFunctionParam, ScopeTrackerIdentifier, ScopeTrackerVariable, walk } from 'oxc-walker'
 import { joinURL, parseURL } from 'ufo'
 
 const WORD_OR_DOLLAR_RE = /[\w$]/
+// Static blank 1x1 transparent PNG — every user gets the same value, defeating canvas fingerprinting
+// while returning a valid data URL that won't break scripts checking format/truthiness.
+const BLANK_CANVAS_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIHWNgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12NgYGBgAAAABQABXvMqOgAAAABJRU5ErkJggg=='
 const GA_COLLECT_RE = /([\w$])?"https:\/\/"\+\(.*?\)\+"\.google-analytics\.com\/g\/collect"/g
 const GA_ANALYTICS_COLLECT_RE = /([\w$])?"https:\/\/"\+\(.*?\)\+"\.analytics\.google\.com\/g\/collect"/g
 const FATHOM_SELF_HOSTED_RE = /\.src\.indexOf\("cdn\.usefathom\.com"\)\s*<\s*0/
@@ -123,14 +126,19 @@ function resolveToGlobal(name: string, scopeTracker: ScopeTracker, depth = 0): s
       if (init.type === 'Identifier')
         return resolveToGlobal(init.name, scopeTracker, depth + 1)
 
-      // var n = w.navigator → resolve w, then append .navigator
-      if (init.type === 'MemberExpression' && !init.computed && init.object?.type === 'Identifier' && init.property?.type === 'Identifier') {
+      // var n = w.navigator / var n = w['navigator'] → resolve w, then append property
+      if (init.type === 'MemberExpression' && init.object?.type === 'Identifier') {
+        const memberProp = init.computed
+          ? (init.property?.type === 'Literal' && typeof init.property.value === 'string' ? init.property.value : null)
+          : init.property?.type === 'Identifier' ? init.property.name : null
+        if (!memberProp)
+          return null
         const objGlobal = resolveToGlobal(init.object.name, scopeTracker, depth + 1)
         if (!objGlobal)
           return null
         // window.navigator → "navigator", window.fetch stays as compound
         if (WINDOW_GLOBALS.has(objGlobal) || objGlobal === 'document')
-          return init.property.name
+          return memberProp
         return null
       }
 
@@ -250,6 +258,45 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       // API call rewriting
       if (node.type === 'CallExpression') {
         const callee = (node as any).callee
+
+        // Canvas fingerprinting neutralization — only affects downloaded third-party scripts.
+        // Resolves aliased objects through the scope chain to avoid false positives.
+        const canvasPropName = callee?.type === 'MemberExpression'
+          ? (callee.computed
+              ? (callee.property?.type === 'Literal' && typeof callee.property.value === 'string' ? callee.property.value : null)
+              : callee.property?.name)
+          : null
+
+        // .toDataURL() → static blank canvas (prevents canvas fingerprint extraction)
+        if (canvasPropName === 'toDataURL' && callee.object) {
+          const blankCanvas = `"${BLANK_CANVAS_DATA_URL}"`
+          // Skip if the object resolves to a locally declared function/class (not a DOM element)
+          if (callee.object.type === 'Identifier') {
+            const decl = scopeTracker.getDeclaration(callee.object.name)
+            // If declared as a function or class, it's not a canvas element — skip
+            if (decl instanceof ScopeTrackerFunction || decl instanceof ScopeTrackerIdentifier) {
+              // fall through to other checks
+              ;
+            }
+            else {
+              s.overwrite(node.start, node.end, blankCanvas)
+              return
+            }
+          }
+          else {
+            // Chained access (e.g. ctx.canvas.toDataURL()) — always neutralize
+            s.overwrite(node.start, node.end, blankCanvas)
+            return
+          }
+        }
+        // .getExtension('WEBGL_debug_renderer_info') → null (prevents GPU fingerprinting)
+        if (canvasPropName === 'getExtension') {
+          const args = (node as any).arguments
+          if (args?.length === 1 && args[0]?.type === 'Literal' && args[0].value === 'WEBGL_debug_renderer_info') {
+            s.overwrite(node.start, node.end, 'null')
+            return
+          }
+        }
 
         // fetch(url) → check it's truly global (not locally declared)
         if (callee?.type === 'Identifier' && callee.name === 'fetch') {

@@ -10,6 +10,8 @@ export interface ScriptMeta {
   urls: string[]
   /** Types of data this script tracks/collects */
   trackedData: TrackedDataType[]
+  /** Script uses canvas/WebGL APIs for device fingerprinting — neutralized at build time via AST rewriting */
+  canvasFingerprinting?: boolean
 }
 
 export const scriptMeta: Record<string, ScriptMeta> = {
@@ -49,6 +51,7 @@ export const scriptMeta: Record<string, ScriptMeta> = {
   googleAnalytics: {
     urls: ['https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P'],
     trackedData: ['page-views', 'events', 'conversions', 'user-identity', 'audiences'],
+    canvasFingerprinting: true,
   },
   umamiAnalytics: {
     urls: ['https://cloud.umami.is/script.js'],
@@ -59,22 +62,27 @@ export const scriptMeta: Record<string, ScriptMeta> = {
   metaPixel: {
     urls: ['https://connect.facebook.net/en_US/fbevents.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    canvasFingerprinting: true,
   },
   xPixel: {
     urls: ['https://static.ads-twitter.com/uwt.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    canvasFingerprinting: true,
   },
   tikTokPixel: {
     urls: ['https://analytics.tiktok.com/i18n/pixel/events.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    canvasFingerprinting: true,
   },
   snapchatPixel: {
     urls: ['https://sc-static.net/scevent.min.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    canvasFingerprinting: true,
   },
   redditPixel: {
     urls: ['https://www.redditstatic.com/ads/pixel.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    canvasFingerprinting: true,
   },
   googleAdsense: {
     urls: ['https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'],
@@ -89,10 +97,12 @@ export const scriptMeta: Record<string, ScriptMeta> = {
   hotjar: {
     urls: ['https://static.hotjar.com/c/hotjar-3925006.js?sv=6'],
     trackedData: ['page-views', 'session-replay', 'heatmaps', 'clicks', 'scrolls', 'form-submissions'],
+    canvasFingerprinting: true,
   },
   clarity: {
     urls: ['https://www.clarity.ms/tag/mqk2m9dr2v'],
     trackedData: ['page-views', 'session-replay', 'heatmaps', 'clicks', 'scrolls'],
+    canvasFingerprinting: true,
   },
 
   // Tag Manager

@@ -108,14 +108,7 @@ const FINGERPRINT_PAYLOAD = {
     doNotTrack: null,
     plugins: ['PDF Viewer', 'Chrome PDF Viewer', 'Chromium PDF Viewer'],
 
-    // Canvas hardware
-    canvas: 'a1b2c3d4e5f6g7h8i9j0',
-    webgl: {
-      vendor: 'Google Inc. (Apple)',
-      renderer: 'ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)',
-    },
-
-    // Audio hardware
+    // Audio hardware (canvas/webgl fingerprints are neutralized at build time via AST rewriting)
     audioFingerprint: 124.04347527516074,
 
     // Font detection
@@ -248,10 +241,6 @@ describe('proxy privacy - payload analysis', () => {
         vectors.push('timezone')
       if (fp.plugins)
         vectors.push('plugins')
-      if (fp.canvas)
-        vectors.push('canvas')
-      if (fp.webgl)
-        vectors.push('webgl')
       if (fp.audioFingerprint)
         vectors.push('audioFingerprint')
       if (fp.fonts)
@@ -345,9 +334,7 @@ describe('stripFingerprintingFromPayload', () => {
       expect(result.plugins).toEqual([])
       expect(result.fonts).toEqual([])
 
-      // Canvas/WebGL/Audio replaced with empty (pure fingerprints)
-      expect(result.canvas).toBe('')
-      expect(result.webgl).toEqual({})
+      // Audio fingerprint replaced with empty (canvas/webgl neutralized at build time)
       expect(result.audioFingerprint).toBe(0)
 
       // Timezone generalized
@@ -470,7 +457,7 @@ describe('selective privacy in stripPayloadFingerprinting', () => {
     ul: 'en-US,en;q=0.9,fr;q=0.8',
     sr: '2560x1440',
     hardwareConcurrency: 8,
-    canvas: 'abc123',
+    audiofingerprint: 124.5,
     timezone: 'America/New_York',
     dt: 'Page Title',
   }
@@ -483,13 +470,13 @@ describe('selective privacy in stripPayloadFingerprinting', () => {
     expect(result.sr).toBe('1920x1080') // generalized
   })
 
-  it('screen:false → screen/hardware pass through, canvas/timezone still anonymized', () => {
+  it('screen:false → screen/hardware pass through, timezone still anonymized', () => {
     const privacy: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: false, timezone: true, hardware: true }
     const result = stripPayloadFingerprinting(testPayload, privacy)
     expect(result.uip).toBe('192.168.1.0') // anonymized
     expect(result.sr).toBe('2560x1440') // not generalized (screen flag off)
     expect(result.hardwareConcurrency).toBe(8) // not bucketed (screen flag off)
-    expect(result.canvas).toBe('') // stripped (hardware flag on)
+    expect(result.audiofingerprint).toBe(0) // stripped (hardware flag on)
     expect(result.timezone).toBe('UTC') // generalized (timezone flag on)
   })
 
@@ -498,15 +485,15 @@ describe('selective privacy in stripPayloadFingerprinting', () => {
     const result = stripPayloadFingerprinting(testPayload, privacy)
     expect(result.timezone).toBe('America/New_York') // not generalized (timezone flag off)
     expect(result.sr).toBe('1920x1080') // generalized (screen flag on)
-    expect(result.canvas).toBe('') // stripped (hardware flag on)
+    expect(result.audiofingerprint).toBe(0) // stripped (hardware flag on)
   })
 
-  it('hardware:false → canvas/versions pass through', () => {
+  it('hardware:false → audio/versions pass through', () => {
     const privacy: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: false }
     const result = stripPayloadFingerprinting(testPayload, privacy)
     expect(result.uip).toBe('192.168.1.0') // anonymized (ip flag on)
     expect(result.sr).toBe('1920x1080') // generalized (screen flag on)
-    expect(result.canvas).toBe('abc123') // not stripped (hardware flag off)
+    expect(result.audiofingerprint).toBe(124.5) // not stripped (hardware flag off)
     expect(result.timezone).toBe('UTC') // generalized (timezone flag on)
   })
 
@@ -517,7 +504,7 @@ describe('selective privacy in stripPayloadFingerprinting', () => {
     expect(result.ua).toBe(testPayload.ua)
     expect(result.ul).toBe('en-US,en;q=0.9,fr;q=0.8')
     expect(result.sr).toBe('2560x1440')
-    expect(result.canvas).toBe('abc123')
+    expect(result.audiofingerprint).toBe(124.5)
     expect(result.timezone).toBe('America/New_York')
   })
 

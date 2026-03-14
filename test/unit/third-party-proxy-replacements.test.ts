@@ -483,9 +483,10 @@ describe('privacy stripping snapshots', () => {
   describe('session recording payload (Clarity/Hotjar)', () => {
     it('anonymize mode - snapshot', () => {
       const result = stripFingerprintingFromPayload(sessionPayload)
+      // canvas and webgl pass through — neutralized at build time via AST rewriting, not at runtime
       expect(result).toMatchInlineSnapshot(`
         {
-          "canvas": "",
+          "canvas": "fp_canvas_abc123",
           "deviceMemory": 16,
           "fonts": [],
           "hardwareConcurrency": 8,
@@ -502,7 +503,10 @@ describe('privacy stripping snapshots', () => {
           "uid": "user-xyz-789",
           "url": "https://example.com/dashboard",
           "vp": "1920x1080",
-          "webgl": {},
+          "webgl": {
+            "renderer": "ANGLE (NVIDIA GeForce RTX 3080)",
+            "vendor": "Google Inc. (NVIDIA)",
+          },
         }
       `)
     })
@@ -538,8 +542,9 @@ describe('privacy stripping snapshots', () => {
       expect(result.deviceMemory).toBe(16) // Generalized to bucket
       expect(result.plugins).toEqual([]) // Replaced with empty
       expect(result.fonts).toEqual([]) // Replaced with empty
-      expect(result.canvas).toBe('') // Replaced with empty
-      expect(result.webgl).toEqual({}) // Replaced with empty
+      // canvas and webgl pass through at runtime — neutralized at build time via AST rewriting
+      expect(result.canvas).toBe(sessionPayload.canvas)
+      expect(result.webgl).toEqual(sessionPayload.webgl)
       expect(result.timezone).toBe('UTC') // Generalized to UTC
       expect(result.timezoneOffset).toBe(360) // Bucketed to 3-hour interval
 

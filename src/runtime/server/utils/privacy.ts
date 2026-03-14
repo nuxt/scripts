@@ -149,11 +149,13 @@ export const STRIP_PARAMS = {
   // Browser version lists — generalized to major versions (d_bvs = Snapchat, uafvl = GA Client Hints)
   browserVersion: ['d_bvs', 'uafvl'],
   // Browser data lists — replaced with empty value
-  browserData: ['plugins', 'fonts'],
+  browserData: ['plugins', 'fonts', 'audiofingerprint'],
   // Location/Timezone — generalized
   location: ['tz', 'timezone', 'timezoneoffset'],
-  // Canvas/WebGL/Audio fingerprints — replaced with empty value (pure fingerprints, no analytics value)
-  canvas: ['canvas', 'webgl', 'audiofingerprint'],
+  // Canvas/WebGL fingerprints — neutralized at build time via AST rewriting (rewrite-ast.ts).
+  // These params are no longer stripped at runtime; the source APIs (toDataURL, WEBGL_debug_renderer_info)
+  // are neutralized before the script ever runs.
+  // canvas: ['canvas', 'webgl'],
   // Combined device fingerprinting (X/Twitter dv param contains: timezone, locale, vendor, platform, screen, etc.)
   deviceInfo: ['dv', 'device_info', 'deviceinfo'],
 }
@@ -490,12 +492,7 @@ export function stripPayloadFingerprinting(
     }
     // Replace browser data lists with empty value — hardware flag
     if (matchesParam(key, STRIP_PARAMS.browserData)) {
-      result[key] = p.hardware ? (Array.isArray(value) ? [] : '') : value
-      continue
-    }
-    // Replace canvas/webgl/audio fingerprints with empty value — hardware flag
-    if (matchesParam(key, STRIP_PARAMS.canvas)) {
-      result[key] = p.hardware ? (typeof value === 'number' ? 0 : typeof value === 'object' ? {} : '') : value
+      result[key] = p.hardware ? (Array.isArray(value) ? [] : typeof value === 'number' ? 0 : '') : value
       continue
     }
     // Anonymize combined device info (parse and generalize components) — hardware flag
