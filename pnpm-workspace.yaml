@@ -21,7 +21,7 @@ catalog:
   '@typescript-eslint/typescript-estree': ^8.57.0
   '@vue/test-utils': ^2.4.6
   '@vueuse/core': ^14.2.1
-  bumpp: ^10.4.1
+  bumpp: ^11.0.1
   consola: ^3.4.2
   defu: ^6.1.4
   eslint: ^10.0.3
