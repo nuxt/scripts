@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-export type HotjarInput = RegistryScriptInput<typeof HotjarOptions, true, false, false>
+export type HotjarInput = RegistryScriptInput<typeof HotjarOptions, true, false>
 
 export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
   return useRegistryScript<T, typeof HotjarOptions>('hotjar', options => ({

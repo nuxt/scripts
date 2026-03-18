@@ -5,7 +5,7 @@ import { GoogleAdsenseOptions } from './schemas'
 
 export { GoogleAdsenseOptions }
 
-export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions, true, false, false>
+export type GoogleAdsenseInput = RegistryScriptInput<typeof GoogleAdsenseOptions, true, false>
 
 export interface GoogleAdsenseApi {
   /**

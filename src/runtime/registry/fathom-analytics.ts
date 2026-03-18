@@ -4,7 +4,7 @@ import { FathomAnalyticsOptions } from './schemas'
 
 export { FathomAnalyticsOptions }
 
-export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false, false>
+export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false>
 
 export interface FathomAnalyticsApi {
   beacon: (ctx: { url: string, referrer?: string }) => void

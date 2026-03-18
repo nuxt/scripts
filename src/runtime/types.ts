@@ -196,7 +196,7 @@ export interface ScriptRegistry {
   [key: `${string}-npm`]: NpmInput
 }
 
-export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
+export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
@@ -212,30 +212,20 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 type ScriptInput = Script
 
 export type InferIfSchema<T> = T extends ObjectSchema<any, any> | UnionSchema<any, any> ? InferInput<T> : T
+export interface RegistryScriptInputExtras<Bundelable extends boolean = true, Usable extends boolean = false> {
+  /**
+   * A unique key to use for the script, this can be used to load multiple of the same script with different options.
+   */
+  key?: string
+  scriptInput?: ScriptInput
+  scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+}
+
 export type RegistryScriptInput<
   T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
-  CanBypassOptions extends boolean = true,
->
-  = (InferIfSchema<T>
-    & {
-      /**
-       * A unique key to use for the script, this can be used to load multiple of the same script with different options.
-       */
-      key?: string
-      scriptInput?: ScriptInput
-      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-    })
-    | Partial<InferIfSchema<T>> & (
-    CanBypassOptions extends true ? {
-      /**
-       * A unique key to use for the script, this can be used to load multiple of the same script with different options.
-       */
-      key?: string
-      scriptInput: Required<Pick<ScriptInput, 'src'>> & ScriptInput
-      scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-    } : never)
+> = Partial<InferIfSchema<T>> & RegistryScriptInputExtras<Bundelable, Usable>
 
 export interface RegistryScriptServerHandler {
   route: string

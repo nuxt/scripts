@@ -21,7 +21,7 @@ declare global {
 }
 
 export { RedditPixelOptions }
-export type RedditPixelInput = RegistryScriptInput<typeof RedditPixelOptions, true, false, false>
+export type RedditPixelInput = RegistryScriptInput<typeof RedditPixelOptions, true, false>
 
 export function useScriptRedditPixel<T extends RedditPixelApi>(_options?: RedditPixelInput) {
   return useRegistryScript<T, typeof RedditPixelOptions>('redditPixel', (options) => {
