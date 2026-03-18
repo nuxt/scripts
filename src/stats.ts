@@ -246,7 +246,7 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
 
   return entries.map((entry) => {
     const id = entry.registryKey || deriveMetaKey(entry.import?.name, entry.label) as RegistryScriptKey
-    const meta = id ? scriptMeta[id] : undefined
+    const meta = id && id in scriptMeta ? scriptMeta[id as keyof typeof scriptMeta] : undefined
     const size = sizes[id || '']
     const proxyConfigKey = entry.proxy === false ? undefined : (entry.proxy || entry.registryKey)
     const proxyConfig = proxyConfigKey ? proxyConfigs[proxyConfigKey] : undefined
