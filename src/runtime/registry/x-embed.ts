@@ -45,7 +45,7 @@ export interface XEmbedTweetData {
   }
 }
 
-export type XEmbedInput = RegistryScriptInput<typeof XEmbedOptions, false, false, false>
+export type XEmbedInput = RegistryScriptInput<typeof XEmbedOptions, false, false>
 
 /**
  * Proxy an X/Twitter image URL through the server

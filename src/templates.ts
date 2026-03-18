@@ -119,6 +119,8 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
 
   // Registry entries are pre-normalized to [input, scriptOptions?] tuple form
   for (const [k, c] of Object.entries(config.registry || {})) {
+    if (c === false)
+      continue
     const importDefinition = registry.find(i => i.import.name.toLowerCase() === `usescript${k.toLowerCase()}`)
     if (importDefinition) {
       resolvedRegistryKeys.push(k)

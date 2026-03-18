@@ -346,6 +346,8 @@ export default defineNuxtModule<ModuleOptions>({
       // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig
       const registryWithDefaults: Record<string, any> = {}
       for (const [key, entry] of Object.entries(config.registry)) {
+        if (entry === false)
+          continue
         const input = (entry as any[])[0]
         const envDefaults = REGISTRY_ENV_DEFAULTS[key as RegistryScriptKey]
         registryWithDefaults[key] = envDefaults ? defu(input, envDefaults) : input

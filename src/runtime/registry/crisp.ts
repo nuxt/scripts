@@ -4,7 +4,7 @@ import { CrispOptions } from './schemas'
 
 export { CrispOptions }
 
-export type CrispInput = RegistryScriptInput<typeof CrispOptions, false, false, false>
+export type CrispInput = RegistryScriptInput<typeof CrispOptions, false, false>
 
 export interface CrispApi {
   push: (...args: any[]) => void

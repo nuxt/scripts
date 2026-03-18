@@ -40,7 +40,7 @@ declare global {
 }
 
 export { XPixelOptions }
-export type XPixelInput = RegistryScriptInput<typeof XPixelOptions, true, false, false>
+export type XPixelInput = RegistryScriptInput<typeof XPixelOptions, true, false>
 
 export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
   return useRegistryScript<T, typeof XPixelOptions>('xPixel', (options) => {

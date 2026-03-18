@@ -71,7 +71,7 @@ export interface BlueskyEmbedPostData {
   labels: Array<{ val: string }>
 }
 
-export type BlueskyEmbedInput = RegistryScriptInput<typeof BlueskyEmbedOptions, false, false, false>
+export type BlueskyEmbedInput = RegistryScriptInput<typeof BlueskyEmbedOptions, false, false>
 
 const BSKY_POST_URL_RE = /bsky\.app\/profile\/([^/]+)\/post\/([^/?]+)/
 

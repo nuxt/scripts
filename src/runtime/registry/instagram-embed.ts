@@ -3,7 +3,7 @@ import { InstagramEmbedOptions } from './schemas'
 
 export { InstagramEmbedOptions }
 
-export type InstagramEmbedInput = RegistryScriptInput<typeof InstagramEmbedOptions, false, false, false>
+export type InstagramEmbedInput = RegistryScriptInput<typeof InstagramEmbedOptions, false, false>
 
 const INSTAGRAM_SHORTCODE_RE = /instagram\.com\/(?:p|reel|tv)\/([^/?]+)/
 

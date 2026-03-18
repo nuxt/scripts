@@ -7,7 +7,7 @@ import { MatomoAnalyticsOptions } from './schemas'
 
 export { MatomoAnalyticsOptions }
 
-export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false, false>
+export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false>
 
 interface MatomoAnalyticsApi {
   _paq: unknown[]
