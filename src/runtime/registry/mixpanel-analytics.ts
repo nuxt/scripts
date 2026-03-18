@@ -45,24 +45,30 @@ export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_opti
       clientInit: import.meta.server
         ? undefined
         : () => {
-            window.mixpanel = window.mixpanel || [] as any
-            for (const method of methods) {
-              (window.mixpanel as any)[method] = (window.mixpanel as any)[method] || ((...args: any[]) => {
-                (window.mixpanel as any).push([method, ...args])
-              })
+            const mp = (window.mixpanel = (window.mixpanel || []) as any)
+            if (!mp.__SV) {
+              mp.__SV = 1.2
+              mp._i = mp._i || []
+
+              mp.init = (token: string, config?: Record<string, any>, name = 'mixpanel') => {
+                const target = name === 'mixpanel' ? mp : (mp[name] = [])
+                target.people = target.people || []
+                for (const method of methods) {
+                  target[method] = (...args: any[]) => {
+                    target.push([method, ...args])
+                  }
+                }
+                for (const method of peopleMethods) {
+                  target.people[method] = (...args: any[]) => {
+                    target.push([`people.${method}`, ...args])
+                  }
+                }
+                mp._i.push([token, config, name])
+              }
             }
-            window.mixpanel.people = window.mixpanel.people || {} as any
-            for (const method of peopleMethods) {
-              (window.mixpanel.people as any)[method] = (window.mixpanel.people as any)[method] || ((...args: any[]) => {
-                (window.mixpanel as any).push([`people.${method}`, ...args])
-              })
-            }
-            window.mixpanel.init = window.mixpanel.init || ((...args: any[]) => {
-              (window.mixpanel as any).push(['init', ...args])
-            })
-            if (options?.token) {
-              window.mixpanel.init(options.token)
-            }
+
+            if (options?.token)
+              mp.init(options.token)
           },
     }
   }, _options)

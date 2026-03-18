@@ -488,6 +488,18 @@
         "code": "export const MetaPixelOptions = object({\n  /**\n   * Your Meta (Facebook) Pixel ID.\n   * @see https://developers.facebook.com/docs/meta-pixel/get-started\n   */\n  id: union([string(), number()]),\n})"
       }
     ],
+    "mixpanel-analytics": [
+      {
+        "name": "MixpanelAnalyticsOptions",
+        "kind": "const",
+        "code": "export const MixpanelAnalyticsOptions = object({\n  /**\n   * Your Mixpanel project token.\n   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library\n   */\n  token: string(),\n})"
+      },
+      {
+        "name": "MixpanelAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface MixpanelAnalyticsApi {\n  mixpanel: {\n    track: (event: string, properties?: Record<string, any>) => void\n    identify: (distinctId: string) => void\n    reset: () => void\n    people: {\n      set: (properties: Record<string, any>) => void\n    }\n    register: (properties: Record<string, any>) => void\n    init: (token: string, config?: Record<string, any>) => void\n  }\n}"
+      }
+    ],
     "npm": [
       {
         "name": "NpmOptions",
@@ -603,18 +615,6 @@
         "name": "RybbitQueueState",
         "kind": "interface",
         "code": "interface RybbitQueueState {\n  queue: Array<[string, ...any[]]>\n  flushed: boolean\n}"
-      }
-    ],
-    "mixpanel-analytics": [
-      {
-        "name": "MixpanelAnalyticsOptions",
-        "kind": "const",
-        "code": "export const MixpanelAnalyticsOptions = object({\n  /**\n   * Your Mixpanel project token.\n   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library\n   */\n  token: string(),\n})"
-      },
-      {
-        "name": "MixpanelAnalyticsApi",
-        "kind": "interface",
-        "code": "export interface MixpanelAnalyticsApi {\n  mixpanel: {\n    track: (event: string, properties?: Record<string, any>) => void\n    identify: (distinctId: string) => void\n    reset: () => void\n    people: {\n      set: (properties: Record<string, any>) => void\n    }\n    register: (properties: Record<string, any>) => void\n    init: (token: string, config?: Record<string, any>) => void\n  }\n}"
       }
     ],
     "segment": [
@@ -1723,6 +1723,14 @@
         "type": "string",
         "required": false,
         "description": "Override the analytics host URL. When first-party mode is enabled, this is auto-injected to route through the proxy. The SDK derives its API endpoint from the script src, so this changes the script src to `${analyticsHost}/script.js`."
+      }
+    ],
+    "MixpanelAnalyticsOptions": [
+      {
+        "name": "token",
+        "type": "string",
+        "required": true,
+        "description": "Your Mixpanel project token."
       }
     ],
     "SegmentOptions": [

@@ -4,6 +4,7 @@ import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 import type { GoogleRecaptchaInput } from './runtime/registry/google-recaptcha'
 import type { HotjarInput } from './runtime/registry/hotjar'
 import type { IntercomInput } from './runtime/registry/intercom'
+import type { MixpanelAnalyticsInput } from './runtime/registry/mixpanel-analytics'
 import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
 import type { RybbitAnalyticsInput } from './runtime/registry/rybbit-analytics'
@@ -138,7 +139,11 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'mixpanelAnalytics',
       label: 'Mixpanel',
-      src: 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js',
+      scriptBundling: (options?: MixpanelAnalyticsInput) => {
+        if (!options?.token)
+          return false
+        return 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'
+      },
       category: 'analytics',
       logo: LOGOS.mixpanelAnalytics,
       import: {

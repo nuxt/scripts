@@ -150,7 +150,7 @@ const PARTYTOWN_FORWARDS: Partial<Record<RegistryScriptKey, string[]>> = {
   umamiAnalytics: ['umami', 'umami.track'],
   matomoAnalytics: ['_paq.push'],
   segment: ['analytics', 'analytics.track', 'analytics.page', 'analytics.identify'],
-  mixpanelAnalytics: ['mixpanel', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register'],
+  mixpanelAnalytics: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register'],
   metaPixel: ['fbq'],
   xPixel: ['twq'],
   tiktokPixel: ['ttq.track', 'ttq.page', 'ttq.identify'],
