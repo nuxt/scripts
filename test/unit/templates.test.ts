@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import { normalizeRegistryConfig } from '../../src/normalize'
 import { resolveTriggerForTemplate, templatePlugin } from '../../src/templates'
+
+/** Normalize registry config before passing to templatePlugin (mirrors module.ts behavior) */
+function templatePluginNormalized(config: Parameters<typeof templatePlugin>[0], registry: Parameters<typeof templatePlugin>[1]) {
+  if (config.registry)
+    normalizeRegistryConfig(config.registry as Record<string, any>)
+  return templatePlugin(config, registry)
+}
 
 describe('template plugin file', () => {
   // global
@@ -103,7 +111,7 @@ describe('template plugin file', () => {
   })
   // registry
   it('registry object', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         stripe: {
@@ -120,7 +128,7 @@ describe('template plugin file', () => {
     expect(res).toContain('useScriptStripe({"id":"test"})')
   })
   it('registry array', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         stripe: [
@@ -143,7 +151,7 @@ describe('template plugin file', () => {
   })
 
   it('registry with partytown option', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         googleAnalytics: [
@@ -189,7 +197,7 @@ describe('template plugin file', () => {
 
   // Test registry with idleTimeout trigger
   it('registry with idleTimeout trigger', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       registry: {
         googleAnalytics: [
           { id: 'GA_MEASUREMENT_ID' },

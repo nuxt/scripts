@@ -61,7 +61,7 @@ export default defineNuxtConfig({
     registry: {
       posthog: {
         apiKey: 'YOUR_API_KEY',
-        // apiHost is auto-set to '/_proxy/ph' (or '/_proxy/ph-eu' for EU region)
+        // apiHost is auto-set to '/_scripts/p/ph' (or '/_scripts/p/ph-eu' for EU region)
       }
     }
   }

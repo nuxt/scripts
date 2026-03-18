@@ -38,51 +38,51 @@ function clearCaptures() {
  */
 const PROVIDER_PATHS: Record<string, string[]> = {
   googleAnalytics: [
-    '/_scripts/c/ga',
-    '/_scripts/c/gtm',
-    '/_scripts/c/ga-dc', // DoubleClick
-    '/_scripts/c/ga-syn', // Google Syndication
-    '/_scripts/c/ga-ads', // Google Ads
-    '/_scripts/c/ga-gads', // Google Ads DoubleClick
+    '/_scripts/p/ga',
+    '/_scripts/p/gtm',
+    '/_scripts/p/ga-dc', // DoubleClick
+    '/_scripts/p/ga-syn', // Google Syndication
+    '/_scripts/p/ga-ads', // Google Ads
+    '/_scripts/p/ga-gads', // Google Ads DoubleClick
   ],
-  googleTagManager: ['/_scripts/c/gtm'],
+  googleTagManager: ['/_scripts/p/gtm'],
   metaPixel: [
-    '/_scripts/c/meta',
-    '/_scripts/c/meta-tr',
-    '/_scripts/c/meta-px', // Pixel domain
-    '/_scripts/c/meta-plugins', // Plugins
+    '/_scripts/p/meta',
+    '/_scripts/p/meta-tr',
+    '/_scripts/p/meta-px', // Pixel domain
+    '/_scripts/p/meta-plugins', // Plugins
   ],
-  segment: ['/_scripts/c/segment', '/_scripts/c/segment-cdn'],
-  xPixel: ['/_scripts/c/x', '/_scripts/c/x-t'],
-  snapchatPixel: ['/_scripts/c/snap'],
+  segment: ['/_scripts/p/segment', '/_scripts/p/segment-cdn'],
+  xPixel: ['/_scripts/p/x', '/_scripts/p/x-t'],
+  snapchatPixel: ['/_scripts/p/snap'],
   clarity: [
-    '/_scripts/c/clarity',
-    '/_scripts/c/clarity-scripts', // Script loader
-    '/_scripts/c/clarity-data',
-    '/_scripts/c/clarity-events',
-    '/_scripts/c/clarity-collect', // k.clarity.ms beacon endpoint
+    '/_scripts/p/clarity',
+    '/_scripts/p/clarity-scripts', // Script loader
+    '/_scripts/p/clarity-data',
+    '/_scripts/p/clarity-events',
+    '/_scripts/p/clarity-collect', // k.clarity.ms beacon endpoint
   ],
   hotjar: [
-    '/_scripts/c/hotjar',
-    '/_scripts/c/hotjar-script', // Script loader
-    '/_scripts/c/hotjar-vars',
-    '/_scripts/c/hotjar-in',
-    '/_scripts/c/hotjar-vc',
-    '/_scripts/c/hotjar-metrics',
-    '/_scripts/c/hotjar-insights',
+    '/_scripts/p/hotjar',
+    '/_scripts/p/hotjar-script', // Script loader
+    '/_scripts/p/hotjar-vars',
+    '/_scripts/p/hotjar-in',
+    '/_scripts/p/hotjar-vc',
+    '/_scripts/p/hotjar-metrics',
+    '/_scripts/p/hotjar-insights',
   ],
-  tiktokPixel: ['/_scripts/c/tiktok'],
-  redditPixel: ['/_scripts/c/reddit'],
-  vercelAnalytics: ['/_scripts/c/vercel'],
-  posthog: ['/_scripts/c/ph', '/_scripts/c/ph-eu'],
-  umamiAnalytics: ['/_scripts/c/umami'],
-  plausibleAnalytics: ['/_scripts/c/plausible'],
-  cloudflareWebAnalytics: ['/_scripts/c/cfwa', '/_scripts/c/cfwa-beacon'],
-  fathomAnalytics: ['/_scripts/c/fathom'],
-  intercom: ['/_scripts/c/intercom', '/_scripts/c/intercom-api', '/_scripts/c/intercom-cdn'],
-  crisp: ['/_scripts/c/crisp'],
-  rybbitAnalytics: ['/_scripts/c/rybbit'],
-  databuddyAnalytics: ['/_scripts/c/databuddy', '/_scripts/c/databuddy-api'],
+  tiktokPixel: ['/_scripts/p/tiktok'],
+  redditPixel: ['/_scripts/p/reddit'],
+  vercelAnalytics: ['/_scripts/p/vercel'],
+  posthog: ['/_scripts/p/ph', '/_scripts/p/ph-eu'],
+  umamiAnalytics: ['/_scripts/p/umami'],
+  plausibleAnalytics: ['/_scripts/p/plausible'],
+  cloudflareWebAnalytics: ['/_scripts/p/cfwa', '/_scripts/p/cfwa-beacon'],
+  fathomAnalytics: ['/_scripts/p/fathom'],
+  intercom: ['/_scripts/p/intercom', '/_scripts/p/intercom-api', '/_scripts/p/intercom-cdn'],
+  crisp: ['/_scripts/p/crisp'],
+  rybbitAnalytics: ['/_scripts/p/rybbit'],
+  databuddyAnalytics: ['/_scripts/p/databuddy', '/_scripts/p/databuddy-api'],
 }
 
 /**
@@ -571,7 +571,7 @@ describe('first-party privacy stripping', () => {
   describe('proxy endpoint', () => {
     it('proxy endpoint works directly', async () => {
       // Test if the proxy endpoint can reach external URL
-      const response = await $fetch('/_scripts/c/gtm/gtag/js?id=G-TEST', {
+      const response = await $fetch('/_scripts/p/gtm/gtag/js?id=G-TEST', {
         responseType: 'text',
         timeout: 5000,
       }).catch((e: any) => ({
@@ -626,7 +626,7 @@ describe('first-party privacy stripping', () => {
       // Combine all cached scripts content
       const allContent = files.map(f => readFileSync(join(cacheDir, f), 'utf-8')).join('\n')
       // Verify at least one proxy URL is present (GA, Clarity, etc.)
-      const hasProxyUrl = allContent.includes('/_scripts/c/')
+      const hasProxyUrl = allContent.includes('/_scripts/p/')
       expect(hasProxyUrl).toBe(true)
     })
   })
@@ -657,7 +657,7 @@ describe('first-party privacy stripping', () => {
           }
         }
         const parsed = new URL(reqUrl)
-        if (parsed.pathname.startsWith('/_scripts/c/')) {
+        if (parsed.pathname.startsWith('/_scripts/p/')) {
           proxyRequests.push(parsed.pathname)
         }
         else if (serverOrigin && !reqUrl.startsWith(serverOrigin) && parsed.protocol.startsWith('http')) {
@@ -686,11 +686,11 @@ describe('first-party privacy stripping', () => {
 
     /**
      * Providers with full runtime proxy support — their bundled scripts route
-     * runtime API calls (collect, track, beacon) through /_scripts/c/ endpoints.
+     * runtime API calls (collect, track, beacon) through /_scripts/p/ endpoints.
      * Tests for these providers strictly assert proxy requests + captures.
      *
      * Providers NOT in this set only have script bundling (loaded from /_scripts/assets/)
-     * but their runtime calls bypass /_scripts/c/ and go directly to third-party domains.
+     * but their runtime calls bypass /_scripts/p/ and go directly to third-party domains.
      * Tests for those providers document the external requests but don't fail.
      */
     const FULL_PROXY_PROVIDERS = new Set([
@@ -790,7 +790,7 @@ describe('first-party privacy stripping', () => {
         clickSelectors: ['#trigger-pageview'],
       })
       await assertCaptures('googleAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/',
+        proxyPrefix: '/_scripts/p/',
         domains: ['google-analytics.com', 'analytics.google.com'],
       })
     }, 45000)
@@ -798,7 +798,7 @@ describe('first-party privacy stripping', () => {
     it('googleTagManager', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('googleTagManager', '/gtm')
       await assertCaptures('googleTagManager', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/gtm',
+        proxyPrefix: '/_scripts/p/gtm',
         domains: ['googletagmanager.com'],
       })
     }, 30000)
@@ -808,7 +808,7 @@ describe('first-party privacy stripping', () => {
         clickSelectors: ['#trigger-pageview', '#trigger-event'],
       })
       await assertCaptures('metaPixel', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/meta',
+        proxyPrefix: '/_scripts/p/meta',
         domains: ['facebook.com', 'facebook.net'],
       })
     }, 30000)
@@ -818,7 +818,7 @@ describe('first-party privacy stripping', () => {
         clickSelectors: ['#trigger-page', '#trigger-event'],
       })
       await assertCaptures('segment', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/segment',
+        proxyPrefix: '/_scripts/p/segment',
         domains: ['segment.io', 'segment.com'],
       })
     }, 30000)
@@ -826,7 +826,7 @@ describe('first-party privacy stripping', () => {
     it('xPixel', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('xPixel', '/x')
       await assertCaptures('xPixel', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/x',
+        proxyPrefix: '/_scripts/p/x',
         domains: ['twitter.com', 't.co'],
       })
     }, 30000)
@@ -836,7 +836,7 @@ describe('first-party privacy stripping', () => {
         clickSelectors: ['#trigger-pageview', '#trigger-event'],
       })
       await assertCaptures('snapchatPixel', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/snap',
+        proxyPrefix: '/_scripts/p/snap',
         domains: ['snapchat.com'],
       })
     }, 30000)
@@ -844,7 +844,7 @@ describe('first-party privacy stripping', () => {
     it('clarity', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('clarity', '/clarity')
       await assertCaptures('clarity', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/clarity',
+        proxyPrefix: '/_scripts/p/clarity',
         domains: ['clarity.ms'],
       })
     }, 30000)
@@ -855,7 +855,7 @@ describe('first-party privacy stripping', () => {
       // Script loads from /_scripts/assets/ (verified in bundle coverage test below).
       if (captures.length > 0) {
         await assertCaptures('hotjar', captures, rawCaptures, proxyRequests, externalRequests, {
-          proxyPrefix: '/_scripts/c/hotjar',
+          proxyPrefix: '/_scripts/p/hotjar',
           domains: ['hotjar.com'],
         })
       }
@@ -868,7 +868,7 @@ describe('first-party privacy stripping', () => {
       // TikTok has a dummy key — can't require captures
       if (captures.length > 0) {
         await assertCaptures('tiktokPixel', captures, rawCaptures, proxyRequests, externalRequests, {
-          proxyPrefix: '/_scripts/c/tiktok',
+          proxyPrefix: '/_scripts/p/tiktok',
           domains: ['tiktok.com'],
         })
       }
@@ -879,7 +879,7 @@ describe('first-party privacy stripping', () => {
         clickSelectors: ['#trigger-pagevisit', '#trigger-event'],
       })
       await assertCaptures('redditPixel', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/reddit',
+        proxyPrefix: '/_scripts/p/reddit',
         domains: ['reddit.com'],
       })
     }, 30000)
@@ -904,7 +904,7 @@ describe('first-party privacy stripping', () => {
     it('posthog', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('posthog', '/posthog')
       await assertCaptures('posthog', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/ph',
+        proxyPrefix: '/_scripts/p/ph',
         domains: ['posthog.com'],
       })
     }, 30000)
@@ -912,7 +912,7 @@ describe('first-party privacy stripping', () => {
     it('umamiAnalytics', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('umamiAnalytics', '/umami')
       await assertCaptures('umamiAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/umami',
+        proxyPrefix: '/_scripts/p/umami',
         domains: ['umami.is'],
       })
     }, 30000)
@@ -920,7 +920,7 @@ describe('first-party privacy stripping', () => {
     it('plausibleAnalytics', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('plausibleAnalytics', '/plausible')
       await assertCaptures('plausibleAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/plausible',
+        proxyPrefix: '/_scripts/p/plausible',
         domains: ['plausible.io'],
       })
     }, 30000)
@@ -928,7 +928,7 @@ describe('first-party privacy stripping', () => {
     it('cloudflareWebAnalytics', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('cloudflareWebAnalytics', '/cfwa')
       await assertCaptures('cloudflareWebAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/cfwa',
+        proxyPrefix: '/_scripts/p/cfwa',
         domains: ['cloudflareinsights.com'],
       })
     }, 30000)
@@ -936,7 +936,7 @@ describe('first-party privacy stripping', () => {
     it('fathomAnalytics', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('fathomAnalytics', '/fathom')
       await assertCaptures('fathomAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/fathom',
+        proxyPrefix: '/_scripts/p/fathom',
         domains: ['usefathom.com'],
       })
     }, 30000)
@@ -944,7 +944,7 @@ describe('first-party privacy stripping', () => {
     it('intercom', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('intercom', '/intercom-test')
       await assertCaptures('intercom', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/intercom',
+        proxyPrefix: '/_scripts/p/intercom',
         domains: ['intercom.io', 'intercomcdn.com'],
       })
     }, 30000)
@@ -952,7 +952,7 @@ describe('first-party privacy stripping', () => {
     it('crisp', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('crisp', '/crisp-test')
       await assertCaptures('crisp', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/crisp',
+        proxyPrefix: '/_scripts/p/crisp',
         domains: ['crisp.chat'],
       })
     }, 30000)
@@ -960,7 +960,7 @@ describe('first-party privacy stripping', () => {
     it('rybbitAnalytics', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('rybbitAnalytics', '/rybbit')
       await assertCaptures('rybbitAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/rybbit',
+        proxyPrefix: '/_scripts/p/rybbit',
         domains: ['rybbit.io'],
       })
     }, 30000)
@@ -968,7 +968,7 @@ describe('first-party privacy stripping', () => {
     it('databuddyAnalytics', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests } = await testProvider('databuddyAnalytics', '/databuddy')
       await assertCaptures('databuddyAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/c/databuddy',
+        proxyPrefix: '/_scripts/p/databuddy',
         domains: ['databuddy.cc'],
       })
     }, 30000)
@@ -1025,7 +1025,7 @@ describe('first-party privacy stripping', () => {
         uncaughtErrors.push(msg)
       })
 
-      // Catch failed responses from our server (/_scripts/c/ and /_scripts/).
+      // Catch failed responses from our server (/_scripts/p/ and /_scripts/).
       // External 4xx from third-party services with test keys is expected.
       page.on('response', (response) => {
         const reqUrl = response.url()
@@ -1092,7 +1092,7 @@ describe('first-party privacy stripping', () => {
         const content = readFileSync(join(cacheDir, file), 'utf-8')
 
         // Check for the broken pattern: expression in object property key position
-        // e.g. {self.location.origin+"/_scripts/c/...":handler}
+        // e.g. {self.location.origin+"/_scripts/p/...":handler}
         // Must distinguish from ternary `:` (condition?expr:else) which is valid.
         // Object keys appear after `{` or `,` — match those preceding contexts.
         const brokenPropertyKeyPattern = /[{,]\s*self\.location\.origin\+["'`][^"'`]*["'`]\s*:/
@@ -1102,7 +1102,7 @@ describe('first-party privacy stripping', () => {
         ).toBe(false)
 
         // Verify proxy URLs are present (rewrites applied)
-        if (content.includes('/_scripts/c/') || content.includes('/_scripts/c/')) {
+        if (content.includes('/_scripts/p/') || content.includes('/_scripts/p/')) {
           // Script has proxy rewrites — verify no full third-party URLs remain in common URL patterns
           const thirdPartyUrlPattern = /["'`]https?:\/\/(?:www\.google-analytics\.com|analytics\.tiktok\.com|connect\.facebook\.net)\//
           const hasUnrewrittenUrls = thirdPartyUrlPattern.test(content)
@@ -1164,7 +1164,7 @@ describe('first-party privacy stripping', () => {
         const pathname = new URL(reqUrl).pathname
         if (pathname.startsWith('/_scripts/assets/'))
           scriptRequests.push({ url: pathname, status })
-        if (pathname.startsWith('/_scripts/c/'))
+        if (pathname.startsWith('/_scripts/p/'))
           proxyRequests.push({ url: pathname, status })
       })
 

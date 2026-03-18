@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { getProxyConfig } from '../../src/proxy-configs'
+import { getAllProxyConfigs } from '../../src/first-party'
 
 describe('gravatar proxy config', () => {
   it('returns proxy config for gravatar', () => {
-    const config = getProxyConfig('gravatar', '/_scripts/c')
+    const config = getAllProxyConfigs('/_scripts/c').gravatar
     expect(config).toBeDefined()
     expect(config?.rewrite).toBeDefined()
     expect(config?.routes).toBeDefined()
   })
 
   it('rewrites secure.gravatar.com for hovercards JS', () => {
-    const config = getProxyConfig('gravatar', '/_scripts/c')
+    const config = getAllProxyConfigs('/_scripts/c').gravatar
     expect(config?.rewrite).toContainEqual({
       from: 'secure.gravatar.com',
       to: '/_scripts/c/gravatar',
@@ -18,7 +18,7 @@ describe('gravatar proxy config', () => {
   })
 
   it('rewrites gravatar.com/avatar for image proxying', () => {
-    const config = getProxyConfig('gravatar', '/_scripts/c')
+    const config = getAllProxyConfigs('/_scripts/c').gravatar
     expect(config?.rewrite).toContainEqual({
       from: 'gravatar.com/avatar',
       to: '/_scripts/c/gravatar-avatar',
@@ -26,7 +26,7 @@ describe('gravatar proxy config', () => {
   })
 
   it('routes proxy to correct targets', () => {
-    const config = getProxyConfig('gravatar', '/_scripts/c')
+    const config = getAllProxyConfigs('/_scripts/c').gravatar
     expect(config?.routes?.['/_scripts/c/gravatar/**']).toEqual({
       proxy: 'https://secure.gravatar.com/**',
     })
@@ -36,7 +36,7 @@ describe('gravatar proxy config', () => {
   })
 
   it('uses custom collectPrefix', () => {
-    const config = getProxyConfig('gravatar', '/_custom/proxy')
+    const config = getAllProxyConfigs('/_custom/proxy').gravatar
     expect(config?.rewrite).toContainEqual({
       from: 'secure.gravatar.com',
       to: '/_custom/proxy/gravatar',

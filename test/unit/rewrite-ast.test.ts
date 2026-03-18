@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getAllProxyConfigs } from '../../src/first-party'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
 
 const rewrites = [
@@ -179,6 +180,46 @@ describe('rewriteScriptUrlsAST', () => {
 
     it('neutralizes bracket notation obfuscation: c["toDataURL"]()', () => {
       expect(rewrite('var c = document.createElement("canvas"); c["toDataURL"]();')).toContain(blankPng)
+    })
+  })
+
+  describe('rybbit SDK host derivation patching', () => {
+    const rybbitConfig = getAllProxyConfigs('/_scripts/p').rybbitAnalytics
+
+    function rewriteRybbit(code: string): string {
+      return rewriteScriptUrlsAST(code, 'rybbit.js', rybbitConfig.rewrite!, rybbitConfig.postProcess)
+    }
+
+    it('patches e.split("/script.js")[0] with proxy path', () => {
+      const code = 'let e=n.getAttribute("src");let t=e.split("/script.js")[0];'
+      const result = rewriteRybbit(code)
+      expect(result).toContain('self.location.origin+"/_scripts/p/rybbit/api"')
+      expect(result).not.toContain('.split("/script.js")[0]')
+    })
+
+    it('patches with single quotes', () => {
+      const code = 'let e=n.getAttribute(\'src\');let t=e.split(\'/script.js\')[0];'
+      const result = rewriteRybbit(code)
+      expect(result).toContain('self.location.origin+"/_scripts/p/rybbit/api"')
+    })
+
+    it('patches with different variable names', () => {
+      const code = 'var src=el.getAttribute("src");var host=src.split("/script.js")[0];'
+      const result = rewriteRybbit(code)
+      expect(result).toContain('self.location.origin+"/_scripts/p/rybbit/api"')
+    })
+
+    it('uses custom proxyPrefix', () => {
+      const customConfig = getAllProxyConfigs('/_analytics').rybbitAnalytics
+      const code = 'let t=e.split("/script.js")[0];'
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', customConfig.rewrite!, customConfig.postProcess)
+      expect(result).toContain('self.location.origin+"/_analytics/rybbit/api"')
+    })
+
+    it('does not patch when no rybbit postProcess is provided', () => {
+      const code = 'let t=e.split("/script.js")[0];'
+      const result = rewrite(code) // uses default rewrites (example.com), no postProcess
+      expect(result).toContain('.split("/script.js")[0]')
     })
   })
 

@@ -1,19 +1,36 @@
 import { describe, expect, it } from 'vitest'
-import { autoInjectProxyEndpoints } from '../../src/first-party/auto-inject'
+import { getAllProxyConfigs } from '../../src/first-party/proxy-configs'
+import { applyAutoInject } from '../../src/first-party/setup'
+import { normalizeRegistryConfig } from '../../src/normalize'
 
 function makeRuntimeConfig(scripts: Record<string, any> = {}) {
   return { public: { scripts } }
 }
 
-describe('autoInjectProxyEndpoints', () => {
+/**
+ * Apply auto-inject for all proxy configs that have autoInject defined,
+ * mimicking what finalizeFirstParty does (normalize → inject).
+ */
+function autoInjectAll(registry: any, rt: any, proxyPrefix: string) {
+  normalizeRegistryConfig(registry)
+  const configs = getAllProxyConfigs(proxyPrefix)
+  for (const [key, config] of Object.entries(configs)) {
+    if (config.autoInject && registry[key] !== undefined) {
+      applyAutoInject(registry, rt, proxyPrefix, key, config.autoInject)
+    }
+  }
+}
+
+describe('autoInject via proxy configs', () => {
   describe('object entries', () => {
     it('injects apiHost for posthog config object', () => {
       const registry: any = { posthog: { apiKey: 'phc_test' } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.posthog.apiHost).toBe('/_proxy/ph')
+      // After normalization, object entries become [input]
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph')
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
     })
 
@@ -21,9 +38,9 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { plausibleAnalytics: { domain: 'example.com' } }
       const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: 'example.com' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.plausibleAnalytics.endpoint).toBe('/_proxy/plausible/api/event')
+      expect(registry.plausibleAnalytics[0].endpoint).toBe('/_proxy/plausible/api/event')
       expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible/api/event')
     })
 
@@ -31,9 +48,9 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: { apiKey: 'phc_test', apiHost: 'https://custom.host' } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test', apiHost: 'https://custom.host' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.posthog.apiHost).toBe('https://custom.host')
+      expect(registry.posthog[0].apiHost).toBe('https://custom.host')
       expect(rt.public.scripts.posthog.apiHost).toBe('https://custom.host')
     })
 
@@ -41,9 +58,9 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: { apiKey: 'phc_test', region: 'eu' } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test', region: 'eu' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.posthog.apiHost).toBe('/_proxy/ph-eu')
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph-eu')
     })
   })
 
@@ -52,7 +69,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: [{ apiKey: 'phc_test' }, { partytown: true }] }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(registry.posthog[0].apiHost).toBe('/_proxy/ph')
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
@@ -62,7 +79,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: [] }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.posthog.apiHost).toBeUndefined()
     })
@@ -73,9 +90,10 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: true }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.posthog).toBe(true)
+      // After normalization, true becomes [{}] — both input and runtimeConfig get the value
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph')
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
     })
 
@@ -83,7 +101,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: true }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '', region: 'eu' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph-eu')
     })
@@ -92,7 +110,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { plausibleAnalytics: true }
       const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible/api/event')
     })
@@ -101,7 +119,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { umamiAnalytics: true }
       const rt = makeRuntimeConfig({ umamiAnalytics: { websiteId: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.umamiAnalytics.hostUrl).toBe('/_proxy/umami')
     })
@@ -110,7 +128,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { rybbitAnalytics: true }
       const rt = makeRuntimeConfig({ rybbitAnalytics: { siteId: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.rybbitAnalytics.analyticsHost).toBe('/_proxy/rybbit/api')
     })
@@ -119,7 +137,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { databuddyAnalytics: true }
       const rt = makeRuntimeConfig({ databuddyAnalytics: { clientId: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.databuddyAnalytics.apiUrl).toBe('/_proxy/databuddy-api')
     })
@@ -130,18 +148,18 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: 'mock' }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
     })
   })
 
   describe('skipped entries', () => {
-    it('skips scripts not in AUTO_INJECT_DEFS', () => {
+    it('skips scripts without autoInject config', () => {
       const registry: any = { googleAnalytics: { id: 'G-TEST' } }
       const rt = makeRuntimeConfig({ googleAnalytics: { id: 'G-TEST' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.googleAnalytics).toEqual({ id: 'G-TEST' })
     })
@@ -150,7 +168,7 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: false }
       const rt = makeRuntimeConfig()
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.posthog).toBeUndefined()
     })
@@ -159,18 +177,18 @@ describe('autoInjectProxyEndpoints', () => {
       const registry: any = { posthog: false }
       const rt = makeRuntimeConfig({ posthog: { existing: 'value' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_proxy')
+      autoInjectAll(registry, rt, '/_proxy')
 
       expect(rt.public.scripts.posthog).toEqual({ existing: 'value' })
     })
   })
 
-  describe('custom collectPrefix', () => {
+  describe('custom proxyPrefix', () => {
     it('uses custom prefix in computed values', () => {
       const registry: any = { posthog: true }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
-      autoInjectProxyEndpoints(registry, rt, '/_analytics')
+      autoInjectAll(registry, rt, '/_analytics')
 
       expect(rt.public.scripts.posthog.apiHost).toBe('/_analytics/ph')
     })
