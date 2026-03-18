@@ -1,3 +1,4 @@
+import type { Ref } from 'vue'
 import type { ConsentScriptTriggerOptions } from '../types'
 import { onNuxtReady, requestIdleCallback, tryUseNuxtApp } from 'nuxt/app'
 import { isRef, ref, toValue, watch } from 'vue'
@@ -7,24 +8,62 @@ interface UseConsentScriptTriggerApi extends Promise<void> {
    * A function that can be called to accept the consent and load the script.
    */
   accept: () => void
+  /**
+   * A function that can be called to revoke consent and signal the script should be unloaded.
+   */
+  revoke: () => void
+  /**
+   * Reactive reference to the consent state
+   */
+  consented: Ref<boolean>
 }
 
 /**
  * Load a script once consent has been provided either through a resolvable `consent` or calling the `accept` method.
+ * Supports revoking consent via the reactive `consented` ref. Consumers should watch `consented` to react to revocation.
  * @param options
  */
 export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): UseConsentScriptTriggerApi {
-  if (import.meta.server)
-    return new Promise(() => {}) as UseConsentScriptTriggerApi
+  if (import.meta.server) {
+    const p = new Promise<void>(() => {}) as UseConsentScriptTriggerApi
+    p.accept = () => {}
+    p.revoke = () => {}
+    p.consented = ref(false)
+    return p
+  }
 
   const consented = ref<boolean>(false)
-  // user may want ot still load the script on idle
   const nuxtApp = tryUseNuxtApp()
+
+  // Setup initial consent value
+  if (options?.consent) {
+    if (isRef(options?.consent)) {
+      watch(options.consent, (_val) => {
+        const val = toValue(_val)
+        consented.value = Boolean(val)
+      }, { immediate: true })
+    }
+    // check for boolean primitive
+    else if (typeof options?.consent === 'boolean') {
+      consented.value = options?.consent
+    }
+    // consent is a promise
+    else if (options?.consent instanceof Promise) {
+      options.consent
+        .then((res) => {
+          consented.value = typeof res === 'boolean' ? res : true
+        })
+        .catch(() => {
+          consented.value = false
+        })
+    }
+  }
+
   const promise = new Promise<void>((resolve) => {
-    watch(consented, (ready) => {
-      if (ready) {
+    watch(consented, (newValue, oldValue) => {
+      if (newValue && !oldValue) {
+        // Consent granted - load script
         const runner = nuxtApp?.runWithContext || ((cb: () => void) => cb())
-        // TODO drop support in v1
         if (options?.postConsentTrigger instanceof Promise) {
           options.postConsentTrigger.then(() => runner(resolve))
           return
@@ -50,29 +89,21 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
         // other trigger not supported
         runner(resolve)
       }
-    })
-    if (options?.consent) {
-      if (isRef(options?.consent)) {
-        watch(options.consent, (_val) => {
-          const val = toValue(_val)
-          consented.value = Boolean(val)
-        }, { immediate: true })
-      }
-      // check for boolean primitive
-      else if (typeof options?.consent === 'boolean') {
-        consented.value = options?.consent
-      }
-      // consent is a promise
-      else if (options?.consent instanceof Promise) {
-        options?.consent.then((res) => {
-          consented.value = typeof res === 'boolean' ? res : true
-        })
-      }
-    }
+      // Revocation is handled via the reactive `consented` ref, not promise rejection.
+      // Once resolved, a promise cannot be rejected — consumers should watch `consented` instead.
+    }, { immediate: true })
   }) as UseConsentScriptTriggerApi
+
   // we augment the promise with a consent API
   promise.accept = () => {
     consented.value = true
   }
+
+  promise.revoke = () => {
+    consented.value = false
+  }
+
+  promise.consented = consented
+
   return promise as UseConsentScriptTriggerApi
 }
