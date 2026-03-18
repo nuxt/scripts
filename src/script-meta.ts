@@ -46,6 +46,10 @@ export const scriptMeta = {
     urls: ['https://cdn.databuddy.cc/databuddy.js'],
     trackedData: ['page-views', 'events'],
   },
+  mixpanelAnalytics: {
+    urls: ['https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'],
+    trackedData: ['page-views', 'events', 'conversions', 'user-identity'],
+  },
   segment: {
     urls: ['https://cdn.segment.com/analytics.js/v1/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/analytics.min.js'],
     trackedData: ['page-views', 'events', 'conversions', 'user-identity'],

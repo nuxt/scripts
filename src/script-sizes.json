@@ -374,6 +374,60 @@
       }
     ]
   },
+  "mixpanelAnalytics": {
+    "totalTransferKb": 45.2,
+    "totalDecodedKb": 148,
+    "loadTimeMs": 320,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "cdn.mxpnl.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 46285,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 12,
+      "scriptDurationMs": 8,
+      "heapDeltaKb": 1200
+    },
+    "scripts": [
+      {
+        "url": "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js",
+        "transferKb": 45.2,
+        "decodedKb": 148,
+        "encoding": "gzip",
+        "durationMs": 320,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
   "segment": {
     "totalTransferKb": 29.6,
     "totalDecodedKb": 107,
