@@ -1,5 +1,11 @@
 import { useRegistryScript } from '#nuxt-scripts/utils'
 
+declare global {
+  interface Window {
+    myScript: () => void
+  }
+}
+
 export interface CustomApi {
   myScript: () => void
 }

@@ -1,5 +1,451 @@
 # Changelog
 
+## v1.0.0-beta.6...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.6...main)
+
+### 🩹 Fixes
+
+- **posthog:** 'history_change' as a capture_pageview option ([#620](https://github.com/nuxt/scripts/pull/620))
+- Preserve compressed/binary request bodies in proxy handler ([#619](https://github.com/nuxt/scripts/pull/619))
+
+### 🏡 Chore
+
+- Bump deps ([4d79e91](https://github.com/nuxt/scripts/commit/4d79e91))
+- Fix rybbit loogo ([68eeb73](https://github.com/nuxt/scripts/commit/68eeb73))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Kuba ([@zizzfizzix](https://github.com/zizzfizzix))
+
+## v1.0.0-beta.5...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.5...main)
+
+### 💅 Refactors
+
+- Replace SW + beacon monkey-patch with AST-based API rewriting ([#614](https://github.com/nuxt/scripts/pull/614))
+
+### 🏡 Chore
+
+- Bump deps ([814bbf6](https://github.com/nuxt/scripts/commit/814bbf6))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.4...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.4...main)
+
+### 🩹 Fixes
+
+- Protect against broken new URL when proxying ([cb7ff7e](https://github.com/nuxt/scripts/commit/cb7ff7e))
+
+### 🏡 Chore
+
+- Bump ([d03285a](https://github.com/nuxt/scripts/commit/d03285a))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.3...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.3...main)
+
+### 🩹 Fixes
+
+- Broken bundle transforms ([84709eb](https://github.com/nuxt/scripts/commit/84709eb))
+
+### 🏡 Chore
+
+- Bump ([4a23752](https://github.com/nuxt/scripts/commit/4a23752))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.2...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.2...main)
+
+### 🚀 Enhancements
+
+- **posthog:** Support proxy mode ([6c4675f](https://github.com/nuxt/scripts/commit/6c4675f))
+- **proxy:** Granular per-script privacy controls ([#611](https://github.com/nuxt/scripts/pull/611))
+
+### 🩹 Fixes
+
+- Broken bare domain path matching ([58fe9e3](https://github.com/nuxt/scripts/commit/58fe9e3))
+
+### 🏡 Chore
+
+- Bump deps ([ff0135e](https://github.com/nuxt/scripts/commit/ff0135e))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v1.0.0-beta.1...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v1.0.0-beta.1...main)
+
+### 🚀 Enhancements
+
+- Add SSR social media embeds for X and Instagram ([#590](https://github.com/nuxt/scripts/pull/590))
+- Experimental nuxt/partytown support ([#576](https://github.com/nuxt/scripts/pull/576))
+- First-party proxy mode with privacy anonymization ([#577](https://github.com/nuxt/scripts/pull/577))
+
+### 🔥 Performance
+
+- Migrate plugins to oxc-walker (parseAndWalk) ([#610](https://github.com/nuxt/scripts/pull/610))
+
+### 🩹 Fixes
+
+- Safer resolve of triggers via nuxt.config ([738703a](https://github.com/nuxt/scripts/commit/738703a))
+- Import from `@nuxt/schema` ([#600](https://github.com/nuxt/scripts/pull/600))
+- Explicit opt-in for proxy mode ([ef5f418](https://github.com/nuxt/scripts/commit/ef5f418))
+- Migrate to unplugin v3 ([409a88c](https://github.com/nuxt/scripts/commit/409a88c))
+- **proxy:** Missing path separators ([a935e97](https://github.com/nuxt/scripts/commit/a935e97))
+- Better registry key matching ([23c7545](https://github.com/nuxt/scripts/commit/23c7545))
+- **proxy:** Missing script src ([fadda86](https://github.com/nuxt/scripts/commit/fadda86))
+- **tiktok:** Missing global ([8b39140](https://github.com/nuxt/scripts/commit/8b39140))
+
+### 📖 Documentation
+
+- Add skilld agent skill snippet ([#603](https://github.com/nuxt/scripts/pull/603))
+
+### 🏡 Chore
+
+- Broken type checks ([c5e8c84](https://github.com/nuxt/scripts/commit/c5e8c84))
+- Missed files ([0485d59](https://github.com/nuxt/scripts/commit/0485d59))
+- Sync ([eaf6620](https://github.com/nuxt/scripts/commit/eaf6620))
+- Disable proxy service worker in dev ([473894b](https://github.com/nuxt/scripts/commit/473894b))
+- Bump deps ([b0a5dca](https://github.com/nuxt/scripts/commit/b0a5dca))
+- Bump deps ([989e90d](https://github.com/nuxt/scripts/commit/989e90d))
+- Broken tests ([e96c0d3](https://github.com/nuxt/scripts/commit/e96c0d3))
+- Broken tests ([97d72a4](https://github.com/nuxt/scripts/commit/97d72a4))
+- Broken tests ([8dd59f5](https://github.com/nuxt/scripts/commit/8dd59f5))
+- Broken tests ([9c4662e](https://github.com/nuxt/scripts/commit/9c4662e))
+- Sync ([4290e7e](https://github.com/nuxt/scripts/commit/4290e7e))
+- Sync ([4db19a8](https://github.com/nuxt/scripts/commit/4db19a8))
+- Sync ([90ecc42](https://github.com/nuxt/scripts/commit/90ecc42))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Daniel Roe ([@danielroe](https://github.com/danielroe))
+
+## v0.13.1...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.13.1...main)
+
+### 🩹 Fixes
+
+- Allow `@stripe/stripe-js` v8 ([f516827](https://github.com/nuxt/scripts/commit/f516827))
+- **paypal:** V9 sdk peer dependency ([a8a93f4](https://github.com/nuxt/scripts/commit/a8a93f4))
+
+### 🏡 Chore
+
+- Changelog ([6d7b22a](https://github.com/nuxt/scripts/commit/6d7b22a))
+- Bump ([9909791](https://github.com/nuxt/scripts/commit/9909791))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v0.13.0...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.13.0...main)
+
+### 🩹 Fixes
+
+- **x-pixel:** Correct variable name from e.exe to s.exe ([#541](https://github.com/nuxt/scripts/pull/541))
+- Convert MarkerClusterer to dynamic import to support optional peer dependency ([#551](https://github.com/nuxt/scripts/pull/551))
+- **google-maps:** Missing types for `<ScriptGoogleMaps/>` ([#560](https://github.com/nuxt/scripts/pull/560))
+
+### 💅 Refactors
+
+- Use `extendViteConfig` in development ([#554](https://github.com/nuxt/scripts/pull/554))
+
+### 📖 Documentation
+
+- Correct weird wording ([#538](https://github.com/nuxt/scripts/pull/538))
+- Destruct TrackedPage payload ([#549](https://github.com/nuxt/scripts/pull/549))
+- Fix Nuxt badge icon ([#559](https://github.com/nuxt/scripts/pull/559))
+
+### 🏡 Chore
+
+- Bump ([d825df9](https://github.com/nuxt/scripts/commit/d825df9))
+- Vitest v4 fixes ([2053869](https://github.com/nuxt/scripts/commit/2053869))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Bobbie Goede <bobbiegoede@gmail.com>
+- IO-Fire ([@IO-Fire](https://github.com/IO-Fire))
+- Copilot ([@MicrosoftCopilot](https://github.com/MicrosoftCopilot))
+- Daniel Roe ([@danielroe](https://github.com/danielroe))
+- Dennis Adriaansen <adriaansendennis@gmail.com>
+- Kohei Tsukiyama ([@tsukiyama-3](https://github.com/tsukiyama-3))
+- Alexandru Ungureanu ([@unguul](https://github.com/unguul))
+
+## v0.12.2...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.12.2...main)
+
+### 🚀 Enhancements
+
+- ⚠️  Plausible script updates ([#534](https://github.com/nuxt/scripts/pull/534))
+
+### 🩹 Fixes
+
+- **google-maps:** Mark peer dependency as optional ([#537](https://github.com/nuxt/scripts/pull/537))
+- DefaultScriptOptions idleTimeout config ([faf83ff](https://github.com/nuxt/scripts/commit/faf83ff))
+
+### 🏡 Chore
+
+- Sync changelog ([da14392](https://github.com/nuxt/scripts/commit/da14392))
+- Bump ([e1a02d3](https://github.com/nuxt/scripts/commit/e1a02d3))
+
+#### ⚠️ Breaking Changes
+
+- ⚠️  Plausible script updates ([#534](https://github.com/nuxt/scripts/pull/534))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Danshil Kokil Mungur <danshil.mungur@gmail.com>
+
+## v0.12.1...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.12.1...main)
+
+### 🩹 Fixes
+
+- Databuddy types script registry ([#528](https://github.com/nuxt/scripts/pull/528))
+- **gtm:** Expose `gtag` globally ([#524](https://github.com/nuxt/scripts/pull/524))
+- Add missing autoImports ([#532](https://github.com/nuxt/scripts/pull/532))
+
+### 🏡 Chore
+
+- Bump ([927326d](https://github.com/nuxt/scripts/commit/927326d))
+- Bump ([fb10711](https://github.com/nuxt/scripts/commit/fb10711))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Julien Huang ([@huang-julien](https://github.com/huang-julien))
+- DanLdu ([@DanLDU](https://github.com/DanLDU))
+- Vachmara <valentinchmara@gmail.com>
+
+## v0.12.0...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.12.0...main)
+
+### 🔥 Performance
+
+- **googleMaps:** Avoid multiple rerenders when adding markers to clusterer ([#517](https://github.com/nuxt/scripts/pull/517))
+
+### 🩹 Fixes
+
+- Resolve import paths as absolute ([a217362](https://github.com/nuxt/scripts/commit/a217362))
+
+### 🏡 Chore
+
+- Changelog ([61d694e](https://github.com/nuxt/scripts/commit/61d694e))
+- Sync ([da732bf](https://github.com/nuxt/scripts/commit/da732bf))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Damian Głowala ([@DamianGlowala](https://github.com/DamianGlowala))
+
+## v0.11.13...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.13...main)
+
+### 🚀 Enhancements
+
+- Add databuddy analytics ([#495](https://github.com/nuxt/scripts/pull/495))
+- PayPal SDK ([#503](https://github.com/nuxt/scripts/pull/503))
+- Reddit Pixel ([#507](https://github.com/nuxt/scripts/pull/507))
+- **stripe:** ⚠️  Stripe basil ([#509](https://github.com/nuxt/scripts/pull/509))
+- **google-maps:** Declarative SFC API ([#510](https://github.com/nuxt/scripts/pull/510))
+- Bundling cache expiration & bypass ([#497](https://github.com/nuxt/scripts/pull/497))
+- **devtools:** Improved tracking ([9aa000d](https://github.com/nuxt/scripts/commit/9aa000d))
+- **matomoAnalytics:** ⚠️  `watch` mode ([#514](https://github.com/nuxt/scripts/pull/514))
+- New event triggers ([#515](https://github.com/nuxt/scripts/pull/515))
+
+### 🩹 Fixes
+
+- **devtools:** Show URL logos correctly ([30abad4](https://github.com/nuxt/scripts/commit/30abad4))
+- **devtools:** Show error status's ([22d91c5](https://github.com/nuxt/scripts/commit/22d91c5))
+- **devtools:** Show validation errors ([c9e1a20](https://github.com/nuxt/scripts/commit/c9e1a20))
+- **devtools:** Add null safety ([#501](https://github.com/nuxt/scripts/pull/501))
+- Merge query parms when overriding `scriptInput.src` ([#500](https://github.com/nuxt/scripts/pull/500))
+- **gtm:** Broken `onBeforeGtmStart` arguments ([#494](https://github.com/nuxt/scripts/pull/494))
+- **types:** Publish types for node context ([695b7f1](https://github.com/nuxt/scripts/commit/695b7f1))
+- **matomo:** Broken event tracking ([712a869](https://github.com/nuxt/scripts/commit/712a869))
+- Gracefully handle production only scripts ([a53ab33](https://github.com/nuxt/scripts/commit/a53ab33))
+- Drop `#imports` usage ([67b7e70](https://github.com/nuxt/scripts/commit/67b7e70))
+- Drop `performanceMarkFeature` emits ([c079f51](https://github.com/nuxt/scripts/commit/c079f51))
+- **googleAnalytics:** Support customer ids ([20aa9d5](https://github.com/nuxt/scripts/commit/20aa9d5))
+- Respect env data when bundling ([864102f](https://github.com/nuxt/scripts/commit/864102f))
+- Improved debugging when bundling fails ([34d7be7](https://github.com/nuxt/scripts/commit/34d7be7))
+- **useScriptEventPage:** Remove hooks on dispose ([cf5d715](https://github.com/nuxt/scripts/commit/cf5d715))
+
+### 📖 Documentation
+
+- Improve responsiveness ([#505](https://github.com/nuxt/scripts/pull/505))
+- Improve bundling documentation ([#498](https://github.com/nuxt/scripts/pull/498))
+
+### 🏡 Chore
+
+- Type issue ([fe6ea30](https://github.com/nuxt/scripts/commit/fe6ea30))
+- Changelog ([83e9954](https://github.com/nuxt/scripts/commit/83e9954))
+- Bump deps ([110eaa9](https://github.com/nuxt/scripts/commit/110eaa9))
+- Bump lock ([57ea493](https://github.com/nuxt/scripts/commit/57ea493))
+- Missing paypal type ([3c01eb8](https://github.com/nuxt/scripts/commit/3c01eb8))
+- Bump deps ([511b57f](https://github.com/nuxt/scripts/commit/511b57f))
+- Types ([1ae8043](https://github.com/nuxt/scripts/commit/1ae8043))
+- Standalone playground ([8662c66](https://github.com/nuxt/scripts/commit/8662c66))
+- Tidy up playground ([dbed5b7](https://github.com/nuxt/scripts/commit/dbed5b7))
+- Sync playground ([6571544](https://github.com/nuxt/scripts/commit/6571544))
+- Lint ([b7213e0](https://github.com/nuxt/scripts/commit/b7213e0))
+- Lint ([78fbd7c](https://github.com/nuxt/scripts/commit/78fbd7c))
+- Lint ([6361c68](https://github.com/nuxt/scripts/commit/6361c68))
+- Broken tests ([ba85f61](https://github.com/nuxt/scripts/commit/ba85f61))
+- Bump deps ([a27120d](https://github.com/nuxt/scripts/commit/a27120d))
+- Lint ([ecada33](https://github.com/nuxt/scripts/commit/ecada33))
+- Fix broken test ([9dd054f](https://github.com/nuxt/scripts/commit/9dd054f))
+- Bump deps ([b98c236](https://github.com/nuxt/scripts/commit/b98c236))
+- Maybe fix nightly ([b9f6727](https://github.com/nuxt/scripts/commit/b9f6727))
+
+#### ⚠️ Breaking Changes
+
+- **stripe:** ⚠️  Stripe basil ([#509](https://github.com/nuxt/scripts/pull/509))
+- **matomoAnalytics:** ⚠️  `watch` mode ([#514](https://github.com/nuxt/scripts/pull/514))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- René Kersten <rene.kersten@gmail.com>
+- Gelanderos <gelanderos@artlesslabs.com>
+- Vachmara <valentinchmara@gmail.com>
+
+## v0.11.12...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.12...main)
+
+### 🏡 Chore
+
+- Broken release script ([3e6fc59](https://github.com/nuxt/scripts/commit/3e6fc59))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v0.11.10...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.10...main)
+
+### 🏡 Chore
+
+- NPM trusted publishing ([b785b61](https://github.com/nuxt/scripts/commit/b785b61))
+- Sync changelog ([032f73c](https://github.com/nuxt/scripts/commit/032f73c))
+- Bump deps ([abfa89e](https://github.com/nuxt/scripts/commit/abfa89e))
+- Sync lock ([f26b0a2](https://github.com/nuxt/scripts/commit/f26b0a2))
+- Broken release script ([c79c45a](https://github.com/nuxt/scripts/commit/c79c45a))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v0.11.9...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.9...main)
+
+### 🏡 Chore
+
+- Migrate to `addTypeTemplate` ([399e0c2](https://github.com/nuxt/scripts/commit/399e0c2))
+- Add nightly releases ([e49434e](https://github.com/nuxt/scripts/commit/e49434e))
+- Drop nuxt peer dependency ([dc4e84a](https://github.com/nuxt/scripts/commit/dc4e84a))
+- Missing sqlite dep ([922467c](https://github.com/nuxt/scripts/commit/922467c))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+
+## v0.11.8...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.8...main)
+
+### 🚀 Enhancements
+
+- **rybbit:** Add new tracking configuration options ([#471](https://github.com/nuxt/scripts/pull/471))
+
+### 🩹 Fixes
+
+- **meta-pixel:** Refine fbq type definitions ([#464](https://github.com/nuxt/scripts/pull/464))
+- Support cdnURL for bundled scripts ([#472](https://github.com/nuxt/scripts/pull/472))
+
+### 📖 Documentation
+
+- Correct contents of XPixelAPI ([#465](https://github.com/nuxt/scripts/pull/465))
+
+### 🏡 Chore
+
+- Bump deps & changelog ([19c74b2](https://github.com/nuxt/scripts/commit/19c74b2))
+- Bump lock ([fb2d62b](https://github.com/nuxt/scripts/commit/fb2d62b))
+- Remove `bridge: false` from module compatibility ([#470](https://github.com/nuxt/scripts/pull/470))
+- Fix tests ([e14cd1b](https://github.com/nuxt/scripts/commit/e14cd1b))
+- Fix tests ([2b7002c](https://github.com/nuxt/scripts/commit/2b7002c))
+- Fix tests ([9f486ae](https://github.com/nuxt/scripts/commit/9f486ae))
+- Type issues ([243d8d6](https://github.com/nuxt/scripts/commit/243d8d6))
+- Sync lock ([0198225](https://github.com/nuxt/scripts/commit/0198225))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Dan <danker.twist@gmail.com>
+- Daniel Roe ([@danielroe](https://github.com/danielroe))
+- Nagaakihoshi <nagaaki.hoshi@yourmystar.jp>
+- Kohei Tsukiyama ([@tsukiyama-3](https://github.com/tsukiyama-3))
+
+## v0.11.7...main
+
+[compare changes](https://github.com/nuxt/scripts/compare/v0.11.7...main)
+
+### 🩹 Fixes
+
+- **GoogleMaps:** Properly handle centerMarker removal logic ([#460](https://github.com/nuxt/scripts/pull/460))
+- **rybbit:** Support number `siteId` ([ab89f42](https://github.com/nuxt/scripts/commit/ab89f42))
+- **rybbit:** Prefer top level functions ([8853333](https://github.com/nuxt/scripts/commit/8853333))
+- **UmamiAnalytics:** V2.18 compatibility ([7671c80](https://github.com/nuxt/scripts/commit/7671c80))
+- **VimeoPlayer:** Switch to new oembed API for thumbnails ([09fa69f](https://github.com/nuxt/scripts/commit/09fa69f))
+
+### 📖 Documentation
+
+- Add manual ContentSurround for the introduction step ([#456](https://github.com/nuxt/scripts/pull/456))
+
+### 🏡 Chore
+
+- Fix doc build ([8889c58](https://github.com/nuxt/scripts/commit/8889c58))
+- Missing lock file ([7f4da53](https://github.com/nuxt/scripts/commit/7f4da53))
+- Broken components ([1d72679](https://github.com/nuxt/scripts/commit/1d72679))
+- Docs overflow bug ([ab52c85](https://github.com/nuxt/scripts/commit/ab52c85))
+- **rybbit:** Improve types ([93e2971](https://github.com/nuxt/scripts/commit/93e2971))
+- Bump deps ([f9d9cc9](https://github.com/nuxt/scripts/commit/f9d9cc9))
+
+### ❤️ Contributors
+
+- Harlan Wilton ([@harlan-zw](https://github.com/harlan-zw))
+- Ilya Shaplyko ([@Shaglock](https://github.com/Shaglock))
+- Faudel HADROUG ([@Faudelhadroug](https://github.com/Faudelhadroug))
+
 ## v0.11.6...main
 
 [compare changes](https://github.com/nuxt/scripts/compare/v0.11.6...main)

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck
 
-/// <reference types="vimeo__player" />
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
+import type { ElementScriptTrigger } from '../types'
 import { defu } from 'defu'
 import { useAsyncData, useHead } from 'nuxt/app'
-import type { ElementScriptTrigger } from '../types'
+/// <reference types="vimeo__player" />
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
 import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
@@ -52,16 +52,24 @@ const props = withDefaults(defineProps<{
   vimeoOptions?: VimeoOptions
   id?: number | undefined
   url?: string | undefined
+  ratio?: string
+  /**
+   * Object-fit for the placeholder image.
+   *
+   * @default 'contain'
+   */
+  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 }>(), {
   trigger: 'mousedown',
+  ratio: '16/9',
+  placeholderObjectFit: 'contain',
 })
 
 const emits = defineEmits<TEmits>()
 
 type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type TEmits = {
+interface TEmits {
   play: EventMap<'play'>
   playing: EventMap<'playing'>
   pause: EventMap<'pause'>
@@ -152,16 +160,24 @@ const id = computed(() => {
   return props.vimeoOptions?.id || props.id
 })
 
+const videoId = computed(() => `vimeo-embed:${id.value}`)
 const { data: payload } = useAsyncData(
-  `vimeo-embed:${id.value}`,
+  videoId,
   // TODO ideally we cache this
-  () => $fetch(`https://vimeo.com/api/v2/video/${id.value}.json`).then(res => (res as any)[0]),
+  () => $fetch(`https://vimeo.com/api/oembed.json`, {
+    params: {
+      url: `https://vimeo.com/${id.value}`,
+      format: 'json',
+    },
+  }),
   {
-    watch: [id],
+    lazy: true,
   },
 )
 
-const placeholder = computed(() => payload.value?.thumbnail_large)
+const placeholder = computed(() => {
+  return payload.value?.thumbnail_url
+})
 
 let player: Vimeo | undefined
 // we can't directly expose the player as vue will break the proxy
@@ -240,12 +256,13 @@ const rootAttrs = computed(() => {
     'aria-live': 'polite',
     'role': 'application',
     'style': {
-      maxWidth: '100%',
-      width: `auto`,
-      height: 'auto',
-      aspectRatio: `16/9`,
-      position: 'relative',
-      backgroundColor: 'black',
+      '--vimeo-ratio': props.ratio,
+      'maxWidth': '100%',
+      'width': `auto`,
+      'height': 'auto',
+      'aspectRatio': props.ratio,
+      'position': 'relative',
+      'backgroundColor': 'black',
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
@@ -261,7 +278,7 @@ const placeholderAttrs = computed(() => {
     style: {
       cursor: 'pointer',
       width: '100%',
-      objectFit: 'contain',
+      objectFit: props.placeholderObjectFit,
       height: '100%',
     },
   } satisfies ImgHTMLAttributes)
@@ -288,7 +305,7 @@ onBeforeUnmount(() => player?.unload())
 <style>
 .vimeo-player iframe {
   height: auto;
-  aspect-ratio: 16/9;
+  aspect-ratio: var(--vimeo-ratio, 16/9);
   width: 100%;
   max-width: 100% !important;
 }

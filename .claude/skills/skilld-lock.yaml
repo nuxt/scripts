@@ -1,0 +1,8 @@
+skills:
+  unplugin-skilld:
+    packageName: unplugin
+    version: 3.0.0
+    repo: unjs/unplugin
+    source: "https://github.com/unjs/unplugin/tree/v3.0.0/docs"
+    syncedAt: 2026-02-19
+    generator: skilld

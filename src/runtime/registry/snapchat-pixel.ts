@@ -1,7 +1,9 @@
-import { useRegistryScript } from '../utils'
 import type { InferInput } from '#nuxt-scripts-validator'
-import { boolean, object, optional, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { InitObjectPropertiesSchema, SnapTrPixelOptions } from './schemas'
+
+export { InitObjectPropertiesSchema, SnapTrPixelOptions }
 
 type StandardEvents = 'PAGE_VIEW' | 'VIEW_CONTENT' | 'ADD_CART' | 'SIGN_UP' | 'SAVE' | 'START_CHECKOUT' | 'APP_OPEN' | 'ADD_BILLING' | 'SEARCH' | 'SUBSCRIBE' | 'AD_CLICK' | 'AD_VIEW' | 'COMPLETE_TUTORIAL' | 'LEVEL_COMPLETE' | 'INVITE' | 'LOGIN' | 'SHARE' | 'RESERVE' | 'ACHIEVEMENT_UNLOCKED' | 'ADD_TO_WISHLIST' | 'SPENT_CREDITS' | 'RATE' | 'START_TRIAL' | 'LIST_VIEW'
 
@@ -25,28 +27,13 @@ interface EventObjectProperties {
   [key: string]: any
 }
 
-export const InitObjectPropertiesSchema = object({
-  user_email: optional(string()),
-  ip_address: optional(string()),
-  user_phone_number: optional(string()),
-  user_hashed_email: optional(string()),
-  user_hashed_phone_number: optional(string()),
-  firstname: optional(string()),
-  lastname: optional(string()),
-  geo_city: optional(string()),
-  geo_region: optional(string()),
-  geo_postal_code: optional(string()),
-  geo_country: optional(string()),
-  age: optional(string()),
-})
-
 type InitObjectProperties = InferInput<typeof InitObjectPropertiesSchema>
 
-type SnapTrFns =
-  ((event: 'track', eventName: StandardEvents | '', data?: EventObjectProperties) => void) &
-  ((event: 'init', id: string, data?: Record<string, any>) => void) &
-  ((event: 'init', id: string, data?: InitObjectProperties) => void) &
-  ((event: string, ...params: any[]) => void)
+type SnapTrFns
+  = ((event: 'track', eventName: StandardEvents | (string & {}), data?: EventObjectProperties) => void)
+    & ((event: 'init', id: string, data?: Record<string, any>) => void)
+    & ((event: 'init', id: string, data?: InitObjectProperties) => void)
+    & ((event: (string & {}), ...params: any[]) => void)
 
 export interface SnapPixelApi {
   snaptr: SnapTrFns & {
@@ -62,13 +49,7 @@ export interface SnapPixelApi {
 declare global {
   interface Window extends SnapPixelApi {}
 }
-
-export const SnapTrPixelOptions = object({
-  id: string(),
-  trackPageView: optional(boolean()),
-  ...(InitObjectPropertiesSchema?.entries || {}),
-})
-export type SnapTrPixelInput = RegistryScriptInput<typeof SnapTrPixelOptions, true, false, false>
+export type SnapTrPixelInput = RegistryScriptInput<typeof SnapTrPixelOptions, true, false>
 
 export function useScriptSnapchatPixel<T extends SnapPixelApi>(_options?: SnapTrPixelInput) {
   return useRegistryScript<T, typeof SnapTrPixelOptions>('snapchatPixel', options => ({

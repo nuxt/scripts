@@ -1,6 +1,6 @@
-import { useRegistryScript } from '../utils'
-import { number, object, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { MetaPixelOptions } from './schemas'
 
 type StandardEvents = 'AddPaymentInfo' | 'AddToCart' | 'AddToWishlist' | 'CompleteRegistration' | 'Contact' | 'CustomizeProduct' | 'Donate' | 'FindLocation' | 'InitiateCheckout' | 'Lead' | 'Purchase' | 'Schedule' | 'Search' | 'StartTrial' | 'SubmitApplication' | 'Subscribe' | 'ViewContent'
 interface EventObjectProperties {
@@ -8,18 +8,29 @@ interface EventObjectProperties {
   content_ids?: string[]
   content_name?: string
   content_type?: string
-  contents: { id: string, quantity: number }[]
+  contents?: { id: string, quantity: number }[]
   currency?: string
   delivery_category?: 'in_store' | 'curbside' | 'home_delivery'
   num_items?: number
   predicted_ltv?: number
   search_string?: string
-  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | string
+  status?: 'completed' | 'updated' | 'viewed' | 'added_to_cart' | 'removed_from_cart' | (string & {})
   value?: number
   [key: string]: any
 }
+type ConsentAction = 'grant' | 'revoke'
 
-type FbqFns = ((event: 'track', eventName: StandardEvents, data?: EventObjectProperties) => void) & ((event: 'trackCustom', eventName: string, data?: EventObjectProperties) => void) & ((event: 'init', id: number, data?: Record<string, any>) => void) & ((event: 'init', id: string) => void) & ((event: string, ...params: any[]) => void)
+type FbqArgs
+  = | ['track', StandardEvents, EventObjectProperties?]
+    | ['trackCustom', string, EventObjectProperties?]
+    | ['trackSingle', string, StandardEvents, EventObjectProperties?]
+    | ['trackSingleCustom', string, string, EventObjectProperties?]
+    | ['init', string]
+    | ['init', number, Record<string, any>?]
+    | ['consent', ConsentAction]
+  // fallback: allow any fbq call signature not covered above
+    | [string, ...any[]]
+type FbqFns = (...args: FbqArgs) => void
 
 export interface MetaPixelApi {
   fbq: FbqFns & {
@@ -36,10 +47,8 @@ declare global {
   interface Window extends MetaPixelApi {}
 }
 
-export const MetaPixelOptions = object({
-  id: union([string(), number()]),
-})
-export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false, false>
+export { MetaPixelOptions }
+export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false>
 
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
   return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({

@@ -1,0 +1,106 @@
+<script setup lang="ts">
+import type { HTMLAttributes } from 'vue'
+import type { XEmbedTweetData } from '../registry/x-embed'
+import { useAsyncData } from 'nuxt/app'
+import { computed } from 'vue'
+import { formatCount, formatTweetDate, proxyXImageUrl } from '../registry/x-embed'
+import { requireRegistryEndpoint } from '../utils'
+
+const props = withDefaults(defineProps<{
+  /**
+   * The tweet ID to embed
+   */
+  tweetId: string
+  /**
+   * Custom API endpoint for fetching tweet data
+   * @default '/_scripts/embed/x'
+   */
+  apiEndpoint?: string
+  /**
+   * Custom image proxy endpoint
+   * @default '/_scripts/embed/x-image'
+   */
+  imageProxyEndpoint?: string
+  /**
+   * Root element attributes
+   */
+  rootAttrs?: HTMLAttributes
+}>(), {
+  apiEndpoint: '/_scripts/embed/x',
+  imageProxyEndpoint: '/_scripts/embed/x-image',
+})
+if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/x')
+  requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
+
+const cacheKey = computed(() => `x-embed-${props.tweetId}`)
+
+const { data: tweet, status, error } = useAsyncData<XEmbedTweetData>(
+  cacheKey,
+  () => $fetch(`${props.apiEndpoint}?id=${props.tweetId}`),
+)
+
+const slotProps = computed(() => {
+  if (!tweet.value)
+    return null
+
+  const t = tweet.value
+  return {
+    // Raw data
+    tweet: t,
+    // User info
+    userName: t.user.name,
+    userHandle: t.user.screen_name,
+    userAvatar: proxyXImageUrl(t.user.profile_image_url_https, props.imageProxyEndpoint),
+    userAvatarOriginal: t.user.profile_image_url_https,
+    isVerified: t.user.verified || t.user.is_blue_verified,
+    // Tweet content
+    text: t.text,
+    // Formatted values
+    datetime: formatTweetDate(t.created_at),
+    createdAt: new Date(t.created_at),
+    likes: t.favorite_count,
+    likesFormatted: formatCount(t.favorite_count),
+    replies: t.conversation_count,
+    repliesFormatted: formatCount(t.conversation_count),
+    // Media
+    photos: t.photos?.map(p => ({
+      ...p,
+      proxiedUrl: proxyXImageUrl(p.url, props.imageProxyEndpoint),
+    })),
+    video: t.video
+      ? {
+          ...t.video,
+          posterProxied: proxyXImageUrl(t.video.poster, props.imageProxyEndpoint),
+        }
+      : null,
+    // Links
+    tweetUrl: `https://x.com/${t.user.screen_name}/status/${t.id_str}`,
+    userUrl: `https://x.com/${t.user.screen_name}`,
+    // Quoted tweet
+    quotedTweet: t.quoted_tweet,
+    // Reply context
+    isReply: !!t.parent,
+    replyToUser: t.parent?.user.screen_name,
+    // Helpers
+    proxyImage: (url: string) => proxyXImageUrl(url, props.imageProxyEndpoint),
+  }
+})
+
+defineExpose({
+  tweet,
+  status,
+  error,
+})
+</script>
+
+<template>
+  <div v-bind="rootAttrs">
+    <slot v-if="status === 'pending'" name="loading">
+      <div>Loading tweet...</div>
+    </slot>
+    <slot v-else-if="status === 'error'" name="error" :error="error">
+      <div>Failed to load tweet</div>
+    </slot>
+    <slot v-else-if="slotProps" v-bind="slotProps" />
+  </div>
+</template>

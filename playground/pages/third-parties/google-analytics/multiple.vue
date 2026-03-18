@@ -1,30 +1,36 @@
 <script lang="ts" setup>
-import { useHead, useScriptGoogleAnalytics } from '#imports'
+import { useHead } from '#imports'
 
 useHead({
-  title: 'Google Analytics',
+  title: 'Google Analytics - Multiple Instances',
 })
 
-// composables return the underlying api as a proxy object and the script state
-const { gtag: gtag1, status: status1 } = useScriptGoogleAnalytics({
+// Load multiple Google Analytics instances with different keys
+const { proxy: proxy1, status: status1 } = useScriptGoogleAnalytics({
   key: 'gtag1',
   id: 'G-TR58L0EF8P',
+  scriptOptions: {
+    trigger: 'onNuxtReady',
+  },
 })
 
-const { gtag: gtag2, status: status2 } = useScriptGoogleAnalytics({
+const { proxy: proxy2, status: status2 } = useScriptGoogleAnalytics({
   key: 'gtag2',
   id: 'G-1234567890',
+  scriptOptions: {
+    trigger: 'onNuxtReady',
+  },
 })
 
-// id set via nuxt scripts module config
-gtag1('event', 'page_view', {
-  page_title: 'Google Analytics',
-  page_location: 'https://harlanzw.com/third-parties/google-analytics',
-  page_path: '/third-parties/google-analytics',
+// Use proxy to send events
+proxy1.gtag('event', 'page_view', {
+  page_title: 'Google Analytics - Multiple',
+  page_location: 'https://harlanzw.com/third-parties/google-analytics/multiple',
+  page_path: '/third-parties/google-analytics/multiple',
 })
 
 function triggerConversion() {
-  gtag2('event', 'conversion')
+  proxy2.gtag('event', 'conversion')
 }
 </script>
 

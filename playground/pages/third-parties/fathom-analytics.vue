@@ -1,21 +1,25 @@
 <script lang="ts" setup>
-import { ref, useHead, useScriptFathomAnalytics } from '#imports'
+import { ref, useHead } from '#imports'
 
 useHead({
-  title: 'Fathom',
+  title: 'Fathom Analytics',
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { status, trackPageview, trackEvent } = useScriptFathomAnalytics({
+const { status, proxy } = useScriptFathomAnalytics({
   site: 'BRDEJWKJ',
+  scriptOptions: {
+    trigger: 'onNuxtReady',
+  },
 })
-// this will be triggered once the script is ready async
-trackPageview({ url: '/fathom' })
+
+// Use proxy to track events - proxy handles script loading automatically
+proxy.trackPageview({ url: '/fathom' })
 
 const clicks = ref(0)
 async function clickHandler() {
   clicks.value++
-  trackEvent('ClickedButton', { _value: clicks.value })
+  proxy.trackEvent('ClickedButton', { _value: clicks.value })
 }
 </script>
 

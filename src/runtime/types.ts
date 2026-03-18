@@ -1,38 +1,56 @@
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue'
 import type {
   Script,
 } from '@unhead/vue/types'
-import type { UseScriptInput, VueScriptInstance, UseScriptOptions } from '@unhead/vue'
-import type { ComputedRef, Ref } from 'vue'
-import type { InferInput, ObjectSchema } from 'valibot'
 import type { Import } from 'unimport'
-import type { SegmentInput } from './registry/segment'
-import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
-import type { MetaPixelInput } from './registry/meta-pixel'
-import type { FathomAnalyticsInput } from './registry/fathom-analytics'
-import type { HotjarInput } from './registry/hotjar'
-import type { IntercomInput } from './registry/intercom'
-import type { GoogleMapsInput } from './registry/google-maps'
-import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
-import type { StripeInput } from './registry/stripe'
-import type { VimeoPlayerInput } from './registry/vimeo-player'
-import type { XPixelInput } from './registry/x-pixel'
-import type { SnapTrPixelInput } from './registry/snapchat-pixel'
-import type { YouTubePlayerInput } from './registry/youtube-player'
-import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
-import type { NpmInput } from './registry/npm'
-import type { LemonSqueezyInput } from './registry/lemon-squeezy'
-import type { GoogleAdsenseInput } from './registry/google-adsense'
+import type { InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
+import type { ComputedRef, Ref } from 'vue'
+import type { BlueskyEmbedInput } from './registry/bluesky-embed'
 import type { ClarityInput } from './registry/clarity'
+import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
 import type { CrispInput } from './registry/crisp'
+import type { DatabuddyAnalyticsInput } from './registry/databuddy-analytics'
+import type { FathomAnalyticsInput } from './registry/fathom-analytics'
+import type { GoogleAdsenseInput } from './registry/google-adsense'
 import type { GoogleAnalyticsInput } from './registry/google-analytics'
+import type { GoogleMapsInput } from './registry/google-maps'
+import type { GoogleRecaptchaInput } from './registry/google-recaptcha'
+import type { GoogleSignInInput } from './registry/google-sign-in'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
-import type { UmamiAnalyticsInput } from './registry/umami-analytics'
+import type { GravatarInput } from './registry/gravatar'
+import type { HotjarInput } from './registry/hotjar'
+import type { InstagramEmbedInput } from './registry/instagram-embed'
+import type { IntercomInput } from './registry/intercom'
+import type { LemonSqueezyInput } from './registry/lemon-squeezy'
+import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
+import type { MetaPixelInput } from './registry/meta-pixel'
+import type { NpmInput } from './registry/npm'
+import type { PayPalInput } from './registry/paypal'
+import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
+import type { PostHogInput } from './registry/posthog'
+import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
+import type { SegmentInput } from './registry/segment'
+import type { SnapTrPixelInput } from './registry/snapchat-pixel'
+import type { StripeInput } from './registry/stripe'
+import type { TikTokPixelInput } from './registry/tiktok-pixel'
+import type { UmamiAnalyticsInput } from './registry/umami-analytics'
+import type { VercelAnalyticsInput } from './registry/vercel-analytics'
+import type { VimeoPlayerInput } from './registry/vimeo-player'
+import type { XEmbedInput } from './registry/x-embed'
+import type { XPixelInput } from './registry/x-pixel'
+import type { YouTubePlayerInput } from './registry/youtube-player'
 import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T>
+export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
+  /**
+   * Remove and reload the script. Useful for scripts that need to re-execute
+   * after SPA navigation (e.g., DOM-scanning scripts like iubenda).
+   */
+  reload: () => Promise<T>
+}
 
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {
   /**
@@ -47,9 +65,28 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    * performance by avoiding the extra DNS lookup and reducing the number of requests. It also
    * improves privacy by not sharing the user's IP address with third-party servers.
    * - `true` - Bundle the script as an asset.
+   * - `'force'` - Bundle the script and force download, bypassing cache. Useful for development.
    * - `false` - Do not bundle the script. (default)
+   *
+   * Note: Using 'force' may significantly increase build time as scripts will be re-downloaded on every build.
+   *
+   * @deprecated Use `scripts.firstParty: true` in nuxt.config instead for bundling and routing scripts through your domain.
    */
-  bundle?: boolean
+  bundle?: boolean | 'force'
+  /**
+   * Opt-out of first-party routing for this specific script when global `scripts.firstParty` is enabled.
+   * Set to `false` to load this script directly from its original source instead of through your domain.
+   *
+   * Note: This option only works as an opt-out. To enable first-party routing, use the global `scripts.firstParty` option in nuxt.config.
+   */
+  firstParty?: false
+  /**
+   * Load the script in a web worker using Partytown.
+   * When enabled, adds `type="text/partytown"` to the script tag.
+   * Requires @nuxtjs/partytown to be installed and configured separately.
+   * @see https://partytown.qwik.dev/
+   */
+  partytown?: boolean
   /**
    * Skip any schema validation for the script input. This is useful for loading the script stubs for development without
    * loading the actual script and not getting warnings.
@@ -68,10 +105,6 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
   /**
    * @internal
    */
-  performanceMarkFeature?: string
-  /**
-   * @internal
-   */
   devtools?: {
     /**
      * Key used to map to the registry script for Nuxt DevTools.
@@ -84,9 +117,13 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
      */
     registryMeta?: Record<string, string>
   }
+  /**
+   * @internal
+   */
+  _validate?: () => ValiError<any> | null | undefined
 }
 
-export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' }
+export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' | { idleTimeout: number } | { interaction: string[] } | { serviceWorker: true } }
 
 export type NuxtUseScriptInput = UseScriptInput
 
@@ -126,35 +163,55 @@ export interface NuxtDevToolsScriptInstance {
 }
 
 export interface ScriptRegistry {
+  blueskyEmbed?: BlueskyEmbedInput
+  carbonAds?: true
   crisp?: CrispInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
+  databuddyAnalytics?: DatabuddyAnalyticsInput
   metaPixel?: MetaPixelInput
   fathomAnalytics?: FathomAnalyticsInput
+  instagramEmbed?: InstagramEmbedInput
   plausibleAnalytics?: PlausibleAnalyticsInput
   googleAdsense?: GoogleAdsenseInput
   googleAnalytics?: GoogleAnalyticsInput
   googleMaps?: GoogleMapsInput
+  googleRecaptcha?: GoogleRecaptchaInput
+  googleSignIn?: GoogleSignInInput
   lemonSqueezy?: LemonSqueezyInput
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
   intercom?: IntercomInput
+  paypal?: PayPalInput
+  posthog?: PostHogInput
   matomoAnalytics?: MatomoAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
+  redditPixel?: RedditPixelInput
   segment?: SegmentInput
   stripe?: StripeInput
+  tiktokPixel?: TikTokPixelInput
+  xEmbed?: XEmbedInput
   xPixel?: XPixelInput
   snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
+  vercelAnalytics?: VercelAnalyticsInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
+  gravatar?: GravatarInput
+  npm?: NpmInput
   [key: `${string}-npm`]: NpmInput
 }
 
-export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
+/**
+ * Union of all explicit registry script keys (excludes npm pattern).
+ * Use this to type-check records that enumerate scripts.
+ */
+export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
+
+export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
-}>
+}> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
 
 export type UseFunctionType<T, U> = T extends {
   use: infer V
@@ -166,39 +223,53 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 
 type ScriptInput = Script
 
-export type InferIfSchema<T> = T extends ObjectSchema<any, any> ? InferInput<T> : T
+export type InferIfSchema<T> = T extends ObjectSchema<any, any> | UnionSchema<any, any> ? InferInput<T> : T
+export interface RegistryScriptInputExtras<Bundelable extends boolean = true, Usable extends boolean = false> {
+  /**
+   * A unique key to use for the script, this can be used to load multiple of the same script with different options.
+   */
+  key?: string
+  scriptInput?: ScriptInput
+  scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+}
+
 export type RegistryScriptInput<
   T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
-  CanBypassOptions extends boolean = true,
-> =
-    (InferIfSchema<T>
-      & {
-      /**
-       * A unique key to use for the script, this can be used to load multiple of the same script with different options.
-       */
-        key?: string
-        scriptInput?: ScriptInput
-        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-      })
-      | Partial<InferIfSchema<T>> & (
-      CanBypassOptions extends true ? {
-      /**
-       * A unique key to use for the script, this can be used to load multiple of the same script with different options.
-       */
-        key?: string
-        scriptInput: Required<Pick<ScriptInput, 'src'>> & ScriptInput
-        scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-      } : never)
+> = Partial<InferIfSchema<T>> & RegistryScriptInputExtras<Bundelable, Usable>
+
+export interface RegistryScriptServerHandler {
+  route: string
+  handler: string
+  middleware?: boolean
+}
 
 export interface RegistryScript {
+  /**
+   * The config key used in `scripts.registry` in nuxt.config (e.g., 'googleAnalytics', 'plausibleAnalytics').
+   * Used for direct lookup from config to script — avoids fragile import name convention matching.
+   */
+  registryKey?: RegistryScriptKey
   import?: Import // might just be a component
   scriptBundling?: false | ((options?: any) => string | false)
+  /**
+   * First-party proxy config alias. Only needed when a script shares another script's
+   * proxy config (e.g., googleAdsense uses `proxy: 'googleAnalytics'`).
+   *
+   * By default, the proxy config is looked up by `registryKey`. Set to `false` to
+   * explicitly disable first-party routing for this script.
+   * @internal
+   */
+  proxy?: RegistryScriptKey | false
   label?: string
   src?: string | false
   category?: string
   logo?: string | { light: string, dark: string }
+  /**
+   * Server handlers (routes/middleware) to register when this script is enabled via registry config.
+   */
+  serverHandlers?: RegistryScriptServerHandler[]
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false

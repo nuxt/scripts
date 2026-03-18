@@ -1,0 +1,17 @@
+{
+  "name": "nuxt-scripts-custom-script-example",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "@nuxt/scripts": "latest",
+    "@nuxt/ui": "^4.5.1",
+    "nuxt": "^4.4.2",
+    "tailwindcss": "^4.2.1",
+    "vue": "^3.5.30"
+  }
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {},
+    },
+    "passthroughBody": false,
+    "path": "/_proxy/clarity-scripts/0.8.56/clarity.js",
+    "privacy": {
+      "hardware": true,
+      "ip": true,
+      "language": true,
+      "screen": false,
+      "timezone": false,
+      "userAgent": false,
+    },
+    "stripped": {
+      "body": null,
+      "query": {},
+    },
+    "targetUrl": "https://scripts.clarity.ms/0.8.56/clarity.js",
+  },
+]

@@ -1,22 +1,12 @@
-import { joinURL } from 'ufo'
-import { useRegistryScript } from '../utils'
-import { literal, number, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { InferInput } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { joinURL } from 'ufo'
+import { useRegistryScript } from '../utils'
+import { IntercomOptions } from './schemas'
 
-export const IntercomOptions = object({
-  app_id: string(),
-  api_base: optional(union([literal('https://api-iam.intercom.io'), literal('https://api-iam.eu.intercom.io'), literal('https://api-iam.au.intercom.io')])),
-  name: optional(string()),
-  email: optional(string()),
-  user_id: optional(string()),
-  // customizing the messenger
-  alignment: optional(union([literal('left'), literal('right')])),
-  horizontal_padding: optional(number()),
-  vertical_padding: optional(number()),
-})
+export { IntercomOptions }
 
-export type IntercomInput = RegistryScriptInput<typeof IntercomOptions, true, false, false>
+export type IntercomInput = RegistryScriptInput<typeof IntercomOptions, true, false>
 
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: InferInput<typeof IntercomOptions>) => void)
@@ -24,7 +14,7 @@ export interface IntercomApi {
     & ((event: 'update', options?: InferInput<typeof IntercomOptions>) => void)
     & ((event: 'hide') => void)
     & ((event: 'show') => void)
-    & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | string) => void)
+    & ((event: 'showSpace', spaceName: 'home' | 'messages' | 'help' | 'news' | 'tasks' | 'tickets' | (string & {})) => void)
     & ((event: 'showMessages') => void)
     & ((event: 'showNewMessage', content?: string) => void)
     & ((event: 'onHide', fn: () => void) => void)
@@ -40,7 +30,7 @@ export interface IntercomApi {
     & ((event: 'showTicket', ticketId: string | number) => void)
     & ((event: 'showConversation', conversationId: string | number) => void)
     & ((event: 'onUserEmailSupplied', fn: () => void) => void)
-    & ((event: string, ...params: any[]) => void)
+    & ((event: (string & {}), ...params: any[]) => void)
 }
 
 declare global {

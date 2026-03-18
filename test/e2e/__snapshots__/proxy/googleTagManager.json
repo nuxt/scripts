@@ -1,0 +1,31 @@
+[
+  {
+    "method": "GET",
+    "original": {
+      "body": null,
+      "query": {
+        "cx": "c",
+        "gtm": "<GTM>",
+        "id": "G-TR58L0EF8P",
+      },
+    },
+    "path": "/_proxy/gtm/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=<GTM>",
+    "privacy": {
+      "hardware": false,
+      "ip": false,
+      "language": false,
+      "screen": false,
+      "timezone": false,
+      "userAgent": false,
+    },
+    "stripped": {
+      "body": null,
+      "query": {
+        "cx": "c",
+        "gtm": "<GTM>",
+        "id": "G-TR58L0EF8P",
+      },
+    },
+    "targetUrl": "https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P&cx=c&gtm=<GTM>",
+  },
+]

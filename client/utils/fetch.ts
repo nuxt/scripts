@@ -1,24 +1,48 @@
-export async function getScriptSize(url: string) {
-  const compressedResponse = await fetch(url, { headers: { 'Accept-Encoding': 'gzip' } })
-  return bytesToSize(await getResponseSize(compressedResponse))
-}
-
-async function getResponseSize(response) {
-  const reader = response.body.getReader()
-  const contentLength = +response.headers.get('Content-Length')
-
-  if (contentLength) {
-    return contentLength
+export async function fetchScript(url: string) {
+  const compressedResponse = await fetch(url, { headers: { 'Accept-Encoding': 'gzip' } }).catch((err) => {
+    return {
+      size: null,
+      error: err,
+    }
+  })
+  if (compressedResponse?.error) {
+    return compressedResponse as { size: null, error: Error }
   }
-  else {
-    let total = 0
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done)
-        return total
-      total += value.length
+  if (!compressedResponse.ok) {
+    return {
+      size: null,
+      error: new Error(`Failed to fetch ${compressedResponse.status} ${compressedResponse.statusText}`),
     }
   }
+  const size = await getResponseSize(compressedResponse)
+  if (!size) {
+    return {
+      size: null,
+    }
+  }
+  return {
+    size: bytesToSize(size),
+  }
+}
+
+async function getResponseSize(response: Response) {
+  const reader = response.body?.getReader()
+  const contentLength = response.headers.get('Content-Length')
+
+  if (contentLength) {
+    return Number(contentLength)
+  }
+  if (!reader) {
+    return null
+  }
+  let total = 0
+  let done = false
+  while (!done) {
+    const data = await reader.read()
+    done = data.done
+    total += data.value?.length || 0
+  }
+  return total > 0 ? total : null
 }
 
 function bytesToSize(bytes: number) {

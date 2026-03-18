@@ -13,7 +13,7 @@ body:
       required: true
     attributes:
       label: 🛠️ To reproduce
-      description: "A reproduction of the bug. Please use the Nuxt Scripts starter https://stackblitz.com/edit/nuxt-starter-pkwfkx?file=pages%2Findex.vue"
+      description: 'A reproduction of the bug. Please use the Nuxt Scripts starter https://stackblitz.com/edit/nuxt-starter-pkwfkx?file=pages%2Findex.vue'
       placeholder: https://stackblitz.com/[...]
   - type: textarea
     validations:

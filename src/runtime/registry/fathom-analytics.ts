@@ -1,31 +1,10 @@
-import { useRegistryScript } from '../utils'
-import { boolean, literal, object, optional, string, union } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { FathomAnalyticsOptions } from './schemas'
 
-export const FathomAnalyticsOptions = object({
-  /**
-   * The Fathom Analytics site ID.
-   */
-  site: string(),
-  /**
-   * The Fathom Analytics tracking mode.
-   */
-  spa: optional(union([literal('auto'), literal('history'), literal('hash')])),
-  /**
-   * Automatically track page views.
-   */
-  auto: optional(boolean()),
-  /**
-   * Enable canonical URL tracking.
-   */
-  canonical: optional(boolean()),
-  /**
-   * Honor Do Not Track requests.
-   */
-  honorDnt: optional(boolean()),
-})
+export { FathomAnalyticsOptions }
 
-export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false, false>
+export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false>
 
 export interface FathomAnalyticsApi {
   beacon: (ctx: { url: string, referrer?: string }) => void
@@ -34,10 +13,10 @@ export interface FathomAnalyticsApi {
   isTrackingEnabled: () => boolean
   send: (type: string, data: unknown) => void
   setSite: (siteId: string) => void
-  sideId: string
+  siteId: string
   trackPageview: (ctx?: { url: string, referrer?: string }) => void
   trackGoal: (goalId: string, cents: number) => void
-  trackEvent: (eventName: string, value: { _value: number }) => void
+  trackEvent: (eventName: string, value?: { _value?: number, _site_id?: string }) => void
 }
 
 declare global {
@@ -49,7 +28,7 @@ declare global {
 export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?: FathomAnalyticsInput) {
   return useRegistryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
     scriptInput: {
-      src: 'https://cdn.usefathom.com/script.js', // can't be bundled
+      src: 'https://cdn.usefathom.com/script.js',
       // append the data attr's
       ...Object.entries(options)
         .filter(([key]) => ['site', 'spa', 'auto', 'canonical', 'honorDnt'].includes(key))

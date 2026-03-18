@@ -1,35 +1,198 @@
-import {
-  addBuildPlugin,
-  addComponentsDir,
-  addImports,
-  addPluginTemplate,
-  createResolver,
-  defineNuxtModule,
-  hasNuxtModule,
-} from '@nuxt/kit'
-import { readPackageJSON } from 'pkg-types'
 import type { FetchOptions } from 'ofetch'
-import { setupDevToolsUI } from './devtools'
-import { NuxtScriptBundleTransformer } from './plugins/transform'
-import { setupPublicAssetStrategy } from './assets'
-import { logger } from './logger'
-import { extendTypes, installNuxtModule } from './kit'
-import { registry } from './registry'
+import type { FirstPartyOptions, FirstPartyPrivacy } from './first-party'
 import type {
   NuxtConfigScriptRegistry,
   NuxtUseScriptInput,
   NuxtUseScriptOptionsSerializable,
   RegistryScript,
+  RegistryScriptKey,
   RegistryScripts,
 } from './runtime/types'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import {
+  addBuildPlugin,
+  addComponentsDir,
+  addImports,
+  addPluginTemplate,
+  addServerHandler,
+  addTemplate,
+  createResolver,
+  defineNuxtModule,
+  hasNuxtModule,
+} from '@nuxt/kit'
+import { defu } from 'defu'
+import { resolve as resolvePath_ } from 'pathe'
+import { readPackageJSON } from 'pkg-types'
+import { setupPublicAssetStrategy } from './assets'
+import { setupDevToolsUI } from './devtools'
+import { finalizeFirstParty, setupFirstParty } from './first-party'
+import { installNuxtModule } from './kit'
+import { logger } from './logger'
+import { normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
-import { templatePlugin } from './templates'
+import { NuxtScriptBundleTransformer } from './plugins/transform'
+import { registry } from './registry'
+import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
+
+declare module '@nuxt/schema' {
+  interface NuxtHooks {
+    'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
+  }
+}
+
+export type { FirstPartyOptions, FirstPartyPrivacy }
+
+/**
+ * Partytown forward config for registry scripts.
+ * Scripts not listed here are likely incompatible due to DOM access requirements.
+ * @see https://partytown.qwik.dev/forwarding-events
+ */
+// Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
+// e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
+const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
+
+/**
+ * Expand self-closing `<Script*>` component tags in page files to work around
+ * a Nuxt core regex issue (nuxt `SFC_SCRIPT_RE` uses case-insensitive matching).
+ */
+function fixSelfClosingScriptComponents(nuxt: any) {
+  function expandTags(content: string): string | null {
+    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
+    if (!SELF_CLOSING_SCRIPT_RE.test(content))
+      return null
+    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
+    return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
+  }
+
+  function fixFile(filePath: string) {
+    if (!existsSync(filePath))
+      return
+    const content = readFileSync(filePath, 'utf-8')
+    const fixed = expandTags(content)
+    if (fixed)
+      nuxt.vfs[filePath] = fixed
+  }
+
+  function scanDir(dir: string) {
+    if (!existsSync(dir))
+      return
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = resolvePath_(dir, entry.name)
+      if (entry.isDirectory())
+        scanDir(fullPath)
+      else if (entry.name.endsWith('.vue'))
+        fixFile(fullPath)
+    }
+  }
+
+  const pagesDirs = new Set<string>()
+  for (const layer of nuxt.options._layers) {
+    pagesDirs.add(resolvePath_(
+      layer.config.srcDir,
+      layer.config.dir?.pages || 'pages',
+    ))
+  }
+  for (const dir of pagesDirs) scanDir(dir)
+
+  // Keep VFS entries fresh during dev HMR
+  if (nuxt.options.dev) {
+    nuxt.hook('builder:watch', (_event: string, relativePath: string) => {
+      if (!relativePath.endsWith('.vue'))
+        return
+      for (const layer of nuxt.options._layers) {
+        const fullPath = resolvePath_(layer.config.srcDir, relativePath)
+        for (const dir of pagesDirs) {
+          if (fullPath.startsWith(`${dir}/`)) {
+            fixFile(fullPath)
+            return
+          }
+        }
+      }
+    })
+  }
+}
+
+const REGISTRY_ENV_DEFAULTS: Partial<Record<RegistryScriptKey, Record<string, string>>> = {
+  clarity: { id: '' },
+  cloudflareWebAnalytics: { token: '' },
+  crisp: { id: '' },
+  databuddyAnalytics: { clientId: '' },
+  fathomAnalytics: { site: '' },
+  googleAdsense: { client: '' },
+  googleAnalytics: { id: '' },
+  googleMaps: { apiKey: '' },
+  googleRecaptcha: { siteKey: '' },
+  googleSignIn: { clientId: '' },
+  googleTagManager: { id: '' },
+  hotjar: { id: '' },
+  intercom: { app_id: '' },
+  matomoAnalytics: { matomoUrl: '' },
+  metaPixel: { id: '' },
+  paypal: { clientId: '' },
+  plausibleAnalytics: { domain: '' },
+  posthog: { apiKey: '' },
+  redditPixel: { id: '' },
+  rybbitAnalytics: { siteId: '' },
+  segment: { writeKey: '' },
+  snapchatPixel: { id: '' },
+  stripe: {},
+  tiktokPixel: { id: '' },
+  umamiAnalytics: { websiteId: '' },
+  vercelAnalytics: {},
+  xPixel: { id: '' },
+}
+
+const PARTYTOWN_FORWARDS: Partial<Record<RegistryScriptKey, string[]>> = {
+  googleAnalytics: ['dataLayer.push', 'gtag'],
+  plausibleAnalytics: ['plausible'],
+  fathomAnalytics: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'],
+  umamiAnalytics: ['umami', 'umami.track'],
+  matomoAnalytics: ['_paq.push'],
+  segment: ['analytics', 'analytics.track', 'analytics.page', 'analytics.identify'],
+  metaPixel: ['fbq'],
+  xPixel: ['twq'],
+  tiktokPixel: ['ttq.track', 'ttq.page', 'ttq.identify'],
+  snapchatPixel: ['snaptr'],
+  redditPixel: ['rdt'],
+  cloudflareWebAnalytics: ['__cfBeacon'],
+}
 
 export interface ModuleOptions {
+  /**
+   * Route third-party scripts through your domain for improved privacy.
+   *
+   * When enabled, scripts are downloaded at build time and served from your domain.
+   * Collection endpoints (analytics, pixels) are also routed through your server,
+   * keeping user IPs private and eliminating third-party cookies.
+   *
+   * **Benefits:**
+   * - User IPs stay private (third parties see your server's IP)
+   * - No third-party cookies (requests are same-origin)
+   * - Works with ad blockers (requests appear first-party)
+   * - Faster loads (no extra DNS lookups)
+   *
+   * **Options:**
+   * - `true` - Enable for all supported scripts (default)
+   * - `false` - Disable (scripts load directly from third parties)
+   * - `{ proxyPrefix: '/_analytics' }` - Enable with custom paths
+   *
+   * For static hosting, scripts are bundled but proxy endpoints require
+   * platform rewrites (see docs). A warning is shown for static presets.
+   *
+   * @default true
+   * @see https://scripts.nuxt.com/docs/guides/first-party
+   */
+  firstParty?: boolean | FirstPartyOptions
   /**
    * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
   registry?: NuxtConfigScriptRegistry
+  /**
+   * Registry scripts to load via Partytown (web worker).
+   * Shorthand for setting `partytown: true` on individual registry scripts.
+   * @example ['googleAnalytics', 'plausible', 'fathom']
+   */
+  partytown?: (keyof NuxtConfigScriptRegistry)[]
   /**
    * Default options for scripts.
    */
@@ -61,6 +224,36 @@ export interface ModuleOptions {
      * Configure the fetch options used for downloading scripts.
      */
     fetchOptions?: FetchOptions
+    /**
+     * Cache duration for bundled scripts in milliseconds.
+     * Scripts older than this will be re-downloaded during builds.
+     * @default 604800000 (7 days)
+     */
+    cacheMaxAge?: number
+    /**
+     * Enable automatic integrity hash generation for bundled scripts.
+     * When enabled, calculates SRI (Subresource Integrity) hash and injects
+     * integrity attribute along with crossorigin="anonymous".
+     *
+     * @default false
+     */
+    integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
+  }
+  /**
+   * Google Static Maps proxy configuration.
+   * Proxies static map images through your server to fix CORS issues and enable caching.
+   */
+  googleStaticMapsProxy?: {
+    /**
+     * Enable proxying Google Static Maps through your own origin.
+     * @default false
+     */
+    enabled?: boolean
+    /**
+     * Cache duration for static map images in seconds.
+     * @default 3600 (1 hour)
+     */
+    cacheMaxAge?: number
   }
   /**
    * Whether the module is enabled.
@@ -86,10 +279,10 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'scripts',
     compatibility: {
       nuxt: '>=3.16',
-      bridge: false,
     },
   },
   defaults: {
+    firstParty: true,
     defaultScriptOptions: {
       trigger: 'onNuxtReady',
     },
@@ -99,6 +292,10 @@ export default defineNuxtModule<ModuleOptions>({
         retryDelay: 2000, // Specifies the delay (in milliseconds) between retry attempts.
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
+    },
+    googleStaticMapsProxy: {
+      enabled: false,
+      cacheMaxAge: 3600,
     },
     enabled: true,
     debug: false,
@@ -121,11 +318,94 @@ export default defineNuxtModule<ModuleOptions>({
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
-    nuxt.options.runtimeConfig['nuxt-scripts'] = { version }
+    const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
+    nuxt.options.runtimeConfig['nuxt-scripts'] = {
+      version: version!,
+      // Private proxy config with API key (server-side only)
+      googleStaticMapsProxy: googleMapsEnabled
+        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
+        : undefined,
+    } as any
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
-      defaultScriptOptions: config.defaultScriptOptions,
+      defaultScriptOptions: config.defaultScriptOptions as any,
+      // Only expose enabled and cacheMaxAge to client, not apiKey
+      googleStaticMapsProxy: googleMapsEnabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge ?? 3600 }
+        : undefined,
+    } as any
+
+    // Normalize registry entries to [input, scriptOptions?] tuple form
+    // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
+    if (config.registry) {
+      normalizeRegistryConfig(config.registry as Record<string, any>)
+      nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
+
+      // Auto-populate env var defaults for enabled registry scripts so that
+      // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig
+      const registryWithDefaults: Record<string, any> = {}
+      for (const [key, entry] of Object.entries(config.registry)) {
+        if (entry === false)
+          continue
+        const input = (entry as any[])[0]
+        const envDefaults = REGISTRY_ENV_DEFAULTS[key as RegistryScriptKey]
+        registryWithDefaults[key] = envDefaults ? defu(input, envDefaults) : input
+      }
+
+      nuxt.options.runtimeConfig.public.scripts = defu(
+        nuxt.options.runtimeConfig.public.scripts || {},
+        registryWithDefaults,
+      )
+    }
+
+    // Handle deprecation of bundle option
+    if (config.defaultScriptOptions?.bundle !== undefined) {
+      logger.warn(
+        '`scripts.defaultScriptOptions.bundle` is deprecated. '
+        + 'Use `scripts.firstParty: true` instead. First-party mode is now enabled by default.',
+      )
+    }
+
+    // Setup first-party mode: resolve config, build proxy configs, register proxy handler
+    const firstParty = await setupFirstParty(config, resolvePath)
+    const assetsPrefix = firstParty.assetsPrefix
+
+    // Process partytown shorthand - add partytown: true to specified registry scripts
+    // and auto-configure @nuxtjs/partytown forward array
+    if (config.partytown?.length) {
+      config.registry = config.registry || {}
+      const requiredForwards: string[] = []
+
+      for (const scriptKey of config.partytown) {
+        // Collect required forwards for this script
+        const forwards = PARTYTOWN_FORWARDS[scriptKey as RegistryScriptKey]
+        if (forwards) {
+          requiredForwards.push(...forwards)
+        }
+        else if (import.meta.dev) {
+          logger.warn(`[partytown] "${scriptKey}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
+        }
+
+        // After normalizeRegistryConfig, all entries are [input, scriptOptions?]
+        const reg = config.registry as Record<string, any>
+        const existing = reg[scriptKey]
+        if (existing) {
+          existing[1] = { ...existing[1], partytown: true }
+        }
+        else {
+          reg[scriptKey] = [{}, { partytown: true }]
+        }
+      }
+
+      // Auto-configure @nuxtjs/partytown forward array
+      if (requiredForwards.length && hasNuxtModule('@nuxtjs/partytown')) {
+        const partytownConfig = (nuxt.options as any).partytown || {}
+        const existingForwards = partytownConfig.forward || []
+        const newForwards = [...new Set([...existingForwards, ...requiredForwards])]
+          ; (nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
+        logger.info(`[partytown] Auto-configured forwards: ${requiredForwards.join(', ')}`)
+      }
     }
 
     const composables = [
@@ -133,6 +413,9 @@ export default defineNuxtModule<ModuleOptions>({
       'useScriptEventPage',
       'useScriptTriggerConsent',
       'useScriptTriggerElement',
+      'useScriptTriggerIdleTimeout',
+      'useScriptTriggerInteraction',
+      'useScriptTriggerServiceWorker',
     ]
     for (const composable of composables) {
       addImports({
@@ -145,7 +428,25 @@ export default defineNuxtModule<ModuleOptions>({
 
     addComponentsDir({
       path: await resolvePath('./runtime/components'),
+      pathPrefix: false,
     })
+
+    // Fix #613: Self-closing <Script*> tags break Nuxt's definePageMeta extraction.
+    // Nuxt's SFC_SCRIPT_RE regex uses case-insensitive matching, so <ScriptFoo /> is
+    // matched as a <script> opening tag. Without a closing </ScriptFoo>, the regex
+    // consumes the real </script> closing tag, losing definePageMeta. Expanding
+    // self-closing Script* tags to <ScriptFoo></ScriptFoo> provides the closing tag
+    // that the regex needs to scope its match correctly.
+    fixSelfClosingScriptComponents(nuxt)
+
+    addTemplate({
+      filename: 'nuxt-scripts-trigger-resolver.mjs',
+      getContents() {
+        return templateTriggerResolver(config.defaultScriptOptions)
+      },
+    })
+
+    logger.debug('[nuxt-scripts] First-party config:', firstParty)
 
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
@@ -159,8 +460,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
-      // @ts-expect-error nuxi prepare is broken to generate these types, possibly because of the runtime path
-      await nuxt.hooks.callHook('scripts:registry', registryScripts)
+      await nuxt.hooks.callHook('scripts:registry' as any, registryScripts)
 
       for (const script of registryScripts) {
         if (script.import?.name && !script._importRegistered) {
@@ -172,35 +472,7 @@ export default defineNuxtModule<ModuleOptions>({
       const registryScriptsWithImport = registryScripts.filter(i => !!i.import?.name) as Required<RegistryScript>[]
       const newScripts = registryScriptsWithImport.filter(i => !scripts.some(r => r.import?.name === i.import.name))
 
-      // augment types to support the integrations registry
-      extendTypes(name!, async ({ typesPath }) => {
-        let types = `
-declare module '#app' {
-  interface NuxtApp {
-    $scripts: Record<${[...Object.keys(config.globals || {}), ...Object.keys(config.registry || {})].map(k => `'${k}'`).concat(['string']).join(' | ')}, (import('#nuxt-scripts/types').UseScriptContext<any>)>
-    _scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)>
-  }
-  interface RuntimeNuxtHooks {
-    'scripts:updated': (ctx: { scripts: Record<string, (import('#nuxt-scripts/types').UseScriptContext<any>)> }) => void | Promise<void>
-  }
-}
-`
-        if (newScripts.length) {
-          types = `${types}
-declare module '#nuxt-scripts/types' {
-    type NuxtUseScriptOptions = Omit<import('${typesPath}').NuxtUseScriptOptions, 'use' | 'beforeInit'>
-    interface ScriptRegistry {
-${newScripts.map((i) => {
-  const key = i.import?.name.replace('useScript', '')
-  const keyLcFirst = key.substring(0, 1).toLowerCase() + key.substring(1)
-  return `        ${keyLcFirst}?: import('${i.import?.from}').${key}Input | [import('${i.import?.from}').${key}Input, NuxtUseScriptOptions]`
-}).join('\n')}
-    }
-}`
-          return types
-        }
-        return types
-      })
+      registerTypeTemplates({ nuxt, config, newScripts })
 
       if (Object.keys(config.globals || {}).length || Object.keys(config.registry || {}).length) {
         // create a virtual plugin
@@ -213,6 +485,20 @@ ${newScripts.map((i) => {
       }
       const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
+      // Finalize first-party proxy setup
+      if (firstParty.enabled) {
+        const devtoolsData = finalizeFirstParty({
+          firstParty,
+          registry: config.registry,
+          registryScripts,
+          nuxtOptions: nuxt.options,
+        })
+        // Expose first-party data for devtools
+        if (devtoolsData) {
+          nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = devtoolsData as any
+        }
+      }
+
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
       addBuildPlugin(NuxtScriptsCheckScripts(), {
@@ -220,25 +506,76 @@ ${newScripts.map((i) => {
       })
       addBuildPlugin(NuxtScriptBundleTransformer({
         scripts: registryScriptsWithImport,
-        defaultBundle: config.defaultScriptOptions?.bundle,
+        registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
+        defaultBundle: firstParty.enabled || config.defaultScriptOptions?.bundle,
+        proxyConfigs: firstParty.proxyConfigs,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
         },
-        assetsBaseURL: config.assets?.prefix,
+        assetsBaseURL: assetsPrefix,
         fallbackOnSrcOnBundleFail: config.assets?.fallbackOnSrcOnBundleFail,
         fetchOptions: config.assets?.fetchOptions,
+        cacheMaxAge: config.assets?.cacheMaxAge,
+        integrity: config.assets?.integrity,
         renderedScript,
       }))
 
       nuxt.hooks.hook('build:done', async () => {
-        const initPromise = Array.from(moduleInstallPromises.values())
+        const initPromise = [...moduleInstallPromises.values()]
         for (const p of initPromise)
           await p?.()
       })
     })
 
-    if (nuxt.options.dev)
+    // Register server handlers for enabled registry scripts
+    const enabledEndpoints: Record<string, boolean> = {}
+    for (const script of scripts) {
+      if (!script.serverHandlers?.length || !script.registryKey)
+        continue
+
+      // googleMaps uses googleStaticMapsProxy config for backward compat
+      const isEnabled = script.registryKey === 'googleMaps'
+        ? config.googleStaticMapsProxy?.enabled || config.registry?.googleMaps
+        : config.registry?.[script.registryKey as keyof typeof config.registry]
+
+      if (!isEnabled)
+        continue
+
+      enabledEndpoints[script.registryKey] = true
+      for (const handler of script.serverHandlers) {
+        addServerHandler({
+          route: handler.route,
+          handler: handler.handler,
+          middleware: handler.middleware,
+        })
+      }
+
+      // Script-specific runtimeConfig setup
+      if (script.registryKey === 'gravatar') {
+        // After normalization, all entries are [input, scriptOptions?]
+        const gravatarConfig = (config.registry?.gravatar as any[])?.[0] || {}
+        nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+          { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
+          nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+        ) as any
+      }
+      if (script.registryKey === 'googleMaps') {
+        nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
+          { googleMapsGeocodeProxy: { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey } },
+          nuxt.options.runtimeConfig['nuxt-scripts'] as any,
+        ) as any
+      }
+    }
+
+    // Publish enabled endpoints to client for component opt-in checks
+    nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+      { endpoints: enabledEndpoints },
+      nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+    ) as any
+
+    if (nuxt.options.dev) {
       setupDevToolsUI(config, resolvePath)
+    }
   },
 })

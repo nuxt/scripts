@@ -1,18 +1,15 @@
-import { describe, expect, it } from 'vitest'
 import { createResolver } from '@nuxt/kit'
 import { createPage, setup, url } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
+import { describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 
-await setup({
-  rootDir: resolve('../fixtures/extend-registry'),
-  dev: true,
-  browser: true,
-})
-
-describe('basic', () => {
-  it('extended registry script loads and executes function', async () => {
+describe('basic', async () => {
+  await setup({
+    rootDir: resolve('../fixtures/extend-registry'),
+  })
+  it('extended registry script loads and executes function', { timeout: 30000 }, async () => {
     const page = await createPage()
     const logs: { text: string, location: string }[] = []
     // visit and collect all logs, we need to do a snapshot on them
@@ -40,7 +37,5 @@ describe('basic', () => {
         },
       ]
     `)
-  }, {
-    timeout: 30000,
   })
 })

@@ -1,9 +1,11 @@
-import { useRegistryScript } from '../utils'
-import { number, object, optional } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { HotjarOptions } from './schemas'
+
+export { HotjarOptions }
 
 export interface HotjarApi {
-  hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void) & ((event: 'stateChange', path: string) => void) & ((event: 'event', eventName: string) => void) & ((event: string, arg?: string) => void) & ((...params: any[]) => void) & {
+  hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void) & ((event: 'stateChange', path: string) => void) & ((event: 'vPageView', path: string) => void) & ((event: 'event', eventName: string) => void) & ((event: (string & {}), ...args: any[]) => void) & {
     q: any[]
   }
 }
@@ -14,12 +16,7 @@ declare global {
   }
 }
 
-export const HotjarOptions = object({
-  id: number(),
-  sv: optional(number()),
-})
-
-export type HotjarInput = RegistryScriptInput<typeof HotjarOptions, true, false, false>
+export type HotjarInput = RegistryScriptInput<typeof HotjarOptions, true, false>
 
 export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
   return useRegistryScript<T, typeof HotjarOptions>('hotjar', options => ({

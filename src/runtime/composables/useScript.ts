@@ -1,9 +1,26 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
-import { defu } from 'defu'
-import { useScript as _useScript } from '@unhead/vue/scripts'
-import { reactive } from 'vue'
 import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-import { onNuxtReady, useNuxtApp, useRuntimeConfig, injectHead } from '#imports'
+// @ts-expect-error virtual template
+import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
+import { useScript as _useScript } from '@unhead/vue/scripts'
+import { defu } from 'defu'
+import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
+import { ref } from 'vue'
+import { logger } from '../logger'
+
+type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
+  $scripts: Record<string, UseScriptContext<any> | undefined>
+  _scripts: Record<string, NuxtDevToolsScriptInstance>
+}
+
+function ensureScripts(nuxtApp: NuxtScriptsApp) {
+  // When registry scripts are configured, the plugin provides $scripts via Nuxt's
+  // provide() which creates a getter-only property. We must not reassign it.
+  // When no plugin provides it, we need to initialize it ourselves.
+  if (!nuxtApp.$scripts) {
+    nuxtApp.$scripts = {}
+  }
+}
 
 function useNuxtScriptRuntimeConfig() {
   return useRuntimeConfig().public['nuxt-scripts'] as {
@@ -18,17 +35,70 @@ export function resolveScriptKey(input: any): string {
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
+
+  // Partytown quick-path: use useHead for SSR rendering
+  // Partytown needs scripts in initial HTML with type="text/partytown"
+  if (options.partytown) {
+    const src = input.src
+    if (!src) {
+      throw new Error('useScript with partytown requires a src')
+    }
+    useHead({
+      script: [{ src, type: 'text/partytown' }],
+    })
+    // Register with nuxtApp.$scripts for DevTools visibility
+    const nuxtApp = useNuxtApp() as NuxtScriptsApp
+    ensureScripts(nuxtApp)
+    const status = ref('loaded')
+    const stub = {
+      id: src,
+      status,
+      load: () => Promise.resolve({} as T),
+      remove: () => false,
+      entry: undefined,
+    } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    nuxtApp.$scripts[src] = stub
+    return stub
+  }
+
+  // Warn about unsupported bundling for dynamic sources (internal value set by transform)
+  if (import.meta.dev && (options.bundle as any) === 'unsupported') {
+    console.warn('[Nuxt Scripts] Bundling is not supported for dynamic script sources. Static URLs are required for bundling.')
+    // Reset to false to prevent any unexpected behavior
+    options.bundle = false
+  }
+
+  // Handle trigger objects (idleTimeout, interaction)
+  if (options.trigger && typeof options.trigger === 'object' && !('then' in options.trigger)) {
+    const resolved = resolveTrigger(options.trigger)
+    if (resolved) {
+      options.trigger = resolved
+    }
+  }
+
   // browser hint optimizations
-  const id = String(resolveScriptKey(input) as keyof typeof nuxtApp._scripts)
-  const nuxtApp = useNuxtApp()
+  const nuxtApp = useNuxtApp() as NuxtScriptsApp
+  const id = String(resolveScriptKey(input))
   options.head = options.head || injectHead()
   if (!options.head) {
     throw new Error('useScript() has been called without Nuxt context.')
   }
-  nuxtApp.$scripts = nuxtApp.$scripts! || reactive({})
+  ensureScripts(nuxtApp)
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
-  if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
+  const err = options._validate?.()
+  if (import.meta.dev && import.meta.client && err) {
+    // never resolves
+    options.trigger = new Promise(() => {})
+    if (!exists) {
+      let out = `Skipping script \`${id}\` due to invalid options:\n`
+      for (const e of err.issues) {
+        out += (`  ${e.message}\n`)
+      }
+      logger.info(out)
+    }
+  }
+  else if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
     if (!options.warmupStrategy) {
       options.warmupStrategy = 'preload'
     }
@@ -37,11 +107,34 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
-  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> & { reload: () => Promise<T> }
   const _remove = instance.remove
   instance.remove = () => {
     nuxtApp.$scripts[id] = undefined
     return _remove()
+  }
+  const _load = instance.load
+  instance.load = async () => {
+    if (err) {
+      return Promise.reject(err)
+    }
+    return _load()
+  }
+  // Add reload method for scripts that need to re-execute (e.g., DOM-scanning scripts)
+  instance.reload = async () => {
+    instance.remove()
+    // Use unique key to bypass Unhead's deduplication
+    const reloadInput = typeof input === 'string'
+      ? { src: input, key: `${id}-${Date.now()}` }
+      : { ...input, key: `${id}-${Date.now()}` }
+    // Re-create the script entry
+    const reloaded = _useScript<T>(reloadInput, { ...options, trigger: 'client' } as any as UseScriptOptions<T>)
+    // Copy over the new instance properties
+    Object.assign(instance, {
+      status: reloaded.status,
+      entry: reloaded.entry,
+    })
+    return reloaded.load()
   }
   nuxtApp.$scripts[id] = instance
   // used for devtools integration
@@ -60,7 +153,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
     function syncScripts() {
       nuxtApp._scripts[instance.id] = payload
-      nuxtApp.hooks.callHook('scripts:updated', { scripts: nuxtApp._scripts as any as Record<string, NuxtDevToolsScriptInstance> })
+      nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
     }
 
     if (!nuxtApp._scripts[instance.id]) {
@@ -89,6 +182,14 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         syncScripts()
       })
       payload.$script = instance
+      if (err) {
+        payload.events.push({
+          type: 'status',
+          status: 'validation-failed',
+          args: err,
+          at: Date.now(),
+        })
+      }
       payload.events.push({
         type: 'status',
         status: 'awaitingLoad',

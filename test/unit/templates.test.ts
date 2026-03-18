@@ -1,5 +1,13 @@
-import { describe, it, expect } from 'vitest'
-import { templatePlugin } from '../../src/templates'
+import { describe, expect, it } from 'vitest'
+import { normalizeRegistryConfig } from '../../src/normalize'
+import { resolveTriggerForTemplate, templatePlugin } from '../../src/templates'
+
+/** Normalize registry config before passing to templatePlugin (mirrors module.ts behavior) */
+function templatePluginNormalized(config: Parameters<typeof templatePlugin>[0], registry: Parameters<typeof templatePlugin>[1]) {
+  if (config.registry)
+    normalizeRegistryConfig(config.registry as Record<string, any>)
+  return templatePlugin(config, registry)
+}
 
 describe('template plugin file', () => {
   // global
@@ -9,14 +17,15 @@ describe('template plugin file', () => {
       registry: {},
     }, [])
     expect(res).toMatchInlineSnapshot(`
-      "import { useScript, defineNuxtPlugin } from '#imports'
+      "import { useScript } from '#nuxt-scripts/composables/useScript'
+      import { defineNuxtPlugin } from 'nuxt/app'
 
       export default defineNuxtPlugin({
         name: "scripts:init",
         env: { islands: false },
         parallel: true,
         setup() {
-          return { provide: { $scripts: {  } } }
+          return { provide: { scripts: {  } } }
         }
       })"
     `)
@@ -84,7 +93,8 @@ describe('template plugin file', () => {
       },
     }, [])
     expect(res).toMatchInlineSnapshot(`
-      "import { useScript, defineNuxtPlugin } from '#imports'
+      "import { useScript } from '#nuxt-scripts/composables/useScript'
+      import { defineNuxtPlugin } from 'nuxt/app'
 
       export default defineNuxtPlugin({
         name: "scripts:init",
@@ -94,14 +104,14 @@ describe('template plugin file', () => {
           const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
           const stripe2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe2: window.stripe2 }) })
           const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
-          return { provide: { $scripts: { stripe1, stripe2, stripe3 } } }
+          return { provide: { scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
     `)
   })
   // registry
   it('registry object', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         stripe: {
@@ -118,7 +128,7 @@ describe('template plugin file', () => {
     expect(res).toContain('useScriptStripe({"id":"test"})')
   })
   it('registry array', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         stripe: [
@@ -137,6 +147,142 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptStripe([{"id":"test"},{"trigger":"onNuxtReady"}])')
+    expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
+  })
+
+  it('registry with partytown option', async () => {
+    const res = templatePluginNormalized({
+      globals: {},
+      registry: {
+        googleAnalytics: [
+          { id: 'G-XXXXX' },
+          { partytown: true },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"G-XXXXX","scriptOptions":{"partytown":true}})')
+  })
+
+  // Test idleTimeout trigger in globals
+  it('global with idleTimeout trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { idleTimeout: 3000 },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('useScriptTriggerIdleTimeout({ timeout: 3000 })')
+  })
+
+  // Test interaction trigger in globals
+  it('global with interaction trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        chatWidget: ['https://chat.example.com/widget.js', {
+          trigger: { interaction: ['scroll', 'click'] },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerInteraction }')
+    expect(res).toContain('useScriptTriggerInteraction({ events: ["scroll","click"] })')
+  })
+
+  // Test registry with idleTimeout trigger
+  it('registry with idleTimeout trigger', async () => {
+    const res = templatePluginNormalized({
+      registry: {
+        googleAnalytics: [
+          { id: 'GA_MEASUREMENT_ID' },
+          { trigger: { idleTimeout: 5000 } },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    // Registry scripts now properly resolve triggers in templates
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"GA_MEASUREMENT_ID","scriptOptions":{"trigger":useScriptTriggerIdleTimeout({ timeout: 5000 })}})')
+  })
+
+  // Test both triggers together (should import both)
+  it('mixed triggers import both composables', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { idleTimeout: 3000 },
+        }],
+        chat: ['https://chat.example.com/widget.js', {
+          trigger: { interaction: ['scroll'] },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('import { useScriptTriggerInteraction }')
+  })
+
+  // Test serviceWorker trigger in globals
+  it('global with serviceWorker trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { serviceWorker: true },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerServiceWorker }')
+    expect(res).toContain('useScriptTriggerServiceWorker()')
+  })
+})
+
+describe('resolveTriggerForTemplate', () => {
+  it('should return null for non-object triggers', () => {
+    expect(resolveTriggerForTemplate('onNuxtReady')).toBe(null)
+    expect(resolveTriggerForTemplate(null)).toBe(null)
+    expect(resolveTriggerForTemplate(undefined)).toBe(null)
+    expect(resolveTriggerForTemplate(42)).toBe(null)
+  })
+
+  it('should handle idleTimeout trigger', () => {
+    const result = resolveTriggerForTemplate({ idleTimeout: 5000 })
+    expect(result).toBe('useScriptTriggerIdleTimeout({ timeout: 5000 })')
+  })
+
+  it('should handle interaction trigger', () => {
+    const result = resolveTriggerForTemplate({ interaction: ['scroll', 'click'] })
+    expect(result).toBe('useScriptTriggerInteraction({ events: ["scroll","click"] })')
+  })
+
+  it('should handle serviceWorker trigger', () => {
+    const result = resolveTriggerForTemplate({ serviceWorker: true })
+    expect(result).toBe('useScriptTriggerServiceWorker()')
+  })
+
+  it('should return null for unknown trigger types', () => {
+    const result = resolveTriggerForTemplate({ unknownTrigger: 'value' })
+    expect(result).toBe(null)
+  })
+
+  it('should throw error for multiple trigger properties', () => {
+    expect(() => {
+      resolveTriggerForTemplate({ idleTimeout: 3000, interaction: ['click'] })
+    }).toThrow('Trigger object must have exactly one property, received: idleTimeout, interaction')
+  })
+
+  it('should throw error with correct property names', () => {
+    expect(() => {
+      resolveTriggerForTemplate({ idleTimeout: 3000, interaction: ['click'], someOther: 'value' })
+    }).toThrow('Trigger object must have exactly one property, received: idleTimeout, interaction, someOther')
   })
 })

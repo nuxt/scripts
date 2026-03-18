@@ -1,17 +1,25 @@
-import { defu } from 'defu'
-import type { GenericSchema, InferInput, ObjectSchema, ValiError } from 'valibot'
-import type { UseScriptInput } from '@unhead/vue'
-import { useRuntimeConfig } from 'nuxt/app'
-import { useScript } from './composables/useScript'
-import { parse } from '#nuxt-scripts-validator'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
+  ScriptRegistry,
   UseFunctionType,
-  ScriptRegistry, UseScriptContext,
+  UseScriptContext,
 } from '#nuxt-scripts/types'
+import type { UseScriptInput } from '@unhead/vue'
+import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
+import { parse } from '#nuxt-scripts-validator'
+import { defu } from 'defu'
+import { createError, useRuntimeConfig } from 'nuxt/app'
+import { parseQuery, parseURL, withQuery } from 'ufo'
+import { useScript } from './composables/useScript'
+import { createNpmScriptStub } from './npm-script-stub'
+
+const URL_MATCH_RE = /https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/
+const URL_PAREN_MATCH_RE = /\(https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)\)/
+const VUE_MATCH_RE = /([^/\s]+\.vue):(\d+):(\d+)/
+const CLEAN_CALLER_RE = /^\s*at\s+/
 
 export type MaybePromise<T> = Promise<T> | T
 
@@ -21,38 +29,117 @@ function validateScriptInputSchema<T extends GenericSchema>(key: string, schema:
       parse(schema, options)
     }
     catch (_e) {
-      const e = _e as ValiError<any>
-      // TODO nicer error handling
-      // @ts-expect-error untyped?
-      console.error(e.issues.map(i => `${key}.${i.path?.map(i => i.key).join(',')}: ${i.message}`).join('\n'))
+      return _e as ValiError<any>
     }
   }
+  return null
 }
 
-type OptionsFn<O> = (options: InferIfSchema<O>) => ({
+type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptInput & { src?: string } }) => ({
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
-  schema?: O extends ObjectSchema<any, any> ? O : undefined
-  clientInit?: () => void
+  schema?: O extends ObjectSchema<any, any> | UnionSchema<any, any> ? O : undefined
+  clientInit?: () => void | Promise<any>
+  scriptMode?: 'external' | 'npm' // NEW: external = CDN script (default), npm = NPM package only
 })
 
 export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
+export function requireRegistryEndpoint(componentName: string, registryKey: string): void {
+  const endpoints = (useRuntimeConfig().public['nuxt-scripts'] as any)?.endpoints
+  if (!endpoints?.[registryKey]) {
+    throw createError({
+      message: `${componentName} requires \`scripts.registry.${registryKey}\` to be enabled in nuxt.config`,
+      fatal: import.meta.dev,
+    })
+  }
+}
+
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
-  const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
-  const options = optionsFn(userOptions as InferIfSchema<O>)
+  const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
+  const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
-  const scriptInput = defu(userOptions.scriptInput, options.scriptInput, { key: registryKey }) as any as UseScriptInput
-  const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
+  // NEW: Handle NPM-only scripts differently
+  if (options.scriptMode === 'npm') {
+    return createNpmScriptStub<T>({
+      key: String(registryKey),
+      use: options.scriptOptions?.use,
+      clientInit: options.clientInit,
+      trigger: userOptions.scriptOptions?.trigger as any,
+    }) as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  }
+
+  let finalScriptInput = options.scriptInput
+
+  // If user provided a custom src and the options function returned a src with query params,
+  // extract those query params and apply them to the user's custom src
+  const userSrc = (userOptions.scriptInput as any)?.src
+  const optionsSrc = (options.scriptInput as any)?.src
+
+  if (userSrc && optionsSrc && typeof optionsSrc === 'string' && typeof userSrc === 'string') {
+    const defaultUrl = parseURL(optionsSrc)
+    const customUrl = parseURL(userSrc)
+
+    // Merge query params: user params override default params
+    const defaultQuery = parseQuery(defaultUrl.search || '')
+    const customQuery = parseQuery(customUrl.search || '')
+    const mergedQuery = { ...defaultQuery, ...customQuery }
+
+    // Build the final URL with the custom base and merged query params
+    const baseUrl = customUrl.href?.split('?')[0] || userSrc
+
+    finalScriptInput = {
+      ...((options.scriptInput as object) || {}),
+      src: withQuery(baseUrl, mergedQuery),
+    }
+  }
+
+  const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
+  const scriptOptions = { ...userOptions?.scriptOptions, ...options.scriptOptions }
   if (import.meta.dev) {
-    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey })
+    // Capture where the component was loaded from
+    const error = new Error('Stack trace for component location')
+    const stack = error.stack?.split('\n')
+    const callerLine = stack?.find(line =>
+      line.includes('.vue')
+      && !line.includes('useRegistryScript')
+      && !line.includes('node_modules'),
+    )
+
+    let loadedFrom = 'unknown'
+    if (callerLine) {
+      // Extract URL pattern like "https://localhost:3000/_nuxt/pages/features/custom-registry.vue?t=1758609859248:14:31"
+      // Handle both with and without query parameters
+      const urlMatch = callerLine.match(URL_MATCH_RE)
+        || callerLine.match(URL_PAREN_MATCH_RE)
+
+      if (urlMatch) {
+        const [, filePath, line, column] = urlMatch
+        loadedFrom = `./${filePath}:${line}:${column}`
+      }
+      else {
+        // Try to extract any .vue file path with line:column
+        const vueMatch = callerLine.match(VUE_MATCH_RE)
+        if (vueMatch) {
+          const [, fileName, line, column] = vueMatch
+          loadedFrom = `./${fileName}:${line}:${column}`
+        }
+        else {
+          // Fallback to original cleaning
+          loadedFrom = callerLine.trim().replace(CLEAN_CALLER_RE, '')
+        }
+      }
+    }
+
+    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom })
     if (options.schema) {
       const registryMeta: Record<string, string> = {}
-      for (const k in options.schema.entries) {
-        if (options.schema.entries[k].type !== 'optional') {
+      const entries = 'entries' in options.schema ? options.schema.entries as Record<string, { type: string }> : undefined
+      for (const k in entries) {
+        if (entries[k]?.type !== 'optional') {
           registryMeta[k] = String(userOptions[k as any as keyof typeof userOptions])
         }
       }
@@ -60,14 +147,18 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     }
   }
   const init = scriptOptions.beforeInit
-  scriptOptions.beforeInit = () => {
-    // a manual trigger also means it was disabled by nuxt.config
-    if (import.meta.dev && !scriptOptions.skipValidation && options.schema) {
+
+  if (import.meta.dev) {
+    scriptOptions._validate = () => {
+      // a manual trigger also means it was disabled by nuxt.config
       // overriding the src will skip validation
-      if (!userOptions.scriptInput?.src) {
-        validateScriptInputSchema(registryKey, options.schema, userOptions)
+      if (!userOptions.scriptInput?.src && !scriptOptions.skipValidation && options.schema) {
+        return validateScriptInputSchema(registryKey, options.schema, userOptions)
       }
     }
+  }
+  // wrap beforeInit to add validation
+  scriptOptions.beforeInit = () => {
     // avoid clearing the user beforeInit
     init?.()
     if (import.meta.client) {
@@ -78,12 +169,4 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   return useScript<T>(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
 }
 
-export function pick(obj: Record<string, any>, keys: string[]) {
-  const res: Record<string, any> = {}
-  for (const k of keys) {
-    if (k in obj) {
-      res[k] = obj[k]
-    }
-  }
-  return res
-}
+export * from './utils/pure'

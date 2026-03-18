@@ -1,8 +1,8 @@
-import { withQuery } from 'ufo'
+import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
 import type { GTag } from './google-analytics'
 import { useRegistryScript } from '#nuxt-scripts/utils'
-import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
-import { object, string, optional, boolean, union, literal } from '#nuxt-scripts-validator'
+import { withQuery } from 'ufo'
+import { GoogleTagManagerOptions } from './schemas'
 
 /**
  * Improved DataLayer type that better reflects GTM's capabilities
@@ -16,7 +16,7 @@ export type DataLayer = Array<DataLayerItem>
  */
 export interface DataLayerPush {
   (...args: Parameters<GTag>): void
-  (obj: Record<string, unknown>): void
+  (obj: Record<string, unknown> | any[]): void
 }
 
 /**
@@ -76,40 +76,7 @@ declare global {
   interface Window extends GoogleTagManagerApi {}
 }
 
-/**
- * GTM configuration options with improved documentation
- */
-export const GoogleTagManagerOptions = object({
-  /** GTM container ID (format: GTM-XXXXXX) */
-  id: string(),
-
-  /** Optional dataLayer variable name */
-  l: optional(string()),
-
-  /** Authentication token for environment-specific container versions */
-  auth: optional(string()),
-
-  /** Preview environment name */
-  preview: optional(string()),
-
-  /** Forces GTM cookies to take precedence when true */
-  cookiesWin: optional(union([boolean(), literal('x')])),
-
-  /** Enables debug mode when true */
-  debug: optional(union([boolean(), literal('x')])),
-
-  /** No Personal Advertising - disables advertising features when true */
-  npa: optional(union([boolean(), literal('1')])),
-
-  /** Custom dataLayer name (alternative to "l" property) */
-  dataLayer: optional(string()),
-
-  /** Environment name for environment-specific container */
-  envName: optional(string()),
-
-  /** Referrer policy for analytics requests */
-  authReferrerPolicy: optional(string()),
-})
+export { GoogleTagManagerOptions }
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
@@ -125,7 +92,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
     onBeforeGtmStart?: (gtag: DataLayerPush) => void
   },
 ): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
-  return useRegistryScript<T, typeof GoogleTagManagerOptions>(
+  const instance = useRegistryScript<T, typeof GoogleTagManagerOptions>(
     options?.key || 'googleTagManager',
     (opts) => {
       const dataLayerName = opts?.l ?? opts?.dataLayer ?? 'dataLayer'
@@ -153,26 +120,31 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               google_tag_manager: window.google_tag_manager,
             }
           },
-          performanceMarkFeature: 'nuxt-third-parties-gtm',
-          tagPriority: 1,
         },
         clientInit: import.meta.server
           ? undefined
           : () => {
-            // Initialize dataLayer if it doesn't exist
+              // Initialize dataLayer if it doesn't exist
               (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
 
               // Create gtag function
               function gtag(...args: any[]) {
+                // Pushing arguments to dataLayer is necessary for GTM to process events
                 (window as any)[dataLayerName].push(args)
               }
 
+              // Assign gtag to window for global access
+              (window as any).gtag = gtag
+
               // Allow custom initialization
-              options?.onBeforeGtmStart?.(gtag);
+              options?.onBeforeGtmStart?.(gtag)
+
+              if (opts.defaultConsent)
+                gtag('consent', 'default', opts.defaultConsent)
 
               // Push the standard GTM initialization event
-              (window as any)[dataLayerName].push({
-                'gtm.start': new Date().getTime(),
+              ;(window as any)[dataLayerName].push({
+                'gtm.start': Date.now(),
                 'event': 'gtm.js',
               })
             },
@@ -180,4 +152,13 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
     },
     options,
   )
+
+  // Handle callback for cached/pre-initialized scripts (e.g., when ID is in nuxt.config)
+  if (import.meta.client && options?.onBeforeGtmStart) {
+    const gtag = (window as any).gtag
+    if (gtag)
+      options.onBeforeGtmStart(gtag)
+  }
+
+  return instance
 }

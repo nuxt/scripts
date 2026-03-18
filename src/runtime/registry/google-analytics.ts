@@ -1,7 +1,7 @@
-import { withQuery } from 'ufo'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { object, string, optional } from '#nuxt-scripts-validator'
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { withQuery } from 'ufo'
+import { GoogleAnalyticsOptions } from './schemas'
 
 export type GtagCustomParams = Record<string, any>
 
@@ -50,27 +50,27 @@ export interface EventParameters extends GtagCustomParams {
 }
 
 // Default events in GA4
-export type DefaultEventName =
-  | 'add_payment_info'
-  | 'add_shipping_info'
-  | 'add_to_cart'
-  | 'add_to_wishlist'
-  | 'begin_checkout'
-  | 'purchase'
-  | 'refund'
-  | 'remove_from_cart'
-  | 'select_item'
-  | 'select_promotion'
-  | 'view_cart'
-  | 'view_item'
-  | 'view_item_list'
-  | 'view_promotion'
-  | 'login'
-  | 'sign_up'
-  | 'search'
-  | 'page_view'
-  | 'screen_view'
-  | string // Allow custom event names
+export type DefaultEventName
+  = | 'add_payment_info'
+    | 'add_shipping_info'
+    | 'add_to_cart'
+    | 'add_to_wishlist'
+    | 'begin_checkout'
+    | 'purchase'
+    | 'refund'
+    | 'remove_from_cart'
+    | 'select_item'
+    | 'select_promotion'
+    | 'view_cart'
+    | 'view_item'
+    | 'view_item_list'
+    | 'view_promotion'
+    | 'login'
+    | 'sign_up'
+    | 'search'
+    | 'page_view'
+    | 'screen_view'
+    | (string & {}) // Allow custom event names
 
 // Define the GTag function interface with proper overloads
 export interface GTag {
@@ -107,10 +107,7 @@ export interface GoogleAnalyticsApi {
   dataLayer: DataLayer
 }
 
-export const GoogleAnalyticsOptions = object({
-  id: string(), // The GA4 measurement ID (format: G-XXXXXXXX)
-  l: optional(string()), // Optional global name for dataLayer (defaults to 'dataLayer')
-})
+export { GoogleAnalyticsOptions }
 
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
@@ -130,22 +127,22 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             gtag: w.gtag as DataLayer,
           }
         },
-        performanceMarkFeature: 'nuxt-third-parties-ga',
-        tagPriority: 1,
       },
       clientInit: import.meta.server
         ? undefined
         : () => {
             w[dataLayerName] = w[dataLayerName] || []
             w.gtag = function () {
-              // eslint-disable-next-line
+              // eslint-disable-next-line prefer-rest-params
               w[dataLayerName].push(arguments)
             }
-            // eslint-disable-next-line
-          // @ts-ignore
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore
             _options?.onBeforeGtagStart?.(w.gtag)
             w.gtag('js', new Date())
-            w.gtag('config', (options?.id))
+            if (options?.id) {
+              w.gtag('config', (options?.id))
+            }
           },
     }
   }, _options)

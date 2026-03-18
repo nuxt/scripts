@@ -29,7 +29,7 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 Loading third-party IIFE scripts using `useHead` composable is easy. However,
 things start getting more complicated quickly around SSR, lazy loading, and type safety.
 
-Nuxt Scripts was created to solve these issues and more with the goal of making third-party scripts more performant,
+Nuxt Scripts solves these issues and more with the goal of making third-party scripts more performant,
 have better privacy and be better DX overall.
 
 ## 🚀 Quick Start
@@ -40,7 +40,22 @@ To get started, simply run:
 npx nuxi@latest module add scripts
 ```
 
-That's it! The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
+> [!TIP]
+> Generate an Agent Skill for this package using [skilld](https://github.com/harlan-zw/skilld):
+> ```bash
+> npx skilld add @nuxt/scripts
+> ```
+
+That's it. The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
+
+## 📦 Examples
+
+Explore live examples on [StackBlitz](https://stackblitz.com):
+
+- [Cookie Consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) - Google Consent Mode v2 with GTM
+- [Granular Consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) - Per-category consent management
+- [Custom Script](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/custom-script) - Integrating any third-party script
+- [Performance](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/performance) - Optimize loading with triggers
 
 ## ⛰️ Next Steps
 
@@ -64,7 +79,7 @@ Licensed under the [MIT license](https://github.com/nuxt/scripts/blob/main/LICEN
 [license-src]: https://img.shields.io/npm/l/@nuxt/scripts.svg?style=flat&colorA=18181B&colorB=28CF8D
 [license-href]: https://github.com/nuxt/scripts/blob/main/LICENSE.md
 
-[nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt.js
+[nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt
 [nuxt-href]: https://nuxt.com
 
 [volta-src]: https://user-images.githubusercontent.com/904724/209143798-32345f6c-3cf8-4e06-9659-f4ace4a6acde.svg

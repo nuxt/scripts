@@ -1,8 +1,9 @@
-import { existsSync } from 'node:fs'
-import type { Nuxt } from 'nuxt/schema'
 import type { Resolver } from '@nuxt/kit'
-import { useNuxt } from '@nuxt/kit'
+import type { Nuxt } from '@nuxt/schema'
 import type { ModuleOptions } from './module'
+import { existsSync } from 'node:fs'
+import { addCustomTab } from '@nuxt/devtools-kit'
+import { extendViteConfig, useNuxt } from '@nuxt/kit'
 import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
 export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolvePath'], nuxt: Nuxt = useNuxt()) {
@@ -21,7 +22,7 @@ export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver[
   }
   // In local development, start a separate Nuxt Server and proxy to serve the client
   else {
-    nuxt.hook('vite:extendConfig', (config) => {
+    extendViteConfig((config) => {
       config.server = config.server || {}
       config.server.proxy = config.server.proxy || {}
       config.server.proxy[DEVTOOLS_UI_ROUTE] = {
@@ -33,19 +34,17 @@ export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver[
     })
   }
 
-  nuxt.hook('devtools:customTabs', (tabs) => {
-    tabs.push({
-      // unique identifier
-      name: 'nuxt-scripts',
-      // title to display in the tab
-      title: 'Scripts',
-      // any icon from Iconify, or a URL to an image
-      icon: 'carbon:script',
-      // iframe view
-      view: {
-        type: 'iframe',
-        src: DEVTOOLS_UI_ROUTE,
-      },
-    })
+  addCustomTab({
+    // unique identifier
+    name: 'nuxt-scripts',
+    // title to display in the tab
+    title: 'Scripts',
+    // any icon from Iconify, or a URL to an image
+    icon: 'carbon:script',
+    // iframe view
+    view: {
+      type: 'iframe',
+      src: DEVTOOLS_UI_ROUTE,
+    },
   })
 }

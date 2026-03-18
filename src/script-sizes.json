@@ -1,0 +1,2304 @@
+{
+  "plausibleAnalytics": {
+    "totalTransferKb": 1.9,
+    "totalDecodedKb": 2.9,
+    "loadTimeMs": 179,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "plausible.io"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 1954,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 6,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 698
+    },
+    "scripts": [
+      {
+        "url": "https://plausible.io/js/script.js",
+        "transferKb": 1.9,
+        "decodedKb": 2.9,
+        "encoding": "zstd",
+        "durationMs": 179,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "cloudflareWebAnalytics": {
+    "totalTransferKb": 10.8,
+    "totalDecodedKb": 30.4,
+    "loadTimeMs": 434,
+    "collectsWebVitals": true,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": false,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "static.cloudflareinsights.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 11075,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 6,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 736
+    },
+    "scripts": [
+      {
+        "url": "https://static.cloudflareinsights.com/beacon.min.js",
+        "transferKb": 10.8,
+        "decodedKb": 30.4,
+        "encoding": "gzip",
+        "durationMs": 434,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "posthog": {
+    "totalTransferKb": 0,
+    "totalDecodedKb": 0,
+    "loadTimeMs": 0,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 0,
+      "domains": [],
+      "outboundBytes": 0,
+      "inboundBytes": 0,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 0,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 0
+    },
+    "scripts": []
+  },
+  "fathomAnalytics": {
+    "totalTransferKb": 3,
+    "totalDecodedKb": 6.7,
+    "loadTimeMs": 448,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 2,
+      "domains": [
+        "cdn.usefathom.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 3079,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 10,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 721
+    },
+    "scripts": [
+      {
+        "url": "https://cdn.usefathom.com/script.js",
+        "transferKb": 2.7,
+        "decodedKb": 6.7,
+        "encoding": "zstd",
+        "durationMs": 110,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://cdn.usefathom.com/?h=http%3A%2F%2F127.0.0.1&p=%2FfathomAnalytics&r=&sid=null&qs=%7B%7D&cid=57020307",
+        "transferKb": 0.3,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 448,
+        "initiatorType": "img",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "matomoAnalytics": {
+    "totalTransferKb": 60.4,
+    "totalDecodedKb": 218.6,
+    "loadTimeMs": 119,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "cdn.matomo.cloud"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 61875,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 20,
+      "scriptDurationMs": 6,
+      "heapDeltaKb": 1344
+    },
+    "scripts": [
+      {
+        "url": "https://cdn.matomo.cloud/demo.matomo.cloud/matomo.js",
+        "transferKb": 60.4,
+        "decodedKb": 218.6,
+        "encoding": "br",
+        "durationMs": 119,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "rybbitAnalytics": {
+    "totalTransferKb": 9,
+    "totalDecodedKb": 25.3,
+    "loadTimeMs": 1192,
+    "collectsWebVitals": true,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": true,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "app.rybbit.io"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 9174,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 706
+    },
+    "scripts": [
+      {
+        "url": "https://app.rybbit.io/api/script.js",
+        "transferKb": 9,
+        "decodedKb": 25.3,
+        "encoding": "zstd",
+        "durationMs": 1192,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "databuddyAnalytics": {
+    "totalTransferKb": 10.6,
+    "totalDecodedKb": 29.2,
+    "loadTimeMs": 100,
+    "collectsWebVitals": true,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "cdn.databuddy.cc"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 10865,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 754
+    },
+    "scripts": [
+      {
+        "url": "https://cdn.databuddy.cc/databuddy.js",
+        "transferKb": 10.6,
+        "decodedKb": 29.2,
+        "encoding": "zstd",
+        "durationMs": 100,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "segment": {
+    "totalTransferKb": 29.6,
+    "totalDecodedKb": 107,
+    "loadTimeMs": 714,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "api.segment.io",
+        "cdn.segment.com"
+      ],
+      "outboundBytes": 1006,
+      "inboundBytes": 30291,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 19,
+      "scriptDurationMs": 4,
+      "heapDeltaKb": 1278
+    },
+    "scripts": [
+      {
+        "url": "https://cdn.segment.com/analytics.js/v1/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/analytics.min.js",
+        "transferKb": 28.2,
+        "decodedKb": 106.4,
+        "encoding": "br",
+        "durationMs": 589,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://cdn.segment.com/v1/projects/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/settings",
+        "transferKb": 1.2,
+        "decodedKb": 0.6,
+        "encoding": "none",
+        "durationMs": 90,
+        "initiatorType": "fetch",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://api.segment.io/v1/p",
+        "transferKb": 0.2,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 714,
+        "initiatorType": "fetch",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "googleAnalytics": {
+    "totalTransferKb": 153.9,
+    "totalDecodedKb": 452.9,
+    "loadTimeMs": 831,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "www.googletagmanager.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 157566,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 28,
+      "scriptDurationMs": 17,
+      "heapDeltaKb": 2542
+    },
+    "scripts": [
+      {
+        "url": "https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P",
+        "transferKb": 153.9,
+        "decodedKb": 452.9,
+        "encoding": "zstd",
+        "durationMs": 831,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "umamiAnalytics": {
+    "totalTransferKb": 2.4,
+    "totalDecodedKb": 2.6,
+    "loadTimeMs": 96,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "cloud.umami.is"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 2460,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 5,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 677
+    },
+    "scripts": [
+      {
+        "url": "https://cloud.umami.is/script.js",
+        "transferKb": 2.4,
+        "decodedKb": 2.6,
+        "encoding": "br",
+        "durationMs": 96,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "vercelAnalytics": {
+    "totalTransferKb": 1.6,
+    "totalDecodedKb": 2.4,
+    "loadTimeMs": 105,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "va.vercel-scripts.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 1606,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 5,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 667
+    },
+    "scripts": [
+      {
+        "url": "https://va.vercel-scripts.com/v1/script.js",
+        "transferKb": 1.6,
+        "decodedKb": 2.4,
+        "encoding": "br",
+        "durationMs": 105,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "metaPixel": {
+    "totalTransferKb": 97.1,
+    "totalDecodedKb": 364.7,
+    "loadTimeMs": 406,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "connect.facebook.net",
+        "www.facebook.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 102444,
+      "injectedElements": [
+        {
+          "tag": "script",
+          "src": "https://connect.facebook.net/signals/config/3925006?v=2.9.280&r=stable&domain=127.0.0.1&hme=b758cff5989f970d61536a685dcccfaabd7a9508da12548b3811a55c83b2e4ae&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C264%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C251%2C252%2C250%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C280%2C201%2C190%2C191%2C189%2C283%2C275%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 34,
+      "scriptDurationMs": 21,
+      "heapDeltaKb": 1928
+    },
+    "scripts": [
+      {
+        "url": "https://connect.facebook.net/en_US/fbevents.js",
+        "transferKb": 94.7,
+        "decodedKb": 356.5,
+        "encoding": "gzip",
+        "durationMs": 406,
+        "initiatorType": "script",
+        "protocol": "h2"
+      },
+      {
+        "url": "https://connect.facebook.net/signals/config/3925006?v=2.9.280&r=stable&domain=127.0.0.1&hme=b758cff5989f970d61536a685dcccfaabd7a9508da12548b3811a55c83b2e4ae&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C264%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C251%2C252%2C250%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C280%2C201%2C190%2C191%2C189%2C283%2C275%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+        "transferKb": 2.1,
+        "decodedKb": 8.2,
+        "encoding": "gzip",
+        "durationMs": 262,
+        "initiatorType": "script",
+        "protocol": "h2"
+      },
+      {
+        "url": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A41565%2FmetaPixel&rl=&if=false&ts=1773830901671&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773830901406&coo=false&expv2[0]=pl1&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct1&expv2[6]=hf0&rqm=GET",
+        "transferKb": 0.3,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 85,
+        "initiatorType": "img",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "xPixel": {
+    "totalTransferKb": 14.9,
+    "totalDecodedKb": 46.4,
+    "loadTimeMs": 493,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": true,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": false,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [
+      {
+        "name": "muc_ads",
+        "domain": ".t.co",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      },
+      {
+        "name": "guest_id_marketing",
+        "domain": ".twitter.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      },
+      {
+        "name": "guest_id_ads",
+        "domain": ".twitter.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      },
+      {
+        "name": "personalization_id",
+        "domain": ".twitter.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      },
+      {
+        "name": "guest_id",
+        "domain": ".twitter.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      }
+    ],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "analytics.twitter.com",
+        "static.ads-twitter.com",
+        "t.co"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 15233,
+      "injectedElements": [
+        {
+          "tag": "img",
+          "src": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=b404d79b-8edb-4f9d-9263-3e505c74cce6&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=1b37eb3e-5ba4-42ba-86cf-87eb1090dea3&tw_document_href=http%3A%2F%2F127.0.0.1%3A41565%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773830903063.50317557826201012&txn_id=ol7lz&type=javascript&version=2.3.49"
+        },
+        {
+          "tag": "img",
+          "src": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=b404d79b-8edb-4f9d-9263-3e505c74cce6&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=1b37eb3e-5ba4-42ba-86cf-87eb1090dea3&tw_document_href=http%3A%2F%2F127.0.0.1%3A41565%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773830903063.50317557826201012&txn_id=ol7lz&type=javascript&version=2.3.49"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 14,
+      "scriptDurationMs": 2,
+      "heapDeltaKb": 984
+    },
+    "scripts": [
+      {
+        "url": "https://static.ads-twitter.com/uwt.js",
+        "transferKb": 13.3,
+        "decodedKb": 46.4,
+        "encoding": "gzip",
+        "durationMs": 73,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=b404d79b-8edb-4f9d-9263-3e505c74cce6&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=1b37eb3e-5ba4-42ba-86cf-87eb1090dea3&tw_document_href=http%3A%2F%2F127.0.0.1%3A41565%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773830903063.50317557826201012&txn_id=ol7lz&type=javascript&version=2.3.49",
+        "transferKb": 0.6,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 255,
+        "initiatorType": "img",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=b404d79b-8edb-4f9d-9263-3e505c74cce6&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=1b37eb3e-5ba4-42ba-86cf-87eb1090dea3&tw_document_href=http%3A%2F%2F127.0.0.1%3A41565%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773830903063.50317557826201012&txn_id=ol7lz&type=javascript&version=2.3.49",
+        "transferKb": 1,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 493,
+        "initiatorType": "img",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "tiktokPixel": {
+    "totalTransferKb": 147.9,
+    "totalDecodedKb": 623,
+    "loadTimeMs": 318,
+    "collectsWebVitals": true,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [
+      {
+        "name": "_ttp",
+        "domain": ".tiktok.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 390,
+        "firstParty": false
+      }
+    ],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "analytics.tiktok.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 151446,
+      "injectedElements": [
+        {
+          "tag": "script",
+          "src": "https://analytics.tiktok.com/i18n/pixel/static/identify_31760074.js"
+        },
+        {
+          "tag": "script",
+          "src": "https://analytics.tiktok.com/i18n/pixel/static/main.MTEwMjY2ZTExMA.js"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 47,
+      "scriptDurationMs": 24,
+      "heapDeltaKb": 2248
+    },
+    "scripts": [
+      {
+        "url": "https://analytics.tiktok.com/i18n/pixel/events.js",
+        "transferKb": 2.8,
+        "decodedKb": 7.6,
+        "encoding": "gzip",
+        "durationMs": 318,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://analytics.tiktok.com/i18n/pixel/static/main.MTEwMjY2ZTExMA.js",
+        "transferKb": 105.5,
+        "decodedKb": 463.4,
+        "encoding": "gzip",
+        "durationMs": 64,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://analytics.tiktok.com/i18n/pixel/static/identify_31760074.js",
+        "transferKb": 39.6,
+        "decodedKb": 152,
+        "encoding": "gzip",
+        "durationMs": 40,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "snapchatPixel": {
+    "totalTransferKb": 1.3,
+    "totalDecodedKb": 58.2,
+    "loadTimeMs": 1421,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [
+      {
+        "name": "X-AB",
+        "domain": "sc-static.net",
+        "path": "/scevent.min.js",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 1,
+        "firstParty": false
+      },
+      {
+        "name": "sc_at",
+        "domain": ".snapchat.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 390,
+        "firstParty": false
+      },
+      {
+        "name": "TapAd_TS",
+        "domain": ".tapad.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 60,
+        "firstParty": false
+      },
+      {
+        "name": "TapAd_DID",
+        "domain": ".tapad.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 60,
+        "firstParty": false
+      },
+      {
+        "name": "TapAd_3WAY_SYNCS",
+        "domain": ".tapad.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 60,
+        "firstParty": false
+      }
+    ],
+    "network": {
+      "requestCount": 9,
+      "domains": [
+        "pixel.tapad.com",
+        "sc-static.net",
+        "tr.snapchat.com"
+      ],
+      "outboundBytes": 1715,
+      "inboundBytes": 26696,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 46,
+      "scriptDurationMs": 29,
+      "heapDeltaKb": 2242
+    },
+    "scripts": [
+      {
+        "url": "https://sc-static.net/scevent.min.js",
+        "transferKb": 0,
+        "decodedKb": 57.4,
+        "encoding": "gzip",
+        "durationMs": 1421,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://tr.snapchat.com/config/1/2295cbcc-cb3f-4727-8c09-1133b742722c.json?v=3.54.3-2603171656",
+        "transferKb": 0.3,
+        "decodedKb": 0.1,
+        "encoding": "none",
+        "durationMs": 535,
+        "initiatorType": "fetch",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://tr.snapchat.com/cm/i?pid=2295cbcc-cb3f-4727-8c09-1133b742722c&u_scsid=ee3d794a-8aed-43ff-be1c-65758db6e3cb&u_sclid=7a2e4870-f76a-4d1b-a35f-cb0d81d2a513",
+        "transferKb": 1,
+        "decodedKb": 0.7,
+        "encoding": "none",
+        "durationMs": 323,
+        "initiatorType": "iframe",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://tr.snapchat.com/p",
+        "transferKb": 0,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 152,
+        "initiatorType": "beacon",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "redditPixel": {
+    "totalTransferKb": 19.5,
+    "totalDecodedKb": 65.3,
+    "loadTimeMs": 344,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "alb.reddit.com",
+        "pixel-config.reddit.com",
+        "www.redditstatic.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 20077,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 12,
+      "scriptDurationMs": 5,
+      "heapDeltaKb": 932
+    },
+    "scripts": [
+      {
+        "url": "https://www.redditstatic.com/ads/pixel.js",
+        "transferKb": 18.8,
+        "decodedKb": 65.3,
+        "encoding": "gzip",
+        "durationMs": 135,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://pixel-config.reddit.com/pixels/a2_ilz4u0kbdr3v/config",
+        "transferKb": 0.1,
+        "decodedKb": 0,
+        "encoding": "gzip",
+        "durationMs": 129,
+        "initiatorType": "xmlhttprequest",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://alb.reddit.com/rp.gif?ts=1773830910021&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=bfac0577-a39c-4489-97bf-09d728859925&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc=",
+        "transferKb": 0.6,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 344,
+        "initiatorType": "img",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "googleAdsense": {
+    "totalTransferKb": 63.1,
+    "totalDecodedKb": 191.6,
+    "loadTimeMs": 385,
+    "collectsWebVitals": true,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "pagead2.googlesyndication.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 64847,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 14,
+      "scriptDurationMs": 6,
+      "heapDeltaKb": 1782
+    },
+    "scripts": [
+      {
+        "url": "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
+        "transferKb": 63.1,
+        "decodedKb": 191.6,
+        "encoding": "br",
+        "durationMs": 385,
+        "initiatorType": "script",
+        "protocol": "h2"
+      }
+    ]
+  },
+  "carbonAds": {
+    "totalTransferKb": 10.4,
+    "totalDecodedKb": 34.5,
+    "loadTimeMs": 92,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "cdn.carbonads.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 10653,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 681
+    },
+    "scripts": [
+      {
+        "url": "https://cdn.carbonads.com/carbon.js?serve=CW7DTKJL&placement=unlighthousedev&format=cover",
+        "transferKb": 10.4,
+        "decodedKb": 34.5,
+        "encoding": "gzip",
+        "durationMs": 92,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "hotjar": {
+    "totalTransferKb": 6.2,
+    "totalDecodedKb": 15,
+    "loadTimeMs": 369,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": false,
+      "xhr": true,
+      "websocket": true,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "static.hotjar.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 6343,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 705
+    },
+    "scripts": [
+      {
+        "url": "https://static.hotjar.com/c/hotjar-3925006.js?sv=6",
+        "transferKb": 6.2,
+        "decodedKb": 15,
+        "encoding": "br",
+        "durationMs": 369,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "clarity": {
+    "totalTransferKb": 27.3,
+    "totalDecodedKb": 80.2,
+    "loadTimeMs": 643,
+    "collectsWebVitals": true,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": true,
+      "deviceMemory": true,
+      "plugins": false,
+      "languages": true,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": false,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": true,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "k.clarity.ms",
+        "scripts.clarity.ms",
+        "www.clarity.ms"
+      ],
+      "outboundBytes": 750,
+      "inboundBytes": 27893,
+      "injectedElements": [
+        {
+          "tag": "script",
+          "src": "https://scripts.clarity.ms/0.8.57/clarity.js"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 23,
+      "scriptDurationMs": 12,
+      "heapDeltaKb": 1150
+    },
+    "scripts": [
+      {
+        "url": "https://www.clarity.ms/tag/mqk2m9dr2v",
+        "transferKb": 0.9,
+        "decodedKb": 0.6,
+        "encoding": "none",
+        "durationMs": 355,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://scripts.clarity.ms/0.8.57/clarity.js",
+        "transferKb": 26.1,
+        "decodedKb": 79.6,
+        "encoding": "br",
+        "durationMs": 110,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://k.clarity.ms/collect",
+        "transferKb": 0.3,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 643,
+        "initiatorType": "xmlhttprequest",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "googleTagManager": {
+    "totalTransferKb": 108.4,
+    "totalDecodedKb": 301.7,
+    "loadTimeMs": 633,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "www.googletagmanager.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 110986,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 17,
+      "scriptDurationMs": 7,
+      "heapDeltaKb": 1757
+    },
+    "scripts": [
+      {
+        "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MWW974PF",
+        "transferKb": 108.4,
+        "decodedKb": 301.7,
+        "encoding": "zstd",
+        "durationMs": 633,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "intercom": {
+    "totalTransferKb": 3.6,
+    "totalDecodedKb": 7.4,
+    "loadTimeMs": 737,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": true,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "widget.intercom.io"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 3709,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 6,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 675
+    },
+    "scripts": [
+      {
+        "url": "https://widget.intercom.io/widget/akg5rmxb",
+        "transferKb": 3.6,
+        "decodedKb": 7.4,
+        "encoding": "gzip",
+        "durationMs": 737,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "crisp": {
+    "totalTransferKb": 3.3,
+    "totalDecodedKb": 7.5,
+    "loadTimeMs": 138,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": true,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": true,
+      "websocket": true,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "client.crisp.chat"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 3377,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 6,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 705
+    },
+    "scripts": [
+      {
+        "url": "https://client.crisp.chat/l.js",
+        "transferKb": 3.3,
+        "decodedKb": 7.5,
+        "encoding": "br",
+        "durationMs": 138,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "stripe": {
+    "totalTransferKb": 213.3,
+    "totalDecodedKb": 922.7,
+    "loadTimeMs": 227,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": true,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "js.stripe.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 218670,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 38,
+      "scriptDurationMs": 10,
+      "heapDeltaKb": 2305
+    },
+    "scripts": [
+      {
+        "url": "https://js.stripe.com/v3/",
+        "transferKb": 213.3,
+        "decodedKb": 922.7,
+        "encoding": "br",
+        "durationMs": 227,
+        "initiatorType": "script",
+        "protocol": "h2"
+      }
+    ]
+  },
+  "lemonSqueezy": {
+    "totalTransferKb": 1.8,
+    "totalDecodedKb": 3.8,
+    "loadTimeMs": 146,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "assets.lemonsqueezy.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 1832,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 5,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 671
+    },
+    "scripts": [
+      {
+        "url": "https://assets.lemonsqueezy.com/lemon.js",
+        "transferKb": 1.8,
+        "decodedKb": 3.8,
+        "encoding": "br",
+        "durationMs": 146,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "paypal": {
+    "totalTransferKb": 48.8,
+    "totalDecodedKb": 148,
+    "loadTimeMs": 187,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": false,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "www.paypal.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 49995,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 27,
+      "scriptDurationMs": 14,
+      "heapDeltaKb": 1633
+    },
+    "scripts": [
+      {
+        "url": "https://www.paypal.com/web-sdk/v6/core",
+        "transferKb": 48.8,
+        "decodedKb": 148,
+        "encoding": "gzip",
+        "durationMs": 187,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "vimeoPlayer": {
+    "totalTransferKb": 8.9,
+    "totalDecodedKb": 23.8,
+    "loadTimeMs": 108,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": true,
+      "websocket": true,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [
+      {
+        "name": "__cf_bm",
+        "domain": ".vimeo.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 0,
+        "firstParty": false
+      },
+      {
+        "name": "_cfuvid",
+        "domain": ".vimeo.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": true,
+        "lifetimeDays": -1,
+        "firstParty": false
+      }
+    ],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "player.vimeo.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 9083,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 7,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 693
+    },
+    "scripts": [
+      {
+        "url": "https://player.vimeo.com/api/player.js",
+        "transferKb": 8.9,
+        "decodedKb": 23.8,
+        "encoding": "gzip",
+        "durationMs": 108,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "youtubePlayer": {
+    "totalTransferKb": 13.6,
+    "totalDecodedKb": 32.4,
+    "loadTimeMs": 454,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [
+      {
+        "name": "YSC",
+        "domain": ".youtube.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": true,
+        "lifetimeDays": -1,
+        "firstParty": false
+      },
+      {
+        "name": "VISITOR_INFO1_LIVE",
+        "domain": ".youtube.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 180,
+        "firstParty": false
+      },
+      {
+        "name": "VISITOR_PRIVACY_METADATA",
+        "domain": ".youtube.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 180,
+        "firstParty": false
+      },
+      {
+        "name": "__Secure-ROLLOUT_TOKEN",
+        "domain": ".youtube.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 180,
+        "firstParty": false
+      }
+    ],
+    "network": {
+      "requestCount": 2,
+      "domains": [
+        "www.youtube.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 13881,
+      "injectedElements": [
+        {
+          "tag": "script",
+          "src": "https://www.youtube.com/s/player/21cd2156/www-widgetapi.vflset/www-widgetapi.js"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 8,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 763
+    },
+    "scripts": [
+      {
+        "url": "https://www.youtube.com/iframe_api",
+        "transferKb": 3,
+        "decodedKb": 1,
+        "encoding": "br",
+        "durationMs": 454,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://www.youtube.com/s/player/21cd2156/www-widgetapi.vflset/www-widgetapi.js",
+        "transferKb": 10.6,
+        "decodedKb": 31.4,
+        "encoding": "br",
+        "durationMs": 36,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "googleMaps": {
+    "totalTransferKb": 0,
+    "totalDecodedKb": 0,
+    "loadTimeMs": 0,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 0,
+      "domains": [],
+      "outboundBytes": 0,
+      "inboundBytes": 0,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 0,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 0
+    },
+    "scripts": []
+  },
+  "npm": {
+    "totalTransferKb": 0,
+    "totalDecodedKb": 0,
+    "loadTimeMs": 0,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 0,
+      "domains": [],
+      "outboundBytes": 0,
+      "inboundBytes": 0,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 0,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 0
+    },
+    "scripts": []
+  },
+  "googleRecaptcha": {
+    "totalTransferKb": 363.9,
+    "totalDecodedKb": 852,
+    "loadTimeMs": 360,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": true,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": true,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 2,
+      "domains": [
+        "www.google.com",
+        "www.gstatic.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 373011,
+      "injectedElements": [
+        {
+          "tag": "script",
+          "src": "https://www.gstatic.com/recaptcha/releases/qm3PSRIx10pekcnS9DjGnjPW/recaptcha__en.js"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 71,
+      "scriptDurationMs": 40,
+      "heapDeltaKb": 2946
+    },
+    "scripts": [
+      {
+        "url": "https://www.google.com/recaptcha/api.js",
+        "transferKb": 1.5,
+        "decodedKb": 1.5,
+        "encoding": "gzip",
+        "durationMs": 360,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://www.gstatic.com/recaptcha/releases/qm3PSRIx10pekcnS9DjGnjPW/recaptcha__en.js",
+        "transferKb": 362.4,
+        "decodedKb": 850.5,
+        "encoding": "gzip",
+        "durationMs": 285,
+        "initiatorType": "script",
+        "protocol": "h2"
+      }
+    ]
+  },
+  "googleSignIn": {
+    "totalTransferKb": 92.1,
+    "totalDecodedKb": 247.5,
+    "loadTimeMs": 631,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": false,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": true,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "accounts.google.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 94322,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 12,
+      "scriptDurationMs": 2,
+      "heapDeltaKb": 1160
+    },
+    "scripts": [
+      {
+        "url": "https://accounts.google.com/gsi/client",
+        "transferKb": 92.1,
+        "decodedKb": 247.5,
+        "encoding": "gzip",
+        "durationMs": 631,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "blueskyEmbed": {
+    "totalTransferKb": 0,
+    "totalDecodedKb": 0,
+    "loadTimeMs": 0,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 0,
+      "domains": [],
+      "outboundBytes": 0,
+      "inboundBytes": 0,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 0,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 0
+    },
+    "scripts": []
+  },
+  "instagramEmbed": {
+    "totalTransferKb": 33.9,
+    "totalDecodedKb": 102.2,
+    "loadTimeMs": 361,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "www.instagram.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 36789,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 11,
+      "scriptDurationMs": 5,
+      "heapDeltaKb": 837
+    },
+    "scripts": [
+      {
+        "url": "https://www.instagram.com/embed.js",
+        "transferKb": 33.9,
+        "decodedKb": 102.2,
+        "encoding": "zstd",
+        "durationMs": 361,
+        "initiatorType": "script",
+        "protocol": "h2"
+      }
+    ]
+  },
+  "xEmbed": {
+    "totalTransferKb": 130.5,
+    "totalDecodedKb": 410.4,
+    "loadTimeMs": 85,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": true,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 3,
+      "domains": [
+        "platform.twitter.com",
+        "syndication.twitter.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 134625,
+      "injectedElements": [
+        {
+          "tag": "iframe",
+          "src": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A41565"
+        }
+      ]
+    },
+    "performance": {
+      "taskDurationMs": 48,
+      "scriptDurationMs": 16,
+      "heapDeltaKb": 2386
+    },
+    "scripts": [
+      {
+        "url": "https://platform.twitter.com/widgets.js",
+        "transferKb": 27.3,
+        "decodedKb": 90.9,
+        "encoding": "gzip",
+        "durationMs": 85,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A41565",
+        "transferKb": 103.2,
+        "decodedKb": 319.5,
+        "encoding": "gzip",
+        "durationMs": 68,
+        "initiatorType": "iframe",
+        "protocol": "unknown"
+      }
+    ]
+  },
+  "gravatar": {
+    "totalTransferKb": 0,
+    "totalDecodedKb": 0,
+    "loadTimeMs": 0,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": false,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "sendBeacon": false,
+      "fetch": false,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 0,
+      "domains": [],
+      "outboundBytes": 0,
+      "inboundBytes": 0,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 0,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 0
+    },
+    "scripts": []
+  }
+}

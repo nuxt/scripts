@@ -1,31 +1,31 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { UseScriptContext } from '@unhead/vue'
+import type { MaybePromise } from '../utils'
+import { useHead } from '@unhead/vue'
 /// <reference types="youtube" />
 import { watch } from 'vue'
-import type { UseScriptContext } from '@unhead/vue'
-import { useHead } from '@unhead/vue'
-import type { MaybePromise } from '../utils'
 import { useRegistryScript } from '../utils'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 
 export interface YouTubePlayerApi {
   YT: MaybePromise<{
     Player: YT.Player
     PlayerState: YT.PlayerState
-    get(k: string): any
+    get: (k: string) => any
     loaded: 0 | 1
     loading: 0 | 1
-    ready(f: () => void): void
-    scan(): void
-    setConfig(config: YT.PlayerOptions): void
-    subscribe<EventName extends keyof YT.Events>(
+    ready: (f: () => void) => void
+    scan: () => void
+    setConfig: (config: YT.PlayerOptions) => void
+    subscribe: <EventName extends keyof YT.Events>(
       event: EventName,
       listener: YT.Events[EventName],
-      context?: any
-    ): void
-    unsubscribe<EventName extends keyof YT.Events>(
+      context?: any,
+    ) => void
+    unsubscribe: <EventName extends keyof YT.Events>(
       event: EventName,
       listener: YT.Events[EventName],
-      context?: any
-    ): void
+      context?: any,
+    ) => void
   }>
 }
 

@@ -1,6 +1,8 @@
-import { useRegistryScript } from '../utils'
-import { boolean, minLength, object, optional, pipe, string } from '#nuxt-scripts-validator'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { CloudflareWebAnalyticsOptions } from './schemas'
+
+export { CloudflareWebAnalyticsOptions }
 
 /**
  * Sample:
@@ -20,20 +22,6 @@ export interface CloudflareWebAnalyticsApi {
 declare global {
   interface Window extends CloudflareWebAnalyticsApi {}
 }
-
-export const CloudflareWebAnalyticsOptions = object({
-  /**
-   * The Cloudflare Web Analytics token.
-   */
-  token: pipe(string(), minLength(32)),
-  /**
-   * Cloudflare Web Analytics enables measuring SPAs automatically by overriding the History API’s pushState function
-   * and listening to the onpopstate. Hash-based router is not supported.
-   *
-   * @default true
-   */
-  spa: optional(boolean()),
-})
 
 export type CloudflareWebAnalyticsInput = RegistryScriptInput<typeof CloudflareWebAnalyticsOptions>
 
