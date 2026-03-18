@@ -34,12 +34,6 @@ import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { registry } from './registry'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
-declare module '@nuxt/schema' {
-  interface NuxtHooks {
-    'scripts:registry': (registry: RegistryScripts) => void | Promise<void>
-  }
-}
-
 export type { FirstPartyOptions, FirstPartyPrivacy }
 
 /**
