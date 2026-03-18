@@ -59,7 +59,7 @@ function login(userId: string) {
 
 ### Registering Super Properties
 
-Super properties are sent with every subsequent event:
+Mixpanel sends super properties with every subsequent event:
 
 ```vue
 <script setup lang="ts">
