@@ -24,6 +24,7 @@ import type { IntercomInput } from './registry/intercom'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
+import type { MixpanelAnalyticsInput } from './registry/mixpanel-analytics'
 import type { NpmInput } from './registry/npm'
 import type { PayPalInput } from './registry/paypal'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
@@ -185,6 +186,7 @@ export interface ScriptRegistry {
   paypal?: PayPalInput
   posthog?: PostHogInput
   matomoAnalytics?: MatomoAnalyticsInput
+  mixpanelAnalytics?: MixpanelAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
   redditPixel?: RedditPixelInput
   segment?: SegmentInput
