@@ -154,7 +154,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'bingUet',
       label: 'Bing UET',
-      src: '//bat.bing.com/bat.js',
+      src: 'https://bat.bing.com/bat.js',
       category: 'ad',
       logo: LOGOS.bingUet,
       import: {

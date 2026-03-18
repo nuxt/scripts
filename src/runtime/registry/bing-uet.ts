@@ -22,7 +22,7 @@ declare global {
 export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput) {
   return useRegistryScript<T, typeof BingUetOptions>('bingUet', options => ({
     scriptInput: {
-      src: '//bat.bing.com/bat.js',
+      src: 'https://bat.bing.com/bat.js',
       crossorigin: false,
     },
     schema: import.meta.dev ? BingUetOptions : undefined,
