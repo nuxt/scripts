@@ -44,7 +44,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       throw new Error('useScript with partytown requires a src')
     }
     useHead({
-      script: [{ src, type: 'text/partytown' }],
+      script: [{ ...input, src, type: 'text/partytown' }],
     })
     // Register with nuxtApp.$scripts for DevTools visibility
     const nuxtApp = useNuxtApp() as NuxtScriptsApp
