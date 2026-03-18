@@ -17,8 +17,8 @@ describe('getScriptStats', () => {
       expect(Array.isArray(s.trackedData)).toBe(true)
       expect(typeof s.hasBundling).toBe('boolean')
       expect(typeof s.hasProxy).toBe('boolean')
-      expect(Array.isArray(s.domains)).toBe(true)
-      expect(typeof s.endpoints).toBe('number')
+      expect(Array.isArray(s.proxyDomains)).toBe(true)
+      expect(typeof s.proxyEndpoints).toBe('number')
       expect(['full', 'partial', 'none', 'unknown']).toContain(s.privacyLevel)
       expect(['cdn', 'npm', 'dynamic']).toContain(s.loadingMethod)
     }
