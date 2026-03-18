@@ -214,7 +214,7 @@ export type BuiltInRegistryScriptKey
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
     | 'hotjar' | 'intercom' | 'paypal' | 'posthog' | 'matomoAnalytics'
-    | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
+    | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'gravatar' | 'npm'
 
