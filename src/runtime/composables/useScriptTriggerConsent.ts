@@ -8,9 +8,7 @@ interface UseConsentScriptTriggerApi extends Promise<void> {
    */
   accept: () => void
   /**
-   * A function that can be called to revoke consent. Since the trigger promise is already resolved
-   * once accepted, revocation is signaled via the reactive `consented` ref rather than promise rejection.
-   * Consumers should `watch(consent.consented, ...)` to react to revocation.
+   * A function that can be called to revoke consent and signal the script should be unloaded.
    */
   revoke: () => void
   /**
@@ -25,8 +23,13 @@ interface UseConsentScriptTriggerApi extends Promise<void> {
  * @param options
  */
 export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): UseConsentScriptTriggerApi {
-  if (import.meta.server)
-    return new Promise(() => {}) as UseConsentScriptTriggerApi
+  if (import.meta.server) {
+    const p = new Promise<void>(() => {}) as UseConsentScriptTriggerApi
+    p.accept = () => {}
+    p.revoke = () => {}
+    p.consented = ref(false)
+    return p
+  }
 
   const consented = ref<boolean>(false)
   const nuxtApp = tryUseNuxtApp()
@@ -56,6 +59,10 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
       if (newValue && !oldValue) {
         // Consent granted - load script
         const runner = nuxtApp?.runWithContext || ((cb: () => void) => cb())
+        if (options?.postConsentTrigger instanceof Promise) {
+          options.postConsentTrigger.then(() => runner(resolve))
+          return
+        }
         if (typeof options?.postConsentTrigger === 'function') {
           // check if function has an argument
           if (options?.postConsentTrigger.length === 1) {
@@ -79,7 +86,7 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
       }
       // Revocation is handled via the reactive `consented` ref, not promise rejection.
       // Once resolved, a promise cannot be rejected — consumers should watch `consented` instead.
-    })
+    }, { immediate: true })
   }) as UseConsentScriptTriggerApi
 
   // we augment the promise with a consent API

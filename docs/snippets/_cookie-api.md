@@ -2,10 +2,10 @@
 <script lang="ts" setup>
 const cookieConsent = useScriptTriggerConsent()
 const myScript = useScript('/my-script.js', {
-  trigger: cookieConsent 
+  trigger: cookieConsent
 })
 </script>
 <template>
-  <CookieConsent @accept="cookieConsent.accept()" />
+  <CookieConsent @accept="cookieConsent.accept()" @revoke="cookieConsent.revoke()" />
 </template>
 ```
