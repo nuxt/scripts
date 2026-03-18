@@ -212,20 +212,20 @@ export type EmptyOptionsSchema = typeof _emptyOptions
 type ScriptInput = Script
 
 export type InferIfSchema<T> = T extends ObjectSchema<any, any> | UnionSchema<any, any> ? InferInput<T> : T
+export interface RegistryScriptInputExtras<Bundelable extends boolean = true, Usable extends boolean = false> {
+  /**
+   * A unique key to use for the script, this can be used to load multiple of the same script with different options.
+   */
+  key?: string
+  scriptInput?: ScriptInput
+  scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
+}
+
 export type RegistryScriptInput<
   T = EmptyOptionsSchema,
   Bundelable extends boolean = true,
   Usable extends boolean = false,
->
-= Partial<InferIfSchema<T>>
-  & {
-    /**
-     * A unique key to use for the script, this can be used to load multiple of the same script with different options.
-     */
-    key?: string
-    scriptInput?: ScriptInput
-    scriptOptions?: Omit<NuxtUseScriptOptions, Bundelable extends true ? '' : 'bundle' | Usable extends true ? '' : 'use'>
-  }
+> = Partial<InferIfSchema<T>> & RegistryScriptInputExtras<Bundelable, Usable>
 
 export interface RegistryScriptServerHandler {
   route: string
