@@ -107,6 +107,7 @@ function fixSelfClosingScriptComponents(nuxt: any) {
 }
 
 const REGISTRY_ENV_DEFAULTS: Partial<Record<RegistryScriptKey, Record<string, string>>> = {
+  bingUet: { id: '' },
   clarity: { id: '' },
   cloudflareWebAnalytics: { token: '' },
   crisp: { id: '' },
@@ -138,6 +139,7 @@ const REGISTRY_ENV_DEFAULTS: Partial<Record<RegistryScriptKey, Record<string, st
 }
 
 const PARTYTOWN_FORWARDS: Partial<Record<RegistryScriptKey, string[]>> = {
+  bingUet: ['uetq.push'],
   googleAnalytics: ['dataLayer.push', 'gtag'],
   plausibleAnalytics: ['plausible'],
   fathomAnalytics: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'],

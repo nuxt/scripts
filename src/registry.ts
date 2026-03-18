@@ -152,6 +152,17 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       },
     },
     {
+      registryKey: 'bingUet',
+      label: 'Bing UET',
+      src: 'https://bat.bing.com/bat.js',
+      category: 'ad',
+      logo: LOGOS.bingUet,
+      import: {
+        name: 'useScriptBingUet',
+        from: await resolve('./runtime/registry/bing-uet'),
+      },
+    },
+    {
       registryKey: 'metaPixel',
       label: 'Meta Pixel',
       src: 'https://connect.facebook.net/en_US/fbevents.js',

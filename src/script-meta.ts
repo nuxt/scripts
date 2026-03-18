@@ -68,6 +68,11 @@ export const scriptMeta = {
   },
 
   // Ads / Pixels
+  bingUet: {
+    urls: ['https://bat.bing.com/bat.js'],
+    trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    testId: '247021147',
+  },
   metaPixel: {
     urls: ['https://connect.facebook.net/en_US/fbevents.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],

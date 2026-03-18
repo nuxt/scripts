@@ -748,6 +748,19 @@ export const MixpanelAnalyticsOptions = object({
   token: string(),
 })
 
+export const BingUetOptions = object({
+  /**
+   * Your Bing UET tag ID.
+   * @see https://help.ads.microsoft.com/#apex/ads/en/56682/2-500
+   */
+  id: string(),
+  /**
+   * Enable automatic SPA page tracking.
+   * @default true
+   */
+  enableAutoSpaTracking: optional(boolean()),
+})
+
 export const SegmentOptions = object({
   /**
    * Your Segment write key.

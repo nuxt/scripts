@@ -1,5 +1,17 @@
 {
   "types": {
+    "bing-uet": [
+      {
+        "name": "BingUetOptions",
+        "kind": "const",
+        "code": "export const BingUetOptions = object({\n  /**\n   * Your Bing UET tag ID.\n   * @see https://help.ads.microsoft.com/#apex/ads/en/56682/2-500\n   */\n  id: string(),\n  /**\n   * Enable automatic SPA page tracking.\n   * @default true\n   */\n  enableAutoSpaTracking: optional(boolean()),\n})"
+      },
+      {
+        "name": "BingUetApi",
+        "kind": "interface",
+        "code": "export interface BingUetApi {\n  uetq: {\n    push: (event: string | Record<string, any>) => void\n  }\n}"
+      }
+    ],
     "bluesky-embed": [
       {
         "name": "BlueskyEmbedOptions",
@@ -1731,6 +1743,21 @@
         "type": "string",
         "required": true,
         "description": "Your Mixpanel project token."
+      }
+    ],
+    "BingUetOptions": [
+      {
+        "name": "id",
+        "type": "string",
+        "required": true,
+        "description": "Your Bing UET tag ID."
+      },
+      {
+        "name": "enableAutoSpaTracking",
+        "type": "boolean",
+        "required": false,
+        "description": "Enable automatic SPA page tracking.",
+        "defaultValue": "true"
       }
     ],
     "SegmentOptions": [
