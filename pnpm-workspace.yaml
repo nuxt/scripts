@@ -38,7 +38,7 @@ catalog:
   pathe: ^2.0.3
   pkg-types: ^2.3.0
   playwright-core: ^1.58.2
-  posthog-js: ^1.360.2
+  posthog-js: ^1.361.1
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.0.0
