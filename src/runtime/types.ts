@@ -203,8 +203,22 @@ export interface ScriptRegistry {
 }
 
 /**
+ * Built-in registry script keys — not affected by module augmentation.
+ * Use this to type-check records that must enumerate all built-in scripts (logos, meta, etc.).
+ */
+export type BuiltInRegistryScriptKey
+  = | 'blueskyEmbed' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
+    | 'databuddyAnalytics' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
+    | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
+    | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
+    | 'hotjar' | 'intercom' | 'paypal' | 'posthog' | 'matomoAnalytics'
+    | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
+    | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'youtubePlayer' | 'vercelAnalytics'
+    | 'vimeoPlayer' | 'umamiAnalytics' | 'gravatar' | 'npm'
+
+/**
  * Union of all explicit registry script keys (excludes npm pattern).
- * Use this to type-check records that enumerate scripts.
+ * Includes both built-in and augmented keys.
  */
 export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
