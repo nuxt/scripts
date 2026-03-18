@@ -343,6 +343,9 @@ export default defineNuxtModule<ModuleOptions>({
       // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig
       const registryWithDefaults: Record<string, any> = {}
       for (const [key, value] of Object.entries(config.registry)) {
+        if (value === false) {
+          continue
+        }
         if (value && REGISTRY_ENV_DEFAULTS[key]) {
           const envDefaults = REGISTRY_ENV_DEFAULTS[key]
           if (value === true || value === 'mock') {

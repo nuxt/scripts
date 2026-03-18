@@ -59,7 +59,7 @@ declare global {
 
 export { TikTokPixelOptions }
 
-export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, true, false, false>
+export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, true, false>
 
 export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput) {
   return useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({

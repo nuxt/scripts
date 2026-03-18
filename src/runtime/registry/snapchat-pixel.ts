@@ -49,7 +49,7 @@ export interface SnapPixelApi {
 declare global {
   interface Window extends SnapPixelApi {}
 }
-export type SnapTrPixelInput = RegistryScriptInput<typeof SnapTrPixelOptions, true, false, false>
+export type SnapTrPixelInput = RegistryScriptInput<typeof SnapTrPixelOptions, true, false>
 
 export function useScriptSnapchatPixel<T extends SnapPixelApi>(_options?: SnapTrPixelInput) {
   return useRegistryScript<T, typeof SnapTrPixelOptions>('snapchatPixel', options => ({

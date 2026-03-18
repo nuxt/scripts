@@ -6,7 +6,7 @@ import { IntercomOptions } from './schemas'
 
 export { IntercomOptions }
 
-export type IntercomInput = RegistryScriptInput<typeof IntercomOptions, true, false, false>
+export type IntercomInput = RegistryScriptInput<typeof IntercomOptions, true, false>
 
 export interface IntercomApi {
   Intercom: ((event: 'boot', data?: InferInput<typeof IntercomOptions>) => void)

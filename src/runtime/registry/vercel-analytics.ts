@@ -15,7 +15,7 @@ export interface BeforeSendEvent {
 
 export type BeforeSend = (event: BeforeSendEvent) => BeforeSendEvent | null
 
-export type VercelAnalyticsInput = RegistryScriptInput<typeof VercelAnalyticsOptions, false, false, false> & {
+export type VercelAnalyticsInput = RegistryScriptInput<typeof VercelAnalyticsOptions, false, false> & {
   beforeSend?: BeforeSend
 }
 

@@ -48,7 +48,7 @@ declare global {
 }
 
 export { MetaPixelOptions }
-export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false, false>
+export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false>
 
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
   return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({

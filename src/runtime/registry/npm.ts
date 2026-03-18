@@ -7,7 +7,7 @@ export { NpmOptions }
 
 type Provider = 'jsdelivr' | 'cdnjs' | 'unpkg'
 
-export type NpmInput = RegistryScriptInput<typeof NpmOptions, true, true, false>
+export type NpmInput = RegistryScriptInput<typeof NpmOptions, true, true>
 
 export function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput) {
   return useRegistryScript<T, typeof NpmOptions>(`${_options.packageName}-npm`, (options) => {
