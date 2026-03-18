@@ -21,22 +21,14 @@ export type FirstPartyPrivacy = ProxyPrivacyInput
 
 export interface FirstPartyOptions {
   /**
-   * Path prefix for serving bundled scripts.
-   *
-   * This is where the downloaded and rewritten script files are served from.
-   * @default '/_scripts/assets'
-   * @example '/_analytics'
-   */
-  prefix?: string
-  /**
-   * Path prefix for collection/tracking proxy endpoints.
+   * Path prefix for proxy endpoints.
    *
    * Analytics collection requests are proxied through these paths.
-   * For example, Google Analytics collection goes to `/_scripts/c/ga/g/collect`.
-   * @default '/_scripts/c'
+   * For example, Google Analytics collection goes to `/_scripts/p/ga/g/collect`.
+   * @default '/_scripts/p'
    * @example '/_tracking'
    */
-  collectPrefix?: string
+  proxyPrefix?: string
   /**
    * Global privacy override for all proxied scripts.
    *
@@ -53,8 +45,21 @@ export interface FirstPartyOptions {
 }
 
 /**
+ * Auto-inject configuration for scripts that need explicit endpoint config.
+ * For example, PostHog needs `apiHost` set to the proxy endpoint, Plausible needs `endpoint`.
+ */
+export interface ProxyAutoInject {
+  /** The config field name to set (e.g., 'apiHost', 'endpoint') */
+  configField: string
+  /** Compute the proxy endpoint value from the proxyPrefix and script config */
+  computeValue: (proxyPrefix: string, config: Record<string, any>) => string
+}
+
+/**
  * Proxy configuration for third-party scripts.
- * Defines URL rewrites and route rules for proxying collection endpoints.
+ * Defines URL rewrites, route rules, privacy controls, auto-inject, and post-processing.
+ * Each supported script has one ProxyConfig that is the single source of truth
+ * for all first-party routing behavior.
  */
 export interface ProxyConfig {
   /** URL rewrites to apply to downloaded script content */
@@ -70,6 +75,14 @@ export interface ProxyConfig {
    * Users can override per-script defaults via `firstParty.privacy` in nuxt.config.
    */
   privacy: ProxyPrivacyInput
+  /** Auto-inject proxy endpoint config into the script's SDK options */
+  autoInject?: ProxyAutoInject
+  /**
+   * SDK-specific post-processing applied after AST URL rewriting.
+   * Used for regex patches that can't be handled by the generic AST rewriter
+   * (e.g., GA dynamic URL construction, Fathom self-hosted detection, Rybbit host derivation).
+   */
+  postProcess?: (output: string, rewrites: import('../runtime/utils/pure').ProxyRewrite[]) => string
 }
 
 export interface InterceptRule {

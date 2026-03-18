@@ -273,48 +273,65 @@ export default defineEventHandler(async (event) => {
           body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
         }
         else if (typeof rawBody === 'string') {
-          // Try parsing as JSON first (sendBeacon often sends JSON with text/plain content-type)
-          if (rawBody.startsWith('{') || rawBody.startsWith('[')) {
-            let parsed: unknown = null
-            try {
-              parsed = JSON.parse(rawBody)
+          if (contentType.includes('application/x-www-form-urlencoded')) {
+            // URL-encoded form data — preserve repeated keys (e.g. ?tag=a&tag=b)
+            const params = new URLSearchParams(rawBody)
+            const obj: Record<string, unknown> = {}
+            for (const [key, value] of params.entries()) {
+              if (key in obj) {
+                // Repeated key → accumulate as array
+                const existing = obj[key]
+                obj[key] = Array.isArray(existing) ? [...existing, value] : [existing, value]
+              }
+              else {
+                obj[key] = value
+              }
             }
-            catch { /* not valid JSON */ }
+            const stripped = stripPayloadFingerprinting(obj, privacy)
+            // Reconstruct form data, expanding arrays back to repeated keys
+            const out = new URLSearchParams()
+            for (const [k, v] of Object.entries(stripped)) {
+              if (v === undefined || v === null)
+                continue
+              if (Array.isArray(v)) {
+                for (const item of v)
+                  out.append(k, typeof item === 'string' ? item : JSON.stringify(item))
+              }
+              else {
+                out.append(k, typeof v === 'string' ? v : JSON.stringify(v))
+              }
+            }
+            body = out.toString()
+          }
+          else {
+            // Try parsing as JSON: explicit JSON content-type, or heuristic for
+            // sendBeacon payloads that send JSON with text/plain content-type
+            const maybeJson = contentType.includes('json')
+              || (rawBody.startsWith('{') || rawBody.startsWith('['))
+            if (maybeJson) {
+              let parsed: unknown = null
+              try {
+                parsed = JSON.parse(rawBody)
+              }
+              catch { /* not valid JSON — fall through to raw */ }
 
-            if (Array.isArray(parsed)) {
-              body = parsed.map(item =>
-                item && typeof item === 'object' && !Array.isArray(item)
-                  ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
-                  : item,
-              )
-            }
-            else if (parsed && typeof parsed === 'object') {
-              body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
+              if (Array.isArray(parsed)) {
+                body = parsed.map(item =>
+                  item && typeof item === 'object' && !Array.isArray(item)
+                    ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+                    : item,
+                )
+              }
+              else if (parsed && typeof parsed === 'object') {
+                body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
+              }
+              else {
+                body = rawBody
+              }
             }
             else {
               body = rawBody
             }
-          }
-          else if (contentType.includes('application/x-www-form-urlencoded')) {
-            // URL-encoded form data
-            const params = new URLSearchParams(rawBody)
-            const obj: Record<string, unknown> = {}
-            params.forEach((value, key) => {
-              obj[key] = value
-            })
-            const stripped = stripPayloadFingerprinting(obj, privacy)
-            // Convert all values to strings — URLSearchParams coerces non-strings
-            // to "[object Object]" which corrupts nested objects/arrays
-            const stringified: Record<string, string> = {}
-            for (const [k, v] of Object.entries(stripped)) {
-              if (v === undefined || v === null)
-                continue
-              stringified[k] = typeof v === 'string' ? v : JSON.stringify(v)
-            }
-            body = new URLSearchParams(stringified).toString()
-          }
-          else {
-            body = rawBody
           }
         }
         else {

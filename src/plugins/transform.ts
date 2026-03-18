@@ -2,7 +2,7 @@ import type { RegistryScript } from '#nuxt-scripts/types'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
 import type { InferInput } from 'valibot'
-import type { ProxyRewrite } from '../proxy-configs'
+import type { ProxyConfig, ProxyRewrite } from '../first-party'
 import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'
 import { tryUseNuxt, useNuxt } from '@nuxt/kit'
@@ -16,7 +16,6 @@ import { hasProtocol, joinURL, parseURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
 import { bundleStorage } from '../assets'
 import { logger } from '../logger'
-import { getProxyConfig } from '../proxy-configs'
 import { rewriteScriptUrlsAST } from './rewrite-ast'
 import { isJS, isVue } from './util'
 
@@ -68,13 +67,9 @@ export interface AssetBundlerTransformerOptions {
    */
   registryConfig?: Record<string, any>
   /**
-   * Whether first-party mode is enabled
+   * Pre-built proxy configs from setupFirstParty. Empty object if first-party is disabled.
    */
-  firstPartyEnabled?: boolean
-  /**
-   * Path prefix for collection proxy endpoints
-   */
-  firstPartyCollectPrefix?: string
+  proxyConfigs?: Record<string, ProxyConfig>
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
@@ -109,9 +104,10 @@ async function downloadScript(opts: {
   filename?: string
   forceDownload?: boolean
   proxyRewrites?: ProxyRewrite[]
+  postProcess?: ProxyConfig['postProcess']
   integrity?: boolean | IntegrityAlgorithm
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload, integrity, proxyRewrites } = opts
+  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess } = opts
   if (src === url || !filename) {
     return
   }
@@ -121,7 +117,7 @@ async function downloadScript(opts: {
   if (!res) {
     // Use storage to cache the font data between builds
     // Include proxy in cache key to differentiate proxied vs non-proxied versions
-    // Also include a hash of proxyRewrites content to handle different collectPrefix values
+    // Also include a hash of proxyRewrites content to handle different proxyPrefix values
     const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
     const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename.replace('.js', `${proxyRewritesHash}.js`)}` : `bundle:${filename}`
     const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
@@ -155,7 +151,7 @@ async function downloadScript(opts: {
     // Apply URL rewrites for proxy mode (AST-based at build time)
     if (proxyRewrites?.length && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites)
+      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess)
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
@@ -423,15 +419,17 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // Use script's proxy field if defined, otherwise fall back to registry key
                     const script = options.scripts?.find(s => s.import.name === fnName)
                     const proxyConfigKey = script?.proxy !== false ? (script?.proxy || registryKey) : undefined
-                    const proxyRewrites = options.firstPartyEnabled && !firstPartyOptOut && proxyConfigKey && options.firstPartyCollectPrefix
-                      ? getProxyConfig(proxyConfigKey, options.firstPartyCollectPrefix)?.rewrite
+                    const proxyConfig = !firstPartyOptOut && proxyConfigKey
+                      ? options.proxyConfigs?.[proxyConfigKey]
                       : undefined
+                    const proxyRewrites = proxyConfig?.rewrite
+                    const postProcess = proxyConfig?.postProcess
 
                     // Defer async download + MagicString operations
                     deferredOps.push(async () => {
                       let url = _url
                       try {
-                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, integrity: options.integrity }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                       }
                       catch (e: any) {
                         if (options.fallbackOnSrcOnBundleFail) {

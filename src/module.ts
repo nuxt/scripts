@@ -1,10 +1,11 @@
 import type { FetchOptions } from 'ofetch'
-import type { FirstPartyOptions, FirstPartyPrivacy, InterceptRule } from './first-party'
+import type { FirstPartyOptions, FirstPartyPrivacy } from './first-party'
 import type {
   NuxtConfigScriptRegistry,
   NuxtUseScriptInput,
   NuxtUseScriptOptionsSerializable,
   RegistryScript,
+  RegistryScriptKey,
   RegistryScripts,
 } from './runtime/types'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -24,9 +25,10 @@ import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { setupDevToolsUI } from './devtools'
-import { finalizeFirstParty, resolveFirstPartyConfig, setupFirstPartyHandlers } from './first-party'
+import { finalizeFirstParty, setupFirstParty } from './first-party'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
+import { normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { registry } from './registry'
@@ -110,7 +112,7 @@ function fixSelfClosingScriptComponents(nuxt: any) {
   }
 }
 
-const REGISTRY_ENV_DEFAULTS: Record<string, Record<string, string>> = {
+const REGISTRY_ENV_DEFAULTS: Partial<Record<RegistryScriptKey, Record<string, string>>> = {
   clarity: { id: '' },
   cloudflareWebAnalytics: { token: '' },
   crisp: { id: '' },
@@ -140,12 +142,12 @@ const REGISTRY_ENV_DEFAULTS: Record<string, Record<string, string>> = {
   xPixel: { id: '' },
 }
 
-const PARTYTOWN_FORWARDS: Record<string, string[]> = {
+const PARTYTOWN_FORWARDS: Partial<Record<RegistryScriptKey, string[]>> = {
   googleAnalytics: ['dataLayer.push', 'gtag'],
-  plausible: ['plausible'],
-  fathom: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'],
-  umami: ['umami', 'umami.track'],
-  matomo: ['_paq.push'],
+  plausibleAnalytics: ['plausible'],
+  fathomAnalytics: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'],
+  umamiAnalytics: ['umami', 'umami.track'],
+  matomoAnalytics: ['_paq.push'],
   segment: ['analytics', 'analytics.track', 'analytics.page', 'analytics.identify'],
   metaPixel: ['fbq'],
   xPixel: ['twq'],
@@ -172,7 +174,7 @@ export interface ModuleOptions {
    * **Options:**
    * - `true` - Enable for all supported scripts (default)
    * - `false` - Disable (scripts load directly from third parties)
-   * - `{ collectPrefix: '/_analytics' }` - Enable with custom paths
+   * - `{ proxyPrefix: '/_analytics' }` - Enable with custom paths
    *
    * For static hosting, scripts are bundled but proxy endpoints require
    * platform rewrites (see docs). A warning is shown for static presets.
@@ -334,33 +336,19 @@ export default defineNuxtModule<ModuleOptions>({
         : undefined,
     } as any
 
-    // Merge registry config with existing runtimeConfig.public.scripts for proper env var resolution
-    // Both scripts.registry and runtimeConfig.public.scripts should be supported
+    // Normalize registry entries to [input, scriptOptions?] tuple form
+    // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
+      normalizeRegistryConfig(config.registry as Record<string, any>)
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
       // Auto-populate env var defaults for enabled registry scripts so that
       // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig
       const registryWithDefaults: Record<string, any> = {}
-      for (const [key, value] of Object.entries(config.registry)) {
-        if (value && REGISTRY_ENV_DEFAULTS[key]) {
-          const envDefaults = REGISTRY_ENV_DEFAULTS[key]
-          if (value === true || value === 'mock') {
-            registryWithDefaults[key] = { ...envDefaults }
-          }
-          else if (typeof value === 'object' && !Array.isArray(value)) {
-            registryWithDefaults[key] = defu(value, envDefaults)
-          }
-          else if (Array.isArray(value)) {
-            registryWithDefaults[key] = defu(value[0] || {}, envDefaults)
-          }
-          else {
-            registryWithDefaults[key] = value
-          }
-        }
-        else {
-          registryWithDefaults[key] = value
-        }
+      for (const [key, entry] of Object.entries(config.registry)) {
+        const input = (entry as any[])[0]
+        const envDefaults = REGISTRY_ENV_DEFAULTS[key as RegistryScriptKey]
+        registryWithDefaults[key] = envDefaults ? defu(input, envDefaults) : input
       }
 
       nuxt.options.runtimeConfig.public.scripts = defu(
@@ -377,8 +365,8 @@ export default defineNuxtModule<ModuleOptions>({
       )
     }
 
-    // Resolve first-party configuration
-    const firstParty = resolveFirstPartyConfig(config)
+    // Setup first-party mode: resolve config, build proxy configs, register proxy handler
+    const firstParty = await setupFirstParty(config, resolvePath)
     const assetsPrefix = firstParty.assetsPrefix
 
     // Process partytown shorthand - add partytown: true to specified registry scripts
@@ -389,7 +377,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       for (const scriptKey of config.partytown) {
         // Collect required forwards for this script
-        const forwards = PARTYTOWN_FORWARDS[scriptKey]
+        const forwards = PARTYTOWN_FORWARDS[scriptKey as RegistryScriptKey]
         if (forwards) {
           requiredForwards.push(...forwards)
         }
@@ -397,22 +385,13 @@ export default defineNuxtModule<ModuleOptions>({
           logger.warn(`[partytown] "${scriptKey}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
         }
 
+        // After normalizeRegistryConfig, all entries are [input, scriptOptions?]
         const reg = config.registry as Record<string, any>
         const existing = reg[scriptKey]
-        if (Array.isArray(existing)) {
-          // [input, options] format - merge partytown into options
+        if (existing) {
           existing[1] = { ...existing[1], partytown: true }
         }
-        else if (existing && typeof existing === 'object' && existing !== true && existing !== 'mock') {
-          // input object format - wrap with partytown option
-          reg[scriptKey] = [existing, { partytown: true }]
-        }
-        else if (existing === true || existing === 'mock') {
-          // simple enable - convert to array with partytown
-          reg[scriptKey] = [{}, { partytown: true }]
-        }
         else {
-          // not configured - add with partytown enabled
           reg[scriptKey] = [{}, { partytown: true }]
         }
       }
@@ -467,12 +446,6 @@ export default defineNuxtModule<ModuleOptions>({
 
     logger.debug('[nuxt-scripts] First-party config:', firstParty)
 
-    // Setup first-party proxy mode (must be before modules:done)
-    let interceptRules: InterceptRule[] = []
-    if (firstParty.enabled) {
-      interceptRules = await setupFirstPartyHandlers(firstParty, resolvePath)
-    }
-
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
     for (const script of scripts) {
@@ -512,14 +485,16 @@ export default defineNuxtModule<ModuleOptions>({
 
       // Finalize first-party proxy setup
       if (firstParty.enabled) {
-        finalizeFirstParty({
+        const devtoolsData = finalizeFirstParty({
           firstParty,
-          interceptRules,
           registry: config.registry,
           registryScripts,
-          registryScriptsWithImport,
           nuxtOptions: nuxt.options,
         })
+        // Expose first-party data for devtools
+        if (devtoolsData) {
+          nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = devtoolsData as any
+        }
       }
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
@@ -531,8 +506,7 @@ export default defineNuxtModule<ModuleOptions>({
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         defaultBundle: firstParty.enabled || config.defaultScriptOptions?.bundle,
-        firstPartyEnabled: firstParty.enabled,
-        firstPartyCollectPrefix: firstParty.collectPrefix,
+        proxyConfigs: firstParty.proxyConfigs,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
@@ -577,9 +551,8 @@ export default defineNuxtModule<ModuleOptions>({
 
       // Script-specific runtimeConfig setup
       if (script.registryKey === 'gravatar') {
-        const gravatarConfig = typeof config.registry?.gravatar === 'object' && !Array.isArray(config.registry.gravatar)
-          ? config.registry.gravatar as Record<string, any>
-          : {}
+        // After normalization, all entries are [input, scriptOptions?]
+        const gravatarConfig = (config.registry?.gravatar as any[])?.[0] || {}
         nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
           { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
           nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,

@@ -21,14 +21,14 @@ export interface ProxyPrivacy {
  * Privacy input: `true` = full anonymize, `false` = passthrough (still strips sensitive headers),
  * or a `ProxyPrivacy` object for granular control (unset flags default to `false` — opt-in).
  */
-export type ProxyPrivacyInput = boolean | ProxyPrivacy | null
+export type ProxyPrivacyInput = boolean | ProxyPrivacy
 
 /** Resolved privacy with all flags explicitly set. */
 export type ResolvedProxyPrivacy = Required<ProxyPrivacy>
 
-/** Full anonymization — all flags true. Used as fail-closed default. */
+/** Full anonymization — all flags true. Used as fail-closed default. Mirrors PRIVACY_FULL in proxy-configs.ts. */
 const FULL_PRIVACY: ResolvedProxyPrivacy = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
-/** Passthrough — all flags false. */
+/** Passthrough — all flags false. Mirrors PRIVACY_NONE in proxy-configs.ts. */
 const NO_PRIVACY: ResolvedProxyPrivacy = { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
 
 const MAJOR_VERSION_RE = /^(\d+)/
@@ -50,7 +50,7 @@ const LANG_CODE_RE = /^[a-z]{2}(?:-[a-z]{2,})?$/i
 export function resolvePrivacy(input?: ProxyPrivacyInput): ResolvedProxyPrivacy {
   if (input === true)
     return { ...FULL_PRIVACY }
-  if (input === false || input === undefined || input === null)
+  if (input === false || input === undefined)
     return { ...NO_PRIVACY }
   return {
     ip: input.ip ?? false,
@@ -69,7 +69,7 @@ export function resolvePrivacy(input?: ProxyPrivacyInput): ResolvedProxyPrivacy 
  * When `override` is an object, only explicitly-set fields override.
  */
 export function mergePrivacy(base: ResolvedProxyPrivacy, override?: ProxyPrivacyInput): ResolvedProxyPrivacy {
-  if (override === undefined || override === null)
+  if (override === undefined)
     return base
   // Boolean fully replaces
   if (typeof override === 'boolean')
@@ -470,17 +470,19 @@ export function stripPayloadFingerprinting(
       }
       continue
     }
-    // Generalize hardware to common bucket — screen flag (device capabilities)
+    // Generalize hardware capabilities (concurrency, memory) — hardware flag
     if (matchesParam(key, STRIP_PARAMS.hardware)) {
-      result[key] = p.screen ? generalizeHardware(value) : value
+      result[key] = p.hardware ? generalizeHardware(value) : value
       continue
     }
     // Generalize version strings to major version — hardware flag
+    // (OS/platform versions are hardware fingerprinting vectors: d_os, uapv)
     if (matchesParam(key, STRIP_PARAMS.version)) {
       result[key] = p.hardware ? generalizeVersion(value) : value
       continue
     }
     // Generalize browser version lists to major versions — hardware flag
+    // (full version lists enable cross-site fingerprinting: d_bvs, uafvl)
     if (matchesParam(key, STRIP_PARAMS.browserVersion)) {
       result[key] = p.hardware ? generalizeBrowserVersions(value) : value
       continue

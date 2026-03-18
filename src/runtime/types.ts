@@ -19,6 +19,7 @@ import type { GoogleSignInInput } from './registry/google-sign-in'
 import type { GoogleTagManagerInput } from './registry/google-tag-manager'
 import type { GravatarInput } from './registry/gravatar'
 import type { HotjarInput } from './registry/hotjar'
+import type { InstagramEmbedInput } from './registry/instagram-embed'
 import type { IntercomInput } from './registry/intercom'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
@@ -36,6 +37,7 @@ import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { VercelAnalyticsInput } from './registry/vercel-analytics'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
+import type { XEmbedInput } from './registry/x-embed'
 import type { XPixelInput } from './registry/x-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
 import { object } from '#nuxt-scripts-validator'
@@ -162,12 +164,14 @@ export interface NuxtDevToolsScriptInstance {
 
 export interface ScriptRegistry {
   blueskyEmbed?: BlueskyEmbedInput
+  carbonAds?: true
   crisp?: CrispInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
   databuddyAnalytics?: DatabuddyAnalyticsInput
   metaPixel?: MetaPixelInput
   fathomAnalytics?: FathomAnalyticsInput
+  instagramEmbed?: InstagramEmbedInput
   plausibleAnalytics?: PlausibleAnalyticsInput
   googleAdsense?: GoogleAdsenseInput
   googleAnalytics?: GoogleAnalyticsInput
@@ -186,6 +190,7 @@ export interface ScriptRegistry {
   segment?: SegmentInput
   stripe?: StripeInput
   tiktokPixel?: TikTokPixelInput
+  xEmbed?: XEmbedInput
   xPixel?: XPixelInput
   snapchatPixel?: SnapTrPixelInput
   youtubePlayer?: YouTubePlayerInput
@@ -193,8 +198,15 @@ export interface ScriptRegistry {
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
   gravatar?: GravatarInput
+  npm?: NpmInput
   [key: `${string}-npm`]: NpmInput
 }
+
+/**
+ * Union of all explicit registry script keys (excludes npm pattern).
+ * Use this to type-check records that enumerate scripts.
+ */
+export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
 export type NuxtConfigScriptRegistryEntry<T> = true | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
@@ -248,20 +260,18 @@ export interface RegistryScript {
    * The config key used in `scripts.registry` in nuxt.config (e.g., 'googleAnalytics', 'plausibleAnalytics').
    * Used for direct lookup from config to script — avoids fragile import name convention matching.
    */
-  registryKey?: string
+  registryKey?: RegistryScriptKey
   import?: Import // might just be a component
   scriptBundling?: false | ((options?: any) => string | false)
   /**
-   * First-party routing configuration for this script.
-   * - `string` - The proxy config key to use (e.g., 'googleAnalytics', 'metaPixel')
-   * - `false` - Explicitly disable first-party routing for this script
-   * - `undefined` - Use the default key derived from the function name
+   * First-party proxy config alias. Only needed when a script shares another script's
+   * proxy config (e.g., googleAdsense uses `proxy: 'googleAnalytics'`).
    *
-   * When set to a string, the script's URLs will be rewritten and collection
-   * endpoints will be routed through your server when `scripts.firstParty` is enabled.
+   * By default, the proxy config is looked up by `registryKey`. Set to `false` to
+   * explicitly disable first-party routing for this script.
    * @internal
    */
-  proxy?: string | false
+  proxy?: RegistryScriptKey | false
   label?: string
   src?: string | false
   category?: string
