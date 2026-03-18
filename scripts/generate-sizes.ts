@@ -392,6 +392,27 @@ const CLIENT_INIT: Record<string, string> = {
   vercelAnalytics: `
     window.va = function() { (window.vaq = window.vaq || []).push(arguments) };
     window.vam = 'production';`,
+  bingUet: `
+    window.uetq = window.uetq || [];
+    window.addEventListener('load', function() {
+      if (typeof UET === 'function') {
+        var o = { ti: '\${ID}', enableAutoSpaTracking: true };
+        o.q = window.uetq;
+        window.uetq = new UET(o);
+        window.uetq.push('pageLoad');
+      }
+    });`,
+  mixpanelAnalytics: `
+    var mp = window.mixpanel = window.mixpanel || [];
+    mp.__SV = 1.2; mp._i = mp._i || [];
+    mp.init = function(token, config, name) {
+      var target = name === 'mixpanel' || !name ? mp : (mp[name] = []);
+      target.people = target.people || [];
+      ['track','identify','reset','register'].forEach(function(m) { target[m] = function() { target.push([m].concat([].slice.call(arguments))); }; });
+      ['set'].forEach(function(m) { target.people[m] = function() { target.push(['people.' + m].concat([].slice.call(arguments))); }; });
+      mp._i.push([token, config, name || 'mixpanel']);
+    };
+    mp.init('test_token');`,
   databuddyAnalytics: `
     window.databuddyConfig = { clientId: 'test' };`,
   googleRecaptcha: `
