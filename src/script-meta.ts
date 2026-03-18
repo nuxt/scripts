@@ -1,4 +1,4 @@
-import type { RegistryScriptKey } from './runtime/types'
+import type { BuiltInRegistryScriptKey } from './runtime/types'
 
 export type TrackedDataType
   = | 'page-views' | 'events' | 'conversions' | 'user-identity'
@@ -16,7 +16,7 @@ export interface ScriptMeta {
   testId?: string | number
 }
 
-export const scriptMeta: Record<RegistryScriptKey, ScriptMeta> = {
+export const scriptMeta = {
   // Analytics
   plausibleAnalytics: {
     urls: ['https://plausible.io/js/script.js'],
@@ -197,4 +197,4 @@ export const scriptMeta: Record<RegistryScriptKey, ScriptMeta> = {
     urls: [],
     trackedData: [],
   },
-}
+} satisfies Record<BuiltInRegistryScriptKey, ScriptMeta>

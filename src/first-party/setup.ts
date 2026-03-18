@@ -1,5 +1,5 @@
 import type { ProxyPrivacyInput } from '../runtime/server/utils/privacy'
-import type { NuxtConfigScriptRegistry, RegistryScript, RegistryScriptKey } from '../runtime/types'
+import type { BuiltInRegistryScriptKey, NuxtConfigScriptRegistry, RegistryScript, RegistryScriptKey } from '../runtime/types'
 import type { ProxyAutoInject, ProxyConfig } from './types'
 import { addPluginTemplate, addServerHandler } from '@nuxt/kit'
 import { logger } from '../logger'
@@ -206,7 +206,7 @@ export function finalizeFirstParty(opts: {
         timezone: !!privacy.timezone,
         hardware: !!privacy.hardware,
       }
-      const _meta = scriptMeta[key as RegistryScriptKey]
+      const _meta = scriptMeta[key as BuiltInRegistryScriptKey]
       const logo = script.logo
       const logoStr = typeof logo === 'object' ? (logo.dark || logo.light) : (logo || '')
       const interceptRules = routesToInterceptRules(scriptRoutes)
