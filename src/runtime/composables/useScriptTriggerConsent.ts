@@ -49,9 +49,13 @@ export function useScriptTriggerConsent(options?: ConsentScriptTriggerOptions): 
     }
     // consent is a promise
     else if (options?.consent instanceof Promise) {
-      options?.consent.then((res) => {
-        consented.value = typeof res === 'boolean' ? res : true
-      })
+      options.consent
+        .then((res) => {
+          consented.value = typeof res === 'boolean' ? res : true
+        })
+        .catch(() => {
+          consented.value = false
+        })
     }
   }
 
