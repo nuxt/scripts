@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { InjectionKey, ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
-import { inject, onUnmounted, provide, shallowRef } from 'vue'
+import { inject, onUnmounted, provide, ref, shallowRef } from 'vue'
 import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 
@@ -51,9 +51,14 @@ const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 const advancedMarkerElement = shallowRef<google.maps.marker.AdvancedMarkerElement | undefined>(undefined)
+const isUnmounted = ref(false)
 
 whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
   await mapContext!.mapsApi.value!.importLibrary('marker')
+
+  // component was unmounted while awaiting the library import
+  if (isUnmounted.value)
+    return
 
   advancedMarkerElement.value = new mapContext!.mapsApi.value!.marker.AdvancedMarkerElement(props.options)
 
@@ -79,6 +84,8 @@ whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
 })
 
 onUnmounted(() => {
+  isUnmounted.value = true
+
   if (!advancedMarkerElement.value || !mapContext?.mapsApi.value) {
     return
   }
