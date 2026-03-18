@@ -30,11 +30,11 @@ export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput) 
       use() {
         // After bat.js loads, initialize UET if not already done
         if (options?.id && typeof window.UET === 'function' && Array.isArray(window.uetq)) {
-          const uetOptions: Record<string, any> = {
+          const uetOptions = {
             ti: options.id,
             enableAutoSpaTracking: options.enableAutoSpaTracking ?? true,
+            q: window.uetq as any[],
           }
-          uetOptions.q = window.uetq
           window.uetq = new window.UET(uetOptions)
           window.uetq.push('pageLoad')
         }
