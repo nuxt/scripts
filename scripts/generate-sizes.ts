@@ -270,17 +270,20 @@ const SECONDARY_DOMAINS: Record<string, string[]> = {
 
 // Some bootstraps construct secondary URLs dynamically (no plain URL in source).
 // These extractors derive the URL from patterns in the bootstrap source.
+const HOTJAR_MODULE_RE = /modules\.([a-f0-9]+)\.js/
+const CRISP_HASH_RE = /this\.h="([a-f0-9]+)"/
+
 const SECONDARY_URL_EXTRACTORS: Record<string, (bodies: string[]) => string[]> = {
   hotjar(bodies) {
     // Bootstrap embeds: modules.{hash}.js — construct full URL
     const allText = bodies.join(' ')
-    const match = allText.match(/modules\.([a-f0-9]+)\.js/)
+    const match = HOTJAR_MODULE_RE.exec(allText)
     return match ? [`https://script.hotjar.com/modules.${match[1]}.js`] : []
   },
   crisp(bodies) {
     // Bootstrap pattern: this.h="db1a904", loads client_default_{hash}.js
     const allText = bodies.join(' ')
-    const match = allText.match(/this\.h="([a-f0-9]+)"/)
+    const match = CRISP_HASH_RE.exec(allText)
     return match ? [`https://client.crisp.chat/static/javascripts/client_default_${match[1]}.js`] : []
   },
 }
@@ -405,6 +408,7 @@ const CLIENT_INIT: Record<string, string> = {
 function buildHtml(key: string, meta: { urls: string[], testId?: string | number }): string {
   let init = CLIENT_INIT[key] || ''
   if (init && meta.testId !== undefined)
+    // eslint-disable-next-line no-template-curly-in-string
     init = init.replaceAll('${ID}', String(meta.testId))
   const initTag = init ? `<script>${init}</script>` : ''
   const scripts = meta.urls.map(u => `<script src="${u}"></script>`).join('\n')
@@ -472,7 +476,9 @@ async function main() {
       const url = event.request.url
       if (!url.startsWith('http://127.0.0.1') && !url.startsWith('data:')) {
         externalRequestCount++
-        try { externalDomains.add(new URL(url).hostname) }
+        try {
+          externalDomains.add(new URL(url).hostname)
+        }
         catch {}
         // Track outbound payload size (POST body, beacon data)
         if (event.request.postData)

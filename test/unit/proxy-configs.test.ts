@@ -42,22 +42,27 @@ describe('proxy configs', () => {
     })
 
     it('rewrites template literals with expressions', () => {
+      // eslint-disable-next-line no-template-curly-in-string
       const input = 'const u=`https://www.google-analytics.com/collect?id=${id}`'
       const output = fn(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },
       ])
+      // eslint-disable-next-line no-template-curly-in-string
       expect(output).toBe('const u=self.location.origin+`/_scripts/c/ga/collect?id=${id}`')
     })
 
     it('rewrites template literals with multiple expressions', () => {
+      // eslint-disable-next-line no-template-curly-in-string
       const input = 'fetch(`https://analytics.tiktok.com/api?id=${id}&v=${ver}`)'
       const output = fn(input, [
         { from: 'analytics.tiktok.com', to: '/_scripts/c/tiktok' },
       ])
+      // eslint-disable-next-line no-template-curly-in-string
       expect(output).toBe('__nuxtScripts.fetch(self.location.origin+`/_scripts/c/tiktok/api?id=${id}&v=${ver}`)')
     })
 
     it('does not rewrite template literals with expressions when no match', () => {
+      // eslint-disable-next-line no-template-curly-in-string
       const input = 'const u=`https://example.com/api?id=${id}`'
       const output = fn(input, [
         { from: 'www.google-analytics.com', to: '/_scripts/c/ga' },

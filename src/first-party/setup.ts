@@ -206,7 +206,7 @@ export function finalizeFirstParty(opts: {
         timezone: !!privacy.timezone,
         hardware: !!privacy.hardware,
       }
-      const meta = scriptMeta[key as RegistryScriptKey]
+      const _meta = scriptMeta[key as RegistryScriptKey]
       const logo = script.logo
       const logoStr = typeof logo === 'object' ? (logo.dark || logo.light) : (logo || '')
       const interceptRules = routesToInterceptRules(scriptRoutes)
