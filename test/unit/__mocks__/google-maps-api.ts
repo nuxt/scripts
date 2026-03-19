@@ -43,6 +43,29 @@ export function createMockMarkerClusterer() {
   }
 }
 
+export function createMockDataLayer() {
+  const features: any[] = []
+  return {
+    setStyle: vi.fn(),
+    setMap: vi.fn(),
+    addGeoJson: vi.fn((geoJson: any) => {
+      features.push(geoJson)
+      return features
+    }),
+    loadGeoJson: vi.fn(),
+    forEach: vi.fn((callback: (feature: any) => void) => {
+      features.forEach(callback)
+    }),
+    remove: vi.fn((feature: any) => {
+      const idx = features.indexOf(feature)
+      if (idx >= 0)
+        features.splice(idx, 1)
+    }),
+    addListener: vi.fn(),
+    _features: features,
+  }
+}
+
 // Class-based mocks for Vitest 4 constructor support - returns shared instance
 function createMockClass<T>(instance: T) {
   // eslint-disable-next-line prefer-arrow-callback
@@ -71,11 +94,13 @@ export function createMockGoogleMapsAPI() {
   const mockInfoWindow = createMockInfoWindow()
   const mockPinElement = createMockPinElement()
   const mockMarkerClusterer = createMockMarkerClusterer()
+  const mockDataLayer = createMockDataLayer()
 
   const MockMarker = createMockClass(mockMarker)
   const MockAdvancedMarkerElement = createMockClass(mockAdvancedMarkerElement)
   const MockPinElement = createMockClass(mockPinElement)
   const MockInfoWindow = createMockClass(mockInfoWindow)
+  const MockData = createMockClass(mockDataLayer)
   // eslint-disable-next-line prefer-arrow-callback
   const MockLatLng = vi.fn(function (this: any, lat: number, lng: number) {
     return { lat, lng }
@@ -88,6 +113,7 @@ export function createMockGoogleMapsAPI() {
       PinElement: MockPinElement,
     },
     InfoWindow: MockInfoWindow,
+    Data: MockData,
     event: {
       clearInstanceListeners: vi.fn(),
     },
@@ -104,6 +130,7 @@ export function createMockGoogleMapsAPI() {
     mockInfoWindow,
     mockMarkerClusterer,
     mockPinElement,
+    mockDataLayer,
     mockMapsApi,
   }
 }
@@ -122,6 +149,7 @@ export function createMockGoogleMapsAPIWithInstances() {
   const MockPolyline = createMockClassFactory(() => ({ setOptions: vi.fn(), setMap: vi.fn(), addListener: vi.fn() }))
   const MockRectangle = createMockClassFactory(() => ({ setOptions: vi.fn(), setMap: vi.fn(), addListener: vi.fn() }))
   const MockHeatmapLayer = createMockClassFactory(() => ({ setOptions: vi.fn(), setMap: vi.fn() }))
+  const MockData = createMockClassFactory(createMockDataLayer)
 
   const mockMapsApi = {
     Marker: MockMarker,
@@ -130,6 +158,7 @@ export function createMockGoogleMapsAPIWithInstances() {
       PinElement: MockPinElement,
     },
     InfoWindow: MockInfoWindow,
+    Data: MockData,
     Circle: MockCircle,
     Polygon: MockPolygon,
     Polyline: MockPolyline,
@@ -168,6 +197,7 @@ export function createMockGoogleMapsAPIWithInstances() {
     MockPolyline,
     MockRectangle,
     MockHeatmapLayer,
+    MockData,
   }
 }
 
@@ -215,4 +245,23 @@ export const MARKER_CLUSTERER_EVENTS = [
   'click',
   'clusteringbegin',
   'clusteringend',
+] as const
+
+export const DATA_MOUSE_EVENTS = [
+  'click',
+  'contextmenu',
+  'dblclick',
+  'mousedown',
+  'mousemove',
+  'mouseout',
+  'mouseover',
+  'mouseup',
+] as const
+
+export const DATA_FEATURE_EVENTS = [
+  'addfeature',
+  'removefeature',
+  'setgeometry',
+  'setproperty',
+  'removeproperty',
 ] as const
