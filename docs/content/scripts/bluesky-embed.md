@@ -14,9 +14,6 @@ links:
 
 Nuxt Scripts provides a [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"} component that fetches post data server-side and exposes it via slots for complete styling control. All data is proxied through your server - no client-side API calls to Bluesky.
 
-::script-stats
-::
-
 ::script-types
 ::
 
@@ -49,6 +46,8 @@ The [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"} c
 ### Demo
 
 ::code-group
+
+:bluesky-embed-demo{label="Output"}
 
 ```vue [Basic Usage]
 <template>

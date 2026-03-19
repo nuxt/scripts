@@ -10,7 +10,7 @@ links:
 
 ---
 
-::script-stats
+::script-docs
 ::
 
 ::script-types

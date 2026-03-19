@@ -18,9 +18,6 @@ links:
 
 Nuxt Scripts provides a [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps){lang="html"} component to interact with the Google Maps.
 
-::script-stats
-::
-
 ::script-types
 ::
 
