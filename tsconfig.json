@@ -13,6 +13,7 @@
     "test/e2e",
     "test/fixtures",
     "test/unit",
+    "test/nuxt-runtime",
     "test/benchmark.skip.ts",
     "examples"
   ]

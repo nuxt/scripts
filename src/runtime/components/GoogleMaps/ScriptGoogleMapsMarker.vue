@@ -1,13 +1,10 @@
 <script lang="ts">
-import type { InjectionKey, ShallowRef } from 'vue'
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted, provide, shallowRef } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { inject, provide, watch } from 'vue'
+import { MARKER_INJECTION_KEY } from './injectionKeys'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
-export const MARKER_INJECTION_KEY = Symbol('marker') as InjectionKey<{
-  marker: ShallowRef<google.maps.Marker | undefined>
-}>
+export { MARKER_INJECTION_KEY } from './injectionKeys'
 </script>
 
 <script setup lang="ts">
@@ -47,61 +44,47 @@ const eventsWithMapMouseEventPayload = [
   'mouseup',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
-const marker = shallowRef<google.maps.Marker | undefined>(undefined)
-
-whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
-  marker.value = new mapContext!.mapsApi.value!.Marker(props.options)
-
-  setupMarkerEventListeners(marker.value)
-
-  if (markerClustererContext?.markerClusterer.value) {
-    markerClustererContext.markerClusterer.value.addMarker(marker.value, true)
-
-    markerClustererContext.requestRerender()
-  }
-  else {
-    marker.value.setMap(mapContext!.map.value!)
-  }
-
-  whenever(() => props.options, (options) => {
-    marker.value?.setOptions(options)
-  }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
+const marker = useGoogleMapsResource<google.maps.Marker>({
+  create({ mapsApi, map }) {
+    const m = new mapsApi.Marker(props.options)
+    setupEventListeners(m)
+    if (markerClustererContext?.markerClusterer.value) {
+      markerClustererContext.markerClusterer.value.addMarker(m, true)
+      markerClustererContext.requestRerender()
+    }
+    else {
+      m.setMap(map)
+    }
+    return m
+  },
+  cleanup(m, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(m)
+    if (markerClustererContext?.markerClusterer.value) {
+      markerClustererContext.markerClusterer.value.removeMarker(m, true)
+      markerClustererContext.requestRerender()
+    }
+    else {
+      m.setMap(null)
+    }
+  },
 })
 
-onUnmounted(() => {
-  if (!marker.value || !mapContext?.mapsApi.value) {
-    return
+watch(() => props.options, (options) => {
+  if (marker.value && options) {
+    marker.value.setOptions(options)
   }
-
-  mapContext.mapsApi.value.event.clearInstanceListeners(marker.value)
-
-  if (markerClustererContext?.markerClusterer.value) {
-    markerClustererContext.markerClusterer.value.removeMarker(marker.value, true)
-
-    markerClustererContext.requestRerender()
-  }
-  else {
-    marker.value.setMap(null)
-  }
-})
+}, { deep: true })
 
 provide(MARKER_INJECTION_KEY, { marker })
 
-function setupMarkerEventListeners(marker: google.maps.Marker) {
+function setupEventListeners(m: google.maps.Marker) {
   eventsWithoutPayload.forEach((event) => {
-    marker.addListener(event, () => emit(event))
+    m.addListener(event, () => emit(event))
   })
-
   eventsWithMapMouseEventPayload.forEach((event) => {
-    marker.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+    m.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
   })
 }
 </script>

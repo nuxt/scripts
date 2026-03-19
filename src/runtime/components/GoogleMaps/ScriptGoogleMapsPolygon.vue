@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { watch } from 'vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
   options?: Omit<google.maps.PolygonOptions, 'map'>
@@ -29,45 +28,30 @@ const eventsWithMapMouseEventPayload = [
   'dragstart',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
-
-let polygon: google.maps.Polygon | undefined
-
-whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
-  polygon = new mapContext!.mapsApi.value!.Polygon({
-    map: mapContext!.map.value,
-    ...props.options,
-  })
-
-  setupPolygonEventListeners(polygon)
-
-  whenever(() => props.options, (options) => {
-    polygon?.setOptions(options)
-  }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
+const polygon = useGoogleMapsResource<google.maps.Polygon>({
+  create({ mapsApi, map }) {
+    const p = new mapsApi.Polygon({ map, ...props.options })
+    setupEventListeners(p)
+    return p
+  },
+  cleanup(p, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(p)
+    p.setMap(null)
+  },
 })
 
-onUnmounted(() => {
-  if (!polygon || !mapContext?.mapsApi.value) {
-    return
+watch(() => props.options, (options) => {
+  if (polygon.value && options) {
+    polygon.value.setOptions(options)
   }
+}, { deep: true })
 
-  mapContext.mapsApi.value.event.clearInstanceListeners(polygon)
-
-  polygon.setMap(null)
-})
-
-function setupPolygonEventListeners(polygon: google.maps.Polygon) {
+function setupEventListeners(p: google.maps.Polygon) {
   eventsWithPolyMouseEventPayload.forEach((event) => {
-    polygon.addListener(event, (payload: google.maps.PolyMouseEvent) => emit(event, payload))
+    p.addListener(event, (payload: google.maps.PolyMouseEvent) => emit(event, payload))
   })
-
   eventsWithMapMouseEventPayload.forEach((event) => {
-    polygon.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+    p.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
   })
 }
 </script>
