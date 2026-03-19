@@ -52,7 +52,8 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
     const marker = new mapsApi.marker.AdvancedMarkerElement(props.options)
     setupEventListeners(marker)
     if (markerClustererContext?.markerClusterer.value) {
-      markerClustererContext.markerClusterer.value.addMarker(marker)
+      markerClustererContext.markerClusterer.value.addMarker(marker, true)
+      markerClustererContext.requestRerender()
     }
     else {
       marker.map = map
@@ -62,7 +63,8 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
   cleanup(marker, { mapsApi }) {
     mapsApi.event.clearInstanceListeners(marker)
     if (markerClustererContext?.markerClusterer.value) {
-      markerClustererContext.markerClusterer.value.removeMarker(marker)
+      markerClustererContext.markerClusterer.value.removeMarker(marker, true)
+      markerClustererContext.requestRerender()
     }
     else {
       marker.map = null
