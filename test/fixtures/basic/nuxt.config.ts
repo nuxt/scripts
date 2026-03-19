@@ -9,6 +9,7 @@ export default defineNuxtConfig({
       xEmbed: true,
       instagramEmbed: true,
       blueskyEmbed: true,
+      gravatar: true,
     },
   },
   devtools: {
