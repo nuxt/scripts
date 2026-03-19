@@ -25,7 +25,7 @@ import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { setupDevToolsUI } from './devtools'
-import { finalizeFirstParty, setupFirstParty } from './first-party'
+import { finalizeFirstParty, generatePartytownResolveUrl, setupFirstParty } from './first-party'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
 import { normalizeRegistryConfig } from './normalize'
@@ -485,7 +485,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       // Finalize first-party proxy setup
       if (firstParty.enabled) {
-        const devtoolsData = finalizeFirstParty({
+        const { interceptRules, devtools: devtoolsData } = finalizeFirstParty({
           firstParty,
           registry: config.registry,
           registryScripts,
@@ -494,6 +494,18 @@ export default defineNuxtModule<ModuleOptions>({
         // Expose first-party data for devtools
         if (devtoolsData) {
           nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = devtoolsData as any
+        }
+        // Auto-configure Partytown resolveUrl for first-party proxy
+        if (config.partytown?.length && hasNuxtModule('@nuxtjs/partytown') && interceptRules.length) {
+          const partytownConfig = (nuxt.options as any).partytown || {}
+          if (!partytownConfig.resolveUrl) {
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(interceptRules)
+            ;(nuxt.options as any).partytown = partytownConfig
+            logger.info('[partytown] Auto-configured resolveUrl for first-party proxy')
+          }
+          else {
+            logger.warn('[partytown] Custom resolveUrl already set — first-party proxy URLs will not be auto-rewritten in Partytown worker. Add first-party proxy rules to your resolveUrl manually.')
+          }
         }
       }
 
@@ -507,6 +519,7 @@ export default defineNuxtModule<ModuleOptions>({
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         defaultBundle: firstParty.enabled || config.defaultScriptOptions?.bundle,
         proxyConfigs: firstParty.proxyConfigs,
+        partytownScripts: new Set(config.partytown || []),
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))
