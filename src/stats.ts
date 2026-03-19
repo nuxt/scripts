@@ -34,11 +34,26 @@ export interface ScriptApis {
   webgl: boolean
   audioContext: boolean
   userAgent: boolean
+  doNotTrack: boolean
   hardwareConcurrency: boolean
   deviceMemory: boolean
   plugins: boolean
   languages: boolean
   screen: boolean
+  timezone: boolean
+  platform: boolean
+  vendor: boolean
+  connection: boolean
+  maxTouchPoints: boolean
+  devicePixelRatio: boolean
+  mediaDevices: boolean
+  getBattery: boolean
+  referrer: boolean
+  windowName: boolean
+  rtcPeerConnection: boolean
+  geolocation: boolean
+  serviceWorker: boolean
+  cacheApi: boolean
   sendBeacon: boolean
   fetch: boolean
   xhr: boolean
@@ -53,8 +68,10 @@ export interface ApiPrivacyScore {
   score: number
   /** Persistence APIs used (cookies, localStorage, sessionStorage, indexedDB) */
   persistence: number
-  /** Fingerprinting APIs used (canvas, webgl, audioContext, deviceMemory, hardwareConcurrency, plugins, screen, userAgent, languages) */
+  /** Fingerprinting APIs used (canvas, webgl, audioContext, deviceMemory, hardwareConcurrency, plugins, screen, userAgent, languages, timezone, platform, vendor, connection, maxTouchPoints, devicePixelRatio, mediaDevices, getBattery) */
   fingerprinting: number
+  /** Tracking APIs used (referrer, windowName, rtcPeerConnection, geolocation, serviceWorker, cacheApi) */
+  tracking: number
   /** Behavioral monitoring APIs used (mutationObserver, intersectionObserver) */
   monitoring: number
 }
@@ -135,16 +152,20 @@ export interface ScriptStats {
 // Network APIs (fetch, xhr, sendBeacon, websocket) and performanceObserver are
 // functional (every script needs to send data) and excluded from scoring.
 const PERSISTENCE_APIS = ['cookies', 'localStorage', 'sessionStorage', 'indexedDB'] as const
-const FINGERPRINTING_APIS = ['canvas', 'webgl', 'audioContext', 'deviceMemory', 'hardwareConcurrency', 'plugins', 'screen', 'userAgent', 'languages'] as const
+const FINGERPRINTING_APIS = ['canvas', 'webgl', 'audioContext', 'deviceMemory', 'hardwareConcurrency', 'plugins', 'screen', 'userAgent', 'languages', 'timezone', 'platform', 'vendor', 'connection', 'maxTouchPoints', 'devicePixelRatio', 'mediaDevices', 'getBattery'] as const
+const TRACKING_APIS = ['referrer', 'windowName', 'rtcPeerConnection', 'geolocation', 'serviceWorker', 'cacheApi'] as const
 const MONITORING_APIS = ['mutationObserver', 'intersectionObserver'] as const
 
-// Weights: persistence enables cross-visit tracking (heaviest), fingerprinting
-// enables device identification, monitoring enables behavioral observation.
+// Weights: persistence enables cross-visit tracking (heaviest), tracking enables
+// cross-site identification, fingerprinting enables device identification,
+// monitoring enables behavioral observation.
 const PERSISTENCE_WEIGHT = 10
+const TRACKING_WEIGHT = 8
 const FINGERPRINTING_WEIGHT = 6
 const MONITORING_WEIGHT = 4
 
 const MAX_SCORE = PERSISTENCE_APIS.length * PERSISTENCE_WEIGHT
+  + TRACKING_APIS.length * TRACKING_WEIGHT
   + FINGERPRINTING_APIS.length * FINGERPRINTING_WEIGHT
   + MONITORING_APIS.length * MONITORING_WEIGHT
 
@@ -152,9 +173,11 @@ function computeApiPrivacyScore(apis: ScriptApis): ApiPrivacyScore {
   const count = (keys: readonly (keyof ScriptApis)[]) => keys.filter(k => apis[k]).length
   const persistence = count(PERSISTENCE_APIS)
   const fingerprinting = count(FINGERPRINTING_APIS)
+  const tracking = count(TRACKING_APIS)
   const monitoring = count(MONITORING_APIS)
 
   const raw = persistence * PERSISTENCE_WEIGHT
+    + tracking * TRACKING_WEIGHT
     + fingerprinting * FINGERPRINTING_WEIGHT
     + monitoring * MONITORING_WEIGHT
 
@@ -162,6 +185,7 @@ function computeApiPrivacyScore(apis: ScriptApis): ApiPrivacyScore {
     score: Math.round((raw / MAX_SCORE) * 100),
     persistence,
     fingerprinting,
+    tracking,
     monitoring,
   }
 }

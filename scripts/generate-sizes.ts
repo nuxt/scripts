@@ -40,11 +40,28 @@ interface ScriptApis {
   audioContext: boolean
   // Device / environment
   userAgent: boolean
+  doNotTrack: boolean
   hardwareConcurrency: boolean
   deviceMemory: boolean
   plugins: boolean
   languages: boolean
   screen: boolean
+  // Fingerprinting — additional signals
+  timezone: boolean
+  platform: boolean
+  vendor: boolean
+  connection: boolean
+  maxTouchPoints: boolean
+  devicePixelRatio: boolean
+  mediaDevices: boolean
+  getBattery: boolean
+  // Tracking
+  referrer: boolean
+  windowName: boolean
+  rtcPeerConnection: boolean
+  geolocation: boolean
+  serviceWorker: boolean
+  cacheApi: boolean
   // Network
   sendBeacon: boolean
   fetch: boolean
@@ -122,11 +139,26 @@ const STATIC_API_PATTERNS: Record<keyof ScriptApis, RegExp[]> = {
   webgl: [/webgl/, /experimental-webgl/],
   audioContext: [/AudioContext/, /webkitAudioContext/],
   userAgent: [/userAgent/],
+  doNotTrack: [/doNotTrack/, /msDoNotTrack/],
   hardwareConcurrency: [/hardwareConcurrency/],
   deviceMemory: [/deviceMemory/],
   plugins: [/navigator\.plugins/],
   languages: [/navigator\.languages?\b/],
   screen: [/screen\.(?:width|height|colorDepth|pixelDepth|availWidth|availHeight)\b/],
+  timezone: [/DateTimeFormat/, /\.timeZone\b/, /getTimezoneOffset/],
+  platform: [/navigator\.platform/],
+  vendor: [/navigator\.vendor/],
+  connection: [/navigator\.connection/, /\.effectiveType/, /\.downlink\b/, /\.rtt\b/],
+  maxTouchPoints: [/maxTouchPoints/],
+  devicePixelRatio: [/devicePixelRatio/],
+  mediaDevices: [/mediaDevices/, /enumerateDevices/],
+  getBattery: [/getBattery/],
+  referrer: [/document\.referrer/],
+  windowName: [/window\.name\b/],
+  rtcPeerConnection: [/RTCPeerConnection/, /webkitRTCPeerConnection/],
+  geolocation: [/geolocation/],
+  serviceWorker: [/serviceWorker/],
+  cacheApi: [/caches\.open/, /CacheStorage/],
   sendBeacon: [/sendBeacon/],
   fetch: [/\.fetch\s*\(/, /\bfetch\s*\(/],
   xhr: [/XMLHttpRequest/],
@@ -154,11 +186,26 @@ const EMPTY_APIS: ScriptApis = {
   webgl: false,
   audioContext: false,
   userAgent: false,
+  doNotTrack: false,
   hardwareConcurrency: false,
   deviceMemory: false,
   plugins: false,
   languages: false,
   screen: false,
+  timezone: false,
+  platform: false,
+  vendor: false,
+  connection: false,
+  maxTouchPoints: false,
+  devicePixelRatio: false,
+  mediaDevices: false,
+  getBattery: false,
+  referrer: false,
+  windowName: false,
+  rtcPeerConnection: false,
+  geolocation: false,
+  serviceWorker: false,
+  cacheApi: false,
   sendBeacon: false,
   fetch: false,
   xhr: false,
@@ -208,7 +255,7 @@ const API_INSTRUMENTATION = `
   }
 
   // Device / environment
-  ['userAgent', 'hardwareConcurrency', 'deviceMemory', 'plugins', 'languages'].forEach(function(prop) {
+  ['userAgent', 'doNotTrack', 'hardwareConcurrency', 'deviceMemory', 'plugins', 'languages', 'platform', 'vendor', 'connection', 'maxTouchPoints'].forEach(function(prop) {
     const orig = Object.getOwnPropertyDescriptor(Navigator.prototype, prop) || Object.getOwnPropertyDescriptor(navigator, prop);
     if (!orig) return;
     try {
@@ -218,6 +265,18 @@ const API_INSTRUMENTATION = `
       });
     } catch(e) {}
   });
+  // window.doNotTrack (non-standard, used by some privacy scripts)
+  if ('doNotTrack' in window) {
+    const origDNT = Object.getOwnPropertyDescriptor(window, 'doNotTrack');
+    if (origDNT) {
+      try {
+        Object.defineProperty(window, 'doNotTrack', {
+          get: function() { a.add('doNotTrack'); return origDNT.get ? origDNT.get.call(this) : origDNT.value; },
+          configurable: true
+        });
+      } catch(e) {}
+    }
+  }
   ['width', 'height', 'colorDepth', 'pixelDepth', 'availWidth', 'availHeight'].forEach(function(prop) {
     const orig = Object.getOwnPropertyDescriptor(Screen.prototype, prop);
     if (!orig) return;
@@ -228,6 +287,93 @@ const API_INSTRUMENTATION = `
       });
     } catch(e) {}
   });
+
+  // devicePixelRatio
+  const origDPR = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+  if (origDPR) {
+    try {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        get: function() { a.add('devicePixelRatio'); return origDPR.get ? origDPR.get.call(this) : origDPR.value; },
+        configurable: true
+      });
+    } catch(e) {}
+  }
+
+  // Timezone (Intl.DateTimeFormat)
+  const origDTF = Intl.DateTimeFormat;
+  Intl.DateTimeFormat = function() { a.add('timezone'); return new origDTF(...arguments); };
+  Intl.DateTimeFormat.prototype = origDTF.prototype;
+  Intl.DateTimeFormat.supportedLocalesOf = origDTF.supportedLocalesOf;
+  const origGTZO = Date.prototype.getTimezoneOffset;
+  Date.prototype.getTimezoneOffset = function() { a.add('timezone'); return origGTZO.call(this); };
+
+  // navigator.getBattery
+  if (navigator.getBattery) {
+    const origBat = navigator.getBattery;
+    navigator.getBattery = function() { a.add('getBattery'); return origBat.call(this); };
+  }
+
+  // navigator.mediaDevices
+  if (navigator.mediaDevices) {
+    const origED = navigator.mediaDevices.enumerateDevices;
+    if (origED) navigator.mediaDevices.enumerateDevices = function() { a.add('mediaDevices'); return origED.call(this); };
+  }
+
+  // navigator.geolocation
+  if (navigator.geolocation) {
+    const origGCP = navigator.geolocation.getCurrentPosition;
+    const origWP = navigator.geolocation.watchPosition;
+    navigator.geolocation.getCurrentPosition = function() { a.add('geolocation'); return origGCP.apply(this, arguments); };
+    navigator.geolocation.watchPosition = function() { a.add('geolocation'); return origWP.apply(this, arguments); };
+  }
+
+  // document.referrer
+  const origRef = Object.getOwnPropertyDescriptor(Document.prototype, 'referrer');
+  if (origRef) {
+    try {
+      Object.defineProperty(document, 'referrer', {
+        get: function() { a.add('referrer'); return origRef.get.call(this); },
+        configurable: true
+      });
+    } catch(e) {}
+  }
+
+  // window.name
+  const origWN = Object.getOwnPropertyDescriptor(window, 'name') || { get: function() { return ''; }, set: function() {} };
+  try {
+    Object.defineProperty(window, 'name', {
+      get: function() { a.add('windowName'); return origWN.get ? origWN.get.call(this) : origWN.value; },
+      set: function(v) { a.add('windowName'); if (origWN.set) origWN.set.call(this, v); },
+      configurable: true
+    });
+  } catch(e) {}
+
+  // RTCPeerConnection
+  const OrigRTC = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+  if (OrigRTC) {
+    window.RTCPeerConnection = function() { a.add('rtcPeerConnection'); return new OrigRTC(...arguments); };
+    window.RTCPeerConnection.prototype = OrigRTC.prototype;
+    if (window.webkitRTCPeerConnection) window.webkitRTCPeerConnection = window.RTCPeerConnection;
+  }
+
+  // Service Worker
+  if (navigator.serviceWorker) {
+    const origSW = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker') || Object.getOwnPropertyDescriptor(Navigator.prototype, 'serviceWorker');
+    if (origSW) {
+      try {
+        Object.defineProperty(navigator, 'serviceWorker', {
+          get: function() { a.add('serviceWorker'); return origSW.get ? origSW.get.call(this) : origSW.value; },
+          configurable: true
+        });
+      } catch(e) {}
+    }
+  }
+
+  // Cache API
+  if (window.caches) {
+    const origCO = window.caches.open;
+    window.caches.open = function() { a.add('cacheApi'); return origCO.apply(this, arguments); };
+  }
 
   // Network
   const origBeacon = navigator.sendBeacon;
@@ -463,7 +609,10 @@ async function main() {
   const { port, close } = await startServer()
   console.log(`Server listening on http://127.0.0.1:${port}`)
 
-  const browser = await chromium.launch({ headless: true })
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--disable-features=ThirdPartyCookieBlocking'],
+  })
   const sizes: Record<string, ScriptSizeEntry> = {}
 
   for (const [key, meta] of Object.entries(scriptMeta)) {
