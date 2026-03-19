@@ -606,7 +606,7 @@ All SFC components accept an `options` prop matching their Google Maps API optio
 
 ### `ScriptGoogleMapsGeoJson`{lang="html"}
 
-Loads GeoJSON data onto the map using `google.maps.Data`. Wraps `loadGeoJson` (URL string) and `addGeoJson` (inline object).
+Loads GeoJSON data onto the map using `google.maps.Data` and either `loadGeoJson` (when `src` is a URL) or `addGeoJson` (when `src` is an inline object).
 
 #### Props
 
