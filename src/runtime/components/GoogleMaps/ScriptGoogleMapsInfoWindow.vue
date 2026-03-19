@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted, useTemplateRef } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
-import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './ScriptGoogleMapsAdvancedMarkerElement.vue'
-import { MARKER_INJECTION_KEY } from './ScriptGoogleMapsMarker.vue'
+import { inject, useTemplateRef, watch } from 'vue'
+import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
   options?: google.maps.InfoWindowOptions
@@ -25,73 +23,59 @@ const infoWindowEvents = [
   'zindex_changed',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
 const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
 
 const infoWindowContainer = useTemplateRef('info-window-container')
 
-let infoWindow: google.maps.InfoWindow | undefined
-
-whenever(
-  () => mapContext?.map.value
-    && mapContext.mapsApi.value
-    && infoWindowContainer.value,
-  () => {
-    infoWindow = new mapContext!.mapsApi.value!.InfoWindow({
+const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
+  ready: () => !!infoWindowContainer.value,
+  create({ mapsApi, map }) {
+    const iw = new mapsApi.InfoWindow({
       content: infoWindowContainer.value,
       ...props.options,
     })
 
-    setupInfoWindowEventListeners(infoWindow)
+    setupEventListeners(iw)
 
     if (markerContext?.marker.value) {
       markerContext.marker.value.addListener('click', () => {
-        infoWindow!.open({
+        iw.open({
           anchor: markerContext.marker.value,
-          map: mapContext!.map.value,
+          map,
         })
       })
     }
     else if (advancedMarkerElementContext?.advancedMarkerElement.value) {
       advancedMarkerElementContext.advancedMarkerElement.value.addListener('click', () => {
-        infoWindow!.open({
+        iw.open({
           anchor: advancedMarkerElementContext.advancedMarkerElement.value,
-          map: mapContext!.map.value,
+          map,
         })
       })
     }
     else {
-      infoWindow.setPosition(props.options?.position)
-
-      infoWindow.open(mapContext!.map.value)
+      iw.setPosition(props.options?.position)
+      iw.open(map)
     }
 
-    whenever(() => props.options, (options) => {
-      infoWindow?.setOptions(options)
-    }, {
-      deep: true,
-    })
+    return iw
   },
-  {
-    immediate: true,
-    once: true,
+  cleanup(iw, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(iw)
+    iw.close()
   },
-)
-
-onUnmounted(() => {
-  if (!infoWindow || !mapContext?.mapsApi.value) {
-    return
-  }
-
-  mapContext.mapsApi.value.event.clearInstanceListeners(infoWindow)
-
-  infoWindow.close()
 })
 
-function setupInfoWindowEventListeners(infoWindow: google.maps.InfoWindow) {
+watch(() => props.options, (options) => {
+  if (infoWindow.value && options) {
+    infoWindow.value.setOptions(options)
+  }
+}, { deep: true })
+
+function setupEventListeners(iw: google.maps.InfoWindow) {
   infoWindowEvents.forEach((event) => {
-    infoWindow.addListener(event, () => emit(event))
+    iw.addListener(event, () => emit(event))
   })
 }
 </script>

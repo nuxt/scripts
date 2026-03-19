@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { watch } from 'vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
   options?: Omit<google.maps.RectangleOptions, 'map'>
@@ -30,45 +29,30 @@ const eventsWithMapMouseEventPayload = [
   'mouseup',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
-
-let rectangle: google.maps.Rectangle | undefined
-
-whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
-  rectangle = new mapContext!.mapsApi.value!.Rectangle({
-    map: mapContext!.map.value,
-    ...props.options,
-  })
-
-  setupRectangleEventListeners(rectangle)
-
-  whenever(() => props.options, (options) => {
-    rectangle?.setOptions(options)
-  }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
+const rectangle = useGoogleMapsResource<google.maps.Rectangle>({
+  create({ mapsApi, map }) {
+    const r = new mapsApi.Rectangle({ map, ...props.options })
+    setupEventListeners(r)
+    return r
+  },
+  cleanup(r, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(r)
+    r.setMap(null)
+  },
 })
 
-onUnmounted(() => {
-  if (!rectangle || !mapContext?.mapsApi.value) {
-    return
+watch(() => props.options, (options) => {
+  if (rectangle.value && options) {
+    rectangle.value.setOptions(options)
   }
+}, { deep: true })
 
-  mapContext.mapsApi.value.event.clearInstanceListeners(rectangle)
-
-  rectangle.setMap(null)
-})
-
-function setupRectangleEventListeners(rectangle: google.maps.Rectangle) {
+function setupEventListeners(r: google.maps.Rectangle) {
   eventsWithoutPayload.forEach((event) => {
-    rectangle.addListener(event, () => emit(event))
+    r.addListener(event, () => emit(event))
   })
-
   eventsWithMapMouseEventPayload.forEach((event) => {
-    rectangle.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+    r.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
   })
 }
 </script>

@@ -1,37 +1,29 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { watch } from 'vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
   options?: Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>
 }>()
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
-
-let heatmapLayer: google.maps.visualization.HeatmapLayer | undefined
-
-whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
-  await mapContext!.mapsApi.value!.importLibrary('visualization')
-
-  heatmapLayer = new mapContext!.mapsApi.value!.visualization.HeatmapLayer({
-    map: mapContext!.map.value!,
-    ...props.options,
-  })
-
-  whenever(() => props.options, (options) => {
-    heatmapLayer?.setOptions(options)
-  }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
+const heatmapLayer = useGoogleMapsResource<google.maps.visualization.HeatmapLayer>({
+  async create({ mapsApi, map }) {
+    await mapsApi.importLibrary('visualization')
+    return new mapsApi.visualization.HeatmapLayer({
+      map,
+      ...props.options,
+    })
+  },
+  cleanup(layer) {
+    layer.setMap(null)
+  },
 })
 
-onUnmounted(() => {
-  heatmapLayer?.setMap(null)
-})
+watch(() => props.options, (options) => {
+  if (heatmapLayer.value && options) {
+    heatmapLayer.value.setOptions(options)
+  }
+}, { deep: true })
 </script>
 
 <template>

@@ -1,13 +1,10 @@
 <script lang="ts">
-import type { InjectionKey, ShallowRef } from 'vue'
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted, provide, ref, shallowRef } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { inject, provide, watch } from 'vue'
+import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './injectionKeys'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
-export const ADVANCED_MARKER_ELEMENT_INJECTION_KEY = Symbol('marker') as InjectionKey<{
-  advancedMarkerElement: ShallowRef<google.maps.marker.AdvancedMarkerElement | undefined>
-}>
+export { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './injectionKeys'
 </script>
 
 <script setup lang="ts">
@@ -47,68 +44,46 @@ const eventsWithMapMouseEventPayload = [
   'mouseup',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
-const advancedMarkerElement = shallowRef<google.maps.marker.AdvancedMarkerElement | undefined>(undefined)
-const isUnmounted = ref(false)
-
-whenever(() => mapContext?.map.value && mapContext.mapsApi.value, async () => {
-  await mapContext!.mapsApi.value!.importLibrary('marker')
-
-  // component was unmounted while awaiting the library import
-  if (isUnmounted.value)
-    return
-
-  advancedMarkerElement.value = new mapContext!.mapsApi.value!.marker.AdvancedMarkerElement(props.options)
-
-  setupAdvancedMarkerElementEventListeners(advancedMarkerElement.value)
-
-  if (markerClustererContext?.markerClusterer.value) {
-    markerClustererContext.markerClusterer.value.addMarker(advancedMarkerElement.value)
-  }
-  else {
-    advancedMarkerElement.value.map = mapContext!.map.value
-  }
-
-  whenever(() => props.options, (options) => {
-    if (advancedMarkerElement.value && options) {
-      Object.assign(advancedMarkerElement.value, options)
+const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedMarkerElement>({
+  async create({ mapsApi, map }) {
+    await mapsApi.importLibrary('marker')
+    const marker = new mapsApi.marker.AdvancedMarkerElement(props.options)
+    setupEventListeners(marker)
+    if (markerClustererContext?.markerClusterer.value) {
+      markerClustererContext.markerClusterer.value.addMarker(marker)
     }
-  }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
+    else {
+      marker.map = map
+    }
+    return marker
+  },
+  cleanup(marker, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(marker)
+    if (markerClustererContext) {
+      markerClustererContext.markerClusterer.value?.removeMarker(marker)
+    }
+    else {
+      marker.map = null
+    }
+  },
 })
 
-onUnmounted(() => {
-  isUnmounted.value = true
-
-  if (!advancedMarkerElement.value || !mapContext?.mapsApi.value) {
-    return
+watch(() => props.options, (options) => {
+  if (advancedMarkerElement.value && options) {
+    Object.assign(advancedMarkerElement.value, options)
   }
-
-  mapContext.mapsApi.value.event.clearInstanceListeners(advancedMarkerElement.value)
-
-  if (markerClustererContext) {
-    markerClustererContext.markerClusterer.value?.removeMarker(advancedMarkerElement.value)
-  }
-  else {
-    advancedMarkerElement.value.map = null
-  }
-})
+}, { deep: true })
 
 provide(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, { advancedMarkerElement })
 
-function setupAdvancedMarkerElementEventListeners(advancedMarkerElement: google.maps.marker.AdvancedMarkerElement) {
+function setupEventListeners(marker: google.maps.marker.AdvancedMarkerElement) {
   eventsWithoutPayload.forEach((event) => {
-    advancedMarkerElement.addListener(event, () => emit(event))
+    marker.addListener(event, () => emit(event))
   })
-
   eventsWithMapMouseEventPayload.forEach((event) => {
-    advancedMarkerElement.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+    marker.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
   })
 }
 </script>

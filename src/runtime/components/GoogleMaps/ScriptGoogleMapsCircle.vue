@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { inject, onUnmounted } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { watch } from 'vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
   options?: Omit<google.maps.CircleOptions, 'map'>
@@ -31,45 +30,30 @@ const eventsWithMapMouseEventPayload = [
   'rightclick',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
-
-let circle: google.maps.Circle | undefined
-
-whenever(() => mapContext?.map.value && mapContext.mapsApi.value, () => {
-  circle = new mapContext!.mapsApi.value!.Circle({
-    map: mapContext!.map.value,
-    ...props.options,
-  })
-
-  setupCircleEventListeners(circle)
-
-  whenever(() => props.options, (options) => {
-    circle?.setOptions(options)
-  }, {
-    deep: true,
-  })
-}, {
-  immediate: true,
-  once: true,
+const circle = useGoogleMapsResource<google.maps.Circle>({
+  create({ mapsApi, map }) {
+    const c = new mapsApi.Circle({ map, ...props.options })
+    setupEventListeners(c)
+    return c
+  },
+  cleanup(c, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(c)
+    c.setMap(null)
+  },
 })
 
-onUnmounted(() => {
-  if (!circle || !mapContext?.mapsApi.value) {
-    return
+watch(() => props.options, (options) => {
+  if (circle.value && options) {
+    circle.value.setOptions(options)
   }
+}, { deep: true })
 
-  mapContext.mapsApi.value.event.clearInstanceListeners(circle)
-
-  circle.setMap(null)
-})
-
-function setupCircleEventListeners(circle: google.maps.Circle) {
+function setupEventListeners(c: google.maps.Circle) {
   eventsWithoutPayload.forEach((event) => {
-    circle.addListener(event, () => emit(event))
+    c.addListener(event, () => emit(event))
   })
-
   eventsWithMapMouseEventPayload.forEach((event) => {
-    circle.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
+    c.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
   })
 }
 </script>
