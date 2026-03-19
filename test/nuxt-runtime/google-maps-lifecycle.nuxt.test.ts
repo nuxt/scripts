@@ -2,13 +2,21 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue'
 import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsAdvancedMarkerElement from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsAdvancedMarkerElement.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsCircle from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsCircle.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsHeatmapLayer from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsHeatmapLayer.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsMarker from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsMarker.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsPinElement from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPinElement.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsPolygon from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolygon.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsPolyline from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolyline.vue'
+// @ts-expect-error - google.maps types not available in CI typecheck context
 import ScriptGoogleMapsRectangle from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsRectangle.vue'
 import { createMockGoogleMapsAPIWithInstances } from '../unit/__mocks__/google-maps-api'
 
