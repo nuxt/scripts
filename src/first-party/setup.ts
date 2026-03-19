@@ -1,6 +1,6 @@
 import type { ProxyPrivacyInput } from '../runtime/server/utils/privacy'
 import type { BuiltInRegistryScriptKey, NuxtConfigScriptRegistry, RegistryScript, RegistryScriptKey } from '../runtime/types'
-import type { ProxyAutoInject, ProxyConfig } from './types'
+import type { InterceptRule, ProxyAutoInject, ProxyConfig } from './types'
 import { addPluginTemplate, addServerHandler } from '@nuxt/kit'
 import { logger } from '../logger'
 import { scriptMeta } from '../script-meta'
@@ -135,17 +135,22 @@ function computePrivacyLevel(privacy: Record<string, boolean>): 'full' | 'partia
   return 'none'
 }
 
+export interface FinalizeFirstPartyResult {
+  interceptRules: InterceptRule[]
+  devtools?: FirstPartyDevtoolsData
+}
+
 /**
  * Finalize first-party setup inside modules:done.
  * Uses pre-built proxyConfigs from setupFirstParty — no rebuild.
- * Returns devtools data when in dev mode.
+ * Returns intercept rules (for partytown resolveUrl) and devtools data.
  */
 export function finalizeFirstParty(opts: {
   firstParty: FirstPartyConfig
   registry: NuxtConfigScriptRegistry | undefined
   registryScripts: RegistryScript[]
   nuxtOptions: { dev: boolean, runtimeConfig: Record<string, any> }
-}): FirstPartyDevtoolsData | undefined {
+}): FinalizeFirstPartyResult {
   const { firstParty, registryScripts, nuxtOptions } = opts
   const { proxyConfigs, proxyPrefix } = firstParty
   const registryKeys = Object.keys(opts.registry || {})
@@ -292,7 +297,8 @@ export function finalizeFirstParty(opts: {
     )
   }
 
-  // Return devtools data in dev mode
+  // Build devtools data in dev mode
+  let devtools: FirstPartyDevtoolsData | undefined
   if (nuxtOptions.dev) {
     const allDomains = new Set<string>()
     for (const s of devtoolsScripts) {
@@ -300,7 +306,7 @@ export function finalizeFirstParty(opts: {
         allDomains.add(d)
     }
 
-    return {
+    devtools = {
       enabled: true,
       proxyPrefix,
       privacyMode: privacyLabel,
@@ -309,4 +315,6 @@ export function finalizeFirstParty(opts: {
       totalDomains: allDomains.size,
     }
   }
+
+  return { interceptRules, devtools }
 }

@@ -80,6 +80,12 @@ export interface AssetBundlerTransformerOptions {
    */
   integrity?: boolean | IntegrityAlgorithm
   renderedScript?: Map<string, RenderedScriptMeta | Error>
+  /**
+   * Set of registry script keys that use Partytown.
+   * Scripts in this set skip API call rewrites (__nuxtScripts.*) since Partytown's
+   * resolveUrl hook handles network interception in the web worker instead.
+   */
+  partytownScripts?: Set<string>
 }
 
 function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts/assets'): { url: string, filename?: string } {
@@ -106,8 +112,9 @@ async function downloadScript(opts: {
   proxyRewrites?: ProxyRewrite[]
   postProcess?: ProxyConfig['postProcess']
   integrity?: boolean | IntegrityAlgorithm
+  skipApiRewrites?: boolean
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess } = opts
+  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess, skipApiRewrites } = opts
   if (src === url || !filename) {
     return
   }
@@ -151,7 +158,7 @@ async function downloadScript(opts: {
     // Apply URL rewrites for proxy mode (AST-based at build time)
     if (proxyRewrites?.length && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess)
+      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess, { skipApiRewrites })
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
@@ -424,12 +431,13 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       : undefined
                     const proxyRewrites = proxyConfig?.rewrite
                     const postProcess = proxyConfig?.postProcess
+                    const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
 
                     // Defer async download + MagicString operations
                     deferredOps.push(async () => {
                       let url = _url
                       try {
-                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity, skipApiRewrites }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                       }
                       catch (e: any) {
                         if (options.fallbackOnSrcOnBundleFail) {

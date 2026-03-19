@@ -195,7 +195,7 @@ function resolveCalleeTarget(callee: any, scopeTracker: ScopeTracker): string | 
  * Uses oxc-walker with ScopeTracker to precisely identify string literals,
  * resolve aliased globals, and rewrite API calls through the proxy.
  */
-export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], postProcess?: (output: string, rewrites: ProxyRewrite[]) => string): string {
+export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], postProcess?: (output: string, rewrites: ProxyRewrite[]) => string, options?: { skipApiRewrites?: boolean }): string {
   const s = new MagicString(content)
 
   // In minified JS, keywords like `return` can directly precede string literals
@@ -271,8 +271,8 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
         }
       }
 
-      // API call rewriting
-      if (node.type === 'CallExpression') {
+      // API call rewriting — skip for partytown scripts (they use resolveUrl instead)
+      if (node.type === 'CallExpression' && !options?.skipApiRewrites) {
         const callee = (node as any).callee
 
         // Canvas fingerprinting neutralization — only affects downloaded third-party scripts.
@@ -341,7 +341,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       }
 
       // new XMLHttpRequest / new Image / new x.XMLHttpRequest / new x.Image
-      if (node.type === 'NewExpression') {
+      if (node.type === 'NewExpression' && !options?.skipApiRewrites) {
         const callee = (node as any).callee
 
         // new XMLHttpRequest — check it's truly global
