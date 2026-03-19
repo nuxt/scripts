@@ -39,7 +39,6 @@ export default defineEventHandler(async (event) => {
   })
 
   const response = await $fetch.raw(gravatarUrl, {
-    responseType: 'arrayBuffer',
     headers: {
       'User-Agent': 'Nuxt Scripts Gravatar Proxy',
     },

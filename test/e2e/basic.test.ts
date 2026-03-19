@@ -178,7 +178,7 @@ describe('basic', () => {
     await page.waitForTimeout(500)
     // get content of #script-src
     const text = await page.$eval('#script-src', el => el.textContent)
-    expect(text).toMatchInlineSnapshot(`"/_scripts/assets/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
+    expect(text).toMatchInlineSnapshot(`"/_scripts/assets/PHzhM8DFXcXVSSJF110cyV3pjg9cp8oWv_f4Dk2ax1w.js"`)
   })
   it('partytown adds type attribute', async () => {
     const { page } = await createPage('/partytown')
@@ -231,6 +231,60 @@ describe('youtube', () => {
 
     expect(player1StatusFinal).toBe('ready')
     expect(player3StatusFinal).toBe('waiting')
+  })
+})
+
+describe('gravatar', () => {
+  async function expectImageSnapshot(buffer: Buffer, id: string) {
+    const { toMatchImageSnapshot } = await import('jest-image-snapshot')
+    expect.extend({ toMatchImageSnapshot })
+    ;(expect(buffer) as any).toMatchImageSnapshot({
+      customSnapshotIdentifier: id,
+      customSnapshotsDir: `${import.meta.dirname}/__image_snapshots__`,
+    })
+  }
+
+  it('proxy returns valid image for email lookup', {
+    timeout: 15000,
+  }, async () => {
+    const response = await fetch(url('/_scripts/proxy/gravatar?email=test@example.com&s=80&d=identicon&r=g'))
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toContain('image/')
+    expect(response.headers.get('cache-control')).toContain('public')
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    expect(buffer.length).toBeGreaterThan(100)
+    await expectImageSnapshot(buffer, 'gravatar-email-proxy')
+  })
+
+  it('proxy returns valid image for hash lookup', {
+    timeout: 15000,
+  }, async () => {
+    // SHA256 of "test@example.com"
+    const hash = '973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b'
+    const response = await fetch(url(`/_scripts/proxy/gravatar?hash=${hash}&s=80&d=identicon&r=g`))
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toContain('image/')
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    expect(buffer.length).toBeGreaterThan(100)
+    await expectImageSnapshot(buffer, 'gravatar-hash-proxy')
+  })
+
+  it('email and hash proxy return identical images', {
+    timeout: 15000,
+  }, async () => {
+    const hash = '973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b'
+    const [emailRes, hashRes] = await Promise.all([
+      fetch(url('/_scripts/proxy/gravatar?email=test@example.com&s=80&d=identicon&r=g')),
+      fetch(url(`/_scripts/proxy/gravatar?hash=${hash}&s=80&d=identicon&r=g`)),
+    ])
+
+    const emailBuffer = Buffer.from(await emailRes.arrayBuffer())
+    const hashBuffer = Buffer.from(await hashRes.arrayBuffer())
+
+    // Same email hashed server-side should produce identical image to pre-computed hash
+    expect(emailBuffer.equals(hashBuffer)).toBe(true)
   })
 })
 
