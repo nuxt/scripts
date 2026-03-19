@@ -1,7 +1,7 @@
-import { mount } from '@vue/test-utils'
 /**
  * @vitest-environment happy-dom
  */
+import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, onUnmounted, provide, ref, shallowRef } from 'vue'
 import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'

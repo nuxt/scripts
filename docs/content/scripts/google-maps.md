@@ -523,15 +523,15 @@ onMounted(() => {
 
 ### Component Hierarchy
 
-```
+```text
 ScriptGoogleMaps (root)
 ├── ScriptGoogleMapsMarkerClusterer (optional)
-│   └── ScriptGoogleMapsMarker / AdvancedMarkerElement
+│   └── ScriptGoogleMapsMarker / ScriptGoogleMapsAdvancedMarkerElement
 │       └── ScriptGoogleMapsInfoWindow (optional)
 ├── ScriptGoogleMapsAdvancedMarkerElement
 │   ├── ScriptGoogleMapsPinElement (optional)
 │   └── ScriptGoogleMapsInfoWindow (optional)
-└── Overlays (Circle, Polygon, Polyline, Rectangle, HeatmapLayer)
+└── ScriptGoogleMapsCircle / Polygon / Polyline / Rectangle / HeatmapLayer
 ```
 
 All SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which is injected automatically). Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.

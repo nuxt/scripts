@@ -570,23 +570,27 @@ describe('memory leak prevention - options reactivity after unmount', () => {
     vi.clearAllMocks()
   })
 
-  it('should not apply options changes after unmount (watcher stopped)', async () => {
+  it('should not apply options changes after child unmount (watcher stopped)', async () => {
+    // Unmount only the child marker (not the whole provider) so the reactive
+    // context stays alive — this properly tests that the watcher is stopped,
+    // rather than relying on the marker being destroyed with the whole tree.
     const Provider = createMapProvider(mocks).Provider
-    const optionsRef = ref<any>({ position: { lat: 0, lng: 0 } })
+    const showMarker = ref(true)
+    const markerOptions = ref<any>({ position: { lat: 0, lng: 0 } })
 
-    const Child = defineComponent({
-      props: ['options'],
-      setup(props) {
-        return () => h(ScriptGoogleMapsAdvancedMarkerElement, {
-          options: props.options,
-        })
+    const Wrapper = defineComponent({
+      setup() {
+        return { showMarker, markerOptions }
+      },
+      render() {
+        return showMarker.value
+          ? h(ScriptGoogleMapsAdvancedMarkerElement, { options: markerOptions.value })
+          : h('div')
       },
     })
 
     const wrapper = await mountSuspended(Provider, {
-      slots: {
-        default: () => h(Child, { options: optionsRef.value }),
-      },
+      slots: { default: () => h(Wrapper) },
     })
 
     await flushAsync()
@@ -594,14 +598,19 @@ describe('memory leak prevention - options reactivity after unmount', () => {
     const marker = mocks.MockAdvancedMarkerElement.instances[0]!
     const positionBeforeUnmount = marker.position
 
-    wrapper.unmount()
-
-    // Try changing options after unmount
-    optionsRef.value = { position: { lat: 99, lng: 99 } }
+    // Unmount only the marker child, provider stays alive
+    showMarker.value = false
     await flushAsync()
 
-    // Marker position should not have changed (watcher was stopped)
+    // Mutate the same reactive object — if watcher leaked, it would fire
+    markerOptions.value.position.lat = 99
+    markerOptions.value.position.lng = 99
+    await flushAsync()
+
+    // Marker position should not have changed (watcher was stopped on child unmount)
     expect(marker.position).toBe(positionBeforeUnmount)
+
+    wrapper.unmount()
   })
 })
 
