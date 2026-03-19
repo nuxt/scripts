@@ -2,6 +2,7 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue'
+import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'
 import ScriptGoogleMapsAdvancedMarkerElement from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsAdvancedMarkerElement.vue'
 import ScriptGoogleMapsCircle from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsCircle.vue'
 import ScriptGoogleMapsHeatmapLayer from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsHeatmapLayer.vue'
@@ -10,7 +11,6 @@ import ScriptGoogleMapsPinElement from '../../src/runtime/components/GoogleMaps/
 import ScriptGoogleMapsPolygon from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolygon.vue'
 import ScriptGoogleMapsPolyline from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolyline.vue'
 import ScriptGoogleMapsRectangle from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsRectangle.vue'
-import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'
 import { createMockGoogleMapsAPIWithInstances } from '../unit/__mocks__/google-maps-api'
 
 type MockAPI = ReturnType<typeof createMockGoogleMapsAPIWithInstances>
