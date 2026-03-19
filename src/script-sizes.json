@@ -2,7 +2,7 @@
   "plausibleAnalytics": {
     "totalTransferKb": 1.9,
     "totalDecodedKb": 2.9,
-    "loadTimeMs": 428,
+    "loadTimeMs": 222,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -52,8 +52,8 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 9,
-      "scriptDurationMs": 2,
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
       "heapDeltaKb": 759
     },
     "scripts": [
@@ -62,7 +62,7 @@
         "transferKb": 1.9,
         "decodedKb": 2.9,
         "encoding": "zstd",
-        "durationMs": 428,
+        "durationMs": 222,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -71,7 +71,7 @@
   "cloudflareWebAnalytics": {
     "totalTransferKb": 10.8,
     "totalDecodedKb": 30.4,
-    "loadTimeMs": 119,
+    "loadTimeMs": 202,
     "collectsWebVitals": true,
     "apis": {
       "cookies": false,
@@ -121,7 +121,7 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 8,
+      "taskDurationMs": 6,
       "scriptDurationMs": 1,
       "heapDeltaKb": 784
     },
@@ -131,7 +131,7 @@
         "transferKb": 10.8,
         "decodedKb": 30.4,
         "encoding": "gzip",
-        "durationMs": 119,
+        "durationMs": 202,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -197,7 +197,7 @@
   "fathomAnalytics": {
     "totalTransferKb": 3,
     "totalDecodedKb": 6.7,
-    "loadTimeMs": 297,
+    "loadTimeMs": 307,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -247,7 +247,7 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 9,
+      "taskDurationMs": 11,
       "scriptDurationMs": 1,
       "heapDeltaKb": 760
     },
@@ -257,16 +257,16 @@
         "transferKb": 2.7,
         "decodedKb": 6.7,
         "encoding": "zstd",
-        "durationMs": 97,
+        "durationMs": 177,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://cdn.usefathom.com/?h=http%3A%2F%2F127.0.0.1&p=%2FfathomAnalytics&r=&sid=null&qs=%7B%7D&cid=35995004",
+        "url": "https://cdn.usefathom.com/?h=http%3A%2F%2F127.0.0.1&p=%2FfathomAnalytics&r=&sid=null&qs=%7B%7D&cid=71215632",
         "transferKb": 0.3,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 297,
+        "durationMs": 307,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -275,7 +275,7 @@
   "matomoAnalytics": {
     "totalTransferKb": 60.4,
     "totalDecodedKb": 218.6,
-    "loadTimeMs": 138,
+    "loadTimeMs": 1850,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -321,13 +321,13 @@
         "cdn.matomo.cloud"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 61866,
+      "inboundBytes": 61878,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 16,
+      "taskDurationMs": 20,
       "scriptDurationMs": 5,
-      "heapDeltaKb": 1393
+      "heapDeltaKb": 1394
     },
     "scripts": [
       {
@@ -335,7 +335,7 @@
         "transferKb": 60.4,
         "decodedKb": 218.6,
         "encoding": "br",
-        "durationMs": 138,
+        "durationMs": 1850,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -344,7 +344,7 @@
   "rybbitAnalytics": {
     "totalTransferKb": 9,
     "totalDecodedKb": 25.4,
-    "loadTimeMs": 1078,
+    "loadTimeMs": 1165,
     "collectsWebVitals": true,
     "apis": {
       "cookies": false,
@@ -394,8 +394,8 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
-      "scriptDurationMs": 1,
+      "taskDurationMs": 8,
+      "scriptDurationMs": 2,
       "heapDeltaKb": 755
     },
     "scripts": [
@@ -404,7 +404,7 @@
         "transferKb": 9,
         "decodedKb": 25.4,
         "encoding": "zstd",
-        "durationMs": 1078,
+        "durationMs": 1165,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -413,7 +413,7 @@
   "databuddyAnalytics": {
     "totalTransferKb": 10.6,
     "totalDecodedKb": 29.2,
-    "loadTimeMs": 119,
+    "loadTimeMs": 355,
     "collectsWebVitals": true,
     "apis": {
       "cookies": false,
@@ -463,8 +463,8 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 8,
-      "scriptDurationMs": 2,
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
       "heapDeltaKb": 803
     },
     "scripts": [
@@ -473,7 +473,7 @@
         "transferKb": 10.6,
         "decodedKb": 29.2,
         "encoding": "zstd",
-        "durationMs": 119,
+        "durationMs": 355,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -482,7 +482,7 @@
   "mixpanelAnalytics": {
     "totalTransferKb": 31,
     "totalDecodedKb": 93.9,
-    "loadTimeMs": 127,
+    "loadTimeMs": 85,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -528,12 +528,12 @@
         "cdn.mxpnl.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 31788,
+      "inboundBytes": 31795,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 14,
-      "scriptDurationMs": 7,
+      "taskDurationMs": 16,
+      "scriptDurationMs": 8,
       "heapDeltaKb": 1167
     },
     "scripts": [
@@ -542,7 +542,7 @@
         "transferKb": 31,
         "decodedKb": 93.9,
         "encoding": "gzip",
-        "durationMs": 127,
+        "durationMs": 85,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -551,7 +551,7 @@
   "segment": {
     "totalTransferKb": 29.6,
     "totalDecodedKb": 107,
-    "loadTimeMs": 757,
+    "loadTimeMs": 1125,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -598,12 +598,12 @@
         "cdn.segment.com"
       ],
       "outboundBytes": 1006,
-      "inboundBytes": 30282,
+      "inboundBytes": 30291,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 21,
-      "scriptDurationMs": 4,
+      "taskDurationMs": 23,
+      "scriptDurationMs": 5,
       "heapDeltaKb": 1328
     },
     "scripts": [
@@ -612,7 +612,7 @@
         "transferKb": 28.2,
         "decodedKb": 106.4,
         "encoding": "br",
-        "durationMs": 562,
+        "durationMs": 1125,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -621,7 +621,7 @@
         "transferKb": 1.2,
         "decodedKb": 0.6,
         "encoding": "none",
-        "durationMs": 68,
+        "durationMs": 175,
         "initiatorType": "fetch",
         "protocol": "unknown"
       },
@@ -630,7 +630,7 @@
         "transferKb": 0.2,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 757,
+        "durationMs": 723,
         "initiatorType": "fetch",
         "protocol": "unknown"
       }
@@ -639,7 +639,7 @@
   "googleAnalytics": {
     "totalTransferKb": 154.2,
     "totalDecodedKb": 454.1,
-    "loadTimeMs": 987,
+    "loadTimeMs": 507,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -689,7 +689,7 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 28,
+      "taskDurationMs": 26,
       "scriptDurationMs": 14,
       "heapDeltaKb": 2641
     },
@@ -699,7 +699,7 @@
         "transferKb": 154.2,
         "decodedKb": 454.1,
         "encoding": "zstd",
-        "durationMs": 987,
+        "durationMs": 507,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -708,7 +708,7 @@
   "umamiAnalytics": {
     "totalTransferKb": 2.4,
     "totalDecodedKb": 2.6,
-    "loadTimeMs": 73,
+    "loadTimeMs": 105,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -758,9 +758,9 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 5,
+      "taskDurationMs": 6,
       "scriptDurationMs": 0,
-      "heapDeltaKb": 725
+      "heapDeltaKb": 726
     },
     "scripts": [
       {
@@ -768,7 +768,7 @@
         "transferKb": 2.4,
         "decodedKb": 2.6,
         "encoding": "br",
-        "durationMs": 73,
+        "durationMs": 105,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -777,7 +777,7 @@
   "vercelAnalytics": {
     "totalTransferKb": 1.6,
     "totalDecodedKb": 2.4,
-    "loadTimeMs": 188,
+    "loadTimeMs": 95,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -827,7 +827,7 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
+      "taskDurationMs": 6,
       "scriptDurationMs": 0,
       "heapDeltaKb": 716
     },
@@ -837,7 +837,7 @@
         "transferKb": 1.6,
         "decodedKb": 2.4,
         "encoding": "br",
-        "durationMs": 188,
+        "durationMs": 95,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -846,7 +846,7 @@
   "bingUet": {
     "totalTransferKb": 16.2,
     "totalDecodedKb": 54,
-    "loadTimeMs": 231,
+    "loadTimeMs": 377,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -923,14 +923,14 @@
         },
         {
           "tag": "img",
-          "src": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=b497f2e0-2a51-4e62-b2d4-a2e0461168cb&bo=1&sid=a713d100238511f1a2588fc1b6af6137&vid=a713f270238511f1864a1db8a5daca46&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A39875%2FbingUet&r=&lt=238&evt=pageLoad&sv=2&cdb=AQAQ&rn=931890"
+          "src": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=b287c383-aa8f-41a5-8926-21b246541c8f&bo=1&sid=33e4c280238c11f1a860d93cdbc6baff&vid=33e4cda0238c11f1b98f019cad57be55&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A40469%2FbingUet&r=&lt=389&evt=pageLoad&sv=2&cdb=AQAQ&rn=246784"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 12,
-      "scriptDurationMs": 5,
-      "heapDeltaKb": 919
+      "taskDurationMs": 17,
+      "scriptDurationMs": 4,
+      "heapDeltaKb": 983
     },
     "scripts": [
       {
@@ -938,7 +938,7 @@
         "transferKb": 15.4,
         "decodedKb": 53.6,
         "encoding": "gzip",
-        "durationMs": 231,
+        "durationMs": 377,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -947,16 +947,16 @@
         "transferKb": 0.4,
         "decodedKb": 0.4,
         "encoding": "br",
-        "durationMs": 150,
+        "durationMs": 182,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=b497f2e0-2a51-4e62-b2d4-a2e0461168cb&bo=1&sid=a713d100238511f1a2588fc1b6af6137&vid=a713f270238511f1864a1db8a5daca46&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A39875%2FbingUet&r=&lt=238&evt=pageLoad&sv=2&cdb=AQAQ&rn=931890",
+        "url": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=b287c383-aa8f-41a5-8926-21b246541c8f&bo=1&sid=33e4c280238c11f1a860d93cdbc6baff&vid=33e4cda0238c11f1b98f019cad57be55&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A40469%2FbingUet&r=&lt=389&evt=pageLoad&sv=2&cdb=AQAQ&rn=246784",
         "transferKb": 0.4,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 145,
+        "durationMs": 191,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -965,7 +965,7 @@
   "metaPixel": {
     "totalTransferKb": 97.1,
     "totalDecodedKb": 364.7,
-    "loadTimeMs": 214,
+    "loadTimeMs": 204,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -1012,7 +1012,7 @@
         "www.facebook.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 102406,
+      "inboundBytes": 102393,
       "injectedElements": [
         {
           "tag": "script",
@@ -1020,14 +1020,14 @@
         },
         {
           "tag": "img",
-          "src": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A39875%2FmetaPixel&rl=&if=false&ts=1773919241677&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773919241461&coo=false&expv2[0]=pl0&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct1&expv2[6]=hf1&rqm=GET"
+          "src": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A40469%2FmetaPixel&rl=&if=false&ts=1773922054886&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773922054679&coo=false&expv2[0]=pl0&expv2[1]=el3&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct0&expv2[6]=hf1&rqm=GET"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 31,
-      "scriptDurationMs": 20,
-      "heapDeltaKb": 1964
+      "taskDurationMs": 34,
+      "scriptDurationMs": 22,
+      "heapDeltaKb": 1959
     },
     "scripts": [
       {
@@ -1035,7 +1035,7 @@
         "transferKb": 94.7,
         "decodedKb": 356.5,
         "encoding": "gzip",
-        "durationMs": 174,
+        "durationMs": 108,
         "initiatorType": "script",
         "protocol": "h2"
       },
@@ -1044,16 +1044,16 @@
         "transferKb": 2.1,
         "decodedKb": 8.2,
         "encoding": "gzip",
-        "durationMs": 214,
+        "durationMs": 204,
         "initiatorType": "script",
         "protocol": "h2"
       },
       {
-        "url": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A39875%2FmetaPixel&rl=&if=false&ts=1773919241677&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773919241461&coo=false&expv2[0]=pl0&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct1&expv2[6]=hf1&rqm=GET",
+        "url": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A40469%2FmetaPixel&rl=&if=false&ts=1773922054886&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773922054679&coo=false&expv2[0]=pl0&expv2[1]=el3&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct0&expv2[6]=hf1&rqm=GET",
         "transferKb": 0.3,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 95,
+        "durationMs": 203,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -1062,7 +1062,7 @@
   "xPixel": {
     "totalTransferKb": 15.1,
     "totalDecodedKb": 47.1,
-    "loadTimeMs": 798,
+    "loadTimeMs": 404,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1102,17 +1102,6 @@
       "intersectionObserver": false
     },
     "cookies": [
-      {
-        "name": "muc_ads",
-        "domain": ".t.co",
-        "path": "/",
-        "httpOnly": false,
-        "secure": true,
-        "sameSite": "None",
-        "session": false,
-        "lifetimeDays": 400,
-        "firstParty": false
-      },
       {
         "name": "guest_id_marketing",
         "domain": ".twitter.com",
@@ -1156,6 +1145,17 @@
         "session": false,
         "lifetimeDays": 400,
         "firstParty": false
+      },
+      {
+        "name": "muc_ads",
+        "domain": ".t.co",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
       }
     ],
     "network": {
@@ -1166,20 +1166,20 @@
         "t.co"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 15452,
+      "inboundBytes": 15445,
       "injectedElements": [
         {
           "tag": "img",
-          "src": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=e1e474c4-0b25-436b-8fc9-f4df1bfbb0ef&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=b025e2bb-f7b4-41c6-9630-29e6228f2fdd&tw_document_href=http%3A%2F%2F127.0.0.1%3A39875%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773919246407.9847645973817689&txn_id=ol7lz&type=javascript&version=2.3.50"
+          "src": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=ac7b41e3-6dac-4c47-bf2d-ec75e58f4b92&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=9d4dda92-69fa-43c6-950b-a90d1a90705e&tw_document_href=http%3A%2F%2F127.0.0.1%3A40469%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773922059736.26211941354742921&txn_id=ol7lz&type=javascript&version=2.3.50"
         },
         {
           "tag": "img",
-          "src": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=e1e474c4-0b25-436b-8fc9-f4df1bfbb0ef&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=b025e2bb-f7b4-41c6-9630-29e6228f2fdd&tw_document_href=http%3A%2F%2F127.0.0.1%3A39875%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773919246407.9847645973817689&txn_id=ol7lz&type=javascript&version=2.3.50"
+          "src": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=ac7b41e3-6dac-4c47-bf2d-ec75e58f4b92&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=9d4dda92-69fa-43c6-950b-a90d1a90705e&tw_document_href=http%3A%2F%2F127.0.0.1%3A40469%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773922059736.26211941354742921&txn_id=ol7lz&type=javascript&version=2.3.50"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 15,
+      "taskDurationMs": 16,
       "scriptDurationMs": 2,
       "heapDeltaKb": 1035
     },
@@ -1189,34 +1189,34 @@
         "transferKb": 13.5,
         "decodedKb": 47.1,
         "encoding": "gzip",
-        "durationMs": 59,
+        "durationMs": 71,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=e1e474c4-0b25-436b-8fc9-f4df1bfbb0ef&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=b025e2bb-f7b4-41c6-9630-29e6228f2fdd&tw_document_href=http%3A%2F%2F127.0.0.1%3A39875%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773919246407.9847645973817689&txn_id=ol7lz&type=javascript&version=2.3.50",
+        "url": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=ac7b41e3-6dac-4c47-bf2d-ec75e58f4b92&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=9d4dda92-69fa-43c6-950b-a90d1a90705e&tw_document_href=http%3A%2F%2F127.0.0.1%3A40469%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773922059736.26211941354742921&txn_id=ol7lz&type=javascript&version=2.3.50",
         "transferKb": 0.6,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 247,
+        "durationMs": 404,
         "initiatorType": "img",
         "protocol": "unknown"
       },
       {
-        "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=e1e474c4-0b25-436b-8fc9-f4df1bfbb0ef&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=b025e2bb-f7b4-41c6-9630-29e6228f2fdd&tw_document_href=http%3A%2F%2F127.0.0.1%3A39875%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773919246407.9847645973817689&txn_id=ol7lz&type=javascript&version=2.3.50",
+        "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=ac7b41e3-6dac-4c47-bf2d-ec75e58f4b92&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=9d4dda92-69fa-43c6-950b-a90d1a90705e&tw_document_href=http%3A%2F%2F127.0.0.1%3A40469%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773922059736.26211941354742921&txn_id=ol7lz&type=javascript&version=2.3.50",
         "transferKb": 1,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 798,
+        "durationMs": 395,
         "initiatorType": "img",
         "protocol": "unknown"
       }
     ]
   },
   "tiktokPixel": {
-    "totalTransferKb": 1889.5,
+    "totalTransferKb": 1889.6,
     "totalDecodedKb": 2365,
-    "loadTimeMs": 319,
+    "loadTimeMs": 282,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -1274,7 +1274,7 @@
         "analytics.tiktok.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 151378,
+      "inboundBytes": 151441,
       "injectedElements": [
         {
           "tag": "script",
@@ -1287,35 +1287,35 @@
       ]
     },
     "performance": {
-      "taskDurationMs": 51,
-      "scriptDurationMs": 24,
+      "taskDurationMs": 61,
+      "scriptDurationMs": 25,
       "heapDeltaKb": 2297
     },
     "scripts": [
       {
         "url": "https://analytics.tiktok.com/i18n/pixel/events.js",
-        "transferKb": 2.7,
+        "transferKb": 2.6,
         "decodedKb": 7.6,
         "encoding": "gzip",
-        "durationMs": 319,
+        "durationMs": 282,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
         "url": "https://analytics.tiktok.com/i18n/pixel/static/main.MTEwMjY2ZTExMA.js",
-        "transferKb": 105.5,
+        "transferKb": 105.8,
         "decodedKb": 463.4,
         "encoding": "gzip",
-        "durationMs": 292,
+        "durationMs": 63,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
         "url": "https://analytics.tiktok.com/i18n/pixel/static/identify_31760074.js",
-        "transferKb": 39.6,
+        "transferKb": 39.5,
         "decodedKb": 152,
         "encoding": "gzip",
-        "durationMs": 25,
+        "durationMs": 32,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1342,7 +1342,7 @@
   "snapchatPixel": {
     "totalTransferKb": 1.3,
     "totalDecodedKb": 58.2,
-    "loadTimeMs": 783,
+    "loadTimeMs": 583,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1445,14 +1445,14 @@
         "sc-static.net",
         "tr.snapchat.com"
       ],
-      "outboundBytes": 3046,
-      "inboundBytes": 26710,
+      "outboundBytes": 3048,
+      "inboundBytes": 26697,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 45,
-      "scriptDurationMs": 26,
-      "heapDeltaKb": 2472
+      "taskDurationMs": 39,
+      "scriptDurationMs": 23,
+      "heapDeltaKb": 2461
     },
     "scripts": [
       {
@@ -1460,7 +1460,7 @@
         "transferKb": 0,
         "decodedKb": 57.4,
         "encoding": "gzip",
-        "durationMs": 772,
+        "durationMs": 583,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1469,16 +1469,16 @@
         "transferKb": 0.3,
         "decodedKb": 0.1,
         "encoding": "none",
-        "durationMs": 783,
+        "durationMs": 434,
         "initiatorType": "fetch",
         "protocol": "unknown"
       },
       {
-        "url": "https://tr.snapchat.com/cm/i?pid=2295cbcc-cb3f-4727-8c09-1133b742722c&u_scsid=c0d6c106-1255-46c7-98ea-1958d07fd48c&u_sclid=6ec726f7-3e5d-41e9-8afb-5e931213f12f",
+        "url": "https://tr.snapchat.com/cm/i?pid=2295cbcc-cb3f-4727-8c09-1133b742722c&u_scsid=c6e75aa0-705d-410b-a9ee-7dd85a3050e4&u_sclid=c6a0639d-5685-4940-81bc-e78a728b00a8",
         "transferKb": 1,
         "decodedKb": 0.7,
         "encoding": "none",
-        "durationMs": 455,
+        "durationMs": 203,
         "initiatorType": "iframe",
         "protocol": "unknown"
       },
@@ -1487,16 +1487,7 @@
         "transferKb": 0,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 171,
-        "initiatorType": "beacon",
-        "protocol": "unknown"
-      },
-      {
-        "url": "https://tr.snapchat.com/p",
-        "transferKb": 0,
-        "decodedKb": 0,
-        "encoding": "none",
-        "durationMs": 412,
+        "durationMs": 120,
         "initiatorType": "beacon",
         "protocol": "unknown"
       }
@@ -1505,7 +1496,7 @@
   "redditPixel": {
     "totalTransferKb": 19.5,
     "totalDecodedKb": 65.3,
-    "loadTimeMs": 351,
+    "loadTimeMs": 466,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1557,7 +1548,7 @@
       "injectedElements": [
         {
           "tag": "img",
-          "src": "https://alb.reddit.com/rp.gif?ts=1773919268865&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=6357d54f-bc98-4bb1-b348-27dc5eab36e7&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc="
+          "src": "https://alb.reddit.com/rp.gif?ts=1773922077055&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=1a4652ca-022c-4403-bb81-4e38d1080f71&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc="
         }
       ]
     },
@@ -1572,7 +1563,7 @@
         "transferKb": 18.8,
         "decodedKb": 65.3,
         "encoding": "gzip",
-        "durationMs": 148,
+        "durationMs": 279,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1581,16 +1572,16 @@
         "transferKb": 0.1,
         "decodedKb": 0,
         "encoding": "gzip",
-        "durationMs": 129,
+        "durationMs": 137,
         "initiatorType": "xmlhttprequest",
         "protocol": "unknown"
       },
       {
-        "url": "https://alb.reddit.com/rp.gif?ts=1773919268865&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=6357d54f-bc98-4bb1-b348-27dc5eab36e7&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc=",
+        "url": "https://alb.reddit.com/rp.gif?ts=1773922077055&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=1a4652ca-022c-4403-bb81-4e38d1080f71&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc=",
         "transferKb": 0.6,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 351,
+        "durationMs": 466,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -1599,7 +1590,7 @@
   "googleAdsense": {
     "totalTransferKb": 69.8,
     "totalDecodedKb": 198.2,
-    "loadTimeMs": 511,
+    "loadTimeMs": 312,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -1645,13 +1636,13 @@
         "pagead2.googlesyndication.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 64727,
+      "inboundBytes": 64712,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 15,
+      "taskDurationMs": 14,
       "scriptDurationMs": 6,
-      "heapDeltaKb": 1820
+      "heapDeltaKb": 1822
     },
     "scripts": [
       {
@@ -1659,7 +1650,7 @@
         "transferKb": 63,
         "decodedKb": 191.4,
         "encoding": "br",
-        "durationMs": 511,
+        "durationMs": 312,
         "initiatorType": "script",
         "protocol": "h2"
       },
@@ -1677,7 +1668,7 @@
   "carbonAds": {
     "totalTransferKb": 10.4,
     "totalDecodedKb": 34.5,
-    "loadTimeMs": 126,
+    "loadTimeMs": 235,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1723,13 +1714,13 @@
         "cdn.carbonads.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 10652,
+      "inboundBytes": 10653,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
+      "taskDurationMs": 6,
       "scriptDurationMs": 1,
-      "heapDeltaKb": 729
+      "heapDeltaKb": 730
     },
     "scripts": [
       {
@@ -1737,7 +1728,7 @@
         "transferKb": 10.4,
         "decodedKb": 34.5,
         "encoding": "gzip",
-        "durationMs": 126,
+        "durationMs": 235,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -1746,7 +1737,7 @@
   "hotjar": {
     "totalTransferKb": 62.2,
     "totalDecodedKb": 242.5,
-    "loadTimeMs": 409,
+    "loadTimeMs": 347,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1792,11 +1783,11 @@
         "static.hotjar.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 6343,
+      "inboundBytes": 6344,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
+      "taskDurationMs": 8,
       "scriptDurationMs": 1,
       "heapDeltaKb": 757
     },
@@ -1806,7 +1797,7 @@
         "transferKb": 6.2,
         "decodedKb": 15,
         "encoding": "br",
-        "durationMs": 409,
+        "durationMs": 347,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1824,7 +1815,7 @@
   "clarity": {
     "totalTransferKb": 27.2,
     "totalDecodedKb": 80.2,
-    "loadTimeMs": 641,
+    "loadTimeMs": 653,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -1871,7 +1862,7 @@
         "scripts.clarity.ms",
         "www.clarity.ms"
       ],
-      "outboundBytes": 760,
+      "outboundBytes": 761,
       "inboundBytes": 27823,
       "injectedElements": [
         {
@@ -1881,9 +1872,9 @@
       ]
     },
     "performance": {
-      "taskDurationMs": 19,
+      "taskDurationMs": 20,
       "scriptDurationMs": 10,
-      "heapDeltaKb": 1199
+      "heapDeltaKb": 1198
     },
     "scripts": [
       {
@@ -1891,7 +1882,7 @@
         "transferKb": 0.8,
         "decodedKb": 0.6,
         "encoding": "none",
-        "durationMs": 379,
+        "durationMs": 517,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1900,7 +1891,7 @@
         "transferKb": 26.1,
         "decodedKb": 79.6,
         "encoding": "br",
-        "durationMs": 215,
+        "durationMs": 653,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1909,7 +1900,7 @@
         "transferKb": 0.3,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 641,
+        "durationMs": 630,
         "initiatorType": "xmlhttprequest",
         "protocol": "unknown"
       }
@@ -1918,7 +1909,7 @@
   "googleTagManager": {
     "totalTransferKb": 108.6,
     "totalDecodedKb": 302.5,
-    "loadTimeMs": 1498,
+    "loadTimeMs": 470,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1964,13 +1955,13 @@
         "www.googletagmanager.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 111254,
+      "inboundBytes": 111230,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 15,
-      "scriptDurationMs": 6,
-      "heapDeltaKb": 1811
+      "taskDurationMs": 16,
+      "scriptDurationMs": 7,
+      "heapDeltaKb": 1812
     },
     "scripts": [
       {
@@ -1978,16 +1969,16 @@
         "transferKb": 108.6,
         "decodedKb": 302.5,
         "encoding": "zstd",
-        "durationMs": 1498,
+        "durationMs": 470,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "intercom": {
-    "totalTransferKb": 9669.4,
-    "totalDecodedKb": 10437.5,
-    "loadTimeMs": 320,
+    "totalTransferKb": 9669.5,
+    "totalDecodedKb": 10437.8,
+    "loadTimeMs": 746,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2033,11 +2024,11 @@
         "widget.intercom.io"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 3703,
+      "inboundBytes": 3706,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 6,
+      "taskDurationMs": 7,
       "scriptDurationMs": 0,
       "heapDeltaKb": 726
     },
@@ -2047,7 +2038,7 @@
         "transferKb": 3.6,
         "decodedKb": 7.4,
         "encoding": "gzip",
-        "durationMs": 320,
+        "durationMs": 746,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -2079,9 +2070,9 @@
         "protocol": "unknown"
       },
       {
-        "url": "https://js.intercomcdn.com/frame-modern.c264e434.js",
-        "transferKb": 189.9,
-        "decodedKb": 630,
+        "url": "https://js.intercomcdn.com/frame-modern.44cf15aa.js",
+        "transferKb": 190,
+        "decodedKb": 630.3,
         "encoding": "gzip",
         "durationMs": 0,
         "initiatorType": "secondary",
@@ -2092,7 +2083,7 @@
   "crisp": {
     "totalTransferKb": 324.9,
     "totalDecodedKb": 329.1,
-    "loadTimeMs": 195,
+    "loadTimeMs": 349,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2152,7 +2143,7 @@
         "transferKb": 3.3,
         "decodedKb": 7.5,
         "encoding": "br",
-        "durationMs": 195,
+        "durationMs": 349,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -2170,7 +2161,7 @@
   "stripe": {
     "totalTransferKb": 215.4,
     "totalDecodedKb": 926.5,
-    "loadTimeMs": 216,
+    "loadTimeMs": 160,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2209,7 +2200,19 @@
       "performanceObserver": true,
       "intersectionObserver": true
     },
-    "cookies": [],
+    "cookies": [
+      {
+        "name": "m",
+        "domain": "m.stripe.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      }
+    ],
     "network": {
       "requestCount": 2,
       "domains": [
@@ -2220,14 +2223,14 @@
       "injectedElements": [
         {
           "tag": "iframe",
-          "src": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A39875%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3"
+          "src": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A40469%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 93,
-      "scriptDurationMs": 15,
-      "heapDeltaKb": 3266
+      "taskDurationMs": 148,
+      "scriptDurationMs": 17,
+      "heapDeltaKb": 4353
     },
     "scripts": [
       {
@@ -2235,16 +2238,16 @@
         "transferKb": 214.9,
         "decodedKb": 926.3,
         "encoding": "br",
-        "durationMs": 216,
+        "durationMs": 160,
         "initiatorType": "script",
         "protocol": "h2"
       },
       {
-        "url": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A39875%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3",
+        "url": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A40469%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3",
         "transferKb": 0.5,
         "decodedKb": 0.2,
         "encoding": "none",
-        "durationMs": 28,
+        "durationMs": 30,
         "initiatorType": "iframe",
         "protocol": "h2"
       }
@@ -2253,7 +2256,7 @@
   "lemonSqueezy": {
     "totalTransferKb": 1.8,
     "totalDecodedKb": 3.8,
-    "loadTimeMs": 143,
+    "loadTimeMs": 227,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2303,7 +2306,7 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 5,
+      "taskDurationMs": 6,
       "scriptDurationMs": 0,
       "heapDeltaKb": 720
     },
@@ -2313,16 +2316,16 @@
         "transferKb": 1.8,
         "decodedKb": 3.8,
         "encoding": "br",
-        "durationMs": 143,
+        "durationMs": 227,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "paypal": {
-    "totalTransferKb": 95.5,
+    "totalTransferKb": 95.2,
     "totalDecodedKb": 288.8,
-    "loadTimeMs": 169,
+    "loadTimeMs": 276,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2368,7 +2371,7 @@
         "www.paypal.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 49995,
+      "inboundBytes": 49707,
       "injectedElements": []
     },
     "performance": {
@@ -2379,10 +2382,10 @@
     "scripts": [
       {
         "url": "https://www.paypal.com/web-sdk/v6/core",
-        "transferKb": 48.8,
+        "transferKb": 48.5,
         "decodedKb": 148,
-        "encoding": "gzip",
-        "durationMs": 169,
+        "encoding": "br",
+        "durationMs": 276,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -2409,7 +2412,7 @@
   "vimeoPlayer": {
     "totalTransferKb": 8.9,
     "totalDecodedKb": 23.8,
-    "loadTimeMs": 5117,
+    "loadTimeMs": 178,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2478,13 +2481,13 @@
         "player.vimeo.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 9083,
+      "inboundBytes": 9084,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 6,
-      "scriptDurationMs": 0,
-      "heapDeltaKb": 741
+      "taskDurationMs": 7,
+      "scriptDurationMs": 1,
+      "heapDeltaKb": 742
     },
     "scripts": [
       {
@@ -2492,7 +2495,7 @@
         "transferKb": 8.9,
         "decodedKb": 23.8,
         "encoding": "gzip",
-        "durationMs": 5117,
+        "durationMs": 178,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -2501,7 +2504,7 @@
   "youtubePlayer": {
     "totalTransferKb": 13.9,
     "totalDecodedKb": 32.4,
-    "loadTimeMs": 669,
+    "loadTimeMs": 309,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2564,17 +2567,6 @@
         "firstParty": false
       },
       {
-        "name": "__Secure-ROLLOUT_TOKEN",
-        "domain": ".youtube.com",
-        "path": "/",
-        "httpOnly": true,
-        "secure": true,
-        "sameSite": "None",
-        "session": false,
-        "lifetimeDays": 180,
-        "firstParty": false
-      },
-      {
         "name": "VISITOR_INFO1_LIVE",
         "domain": ".youtube.com",
         "path": "/",
@@ -2595,6 +2587,17 @@
         "session": false,
         "lifetimeDays": 180,
         "firstParty": false
+      },
+      {
+        "name": "__Secure-ROLLOUT_TOKEN",
+        "domain": ".youtube.com",
+        "path": "/",
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 180,
+        "firstParty": false
       }
     ],
     "network": {
@@ -2603,11 +2606,11 @@
         "www.youtube.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 14236,
+      "inboundBytes": 14257,
       "injectedElements": [
         {
           "tag": "script",
-          "src": "https://www.youtube.com/s/player/1ebf2aa6/www-widgetapi.vflset/www-widgetapi.js"
+          "src": "https://www.youtube.com/s/player/f4f314f0/www-widgetapi.vflset/www-widgetapi.js"
         }
       ]
     },
@@ -2622,16 +2625,16 @@
         "transferKb": 3.3,
         "decodedKb": 1,
         "encoding": "br",
-        "durationMs": 669,
+        "durationMs": 309,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://www.youtube.com/s/player/1ebf2aa6/www-widgetapi.vflset/www-widgetapi.js",
+        "url": "https://www.youtube.com/s/player/f4f314f0/www-widgetapi.vflset/www-widgetapi.js",
         "transferKb": 10.6,
         "decodedKb": 31.4,
         "encoding": "br",
-        "durationMs": 264,
+        "durationMs": 22,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -2754,7 +2757,7 @@
   "googleRecaptcha": {
     "totalTransferKb": 363.9,
     "totalDecodedKb": 852,
-    "loadTimeMs": 368,
+    "loadTimeMs": 245,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2801,7 +2804,7 @@
         "www.gstatic.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 373011,
+      "inboundBytes": 373010,
       "injectedElements": [
         {
           "tag": "script",
@@ -2810,9 +2813,9 @@
       ]
     },
     "performance": {
-      "taskDurationMs": 66,
-      "scriptDurationMs": 37,
-      "heapDeltaKb": 3019
+      "taskDurationMs": 68,
+      "scriptDurationMs": 38,
+      "heapDeltaKb": 2990
     },
     "scripts": [
       {
@@ -2820,7 +2823,7 @@
         "transferKb": 1.5,
         "decodedKb": 1.5,
         "encoding": "gzip",
-        "durationMs": 368,
+        "durationMs": 245,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -2829,7 +2832,7 @@
         "transferKb": 362.4,
         "decodedKb": 850.5,
         "encoding": "gzip",
-        "durationMs": 283,
+        "durationMs": 232,
         "initiatorType": "script",
         "protocol": "h2"
       }
@@ -2837,8 +2840,8 @@
   },
   "googleSignIn": {
     "totalTransferKb": 92.1,
-    "totalDecodedKb": 247.5,
-    "loadTimeMs": 643,
+    "totalDecodedKb": 247.6,
+    "loadTimeMs": 619,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2884,21 +2887,21 @@
         "accounts.google.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 94312,
+      "inboundBytes": 94339,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 12,
+      "taskDurationMs": 11,
       "scriptDurationMs": 2,
-      "heapDeltaKb": 1206
+      "heapDeltaKb": 1210
     },
     "scripts": [
       {
         "url": "https://accounts.google.com/gsi/client",
         "transferKb": 92.1,
-        "decodedKb": 247.5,
+        "decodedKb": 247.6,
         "encoding": "gzip",
-        "durationMs": 643,
+        "durationMs": 619,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -2964,7 +2967,7 @@
   "instagramEmbed": {
     "totalTransferKb": 33.9,
     "totalDecodedKb": 102.2,
-    "loadTimeMs": 338,
+    "loadTimeMs": 359,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -3024,7 +3027,7 @@
         "transferKb": 33.9,
         "decodedKb": 102.2,
         "encoding": "zstd",
-        "durationMs": 338,
+        "durationMs": 359,
         "initiatorType": "script",
         "protocol": "h2"
       }
@@ -3033,7 +3036,7 @@
   "xEmbed": {
     "totalTransferKb": 130.5,
     "totalDecodedKb": 410.4,
-    "loadTimeMs": 5129,
+    "loadTimeMs": 79,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -3080,18 +3083,18 @@
         "syndication.twitter.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 134602,
+      "inboundBytes": 134600,
       "injectedElements": [
         {
           "tag": "iframe",
-          "src": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A39875"
+          "src": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A40469"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 42,
-      "scriptDurationMs": 14,
-      "heapDeltaKb": 2476
+      "taskDurationMs": 49,
+      "scriptDurationMs": 16,
+      "heapDeltaKb": 2540
     },
     "scripts": [
       {
@@ -3099,16 +3102,16 @@
         "transferKb": 27.3,
         "decodedKb": 90.9,
         "encoding": "gzip",
-        "durationMs": 5129,
+        "durationMs": 79,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A39875",
+        "url": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A40469",
         "transferKb": 103.2,
         "decodedKb": 319.5,
         "encoding": "gzip",
-        "durationMs": 77,
+        "durationMs": 57,
         "initiatorType": "iframe",
         "protocol": "unknown"
       }

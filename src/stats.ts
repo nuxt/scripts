@@ -82,6 +82,8 @@ export interface PrivacyRating {
     monitoring: { score: number, apis: string[] }
     /** Data collection scope — what types of data are tracked (0–10) */
     dataScope: { score: number, types: string[] }
+    /** Fingerprint exfiltration — heavy FP APIs combined with outbound channels (0–25) */
+    fpExfiltration: { score: number, heavyApis: string[] }
   }
 }
 
@@ -241,7 +243,29 @@ const DATA_SCOPE_WEIGHT: Partial<Record<TrackedDataType, number>> = {
   'transactions': 1,
   'errors': 0, // functional
   'video-engagement': 0,
-  'tag-injection': 2, // loads unknown third-party code
+  'tag-injection': 5, // loads unknown third-party code — wildcard privacy risk
+}
+
+// Known API usage that our AST detection misses due to obfuscation, eval(), or
+// runtime code generation. These are manually verified and added as corrections.
+const KNOWN_UNDETECTED_APIS: Partial<Record<string, (keyof ScriptApis)[]>> = {
+  // reCAPTCHA: bot detection fingerprints via canvas, webgl, audio — heavily obfuscated
+  googleRecaptcha: ['canvas', 'webgl', 'audioContext'],
+}
+
+// High-entropy fingerprinting APIs that create unique, cross-site-trackable
+// device identifiers. These are qualitatively different from passive FP
+// (screen dims, userAgent) — they generate renders or probe hardware in ways
+// that produce near-unique signatures.
+const HEAVY_FP_APIS: (keyof ScriptApis)[] = ['canvas', 'webgl', 'audioContext', 'rtcPeerConnection']
+
+// APIs used for legitimate product functionality, not fingerprinting.
+// Exempts these from the fingerprint exfiltration penalty.
+const KNOWN_FUNCTIONAL_APIS: Partial<Record<string, (keyof ScriptApis)[]>> = {
+  // Crisp: voice/video chat requires audio, WebRTC, and camera/mic enumeration
+  crisp: ['audioContext', 'rtcPeerConnection', 'mediaDevices'],
+  // Intercom: canvas used for UI rendering, not fingerprinting
+  intercom: ['canvas'],
 }
 
 function computePrivacyRating(
@@ -249,6 +273,7 @@ function computePrivacyRating(
   cookies: ScriptCookie[],
   network: NetworkSummary,
   trackedData: TrackedDataType[],
+  functionalApis?: Set<keyof ScriptApis>,
 ): PrivacyRating {
   // ── 1. Fingerprinting (0–30) ──
   const fingerprintApis: string[] = []
@@ -313,8 +338,20 @@ function computePrivacyRating(
   const scopeRaw = trackedData.reduce((sum, t) => sum + (DATA_SCOPE_WEIGHT[t] ?? 0), 0)
   const scopeScore = Math.min(10, scopeRaw)
 
+  // ── 6. Fingerprint exfiltration (0–25) ──
+  // The real privacy harm: collecting unique device fingerprints AND sending
+  // them to servers. Light FP data (screen dims, userAgent) is expected and
+  // harmless alone. Heavy FP APIs (canvas/webgl/audio renders) create near-
+  // unique identifiers — when combined with exfiltration channels, they enable
+  // cross-site tracking.
+  const heavyFpApis = HEAVY_FP_APIS.filter(api => apis[api] && !functionalApis?.has(api))
+  const hasExfiltration = totalOutbound > 0 || domainCount > 1 || trackingPixels > 0 || apis.sendBeacon
+  const fpExfilScore = heavyFpApis.length > 0 && hasExfiltration
+    ? Math.min(25, heavyFpApis.length * 9)
+    : 0
+
   // ── Total & grade ──
-  const score = fingerprintScore + persistenceScore + networkScore + monitorScore + scopeScore
+  const score = fingerprintScore + persistenceScore + networkScore + monitorScore + scopeScore + fpExfilScore
 
   let grade: PrivacyGrade
   if (score <= 5)
@@ -338,6 +375,7 @@ function computePrivacyRating(
       network: { score: networkScore, domains: domainCount, outboundBytes: totalOutbound, trackingPixels },
       monitoring: { score: monitorScore, apis: monitorApis },
       dataScope: { score: scopeScore, types: scopeTypes },
+      fpExfiltration: { score: fpExfilScore, heavyApis: heavyFpApis },
     },
   }
 }
@@ -541,7 +579,12 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
     const emptyNetwork: NetworkSummary = { requestCount: 0, domains: [], outboundBytes: 0, inboundBytes: 0, injectedElements: [] }
     const emptyPerf: PerformanceSummary = { taskDurationMs: 0, scriptDurationMs: 0, heapDeltaKb: 0 }
 
-    const apis = size?.apis ?? emptyApis
+    const apis = { ...(size?.apis ?? emptyApis) }
+    // Apply known API corrections for scripts with obfuscated fingerprinting
+    const knownApis = KNOWN_UNDETECTED_APIS[id]
+    if (knownApis) {
+      for (const api of knownApis) apis[api] = true
+    }
     const cookies = size?.cookies ?? []
     const network = size?.network ?? emptyNetwork
     const perf = size?.performance ?? emptyPerf
@@ -566,7 +609,7 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
       trackedData,
       collectsWebVitals: size?.collectsWebVitals ?? false,
       apis,
-      privacyRating: computePrivacyRating(apis, cookies, network, trackedData),
+      privacyRating: computePrivacyRating(apis, cookies, network, trackedData, KNOWN_FUNCTIONAL_APIS[id] ? new Set(KNOWN_FUNCTIONAL_APIS[id]) : undefined),
       cookies,
       network,
       performance: perf,
