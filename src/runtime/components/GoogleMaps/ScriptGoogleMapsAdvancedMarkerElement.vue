@@ -61,8 +61,8 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
   },
   cleanup(marker, { mapsApi }) {
     mapsApi.event.clearInstanceListeners(marker)
-    if (markerClustererContext) {
-      markerClustererContext.markerClusterer.value?.removeMarker(marker)
+    if (markerClustererContext?.markerClusterer.value) {
+      markerClustererContext.markerClusterer.value.removeMarker(marker)
     }
     else {
       marker.map = null

@@ -28,6 +28,9 @@ const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KE
 
 const infoWindowContainer = useTemplateRef('info-window-container')
 
+// Track click listener on parent marker so it can be removed on cleanup
+let markerClickListener: google.maps.MapsEventListener | undefined
+
 const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
   ready: () => !!infoWindowContainer.value,
   create({ mapsApi, map }) {
@@ -39,7 +42,7 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
     setupEventListeners(iw)
 
     if (markerContext?.marker.value) {
-      markerContext.marker.value.addListener('click', () => {
+      markerClickListener = markerContext.marker.value.addListener('click', () => {
         iw.open({
           anchor: markerContext.marker.value,
           map,
@@ -47,7 +50,7 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
       })
     }
     else if (advancedMarkerElementContext?.advancedMarkerElement.value) {
-      advancedMarkerElementContext.advancedMarkerElement.value.addListener('click', () => {
+      markerClickListener = advancedMarkerElementContext.advancedMarkerElement.value.addListener('click', () => {
         iw.open({
           anchor: advancedMarkerElementContext.advancedMarkerElement.value,
           map,
@@ -62,6 +65,8 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
     return iw
   },
   cleanup(iw, { mapsApi }) {
+    markerClickListener?.remove()
+    markerClickListener = undefined
     mapsApi.event.clearInstanceListeners(iw)
     iw.close()
   },

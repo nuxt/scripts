@@ -39,7 +39,7 @@ async function flushAsync(ticks = 4) {
   }
 }
 
-describe('scri ptGoogleMapsAdvancedMarkerElement', () => {
+describe('scriptGoogleMapsAdvancedMarkerElement', () => {
   let mocks: MockAPI
 
   beforeEach(() => {
