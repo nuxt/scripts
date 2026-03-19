@@ -11,10 +11,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGoogleMaps.vue
     size: xs
-  - label: "<ScriptGoogleMapsGeoJson>"
-    icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/GoogleMaps/ScriptGoogleMapsGeoJson.vue
-    size: xs
 
 ---
 
@@ -582,11 +578,7 @@ ScriptGoogleMaps (root)
 └── ScriptGoogleMapsCircle / Polygon / Polyline / Rectangle / HeatmapLayer
 ```
 
-All SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which the parent component injects automatically). Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.
-
-::callout
-`ScriptGoogleMapsGeoJson` uses `src` and `style` props instead of the `options` pattern used by other SFC components.
-::
+Most SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which the parent component injects automatically). `ScriptGoogleMapsGeoJson` uses `src` and `style` props instead. Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.
 
 ### Component Reference
 

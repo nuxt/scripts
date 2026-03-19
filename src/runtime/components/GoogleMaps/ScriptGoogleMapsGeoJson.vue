@@ -68,8 +68,8 @@ watch(() => props.src, (src) => {
 })
 
 watch(() => props.style, (style) => {
-  if (dataLayer.value && style)
-    dataLayer.value.setStyle(style)
+  if (dataLayer.value)
+    dataLayer.value.setStyle(style ?? {})
 }, { deep: true })
 
 function setupEventListeners(layer: google.maps.Data) {
