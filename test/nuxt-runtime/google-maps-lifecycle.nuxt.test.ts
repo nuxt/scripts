@@ -1,19 +1,17 @@
+/// <reference types="google.maps" />
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue'
+import ScriptGoogleMapsAdvancedMarkerElement from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsAdvancedMarkerElement.vue'
+import ScriptGoogleMapsCircle from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsCircle.vue'
+import ScriptGoogleMapsHeatmapLayer from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsHeatmapLayer.vue'
+import ScriptGoogleMapsMarker from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsMarker.vue'
+import ScriptGoogleMapsPinElement from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPinElement.vue'
+import ScriptGoogleMapsPolygon from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolygon.vue'
+import ScriptGoogleMapsPolyline from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolyline.vue'
+import ScriptGoogleMapsRectangle from '../../src/runtime/components/GoogleMaps/ScriptGoogleMapsRectangle.vue'
 import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'
 import { createMockGoogleMapsAPIWithInstances } from '../unit/__mocks__/google-maps-api'
-
-// Resolve components via dynamic import to avoid typecheck failures in CI
-// (the .vue files reference google.maps types not in the generated nuxt tsconfig)
-const { default: ScriptGoogleMapsAdvancedMarkerElement } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsAdvancedMarkerElement.vue')
-const { default: ScriptGoogleMapsCircle } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsCircle.vue')
-const { default: ScriptGoogleMapsHeatmapLayer } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsHeatmapLayer.vue')
-const { default: ScriptGoogleMapsMarker } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsMarker.vue')
-const { default: ScriptGoogleMapsPinElement } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPinElement.vue')
-const { default: ScriptGoogleMapsPolygon } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolygon.vue')
-const { default: ScriptGoogleMapsPolyline } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsPolyline.vue')
-const { default: ScriptGoogleMapsRectangle } = await import('../../src/runtime/components/GoogleMaps/ScriptGoogleMapsRectangle.vue')
 
 type MockAPI = ReturnType<typeof createMockGoogleMapsAPIWithInstances>
 
