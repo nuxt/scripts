@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs } from '../../src/first-party'
+import { generatePartytownResolveUrl, getAllProxyConfigs } from '../../src/first-party'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
 
 const rewrites = [
@@ -231,5 +231,122 @@ describe('rewriteScriptUrlsAST', () => {
     it('rewrites navigator.sendBeacon', () => {
       expect(rewrite('navigator.sendBeacon("https://example.com/collect", data)')).toContain('__nuxtScripts.sendBeacon')
     })
+  })
+
+  describe('skipApiRewrites (partytown mode)', () => {
+    function rewritePartytown(code: string): string {
+      return rewriteScriptUrlsAST(code, 'test.js', rewrites, undefined, { skipApiRewrites: true })
+    }
+
+    it('still rewrites URL string literals', () => {
+      expect(rewritePartytown('"https://example.com/api"')).toContain('self.location.origin+"/_proxy/ex/api"')
+    })
+
+    it('skips fetch rewriting', () => {
+      const result = rewritePartytown('fetch("https://example.com/api")')
+      expect(result).not.toContain('__nuxtScripts')
+      expect(result).toContain('fetch(')
+      // URL literal is still rewritten
+      expect(result).toContain('self.location.origin+"/_proxy/ex/api"')
+    })
+
+    it('skips navigator.sendBeacon rewriting', () => {
+      const result = rewritePartytown('navigator.sendBeacon("https://example.com/collect", data)')
+      expect(result).not.toContain('__nuxtScripts')
+      expect(result).toContain('navigator.sendBeacon(')
+    })
+
+    it('skips XMLHttpRequest rewriting', () => {
+      const result = rewritePartytown('var a = new XMLHttpRequest();')
+      expect(result).not.toContain('__nuxtScripts')
+      expect(result).toContain('new XMLHttpRequest()')
+    })
+
+    it('skips Image rewriting', () => {
+      const result = rewritePartytown('var img = new Image();')
+      expect(result).not.toContain('__nuxtScripts')
+      expect(result).toContain('new Image()')
+    })
+
+    it('skips canvas toDataURL neutralization', () => {
+      const result = rewritePartytown('ctx.canvas.toDataURL()')
+      expect(result).not.toContain('data:image/png')
+      expect(result).toContain('toDataURL()')
+    })
+  })
+})
+
+describe('generatePartytownResolveUrl', () => {
+  it('generates a valid function string', () => {
+    const rules = [
+      { pattern: 'www.google-analytics.com', pathPrefix: '', target: '/_scripts/p/ga' },
+    ]
+    const fn = generatePartytownResolveUrl(rules)
+    expect(fn).toContain('function(url, location, type)')
+    expect(fn).toContain('www.google-analytics.com')
+    expect(fn).toContain('/_scripts/p/ga')
+  })
+
+  it('embeds all rules as JSON', () => {
+    const rules = [
+      { pattern: 'www.google-analytics.com', pathPrefix: '', target: '/_scripts/p/ga' },
+      { pattern: 'www.facebook.com', pathPrefix: '/tr', target: '/_scripts/p/meta' },
+    ]
+    const fn = generatePartytownResolveUrl(rules)
+    expect(fn).toContain('"www.facebook.com"')
+    expect(fn).toContain('"/tr"')
+  })
+
+  it('returns undefined for non-matching URLs (no return statement for miss)', () => {
+    const rules = [{ pattern: 'example.com', pathPrefix: '', target: '/_scripts/p/ex' }]
+    const fn = generatePartytownResolveUrl(rules)
+    // eslint-disable-next-line no-new-func
+    const resolveUrl = new Function(`return ${fn}`)()
+    const url = new URL('https://other.com/path')
+    const location = new URL('https://mysite.com')
+    expect(resolveUrl(url, location, 'fetch')).toBeUndefined()
+  })
+
+  it('rewrites matching URLs to first-party proxy', () => {
+    const rules = [{ pattern: 'example.com', pathPrefix: '', target: '/_scripts/p/ex' }]
+    const fn = generatePartytownResolveUrl(rules)
+    // eslint-disable-next-line no-new-func
+    const resolveUrl = new Function(`return ${fn}`)()
+    const url = new URL('https://example.com/collect?v=1')
+    const location = new URL('https://mysite.com')
+    const result = resolveUrl(url, location, 'fetch')
+    expect(result).toBeInstanceOf(URL)
+    expect(result.pathname).toBe('/_scripts/p/ex/collect')
+    expect(result.search).toBe('?v=1')
+    expect(result.origin).toBe('https://mysite.com')
+  })
+
+  it('matches subdomains', () => {
+    const rules = [{ pattern: 'google-analytics.com', pathPrefix: '', target: '/_scripts/p/ga' }]
+    const fn = generatePartytownResolveUrl(rules)
+    // eslint-disable-next-line no-new-func
+    const resolveUrl = new Function(`return ${fn}`)()
+    const url = new URL('https://www.google-analytics.com/g/collect')
+    const location = new URL('https://mysite.com')
+    const result = resolveUrl(url, location, 'fetch')
+    expect(result.pathname).toBe('/_scripts/p/ga/g/collect')
+  })
+
+  it('respects pathPrefix matching', () => {
+    const rules = [{ pattern: 'www.facebook.com', pathPrefix: '/tr', target: '/_scripts/p/meta' }]
+    const fn = generatePartytownResolveUrl(rules)
+    // eslint-disable-next-line no-new-func
+    const resolveUrl = new Function(`return ${fn}`)()
+
+    // Matching path prefix
+    const url1 = new URL('https://www.facebook.com/tr?id=123')
+    const location = new URL('https://mysite.com')
+    const result1 = resolveUrl(url1, location, 'fetch')
+    expect(result1.pathname).toBe('/_scripts/p/meta/')
+    expect(result1.search).toBe('?id=123')
+
+    // Non-matching path prefix
+    const url2 = new URL('https://www.facebook.com/other')
+    expect(resolveUrl(url2, location, 'fetch')).toBeUndefined()
   })
 })
