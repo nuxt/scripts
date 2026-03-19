@@ -531,7 +531,7 @@ onMounted(() => {
 Load GeoJSON from a URL or inline object and apply custom styling:
 
 ```vue
-<script setup>
+<script setup lang="ts">
 const geoJsonStyle = {
   fillColor: '#4285F4',
   fillOpacity: 0.4,
@@ -602,7 +602,7 @@ All SFC components accept an `options` prop matching their Google Maps API optio
 | `ScriptGoogleMapsPolyline` | `google.maps.PolylineOptions` | |
 | `ScriptGoogleMapsRectangle` | `google.maps.RectangleOptions` | |
 | `ScriptGoogleMapsHeatmapLayer` | `google.maps.visualization.HeatmapLayerOptions` | |
-| `ScriptGoogleMapsGeoJson` | `src`: `string \| object`, `style`: `google.maps.Data.StyleOptions` | Emits mouse & feature events |
+| `ScriptGoogleMapsGeoJson` | `src`: `string \| object`, `style`: `google.maps.Data.StylingFunction \| google.maps.Data.StyleOptions` | Emits mouse & feature events |
 
 ### `ScriptGoogleMapsGeoJson`{lang="html"}
 
