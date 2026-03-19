@@ -27,8 +27,9 @@ export const scriptMeta = {
     trackedData: ['page-views'],
   },
   posthog: {
-    urls: [], // NPM-only, no CDN script
+    urls: ['https://us-assets.i.posthog.com/static/array.js'],
     trackedData: ['page-views', 'events', 'conversions', 'user-identity', 'session-replay', 'heatmaps', 'ab-testing'],
+    testId: 'phc_test',
   },
   fathomAnalytics: {
     urls: ['https://cdn.usefathom.com/script.js'],
@@ -199,7 +200,7 @@ export const scriptMeta = {
 
   // Identity
   gravatar: {
-    urls: [],
+    urls: ['https://secure.gravatar.com/js/gprofiles.js'],
     trackedData: [],
   },
 } satisfies Record<BuiltInRegistryScriptKey, ScriptMeta>
