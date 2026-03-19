@@ -36,6 +36,28 @@ const heatmapLayerData = ref<google.maps.LatLng[]>([])
 
 const isCircleShown = ref(false)
 
+const isGeoJsonShown = ref(false)
+
+const geoJsonData = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [151.20, -33.87],
+          [151.25, -33.87],
+          [151.25, -33.90],
+          [151.20, -33.90],
+          [151.20, -33.87],
+        ]],
+      },
+      properties: { name: 'Sydney CBD' },
+    },
+  ],
+}
+
 const googleMapsRef = useTemplateRef('googleMapsRef')
 
 whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
@@ -191,6 +213,17 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         }"
       />
 
+      <ScriptGoogleMapsGeoJson
+        v-if="isGeoJsonShown"
+        :src="geoJsonData"
+        :style="{
+          fillColor: '#4285F4',
+          fillOpacity: 0.3,
+          strokeColor: '#4285F4',
+          strokeWeight: 2,
+        }"
+      />
+
       <ScriptGoogleMapsCircle
         v-if="isCircleShown"
         :options="{
@@ -267,6 +300,13 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         @click="isHeatmapLayerShown = !isHeatmapLayerShown"
       >
         {{ `${isHeatmapLayerShown ? 'Hide' : 'Show'} heatmap layer` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isGeoJsonShown = !isGeoJsonShown"
+      >
+        {{ `${isGeoJsonShown ? 'Hide' : 'Show'} geojson` }}
       </button>
 
       <button
