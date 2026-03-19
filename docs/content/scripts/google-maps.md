@@ -239,7 +239,7 @@ The component exposes all internal APIs, so you can customize your map as needed
 ```vue
 <script lang="ts" setup>
 const googleMapsRef = ref()
-onMounted(async () => {
+onMounted(() => {
   const api = googleMapsRef.value
 
   // Access internal APIs
@@ -247,14 +247,17 @@ onMounted(async () => {
   const mapInstance = api.map.value // google.maps.Map instance
 
   // Convert a query to lat/lng
-  const query = await api.resolveQueryToLatLang('Space Needle, Seattle, WA') // { lat: 0, lng: 0 }
+  api.resolveQueryToLatLang('Space Needle, Seattle, WA').then((query) => {
+    // query = { lat: 0, lng: 0 }
+  })
 
   // Import a Google Maps library
-  const geometry = await api.importLibrary('geometry')
-  const distance = googleMaps.geometry.spherical.computeDistanceBetween(
-    new googleMaps.LatLng(0, 0),
-    new googleMaps.LatLng(0, 0)
-  )
+  api.importLibrary('geometry').then((geometry) => {
+    const distance = googleMaps.geometry.spherical.computeDistanceBetween(
+      new googleMaps.LatLng(0, 0),
+      new googleMaps.LatLng(0, 0)
+    )
+  })
 })
 </script>
 
@@ -534,7 +537,7 @@ ScriptGoogleMaps (root)
 └── ScriptGoogleMapsCircle / Polygon / Polyline / Rectangle / HeatmapLayer
 ```
 
-All SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which is injected automatically). Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.
+All SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which the parent component injects automatically). Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.
 
 ### Component Reference
 
