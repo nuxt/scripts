@@ -77,7 +77,7 @@ function setupEventListeners(layer: google.maps.Data) {
     layer.addListener(event, (payload: google.maps.Data.MouseEvent) => emit(event, payload))
   })
   featureEvents.forEach((event) => {
-    layer.addListener(event, (payload: any) => emit(event, payload))
+    layer.addListener(event, (payload: any) => (emit as any)(event, payload))
   })
 }
 </script>
