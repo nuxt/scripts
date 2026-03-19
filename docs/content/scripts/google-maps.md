@@ -434,6 +434,7 @@ All Google Maps SFC components must work within a `<ScriptGoogleMaps>`{lang="htm
 - `<ScriptGoogleMapsPolyline>`{lang="html"} - Line paths
 - `<ScriptGoogleMapsRectangle>`{lang="html"} - Rectangular overlays
 - `<ScriptGoogleMapsHeatmapLayer>`{lang="html"} - Heatmap visualization
+- `<ScriptGoogleMapsOverlayView>`{lang="html"} - Render arbitrary Vue content at a lat/lng position
 
 ### Basic Usage
 
@@ -531,6 +532,7 @@ ScriptGoogleMaps (root)
 ├── ScriptGoogleMapsAdvancedMarkerElement
 │   ├── ScriptGoogleMapsPinElement (optional)
 │   └── ScriptGoogleMapsInfoWindow (optional)
+├── ScriptGoogleMapsOverlayView (arbitrary Vue content at a position)
 └── ScriptGoogleMapsCircle / Polygon / Polyline / Rectangle / HeatmapLayer
 ```
 
@@ -550,6 +552,75 @@ All SFC components accept an `options` prop matching their Google Maps API optio
 | `ScriptGoogleMapsPolyline` | `google.maps.PolylineOptions` | |
 | `ScriptGoogleMapsRectangle` | `google.maps.RectangleOptions` | |
 | `ScriptGoogleMapsHeatmapLayer` | `google.maps.visualization.HeatmapLayerOptions` | |
+| `ScriptGoogleMapsOverlayView` | Explicit props (see below) | Renders Vue slot content at a position |
+
+### `<ScriptGoogleMapsOverlayView>`{lang="html"}
+
+Renders arbitrary Vue slot content at a map lat/lng position. Unlike `InfoWindow`, you have full control over HTML structure and styling.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `position` | `google.maps.LatLngLiteral` | (required) | Map anchor point |
+| `anchor` | `OverlayAnchor` | `'bottom-center'` | Which point of the content aligns to the position |
+| `offset` | `{ x: number, y: number }` | - | Pixel fine-tuning after anchor alignment |
+| `pane` | `OverlayPane` | `'floatPane'` | Google Maps pane to render into |
+| `zIndex` | `number` | - | Stack order |
+| `blockMapInteraction` | `boolean` | `true` | Prevents clicks/drags from propagating to the map |
+
+**Popup on marker click:**
+
+```vue
+<script setup>
+const open = ref(false)
+const pos = { lat: -34.397, lng: 150.644 }
+</script>
+
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <ScriptGoogleMapsAdvancedMarkerElement
+      :options="{ position: pos }"
+      @click="open = true"
+    />
+    <ScriptGoogleMapsOverlayView
+      v-if="open"
+      :position="pos"
+      anchor="bottom-center"
+      :offset="{ x: 0, y: -40 }"
+    >
+      <div class="custom-popup">
+        <button @click="open = false">
+          ×
+        </button>
+        <p>Any Vue content here</p>
+      </div>
+    </ScriptGoogleMapsOverlayView>
+  </ScriptGoogleMaps>
+</template>
+```
+
+**Persistent label:**
+
+```vue
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <ScriptGoogleMapsOverlayView
+      :position="{ lat: -34.397, lng: 150.644 }"
+      anchor="center"
+      :block-map-interaction="false"
+    >
+      <span style="background: white; padding: 2px 6px; border-radius: 4px;">
+        Label text
+      </span>
+    </ScriptGoogleMapsOverlayView>
+  </ScriptGoogleMaps>
+</template>
+```
+
+::callout
+The `blockMapInteraction` prop (default `true`) calls `google.maps.OverlayView.preventMapHitsAndGesturesFrom()`{lang="ts"} to stop clicks, taps, and drags from propagating through the overlay to the map. Set it to `false` for non-interactive overlays like labels.
+::
 
 ## [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"}
 

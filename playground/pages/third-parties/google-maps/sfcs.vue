@@ -36,6 +36,8 @@ const heatmapLayerData = ref<google.maps.LatLng[]>([])
 
 const isCircleShown = ref(false)
 
+const isOverlayViewShown = ref(false)
+
 const googleMapsRef = useTemplateRef('googleMapsRef')
 
 whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
@@ -191,6 +193,18 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         }"
       />
 
+      <ScriptGoogleMapsOverlayView
+        v-if="isOverlayViewShown"
+        :position="{ lat: -33.8688, lng: 151.2093 }"
+        anchor="bottom-center"
+        :offset="{ x: 0, y: -10 }"
+      >
+        <div style="background: white; padding: 8px 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); font-family: sans-serif;">
+          <strong>Custom Overlay</strong>
+          <p style="margin: 4px 0 0;">Vue slot content with full reactivity</p>
+        </div>
+      </ScriptGoogleMapsOverlayView>
+
       <ScriptGoogleMapsCircle
         v-if="isCircleShown"
         :options="{
@@ -267,6 +281,13 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         @click="isHeatmapLayerShown = !isHeatmapLayerShown"
       >
         {{ `${isHeatmapLayerShown ? 'Hide' : 'Show'} heatmap layer` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isOverlayViewShown = !isOverlayViewShown"
+      >
+        {{ `${isOverlayViewShown ? 'Hide' : 'Show'} overlay view` }}
       </button>
 
       <button
