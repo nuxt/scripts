@@ -52,6 +52,9 @@ export default defineConfig({
         test: {
           name: 'nuxt-runtime',
           environment: 'nuxt',
+          typecheck: {
+            enabled: false,
+          },
           include: [
             './tests/nuxt-runtime/**/*.test.ts',
             './**/*.nuxt.test.ts',
