@@ -63,17 +63,26 @@ export interface ScriptApis {
   intersectionObserver: boolean
 }
 
-export interface ApiPrivacyScore {
+export type PrivacyGrade = 'A+' | 'A' | 'B' | 'C' | 'D' | 'F'
+
+export interface PrivacyRating {
+  /** Overall letter grade */
+  grade: PrivacyGrade
   /** 0–100, higher = more invasive */
   score: number
-  /** Persistence APIs used (cookies, localStorage, sessionStorage, indexedDB) */
-  persistence: number
-  /** Fingerprinting APIs used (canvas, webgl, audioContext, deviceMemory, hardwareConcurrency, plugins, screen, userAgent, languages, timezone, platform, vendor, connection, maxTouchPoints, devicePixelRatio, mediaDevices, getBattery) */
-  fingerprinting: number
-  /** Tracking APIs used (referrer, windowName, rtcPeerConnection, geolocation, serviceWorker, cacheApi) */
-  tracking: number
-  /** Behavioral monitoring APIs used (mutationObserver, intersectionObserver) */
-  monitoring: number
+  /** Breakdown by privacy concern category */
+  breakdown: {
+    /** Browser fingerprinting APIs — entropy-weighted per AmIUnique/Panopticlick research (0–30) */
+    fingerprinting: { score: number, apis: string[] }
+    /** Persistent storage + cookie tracking (0–25) */
+    persistence: { score: number, thirdPartyCookies: number, longLivedCookies: number, storageApis: string[] }
+    /** Cross-domain data exfiltration & tracking network (0–25) */
+    network: { score: number, domains: number, outboundBytes: number, trackingPixels: number }
+    /** Behavioral observation APIs (0–10) */
+    monitoring: { score: number, apis: string[] }
+    /** Data collection scope — what types of data are tracked (0–10) */
+    dataScope: { score: number, types: string[] }
+  }
 }
 
 export interface ScriptCookie {
@@ -113,6 +122,28 @@ export interface PerformanceSummary {
   heapDeltaKb: number
 }
 
+export type PerformanceGrade = 'A+' | 'A' | 'B' | 'C' | 'D' | 'F'
+
+export interface PerformanceRating {
+  /** Overall letter grade */
+  grade: PerformanceGrade
+  /** 0–100, higher = worse performance impact */
+  score: number
+  /** Breakdown by impact area */
+  breakdown: {
+    /** Network cost — transfer size relative to performance budgets (0–30) */
+    networkCost: { score: number, transferKb: number }
+    /** Main thread blocking — task duration that delays interactivity (0–30) */
+    mainThread: { score: number, taskDurationMs: number, scriptDurationMs: number }
+    /** Memory pressure — heap allocation impact (0–20) */
+    memory: { score: number, heapDeltaKb: number }
+    /** Connection overhead — additional HTTP requests (0–10) */
+    connections: { score: number, requestCount: number }
+    /** CWV risk — estimated Core Web Vitals impact (0–10) */
+    cwvRisk: { score: number, lcpImpactMs: number, clsRisk: boolean, inpRiskLevel: string }
+  }
+}
+
 export interface ScriptStats {
   id: string
   label: string
@@ -126,13 +157,14 @@ export interface ScriptStats {
   collectsWebVitals: boolean
   // Browser APIs used
   apis: ScriptApis
-  apiPrivacyScore: ApiPrivacyScore
+  privacyRating: PrivacyRating
   // Cookies set by the script
   cookies: ScriptCookie[]
   // Network behavior
   network: NetworkSummary
   // Performance impact
   performance: PerformanceSummary
+  performanceRating: PerformanceRating
   // Core Web Vitals estimated impact (computed from measured data)
   cwvEstimate: CwvEstimate
   // Features
@@ -148,45 +180,165 @@ export interface ScriptStats {
   loadingMethod: 'cdn' | 'npm' | 'dynamic'
 }
 
-// Privacy concern categories — grouped by what they enable.
-// Network APIs (fetch, xhr, sendBeacon, websocket) and performanceObserver are
-// functional (every script needs to send data) and excluded from scoring.
-const PERSISTENCE_APIS = ['cookies', 'localStorage', 'sessionStorage', 'indexedDB'] as const
-const FINGERPRINTING_APIS = ['canvas', 'webgl', 'audioContext', 'deviceMemory', 'hardwareConcurrency', 'plugins', 'screen', 'userAgent', 'languages', 'timezone', 'platform', 'vendor', 'connection', 'maxTouchPoints', 'devicePixelRatio', 'mediaDevices', 'getBattery'] as const
-const TRACKING_APIS = ['referrer', 'windowName', 'rtcPeerConnection', 'geolocation', 'serviceWorker', 'cacheApi'] as const
-const MONITORING_APIS = ['mutationObserver', 'intersectionObserver'] as const
+// ── Privacy scoring ─────────────────────────────────────────────────
+// Entropy-weighted fingerprinting scores based on AmIUnique (2016) and
+// EFF Panopticlick (2020) research. Values approximate bits of entropy
+// each API contributes to a unique device fingerprint.
+const FINGERPRINT_ENTROPY: Partial<Record<keyof ScriptApis, number>> = {
+  canvas: 6, // ~17 bits — renders unique per GPU/driver/font stack
+  webgl: 6, // ~15 bits — GPU renderer string uniquely identifies hardware
+  audioContext: 5, // ~12 bits — audio processing stack fingerprint
+  rtcPeerConnection: 4, // leaks real IP behind VPN, enables WebRTC fingerprinting
+  mediaDevices: 3, // enumerates cameras/mics — hardware inventory
+  plugins: 3, // historically ~15 bits, declining in modern browsers
+  screen: 3, // ~8 bits — resolution + colorDepth
+  geolocation: 3, // precise location (requires permission but very invasive)
+  timezone: 2, // ~5 bits
+  languages: 2, // ~5 bits
+  hardwareConcurrency: 2, // ~3.5 bits — CPU core count
+  deviceMemory: 2, // ~2.5 bits — RAM bucket
+  userAgent: 1, // being frozen by UA-CH, declining utility
+  platform: 1, // ~3 bits but highly correlated with userAgent
+  vendor: 1, // low entropy, mostly "Google Inc."
+  maxTouchPoints: 1, // ~2 bits
+  devicePixelRatio: 1, // ~3 bits but correlated with screen
+  connection: 1, // network type — low entropy
+  getBattery: 1, // low entropy but privacy concern (removed from most browsers)
+}
+const MAX_FINGERPRINT = Object.values(FINGERPRINT_ENTROPY).reduce((a, b) => a + b, 0)
 
-// Weights: persistence enables cross-visit tracking (heaviest), tracking enables
-// cross-site identification, fingerprinting enables device identification,
-// monitoring enables behavioral observation.
-const PERSISTENCE_WEIGHT = 10
-const TRACKING_WEIGHT = 8
-const FINGERPRINTING_WEIGHT = 6
-const MONITORING_WEIGHT = 4
+// Persistence: APIs that enable cross-visit tracking
+const STORAGE_API_WEIGHT: Partial<Record<keyof ScriptApis, number>> = {
+  cookies: 4, // cross-domain capable, most abused
+  localStorage: 3, // persistent, survives tab close
+  indexedDB: 3, // large persistent storage
+  sessionStorage: 1, // session-scoped, less invasive
+}
+const MAX_STORAGE_API = Object.values(STORAGE_API_WEIGHT).reduce((a, b) => a + b, 0)
 
-const MAX_SCORE = PERSISTENCE_APIS.length * PERSISTENCE_WEIGHT
-  + TRACKING_APIS.length * TRACKING_WEIGHT
-  + FINGERPRINTING_APIS.length * FINGERPRINTING_WEIGHT
-  + MONITORING_APIS.length * MONITORING_WEIGHT
+// Monitoring: behavioral observation
+const MONITOR_WEIGHT: Partial<Record<keyof ScriptApis, number>> = {
+  mutationObserver: 5, // sees all DOM changes — behavioral tracking
+  intersectionObserver: 3, // viewport/scroll tracking
+  windowName: 2, // cross-origin data channel
+}
+const MAX_MONITOR = Object.values(MONITOR_WEIGHT).reduce((a, b) => a + b, 0)
 
-function computeApiPrivacyScore(apis: ScriptApis): ApiPrivacyScore {
-  const count = (keys: readonly (keyof ScriptApis)[]) => keys.filter(k => apis[k]).length
-  const persistence = count(PERSISTENCE_APIS)
-  const fingerprinting = count(FINGERPRINTING_APIS)
-  const tracking = count(TRACKING_APIS)
-  const monitoring = count(MONITORING_APIS)
+// Data scope: more invasive tracking types score higher
+const DATA_SCOPE_WEIGHT: Partial<Record<TrackedDataType, number>> = {
+  'session-replay': 5, // records entire user session
+  'heatmaps': 4, // tracks mouse movement / attention
+  'user-identity': 4, // PII-adjacent
+  'retargeting': 3, // cross-site ad following
+  'audiences': 3, // user profiling
+  'ab-testing': 2, // behavioral segmentation
+  'form-submissions': 2, // captures input data
+  'clicks': 1,
+  'scrolls': 1,
+  'conversions': 1,
+  'events': 0, // basic analytics, expected
+  'page-views': 0, // basic analytics, expected
+  'transactions': 1,
+  'errors': 0, // functional
+  'video-engagement': 0,
+  'tag-injection': 2, // loads unknown third-party code
+}
 
-  const raw = persistence * PERSISTENCE_WEIGHT
-    + tracking * TRACKING_WEIGHT
-    + fingerprinting * FINGERPRINTING_WEIGHT
-    + monitoring * MONITORING_WEIGHT
+function computePrivacyRating(
+  apis: ScriptApis,
+  cookies: ScriptCookie[],
+  network: NetworkSummary,
+  trackedData: TrackedDataType[],
+): PrivacyRating {
+  // ── 1. Fingerprinting (0–30) ──
+  const fingerprintApis: string[] = []
+  let fingerprintRaw = 0
+  for (const [api, weight] of Object.entries(FINGERPRINT_ENTROPY)) {
+    if (apis[api as keyof ScriptApis]) {
+      fingerprintRaw += weight
+      fingerprintApis.push(api)
+    }
+  }
+  const fingerprintScore = Math.round((fingerprintRaw / MAX_FINGERPRINT) * 30)
+
+  // ── 2. Persistence & cookies (0–25) ──
+  // Storage APIs (0–11 raw → 0–10 normalized)
+  const storageApis: string[] = []
+  let storageRaw = 0
+  for (const [api, weight] of Object.entries(STORAGE_API_WEIGHT)) {
+    if (apis[api as keyof ScriptApis]) {
+      storageRaw += weight
+      storageApis.push(api)
+    }
+  }
+  const storageScore = Math.round((storageRaw / MAX_STORAGE_API) * 10)
+
+  // Actual cookies set (0–15)
+  const thirdPartyCookies = cookies.filter(c => !c.firstParty).length
+  const longLivedCookies = cookies.filter(c => c.lifetimeDays > 30).length
+  // 3 pts per third-party cookie (max 9) + 2 pts per long-lived cookie (max 6)
+  const cookieScore = Math.min(9, thirdPartyCookies * 3) + Math.min(6, longLivedCookies * 2)
+  const persistenceScore = Math.min(25, storageScore + cookieScore)
+
+  // ── 3. Network tracking (0–25) ──
+  const domainCount = network.domains.length
+  // 4 pts per domain beyond the first (loading from your own CDN is expected)
+  const domainScore = Math.min(12, Math.max(0, domainCount - 1) * 4)
+  // Outbound data: POST/beacon bodies + tracking pixel URL query params
+  // Tracking pixels exfiltrate data via GET query strings (screen dims, page URLs, etc.)
+  const pixelQueryBytes = network.injectedElements
+    .filter(e => e.tag === 'img' && e.src.includes('?'))
+    .reduce((sum, e) => sum + new URL(e.src).search.length, 0)
+  const totalOutbound = network.outboundBytes + pixelQueryBytes
+  const outboundScore = totalOutbound === 0 ? 0 : Math.min(8, Math.ceil(totalOutbound / 250))
+  // Tracking pixels & injected iframes
+  const trackingPixels = network.injectedElements.filter(e => e.tag === 'img').length
+  const injectedIframes = network.injectedElements.filter(e => e.tag === 'iframe').length
+  const injectionScore = Math.min(5, trackingPixels * 3 + injectedIframes * 2)
+  const networkScore = Math.min(25, domainScore + outboundScore + injectionScore)
+
+  // ── 4. Behavioral monitoring (0–10) ──
+  const monitorApis: string[] = []
+  let monitorRaw = 0
+  for (const [api, weight] of Object.entries(MONITOR_WEIGHT)) {
+    if (apis[api as keyof ScriptApis]) {
+      monitorRaw += weight
+      monitorApis.push(api)
+    }
+  }
+  const monitorScore = Math.round((monitorRaw / MAX_MONITOR) * 10)
+
+  // ── 5. Data scope (0–10) ──
+  const scopeTypes = trackedData.filter(t => (DATA_SCOPE_WEIGHT[t] ?? 0) > 0)
+  const scopeRaw = trackedData.reduce((sum, t) => sum + (DATA_SCOPE_WEIGHT[t] ?? 0), 0)
+  const scopeScore = Math.min(10, scopeRaw)
+
+  // ── Total & grade ──
+  const score = fingerprintScore + persistenceScore + networkScore + monitorScore + scopeScore
+
+  let grade: PrivacyGrade
+  if (score <= 5)
+    grade = 'A+'
+  else if (score <= 15)
+    grade = 'A'
+  else if (score <= 30)
+    grade = 'B'
+  else if (score <= 50)
+    grade = 'C'
+  else if (score <= 70)
+    grade = 'D'
+  else grade = 'F'
 
   return {
-    score: Math.round((raw / MAX_SCORE) * 100),
-    persistence,
-    fingerprinting,
-    tracking,
-    monitoring,
+    grade,
+    score,
+    breakdown: {
+      fingerprinting: { score: fingerprintScore, apis: fingerprintApis },
+      persistence: { score: persistenceScore, thirdPartyCookies, longLivedCookies, storageApis },
+      network: { score: networkScore, domains: domainCount, outboundBytes: totalOutbound, trackingPixels },
+      monitoring: { score: monitorScore, apis: monitorApis },
+      dataScope: { score: scopeScore, types: scopeTypes },
+    },
   }
 }
 
@@ -214,6 +366,103 @@ function computeCwvEstimate(perf: PerformanceSummary, network: NetworkSummary, a
         : 'low' as const
 
   return { lcpImpactMs, clsRisk, clsElements, inpRiskLevel }
+}
+
+// ── Performance scoring ─────────────────────────────────────────────
+// Absolute thresholds based on web performance budgets, not relative to
+// this dataset. A new script added later won't shift existing grades.
+//
+// Network budget reference: Google's "cost of JavaScript" research
+// recommends <50kb for third-party scripts on mobile.
+// Main thread: 50ms is the Long Task threshold (web.dev).
+// Heap: V8 minor GC triggers around 2–4MB, so staying under 1MB is ideal.
+
+function scoreSteps(value: number, steps: [number, number][]): number {
+  let score = 0
+  for (const [threshold, points] of steps) {
+    if (value >= threshold)
+      score = points
+  }
+  return score
+}
+
+function computePerformanceRating(
+  perf: PerformanceSummary,
+  transferKb: number,
+  network: NetworkSummary,
+  cwv: CwvEstimate,
+): PerformanceRating {
+  // ── 1. Network cost (0–30) — transfer size ──
+  // Thresholds: <5kb=0, <15kb=5, <30kb=10, <60kb=15, <120kb=20, <250kb=25, >=250kb=30
+  const networkScore = scoreSteps(transferKb, [
+    [5, 5],
+    [15, 10],
+    [30, 15],
+    [60, 20],
+    [120, 25],
+    [250, 30],
+  ])
+
+  // ── 2. Main thread blocking (0–30) — taskDurationMs ──
+  // <10ms=0, <20ms=5, <30ms=10, <50ms=18, <75ms=25, >=75ms=30
+  const mainThreadScore = scoreSteps(perf.taskDurationMs, [
+    [10, 5],
+    [20, 10],
+    [30, 18],
+    [50, 25],
+    [75, 30],
+  ])
+
+  // ── 3. Memory pressure (0–20) — heap delta ──
+  // <750kb=0, <1000kb=5, <1500kb=10, <2000kb=15, >=2000kb=20
+  const memoryScore = scoreSteps(perf.heapDeltaKb, [
+    [750, 5],
+    [1000, 10],
+    [1500, 15],
+    [2000, 20],
+  ])
+
+  // ── 4. Connection overhead (0–10) — request count ──
+  // 1=0, 2=3, 3=5, >3=7, >5=10
+  const connectionScore = scoreSteps(network.requestCount, [
+    [2, 3],
+    [3, 5],
+    [4, 7],
+    [6, 10],
+  ])
+
+  // ── 5. CWV risk (0–10) ──
+  const cwvScore
+    = (cwv.lcpImpactMs > 15 ? 3 : 0) // script execution blocks LCP
+      + (cwv.clsRisk ? Math.min(4, cwv.clsElements * 2) : 0) // layout shift risk
+      + (cwv.inpRiskLevel === 'high' ? 3 : cwv.inpRiskLevel === 'medium' ? 1 : 0)
+
+  const score = networkScore + mainThreadScore + memoryScore + connectionScore + cwvScore
+
+  let grade: PerformanceGrade
+  if (score <= 5)
+    grade = 'A+'
+  else if (score <= 15)
+    grade = 'A'
+  else if (score <= 30)
+    grade = 'B'
+  else if (score <= 50)
+    grade = 'C'
+  else if (score <= 70)
+    grade = 'D'
+  else grade = 'F'
+
+  return {
+    grade,
+    score,
+    breakdown: {
+      networkCost: { score: networkScore, transferKb },
+      mainThread: { score: mainThreadScore, taskDurationMs: perf.taskDurationMs, scriptDurationMs: perf.scriptDurationMs },
+      memory: { score: memoryScore, heapDeltaKb: perf.heapDeltaKb },
+      connections: { score: connectionScore, requestCount: network.requestCount },
+      cwvRisk: { score: cwvScore, lcpImpactMs: cwv.lcpImpactMs, clsRisk: cwv.clsRisk, inpRiskLevel: cwv.inpRiskLevel },
+    },
+  }
 }
 
 const DOMAIN_RE = /^https?:\/\/([^/]+)/
@@ -288,25 +537,41 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
     const domains = extractDomains(routes)
     const endpoints = Object.keys(routes).length
 
+    const emptyApis = {} as ScriptApis
+    const emptyNetwork: NetworkSummary = { requestCount: 0, domains: [], outboundBytes: 0, inboundBytes: 0, injectedElements: [] }
+    const emptyPerf: PerformanceSummary = { taskDurationMs: 0, scriptDurationMs: 0, heapDeltaKb: 0 }
+
+    const apis = size?.apis ?? emptyApis
+    const cookies = size?.cookies ?? []
+    const network = size?.network ?? emptyNetwork
+    const perf = size?.performance ?? emptyPerf
+    const trackedData = meta?.trackedData ?? []
+    const scripts = size?.scripts ?? []
+    const transferKb = size?.totalTransferKb ?? 0
+    // Primary transfer: exclude secondary scripts (fetched by our analysis tool for AST
+    // inspection, not loaded by the browser during normal page use)
+    const primaryTransferKb = scripts.length > 0
+      ? Number.parseFloat(scripts.filter(s => s.initiatorType !== 'secondary').reduce((sum, s) => sum + s.transferKb, 0).toFixed(1))
+      : transferKb
+
+    const cwvEstimate = computeCwvEstimate(perf, network, apis)
+
     return {
       id,
       label: entry.label || id || '',
       category: entry.category || 'unknown',
-      scripts: size?.scripts ?? [],
-      totalTransferKb: size?.totalTransferKb ?? 0,
+      scripts,
+      totalTransferKb: transferKb,
       totalDecodedKb: size?.totalDecodedKb ?? 0,
-      trackedData: meta?.trackedData ?? [],
+      trackedData,
       collectsWebVitals: size?.collectsWebVitals ?? false,
-      apis: size?.apis ?? {} as ScriptApis,
-      apiPrivacyScore: computeApiPrivacyScore(size?.apis ?? {} as ScriptApis),
-      cookies: size?.cookies ?? [],
-      network: size?.network ?? { requestCount: 0, domains: [], outboundBytes: 0, inboundBytes: 0, injectedElements: [] },
-      performance: size?.performance ?? { taskDurationMs: 0, scriptDurationMs: 0, heapDeltaKb: 0 },
-      cwvEstimate: computeCwvEstimate(
-        size?.performance ?? { taskDurationMs: 0, scriptDurationMs: 0, heapDeltaKb: 0 },
-        size?.network ?? { requestCount: 0, domains: [], outboundBytes: 0, inboundBytes: 0, injectedElements: [] },
-        size?.apis ?? {} as ScriptApis,
-      ),
+      apis,
+      privacyRating: computePrivacyRating(apis, cookies, network, trackedData),
+      cookies,
+      network,
+      performance: perf,
+      performanceRating: computePerformanceRating(perf, primaryTransferKb, network, cwvEstimate),
+      cwvEstimate,
       hasBundling: entry.scriptBundling !== false && entry.scriptBundling !== undefined,
       hasProxy: !!proxyConfig,
       proxyDomains: domains,

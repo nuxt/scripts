@@ -1,6 +1,8 @@
+import type { CDPSession } from 'playwright-core'
 import { writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { resolve } from 'node:path'
+import { parseAndWalk } from 'oxc-walker'
 import { chromium } from 'playwright-core'
 import { scriptMeta } from '../src/script-meta'
 
@@ -127,52 +129,234 @@ interface CdpResponseData {
   encoding: string
 }
 
-// Static analysis patterns for detecting API usage in minified script source.
-// Property names on browser globals survive minification, so these are reliable.
-// Each key maps to patterns that indicate that API category is used.
-const STATIC_API_PATTERNS: Record<keyof ScriptApis, RegExp[]> = {
-  cookies: [/\.cookie\b/, /document\.cookie/],
-  localStorage: [/localStorage/],
-  sessionStorage: [/sessionStorage/],
-  indexedDB: [/indexedDB/],
-  canvas: [/\.toDataURL\b/, /\.getImageData\b/, /\.toBlob\b/],
-  webgl: [/webgl/, /experimental-webgl/],
-  audioContext: [/AudioContext/, /webkitAudioContext/],
-  userAgent: [/userAgent/],
-  doNotTrack: [/doNotTrack/, /msDoNotTrack/],
-  hardwareConcurrency: [/hardwareConcurrency/],
-  deviceMemory: [/deviceMemory/],
-  plugins: [/navigator\.plugins/],
-  languages: [/navigator\.languages?\b/],
-  screen: [/screen\.(?:width|height|colorDepth|pixelDepth|availWidth|availHeight)\b/],
-  timezone: [/DateTimeFormat/, /\.timeZone\b/, /getTimezoneOffset/],
-  platform: [/navigator\.platform/],
-  vendor: [/navigator\.vendor/],
-  connection: [/navigator\.connection/, /\.effectiveType/, /\.downlink\b/, /\.rtt\b/],
-  maxTouchPoints: [/maxTouchPoints/],
-  devicePixelRatio: [/devicePixelRatio/],
-  mediaDevices: [/mediaDevices/, /enumerateDevices/],
-  getBattery: [/getBattery/],
-  referrer: [/document\.referrer/],
-  windowName: [/window\.name\b/],
-  rtcPeerConnection: [/RTCPeerConnection/, /webkitRTCPeerConnection/],
-  geolocation: [/geolocation/],
-  serviceWorker: [/serviceWorker/],
-  cacheApi: [/caches\.open/, /CacheStorage/],
-  sendBeacon: [/sendBeacon/],
-  fetch: [/\.fetch\s*\(/, /\bfetch\s*\(/],
-  xhr: [/XMLHttpRequest/],
-  websocket: [/WebSocket/],
-  mutationObserver: [/MutationObserver/],
-  performanceObserver: [/PerformanceObserver/],
-  intersectionObserver: [/IntersectionObserver/],
+// Navigator property → API category mapping for AST member expression detection
+const NAVIGATOR_PROPS: Record<string, keyof ScriptApis> = {
+  userAgent: 'userAgent',
+  doNotTrack: 'doNotTrack',
+  hardwareConcurrency: 'hardwareConcurrency',
+  deviceMemory: 'deviceMemory',
+  plugins: 'plugins',
+  languages: 'languages',
+  language: 'languages',
+  platform: 'platform',
+  vendor: 'vendor',
+  connection: 'connection',
+  maxTouchPoints: 'maxTouchPoints',
+  mediaDevices: 'mediaDevices',
+  geolocation: 'geolocation',
+  serviceWorker: 'serviceWorker',
+  getBattery: 'getBattery',
+  sendBeacon: 'sendBeacon',
 }
 
-function detectApisFromSource(source: string): Partial<Record<keyof ScriptApis, boolean>> {
+// Screen property → API category
+const SCREEN_PROPS = new Set(['width', 'height', 'colorDepth', 'pixelDepth', 'availWidth', 'availHeight'])
+
+// Global identifiers that map directly to an API category
+const GLOBAL_IDENTIFIERS: Record<string, keyof ScriptApis> = {
+  localStorage: 'localStorage',
+  sessionStorage: 'sessionStorage',
+  indexedDB: 'indexedDB',
+  AudioContext: 'audioContext',
+  webkitAudioContext: 'audioContext',
+  RTCPeerConnection: 'rtcPeerConnection',
+  webkitRTCPeerConnection: 'rtcPeerConnection',
+  XMLHttpRequest: 'xhr',
+  WebSocket: 'websocket',
+  MutationObserver: 'mutationObserver',
+  PerformanceObserver: 'performanceObserver',
+  IntersectionObserver: 'intersectionObserver',
+  CacheStorage: 'cacheApi',
+}
+
+// Member expression property names that indicate API usage regardless of object
+const PROPERTY_SIGNALS: Record<string, keyof ScriptApis> = {
+  toDataURL: 'canvas',
+  getImageData: 'canvas',
+  toBlob: 'canvas',
+  enumerateDevices: 'mediaDevices',
+  getTimezoneOffset: 'timezone',
+  effectiveType: 'connection',
+  downlink: 'connection',
+  rtt: 'connection',
+  sendBeacon: 'sendBeacon',
+}
+
+// String literals that indicate API usage (for getContext('webgl') etc.)
+const STRING_SIGNALS: Record<string, keyof ScriptApis> = {
+  'webgl': 'webgl',
+  'webgl2': 'webgl',
+  'experimental-webgl': 'webgl',
+}
+
+// Regex fallbacks used when AST parsing fails (invalid JS, wasm, etc.)
+const REGEX_FALLBACKS: [RegExp, keyof ScriptApis][] = [
+  [/userAgent/, 'userAgent'],
+  [/\.cookie\b/, 'cookies'],
+  [/localStorage/, 'localStorage'],
+  [/sessionStorage/, 'sessionStorage'],
+  [/hardwareConcurrency/, 'hardwareConcurrency'],
+  [/deviceMemory/, 'deviceMemory'],
+  [/navigator\.plugins/, 'plugins'],
+  [/navigator\.languages?\b/, 'languages'],
+  [/screen\.(?:width|height|colorDepth|pixelDepth)/, 'screen'],
+  [/getTimezoneOffset|DateTimeFormat/, 'timezone'],
+  [/navigator\.platform/, 'platform'],
+  [/navigator\.vendor/, 'vendor'],
+  [/maxTouchPoints/, 'maxTouchPoints'],
+  [/devicePixelRatio/, 'devicePixelRatio'],
+  [/getBattery/, 'getBattery'],
+  [/document\.referrer/, 'referrer'],
+  [/RTCPeerConnection/, 'rtcPeerConnection'],
+  [/geolocation/, 'geolocation'],
+  [/sendBeacon/, 'sendBeacon'],
+  [/\bfetch\s*\(/, 'fetch'],
+  [/XMLHttpRequest/, 'xhr'],
+  [/WebSocket/, 'websocket'],
+  [/MutationObserver/, 'mutationObserver'],
+  [/PerformanceObserver/, 'performanceObserver'],
+  [/IntersectionObserver/, 'intersectionObserver'],
+  [/AudioContext/, 'audioContext'],
+  [/\.toDataURL\b/, 'canvas'],
+  [/webgl/, 'webgl'],
+  [/mediaDevices|enumerateDevices/, 'mediaDevices'],
+  [/window\.name\b/, 'windowName'],
+  [/indexedDB/, 'indexedDB'],
+  [/serviceWorker/, 'serviceWorker'],
+  [/caches\.open|CacheStorage/, 'cacheApi'],
+  [/navigator\.connection|\.effectiveType|\.downlink\b/, 'connection'],
+  [/doNotTrack/, 'doNotTrack'],
+]
+
+function detectApisFromSourceAst(source: string, filename: string): Partial<Record<keyof ScriptApis, boolean>> {
   const detected: Partial<Record<keyof ScriptApis, boolean>> = {}
-  for (const [api, patterns] of Object.entries(STATIC_API_PATTERNS)) {
-    if (patterns.some(p => p.test(source)))
-      detected[api as keyof ScriptApis] = true
+  const mark = (api: keyof ScriptApis) => {
+    detected[api] = true
+  }
+
+  try {
+    parseAndWalk(source, filename, (node) => {
+      // MemberExpression: navigator.userAgent, screen.width, document.cookie, window.name, etc.
+      if (node.type === 'MemberExpression') {
+        const obj = (node as any).object
+        const prop = (node as any).property
+        const propName = prop?.type === 'Identifier' ? prop.name : prop?.type === 'Literal' ? prop.value : null
+        if (!propName)
+          return
+
+        // navigator.* properties
+        if (obj?.type === 'Identifier' && obj.name === 'navigator' && NAVIGATOR_PROPS[propName])
+          mark(NAVIGATOR_PROPS[propName])
+
+        // screen.width, screen.height, etc.
+        if (obj?.type === 'Identifier' && obj.name === 'screen' && SCREEN_PROPS.has(propName))
+          mark('screen')
+
+        // document.cookie, document.referrer
+        if (obj?.type === 'Identifier' && obj.name === 'document') {
+          if (propName === 'cookie')
+            mark('cookies')
+          if (propName === 'referrer')
+            mark('referrer')
+        }
+
+        // window.name, window.fetch, window.devicePixelRatio, window.localStorage, etc.
+        if (obj?.type === 'Identifier' && (obj.name === 'window' || obj.name === 'self' || obj.name === 'globalThis')) {
+          if (propName === 'name')
+            mark('windowName')
+          if (propName === 'devicePixelRatio')
+            mark('devicePixelRatio')
+          if (propName === 'doNotTrack')
+            mark('doNotTrack')
+          if (GLOBAL_IDENTIFIERS[propName])
+            mark(GLOBAL_IDENTIFIERS[propName])
+        }
+
+        // Nested: window.navigator.userAgent, self.navigator.platform, etc.
+        if (obj?.type === 'MemberExpression') {
+          const innerObj = obj.object
+          const innerProp = obj.property
+          const innerPropName = innerProp?.type === 'Identifier' ? innerProp.name : null
+          if (innerPropName === 'navigator' && NAVIGATOR_PROPS[propName])
+            mark(NAVIGATOR_PROPS[propName])
+          if (innerPropName === 'screen' && SCREEN_PROPS.has(propName))
+            mark('screen')
+          if (innerPropName === 'document') {
+            if (propName === 'cookie')
+              mark('cookies')
+            if (propName === 'referrer')
+              mark('referrer')
+          }
+          // navigator.mediaDevices.enumerateDevices
+          if (innerObj?.type === 'Identifier' && innerObj.name === 'navigator' && innerPropName === 'mediaDevices')
+            mark('mediaDevices')
+        }
+
+        // Property-based signals: .toDataURL(), .getImageData(), .enumerateDevices(), etc.
+        if (PROPERTY_SIGNALS[propName])
+          mark(PROPERTY_SIGNALS[propName])
+
+        // caches.open
+        if (obj?.type === 'Identifier' && obj.name === 'caches' && propName === 'open')
+          mark('cacheApi')
+      }
+
+      // Identifier: bare global references (localStorage, XMLHttpRequest, WebSocket, etc.)
+      if (node.type === 'Identifier') {
+        const name = (node as any).name
+        if (GLOBAL_IDENTIFIERS[name])
+          mark(GLOBAL_IDENTIFIERS[name])
+        if (name === 'devicePixelRatio')
+          mark('devicePixelRatio')
+      }
+
+      // CallExpression: fetch(), Intl.DateTimeFormat(), navigator.geolocation.getCurrentPosition(), etc.
+      if (node.type === 'CallExpression') {
+        const callee = (node as any).callee
+        // bare fetch()
+        if (callee?.type === 'Identifier' && callee.name === 'fetch')
+          mark('fetch')
+        // *.fetch()
+        if (callee?.type === 'MemberExpression') {
+          const cProp = callee.property
+          const cPropName = cProp?.type === 'Identifier' ? cProp.name : null
+          if (cPropName === 'fetch')
+            mark('fetch')
+        }
+      }
+
+      // NewExpression: new AudioContext(), new RTCPeerConnection(), new WebSocket(), etc.
+      if (node.type === 'NewExpression') {
+        const callee = (node as any).callee
+        if (callee?.type === 'Identifier' && GLOBAL_IDENTIFIERS[callee.name])
+          mark(GLOBAL_IDENTIFIERS[callee.name])
+        // new Intl.DateTimeFormat()
+        if (callee?.type === 'MemberExpression') {
+          const obj = callee.object
+          const prop = callee.property
+          if (obj?.type === 'Identifier' && obj.name === 'Intl' && prop?.type === 'Identifier' && prop.name === 'DateTimeFormat')
+            mark('timezone')
+        }
+      }
+
+      // String literals: getContext('webgl'), 'experimental-webgl', etc.
+      if (node.type === 'Literal') {
+        const value = (node as any).value
+        if (typeof value === 'string' && STRING_SIGNALS[value])
+          mark(STRING_SIGNALS[value])
+        // Also catch '.timeZone' access in strings (some scripts use bracket notation)
+        if (typeof value === 'string' && value === 'timeZone')
+          mark('timezone')
+      }
+    })
+  }
+  catch {
+    // If AST parsing fails (invalid JS, wasm, etc.), fall back to regex for critical patterns
+    console.warn(`  ⚠️  AST parse failed for ${filename}, using regex fallback`)
+    for (const [pattern, api] of REGEX_FALLBACKS) {
+      if (pattern.test(source))
+        detected[api] = true
+    }
   }
   return detected
 }
@@ -386,6 +570,25 @@ const API_INSTRUMENTATION = `
   window.WebSocket = function() { a.add('websocket'); return new OrigWS(...arguments); };
   window.WebSocket.prototype = OrigWS.prototype;
 
+  // Track off-DOM image pixels (new Image().src = url)
+  window.__trackingPixels = [];
+  const OrigImage = window.Image;
+  window.Image = function(w, h) {
+    const img = new OrigImage(w, h);
+    const origSrcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    Object.defineProperty(img, 'src', {
+      get: function() { return origSrcDesc.get.call(this); },
+      set: function(v) {
+        if (v && typeof v === 'string' && v.startsWith('http') && !v.startsWith('http://127.0.0.1'))
+          window.__trackingPixels.push(v);
+        origSrcDesc.set.call(this, v);
+      },
+      configurable: true
+    });
+    return img;
+  };
+  window.Image.prototype = OrigImage.prototype;
+
   // Observers
   const OrigMO = window.MutationObserver;
   window.MutationObserver = function() { a.add('mutationObserver'); return new OrigMO(...arguments); };
@@ -405,71 +608,121 @@ const API_INSTRUMENTATION = `
 })();
 `
 
-// Secondary domains where bootstraps load their full SDK from.
-// After page load, script bodies are scanned for JS URLs on these domains
-// and fetched for static analysis (since lazy-loaded modules won't execute in headless).
-const SECONDARY_DOMAINS: Record<string, string[]> = {
-  hotjar: ['script.hotjar.com'],
-  intercom: ['js.intercomcdn.com'],
-  crisp: ['client.crisp.chat/static'],
-}
-
 // Some bootstraps construct secondary URLs dynamically (no plain URL in source).
 // These extractors derive the URL from patterns in the bootstrap source.
 const HOTJAR_MODULE_RE = /modules\.([a-f0-9]+)\.js/
 const CRISP_HASH_RE = /this\.h="([a-f0-9]+)"/
+const INTERCOM_VENDOR_RE = /vendor-modern\.([a-f0-9]+)\.js/
+const INTERCOM_FRAME_RE = /frame-modern\.([a-f0-9]+)\.js/
 
 const SECONDARY_URL_EXTRACTORS: Record<string, (bodies: string[]) => string[]> = {
   hotjar(bodies) {
-    // Bootstrap embeds: modules.{hash}.js — construct full URL
     const allText = bodies.join(' ')
     const match = HOTJAR_MODULE_RE.exec(allText)
     return match ? [`https://script.hotjar.com/modules.${match[1]}.js`] : []
   },
   crisp(bodies) {
-    // Bootstrap pattern: this.h="db1a904", loads client_default_{hash}.js
     const allText = bodies.join(' ')
     const match = CRISP_HASH_RE.exec(allText)
     return match ? [`https://client.crisp.chat/static/javascripts/client_default_${match[1]}.js`] : []
   },
+  intercom(bodies) {
+    const allText = bodies.join(' ')
+    const urls: string[] = []
+    const vendor = INTERCOM_VENDOR_RE.exec(allText)
+    if (vendor)
+      urls.push(`https://js.intercomcdn.com/vendor-modern.${vendor[1]}.js`)
+    const frame = INTERCOM_FRAME_RE.exec(allText)
+    if (frame)
+      urls.push(`https://js.intercomcdn.com/frame-modern.${frame[1]}.js`)
+    return urls
+  },
 }
 
-const SECONDARY_URL_RE = /https?:\/\/[^"'\s]+\.js/g
+const SECONDARY_URL_RE = /https?:\/\/[^"'\s]+\.js(?:\?[^"'\s]*)?/g
 
-async function fetchSecondaryBodies(key: string, existingBodies: string[]): Promise<string[]> {
-  const domains = SECONDARY_DOMAINS[key]
-  if (!domains)
-    return []
+interface SecondaryResult {
+  bodies: string[]
+  scripts: ScriptSizeDetail[]
+}
 
-  // Extract JS URLs from existing bodies that match secondary domains
+// Fetch JS URLs referenced in script bodies from domains already seen in the network waterfall.
+// This avoids fetching random URLs mentioned in comments/strings (e.g. soundcloud in matomo).
+async function fetchSecondaryScripts(key: string, existingBodies: string[], alreadyLoadedUrls: Set<string>, knownDomains: Set<string>): Promise<SecondaryResult> {
   const allText = existingBodies.join(' ')
   const urls = new Set<string>()
+
+  // Build set of known base domains (e.g. paypal.com from www.paypal.com)
+  const baseDomains = new Set<string>()
+  for (const d of knownDomains) {
+    const parts = d.split('.')
+    if (parts.length >= 2)
+      baseDomains.add(parts.slice(-2).join('.'))
+  }
+
+  // Only fetch from domains that share a base domain with known network activity
   for (const match of allText.matchAll(SECONDARY_URL_RE)) {
     const url = match[0]
-    if (domains.some(d => url.includes(d)))
-      urls.add(url)
+    if (alreadyLoadedUrls.has(url) || url.includes('127.0.0.1'))
+      continue
+    if (url.endsWith('.min.js.map') || url.endsWith('.js.map'))
+      continue
+    try {
+      const hostname = new URL(url).hostname
+      const parts = hostname.split('.')
+      const baseDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname
+      if (!baseDomains.has(baseDomain))
+        continue
+    }
+    catch { continue }
+    urls.add(url)
   }
 
   // Try dynamic URL extractors for scripts that construct URLs at runtime
   const extractor = SECONDARY_URL_EXTRACTORS[key]
   if (extractor) {
-    for (const url of extractor(existingBodies))
-      urls.add(url)
+    for (const url of extractor(existingBodies)) {
+      if (!alreadyLoadedUrls.has(url))
+        urls.add(url)
+    }
   }
 
-  const fetched: string[] = []
+  if (urls.size > 0)
+    console.log(`  🔎 Found ${urls.size} secondary JS URL(s) to analyze`)
+
+  const bodies: string[] = []
+  const scripts: ScriptSizeDetail[] = []
   for (const url of urls) {
     try {
       const res = await fetch(url)
-      if (res.ok) {
-        const body = await res.text()
-        fetched.push(body)
-        console.log(`  📦 Secondary: ${url} (${Math.round(body.length / 1024)}KB)`)
-      }
+      if (!res.ok)
+        continue
+      const contentType = res.headers.get('content-type') || ''
+      // Only analyze JS responses (skip images, HTML error pages, etc.)
+      if (!contentType.includes('javascript') && !contentType.includes('ecmascript') && !contentType.includes('json') && !url.endsWith('.js'))
+        continue
+      const body = await res.text()
+      // Skip tiny responses (likely error pages or empty stubs)
+      if (body.length < 50)
+        continue
+      bodies.push(body)
+      const encoding = res.headers.get('content-encoding') || 'none'
+      const transferBytes = Number(res.headers.get('content-length')) || body.length
+      const decodedBytes = body.length
+      scripts.push({
+        url,
+        transferKb: round(transferBytes),
+        decodedKb: round(decodedBytes),
+        encoding,
+        durationMs: 0,
+        initiatorType: 'secondary',
+        protocol: 'unknown',
+      })
+      console.log(`  📦 Secondary: ${url} (${round(transferBytes)}KB transfer, ${round(decodedBytes)}KB decoded)`)
     }
     catch {}
   }
-  return fetched
+  return { bodies, scripts }
 }
 
 function round(bytes: number): number {
@@ -572,6 +825,14 @@ const CLIENT_INIT: Record<string, string> = {
     window.google.accounts.id = window.google.accounts.id || {};`,
 }
 
+// Post-load triggers: scripts evaluated after page load to force lazy SDKs to fully initialize.
+// Chat widgets, embeds, etc. won't load their full SDK without interaction or explicit boot.
+const POST_LOAD_TRIGGERS: Record<string, string> = {
+  intercom: `if (window.Intercom) { Intercom('boot', { app_id: window.intercomSettings?.app_id }); }`,
+  crisp: `if (window.$crisp) { $crisp.push(['do', 'chat:open']); }`,
+  hotjar: `if (window.hj) { hj('trigger', 'test'); }`,
+}
+
 function buildHtml(key: string, meta: { urls: string[], testId?: string | number }): string {
   let init = CLIENT_INIT[key] || ''
   if (init && meta.testId !== undefined)
@@ -600,6 +861,48 @@ function startServer(): Promise<{ port: number, close: () => void }> {
       const port = typeof addr === 'object' && addr ? addr.port : 0
       resolve({ port, close: () => server.close() })
     })
+  })
+}
+
+// Wait until no new network requests for `quietMs`, or until `timeoutMs` total elapsed.
+// Playwright's networkidle (500ms silence) is too short for bootstraps that delay-load SDKs.
+function waitForNetworkQuiet(
+  cdpSession: CDPSession,
+  quietMs = 3000,
+  timeoutMs = 15000,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let lastActivity = Date.now()
+    const start = Date.now()
+
+    const onActivity = () => {
+      lastActivity = Date.now()
+    }
+
+    const cleanup = () => {
+      cdpSession.off('Network.requestWillBeSent', onActivity)
+      cdpSession.off('Network.loadingFinished', onActivity)
+      cdpSession.off('Network.loadingFailed', onActivity)
+      resolve()
+    }
+
+    cdpSession.on('Network.requestWillBeSent', onActivity)
+    cdpSession.on('Network.loadingFinished', onActivity)
+    cdpSession.on('Network.loadingFailed', onActivity)
+
+    const check = () => {
+      if (Date.now() - start > timeoutMs) {
+        cleanup()
+        return
+      }
+      if (Date.now() - lastActivity >= quietMs) {
+        cleanup()
+        return
+      }
+      setTimeout(check, 500)
+    }
+
+    check()
   })
 }
 
@@ -686,8 +989,12 @@ async function main() {
             : Buffer.byteLength(body, 'utf8')
           if (!base64Encoded)
             scriptBodies.push(body)
+          else
+            console.warn(`  ⚠️  Binary response (skipped AST): ${url}`)
         })
-        .catch(() => {}) // Some responses may be unavailable
+        .catch(() => {
+          console.warn(`  ⚠️  CDP getResponseBody failed: ${url}`)
+        })
     })
 
     // Snapshot cookies, heap, and performance metrics before script load
@@ -702,8 +1009,19 @@ async function main() {
         console.warn(`  [timeout] ${key}: ${err.message}`)
       })
 
+    // Force-trigger lazy SDK loads (chat widgets, etc.) before waiting for waterfall
+    const trigger = POST_LOAD_TRIGGERS[key]
+    if (trigger) {
+      await page.evaluate(trigger).catch(() => {})
+      console.log(`  🔄 Triggered post-load init`)
+    }
+
+    // Wait for full waterfall: bootstraps often delay-load their SDK after networkidle.
+    // 3s of network silence, max 15s total.
+    await waitForNetworkQuiet(cdpSession, 3000, 15000)
+
     // Wait for async CDP getResponseBody calls to settle
-    await new Promise(r => setTimeout(r, 200))
+    await new Promise(r => setTimeout(r, 500))
 
     // Collect Performance API entries
     const perfEntries = await page.evaluate(() => {
@@ -762,28 +1080,58 @@ async function main() {
       totalDecoded += s.decodedKb
     }
 
-    // Fetch secondary SDK modules that bootstraps reference but don't load in headless
-    const secondaryBodies = await fetchSecondaryBodies(key, scriptBodies)
-    scriptBodies.push(...secondaryBodies)
+    // Fetch secondary SDK modules that bootstraps reference but don't load in headless.
+    // Only from domains already seen in network waterfall + the script's own CDN domains.
+    const alreadyLoadedUrls = new Set(scripts.map(s => s.url))
+    const knownDomains = new Set(externalDomains)
+    for (const url of meta.urls) {
+      try {
+        knownDomains.add(new URL(url).hostname)
+      }
+      catch {}
+    }
+    // Add domains from extractors (these scripts may not fully execute in headless)
+    const extractor = SECONDARY_URL_EXTRACTORS[key]
+    if (extractor) {
+      for (const url of extractor(scriptBodies)) {
+        try {
+          knownDomains.add(new URL(url).hostname)
+        }
+        catch {}
+      }
+    }
+    const secondary = await fetchSecondaryScripts(key, scriptBodies, alreadyLoadedUrls, knownDomains)
+    scriptBodies.push(...secondary.bodies)
+    // Include secondary script sizes in totals
+    for (const s of secondary.scripts) {
+      scripts.push(s)
+      totalTransfer += s.transferKb
+      totalDecoded += s.decodedKb
+    }
 
     const allBodies = scriptBodies.join(' ')
     const collectsWebVitals = CWV_PATTERNS.some(p => allBodies.includes(p))
     if (collectsWebVitals)
       console.log(`  ⚡ Collects Web Vitals`)
 
-    // Detect APIs: merge runtime instrumentation + static source analysis
+    // Detect APIs: merge runtime instrumentation + AST analysis of every loaded script
     const accessedApis = await page.evaluate(() => [...(window as any).__apiAccess || []])
     const apis: ScriptApis = { ...EMPTY_APIS }
     // Runtime detection
     for (const api of accessedApis) {
-      if (api in apis)
+      if (Object.hasOwn(apis, api))
         (apis as Record<string, boolean>)[api] = true
     }
-    // Static source analysis (catches APIs in bootstrap scripts that don't fully init)
-    const staticApis = detectApisFromSource(allBodies)
-    for (const [api, detected] of Object.entries(staticApis)) {
-      if (detected)
-        (apis as Record<string, boolean>)[api] = true
+    // AST analysis of each script body individually (catches APIs in code paths that don't execute in headless)
+    for (let i = 0; i < scriptBodies.length; i++) {
+      const body = scriptBodies[i]
+      if (!body || body.length < 10)
+        continue
+      const astApis = detectApisFromSourceAst(body, `${key}-script-${i}.js`)
+      for (const [api, found] of Object.entries(astApis)) {
+        if (found && Object.hasOwn(apis, api))
+          (apis as Record<string, boolean>)[api] = true
+      }
     }
     const usedApis = Object.entries(apis).filter(([, v]) => v).map(([k]) => k).sort()
     if (usedApis.length)
@@ -816,14 +1164,21 @@ async function main() {
     const heapDeltaKb = Math.round((heapAfter.usedSize - heapBefore.usedSize) / 1024)
 
     // Injected DOM elements (iframes, img pixels, dynamically added scripts)
-    // Filter out the original script tags we put in our HTML template
+    // Also includes off-DOM tracking pixels (new Image().src = url)
     const originalUrls = meta.urls
     const injectedElements = await page.evaluate((origUrls: string[]) => {
       const els: { tag: string, src: string }[] = []
+      // DOM-appended elements
       for (const el of document.querySelectorAll('iframe[src], img[src], script[src]')) {
         const src = el.getAttribute('src') || ''
         if (src && !src.startsWith('http://127.0.0.1') && !src.startsWith('data:') && !origUrls.includes(src))
           els.push({ tag: el.tagName.toLowerCase(), src })
+      }
+      // Off-DOM tracking pixels (new Image().src = url, never appended to DOM)
+      const seen = new Set(els.map(e => e.src))
+      for (const src of (window as any).__trackingPixels || []) {
+        if (!seen.has(src))
+          els.push({ tag: 'img', src })
       }
       return els
     }, originalUrls)
