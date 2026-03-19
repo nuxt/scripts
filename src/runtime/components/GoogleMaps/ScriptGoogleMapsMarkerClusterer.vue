@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { InjectionKey, ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
-import { inject, onUnmounted, provide, shallowRef } from 'vue'
-import { MAP_INJECTION_KEY } from './ScriptGoogleMaps.vue'
+import { provide, shallowRef } from 'vue'
+import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 // Inline types to avoid requiring @googlemaps/markerclusterer as a build-time dependency
 export interface MarkerClustererInstance {
@@ -41,21 +41,20 @@ const markerClustererEvents = [
   'clusteringend',
 ] as const
 
-const mapContext = inject(MAP_INJECTION_KEY, undefined)
-
-const markerClusterer = shallowRef<MarkerClustererInstance | undefined>(undefined)
-
-whenever(() => mapContext?.map.value, async (map) => {
-  const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
-  markerClusterer.value = new MarkerClusterer({
-    map,
-    ...props.options,
-  } as any) as MarkerClustererInstance
-
-  setupMarkerClustererEventListeners(markerClusterer.value)
-}, {
-  immediate: true,
-  once: true,
+const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
+  async create({ map }) {
+    const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
+    const clusterer = new MarkerClusterer({
+      map,
+      ...props.options,
+    } as any) as MarkerClustererInstance
+    setupEventListeners(clusterer)
+    return clusterer
+  },
+  cleanup(clusterer, { mapsApi }) {
+    mapsApi.event.clearInstanceListeners(clusterer)
+    clusterer.setMap(null)
+  },
 })
 
 const markerClustererNeedsRerender = shallowRef(false)
@@ -66,18 +65,7 @@ function requestRerender() {
 
 whenever(() => markerClustererNeedsRerender.value && markerClusterer.value, () => {
   markerClusterer.value!.render()
-
   markerClustererNeedsRerender.value = false
-})
-
-onUnmounted(() => {
-  if (!markerClusterer.value || !mapContext?.mapsApi.value) {
-    return
-  }
-
-  mapContext.mapsApi.value.event.clearInstanceListeners(markerClusterer.value)
-
-  markerClusterer.value.setMap(null)
 })
 
 provide(
@@ -88,7 +76,7 @@ provide(
   },
 )
 
-function setupMarkerClustererEventListeners(clusterer: MarkerClustererInstance) {
+function setupEventListeners(clusterer: MarkerClustererInstance) {
   markerClustererEvents.forEach((event) => {
     clusterer.addListener(event, () => emit(event, clusterer))
   })
