@@ -27,7 +27,7 @@ export { PRIVACY_FULL, PRIVACY_HEATMAP, PRIVACY_IP_ONLY, PRIVACY_NONE }
  * as `{ from: domain, to: proxyPrefix + '/' + domain }`. The runtime intercept plugin
  * catches any remaining dynamic URLs at the fetch/sendBeacon call site.
  */
-function buildProxyConfig(proxyPrefix: string) {
+function buildProxyConfig(_proxyPrefix: string) {
   return {
     googleAnalytics: {
       domains: [

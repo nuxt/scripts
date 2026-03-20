@@ -98,7 +98,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const targetBase = `https://${domain}`
-  const targetPrefix = `${proxyPrefix}/${domain}`
   log('[proxy] Matched:', domain, '->', targetBase)
 
   // Resolve effective privacy: per-script is the base, global user override on top

@@ -74,17 +74,13 @@ These scripts also have `scriptBundling: false` to prevent AST rewriting.
 ### Config level (`firstParty: false` in registry config)
 Users can opt out per-script in `nuxt.config.ts`:
 
-```ts
-scripts: {
-  registry: {
-    plausibleAnalytics: { domain: 'mysite.com', firstParty: false }
-  }
-}
+```
+scripts.registry.plausibleAnalytics = { domain: 'mysite.com', firstParty: false }
 ```
 
 Or in tuple form with scriptOptions:
-```ts
-plausibleAnalytics: [{ domain: 'mysite.com' }, { firstParty: false }]
+```
+scripts.registry.plausibleAnalytics = [{ domain: 'mysite.com' }, { firstParty: false }]
 ```
 
 This skips domain registration, auto-inject, and AST rewriting for that script. Important for scripts with `autoInject` (Plausible, PostHog, Umami, Rybbit, Databuddy) since `autoInject` runs at module setup before transforms.
