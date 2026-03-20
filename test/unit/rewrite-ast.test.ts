@@ -1,6 +1,11 @@
+import type { ProxyRewrite } from '../../src/first-party'
 import { describe, expect, it } from 'vitest'
 import { generatePartytownResolveUrl, getAllProxyConfigs } from '../../src/first-party'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
+
+function deriveRewrites(domains: string[], proxyPrefix: string): ProxyRewrite[] {
+  return domains.map(domain => ({ from: domain, to: `${proxyPrefix}/${domain}` }))
+}
 
 const rewrites = [
   { from: 'example.com', to: '/_proxy/ex' },
@@ -185,35 +190,37 @@ describe('rewriteScriptUrlsAST', () => {
 
   describe('rybbit SDK host derivation patching', () => {
     const rybbitConfig = getAllProxyConfigs('/_scripts/p').rybbitAnalytics
+    const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
 
     function rewriteRybbit(code: string): string {
-      return rewriteScriptUrlsAST(code, 'rybbit.js', rybbitConfig.rewrite!, rybbitConfig.postProcess)
+      return rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
     }
 
     it('patches e.split("/script.js")[0] with proxy path', () => {
       const code = 'let e=n.getAttribute("src");let t=e.split("/script.js")[0];'
       const result = rewriteRybbit(code)
-      expect(result).toContain('self.location.origin+"/_scripts/p/rybbit/api"')
+      expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
       expect(result).not.toContain('.split("/script.js")[0]')
     })
 
     it('patches with single quotes', () => {
       const code = 'let e=n.getAttribute(\'src\');let t=e.split(\'/script.js\')[0];'
       const result = rewriteRybbit(code)
-      expect(result).toContain('self.location.origin+"/_scripts/p/rybbit/api"')
+      expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
     })
 
     it('patches with different variable names', () => {
       const code = 'var src=el.getAttribute("src");var host=src.split("/script.js")[0];'
       const result = rewriteRybbit(code)
-      expect(result).toContain('self.location.origin+"/_scripts/p/rybbit/api"')
+      expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
     })
 
     it('uses custom proxyPrefix', () => {
       const customConfig = getAllProxyConfigs('/_analytics').rybbitAnalytics
+      const customRewrites = deriveRewrites(customConfig.domains, '/_analytics')
       const code = 'let t=e.split("/script.js")[0];'
-      const result = rewriteScriptUrlsAST(code, 'rybbit.js', customConfig.rewrite!, customConfig.postProcess)
-      expect(result).toContain('self.location.origin+"/_analytics/rybbit/api"')
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', customRewrites, customConfig.postProcess)
+      expect(result).toContain('self.location.origin+"/_analytics/app.rybbit.io/api"')
     })
 
     it('does not patch when no rybbit postProcess is provided', () => {
@@ -278,75 +285,50 @@ describe('rewriteScriptUrlsAST', () => {
 
 describe('generatePartytownResolveUrl', () => {
   it('generates a valid function string', () => {
-    const rules = [
-      { pattern: 'www.google-analytics.com', pathPrefix: '', target: '/_scripts/p/ga' },
-    ]
-    const fn = generatePartytownResolveUrl(rules)
+    const fn = generatePartytownResolveUrl('/_scripts/p')
     expect(fn).toContain('function(url, location, type)')
-    expect(fn).toContain('www.google-analytics.com')
-    expect(fn).toContain('/_scripts/p/ga')
+    expect(fn).toContain('/_scripts/p')
   })
 
-  it('embeds all rules as JSON', () => {
-    const rules = [
-      { pattern: 'www.google-analytics.com', pathPrefix: '', target: '/_scripts/p/ga' },
-      { pattern: 'www.facebook.com', pathPrefix: '/tr', target: '/_scripts/p/meta' },
-    ]
-    const fn = generatePartytownResolveUrl(rules)
-    expect(fn).toContain('"www.facebook.com"')
-    expect(fn).toContain('"/tr"')
-  })
-
-  it('returns undefined for non-matching URLs (no return statement for miss)', () => {
-    const rules = [{ pattern: 'example.com', pathPrefix: '', target: '/_scripts/p/ex' }]
-    const fn = generatePartytownResolveUrl(rules)
+  it('returns undefined for same-origin URLs', () => {
+    const fn = generatePartytownResolveUrl('/_scripts/p')
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
-    const url = new URL('https://other.com/path')
+    const url = new URL('https://mysite.com/path')
     const location = new URL('https://mysite.com')
     expect(resolveUrl(url, location, 'fetch')).toBeUndefined()
   })
 
-  it('rewrites matching URLs to first-party proxy', () => {
-    const rules = [{ pattern: 'example.com', pathPrefix: '', target: '/_scripts/p/ex' }]
-    const fn = generatePartytownResolveUrl(rules)
+  it('rewrites non-same-origin URLs to proxy', () => {
+    const fn = generatePartytownResolveUrl('/_scripts/p')
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
     const url = new URL('https://example.com/collect?v=1')
     const location = new URL('https://mysite.com')
     const result = resolveUrl(url, location, 'fetch')
     expect(result).toBeInstanceOf(URL)
-    expect(result.pathname).toBe('/_scripts/p/ex/collect')
+    expect(result.pathname).toBe('/_scripts/p/example.com/collect')
     expect(result.search).toBe('?v=1')
     expect(result.origin).toBe('https://mysite.com')
   })
 
-  it('matches subdomains', () => {
-    const rules = [{ pattern: 'google-analytics.com', pathPrefix: '', target: '/_scripts/p/ga' }]
-    const fn = generatePartytownResolveUrl(rules)
+  it('preserves host in proxy path', () => {
+    const fn = generatePartytownResolveUrl('/_scripts/p')
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
     const url = new URL('https://www.google-analytics.com/g/collect')
     const location = new URL('https://mysite.com')
     const result = resolveUrl(url, location, 'fetch')
-    expect(result.pathname).toBe('/_scripts/p/ga/g/collect')
+    expect(result.pathname).toBe('/_scripts/p/www.google-analytics.com/g/collect')
   })
 
-  it('respects pathPrefix matching', () => {
-    const rules = [{ pattern: 'www.facebook.com', pathPrefix: '/tr', target: '/_scripts/p/meta' }]
-    const fn = generatePartytownResolveUrl(rules)
+  it('uses custom proxyPrefix', () => {
+    const fn = generatePartytownResolveUrl('/_custom')
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
-
-    // Matching path prefix
-    const url1 = new URL('https://www.facebook.com/tr?id=123')
+    const url = new URL('https://example.com/api')
     const location = new URL('https://mysite.com')
-    const result1 = resolveUrl(url1, location, 'fetch')
-    expect(result1.pathname).toBe('/_scripts/p/meta/')
-    expect(result1.search).toBe('?id=123')
-
-    // Non-matching path prefix
-    const url2 = new URL('https://www.facebook.com/other')
-    expect(resolveUrl(url2, location, 'fetch')).toBeUndefined()
+    const result = resolveUrl(url, location, 'fetch')
+    expect(result.pathname).toBe('/_custom/example.com/api')
   })
 })

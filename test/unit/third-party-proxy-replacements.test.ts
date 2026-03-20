@@ -1,3 +1,4 @@
+import type { ProxyRewrite } from '../../src/first-party'
 import { $fetch } from 'ofetch'
 import { describe, expect, it } from 'vitest'
 import { getAllProxyConfigs } from '../../src/first-party'
@@ -5,6 +6,11 @@ import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
 import { stripFingerprintingFromPayload } from '../utils/proxy-privacy'
 
 const COLLECT_PREFIX = '/_scripts/c'
+
+/** Derive rewrites from proxy config domains, same as transform plugin */
+function deriveRewrites(domains: string[], proxyPrefix: string): ProxyRewrite[] {
+  return domains.map(domain => ({ from: domain, to: `${proxyPrefix}/${domain}` }))
+}
 
 interface ScriptTestCase {
   name: string
@@ -75,8 +81,8 @@ describe('third-party script proxy replacements', () => {
 
     it('has proxy config defined', () => {
       expect(proxyConfig, `Missing proxy config for ${registryKey}`).toBeDefined()
-      expect(proxyConfig.rewrite, `Missing rewrite rules for ${registryKey}`).toBeDefined()
-      expect(proxyConfig.rewrite!.length, `Empty rewrite rules for ${registryKey}`).toBeGreaterThan(0)
+      expect(proxyConfig.domains, `Missing domains for ${registryKey}`).toBeDefined()
+      expect(proxyConfig.domains.length, `Empty domains for ${registryKey}`).toBeGreaterThan(0)
     })
 
     it('downloads and rewrites script correctly', async () => {
@@ -106,7 +112,8 @@ describe('third-party script proxy replacements', () => {
       }
 
       // Apply rewrites
-      const rewritten = rewriteScriptUrlsAST(content, 'script.js', proxyConfig.rewrite!)
+      const rewrites = deriveRewrites(proxyConfig.domains, COLLECT_PREFIX)
+      const rewritten = rewriteScriptUrlsAST(content, 'script.js', rewrites)
 
       // Check that forbidden domains are replaced
       for (const forbidden of forbiddenAfterRewrite) {
@@ -137,23 +144,12 @@ describe('third-party script proxy replacements', () => {
     }, 15000)
   })
 
-  describe('rewrite completeness', () => {
-    it('all proxy configs have matching route rules', () => {
+  describe('config completeness', () => {
+    it('all proxy configs have domains and privacy', () => {
       for (const [key, config] of Object.entries(proxyConfigs)) {
-        expect(config.routes, `${key} missing routes`).toBeDefined()
-        expect(Object.keys(config.routes!).length, `${key} has empty routes`).toBeGreaterThan(0)
-
-        // Each rewrite target should have a corresponding route
-        for (const rewrite of config.rewrite || []) {
-          const hasMatchingRoute = Object.keys(config.routes!).some((route) => {
-            const routeBase = route.replace('/**', '')
-            return rewrite.to.startsWith(routeBase.replace('/_scripts/c', COLLECT_PREFIX))
-          })
-          expect(
-            hasMatchingRoute,
-            `${key}: rewrite target "${rewrite.to}" has no matching route`,
-          ).toBe(true)
-        }
+        expect(config.domains, `${key} missing domains`).toBeDefined()
+        expect(config.domains.length, `${key} has empty domains`).toBeGreaterThan(0)
+        expect(config.privacy, `${key} missing privacy`).toBeDefined()
       }
     })
   })
@@ -217,7 +213,8 @@ describe('third-party script proxy replacements', () => {
       // which is parsed as an identifier, not `return self`.
       const minified = `function f(x){switch(x){case 1:return"https://www.google-analytics.com/collect";case 2:return"https://stats.g.doubleclick.net/g/collect"}}`
       const config = proxyConfigs.googleAnalytics
-      const rewritten = rewriteScriptUrlsAST(minified, 'script.js', config.rewrite!)
+      const rewrites = deriveRewrites(config.domains, COLLECT_PREFIX)
+      const rewritten = rewriteScriptUrlsAST(minified, 'script.js', rewrites)
 
       // Must have a space between `return` and `self`
       expect(rewritten).not.toContain('returnself')
@@ -231,13 +228,14 @@ describe('third-party script proxy replacements', () => {
       const config = proxyConfigs[key]
       expect(config, `Missing config for ${key}`).toBeDefined()
 
-      const rewritten = rewriteScriptUrlsAST(content, 'script.js', config.rewrite!)
+      const rewrites = deriveRewrites(config.domains, COLLECT_PREFIX)
+      const rewritten = rewriteScriptUrlsAST(content, 'script.js', rewrites)
 
       // Should have proxy paths
       expect(rewritten).toContain(COLLECT_PREFIX)
 
       // Should not have original domains in quoted strings
-      for (const { from } of config.rewrite!) {
+      for (const { from } of rewrites) {
         expect(rewritten).not.toContain(`"https://${from}`)
         expect(rewritten).not.toContain(`'https://${from}`)
         expect(rewritten).not.toContain(`"//${from}`)
