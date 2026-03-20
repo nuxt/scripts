@@ -53,7 +53,7 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
     route: assetsBaseURL,
     handler: lazyEventHandler(async () => {
       return eventHandler(async (event) => {
-        const cleanPath = (event.path || '').split('?')[0].slice(1)
+        const cleanPath = (event.path || '').split('?')[0]?.slice(1) || ''
         const filename = cleanPath
         const scriptDescriptor = renderedScript.get(join(assetsBaseURL, cleanPath))
 
