@@ -15,27 +15,27 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'animation_changed'): void
-  (event: 'clickable_changed'): void
-  (event: 'cursor_changed'): void
-  (event: 'draggable_changed'): void
-  (event: 'flat_changed'): void
-  (event: 'icon_changed'): void
-  (event: 'position_changed'): void
-  (event: 'shape_changed'): void
-  (event: 'title_changed'): void
-  (event: 'visible_changed'): void
-  (event: 'zindex_changed'): void
-  (event: 'click', payload: google.maps.MapMouseEvent): void
-  (event: 'contextmenu', payload: google.maps.MapMouseEvent): void
-  (event: 'dblclick', payload: google.maps.MapMouseEvent): void
-  (event: 'drag', payload: google.maps.MapMouseEvent): void
-  (event: 'dragend', payload: google.maps.MapMouseEvent): void
-  (event: 'dragstart', payload: google.maps.MapMouseEvent): void
-  (event: 'mousedown', payload: google.maps.MapMouseEvent): void
-  (event: 'mouseout', payload: google.maps.MapMouseEvent): void
-  (event: 'mouseover', payload: google.maps.MapMouseEvent): void
-  (event: 'mouseup', payload: google.maps.MapMouseEvent): void
+  animation_changed: []
+  clickable_changed: []
+  cursor_changed: []
+  draggable_changed: []
+  flat_changed: []
+  icon_changed: []
+  position_changed: []
+  shape_changed: []
+  title_changed: []
+  visible_changed: []
+  zindex_changed: []
+  click: [payload: google.maps.MapMouseEvent]
+  contextmenu: [payload: google.maps.MapMouseEvent]
+  dblclick: [payload: google.maps.MapMouseEvent]
+  drag: [payload: google.maps.MapMouseEvent]
+  dragend: [payload: google.maps.MapMouseEvent]
+  dragstart: [payload: google.maps.MapMouseEvent]
+  mousedown: [payload: google.maps.MapMouseEvent]
+  mouseout: [payload: google.maps.MapMouseEvent]
+  mouseover: [payload: google.maps.MapMouseEvent]
+  mouseup: [payload: google.maps.MapMouseEvent]
 }>()
 
 if (import.meta.dev) {

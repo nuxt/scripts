@@ -15,10 +15,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'click', payload: google.maps.MapMouseEvent): void
-  (event: 'drag', payload: google.maps.MapMouseEvent): void
-  (event: 'dragend', payload: google.maps.MapMouseEvent): void
-  (event: 'dragstart', payload: google.maps.MapMouseEvent): void
+  click: [payload: google.maps.MapMouseEvent]
+  drag: [payload: google.maps.MapMouseEvent]
+  dragend: [payload: google.maps.MapMouseEvent]
+  dragstart: [payload: google.maps.MapMouseEvent]
 }>()
 const dragEvents = ['drag', 'dragend', 'dragstart'] as const
 const slots = useSlots()

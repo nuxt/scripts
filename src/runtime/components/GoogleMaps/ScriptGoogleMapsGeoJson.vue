@@ -9,19 +9,19 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'click', payload: google.maps.Data.MouseEvent): void
-  (event: 'contextmenu', payload: google.maps.Data.MouseEvent): void
-  (event: 'dblclick', payload: google.maps.Data.MouseEvent): void
-  (event: 'mousedown', payload: google.maps.Data.MouseEvent): void
-  (event: 'mousemove', payload: google.maps.Data.MouseEvent): void
-  (event: 'mouseout', payload: google.maps.Data.MouseEvent): void
-  (event: 'mouseover', payload: google.maps.Data.MouseEvent): void
-  (event: 'mouseup', payload: google.maps.Data.MouseEvent): void
-  (event: 'addfeature', payload: google.maps.Data.AddFeatureEvent): void
-  (event: 'removefeature', payload: google.maps.Data.RemoveFeatureEvent): void
-  (event: 'setgeometry', payload: google.maps.Data.SetGeometryEvent): void
-  (event: 'setproperty', payload: google.maps.Data.SetPropertyEvent): void
-  (event: 'removeproperty', payload: google.maps.Data.RemovePropertyEvent): void
+  click: [payload: google.maps.Data.MouseEvent]
+  contextmenu: [payload: google.maps.Data.MouseEvent]
+  dblclick: [payload: google.maps.Data.MouseEvent]
+  mousedown: [payload: google.maps.Data.MouseEvent]
+  mousemove: [payload: google.maps.Data.MouseEvent]
+  mouseout: [payload: google.maps.Data.MouseEvent]
+  mouseover: [payload: google.maps.Data.MouseEvent]
+  mouseup: [payload: google.maps.Data.MouseEvent]
+  addfeature: [payload: google.maps.Data.AddFeatureEvent]
+  removefeature: [payload: google.maps.Data.RemoveFeatureEvent]
+  setgeometry: [payload: google.maps.Data.SetGeometryEvent]
+  setproperty: [payload: google.maps.Data.SetPropertyEvent]
+  removeproperty: [payload: google.maps.Data.RemovePropertyEvent]
 }>()
 
 const dataEvents = [
