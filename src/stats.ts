@@ -503,7 +503,6 @@ function computePerformanceRating(
   }
 }
 
-const DOMAIN_RE = /^https?:\/\/([^/]+)/
 const USE_SCRIPT_RE = /^useScript/
 const WORD_SPLIT_RE = /[\s-]+/
 
@@ -518,15 +517,8 @@ function computePrivacyLevel(privacy: ScriptPrivacy | null): ScriptStats['privac
   return 'none'
 }
 
-function extractDomains(routes: Record<string, { proxy: string }>): string[] {
-  const domains = new Set<string>()
-  for (const { proxy } of Object.values(routes)) {
-    const match = proxy.match(DOMAIN_RE)
-    if (match?.[1])
-      domains.add(match[1])
-  }
-
-  return [...domains].sort()
+function extractDomains(proxyDomains: string[]): string[] {
+  return [...proxyDomains].sort()
 }
 
 /**
@@ -571,9 +563,8 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
 
     // Extract proxy info
     const privacy = proxyConfig?.privacy as ScriptPrivacy | undefined ?? null
-    const routes = proxyConfig?.routes ?? {}
-    const domains = extractDomains(routes)
-    const endpoints = Object.keys(routes).length
+    const domains = extractDomains(proxyConfig?.domains ?? [])
+    const endpoints = domains.length
 
     const emptyApis = {} as ScriptApis
     const emptyNetwork: NetworkSummary = { requestCount: 0, domains: [], outboundBytes: 0, inboundBytes: 0, injectedElements: [] }
