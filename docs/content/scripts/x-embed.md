@@ -1,5 +1,4 @@
 ---
-
 title: X Embed
 description: Server-side rendered X (Twitter) embeds with zero client-side API calls.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptXEmbed.vue
     size: xs
-
 ---
 
 [X (formerly Twitter)](https://x.com) is a social media platform for sharing posts.

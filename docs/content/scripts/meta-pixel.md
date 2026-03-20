@@ -1,5 +1,4 @@
 ---
-
 title: Meta Pixel
 description: Use Meta Pixel in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
   icon: i-simple-icons-github
   to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/meta-pixel.ts
   size: xs
-
 ---
 
 [Meta Pixel](https://www.facebook.com/business/tools/meta-pixel) lets you measure, optimise and build audiences for your Facebook ad campaigns.

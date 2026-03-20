@@ -1,5 +1,4 @@
 ---
-
 title: Umami Analytics
 description: Use Umami Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/umami-analytics.ts
     size: xs
-
 ---
 
 [Umami](https://umami.is/) collects all the metrics you care about to help you make better decisions.

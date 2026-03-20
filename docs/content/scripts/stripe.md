@@ -1,5 +1,4 @@
 ---
-
 title: Stripe
 description: Use Stripe in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptStripePricingTable.vue
     size: xs
-
 ---
 
 [Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.

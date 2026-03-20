@@ -1,5 +1,4 @@
 ---
-
 title: Matomo Analytics
 description: Use Matomo Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/matomo-analytics.ts
     size: xs
-
 ---
 
 [Matomo Analytics](https://matomo.org/) is a great analytics solution for Nuxt Apps.

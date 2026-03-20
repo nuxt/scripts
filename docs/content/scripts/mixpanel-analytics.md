@@ -1,5 +1,4 @@
 ---
-
 title: Mixpanel
 description: Use Mixpanel in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
   icon: i-simple-icons-github
   to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/mixpanel-analytics.ts
   size: xs
-
 ---
 
 [Mixpanel](https://mixpanel.com) is a product analytics platform that helps you understand how users interact with your application through event tracking, funnels, and retention analysis.

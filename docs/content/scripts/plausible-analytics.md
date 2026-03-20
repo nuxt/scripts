@@ -1,5 +1,4 @@
 ---
-
 title: Plausible Analytics
 description: Use Plausible Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/plausible-analytics.ts
     size: xs
-
 ---
 
 [Plausible Analytics](https://plausible.io/) is a privacy-friendly analytics solution for Nuxt Apps, allowing you to track your website's traffic without compromising your users' privacy.

@@ -1,5 +1,4 @@
 ---
-
 title: Databuddy Analytics
 description: Use Databuddy Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/databuddy-analytics.ts
     size: xs
-
 ---
 
 [Databuddy](https://www.databuddy.cc/) is a privacy-first analytics platform focused on performance and minimal data collection.

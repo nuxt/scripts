@@ -1,5 +1,4 @@
 ---
-
 title: Crisp
 description: Show performance-optimized Crisp in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptCrisp.vue
     size: xs
-
 ---
 
 [Crisp](https://crisp.chat/) is a customer messaging platform that lets you communicate with your customers through chat, email, and more.

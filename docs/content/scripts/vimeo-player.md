@@ -1,5 +1,4 @@
 ---
-
 title: Vimeo Player
 description: Show performance-optimized Vimeo videos in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptVimeoPlayer.vue
     size: xs
-
 ---
 
 [Vimeo](https://vimeo.com/) is a video hosting platform that allows you to upload and share videos.

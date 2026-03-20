@@ -1,5 +1,4 @@
 ---
-
 title: Intercom
 description: Use Intercom in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptIntercom.vue
     size: xs
-
 ---
 
 [Intercom](https://www.intercom.com/) is a customer messaging platform that helps you build better customer relationships.

@@ -1,5 +1,4 @@
 ---
-
 title: Cloudflare Web Analytics
 description: Use Cloudflare Web Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/cloudflare-web-analytics.ts
     size: xs
-
 ---
 
 [Cloudflare Web Analytics](https://developers.cloudflare.com/analytics/web-analytics/) with Nuxt is a great privacy analytics solution. It offers free, privacy-centric analytics for your website. It doesn't gather personal data from your visitors, yet provides detailed insights into your web pages' performance as experienced by your visitors.

@@ -1,5 +1,4 @@
 ---
-
 title: Google Sign-In
 description: Add Google Sign-In to your Nuxt app with One Tap and personalized button support.
 links:
@@ -11,7 +10,6 @@ links:
   icon: i-simple-icons-google
   to: https://developers.google.com/identity/gsi/web/guides/overview
   size: xs
-
 ---
 
 [Google Sign-In](https://developers.google.com/identity/gsi/web) provides a secure and convenient way for users to sign in to your app using their Google Account with One Tap, personalized buttons, and automatic sign-in.

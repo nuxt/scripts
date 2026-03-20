@@ -1,5 +1,4 @@
 ---
-
 title: Bing UET
 description: Use Microsoft Advertising Universal Event Tracking in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
   icon: i-simple-icons-github
   to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/bing-uet.ts
   size: xs
-
 ---
 
 [Microsoft Advertising UET](https://about.ads.microsoft.com/en-us/solutions/tools/universal-event-tracking) (Universal Event Tracking) lets you track conversions, build remarketing lists, and optimize your Microsoft Advertising campaigns.

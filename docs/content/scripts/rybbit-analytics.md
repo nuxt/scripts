@@ -1,5 +1,4 @@
 ---
-
 title: Rybbit Analytics
 description: Use Rybbit Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/rybbit.ts
     size: xs
-
 ---
 
 [Rybbit Analytics](https://www.rybbit.io/) is a privacy-focused analytics solution for tracking user activity on your website without compromising your users' privacy.

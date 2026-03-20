@@ -1,5 +1,4 @@
 ---
-
 title: Google Analytics
 description: Use Google Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-analytics.ts
     size: xs
-
 ---
 
 [Google Analytics](https://marketingplatform.google.com/about/analytics/) is an analytics solution for Nuxt Apps.

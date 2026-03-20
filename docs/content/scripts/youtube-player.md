@@ -1,5 +1,4 @@
 ---
-
 title: YouTube Player
 description: Show performance-optimized YouTube videos in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptYouTubePlayer.vue
     size: xs
-
 ---
 
 [YouTube](https://youtube.com/) is a video hosting platform that allows you to upload and share videos.

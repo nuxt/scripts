@@ -1,5 +1,4 @@
 ---
-
 title: PostHog
 description: Use PostHog in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
   icon: i-simple-icons-github
   to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/posthog.ts
   size: xs
-
 ---
 
 [PostHog](https://posthog.com) is an open-source product analytics platform that provides analytics, session replay, feature flags, A/B testing, and more.

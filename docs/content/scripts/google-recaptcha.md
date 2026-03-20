@@ -1,5 +1,4 @@
 ---
-
 title: Google reCAPTCHA
 description: Use Google reCAPTCHA v3 in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-recaptcha.ts
     size: xs
-
 ---
 
 [Google reCAPTCHA](https://www.google.com/recaptcha/about/) protects your site from spam and abuse using advanced risk analysis.

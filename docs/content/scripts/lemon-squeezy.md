@@ -1,5 +1,4 @@
 ---
-
 title: Lemon Squeezy
 description: Use Lemon Squeezy in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptLemonSqueezy.vue
     size: xs
-
 ---
 
 [Lemon Squeezy](https://www.lemonsqueezy.com/) is a popular payment gateway that allows you to accept payments online.

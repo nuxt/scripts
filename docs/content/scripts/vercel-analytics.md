@@ -1,5 +1,4 @@
 ---
-
 title: Vercel Analytics
 description: Use Vercel Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/vercel-analytics.ts
     size: xs
-
 ---
 
 [Vercel Analytics](https://vercel.com/docs/analytics) provides lightweight, privacy-friendly web analytics for your Nuxt app. It tracks page views and custom events with zero configuration when deployed on [Vercel](https://vercel.com).

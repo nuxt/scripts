@@ -1,5 +1,4 @@
 ---
-
 title: Fathom Analytics
 description: Use Fathom Analytics in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/fathom-analytics.ts
     size: xs
-
 ---
 
 [Fathom Analytics](https://usefathom.com/) is a great privacy analytics solution for your Nuxt app. It doesn't gather personal data from your visitors, yet provides detailed insights into how visitors use your site.
@@ -51,7 +49,7 @@ onLoaded(({ trackGoal }) => {
 Loading Fathom Analytics through the `app.vue` when Nuxt is ready.
 
 ```vue [app.vue]
-<script setup>
+<script setup lang="ts">
 useScriptFathomAnalytics({
   site: 'YOUR_SITE_ID',
   scriptOptions: {

@@ -1,5 +1,4 @@
 ---
-
 title: Carbon Ads
 description: Show carbon ads in your Nuxt app using a Vue component.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptCarbonAds.vue
     size: xs
-
 ---
 
 [Carbon Ads](https://www.carbonads.net/) is an ad service that provides a performance friendly way to show ads on your site.

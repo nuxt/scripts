@@ -1,5 +1,4 @@
 ---
-
 title: TikTok Pixel
 description: Use TikTok Pixel in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
   icon: i-simple-icons-github
   to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/tiktok-pixel.ts
   size: xs
-
 ---
 
 [TikTok Pixel](https://ads.tiktok.com/help/article/tiktok-pixel) lets you measure, optimize and build audiences for your TikTok ad campaigns.

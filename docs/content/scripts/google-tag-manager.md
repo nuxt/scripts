@@ -1,5 +1,4 @@
 ---
-
 title: Google Tag Manager
 description: Use Google Tag Manager in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-tag-manager.ts
     size: xs
-
 ---
 
 [Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.

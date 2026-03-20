@@ -1,5 +1,4 @@
 ---
-
 title: Bluesky Embed
 description: Server-side rendered Bluesky embeds with zero client-side API calls.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptBlueskyEmbed.vue
     size: xs
-
 ---
 
 [Bluesky](https://bsky.app) is a decentralized social media platform built on the AT Protocol.

@@ -1,5 +1,4 @@
 ---
-
 title: Instagram Embed
 description: Server-side rendered Instagram embeds with zero client-side API calls.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptInstagramEmbed.vue
     size: xs
-
 ---
 
 [Instagram](https://instagram.com) is a photo and video sharing social media platform.

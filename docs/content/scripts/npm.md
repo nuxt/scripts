@@ -1,5 +1,4 @@
 ---
-
 title: NPM
 description: Load IIFE scripts from NPM in your Nuxt app.
 links:
@@ -7,7 +6,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/npm.ts
     size: xs
-
 ---
 
 ::script-docs

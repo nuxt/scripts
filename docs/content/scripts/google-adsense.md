@@ -1,5 +1,4 @@
 ---
-
 title: Google Adsense
 description: Show Google Adsense ads in your Nuxt app.
 links:
@@ -11,7 +10,6 @@ links:
     icon: i-simple-icons-github
     to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGoogleAdsense.vue
     size: xs
-
 ---
 
 [Google AdSense](https://www.google.com/adsense/start/) allows you to monetize your website by displaying relevant ads from Google.
