@@ -138,6 +138,9 @@ const REGISTRY_ENV_DEFAULTS: Partial<Record<RegistryScriptKey, Record<string, st
   xPixel: { id: '' },
 }
 
+const UPPER_RE = /([A-Z])/g
+const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
+
 const PARTYTOWN_FORWARDS: Partial<Record<RegistryScriptKey, string[]>> = {
   bingUet: ['uetq.push'],
   googleAnalytics: ['dataLayer.push', 'gtag'],
@@ -341,14 +344,27 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
       // Auto-populate env var defaults for enabled registry scripts so that
-      // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig
+      // NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> works without manual runtimeConfig.
+      // Nuxt resolves env vars against runtimeConfig before modules run, so if the
+      // user didn't declare the path, env vars are silently dropped. We read
+      // process.env directly to recover them.
       const registryWithDefaults: Record<string, any> = {}
       for (const [key, entry] of Object.entries(config.registry)) {
         if (entry === false)
           continue
         const input = (entry as any[])[0]
         const envDefaults = REGISTRY_ENV_DEFAULTS[key as RegistryScriptKey]
-        registryWithDefaults[key] = envDefaults ? defu(input, envDefaults) : input
+        if (!envDefaults) {
+          registryWithDefaults[key] = input
+          continue
+        }
+        // Read process.env for each field, falling back to the static default
+        const envResolved: Record<string, string> = {}
+        for (const [field, defaultValue] of Object.entries(envDefaults)) {
+          const envKey = `NUXT_PUBLIC_SCRIPTS_${toScreamingSnake(key)}_${toScreamingSnake(field)}`
+          envResolved[field] = process.env[envKey] || defaultValue
+        }
+        registryWithDefaults[key] = defu(input, envResolved)
       }
 
       nuxt.options.runtimeConfig.public.scripts = defu(
