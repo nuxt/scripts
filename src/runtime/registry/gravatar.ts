@@ -2,6 +2,8 @@ import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import { GravatarOptions } from './schemas'
 
+export { GravatarOptions } from './schemas'
+
 export type GravatarInput = RegistryScriptInput<typeof GravatarOptions>
 
 export interface GravatarApi {
