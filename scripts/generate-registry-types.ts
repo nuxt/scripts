@@ -45,7 +45,7 @@ const JSDOC_START_RE = /^\s*\/\*\*/
 const JSDOC_END_RE = /^\s*\*\//
 const DOC_LINE_RE = /^\s*\*\s?(.*)/
 const DEFAULT_TAG_RE = /^@default\s*/
-const FIELD_MATCH_RE = /^\s*(\w+)\s*:/
+const FIELD_MATCH_RE = /^\s*(\w+)\s*\??:/
 
 function resolveAstType(node: any, source: string): string {
   if (!node)
@@ -306,9 +306,15 @@ function resolveTSType(node: any, source: string): string {
   return source.slice(node.start, node.end)
 }
 
-function extractPropsFields(typeNode: any, source: string): SchemaFieldMeta[] {
+function extractPropsFields(typeNode: any, source: string, fullSource?: string): SchemaFieldMeta[] {
   if (!typeNode || typeNode.type !== 'TSTypeLiteral')
     return []
+
+  // Parse JSDoc comments from the type literal source text
+  const typeCode = fullSource
+    ? fullSource.slice(typeNode.start, typeNode.end)
+    : source.slice(typeNode.start, typeNode.end)
+  const comments = parseSchemaComments(typeCode)
 
   const fields: SchemaFieldMeta[] = []
   for (const member of typeNode.members || []) {
@@ -322,6 +328,8 @@ function extractPropsFields(typeNode: any, source: string): SchemaFieldMeta[] {
       name,
       type: resolveTSType(member.typeAnnotation?.typeAnnotation, source),
       required: !member.optional,
+      description: comments[name]?.description,
+      defaultValue: comments[name]?.defaultValue,
     })
   }
   return fields
@@ -395,6 +403,10 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
 
         // Parse call signatures or object syntax from TSTypeLiteral
         if (typeArg.type === 'TSTypeLiteral') {
+          // Parse JSDoc comments from the emits type literal
+          const emitsCode = scriptSource.slice(typeArg.start, typeArg.end)
+          const emitsComments = parseSchemaComments(emitsCode)
+
           for (const member of typeArg.members || []) {
             // Object syntax: { click: [payload: Type] } or { close: [] }
             if (member.type === 'TSPropertySignature') {
@@ -416,6 +428,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
                   name: eventName,
                   type: payloadType || '-',
                   required: false,
+                  description: emitsComments[eventName]?.description,
                 })
               }
               continue
@@ -487,7 +500,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
         return
 
       const code = scriptSource.slice(typeArg.start, typeArg.end)
-      const fields = extractPropsFields(typeArg, scriptSource)
+      const fields = extractPropsFields(typeArg, scriptSource, scriptSource)
 
       const defaults: Record<string, string> = {}
       if (defaultsObj?.type === 'ObjectExpression') {
