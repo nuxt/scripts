@@ -549,6 +549,8 @@ const componentToSlug: Record<string, string> = {
   ScriptGoogleMapsPolygon: 'google-maps',
   ScriptGoogleMapsPolyline: 'google-maps',
   ScriptGoogleMapsRectangle: 'google-maps',
+  ScriptGoogleMapsOverlayView: 'google-maps',
+  ScriptGoogleMapsGeoJson: 'google-maps',
   ScriptCarbonAds: 'carbon-ads',
   ScriptCrisp: 'crisp',
   ScriptIntercom: 'intercom',
