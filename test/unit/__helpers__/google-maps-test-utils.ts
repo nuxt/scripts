@@ -135,6 +135,37 @@ export async function simulateMarkerClustererLifecycle(mocks: MocksType, options
 }
 
 /**
+ * Simulates the component lifecycle for GeoJson data layers
+ */
+export function simulateGeoJsonLifecycle(mocks: MocksType, geoJson: string | object, style?: any) {
+  // Creation
+  const dataLayer = new mocks.mockMapsApi.Data({ map: ref({}).value })
+
+  // Style setup
+  if (style) {
+    dataLayer.setStyle(style)
+  }
+
+  // GeoJson loading
+  if (typeof geoJson === 'string') {
+    dataLayer.loadGeoJson(geoJson)
+  }
+  else {
+    dataLayer.addGeoJson(geoJson)
+  }
+
+  // Event listener setup
+  dataLayer.addListener('click', vi.fn())
+  dataLayer.addListener('addfeature', vi.fn())
+
+  // Cleanup
+  mocks.mockMapsApi.event.clearInstanceListeners(dataLayer)
+  dataLayer.setMap(null)
+
+  return dataLayer
+}
+
+/**
  * Test options for various Google Maps objects
  */
 export const TEST_OPTIONS = {
@@ -158,5 +189,15 @@ export const TEST_OPTIONS = {
   pin: {
     scale: 1.5,
     background: '#FF0000',
+  },
+  geoJson: {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [151.2093, -33.8688] },
+        properties: { name: 'Sydney' },
+      },
+    ],
   },
 } as const

@@ -434,6 +434,7 @@ All Google Maps SFC components must work within a `<ScriptGoogleMaps>`{lang="htm
 - `<ScriptGoogleMapsPolyline>`{lang="html"} - Line paths
 - `<ScriptGoogleMapsRectangle>`{lang="html"} - Rectangular overlays
 - `<ScriptGoogleMapsHeatmapLayer>`{lang="html"} - Heatmap visualization
+- `<ScriptGoogleMapsGeoJson>`{lang="html"} - GeoJSON data layers
 
 ### Basic Usage
 
@@ -521,6 +522,48 @@ onMounted(() => {
 </template>
 ```
 
+**GeoJSON Data Layer**
+
+Load GeoJSON from a URL or inline object and apply custom styling:
+
+```vue
+<script setup lang="ts">
+const geoJsonStyle = {
+  fillColor: '#4285F4',
+  fillOpacity: 0.4,
+  strokeColor: '#4285F4',
+  strokeWeight: 2,
+}
+
+function handleFeatureClick(event: google.maps.Data.MouseEvent) {
+  console.log('Clicked feature:', event.feature.getProperty('name'))
+}
+</script>
+
+<template>
+  <ScriptGoogleMaps api-key="your-api-key">
+    <!-- Load from URL -->
+    <ScriptGoogleMapsGeoJson
+      src="https://example.com/data.geojson"
+      :style="geoJsonStyle"
+      @click="handleFeatureClick"
+    />
+
+    <!-- Or pass inline GeoJSON -->
+    <ScriptGoogleMapsGeoJson
+      :src="{
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [150.644, -34.397] },
+          properties: { name: 'My Point' },
+        }],
+      }"
+    />
+  </ScriptGoogleMaps>
+</template>
+```
+
 ### Component Hierarchy
 
 ```text
@@ -531,10 +574,11 @@ ScriptGoogleMaps (root)
 ├── ScriptGoogleMapsAdvancedMarkerElement
 │   ├── ScriptGoogleMapsPinElement (optional)
 │   └── ScriptGoogleMapsInfoWindow (optional)
+├── ScriptGoogleMapsGeoJson (GeoJSON data layer)
 └── ScriptGoogleMapsCircle / Polygon / Polyline / Rectangle / HeatmapLayer
 ```
 
-All SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which the parent component injects automatically). Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.
+Most SFC components accept an `options` prop matching their Google Maps API options type (excluding `map`, which the parent component injects automatically). `ScriptGoogleMapsGeoJson` uses `src` and `style` props instead. Options are reactive - changes update the basic Google Maps object. Components clean up automatically on unmount.
 
 ### Component Reference
 
@@ -550,6 +594,34 @@ All SFC components accept an `options` prop matching their Google Maps API optio
 | `ScriptGoogleMapsPolyline` | `google.maps.PolylineOptions` | |
 | `ScriptGoogleMapsRectangle` | `google.maps.RectangleOptions` | |
 | `ScriptGoogleMapsHeatmapLayer` | `google.maps.visualization.HeatmapLayerOptions` | |
+| `ScriptGoogleMapsGeoJson` | `src`: `string \| object`, `style`: `google.maps.Data.StylingFunction \| google.maps.Data.StyleOptions` | Emits mouse & feature events |
+
+### `ScriptGoogleMapsGeoJson`{lang="html"}
+
+Loads GeoJSON data onto the map using `google.maps.Data` and either `loadGeoJson` (when `src` is a URL) or `addGeoJson` (when `src` is an inline object).
+
+#### Props
+
+| Prop | Type | Description |
+|---|---|---|
+| `src` | `string \| object` | URL to load via `loadGeoJson()`{lang="ts"} or a GeoJSON object to add via `addGeoJson()`{lang="ts"}. Reactive - changing it clears existing features and loads the new data. |
+| `style` | `google.maps.Data.StylingFunction \| google.maps.Data.StyleOptions` | Styling applied to the data layer. Reactive with deep watching. |
+
+#### Events
+
+**Mouse events**: emitted with a `google.maps.Data.MouseEvent` payload:
+
+`click`, `contextmenu`, `dblclick`, `mousedown`, `mousemove`, `mouseout`, `mouseover`, `mouseup`
+
+**Feature lifecycle events:**
+
+| Event | Payload |
+|---|---|
+| `addfeature` | `google.maps.Data.AddFeatureEvent` |
+| `removefeature` | `google.maps.Data.RemoveFeatureEvent` |
+| `setgeometry` | `google.maps.Data.SetGeometryEvent` |
+| `setproperty` | `google.maps.Data.SetPropertyEvent` |
+| `removeproperty` | `google.maps.Data.RemovePropertyEvent` |
 
 ## [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps){lang="ts"}
 
