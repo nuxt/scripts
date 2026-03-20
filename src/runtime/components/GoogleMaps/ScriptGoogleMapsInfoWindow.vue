@@ -44,8 +44,12 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
     })
 
     // Track open state for toggle behavior
-    iw.addListener('closeclick', () => { isOpen = false })
-    iw.addListener('close', () => { isOpen = false })
+    iw.addListener('closeclick', () => {
+      isOpen = false
+    })
+    iw.addListener('close', () => {
+      isOpen = false
+    })
 
     bindGoogleMapsEvents(iw, emit, { noPayload: infoWindowEvents })
 
