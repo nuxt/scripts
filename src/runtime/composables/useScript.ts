@@ -5,7 +5,7 @@ import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
-import { ref } from 'vue'
+import { markRaw, ref } from 'vue'
 import { logger } from '../logger'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
@@ -199,5 +199,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       syncScripts()
     }
   }
+  // Prevent Vue from making the instance deeply reactive, and guard against
+  // circular JSON errors if anything calls JSON.stringify on it (Vue 3.5+
+  // refs have circular `.dep` properties).
+  markRaw(instance as any)
+  ;(instance as any).toJSON = () => ({ id: instance.id, status: instance.status.value })
   return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 }
