@@ -53,7 +53,7 @@ function dumpQueue() {
   <div class="flex flex-col gap-4 p-4">
     <ClientOnly>
       <div>status: {{ status }}</div>
-      <div>mode (window.vam): {{ $window?.vam ?? 'n/a' }}</div>
+      <div>mode (window.vam): {{ typeof window !== 'undefined' ? window.vam ?? 'n/a' : 'n/a' }}</div>
       <div v-if="eventTracked">
         Event tracked!
       </div>

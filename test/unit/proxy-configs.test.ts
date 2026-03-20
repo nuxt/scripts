@@ -1,19 +1,9 @@
 import type { ProxyRewrite } from '../../src/runtime/utils/pure'
 import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs, routesToInterceptRules } from '../../src/first-party'
+import { getAllProxyConfigs } from '../../src/first-party'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
 
 const fn = (c: string, r: ProxyRewrite[]) => rewriteScriptUrlsAST(c, 'test.js', r)
-
-function getInterceptRules(proxyPrefix: string) {
-  const configs = getAllProxyConfigs(proxyPrefix)
-  const allRoutes: Record<string, { proxy: string }> = {}
-  for (const config of Object.values(configs)) {
-    if (config.routes)
-      Object.assign(allRoutes, config.routes)
-  }
-  return routesToInterceptRules(allRoutes)
-}
 
 describe('proxy configs', () => {
   describe('rewriteScriptUrlsAST', () => {
@@ -322,158 +312,86 @@ describe('proxy configs', () => {
     it('returns proxy config for googleAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').googleAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toBeDefined()
-      expect(config?.routes).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'www.google.com/g/collect',
-        to: '/_scripts/c/ga/g/collect',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'www.google-analytics.com',
-        to: '/_scripts/c/ga',
-      })
+      expect(config?.domains).toContain('www.google-analytics.com')
+      expect(config?.domains).toContain('analytics.google.com')
     })
 
     it('returns proxy config for googleTagManager', () => {
       const config = getAllProxyConfigs('/_scripts/c').googleTagManager
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'www.googletagmanager.com',
-        to: '/_scripts/c/gtm',
-      })
+      expect(config?.domains).toContain('www.googletagmanager.com')
     })
 
     it('returns proxy config for metaPixel', () => {
       const config = getAllProxyConfigs('/_scripts/c').metaPixel
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'connect.facebook.net',
-        to: '/_scripts/c/meta',
-      })
+      expect(config?.domains).toContain('connect.facebook.net')
     })
 
     it('returns proxy config for plausibleAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').plausibleAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'plausible.io',
-        to: '/_scripts/c/plausible',
-      })
+      expect(config?.domains).toContain('plausible.io')
     })
 
     it('returns proxy config for cloudflareWebAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').cloudflareWebAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'static.cloudflareinsights.com',
-        to: '/_scripts/c/cfwa',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'cloudflareinsights.com',
-        to: '/_scripts/c/cfwa-beacon',
-      })
+      expect(config?.domains).toContain('static.cloudflareinsights.com')
+      expect(config?.domains).toContain('cloudflareinsights.com')
     })
 
     it('returns proxy config for rybbitAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').rybbitAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'app.rybbit.io',
-        to: '/_scripts/c/rybbit',
-      })
+      expect(config?.domains).toContain('app.rybbit.io')
     })
 
     it('returns proxy config for umamiAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').umamiAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'cloud.umami.is',
-        to: '/_scripts/c/umami',
-      })
+      expect(config?.domains).toContain('cloud.umami.is')
     })
 
     it('returns proxy config for databuddyAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').databuddyAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'cdn.databuddy.cc',
-        to: '/_scripts/c/databuddy',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'basket.databuddy.cc',
-        to: '/_scripts/c/databuddy-api',
-      })
+      expect(config?.domains).toContain('cdn.databuddy.cc')
+      expect(config?.domains).toContain('basket.databuddy.cc')
     })
 
     it('returns proxy config for fathomAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').fathomAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'cdn.usefathom.com',
-        to: '/_scripts/c/fathom',
-      })
+      expect(config?.domains).toContain('cdn.usefathom.com')
     })
 
     it('returns proxy config for intercom', () => {
       const config = getAllProxyConfigs('/_scripts/c').intercom
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'widget.intercom.io',
-        to: '/_scripts/c/intercom',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'api-iam.intercom.io',
-        to: '/_scripts/c/intercom-api',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'api-iam.eu.intercom.io',
-        to: '/_scripts/c/intercom-api-eu',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'api-iam.au.intercom.io',
-        to: '/_scripts/c/intercom-api-au',
-      })
+      expect(config?.domains).toContain('widget.intercom.io')
+      expect(config?.domains).toContain('api-iam.intercom.io')
+      expect(config?.domains).toContain('api-iam.eu.intercom.io')
+      expect(config?.domains).toContain('api-iam.au.intercom.io')
       expect(config?.privacy.ip).toBe(true)
     })
 
     it('returns proxy config for crisp', () => {
       const config = getAllProxyConfigs('/_scripts/c').crisp
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'client.crisp.chat',
-        to: '/_scripts/c/crisp',
-      })
+      expect(config?.domains).toContain('client.crisp.chat')
       expect(config?.privacy.ip).toBe(true)
     })
 
     it('returns proxy config for vercelAnalytics', () => {
       const config = getAllProxyConfigs('/_scripts/c').vercelAnalytics
       expect(config).toBeDefined()
-      expect(config?.rewrite).toContainEqual({
-        from: 'va.vercel-scripts.com',
-        to: '/_scripts/c/vercel',
-      })
-      expect(config?.routes?.['/_scripts/c/vercel/**']).toEqual({
-        proxy: 'https://va.vercel-scripts.com/**',
-      })
+      expect(config?.domains).toContain('va.vercel-scripts.com')
     })
 
     it('returns undefined for unsupported scripts', () => {
       const config = (getAllProxyConfigs('/_scripts/c') as Record<string, any>).unknownScript
       expect(config).toBeUndefined()
-    })
-
-    it('uses custom collectPrefix', () => {
-      const config = getAllProxyConfigs('/_custom/proxy').googleAnalytics
-      expect(config?.rewrite).toContainEqual({
-        from: 'www.google.com/g/collect',
-        to: '/_custom/proxy/ga/g/collect',
-      })
-      expect(config?.rewrite).toContainEqual({
-        from: 'www.google-analytics.com',
-        to: '/_custom/proxy/ga',
-      })
-      expect(config?.routes).toHaveProperty('/_custom/proxy/ga/**')
     })
   })
 
@@ -508,11 +426,9 @@ describe('proxy configs', () => {
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
       const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics']
       for (const [key, config] of Object.entries(configs)) {
-        expect(config, `${key} should have routes`).toHaveProperty('routes')
-        expect(typeof config.routes, `${key}.routes should be an object`).toBe('object')
-        if (config.rewrite) {
-          expect(Array.isArray(config.rewrite), `${key}.rewrite should be an array`).toBe(true)
-        }
+        expect(config, `${key} should have domains`).toHaveProperty('domains')
+        expect(Array.isArray(config.domains), `${key}.domains should be an array`).toBe(true)
+        expect(config.domains.length, `${key}.domains should not be empty`).toBeGreaterThan(0)
         expect(config.privacy, `${key} should have privacy`).toBeDefined()
         expect(config.privacy, `${key}.privacy should not be null`).not.toBeNull()
         expect(typeof config.privacy, `${key}.privacy should be an object`).toBe('object')
@@ -540,197 +456,65 @@ describe('proxy configs', () => {
     })
   })
 
-  describe('route rules structure', () => {
-    it('googleAnalytics routes proxy to correct target', () => {
-      const config = getAllProxyConfigs('/_scripts/c').googleAnalytics
-      expect(config?.routes?.['/_scripts/c/ga/**']).toEqual({
-        proxy: 'https://www.google-analytics.com/**',
-      })
-    })
-
-    it('googleTagManager routes proxy to correct target', () => {
-      const config = getAllProxyConfigs('/_scripts/c').googleTagManager
-      expect(config?.routes?.['/_scripts/c/gtm/**']).toEqual({
-        proxy: 'https://www.googletagmanager.com/**',
-      })
-    })
-
-    it('metaPixel routes proxy to correct target', () => {
-      const config = getAllProxyConfigs('/_scripts/c').metaPixel
-      expect(config?.routes?.['/_scripts/c/meta/**']).toEqual({
-        proxy: 'https://connect.facebook.net/**',
-      })
-    })
-
-    it('plausibleAnalytics routes proxy to correct target', () => {
-      const config = getAllProxyConfigs('/_scripts/c').plausibleAnalytics
-      expect(config?.routes?.['/_scripts/c/plausible/**']).toEqual({
-        proxy: 'https://plausible.io/**',
-      })
-    })
-
-    it('cloudflareWebAnalytics routes proxy to correct targets', () => {
-      const config = getAllProxyConfigs('/_scripts/c').cloudflareWebAnalytics
-      expect(config?.routes?.['/_scripts/c/cfwa/**']).toEqual({
-        proxy: 'https://static.cloudflareinsights.com/**',
-      })
-      expect(config?.routes?.['/_scripts/c/cfwa-beacon/**']).toEqual({
-        proxy: 'https://cloudflareinsights.com/**',
-      })
-    })
-
-    it('databuddyAnalytics routes proxy to correct targets', () => {
-      const config = getAllProxyConfigs('/_scripts/c').databuddyAnalytics
-      expect(config?.routes?.['/_scripts/c/databuddy/**']).toEqual({
-        proxy: 'https://cdn.databuddy.cc/**',
-      })
-      expect(config?.routes?.['/_scripts/c/databuddy-api/**']).toEqual({
-        proxy: 'https://basket.databuddy.cc/**',
-      })
-    })
-
-    it('intercom routes proxy to correct targets', () => {
-      const config = getAllProxyConfigs('/_scripts/c').intercom
-      expect(config?.routes?.['/_scripts/c/intercom/**']).toEqual({
-        proxy: 'https://widget.intercom.io/**',
-      })
-      expect(config?.routes?.['/_scripts/c/intercom-api/**']).toEqual({
-        proxy: 'https://api-iam.intercom.io/**',
-      })
-      expect(config?.routes?.['/_scripts/c/intercom-api-eu/**']).toEqual({
-        proxy: 'https://api-iam.eu.intercom.io/**',
-      })
-      expect(config?.routes?.['/_scripts/c/intercom-api-au/**']).toEqual({
-        proxy: 'https://api-iam.au.intercom.io/**',
-      })
-    })
-  })
-
-  describe('getInterceptRules', () => {
-    it('extracts rules from all proxy configs', () => {
-      const rules = getInterceptRules('/_proxy')
-      expect(rules.length).toBeGreaterThan(0)
-      for (const rule of rules) {
-        expect(rule).toHaveProperty('pattern')
-        expect(rule).toHaveProperty('pathPrefix')
-        expect(rule).toHaveProperty('target')
-        expect(typeof rule.pattern).toBe('string')
-        expect(typeof rule.pathPrefix).toBe('string')
-        expect(typeof rule.target).toBe('string')
-      }
-    })
-
-    it('includes GA rule with empty pathPrefix', () => {
-      const rules = getInterceptRules('/_proxy')
-      const gaRule = rules.find(r => r.pattern === 'www.google-analytics.com')
-      expect(gaRule).toBeDefined()
-      expect(gaRule?.pathPrefix).toBe('')
-      expect(gaRule?.target).toBe('/_proxy/ga')
-    })
-
-    it('includes Meta tracking rule with /tr pathPrefix', () => {
-      const rules = getInterceptRules('/_proxy')
-      const metaTrRule = rules.find(r => r.pattern === 'www.facebook.com')
-      expect(metaTrRule).toBeDefined()
-      expect(metaTrRule?.pathPrefix).toBe('/tr')
-      expect(metaTrRule?.target).toBe('/_proxy/meta-tr')
-    })
-
-    it('includes Meta script rule with empty pathPrefix', () => {
-      const rules = getInterceptRules('/_proxy')
-      const metaRule = rules.find(r => r.pattern === 'connect.facebook.net')
-      expect(metaRule).toBeDefined()
-      expect(metaRule?.pathPrefix).toBe('')
-      expect(metaRule?.target).toBe('/_proxy/meta')
-    })
-
-    it('uses custom collectPrefix', () => {
-      const rules = getInterceptRules('/_custom')
-      const gaRule = rules.find(r => r.pattern === 'www.google-analytics.com')
-      expect(gaRule?.target).toBe('/_custom/ga')
-    })
-  })
-
-  // Test the rewriteUrl logic that runs in the __nuxtScripts client plugin.
-  // This mirrors the runtime function embedded in the plugin template (module.ts).
-  describe('runtime rewriteUrl', () => {
+  // Test the proxyUrl logic that runs in the __nuxtScripts client plugin.
+  // Any non-same-origin URL is proxied through proxyPrefix/<host><path>.
+  describe('runtime proxyUrl', () => {
     const ORIGIN = 'https://example.com'
+    const PROXY_PREFIX = '/_proxy'
 
-    function rewriteUrl(url: string, rules: ReturnType<typeof getInterceptRules>) {
+    function proxyUrl(url: string) {
       try {
         const parsed = new URL(url, ORIGIN)
-        for (const rule of rules) {
-          if (parsed.hostname === rule.pattern || parsed.hostname.endsWith(`.${rule.pattern}`)) {
-            if (rule.pathPrefix && !parsed.pathname.startsWith(rule.pathPrefix))
-              continue
-            const path = rule.pathPrefix ? parsed.pathname.slice(rule.pathPrefix.length) : parsed.pathname
-            return ORIGIN + rule.target + (path.startsWith('/') ? '' : '/') + path + parsed.search
-          }
-        }
+        if (parsed.origin !== ORIGIN)
+          return `${ORIGIN + PROXY_PREFIX}/${parsed.host}${parsed.pathname}${parsed.search}`
       }
       catch { /* invalid URL */ }
       return url
     }
 
-    const rules = getInterceptRules('/_proxy')
-
     it('rewrites GA collect URL', () => {
-      const result = rewriteUrl('https://www.google-analytics.com/g/collect?v=2&tid=G-XXX', rules)
-      expect(result).toBe(`${ORIGIN}/_proxy/ga/g/collect?v=2&tid=G-XXX`)
+      const result = proxyUrl('https://www.google-analytics.com/g/collect?v=2&tid=G-XXX')
+      expect(result).toBe(`${ORIGIN}/_proxy/www.google-analytics.com/g/collect?v=2&tid=G-XXX`)
     })
 
     it('rewrites Meta tracking pixel URL', () => {
-      const result = rewriteUrl('https://www.facebook.com/tr?id=123&ev=PageView', rules)
-      // /tr pathPrefix stripped → empty path → / inserted before query
-      expect(result).toBe(`${ORIGIN}/_proxy/meta-tr/?id=123&ev=PageView`)
+      const result = proxyUrl('https://www.facebook.com/tr?id=123&ev=PageView')
+      expect(result).toBe(`${ORIGIN}/_proxy/www.facebook.com/tr?id=123&ev=PageView`)
     })
 
     it('rewrites GTM script URL', () => {
-      const result = rewriteUrl('https://www.googletagmanager.com/gtm.js?id=GTM-XXX', rules)
-      expect(result).toBe(`${ORIGIN}/_proxy/gtm/gtm.js?id=GTM-XXX`)
+      const result = proxyUrl('https://www.googletagmanager.com/gtm.js?id=GTM-XXX')
+      expect(result).toBe(`${ORIGIN}/_proxy/www.googletagmanager.com/gtm.js?id=GTM-XXX`)
     })
 
     it('rewrites TikTok pixel URL', () => {
-      const result = rewriteUrl('https://analytics.tiktok.com/api/v2/pixel/act', rules)
-      expect(result).toBe(`${ORIGIN}/_proxy/tiktok/api/v2/pixel/act`)
+      const result = proxyUrl('https://analytics.tiktok.com/api/v2/pixel/act')
+      expect(result).toBe(`${ORIGIN}/_proxy/analytics.tiktok.com/api/v2/pixel/act`)
     })
 
-    it('does not rewrite unmatched URLs', () => {
-      const url = 'https://cdn.example.com/script.js'
-      expect(rewriteUrl(url, rules)).toBe(url)
+    it('does not rewrite same-origin URLs', () => {
+      const result = proxyUrl('/local/path')
+      expect(result).toBe('/local/path')
     })
 
     it('passes through non-URL strings', () => {
       const val = 'not-a-url'
-      expect(rewriteUrl(val, rules)).toBe(val)
+      expect(proxyUrl(val)).toBe(val)
     })
 
-    it('rewrites relative URLs matching first-party paths', () => {
-      // Relative URLs get resolved against ORIGIN, so they won't match cross-origin rules
-      const result = rewriteUrl('/local/path', rules)
-      expect(result).toBe('/local/path')
+    it('rewrites any cross-origin URL', () => {
+      const result = proxyUrl('https://cdn.example.com/script.js')
+      expect(result).toBe(`${ORIGIN}/_proxy/cdn.example.com/script.js`)
     })
 
-    it('does not match subdomains against exact hostname rules', () => {
-      // Intercept rules use exact hostnames from routes, not suffix patterns
-      // region1.google-analytics.com won't match www.google-analytics.com
-      const result = rewriteUrl('https://region1.google-analytics.com/g/collect', rules)
-      expect(result).toBe('https://region1.google-analytics.com/g/collect')
-    })
-
-    it('skips pathPrefix mismatch', () => {
-      // www.facebook.com/tr matches, but www.facebook.com/other should not match the /tr rule
-      const result = rewriteUrl('https://www.facebook.com/other/path', rules)
-      // Should not be rewritten because the /tr pathPrefix doesn't match /other
-      expect(result).toBe('https://www.facebook.com/other/path')
+    it('rewrites subdomain URLs', () => {
+      const result = proxyUrl('https://region1.google-analytics.com/g/collect')
+      expect(result).toBe(`${ORIGIN}/_proxy/region1.google-analytics.com/g/collect`)
     })
 
     it('handles fetch with Request object (passthrough)', () => {
-      // The plugin's fetch wrapper passes through non-string urls
-      // This tests the concept — non-string input is returned as-is
       const nonStringUrl = {} as any
-      // Simulating: typeof url === 'string' ? rewriteUrl(url) : url
-      const result = typeof nonStringUrl === 'string' ? rewriteUrl(nonStringUrl, rules) : nonStringUrl
+      const result = typeof nonStringUrl === 'string' ? proxyUrl(nonStringUrl) : nonStringUrl
       expect(result).toBe(nonStringUrl)
     })
   })

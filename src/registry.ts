@@ -1,7 +1,6 @@
 import type { ResolvePathOptions } from '@nuxt/kit'
 import type { ClarityInput } from './runtime/registry/clarity'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
-import type { GoogleRecaptchaInput } from './runtime/registry/google-recaptcha'
 import type { HotjarInput } from './runtime/registry/hotjar'
 import type { IntercomInput } from './runtime/registry/intercom'
 import type { MixpanelAnalyticsInput } from './runtime/registry/mixpanel-analytics'
@@ -303,7 +302,8 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'stripe',
       label: 'Stripe',
-      scriptBundling: false,
+      scriptBundling: false, // needs fingerprinting for fraud detection
+      proxy: false,
       category: 'payments',
       logo: LOGOS.stripe,
       import: {
@@ -325,7 +325,8 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'paypal',
       label: 'PayPal',
-      src: false, // should not be bundled
+      src: false, // needs fingerprinting for fraud detection
+      proxy: false,
       category: 'payments',
       logo: LOGOS.paypal,
       import: {
@@ -428,27 +429,21 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'googleRecaptcha',
       label: 'Google reCAPTCHA',
+      scriptBundling: false, // needs fingerprinting for bot detection
+      proxy: false,
       category: 'utility',
       logo: LOGOS.googleRecaptcha,
       import: {
         name: 'useScriptGoogleRecaptcha',
         from: await resolve('./runtime/registry/google-recaptcha'),
       },
-      scriptBundling(options?: GoogleRecaptchaInput) {
-        if (!options?.siteKey) {
-          return false
-        }
-        const baseUrl = options?.recaptchaNet
-          ? 'https://www.recaptcha.net/recaptcha'
-          : 'https://www.google.com/recaptcha'
-        return `${baseUrl}/${options?.enterprise ? 'enterprise.js' : 'api.js'}`
-      },
     },
     {
       registryKey: 'googleSignIn',
       label: 'Google Sign-In',
       src: 'https://accounts.google.com/gsi/client',
-      scriptBundling: false, // CORS prevents bundling
+      scriptBundling: false, // CORS prevents bundling, needs fingerprinting for auth
+      proxy: false,
       category: 'utility',
       logo: LOGOS.googleSignIn,
       import: {

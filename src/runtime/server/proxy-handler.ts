@@ -13,31 +13,19 @@ import {
 } from './utils/privacy'
 
 interface ProxyConfig {
-  routes: Record<string, string>
+  /** Proxy path prefix (e.g. /_scripts/p) */
+  proxyPrefix: string
+  /** Allowed domains with their privacy config */
+  domainPrivacy: Record<string, ProxyPrivacyInput>
   /** Global user override — undefined means use per-script defaults */
   privacy?: ProxyPrivacyInput
-  /** Per-script privacy from registry (every route has an entry) */
-  routePrivacy: Record<string, ProxyPrivacyInput>
   /** Enable verbose logging (default: only in dev) */
   debug?: boolean
 }
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
-const ROUTE_WILDCARD_RE = /\/\*\*$/
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
 const SKIP_RESPONSE_HEADERS = new Set(['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length'])
-
-/** Pre-sorted route cache keyed by stringified routes object */
-let sortedRoutesCache: { key: string, sorted: [string, string][] } | undefined
-
-function getSortedRoutes(routes: Record<string, string>): [string, string][] {
-  const key = JSON.stringify(routes)
-  if (sortedRoutesCache?.key === key)
-    return sortedRoutesCache.sorted
-  const sorted = Object.entries(routes).sort((a, b) => b[0].length - a[0].length)
-  sortedRoutesCache = { key, sorted }
-  return sorted
-}
 
 /**
  * Strip fingerprinting from URL query string.
@@ -72,7 +60,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { routes, privacy: globalPrivacy, routePrivacy, debug = import.meta.dev } = proxyConfig
+  const { proxyPrefix, domainPrivacy, privacy: globalPrivacy, debug = import.meta.dev } = proxyConfig
   const path = event.path
   const log = debug
     ? (message: string, ...args: any[]) => {
@@ -81,38 +69,40 @@ export default defineEventHandler(async (event) => {
       }
     : () => {}
 
-  // Find matching route (pre-sorted by length descending to match longest/most specific first)
-  let targetBase: string | undefined
-  let matchedPrefix: string | undefined
-  let matchedRoutePattern: string | undefined
+  // Extract domain and remaining path from: /_scripts/p/<host>/<path>
+  const afterPrefix = path.slice(proxyPrefix.length + 1) // +1 for the slash after prefix
+  const slashIdx = afterPrefix.indexOf('/')
+  const domain = slashIdx > 0 ? afterPrefix.slice(0, slashIdx) : afterPrefix
+  const remainingPath = slashIdx > 0 ? afterPrefix.slice(slashIdx) : '/'
 
-  for (const [routePattern, target] of getSortedRoutes(routes)) {
-    // Convert route pattern to prefix (remove /** suffix)
-    const prefix = routePattern.replace(ROUTE_WILDCARD_RE, '')
-    if (path.startsWith(prefix)) {
-      targetBase = target.replace(ROUTE_WILDCARD_RE, '')
-      matchedPrefix = prefix
-      matchedRoutePattern = routePattern
-      log('[proxy] Matched:', prefix, '->', targetBase)
+  if (!domain) {
+    log('[proxy] No domain in path:', path)
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'No proxy domain found',
+      message: `No domain in proxy path: ${path}`,
+    })
+  }
+
+  // Find privacy config by matching domain (exact or parent domain match)
+  let perScriptInput: ProxyPrivacyInput | undefined
+  for (const [configDomain, privacyInput] of Object.entries(domainPrivacy)) {
+    if (domain === configDomain || domain.endsWith(`.${configDomain}`)) {
+      perScriptInput = privacyInput
       break
     }
   }
 
-  if (!targetBase || !matchedPrefix || !matchedRoutePattern) {
-    log('[proxy] No match for path:', path)
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'No proxy route matched',
-      message: `No proxy target found for path: ${path}`,
-    })
+  if (perScriptInput === undefined && debug) {
+    log('[proxy] No privacy config for domain', domain, '— defaulting to full anonymization')
   }
 
+  const targetBase = `https://${domain}`
+  const targetPrefix = `${proxyPrefix}/${domain}`
+  log('[proxy] Matched:', domain, '->', targetBase)
+
   // Resolve effective privacy: per-script is the base, global user override on top
-  // Fail-closed: missing per-script entry → full anonymization (most restrictive)
-  const perScriptInput = routePrivacy[matchedRoutePattern]
-  if (debug && perScriptInput === undefined) {
-    log('[proxy] WARNING: No privacy config for route', matchedRoutePattern, '— defaulting to full anonymization')
-  }
+  // Fail-closed: missing domain → full anonymization (most restrictive)
   const perScriptResolved = resolvePrivacy(perScriptInput ?? true)
   // Global override: when set by user, it overrides per-script field-by-field
   const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
@@ -134,12 +124,7 @@ export default defineEventHandler(async (event) => {
   )
 
   // Build target URL with stripped query params
-  let targetPath = path.slice(matchedPrefix.length)
-  // Ensure path starts with /
-  if (targetPath && !targetPath.startsWith('/')) {
-    targetPath = `/${targetPath}`
-  }
-  let targetUrl = targetBase + targetPath
+  let targetUrl = targetBase + remainingPath
 
   // Strip fingerprinting from query string when any privacy flag is active
   let strippedQueryRecord: Record<string, unknown> | undefined

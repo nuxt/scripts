@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { useScriptLemonSqueezy, onMounted } from '#imports'
 
-const { Setup, Refresh } = useScriptLemonSqueezy()
+const { proxy } = useScriptLemonSqueezy()
 onMounted(() => {
-  Refresh()
-  Setup({
+  proxy.Refresh()
+  proxy.Setup({
     eventHandler: () => {},
   })
 })

@@ -6,10 +6,10 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { status, twq } = useScriptXPixel({ id: 'ol7lz' })
-// this will be triggered once the script is ready async
+const { status, proxy } = useScriptXPixel({ id: 'ol7lz' })
+
 function triggerEvent() {
-  twq('event', 'tw-ol7lz-ol7mb', {
+  proxy.twq('event', 'tw-ol7lz-ol7mb', {
     value: 123,
   })
 }

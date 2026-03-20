@@ -70,6 +70,10 @@ export interface AssetBundlerTransformerOptions {
    * Pre-built proxy configs from setupFirstParty. Empty object if first-party is disabled.
    */
   proxyConfigs?: Record<string, ProxyConfig>
+  /**
+   * Proxy prefix for first-party mode. Used to derive rewrite targets from domains.
+   */
+  proxyPrefix?: string
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
@@ -429,7 +433,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     const proxyConfig = !firstPartyOptOut && proxyConfigKey
                       ? options.proxyConfigs?.[proxyConfigKey]
                       : undefined
-                    const proxyRewrites = proxyConfig?.rewrite
+                    // Derive rewrites from domains: { from: domain, to: proxyPrefix/domain }
+                    const proxyRewrites = proxyConfig?.domains?.map(domain => ({
+                      from: domain,
+                      to: `${options.proxyPrefix}/${domain}`,
+                    }))
                     const postProcess = proxyConfig?.postProcess
                     const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
 
