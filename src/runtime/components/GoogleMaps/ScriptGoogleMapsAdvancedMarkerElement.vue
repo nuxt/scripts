@@ -79,7 +79,7 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
 })
 
 watch(
-  () => [props.position?.lat, props.position?.lng, props.position, props.options],
+  () => [props.position, props.options],
   () => {
     if (!advancedMarkerElement.value)
       return

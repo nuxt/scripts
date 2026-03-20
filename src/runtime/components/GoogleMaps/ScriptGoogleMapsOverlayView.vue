@@ -184,23 +184,13 @@ watch(() => open.value, () => {
   overlay.value.draw()
 })
 
-// Pane change requires remount (setMap cycles onRemove + onAdd + draw)
-watch(() => props.pane, () => {
+// Pane or blockMapInteraction change requires remount (setMap cycles onRemove + onAdd + draw)
+watch([() => props.pane, () => props.blockMapInteraction], () => {
   if (overlay.value) {
     const map = overlay.value.getMap()
     overlay.value.setMap(null)
     if (map)
-      overlay.value.setMap(map as google.maps.Map)
-  }
-})
-
-// blockMapInteraction change requires remount to re-apply preventMapHitsAndGesturesFrom
-watch(() => props.blockMapInteraction, () => {
-  if (overlay.value) {
-    const map = overlay.value.getMap()
-    overlay.value.setMap(null)
-    if (map)
-      overlay.value.setMap(map as google.maps.Map)
+      overlay.value.setMap(map)
   }
 })
 

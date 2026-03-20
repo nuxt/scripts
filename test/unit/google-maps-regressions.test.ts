@@ -8,6 +8,71 @@ import { bindGoogleMapsEvents } from '../../src/runtime/components/GoogleMaps/bi
 import { createMockAdvancedMarkerElement, createMockGoogleMapsAPIWithInstances, createMockInfoWindow } from './__mocks__/google-maps-api'
 
 describe('google Maps Regressions', () => {
+  describe('bindGoogleMapsEvents emit forwarding', () => {
+    it('should forward withPayload events with the listener argument', () => {
+      const handlers = new Map<string, (...args: any[]) => void>()
+      const instance = {
+        addListener: vi.fn((event: string, handler: (...args: any[]) => void) => {
+          handlers.set(event, handler)
+        }),
+      }
+      const emit = vi.fn()
+      const events = ['click', 'clusteringbegin', 'clusteringend'] as const
+
+      bindGoogleMapsEvents(instance, emit, { withPayload: events })
+
+      expect(instance.addListener).toHaveBeenCalledTimes(3)
+
+      // Simulate event firing and verify emit receives the payload
+      const payload = { type: 'test' }
+      handlers.get('clusteringbegin')!(payload)
+      expect(emit).toHaveBeenCalledWith('clusteringbegin', payload)
+
+      handlers.get('click')!(payload)
+      expect(emit).toHaveBeenCalledWith('click', payload)
+    })
+
+    it('should forward noPayload events without arguments', () => {
+      const handlers = new Map<string, (...args: any[]) => void>()
+      const instance = {
+        addListener: vi.fn((event: string, handler: (...args: any[]) => void) => {
+          handlers.set(event, handler)
+        }),
+      }
+      const emit = vi.fn()
+      const events = ['close', 'domready'] as const
+
+      bindGoogleMapsEvents(instance, emit, { noPayload: events })
+
+      handlers.get('close')!()
+      expect(emit).toHaveBeenCalledWith('close')
+    })
+
+    it('should handle mixed noPayload and withPayload events', () => {
+      const handlers = new Map<string, (...args: any[]) => void>()
+      const instance = {
+        addListener: vi.fn((event: string, handler: (...args: any[]) => void) => {
+          handlers.set(event, handler)
+        }),
+      }
+      const emit = vi.fn()
+
+      bindGoogleMapsEvents(instance, emit, {
+        noPayload: ['center_changed'] as const,
+        withPayload: ['click', 'drag'] as const,
+      })
+
+      expect(instance.addListener).toHaveBeenCalledTimes(3)
+
+      handlers.get('center_changed')!()
+      expect(emit).toHaveBeenCalledWith('center_changed')
+
+      const mouseEvent = { latLng: { lat: 0, lng: 0 } }
+      handlers.get('click')!(mouseEvent)
+      expect(emit).toHaveBeenCalledWith('click', mouseEvent)
+    })
+  })
+
   describe('overlayView open model default', () => {
     // Regression: defineModel<boolean>('open') casts missing prop to false via Vue boolean casting,
     // causing draw() to hide the overlay even when v-model:open is not used.

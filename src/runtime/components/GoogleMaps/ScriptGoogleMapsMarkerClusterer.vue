@@ -2,6 +2,7 @@
 import type { InjectionKey, ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { provide, shallowRef } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 // Inline types to avoid requiring @googlemaps/markerclusterer as a build-time dependency
@@ -50,7 +51,7 @@ const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
       map,
       ...props.options,
     } as any) as MarkerClustererInstance
-    setupEventListeners(clusterer)
+    bindGoogleMapsEvents(clusterer, emit, { withPayload: markerClustererEvents })
     return clusterer
   },
   cleanup(clusterer, { mapsApi }) {
@@ -77,12 +78,6 @@ provide(
     requestRerender,
   },
 )
-
-function setupEventListeners(clusterer: MarkerClustererInstance) {
-  markerClustererEvents.forEach((event) => {
-    clusterer.addListener(event, () => (emit as any)(event, clusterer))
-  })
-}
 </script>
 
 <template>

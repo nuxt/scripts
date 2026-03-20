@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { watch } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
@@ -57,7 +58,7 @@ const dataLayer = useGoogleMapsResource<google.maps.Data>({
       layer.setStyle(props.style)
 
     loadGeoJson(props.src, layer)
-    setupEventListeners(layer)
+    bindGoogleMapsEvents(layer, emit, { withPayload: [...dataEvents, ...featureEvents] })
 
     return layer
   },
@@ -78,15 +79,6 @@ watch(() => props.style, (style) => {
   if (dataLayer.value)
     dataLayer.value.setStyle(style ?? {})
 }, { deep: true })
-
-function setupEventListeners(layer: google.maps.Data) {
-  dataEvents.forEach((event) => {
-    layer.addListener(event, (payload: google.maps.Data.MouseEvent) => (emit as any)(event, payload))
-  })
-  featureEvents.forEach((event) => {
-    layer.addListener(event, (payload: any) => (emit as any)(event, payload))
-  })
-}
 </script>
 
 <template>
