@@ -37,19 +37,26 @@ export function useGoogleMapsResource<T>({
 
   whenever(
     () => mapContext?.map.value && mapContext.mapsApi.value && (!ready || ready()),
-    async () => {
-      const result = await create({
+    () => {
+      Promise.resolve(create({
         map: mapContext!.map.value!,
         mapsApi: mapContext!.mapsApi.value!,
-      })
-      if (isUnmounted.value) {
-        // Resource was created during the async gap after unmount — clean it up immediately
-        if (cleanup && mapContext?.mapsApi.value) {
-          cleanup(result, { mapsApi: mapContext.mapsApi.value })
-        }
-        return
-      }
-      resource.value = result
+      }))
+        .then((result) => {
+          if (isUnmounted.value) {
+            // Resource was created during the async gap after unmount — clean it up immediately
+            if (cleanup && mapContext?.mapsApi.value) {
+              cleanup(result, { mapsApi: mapContext.mapsApi.value })
+            }
+            return
+          }
+          resource.value = result
+        })
+        .catch((err) => {
+          if (import.meta.dev) {
+            console.error('[nuxt-scripts] Google Maps resource creation failed:', err)
+          }
+        })
     },
     { immediate: true, once: true },
   )

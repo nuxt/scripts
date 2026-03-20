@@ -1,7 +1,6 @@
 <script lang="ts">
 import type { InjectionKey, ShallowRef } from 'vue'
-import { whenever } from '@vueuse/core'
-import { provide, shallowRef } from 'vue'
+import { provide, shallowRef, watch } from 'vue'
 import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
@@ -73,16 +72,28 @@ const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
   },
 })
 
-const markerClustererNeedsRerender = shallowRef(false)
+const rerenderPending = shallowRef(false)
 
 function requestRerender() {
-  markerClustererNeedsRerender.value = true
+  rerenderPending.value = true
 }
 
-whenever(() => markerClustererNeedsRerender.value && markerClusterer.value, () => {
-  markerClusterer.value!.render()
-  markerClustererNeedsRerender.value = false
-})
+watch(
+  () => rerenderPending.value && markerClusterer.value,
+  (ready) => {
+    if (!ready)
+      return
+    rerenderPending.value = false
+    try {
+      markerClusterer.value!.render()
+    }
+    catch (err) {
+      if (import.meta.dev) {
+        console.error('[nuxt-scripts] MarkerClusterer render failed:', err)
+      }
+    }
+  },
+)
 
 provide(
   MARKER_CLUSTERER_INJECTION_KEY,
