@@ -253,34 +253,196 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
   return declarations
 }
 
-// --- Component props extraction ---
+// --- Component props & events extraction ---
 
 const SCRIPT_SETUP_RE = /<script\s[^>]*\bsetup\b[^>]*>([\s\S]*?)<\/script>/
 
 function extractScriptSetup(vueSource: string): string | null {
-  // Match <script setup> or <script lang="ts" setup> — handles attribute order variations
   const match = vueSource.match(SCRIPT_SETUP_RE)
   return match?.[1] ?? null
 }
 
-function extractComponentProps(scriptSource: string, fileName: string): ExtractedProps | null {
-  const { program } = parseSync(fileName, scriptSource)
-  let result: ExtractedProps | null = null
+interface ComponentMeta {
+  code: string
+  defaults: Record<string, string>
+  fields: SchemaFieldMeta[]
+  events: SchemaFieldMeta[]
+  models: SchemaFieldMeta[]
+}
 
+function resolveTSType(node: any, source: string): string {
+  if (!node)
+    return 'unknown'
+  // Handle common TS type nodes
+  if (node.type === 'TSStringKeyword')
+    return 'string'
+  if (node.type === 'TSNumberKeyword')
+    return 'number'
+  if (node.type === 'TSBooleanKeyword')
+    return 'boolean'
+  if (node.type === 'TSAnyKeyword')
+    return 'any'
+  if (node.type === 'TSVoidKeyword')
+    return 'void'
+  if (node.type === 'TSNullKeyword')
+    return 'null'
+  if (node.type === 'TSUndefinedKeyword')
+    return 'undefined'
+  if (node.type === 'TSNeverKeyword')
+    return 'never'
+  if (node.type === 'TSUnionType') {
+    return node.types.map((t: any) => resolveTSType(t, source)).join(' | ')
+  }
+  if (node.type === 'TSIntersectionType') {
+    return node.types.map((t: any) => resolveTSType(t, source)).join(' & ')
+  }
+  if (node.type === 'TSArrayType') {
+    return `${resolveTSType(node.elementType, source)}[]`
+  }
+  if (node.type === 'TSLiteralType') {
+    if (node.literal?.type === 'StringLiteral' || (node.literal?.type === 'Literal' && typeof node.literal.value === 'string'))
+      return `'${node.literal.value}'`
+    if (node.literal?.type === 'NumericLiteral' || (node.literal?.type === 'Literal' && typeof node.literal.value === 'number'))
+      return String(node.literal.value)
+    if (node.literal?.type === 'BooleanLiteral' || (node.literal?.type === 'Literal' && typeof node.literal.value === 'boolean'))
+      return String(node.literal.value)
+  }
+  // For complex types (generics, qualified names), use the raw source
+  return source.slice(node.start, node.end)
+}
+
+function extractPropsFields(typeNode: any, source: string): SchemaFieldMeta[] {
+  if (!typeNode || typeNode.type !== 'TSTypeLiteral')
+    return []
+
+  const fields: SchemaFieldMeta[] = []
+  for (const member of typeNode.members || []) {
+    if (member.type !== 'TSPropertySignature')
+      continue
+    const name = member.key?.name || member.key?.value
+    if (!name)
+      continue
+
+    fields.push({
+      name,
+      type: resolveTSType(member.typeAnnotation?.typeAnnotation, source),
+      required: !member.optional,
+    })
+  }
+  return fields
+}
+
+function extractComponentMeta(scriptSource: string, fileName: string): ComponentMeta | null {
+  const { program } = parseSync(fileName, scriptSource)
+  let propsResult: { code: string, defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
+  const events: SchemaFieldMeta[] = []
+  const models: SchemaFieldMeta[] = []
+  const constArrays: Record<string, string[]> = {}
+
+  // First pass: collect `as const` arrays for event name resolution
+  walk(program, {
+    enter(node) {
+      if (node.type !== 'VariableDeclaration')
+        return
+      for (const decl of node.declarations || []) {
+        if (decl.id?.type !== 'Identifier')
+          continue
+        const init = decl.init
+        // Match: const foo = [...] as const
+        if (init?.type === 'TSAsExpression' && init.expression?.type === 'ArrayExpression') {
+          const names: string[] = []
+          for (const el of init.expression.elements || []) {
+            // oxc-parser uses 'Literal' (not 'StringLiteral')
+            if ((el.type === 'StringLiteral' || el.type === 'Literal') && typeof el.value === 'string')
+              names.push(el.value)
+          }
+          if (names.length)
+            constArrays[decl.id.name] = names
+        }
+      }
+    },
+  })
+
+  // Second pass: extract defineProps, defineEmits, defineModel
   walk(program, {
     enter(node) {
       if (node.type !== 'CallExpression')
         return
 
+      // defineModel<T>('name')
+      if (node.callee?.name === 'defineModel') {
+        const modelName = node.arguments?.[0]?.value || 'modelValue'
+        const typeParam = node.typeArguments?.params?.[0]
+        models.push({
+          name: `v-model:${modelName}`,
+          type: typeParam ? resolveTSType(typeParam, scriptSource) : 'any',
+          required: false,
+        })
+        return
+      }
+
+      // defineEmits<{...}>()
+      if (node.callee?.name === 'defineEmits') {
+        const typeArg = node.typeArguments?.params?.[0]
+        if (!typeArg)
+          return
+
+        // Parse call signatures: (event: typeof arr[number], payload?: T): void
+        if (typeArg.type === 'TSTypeLiteral') {
+          for (const member of typeArg.members || []) {
+            if (member.type !== 'TSCallSignatureDeclaration')
+              continue
+            const params = member.params || []
+            if (params.length === 0)
+              continue
+
+            // First param is the event discriminator
+            const eventParam = params[0]
+            const eventType = eventParam?.typeAnnotation?.typeAnnotation
+
+            // typeof constArrayName[number] → resolve to array values
+            if (eventType?.type === 'TSIndexedAccessType') {
+              const objType = eventType.objectType
+              if (objType?.type === 'TSTypeQuery') {
+                const refName = objType.exprName?.name
+                if (refName && constArrays[refName]) {
+                  const payloadType = params.length > 1
+                    ? resolveTSType(params[1]?.typeAnnotation?.typeAnnotation, scriptSource)
+                    : undefined
+                  for (const eventName of constArrays[refName]) {
+                    events.push({
+                      name: eventName,
+                      type: payloadType || '-',
+                      required: false,
+                    })
+                  }
+                }
+              }
+            }
+            // Literal string event: (event: 'ready', ...): void
+            else if (eventType?.type === 'TSLiteralType' && (eventType.literal?.type === 'StringLiteral' || eventType.literal?.type === 'Literal')) {
+              const payloadType = params.length > 1
+                ? resolveTSType(params[1]?.typeAnnotation?.typeAnnotation, scriptSource)
+                : undefined
+              events.push({
+                name: eventType.literal.value,
+                type: payloadType || '-',
+                required: false,
+              })
+            }
+          }
+        }
+        return
+      }
+
+      // defineProps / withDefaults(defineProps)
       let definePropsCall: any = null
       let defaultsObj: any = null
 
-      // withDefaults(defineProps<...>(), { ... })
       if (node.callee?.name === 'withDefaults' && node.arguments?.[0]?.callee?.name === 'defineProps') {
         definePropsCall = node.arguments[0]
         defaultsObj = node.arguments[1]
       }
-      // defineProps<...>()
       else if (node.callee?.name === 'defineProps') {
         definePropsCall = node
       }
@@ -293,26 +455,39 @@ function extractComponentProps(scriptSource: string, fileName: string): Extracte
         return
 
       const code = scriptSource.slice(typeArg.start, typeArg.end)
+      const fields = extractPropsFields(typeArg, scriptSource)
 
-      // Extract defaults
       const defaults: Record<string, string> = {}
       if (defaultsObj?.type === 'ObjectExpression') {
         for (const prop of defaultsObj.properties || []) {
           if (prop.type === 'ObjectProperty' || prop.type === 'Property') {
             const key = prop.key?.name || prop.key?.value
-            if (key) {
+            if (key)
               defaults[key] = scriptSource.slice(prop.value.start, prop.value.end)
-            }
           }
         }
       }
 
-      result = { code, defaults }
-      this.skip()
+      // Merge defaults into fields
+      for (const field of fields) {
+        if (defaults[field.name])
+          field.defaultValue = defaults[field.name]
+      }
+
+      propsResult = { code, defaults, fields }
     },
   })
 
-  return result
+  if (!propsResult)
+    return null
+
+  return {
+    code: propsResult.code,
+    defaults: propsResult.defaults,
+    fields: [...propsResult.fields, ...models],
+    events,
+    models,
+  }
 }
 
 // --- Main ---
@@ -343,7 +518,7 @@ function findVueComponents(dir: string): string[] {
 }
 
 const componentFiles = findVueComponents(componentsDir)
-const componentProps: Record<string, ExtractedProps> = {}
+const componentMetas: Record<string, ComponentMeta> = {}
 
 for (const filePath of componentFiles) {
   const vueSource = readFileSync(filePath, 'utf-8')
@@ -352,9 +527,9 @@ for (const filePath of componentFiles) {
     continue
 
   const fileName = filePath.split('/').pop()!
-  const props = extractComponentProps(scriptSetup, fileName.replace('.vue', '.ts'))
-  if (props) {
-    componentProps[fileName.replace('.vue', '')] = props
+  const meta = extractComponentMeta(scriptSetup, fileName.replace('.vue', '.ts'))
+  if (meta) {
+    componentMetas[fileName.replace('.vue', '')] = meta
   }
 }
 
@@ -387,9 +562,8 @@ const componentToSlug: Record<string, string> = {
   ScriptPayPalMessages: 'paypal',
 }
 
-// Add component props as declarations to the types JSON
-for (const [componentName, props] of Object.entries(componentProps)) {
-  // Skip non-public components (loading indicator, aria indicator, etc.)
+// Add component props/events as declarations and schema fields
+for (const [componentName, meta] of Object.entries(componentMetas)) {
   const slug = componentToSlug[componentName]
   if (!slug)
     continue
@@ -397,19 +571,35 @@ for (const [componentName, props] of Object.entries(componentProps)) {
   if (!types[slug])
     types[slug] = []
 
-  const propsInterface = `interface ${componentName}Props ${props.code}`
+  const propsInterface = `interface ${componentName}Props ${meta.code}`
   types[slug].push({
     name: `${componentName}Props`,
     kind: 'interface',
     code: propsInterface,
   })
 
-  if (Object.keys(props.defaults).length) {
-    const defaultsCode = `const ${componentName}Defaults = ${JSON.stringify(props.defaults, null, 2)}`
+  if (Object.keys(meta.defaults).length) {
+    const defaultsCode = `const ${componentName}Defaults = ${JSON.stringify(meta.defaults, null, 2)}`
     types[slug].push({
       name: `${componentName}Defaults`,
       kind: 'const',
       code: defaultsCode,
+    })
+  }
+
+  // Store structured props fields as schema fields for table rendering
+  if (meta.fields.length) {
+    schemaFields[`${componentName}Props`] = meta.fields
+  }
+
+  // Store events as schema fields under a separate key
+  if (meta.events.length) {
+    schemaFields[`${componentName}Events`] = meta.events
+    // Also add an events declaration so ScriptTypes can display it
+    types[slug].push({
+      name: `${componentName}Events`,
+      kind: 'interface',
+      code: `interface ${componentName}Events {\n${meta.events.map(e => `  ${e.name}: ${e.type}`).join('\n')}\n}`,
     })
   }
 }
@@ -420,4 +610,4 @@ const output = {
 }
 
 writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`)
-console.log(`Generated registry types for ${Object.keys(types).length} scripts (${Object.keys(componentProps).length} with component props, ${Object.keys(schemaFields).length} schema fields)`)
+console.log(`Generated registry types for ${Object.keys(types).length} scripts (${Object.keys(componentMetas).length} with component meta, ${Object.keys(schemaFields).length} schema fields)`)

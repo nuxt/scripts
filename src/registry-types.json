@@ -27,11 +27,6 @@
         "name": "ScriptBlueskyEmbedProps",
         "kind": "interface",
         "code": "interface ScriptBlueskyEmbedProps {\n  /**\n   * The Bluesky post URL to embed\n   * @example 'https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a'\n   */\n  postUrl: string\n  /**\n   * Custom API endpoint for fetching post data\n   * @default '/_scripts/embed/bluesky'\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   * @default '/_scripts/embed/bluesky-image'\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
-      },
-      {
-        "name": "ScriptBlueskyEmbedDefaults",
-        "kind": "const",
-        "code": "const ScriptBlueskyEmbedDefaults = {\n  \"apiEndpoint\": \"'/_scripts/embed/bluesky'\",\n  \"imageProxyEndpoint\": \"'/_scripts/embed/bluesky-image'\"\n}"
       }
     ],
     "clarity": [
@@ -78,11 +73,6 @@
         "name": "ScriptCrispProps",
         "kind": "interface",
         "code": "interface ScriptCrispProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  id: string\n  runtimeConfig?: {\n    locale: string\n  }\n  tokenId?: string\n  cookieDomain?: string\n  cookieExpiry?: number\n}"
-      },
-      {
-        "name": "ScriptCrispDefaults",
-        "kind": "const",
-        "code": "const ScriptCrispDefaults = {\n  \"trigger\": \"'click'\"\n}"
       }
     ],
     "databuddy-analytics": [
@@ -124,11 +114,6 @@
         "name": "ScriptGoogleAdsenseProps",
         "kind": "interface",
         "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
-      },
-      {
-        "name": "ScriptGoogleAdsenseDefaults",
-        "kind": "const",
-        "code": "const ScriptGoogleAdsenseDefaults = {\n  \"dataFullWidthResponsive\": \"true\",\n  \"dataAdFormat\": \"undefined\"\n}"
       }
     ],
     "google-analytics": [
@@ -207,22 +192,27 @@
       {
         "name": "ScriptGoogleMapsProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Is Google Maps being rendered above the fold?\n   * This will load the placeholder image with higher priority.\n   */\n  aboveTheFold?: boolean\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Should a marker be displayed on the map where the centre is.\n   */\n  centerMarker?: boolean\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map\n   */\n  height?: number | string\n  /**\n   * Customize the placeholder image attributes.\n   *\n   * @see https://developers.google.com/maps/documentation/maps-static/start.\n   */\n  placeholderOptions?: PlaceholderOptions\n  /**\n   * Customize the placeholder image attributes.\n   */\n  placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Extra Markers to add to the map.\n   */\n  markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light', 'dark', or a reactive ref.\n   */\n  colorMode?: 'light' | 'dark'\n}"
-      },
-      {
-        "name": "ScriptGoogleMapsDefaults",
-        "kind": "const",
-        "code": "const ScriptGoogleMapsDefaults = {\n  \"trigger\": \"['mouseenter', 'mouseover', 'mousedown']\",\n  \"width\": \"640\",\n  \"height\": \"400\",\n  \"centerMarker\": \"true\"\n}"
+        "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Is Google Maps being rendered above the fold?\n   * This will load the placeholder image with higher priority.\n   */\n  aboveTheFold?: boolean\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Zoom level for the map (0-21). Reactive: changing this will update the map.\n   * Takes precedence over mapOptions.zoom when provided.\n   */\n  zoom?: number\n  /**\n   * Should a marker be displayed on the map where the centre is.\n   */\n  centerMarker?: boolean\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map\n   */\n  height?: number | string\n  /**\n   * Customize the placeholder image attributes.\n   *\n   * @see https://developers.google.com/maps/documentation/maps-static/start.\n   */\n  placeholderOptions?: PlaceholderOptions\n  /**\n   * Customize the placeholder image attributes.\n   */\n  placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Extra Markers to add to the map.\n   */\n  markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light', 'dark', or a reactive ref.\n   */\n  colorMode?: 'light' | 'dark'\n}"
       },
       {
         "name": "ScriptGoogleMapsAdvancedMarkerElementProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsAdvancedMarkerElementProps {\n  options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsAdvancedMarkerElementProps {\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsAdvancedMarkerElementEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsAdvancedMarkerElementEvents {\n  animation_changed: -\n  clickable_changed: -\n  cursor_changed: -\n  draggable_changed: -\n  flat_changed: -\n  icon_changed: -\n  position_changed: -\n  shape_changed: -\n  title_changed: -\n  visible_changed: -\n  zindex_changed: -\n  click: google.maps.MapMouseEvent\n  contextmenu: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n}"
       },
       {
         "name": "ScriptGoogleMapsCircleProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsCircleProps {\n  options?: Omit<google.maps.CircleOptions, 'map'>\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsCircleEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsCircleEvents {\n  center_changed: -\n  radius_changed: -\n  click: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mousemove: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n  rightclick: google.maps.MapMouseEvent\n}"
       },
       {
         "name": "ScriptGoogleMapsHeatmapLayerProps",
@@ -235,14 +225,34 @@
         "code": "interface ScriptGoogleMapsInfoWindowProps {\n  options?: google.maps.InfoWindowOptions\n}"
       },
       {
+        "name": "ScriptGoogleMapsInfoWindowEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsInfoWindowEvents {\n  close: -\n  closeclick: -\n  content_changed: -\n  domready: -\n  headercontent_changed: -\n  headerdisabled_changed: -\n  position_changed: -\n  visible: -\n  zindex_changed: -\n}"
+      },
+      {
         "name": "ScriptGoogleMapsMarkerProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsMarkerProps {\n  options?: Omit<google.maps.MarkerOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsMarkerProps {\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  options?: Omit<google.maps.MarkerOptions, 'map'>\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsMarkerEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsMarkerEvents {\n  animation_changed: -\n  clickable_changed: -\n  cursor_changed: -\n  draggable_changed: -\n  flat_changed: -\n  icon_changed: -\n  position_changed: -\n  shape_changed: -\n  title_changed: -\n  visible_changed: -\n  zindex_changed: -\n  click: google.maps.MapMouseEvent\n  contextmenu: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n}"
       },
       {
         "name": "ScriptGoogleMapsMarkerClustererProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsMarkerClustererProps {\n  options?: Omit<MarkerClustererOptions, 'map'>\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsMarkerClustererEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsMarkerClustererEvents {\n  click: MarkerClustererInstance\n  clusteringbegin: MarkerClustererInstance\n  clusteringend: MarkerClustererInstance\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsOverlayViewProps",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsOverlayViewProps {\n  position?: google.maps.LatLngLiteral\n  anchor?: OverlayAnchor\n  offset?: { x: number, y: number }\n  pane?: OverlayPane\n  zIndex?: number\n  blockMapInteraction?: boolean\n}"
       },
       {
         "name": "ScriptGoogleMapsPinElementProps",
@@ -255,14 +265,29 @@
         "code": "interface ScriptGoogleMapsPolygonProps {\n  options?: Omit<google.maps.PolygonOptions, 'map'>\n}"
       },
       {
+        "name": "ScriptGoogleMapsPolygonEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsPolygonEvents {\n  click: google.maps.PolyMouseEvent\n  contextmenu: google.maps.PolyMouseEvent\n  dblclick: google.maps.PolyMouseEvent\n  mousedown: google.maps.PolyMouseEvent\n  mousemove: google.maps.PolyMouseEvent\n  mouseout: google.maps.PolyMouseEvent\n  mouseover: google.maps.PolyMouseEvent\n  mouseup: google.maps.PolyMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n}"
+      },
+      {
         "name": "ScriptGoogleMapsPolylineProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsPolylineProps {\n  options?: Omit<google.maps.PolylineOptions, 'map'>\n}"
       },
       {
+        "name": "ScriptGoogleMapsPolylineEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsPolylineEvents {\n  click: google.maps.PolyMouseEvent\n  contextmenu: google.maps.PolyMouseEvent\n  dblclick: google.maps.PolyMouseEvent\n  mousedown: google.maps.PolyMouseEvent\n  mousemove: google.maps.PolyMouseEvent\n  mouseout: google.maps.PolyMouseEvent\n  mouseover: google.maps.PolyMouseEvent\n  mouseup: google.maps.PolyMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n}"
+      },
+      {
         "name": "ScriptGoogleMapsRectangleProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsRectangleProps {\n  options?: Omit<google.maps.RectangleOptions, 'map'>\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsRectangleEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsRectangleEvents {\n  bounds_changed: -\n  click: google.maps.MapMouseEvent\n  contextmenu: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mousemove: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n}"
       }
     ],
     "google-recaptcha": [
@@ -373,6 +398,11 @@
     ],
     "gravatar": [
       {
+        "name": "GravatarOptions",
+        "kind": "const",
+        "code": "export const GravatarOptions = object({\n  /**\n   * Cache duration for proxied avatar images in seconds.\n   * @default 3600\n   */\n  cacheMaxAge: optional(number()),\n  /**\n   * Default image to show when no Gravatar exists.\n   * @see https://docs.gravatar.com/general/images/#default-image\n   * @default 'mp'\n   */\n  default: optional(string()),\n  /**\n   * Avatar size in pixels (1-2048).\n   * @default 80\n   */\n  size: optional(number()),\n  /**\n   * Content rating filter.\n   * @default 'g'\n   */\n  rating: optional(string()),\n})"
+      },
+      {
         "name": "GravatarApi",
         "kind": "interface",
         "code": "export interface GravatarApi {\n  /**\n   * Get a proxied avatar URL for a given SHA256 email hash.\n   * When firstParty mode is enabled, this routes through your server.\n   */\n  getAvatarUrl: (hash: string, options?: { size?: number, default?: string, rating?: string }) => string\n  /**\n   * Get a proxied avatar URL using the server-side hashing endpoint.\n   * The email is sent to YOUR server (not Gravatar) for hashing.\n   * Only available when the gravatar proxy is enabled.\n   */\n  getAvatarUrlFromEmail: (email: string, options?: { size?: number, default?: string, rating?: string }) => string\n}"
@@ -400,11 +430,6 @@
         "name": "ScriptInstagramEmbedProps",
         "kind": "interface",
         "code": "interface ScriptInstagramEmbedProps {\n  /**\n   * The Instagram post URL to embed\n   * e.g., https://www.instagram.com/p/ABC123/\n   */\n  postUrl: string\n  /**\n   * Whether to include captions in the embed\n   * @default true\n   */\n  captions?: boolean\n  /**\n   * Custom API endpoint for fetching embed HTML\n   * @default '/_scripts/embed/instagram'\n   */\n  apiEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
-      },
-      {
-        "name": "ScriptInstagramEmbedDefaults",
-        "kind": "const",
-        "code": "const ScriptInstagramEmbedDefaults = {\n  \"captions\": \"true\",\n  \"apiEndpoint\": \"'/_scripts/embed/instagram'\"\n}"
       }
     ],
     "intercom": [
@@ -422,11 +447,6 @@
         "name": "ScriptIntercomProps",
         "kind": "interface",
         "code": "interface ScriptIntercomProps {\n  appId: string\n  apiBase?: string\n  name?: string\n  email?: string\n  userId?: string\n  // customizing the messenger\n  alignment?: 'left' | 'right'\n  horizontalPadding?: number\n  verticalPadding?: number\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
-      },
-      {
-        "name": "ScriptIntercomDefaults",
-        "kind": "const",
-        "code": "const ScriptIntercomDefaults = {\n  \"trigger\": \"'click'\"\n}"
       }
     ],
     "lemon-squeezy": [
@@ -444,11 +464,6 @@
         "name": "ScriptLemonSqueezyProps",
         "kind": "interface",
         "code": "interface ScriptLemonSqueezyProps {\n  trigger?: ElementScriptTrigger\n}"
-      },
-      {
-        "name": "ScriptLemonSqueezyDefaults",
-        "kind": "const",
-        "code": "const ScriptLemonSqueezyDefaults = {\n  \"trigger\": \"'visible'\"\n}"
       }
     ],
     "matomo-analytics": [
@@ -541,19 +556,9 @@
         "code": "interface ScriptPayPalButtonsProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The v6 SDK components to load.\n   * @default ['paypal-payments']\n   */\n  components?: Components[]\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * The merchant ID(s).\n   */\n  merchantId?: string | string[]\n  /**\n   * Partner attribution ID for revenue sharing.\n   */\n  partnerAttributionId?: string\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
       },
       {
-        "name": "ScriptPayPalButtonsDefaults",
-        "kind": "const",
-        "code": "const ScriptPayPalButtonsDefaults = {\n  \"trigger\": \"'visible'\",\n  \"clientId\": \"'test'\",\n  \"components\": \"() => ['paypal-payments'] as Components[]\",\n  \"paypalScriptOptions\": \"() => ({})\"\n}"
-      },
-      {
         "name": "ScriptPayPalMessagesProps",
         "kind": "interface",
         "code": "interface ScriptPayPalMessagesProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The merchant ID for the paypal script.\n   */\n  merchantId?: string | string[]\n  /**\n   * The partner attribution ID.\n   */\n  partnerAttributionId?: string\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * Options for the PayPal Messages session.\n   */\n  messagesOptions?: PayPalMessagesOptions\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
-      },
-      {
-        "name": "ScriptPayPalMessagesDefaults",
-        "kind": "const",
-        "code": "const ScriptPayPalMessagesDefaults = {\n  \"trigger\": \"'visible'\",\n  \"clientId\": \"'test'\",\n  \"paypalScriptOptions\": \"() => ({})\",\n  \"messagesOptions\": \"() => ({})\"\n}"
       }
     ],
     "plausible-analytics": [
@@ -698,11 +703,6 @@
         "name": "ScriptStripePricingTableProps",
         "kind": "interface",
         "code": "interface ScriptStripePricingTableProps {\n  trigger?: ElementScriptTrigger\n  publishableKey: string\n  pricingTableId: string\n  clientReferenceId?: string\n  customerEmail?: string\n  customerSessionClientSecret?: string\n}"
-      },
-      {
-        "name": "ScriptStripePricingTableDefaults",
-        "kind": "const",
-        "code": "const ScriptStripePricingTableDefaults = {\n  \"trigger\": \"'visible'\"\n}"
       }
     ],
     "tiktok-pixel": [
@@ -796,11 +796,6 @@
         "name": "ScriptVimeoPlayerProps",
         "kind": "interface",
         "code": "interface ScriptVimeoPlayerProps {\n  // custom\n  trigger?: ElementScriptTrigger\n  placeholderAttrs?: ImgHTMLAttributes\n  rootAttrs?: HTMLAttributes\n  aboveTheFold?: boolean\n  vimeoOptions?: VimeoOptions\n  id?: number | undefined\n  url?: string | undefined\n  ratio?: string\n  /**\n   * Object-fit for the placeholder image.\n   *\n   * @default 'contain'\n   */\n  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'\n}"
-      },
-      {
-        "name": "ScriptVimeoPlayerDefaults",
-        "kind": "const",
-        "code": "const ScriptVimeoPlayerDefaults = {\n  \"trigger\": \"'mousedown'\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'contain'\"\n}"
       }
     ],
     "x-embed": [
@@ -818,11 +813,6 @@
         "name": "ScriptXEmbedProps",
         "kind": "interface",
         "code": "interface ScriptXEmbedProps {\n  /**\n   * The tweet ID to embed\n   */\n  tweetId: string\n  /**\n   * Custom API endpoint for fetching tweet data\n   * @default '/_scripts/embed/x'\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   * @default '/_scripts/embed/x-image'\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
-      },
-      {
-        "name": "ScriptXEmbedDefaults",
-        "kind": "const",
-        "code": "const ScriptXEmbedDefaults = {\n  \"apiEndpoint\": \"'/_scripts/embed/x'\",\n  \"imageProxyEndpoint\": \"'/_scripts/embed/x-image'\"\n}"
       }
     ],
     "x-pixel": [
@@ -862,11 +852,6 @@
         "name": "ScriptYouTubePlayerProps",
         "kind": "interface",
         "code": "interface ScriptYouTubePlayerProps {\n  placeholderAttrs?: ImgHTMLAttributes\n  rootAttrs?: HTMLAttributes\n  aboveTheFold?: boolean\n  trigger?: ElementScriptTrigger\n  videoId: string\n  playerVars?: YT.PlayerVars\n  width?: number\n  height?: number\n  ratio?: string\n  /**\n   * Whether to use youtube-nocookie.com for embedding.\n   *\n   * @default false\n   */\n  cookies?: boolean\n  playerOptions?: YT.PlayerOptions\n  thumbnailSize?: YoutubeThumbnailSize\n  webp?: boolean\n  /**\n   * Object-fit for the placeholder image.\n   *\n   * @default 'cover'\n   */\n  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'\n}"
-      },
-      {
-        "name": "ScriptYouTubePlayerDefaults",
-        "kind": "const",
-        "code": "const ScriptYouTubePlayerDefaults = {\n  \"cookies\": \"false\",\n  \"trigger\": \"'mousedown'\",\n  \"thumbnailSize\": \"'hq720'\",\n  \"webp\": \"true\",\n  \"playerVars\": \"{ autoplay: 0, playsinline: 1 }\",\n  \"width\": \"640\",\n  \"height\": \"360\",\n  \"ratio\": \"'16/9'\",\n  \"placeholderObjectFit\": \"'cover'\"\n}"
       }
     ],
     "carbon-ads": [
@@ -2023,6 +2008,1197 @@
         "required": false,
         "description": "Content rating filter.",
         "defaultValue": "'g'"
+      }
+    ],
+    "ScriptGoogleMapsProps": [
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "aboveTheFold",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "apiKey",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "center",
+        "type": "google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`",
+        "required": false
+      },
+      {
+        "name": "zoom",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "centerMarker",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "mapOptions",
+        "type": "google.maps.MapOptions",
+        "required": false
+      },
+      {
+        "name": "region",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "version",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "width",
+        "type": "number | string",
+        "required": false
+      },
+      {
+        "name": "height",
+        "type": "number | string",
+        "required": false
+      },
+      {
+        "name": "placeholderOptions",
+        "type": "PlaceholderOptions",
+        "required": false
+      },
+      {
+        "name": "placeholderAttrs",
+        "type": "ImgHTMLAttributes & ReservedProps & Record<string, unknown>",
+        "required": false
+      },
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
+        "required": false
+      },
+      {
+        "name": "markers",
+        "type": "(`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]",
+        "required": false
+      },
+      {
+        "name": "mapIds",
+        "type": "{ light?: string, dark?: string }",
+        "required": false
+      },
+      {
+        "name": "colorMode",
+        "type": "'light' | 'dark'",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsAdvancedMarkerElementProps": [
+      {
+        "name": "position",
+        "type": "google.maps.LatLngLiteral | google.maps.LatLng",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsAdvancedMarkerElementEvents": [
+      {
+        "name": "animation_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "clickable_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "cursor_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "draggable_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "flat_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "icon_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "position_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "shape_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "title_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "visible_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "zindex_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "click",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsCircleProps": [
+      {
+        "name": "options",
+        "type": "Omit<google.maps.CircleOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsCircleEvents": [
+      {
+        "name": "center_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "radius_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "click",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousemove",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "rightclick",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsHeatmapLayerProps": [
+      {
+        "name": "options",
+        "type": "Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsInfoWindowProps": [
+      {
+        "name": "options",
+        "type": "google.maps.InfoWindowOptions",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsInfoWindowEvents": [
+      {
+        "name": "close",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "closeclick",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "content_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "domready",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "headercontent_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "headerdisabled_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "position_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "visible",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "zindex_changed",
+        "type": "-",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsMarkerProps": [
+      {
+        "name": "position",
+        "type": "google.maps.LatLngLiteral | google.maps.LatLng",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "Omit<google.maps.MarkerOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsMarkerEvents": [
+      {
+        "name": "animation_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "clickable_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "cursor_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "draggable_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "flat_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "icon_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "position_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "shape_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "title_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "visible_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "zindex_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "click",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsMarkerClustererProps": [
+      {
+        "name": "options",
+        "type": "Omit<MarkerClustererOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsMarkerClustererEvents": [
+      {
+        "name": "click",
+        "type": "MarkerClustererInstance",
+        "required": false
+      },
+      {
+        "name": "clusteringbegin",
+        "type": "MarkerClustererInstance",
+        "required": false
+      },
+      {
+        "name": "clusteringend",
+        "type": "MarkerClustererInstance",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsOverlayViewProps": [
+      {
+        "name": "position",
+        "type": "google.maps.LatLngLiteral",
+        "required": false
+      },
+      {
+        "name": "anchor",
+        "type": "OverlayAnchor",
+        "required": false
+      },
+      {
+        "name": "offset",
+        "type": "{ x: number, y: number }",
+        "required": false
+      },
+      {
+        "name": "pane",
+        "type": "OverlayPane",
+        "required": false
+      },
+      {
+        "name": "zIndex",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "blockMapInteraction",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "v-model:open",
+        "type": "boolean",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsPinElementProps": [
+      {
+        "name": "options",
+        "type": "Omit<google.maps.marker.PinElementOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsPolygonProps": [
+      {
+        "name": "options",
+        "type": "Omit<google.maps.PolygonOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsPolygonEvents": [
+      {
+        "name": "click",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousemove",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsPolylineProps": [
+      {
+        "name": "options",
+        "type": "Omit<google.maps.PolylineOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsPolylineEvents": [
+      {
+        "name": "click",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousemove",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.PolyMouseEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsRectangleProps": [
+      {
+        "name": "options",
+        "type": "Omit<google.maps.RectangleOptions, 'map'>",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsRectangleEvents": [
+      {
+        "name": "bounds_changed",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "click",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousemove",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptBlueskyEmbedProps": [
+      {
+        "name": "postUrl",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "apiEndpoint",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "imageProxyEndpoint",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes",
+        "required": false
+      }
+    ],
+    "ScriptCarbonAdsProps": [
+      {
+        "name": "serve",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "placement",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "format",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      }
+    ],
+    "ScriptCrispProps": [
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "runtimeConfig",
+        "type": "{\n    locale: string\n  }",
+        "required": false
+      },
+      {
+        "name": "tokenId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "cookieDomain",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "cookieExpiry",
+        "type": "number",
+        "required": false
+      }
+    ],
+    "ScriptGoogleAdsenseProps": [
+      {
+        "name": "dataAdClient",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "dataAdSlot",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "dataAdFormat",
+        "type": "'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'",
+        "required": false
+      },
+      {
+        "name": "dataAdLayout",
+        "type": "'in-article' | 'in-feed' | 'fixed'",
+        "required": false
+      },
+      {
+        "name": "dataFullWidthResponsive",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      }
+    ],
+    "ScriptInstagramEmbedProps": [
+      {
+        "name": "postUrl",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "captions",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "apiEndpoint",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes",
+        "required": false
+      }
+    ],
+    "ScriptIntercomProps": [
+      {
+        "name": "appId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "apiBase",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "userId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "alignment",
+        "type": "'left' | 'right'",
+        "required": false
+      },
+      {
+        "name": "horizontalPadding",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "verticalPadding",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      }
+    ],
+    "ScriptLemonSqueezyProps": [
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      }
+    ],
+    "ScriptPayPalButtonsProps": [
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
+        "required": false
+      },
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "clientId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "clientToken",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "components",
+        "type": "Components[]",
+        "required": false
+      },
+      {
+        "name": "pageType",
+        "type": "PageTypes",
+        "required": false
+      },
+      {
+        "name": "locale",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "merchantId",
+        "type": "string | string[]",
+        "required": false
+      },
+      {
+        "name": "partnerAttributionId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "paypalScriptOptions",
+        "type": "Partial<PayPalInput>",
+        "required": false
+      }
+    ],
+    "ScriptPayPalMessagesProps": [
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
+        "required": false
+      },
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "clientId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "clientToken",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "merchantId",
+        "type": "string | string[]",
+        "required": false
+      },
+      {
+        "name": "partnerAttributionId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "pageType",
+        "type": "PageTypes",
+        "required": false
+      },
+      {
+        "name": "locale",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "messagesOptions",
+        "type": "PayPalMessagesOptions",
+        "required": false
+      },
+      {
+        "name": "paypalScriptOptions",
+        "type": "Partial<PayPalInput>",
+        "required": false
+      }
+    ],
+    "ScriptStripePricingTableProps": [
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "publishableKey",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "pricingTableId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "clientReferenceId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "customerEmail",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "customerSessionClientSecret",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "ScriptVimeoPlayerProps": [
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "placeholderAttrs",
+        "type": "ImgHTMLAttributes",
+        "required": false
+      },
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes",
+        "required": false
+      },
+      {
+        "name": "aboveTheFold",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "vimeoOptions",
+        "type": "VimeoOptions",
+        "required": false
+      },
+      {
+        "name": "id",
+        "type": "number | undefined",
+        "required": false
+      },
+      {
+        "name": "url",
+        "type": "string | undefined",
+        "required": false
+      },
+      {
+        "name": "ratio",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "placeholderObjectFit",
+        "type": "'cover' | 'contain' | 'fill' | 'none' | 'scale-down'",
+        "required": false
+      }
+    ],
+    "ScriptXEmbedProps": [
+      {
+        "name": "tweetId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "apiEndpoint",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "imageProxyEndpoint",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes",
+        "required": false
+      }
+    ],
+    "ScriptYouTubePlayerProps": [
+      {
+        "name": "placeholderAttrs",
+        "type": "ImgHTMLAttributes",
+        "required": false
+      },
+      {
+        "name": "rootAttrs",
+        "type": "HTMLAttributes",
+        "required": false
+      },
+      {
+        "name": "aboveTheFold",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "trigger",
+        "type": "ElementScriptTrigger",
+        "required": false
+      },
+      {
+        "name": "videoId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "playerVars",
+        "type": "YT.PlayerVars",
+        "required": false
+      },
+      {
+        "name": "width",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "ratio",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "cookies",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "playerOptions",
+        "type": "YT.PlayerOptions",
+        "required": false
+      },
+      {
+        "name": "thumbnailSize",
+        "type": "YoutubeThumbnailSize",
+        "required": false
+      },
+      {
+        "name": "webp",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "placeholderObjectFit",
+        "type": "'cover' | 'contain' | 'fill' | 'none' | 'scale-down'",
+        "required": false
       }
     ]
   }
