@@ -131,7 +131,7 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
             identify: (userId: string) => callOrQueue('identify', userId),
             clearUserId: () => callOrQueue('clearUserId'),
             getUserId: () => window.rybbit?.getUserId?.() ?? null,
-            rybbit: window.rybbit,
+            get rybbit() { return window.rybbit },
           } as RybbitAnalyticsApi
         },
       },
