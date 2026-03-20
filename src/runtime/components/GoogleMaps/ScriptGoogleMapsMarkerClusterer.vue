@@ -32,7 +32,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: typeof markerClustererEvents[number], payload: MarkerClustererInstance): void
+  (event: 'click', payload: MarkerClustererInstance): void
+  (event: 'clusteringbegin', payload: MarkerClustererInstance): void
+  (event: 'clusteringend', payload: MarkerClustererInstance): void
 }>()
 
 const markerClustererEvents = [
@@ -78,7 +80,7 @@ provide(
 
 function setupEventListeners(clusterer: MarkerClustererInstance) {
   markerClustererEvents.forEach((event) => {
-    clusterer.addListener(event, () => emit(event, clusterer))
+    clusterer.addListener(event, () => (emit as any)(event, clusterer))
   })
 }
 </script>

@@ -8,8 +8,18 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: typeof eventsWithoutPayload[number]): void
-  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
+  (event: 'bounds_changed'): void
+  (event: 'click', payload: google.maps.MapMouseEvent): void
+  (event: 'contextmenu', payload: google.maps.MapMouseEvent): void
+  (event: 'dblclick', payload: google.maps.MapMouseEvent): void
+  (event: 'drag', payload: google.maps.MapMouseEvent): void
+  (event: 'dragend', payload: google.maps.MapMouseEvent): void
+  (event: 'dragstart', payload: google.maps.MapMouseEvent): void
+  (event: 'mousedown', payload: google.maps.MapMouseEvent): void
+  (event: 'mousemove', payload: google.maps.MapMouseEvent): void
+  (event: 'mouseout', payload: google.maps.MapMouseEvent): void
+  (event: 'mouseover', payload: google.maps.MapMouseEvent): void
+  (event: 'mouseup', payload: google.maps.MapMouseEvent): void
 }>()
 
 const eventsWithoutPayload = [

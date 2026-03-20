@@ -8,7 +8,14 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: typeof dataEvents[number], payload: google.maps.Data.MouseEvent): void
+  (event: 'click', payload: google.maps.Data.MouseEvent): void
+  (event: 'contextmenu', payload: google.maps.Data.MouseEvent): void
+  (event: 'dblclick', payload: google.maps.Data.MouseEvent): void
+  (event: 'mousedown', payload: google.maps.Data.MouseEvent): void
+  (event: 'mousemove', payload: google.maps.Data.MouseEvent): void
+  (event: 'mouseout', payload: google.maps.Data.MouseEvent): void
+  (event: 'mouseover', payload: google.maps.Data.MouseEvent): void
+  (event: 'mouseup', payload: google.maps.Data.MouseEvent): void
   (event: 'addfeature', payload: google.maps.Data.AddFeatureEvent): void
   (event: 'removefeature', payload: google.maps.Data.RemoveFeatureEvent): void
   (event: 'setgeometry', payload: google.maps.Data.SetGeometryEvent): void
@@ -74,7 +81,7 @@ watch(() => props.style, (style) => {
 
 function setupEventListeners(layer: google.maps.Data) {
   dataEvents.forEach((event) => {
-    layer.addListener(event, (payload: google.maps.Data.MouseEvent) => emit(event, payload))
+    layer.addListener(event, (payload: google.maps.Data.MouseEvent) => (emit as any)(event, payload))
   })
   featureEvents.forEach((event) => {
     layer.addListener(event, (payload: any) => (emit as any)(event, payload))

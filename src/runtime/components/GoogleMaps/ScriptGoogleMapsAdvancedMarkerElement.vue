@@ -14,7 +14,12 @@ const props = defineProps<{
   options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>
 }>()
 
-const emit = defineEmits(['click', 'drag', 'dragend', 'dragstart'])
+const emit = defineEmits<{
+  (event: 'click', payload: google.maps.MapMouseEvent): void
+  (event: 'drag', payload: google.maps.MapMouseEvent): void
+  (event: 'dragend', payload: google.maps.MapMouseEvent): void
+  (event: 'dragstart', payload: google.maps.MapMouseEvent): void
+}>()
 const dragEvents = ['drag', 'dragend', 'dragstart'] as const
 const slots = useSlots()
 const markerContent = useTemplateRef('marker-content')
