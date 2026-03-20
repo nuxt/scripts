@@ -15,22 +15,8 @@ Nuxt Scripts provides a [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagr
 ::script-stats
 ::
 
-::script-types
+::script-docs{embed}
 ::
-
-## Setup
-
-To use the Instagram embed component, you must enable it in your `nuxt.config`:
-
-```ts [nuxt.config.ts]
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      instagramEmbed: true,
-    },
-  },
-})
-```
 
 This registers the required server API routes (`/_scripts/embed/instagram`, `/_scripts/embed/instagram-image`, and `/_scripts/embed/instagram-asset`) that handle fetching embed HTML and proxying images/assets.
 
@@ -144,3 +130,6 @@ This approach is inspired by [Cloudflare Zaraz's embed implementation](https://b
 - Only supports single-image posts (galleries show first image only)
 - Videos display as static poster images
 - Some interactive features are not available (likes, comments)
+
+::script-types
+::

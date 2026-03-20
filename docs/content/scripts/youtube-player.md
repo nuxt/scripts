@@ -19,7 +19,7 @@ Nuxt Scripts provides a [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube
 ::script-stats
 ::
 
-::script-types
+::script-docs
 ::
 
 ## Types
@@ -219,6 +219,9 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options?: Yo
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+::script-types
+::
 
 ## Example
 

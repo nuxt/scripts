@@ -20,9 +20,6 @@ links:
 
 - **Trigger**: Script will load when Nuxt is hydrated.
 
-::script-types
-::
-
 You can access the `fathom` object as a proxy directly or await the `$script` promise to access the object. It's recommended
 to use the proxy for any void functions.
 
@@ -42,6 +39,9 @@ onLoaded(({ trackGoal }) => {
 })
 ```
 
+::
+
+::script-types
 ::
 
 ## Example

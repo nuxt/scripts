@@ -45,9 +45,6 @@ export default defineNuxtConfig({
 
 - **Trigger: Client** Script will load when Nuxt is hydrating to keep web vital metrics accurate.
 
-::script-types
-::
-
 You can access the `track` and `pageview` methods as a proxy directly or await the `$script` promise to access the object. It's recommended to use the proxy for any void functions.
 
 ::code-group
@@ -64,6 +61,9 @@ onLoaded(({ track }) => {
 })
 ```
 
+::
+
+::script-types
 ::
 
 ## Example

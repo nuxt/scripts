@@ -28,9 +28,6 @@ useScriptUmamiAnalytics({
 })
 ```
 
-::script-types
-::
-
 ## Advanced Features
 
 ### Session Identification
@@ -90,3 +87,6 @@ useScriptUmamiAnalytics({
   beforeSend: 'myBeforeSendHandler'
 })
 ```
+
+::script-types
+::

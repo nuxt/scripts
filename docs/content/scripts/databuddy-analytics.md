@@ -16,9 +16,6 @@ links:
 ::script-docs
 ::
 
-::script-types
-::
-
 ### CDN / Self-hosted
 
 By default the registry injects `https://cdn.databuddy.cc/databuddy.js`. If you host the script yourself, pass `scriptUrl` in options to override the `src`.
@@ -30,3 +27,5 @@ useScriptDatabuddyAnalytics({
 })
 ```
 
+::script-types
+::

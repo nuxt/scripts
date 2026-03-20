@@ -20,7 +20,7 @@ Nuxt Scripts provides a [`useScriptLemonSqueezy()`{lang="ts"}](#usescriptlemonsq
 ::script-stats
 ::
 
-::script-types
+::script-docs
 ::
 
 ## [`<ScriptLemonSqueezy>`{lang="html"}](/scripts/lemon-squeezy){lang="html"}
@@ -112,6 +112,9 @@ export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: Lemo
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+::script-types
+::
 
 ## Example
 

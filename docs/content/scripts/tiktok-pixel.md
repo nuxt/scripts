@@ -18,9 +18,6 @@ Nuxt Scripts provides a registry script composable [`useScriptTikTokPixel()`{lan
 ::script-docs
 ::
 
-::script-types
-::
-
 ## Identifying Users
 
 You can identify users for advanced matching:
@@ -50,3 +47,6 @@ export default defineNuxtConfig({
   }
 })
 ```
+
+::script-types
+::

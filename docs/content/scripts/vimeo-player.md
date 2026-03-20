@@ -19,7 +19,7 @@ Nuxt Scripts provides a [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-pla
 ::script-stats
 ::
 
-::script-types
+::script-docs
 ::
 
 ## Types
@@ -211,6 +211,9 @@ export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoP
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+::script-types
+::
 
 ## Example
 

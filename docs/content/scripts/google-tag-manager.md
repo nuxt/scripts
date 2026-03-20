@@ -42,51 +42,6 @@ useScriptEventPage(({ title, path }) => {
 })
 ```
 
-::script-types
-::
-
-## Examples
-
-### Server-Side GTM Setup
-
-Server-side GTM moves tag execution to your server for better privacy, performance (~500ms faster), and ad-blocker bypass.
-
-**Prerequisites:** [Server-side GTM container](https://tagmanager.google.com), hosting ([Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) / [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide)), and a custom domain.
-
-#### Configuration
-
-Override the script source with your custom domain:
-
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      googleTagManager: {
-        id: 'GTM-XXXXXX',
-        scriptInput: {
-          src: 'https://gtm.example.com/gtm.js'
-        }
-      }
-    }
-  }
-})
-```
-
-For environment tokens (`auth`, `preview`), find them in GTM: Admin > Environments > Get Snippet.
-
-#### Troubleshooting
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Script blocked by ad blocker | Custom domain detected as tracker | Use a non-obvious subdomain name (avoid `gtm`, `analytics`, `tracking`) |
-| Cookies expire after 7 days in Safari | ITP treats subdomain as third-party | Use same-origin setup or implement cookie keeper |
-| Preview mode not working | Missing or incorrect auth/preview tokens | Copy tokens from GTM: Admin > Environments > Get Snippet |
-| CORS errors | Server container misconfigured | Ensure your server container allows requests from your domain |
-| `gtm.js` returns 404 | Incorrect path mapping | Verify your CDN/proxy routes `/gtm.js` to the container |
-
-For infrastructure setup, see [Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) or [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide) guides.
-
 ## Configuring GTM before it starts
 
 [`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"} initializes Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
@@ -172,3 +127,48 @@ useScriptEventPage(({ title, path }) => {
 })
 </script>
 ```
+
+::script-types
+::
+
+## Examples
+
+### Server-Side GTM Setup
+
+Server-side GTM moves tag execution to your server for better privacy, performance (~500ms faster), and ad-blocker bypass.
+
+**Prerequisites:** [Server-side GTM container](https://tagmanager.google.com), hosting ([Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) / [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide)), and a custom domain.
+
+#### Configuration
+
+Override the script source with your custom domain:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      googleTagManager: {
+        id: 'GTM-XXXXXX',
+        scriptInput: {
+          src: 'https://gtm.example.com/gtm.js'
+        }
+      }
+    }
+  }
+})
+```
+
+For environment tokens (`auth`, `preview`), find them in GTM: Admin > Environments > Get Snippet.
+
+#### Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Script blocked by ad blocker | Custom domain detected as tracker | Use a non-obvious subdomain name (avoid `gtm`, `analytics`, `tracking`) |
+| Cookies expire after 7 days in Safari | ITP treats subdomain as third-party | Use same-origin setup or implement cookie keeper |
+| Preview mode not working | Missing or incorrect auth/preview tokens | Copy tokens from GTM: Admin > Environments > Get Snippet |
+| CORS errors | Server container misconfigured | Ensure your server container allows requests from your domain |
+| `gtm.js` returns 404 | Incorrect path mapping | Verify your CDN/proxy routes `/gtm.js` to the container |
+
+For infrastructure setup, see [Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) or [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide) guides.

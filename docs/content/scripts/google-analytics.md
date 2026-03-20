@@ -30,9 +30,6 @@ proxy.gtag('event', 'page_view')
 
 The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
 
-::script-types
-::
-
 ### Customer/Consumer ID Tracking
 
 For e-commerce or multi-tenant applications where you need to track customer-specific analytics alongside your main tracking:
@@ -154,3 +151,6 @@ proxy.gtag('config', 'G-XXXXXXXX', { debug_mode: true })
 View events in GA4: **Admin > DebugView**. Install [GA Debugger extension](https://chrome.google.com/webstore/detail/google-analytics-debugger/jnkmfdileelhofjcijamephohjechhna) for console logging.
 
 For consent mode setup, see the [Consent Guide](/docs/guides/consent).
+
+::script-types
+::

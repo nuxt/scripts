@@ -18,9 +18,6 @@ It provides detailed insights into how your website is performing, how users are
 ::script-docs
 ::
 
-::script-types
-::
-
 By default, Nuxt uses a `siteId` of `1` and automatically enables page tracking via the `watch` option.
 
 ```ts
@@ -98,3 +95,6 @@ useScriptMatomoAnalytics({
   },
 })
 ```
+
+::script-types
+::

@@ -19,9 +19,6 @@ links:
 The composable comes with the following defaults:
 - **Trigger: Client** Script will load when the Nuxt is hydrating to keep web vital metrics accurate.
 
-::script-types
-::
-
 ## Loading in app.vue
 
 Loading Cloudflare Web Analytics through the `app.vue` when Nuxt is ready.
@@ -46,3 +43,6 @@ onLoaded(({ cfBeacon }) => {
   console.log(cfBeacon)
 })
 ```
+
+::script-types
+::

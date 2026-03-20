@@ -8,10 +8,10 @@ links:
     size: xs
 ---
 
-::script-docs
+::script-stats
 ::
 
-::script-types
+::script-docs
 ::
 
 ## Background
@@ -74,6 +74,9 @@ useScriptNpm<SomeApi>({
   packageName: 'some-api'
 })
 ```
+
+::script-types
+::
 
 ## Example
 

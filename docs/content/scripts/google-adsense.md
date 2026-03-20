@@ -22,25 +22,8 @@ Nuxt Scripts provides:
 ::script-stats
 ::
 
-::script-types
+::script-docs
 ::
-
-## Global Setup
-
-You can configure Google AdSense **globally** in your `nuxt.config.ts` so that Nuxt automatically loads the script on all pages.
-
-```ts [nuxt.config.ts]
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      googleAdsense: {
-        client: 'ca-pub-<your-id>', // Your Google AdSense Publisher ID
-        autoAds: true, // Enable Auto Ads
-      },
-    },
-  },
-})
-```
 
 ## Where to Find `<your-id>`{lang="html"} (Publisher ID)
 
@@ -214,4 +197,7 @@ See the [Registry Scripts Guide](/docs/guides/registry-scripts) for advanced usa
 
 ::callout{icon="i-heroicons-light-bulb" to="https://support.google.com/adsense" target="_blank"}
 Need more help? Check out the official **Google AdSense Guide**
+::
+
+::script-types
 ::

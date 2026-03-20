@@ -19,90 +19,13 @@ Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`{la
 ::script-stats
 ::
 
+::script-docs{:sections='["setup", "composable"]'}
+::
+
 ## Live Demo
 
 ::google-sign-in-demo
 ::
-
-::script-docs{:sections='["setup", "composable"]'}
-::
-
-::script-types
-::
-
-## Example
-
-### One Tap Sign-In
-
-The One Tap prompt provides a simplified sign-in experience:
-
-```vue
-<script setup lang="ts">
-const { onLoaded } = useScriptGoogleSignIn()
-
-function handleCredentialResponse(response: CredentialResponse) {
-  // Send the credential to your backend for verification
-  await $fetch('/api/auth/google', {
-    method: 'POST',
-    body: { credential: response.credential }
-  })
-}
-
-onMounted(() => {
-  onLoaded(({ accounts }) => {
-    accounts.id.initialize({
-      client_id: 'YOUR_CLIENT_ID',
-      callback: handleCredentialResponse,
-      context: 'signin',
-      ux_mode: 'popup',
-      use_fedcm_for_prompt: true // Use Privacy Sandbox FedCM API
-    })
-
-    // Show One Tap
-    accounts.id.prompt()
-  })
-})
-</script>
-```
-
-### Personalized Button
-
-Render Google's personalized Sign in with Google button:
-
-```vue
-<script setup lang="ts">
-const { onLoaded } = useScriptGoogleSignIn()
-
-function handleCredentialResponse(response: CredentialResponse) {
-  console.log('Signed in!', response.credential)
-}
-
-onMounted(() => {
-  onLoaded(({ accounts }) => {
-    accounts.id.initialize({
-      client_id: 'YOUR_CLIENT_ID',
-      callback: handleCredentialResponse
-    })
-
-    const buttonDiv = document.getElementById('g-signin-button')
-    if (buttonDiv) {
-      accounts.id.renderButton(buttonDiv, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        shape: 'rectangular',
-        logo_alignment: 'left'
-      })
-    }
-  })
-})
-</script>
-
-<template>
-  <div id="g-signin-button" />
-</template>
-```
 
 ## Moment Notifications
 
@@ -269,3 +192,80 @@ NUXT_PUBLIC_SCRIPTS_GOOGLE_SIGN_IN_CLIENT_ID=your-client-id.apps.googleuserconte
 ::note
 For more detailed info on how to obtain a Google Client ID and configure your OAuth consent screen, see the official [Google Identity Services documentation](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid).
 ::
+
+::script-types
+::
+
+## Example
+
+### One Tap Sign-In
+
+The One Tap prompt provides a simplified sign-in experience:
+
+```vue
+<script setup lang="ts">
+const { onLoaded } = useScriptGoogleSignIn()
+
+function handleCredentialResponse(response: CredentialResponse) {
+  // Send the credential to your backend for verification
+  await $fetch('/api/auth/google', {
+    method: 'POST',
+    body: { credential: response.credential }
+  })
+}
+
+onMounted(() => {
+  onLoaded(({ accounts }) => {
+    accounts.id.initialize({
+      client_id: 'YOUR_CLIENT_ID',
+      callback: handleCredentialResponse,
+      context: 'signin',
+      ux_mode: 'popup',
+      use_fedcm_for_prompt: true // Use Privacy Sandbox FedCM API
+    })
+
+    // Show One Tap
+    accounts.id.prompt()
+  })
+})
+</script>
+```
+
+### Personalized Button
+
+Render Google's personalized Sign in with Google button:
+
+```vue
+<script setup lang="ts">
+const { onLoaded } = useScriptGoogleSignIn()
+
+function handleCredentialResponse(response: CredentialResponse) {
+  console.log('Signed in!', response.credential)
+}
+
+onMounted(() => {
+  onLoaded(({ accounts }) => {
+    accounts.id.initialize({
+      client_id: 'YOUR_CLIENT_ID',
+      callback: handleCredentialResponse
+    })
+
+    const buttonDiv = document.getElementById('g-signin-button')
+    if (buttonDiv) {
+      accounts.id.renderButton(buttonDiv, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'rectangular',
+        logo_alignment: 'left'
+      })
+    }
+  })
+})
+</script>
+
+<template>
+  <div id="g-signin-button" />
+</template>
+```

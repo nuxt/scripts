@@ -15,22 +15,8 @@ Nuxt Scripts provides a [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="
 ::script-stats
 ::
 
-::script-types
+::script-docs{embed}
 ::
-
-## Setup
-
-To use the X embed component, you must enable it in your `nuxt.config`:
-
-```ts [nuxt.config.ts]
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      xEmbed: true,
-    },
-  },
-})
-```
 
 This registers the required server API routes (`/_scripts/embed/x` and `/_scripts/embed/x-image`) that handle fetching tweet data and proxying images.
 
@@ -188,3 +174,6 @@ This approach is inspired by [Cloudflare Zaraz's embed implementation](https://b
 - No direct browser-to-X communication
 - User IP addresses not shared with X
 - All content served from your domain
+
+::script-types
+::

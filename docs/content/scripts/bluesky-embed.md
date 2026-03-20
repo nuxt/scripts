@@ -12,22 +12,11 @@ links:
 
 Nuxt Scripts provides a [`<ScriptBlueskyEmbed>`{lang="html"}](/scripts/bluesky-embed){lang="html"} component that fetches post data server-side and exposes it via slots for complete styling control. All data is proxied through your server - no client-side API calls to Bluesky.
 
-::script-types
+::script-stats
 ::
 
-## Setup
-
-To use the Bluesky embed component, you must enable it in your `nuxt.config`:
-
-```ts [nuxt.config.ts]
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      blueskyEmbed: true,
-    },
-  },
-})
-```
+::script-docs{embed}
+::
 
 This registers the required server API routes (`/_scripts/embed/bluesky` and `/_scripts/embed/bluesky-image`) that handle fetching post data and proxying images.
 
@@ -282,3 +271,6 @@ interface SlotProps {
 ## Author Opt-Out
 
 The component respects Bluesky's `!no-unauthenticated` label. If a post author has opted out of external embedding, the API returns a 403 error and the component shows the error slot.
+
+::script-types
+::

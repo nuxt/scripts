@@ -28,9 +28,6 @@ useScriptPlausibleAnalytics({
 })
 ```
 
-::script-types
-::
-
 **Note:** Find the `scriptId` in your Plausible dashboard under **Site Installation** in your site settings.
 
 **Extracting your Script ID:**
@@ -48,3 +45,6 @@ scriptId: 'gYyxvZhkMzdzXBAtSeSNz'
 //         ^^^^^^^^^^^^^^^^^^^^^^^
 //         Extract from: pa-{scriptId}.js
 ```
+
+::script-types
+::

@@ -26,7 +26,7 @@ Nuxt Scripts provides PayPal SDK v6 integration:
 ::script-stats
 ::
 
-::script-types
+::script-docs
 ::
 
 ## Types
@@ -125,3 +125,14 @@ export default defineNuxtConfig({
 ```text [.env]
 NUXT_PUBLIC_SCRIPTS_PAYPAL_CLIENT_ID=<YOUR_CLIENT_ID>
 ```
+
+### Composable
+
+```ts
+export function useScriptPayPal<T extends PayPalApi>(_options?: PayPalInput) {}
+```
+
+Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+::script-types
+::

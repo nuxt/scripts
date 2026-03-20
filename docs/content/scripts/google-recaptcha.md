@@ -22,95 +22,6 @@ This integration supports reCAPTCHA v3 (score-based, invisible) only. For v2 che
 ::script-docs{:sections='["setup", "composable"]'}
 ::
 
-::script-types
-::
-
-## Example
-
-Using reCAPTCHA v3 to protect a form submission with server-side verification.
-
-::code-group
-
-```vue [ContactForm.vue]
-<script setup lang="ts">
-const { onLoaded } = useScriptGoogleRecaptcha()
-
-const name = ref('')
-const email = ref('')
-const message = ref('')
-const status = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
-
-async function onSubmit() {
-  status.value = 'loading'
-
-  onLoaded(async ({ grecaptcha }) => {
-    // Get reCAPTCHA token
-    const token = await grecaptcha.execute('YOUR_SITE_KEY', { action: 'contact' })
-
-    // Send form data + token to your API for verification
-    const result = await $fetch('/api/contact', {
-      method: 'POST',
-      body: {
-        token,
-        name: name.value,
-        email: email.value,
-        message: message.value
-      }
-    }).catch(() => null)
-
-    status.value = result ? 'success' : 'error'
-  })
-}
-</script>
-
-<template>
-  <form @submit.prevent="onSubmit">
-    <input v-model="name" placeholder="Name" required>
-    <input v-model="email" type="email" placeholder="Email" required>
-    <textarea v-model="message" placeholder="Message" required />
-    <button type="submit" :disabled="status === 'loading'">
-      {{ status === 'loading' ? 'Sending...' : 'Submit' }}
-    </button>
-    <p v-if="status === 'success'">
-      Message sent!
-    </p>
-    <p v-if="status === 'error'">
-      Failed to send. Please try again.
-    </p>
-  </form>
-</template>
-```
-
-```ts [server/api/contact.post.ts]
-export default defineEventHandler(async (event) => {
-  const { token, name, email, message } = await readBody(event)
-
-  // Verify reCAPTCHA token
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY
-  const verification = await $fetch('https://www.google.com/recaptcha/api/siteverify', {
-    method: 'POST',
-    body: new URLSearchParams({
-      secret: secretKey,
-      response: token,
-    }),
-  })
-
-  if (!verification.success || verification.score < 0.5) {
-    throw createError({
-      statusCode: 400,
-      message: 'reCAPTCHA verification failed',
-    })
-  }
-
-  // Process the contact form (send email, save to DB, etc.)
-  console.log('Contact form submitted:', { name, email, message, score: verification.score })
-
-  return { success: true }
-})
-```
-
-::
-
 ## Enterprise
 
 For reCAPTCHA Enterprise, set the `enterprise` option to `true`:
@@ -250,3 +161,92 @@ export default defineNuxtConfig({
   }
 })
 ```
+
+::script-types
+::
+
+## Example
+
+Using reCAPTCHA v3 to protect a form submission with server-side verification.
+
+::code-group
+
+```vue [ContactForm.vue]
+<script setup lang="ts">
+const { onLoaded } = useScriptGoogleRecaptcha()
+
+const name = ref('')
+const email = ref('')
+const message = ref('')
+const status = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
+
+async function onSubmit() {
+  status.value = 'loading'
+
+  onLoaded(async ({ grecaptcha }) => {
+    // Get reCAPTCHA token
+    const token = await grecaptcha.execute('YOUR_SITE_KEY', { action: 'contact' })
+
+    // Send form data + token to your API for verification
+    const result = await $fetch('/api/contact', {
+      method: 'POST',
+      body: {
+        token,
+        name: name.value,
+        email: email.value,
+        message: message.value
+      }
+    }).catch(() => null)
+
+    status.value = result ? 'success' : 'error'
+  })
+}
+</script>
+
+<template>
+  <form @submit.prevent="onSubmit">
+    <input v-model="name" placeholder="Name" required>
+    <input v-model="email" type="email" placeholder="Email" required>
+    <textarea v-model="message" placeholder="Message" required />
+    <button type="submit" :disabled="status === 'loading'">
+      {{ status === 'loading' ? 'Sending...' : 'Submit' }}
+    </button>
+    <p v-if="status === 'success'">
+      Message sent!
+    </p>
+    <p v-if="status === 'error'">
+      Failed to send. Please try again.
+    </p>
+  </form>
+</template>
+```
+
+```ts [server/api/contact.post.ts]
+export default defineEventHandler(async (event) => {
+  const { token, name, email, message } = await readBody(event)
+
+  // Verify reCAPTCHA token
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY
+  const verification = await $fetch('https://www.google.com/recaptcha/api/siteverify', {
+    method: 'POST',
+    body: new URLSearchParams({
+      secret: secretKey,
+      response: token,
+    }),
+  })
+
+  if (!verification.success || verification.score < 0.5) {
+    throw createError({
+      statusCode: 400,
+      message: 'reCAPTCHA verification failed',
+    })
+  }
+
+  // Process the contact form (send email, save to DB, etc.)
+  console.log('Contact form submitted:', { name, email, message, score: verification.score })
+
+  return { success: true }
+})
+```
+
+::

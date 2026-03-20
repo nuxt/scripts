@@ -12,6 +12,12 @@ links:
 
 Nuxt Scripts provides a registry script composable [`useScriptPostHog()`{lang="ts"}](/scripts/posthog){lang="ts"} to easily integrate PostHog in your Nuxt app.
 
+::script-stats
+::
+
+::script-docs
+::
+
 ## Installation
 
 You must install the `posthog-js` dependency:
@@ -19,12 +25,6 @@ You must install the `posthog-js` dependency:
 ```bash
 pnpm add posthog-js
 ```
-
-::script-docs
-::
-
-::script-types
-::
 
 ## EU Hosting
 
@@ -116,3 +116,6 @@ export default defineNuxtConfig({
   }
 })
 ```
+
+::script-types
+::

@@ -14,7 +14,10 @@ links:
 
 [Gravatar](https://gravatar.com) provides globally recognized avatars linked to email addresses. Nuxt Scripts provides a privacy-preserving integration that proxies avatar requests through your own server, preventing Gravatar from tracking your users.
 
-::script-types
+::script-stats
+::
+
+::script-docs
 ::
 
 ## [`<ScriptGravatar>`{lang="html"}](/scripts/gravatar){lang="html"}
@@ -63,6 +66,9 @@ export function useScriptGravatar<T extends GravatarApi>(_options?: GravatarInpu
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+
+::script-types
+::
 
 ## Example
 

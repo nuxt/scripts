@@ -19,7 +19,7 @@ Nuxt Scripts provides a [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="t
 ::script-stats
 ::
 
-::script-types
+::script-docs
 ::
 
 ## [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"}
@@ -196,6 +196,9 @@ export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
 
 For more information, please refer to the [Crisp API documentation](https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/dollar-crisp/).
+
+::script-types
+::
 
 ## Example
 
