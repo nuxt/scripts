@@ -4,23 +4,76 @@ import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
+  /**
+   * The GeoJSON source. Can be a URL string or a GeoJSON object.
+   * @see https://developers.google.com/maps/documentation/javascript/datalayer#load_geojson
+   */
   src: string | object
+  /**
+   * Styling options or a function that computes styles per feature.
+   * @see https://developers.google.com/maps/documentation/javascript/datalayer#style_geojson_data
+   */
   style?: google.maps.Data.StylingFunction | google.maps.Data.StyleOptions
 }>()
 
 const emit = defineEmits<{
+  /**
+   * Fired when a feature in the data layer is clicked.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/data#Data.click
+   */
   click: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when the DOM contextmenu event is fired on a feature.
+   */
   contextmenu: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when a feature is double clicked.
+   */
   dblclick: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when the DOM mousedown event is fired on a feature.
+   */
   mousedown: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when the DOM mousemove event is fired on a feature.
+   */
   mousemove: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when the mouse leaves the area of a feature.
+   */
   mouseout: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when the mouse enters the area of a feature.
+   */
   mouseover: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when the DOM mouseup event is fired on a feature.
+   */
   mouseup: [payload: google.maps.Data.MouseEvent]
+  /**
+   * Fired when a feature is added to the data layer.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/data#Data.addfeature
+   */
   addfeature: [payload: google.maps.Data.AddFeatureEvent]
+  /**
+   * Fired when a feature is removed from the data layer.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/data#Data.removefeature
+   */
   removefeature: [payload: google.maps.Data.RemoveFeatureEvent]
+  /**
+   * Fired when a feature's geometry is set.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/data#Data.setgeometry
+   */
   setgeometry: [payload: google.maps.Data.SetGeometryEvent]
+  /**
+   * Fired when a feature's property is set.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/data#Data.setproperty
+   */
   setproperty: [payload: google.maps.Data.SetPropertyEvent]
+  /**
+   * Fired when a feature's property is removed.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/data#Data.removeproperty
+   */
   removeproperty: [payload: google.maps.Data.RemovePropertyEvent]
 }>()
 

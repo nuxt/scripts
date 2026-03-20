@@ -29,12 +29,25 @@ export const MARKER_CLUSTERER_INJECTION_KEY = Symbol('marker-clusterer') as Inje
 
 <script setup lang="ts">
 const props = defineProps<{
+  /**
+   * Configuration options for the marker clusterer.
+   * @see https://googlemaps.github.io/js-markerclusterer/interfaces/MarkerClustererOptions.html
+   */
   options?: Omit<MarkerClustererOptions, 'map'>
 }>()
 
 const emit = defineEmits<{
+  /**
+   * Fired when a cluster is clicked.
+   */
   click: [payload: MarkerClustererInstance]
+  /**
+   * Fired when the clusterer begins clustering markers.
+   */
   clusteringbegin: [payload: MarkerClustererInstance]
+  /**
+   * Fired when the clusterer finishes clustering markers.
+   */
   clusteringend: [payload: MarkerClustererInstance]
 }>()
 

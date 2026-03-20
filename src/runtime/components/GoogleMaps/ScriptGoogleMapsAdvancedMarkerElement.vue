@@ -10,14 +10,38 @@ export { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './injectionKeys'
 
 <script setup lang="ts">
 const props = defineProps<{
+  /**
+   * The position of the marker on the map.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElementOptions.position
+   */
   position?: google.maps.LatLngLiteral | google.maps.LatLng
+  /**
+   * Configuration options for the advanced marker.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElementOptions
+   */
   options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>
 }>()
 
 const emit = defineEmits<{
+  /**
+   * Fired when the marker is clicked.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElement.click
+   */
   click: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired repeatedly while the user drags the marker.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElement.drag
+   */
   drag: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the user stops dragging the marker.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElement.dragend
+   */
   dragend: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the user starts dragging the marker.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElement.dragstart
+   */
   dragstart: [payload: google.maps.MapMouseEvent]
 }>()
 const dragEvents = ['drag', 'dragend', 'dragstart'] as const

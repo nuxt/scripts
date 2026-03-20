@@ -128,8 +128,13 @@ const props = withDefaults(defineProps<{
 })
 
 const emits = defineEmits<{
-  // our emit
+  /**
+   * Fired when the Google Maps instance is fully loaded and ready to use. Provides access to the maps API.
+   */
   ready: [e: typeof googleMaps]
+  /**
+   * Fired when the Google Maps script fails to load.
+   */
   error: []
 }>()
 

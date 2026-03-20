@@ -4,6 +4,10 @@ import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './injectionKeys'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
+  /**
+   * Configuration options for the pin element that customizes the visual appearance of the marker.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#PinElementOptions
+   */
   options?: Omit<google.maps.marker.PinElementOptions, 'map'>
 }>()
 

@@ -212,7 +212,7 @@
       {
         "name": "ScriptGoogleMapsAdvancedMarkerElementProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsAdvancedMarkerElementProps {\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsAdvancedMarkerElementProps {\n  /**\n   * The position of the marker on the map.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElementOptions.position\n   */\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  /**\n   * Configuration options for the advanced marker.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElementOptions\n   */\n  options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsAdvancedMarkerElementEvents",
@@ -222,7 +222,7 @@
       {
         "name": "ScriptGoogleMapsCircleProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsCircleProps {\n  options?: Omit<google.maps.CircleOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsCircleProps {\n  /**\n   * Configuration options for the circle overlay.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/polygon#CircleOptions\n   */\n  options?: Omit<google.maps.CircleOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsCircleEvents",
@@ -232,7 +232,7 @@
       {
         "name": "ScriptGoogleMapsGeoJsonProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsGeoJsonProps {\n  src: string | object\n  style?: google.maps.Data.StylingFunction | google.maps.Data.StyleOptions\n}"
+        "code": "interface ScriptGoogleMapsGeoJsonProps {\n  /**\n   * The GeoJSON source. Can be a URL string or a GeoJSON object.\n   * @see https://developers.google.com/maps/documentation/javascript/datalayer#load_geojson\n   */\n  src: string | object\n  /**\n   * Styling options or a function that computes styles per feature.\n   * @see https://developers.google.com/maps/documentation/javascript/datalayer#style_geojson_data\n   */\n  style?: google.maps.Data.StylingFunction | google.maps.Data.StyleOptions\n}"
       },
       {
         "name": "ScriptGoogleMapsGeoJsonEvents",
@@ -242,12 +242,12 @@
       {
         "name": "ScriptGoogleMapsHeatmapLayerProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsHeatmapLayerProps {\n  options?: Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsHeatmapLayerProps {\n  /**\n   * Configuration options for the heatmap layer visualization.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/visualization#HeatmapLayerOptions\n   */\n  options?: Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsInfoWindowProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsInfoWindowProps {\n  options?: google.maps.InfoWindowOptions\n}"
+        "code": "interface ScriptGoogleMapsInfoWindowProps {\n  /**\n   * Configuration options for the info window.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/info-window#InfoWindowOptions\n   */\n  options?: google.maps.InfoWindowOptions\n}"
       },
       {
         "name": "ScriptGoogleMapsInfoWindowEvents",
@@ -257,7 +257,7 @@
       {
         "name": "ScriptGoogleMapsMarkerProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsMarkerProps {\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  options?: Omit<google.maps.MarkerOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsMarkerProps {\n  /**\n   * The position of the marker on the map.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/marker#MarkerOptions.position\n   */\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  /**\n   * Configuration options for the legacy marker. Deprecated: use ScriptGoogleMapsAdvancedMarkerElement instead.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/marker#MarkerOptions\n   */\n  options?: Omit<google.maps.MarkerOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsMarkerEvents",
@@ -267,7 +267,7 @@
       {
         "name": "ScriptGoogleMapsMarkerClustererProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsMarkerClustererProps {\n  options?: Omit<MarkerClustererOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsMarkerClustererProps {\n  /**\n   * Configuration options for the marker clusterer.\n   * @see https://googlemaps.github.io/js-markerclusterer/interfaces/MarkerClustererOptions.html\n   */\n  options?: Omit<MarkerClustererOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsMarkerClustererEvents",
@@ -277,17 +277,17 @@
       {
         "name": "ScriptGoogleMapsOverlayViewProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsOverlayViewProps {\n  position?: google.maps.LatLngLiteral\n  anchor?: OverlayAnchor\n  offset?: { x: number, y: number }\n  pane?: OverlayPane\n  zIndex?: number\n  blockMapInteraction?: boolean\n}"
+        "code": "interface ScriptGoogleMapsOverlayViewProps {\n  /**\n   * Geographic position for the overlay. Falls back to parent marker position if omitted.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView\n   */\n  position?: google.maps.LatLngLiteral\n  /**\n   * Anchor point of the overlay relative to its position.\n   * @default 'bottom-center'\n   */\n  anchor?: OverlayAnchor\n  /**\n   * Pixel offset from the anchor position.\n   */\n  offset?: { x: number, y: number }\n  /**\n   * The map pane on which to render the overlay.\n   * @default 'floatPane'\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#MapPanes\n   */\n  pane?: OverlayPane\n  /**\n   * CSS z-index for the overlay element.\n   */\n  zIndex?: number\n  /**\n   * Whether to block map click and gesture events from passing through the overlay.\n   * @default true\n   */\n  blockMapInteraction?: boolean\n}"
       },
       {
         "name": "ScriptGoogleMapsPinElementProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsPinElementProps {\n  options?: Omit<google.maps.marker.PinElementOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsPinElementProps {\n  /**\n   * Configuration options for the pin element that customizes the visual appearance of the marker.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#PinElementOptions\n   */\n  options?: Omit<google.maps.marker.PinElementOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsPolygonProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsPolygonProps {\n  options?: Omit<google.maps.PolygonOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsPolygonProps {\n  /**\n   * Configuration options for the polygon overlay.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/polygon#PolygonOptions\n   */\n  options?: Omit<google.maps.PolygonOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsPolygonEvents",
@@ -297,7 +297,7 @@
       {
         "name": "ScriptGoogleMapsPolylineProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsPolylineProps {\n  options?: Omit<google.maps.PolylineOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsPolylineProps {\n  /**\n   * Configuration options for the polyline overlay.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/polygon#PolylineOptions\n   */\n  options?: Omit<google.maps.PolylineOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsPolylineEvents",
@@ -307,7 +307,7 @@
       {
         "name": "ScriptGoogleMapsRectangleProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsRectangleProps {\n  options?: Omit<google.maps.RectangleOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsRectangleProps {\n  /**\n   * Configuration options for the rectangle overlay.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/polygon#RectangleOptions\n   */\n  options?: Omit<google.maps.RectangleOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsRectangleEvents",
@@ -2074,527 +2074,629 @@
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       },
       {
         "name": "aboveTheFold",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Is Google Maps being rendered above the fold? This will load the placeholder image with higher priority."
       },
       {
         "name": "apiKey",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Defines the Google Maps API key. Must have access to the Static Maps API as well."
       },
       {
         "name": "center",
         "type": "google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`",
-        "required": false
+        "required": false,
+        "description": "A latitude / longitude of where to focus the map."
       },
       {
         "name": "zoom",
         "type": "number",
-        "required": false
+        "required": false,
+        "description": "Zoom level for the map (0-21). Reactive: changing this will update the map. Takes precedence over mapOptions.zoom when provided."
       },
       {
         "name": "centerMarker",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Should a marker be displayed on the map where the centre is."
       },
       {
         "name": "mapOptions",
         "type": "google.maps.MapOptions",
-        "required": false
+        "required": false,
+        "description": "Options for the map."
       },
       {
         "name": "region",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Defines the region of the map."
       },
       {
         "name": "language",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Defines the language of the map"
       },
       {
         "name": "version",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Defines the version of google maps js API"
       },
       {
         "name": "width",
         "type": "number | string",
-        "required": false
+        "required": false,
+        "description": "Defines the width of the map."
       },
       {
         "name": "height",
         "type": "number | string",
-        "required": false
+        "required": false,
+        "description": "Defines the height of the map"
       },
       {
         "name": "placeholderOptions",
         "type": "PlaceholderOptions",
-        "required": false
+        "required": false,
+        "description": "Customize the placeholder image attributes."
       },
       {
         "name": "placeholderAttrs",
         "type": "ImgHTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false
+        "required": false,
+        "description": "Customize the placeholder image attributes."
       },
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false
+        "required": false,
+        "description": "Customize the root element attributes."
       },
       {
         "name": "markers",
         "type": "(`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]",
-        "required": false
+        "required": false,
+        "description": "Extra Markers to add to the map."
       },
       {
         "name": "mapIds",
         "type": "{ light?: string, dark?: string }",
-        "required": false
+        "required": false,
+        "description": "Map IDs for light and dark color modes. When provided, the map will automatically switch styles based on color mode. Requires @nuxtjs/color-mode or manual colorMode prop."
       },
       {
         "name": "colorMode",
         "type": "'light' | 'dark'",
-        "required": false
+        "required": false,
+        "description": "Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode. Accepts 'light', 'dark', or a reactive ref."
       }
     ],
     "ScriptGoogleMapsEvents": [
       {
         "name": "ready",
         "type": "typeof googleMaps",
-        "required": false
+        "required": false,
+        "description": "Fired when the Google Maps instance is fully loaded and ready to use. Provides access to the maps API."
       },
       {
         "name": "error",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the Google Maps script fails to load."
       }
     ],
     "ScriptGoogleMapsAdvancedMarkerElementProps": [
       {
         "name": "position",
         "type": "google.maps.LatLngLiteral | google.maps.LatLng",
-        "required": false
+        "required": false,
+        "description": "The position of the marker on the map."
       },
       {
         "name": "options",
         "type": "Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the advanced marker."
       }
     ],
     "ScriptGoogleMapsAdvancedMarkerElementEvents": [
       {
         "name": "click",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker is clicked."
       },
       {
         "name": "drag",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired repeatedly while the user drags the marker."
       },
       {
         "name": "dragend",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user stops dragging the marker."
       },
       {
         "name": "dragstart",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user starts dragging the marker."
       }
     ],
     "ScriptGoogleMapsCircleProps": [
       {
         "name": "options",
         "type": "Omit<google.maps.CircleOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the circle overlay."
       }
     ],
     "ScriptGoogleMapsCircleEvents": [
       {
         "name": "center_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the circle's center is changed."
       },
       {
         "name": "radius_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the circle's radius is changed."
       },
       {
         "name": "click",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the circle is clicked."
       },
       {
         "name": "dblclick",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the circle is double clicked."
       },
       {
         "name": "drag",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired repeatedly while the user drags the circle."
       },
       {
         "name": "dragend",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user stops dragging the circle."
       },
       {
         "name": "dragstart",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user starts dragging the circle."
       },
       {
         "name": "mousedown",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousedown event is fired on the circle."
       },
       {
         "name": "mousemove",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousemove event is fired on the circle."
       },
       {
         "name": "mouseout",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse leaves the area of the circle."
       },
       {
         "name": "mouseover",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse enters the area of the circle."
       },
       {
         "name": "mouseup",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mouseup event is fired on the circle."
       },
       {
         "name": "rightclick",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the circle is right clicked."
       }
     ],
     "ScriptGoogleMapsGeoJsonProps": [
       {
         "name": "src",
         "type": "string | object",
-        "required": true
+        "required": true,
+        "description": "The GeoJSON source. Can be a URL string or a GeoJSON object."
       },
       {
         "name": "style",
         "type": "google.maps.Data.StylingFunction | google.maps.Data.StyleOptions",
-        "required": false
+        "required": false,
+        "description": "Styling options or a function that computes styles per feature."
       }
     ],
     "ScriptGoogleMapsGeoJsonEvents": [
       {
         "name": "click",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature in the data layer is clicked."
       },
       {
         "name": "contextmenu",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM contextmenu event is fired on a feature."
       },
       {
         "name": "dblclick",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature is double clicked."
       },
       {
         "name": "mousedown",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousedown event is fired on a feature."
       },
       {
         "name": "mousemove",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousemove event is fired on a feature."
       },
       {
         "name": "mouseout",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse leaves the area of a feature."
       },
       {
         "name": "mouseover",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse enters the area of a feature."
       },
       {
         "name": "mouseup",
         "type": "google.maps.Data.MouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mouseup event is fired on a feature."
       },
       {
         "name": "addfeature",
         "type": "google.maps.Data.AddFeatureEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature is added to the data layer."
       },
       {
         "name": "removefeature",
         "type": "google.maps.Data.RemoveFeatureEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature is removed from the data layer."
       },
       {
         "name": "setgeometry",
         "type": "google.maps.Data.SetGeometryEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature's geometry is set."
       },
       {
         "name": "setproperty",
         "type": "google.maps.Data.SetPropertyEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature's property is set."
       },
       {
         "name": "removeproperty",
         "type": "google.maps.Data.RemovePropertyEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when a feature's property is removed."
       }
     ],
     "ScriptGoogleMapsHeatmapLayerProps": [
       {
         "name": "options",
         "type": "Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the heatmap layer visualization."
       }
     ],
     "ScriptGoogleMapsInfoWindowProps": [
       {
         "name": "options",
         "type": "google.maps.InfoWindowOptions",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the info window."
       }
     ],
     "ScriptGoogleMapsInfoWindowEvents": [
       {
         "name": "close",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the info window is closed. Includes both user and programmatic close actions."
       },
       {
         "name": "closeclick",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the close button is clicked."
       },
       {
         "name": "content_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the content of the info window changes."
       },
       {
         "name": "domready",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the info window's `<div>` is attached to the DOM. Useful for computing dynamic content sizing."
       },
       {
         "name": "headercontent_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the header content of the info window changes."
       },
       {
         "name": "headerdisabled_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the header disabled state changes."
       },
       {
         "name": "position_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the info window position changes."
       },
       {
         "name": "visible",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the info window becomes visible."
       },
       {
         "name": "zindex_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the z-index of the info window changes."
       }
     ],
     "ScriptGoogleMapsMarkerProps": [
       {
         "name": "position",
         "type": "google.maps.LatLngLiteral | google.maps.LatLng",
-        "required": false
+        "required": false,
+        "description": "The position of the marker on the map."
       },
       {
         "name": "options",
         "type": "Omit<google.maps.MarkerOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the legacy marker. Deprecated: use ScriptGoogleMapsAdvancedMarkerElement instead."
       }
     ],
     "ScriptGoogleMapsMarkerEvents": [
       {
         "name": "animation_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's animation property changes."
       },
       {
         "name": "clickable_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's clickable property changes."
       },
       {
         "name": "cursor_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's cursor property changes."
       },
       {
         "name": "draggable_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's draggable property changes."
       },
       {
         "name": "flat_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's flat property changes."
       },
       {
         "name": "icon_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's icon property changes."
       },
       {
         "name": "position_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's position property changes."
       },
       {
         "name": "shape_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's shape property changes."
       },
       {
         "name": "title_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's title property changes."
       },
       {
         "name": "visible_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's visible property changes."
       },
       {
         "name": "zindex_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker's zIndex property changes."
       },
       {
         "name": "click",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker is clicked."
       },
       {
         "name": "contextmenu",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM contextmenu event is fired on the marker."
       },
       {
         "name": "dblclick",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the marker is double clicked."
       },
       {
         "name": "drag",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired repeatedly while the user drags the marker."
       },
       {
         "name": "dragend",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user stops dragging the marker."
       },
       {
         "name": "dragstart",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user starts dragging the marker."
       },
       {
         "name": "mousedown",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousedown event is fired on the marker."
       },
       {
         "name": "mouseout",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse leaves the area of the marker."
       },
       {
         "name": "mouseover",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse enters the area of the marker."
       },
       {
         "name": "mouseup",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mouseup event is fired on the marker."
       }
     ],
     "ScriptGoogleMapsMarkerClustererProps": [
       {
         "name": "options",
         "type": "Omit<MarkerClustererOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the marker clusterer."
       }
     ],
     "ScriptGoogleMapsMarkerClustererEvents": [
       {
         "name": "click",
         "type": "MarkerClustererInstance",
-        "required": false
+        "required": false,
+        "description": "Fired when a cluster is clicked."
       },
       {
         "name": "clusteringbegin",
         "type": "MarkerClustererInstance",
-        "required": false
+        "required": false,
+        "description": "Fired when the clusterer begins clustering markers."
       },
       {
         "name": "clusteringend",
         "type": "MarkerClustererInstance",
-        "required": false
+        "required": false,
+        "description": "Fired when the clusterer finishes clustering markers."
       }
     ],
     "ScriptGoogleMapsOverlayViewProps": [
       {
         "name": "position",
         "type": "google.maps.LatLngLiteral",
-        "required": false
+        "required": false,
+        "description": "Geographic position for the overlay. Falls back to parent marker position if omitted."
       },
       {
         "name": "anchor",
         "type": "OverlayAnchor",
-        "required": false
+        "required": false,
+        "description": "Anchor point of the overlay relative to its position.",
+        "defaultValue": "'bottom-center'"
       },
       {
         "name": "offset",
         "type": "{ x: number, y: number }",
-        "required": false
+        "required": false,
+        "description": "Pixel offset from the anchor position."
       },
       {
         "name": "pane",
         "type": "OverlayPane",
-        "required": false
+        "required": false,
+        "description": "The map pane on which to render the overlay.",
+        "defaultValue": "'floatPane'"
       },
       {
         "name": "zIndex",
         "type": "number",
-        "required": false
+        "required": false,
+        "description": "CSS z-index for the overlay element."
       },
       {
         "name": "blockMapInteraction",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Whether to block map click and gesture events from passing through the overlay.",
+        "defaultValue": "true"
       },
       {
         "name": "v-model:open",
@@ -2606,226 +2708,270 @@
       {
         "name": "options",
         "type": "Omit<google.maps.marker.PinElementOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the pin element that customizes the visual appearance of the marker."
       }
     ],
     "ScriptGoogleMapsPolygonProps": [
       {
         "name": "options",
         "type": "Omit<google.maps.PolygonOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the polygon overlay."
       }
     ],
     "ScriptGoogleMapsPolygonEvents": [
       {
         "name": "click",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the polygon is clicked."
       },
       {
         "name": "contextmenu",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM contextmenu event is fired on the polygon."
       },
       {
         "name": "dblclick",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the polygon is double clicked."
       },
       {
         "name": "mousedown",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousedown event is fired on the polygon."
       },
       {
         "name": "mousemove",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousemove event is fired on the polygon."
       },
       {
         "name": "mouseout",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse leaves the area of the polygon."
       },
       {
         "name": "mouseover",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse enters the area of the polygon."
       },
       {
         "name": "mouseup",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mouseup event is fired on the polygon."
       },
       {
         "name": "drag",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired repeatedly while the user drags the polygon."
       },
       {
         "name": "dragend",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user stops dragging the polygon."
       },
       {
         "name": "dragstart",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user starts dragging the polygon."
       }
     ],
     "ScriptGoogleMapsPolylineProps": [
       {
         "name": "options",
         "type": "Omit<google.maps.PolylineOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the polyline overlay."
       }
     ],
     "ScriptGoogleMapsPolylineEvents": [
       {
         "name": "click",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the polyline is clicked."
       },
       {
         "name": "contextmenu",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM contextmenu event is fired on the polyline."
       },
       {
         "name": "dblclick",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the polyline is double clicked."
       },
       {
         "name": "mousedown",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousedown event is fired on the polyline."
       },
       {
         "name": "mousemove",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousemove event is fired on the polyline."
       },
       {
         "name": "mouseout",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse leaves the area of the polyline."
       },
       {
         "name": "mouseover",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse enters the area of the polyline."
       },
       {
         "name": "mouseup",
         "type": "google.maps.PolyMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mouseup event is fired on the polyline."
       },
       {
         "name": "drag",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired repeatedly while the user drags the polyline."
       },
       {
         "name": "dragend",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user stops dragging the polyline."
       },
       {
         "name": "dragstart",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user starts dragging the polyline."
       }
     ],
     "ScriptGoogleMapsRectangleProps": [
       {
         "name": "options",
         "type": "Omit<google.maps.RectangleOptions, 'map'>",
-        "required": false
+        "required": false,
+        "description": "Configuration options for the rectangle overlay."
       }
     ],
     "ScriptGoogleMapsRectangleEvents": [
       {
         "name": "bounds_changed",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Fired when the rectangle's bounds are changed."
       },
       {
         "name": "click",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the rectangle is clicked."
       },
       {
         "name": "contextmenu",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM contextmenu event is fired on the rectangle."
       },
       {
         "name": "dblclick",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the rectangle is double clicked."
       },
       {
         "name": "drag",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired repeatedly while the user drags the rectangle."
       },
       {
         "name": "dragend",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user stops dragging the rectangle."
       },
       {
         "name": "dragstart",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the user starts dragging the rectangle."
       },
       {
         "name": "mousedown",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousedown event is fired on the rectangle."
       },
       {
         "name": "mousemove",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mousemove event is fired on the rectangle."
       },
       {
         "name": "mouseout",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse leaves the area of the rectangle."
       },
       {
         "name": "mouseover",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the mouse enters the area of the rectangle."
       },
       {
         "name": "mouseup",
         "type": "google.maps.MapMouseEvent",
-        "required": false
+        "required": false,
+        "description": "Fired when the DOM mouseup event is fired on the rectangle."
       }
     ],
     "ScriptBlueskyEmbedProps": [
       {
         "name": "postUrl",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The Bluesky post URL to embed"
       },
       {
         "name": "apiEndpoint",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom API endpoint for fetching post data",
+        "defaultValue": "'/_scripts/embed/bluesky'"
       },
       {
         "name": "imageProxyEndpoint",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom image proxy endpoint",
+        "defaultValue": "'/_scripts/embed/bluesky-image'"
       },
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes",
-        "required": false
+        "required": false,
+        "description": "Root element attributes"
       }
     ],
     "ScriptCarbonAdsProps": [
@@ -2847,7 +2993,8 @@
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       }
     ],
     "ScriptCarbonAdsEvents": [
@@ -2866,7 +3013,8 @@
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       },
       {
         "name": "id",
@@ -2935,7 +3083,8 @@
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       }
     ],
     "ScriptGoogleAdsenseEvents": [
@@ -2954,22 +3103,28 @@
       {
         "name": "postUrl",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The Instagram post URL to embed e.g., https://www.instagram.com/p/ABC123/"
       },
       {
         "name": "captions",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Whether to include captions in the embed",
+        "defaultValue": "true"
       },
       {
         "name": "apiEndpoint",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom API endpoint for fetching embed HTML",
+        "defaultValue": "'/_scripts/embed/instagram'"
       },
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes",
-        "required": false
+        "required": false,
+        "description": "Root element attributes"
       }
     ],
     "ScriptIntercomProps": [
@@ -3016,7 +3171,8 @@
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       }
     ],
     "ScriptIntercomEvents": [
@@ -3054,52 +3210,63 @@
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false
+        "required": false,
+        "description": "Customize the root element attributes."
       },
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       },
       {
         "name": "clientId",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Client ID or client token for PayPal SDK v6 authentication."
       },
       {
         "name": "clientToken",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Server-generated client token for SDK v6."
       },
       {
         "name": "components",
         "type": "Components[]",
-        "required": false
+        "required": false,
+        "description": "The v6 SDK components to load.",
+        "defaultValue": "['paypal-payments']"
       },
       {
         "name": "pageType",
         "type": "PageTypes",
-        "required": false
+        "required": false,
+        "description": "The page type context hint."
       },
       {
         "name": "locale",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "The locale for the SDK (BCP-47 code)."
       },
       {
         "name": "merchantId",
         "type": "string | string[]",
-        "required": false
+        "required": false,
+        "description": "The merchant ID(s)."
       },
       {
         "name": "partnerAttributionId",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Partner attribution ID for revenue sharing."
       },
       {
         "name": "paypalScriptOptions",
         "type": "Partial<PayPalInput>",
-        "required": false
+        "required": false,
+        "description": "The paypal script options."
       }
     ],
     "ScriptPayPalButtonsEvents": [
@@ -3118,52 +3285,62 @@
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false
+        "required": false,
+        "description": "Customize the root element attributes."
       },
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
-        "required": false
+        "required": false,
+        "description": "Defines the trigger event to load the script."
       },
       {
         "name": "clientId",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Client ID or client token for PayPal SDK v6 authentication."
       },
       {
         "name": "clientToken",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Server-generated client token for SDK v6."
       },
       {
         "name": "merchantId",
         "type": "string | string[]",
-        "required": false
+        "required": false,
+        "description": "The merchant ID for the paypal script."
       },
       {
         "name": "partnerAttributionId",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "The partner attribution ID."
       },
       {
         "name": "pageType",
         "type": "PageTypes",
-        "required": false
+        "required": false,
+        "description": "The page type context hint."
       },
       {
         "name": "locale",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "The locale for the SDK (BCP-47 code)."
       },
       {
         "name": "messagesOptions",
         "type": "PayPalMessagesOptions",
-        "required": false
+        "required": false,
+        "description": "Options for the PayPal Messages session."
       },
       {
         "name": "paypalScriptOptions",
         "type": "Partial<PayPalInput>",
-        "required": false
+        "required": false,
+        "description": "The paypal script options."
       }
     ],
     "ScriptPayPalMessagesEvents": [
@@ -3266,29 +3443,37 @@
       {
         "name": "placeholderObjectFit",
         "type": "'cover' | 'contain' | 'fill' | 'none' | 'scale-down'",
-        "required": false
+        "required": false,
+        "description": "Object-fit for the placeholder image.",
+        "defaultValue": "'contain'"
       }
     ],
     "ScriptXEmbedProps": [
       {
         "name": "tweetId",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The tweet ID to embed"
       },
       {
         "name": "apiEndpoint",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom API endpoint for fetching tweet data",
+        "defaultValue": "'/_scripts/embed/x'"
       },
       {
         "name": "imageProxyEndpoint",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom image proxy endpoint",
+        "defaultValue": "'/_scripts/embed/x-image'"
       },
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes",
-        "required": false
+        "required": false,
+        "description": "Root element attributes"
       }
     ],
     "ScriptYouTubePlayerProps": [
@@ -3340,7 +3525,9 @@
       {
         "name": "cookies",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Whether to use youtube-nocookie.com for embedding.",
+        "defaultValue": "false"
       },
       {
         "name": "playerOptions",
@@ -3360,7 +3547,9 @@
       {
         "name": "placeholderObjectFit",
         "type": "'cover' | 'contain' | 'fill' | 'none' | 'scale-down'",
-        "required": false
+        "required": false,
+        "description": "Object-fit for the placeholder image.",
+        "defaultValue": "'cover'"
       }
     ],
     "ScriptYouTubePlayerEvents": [

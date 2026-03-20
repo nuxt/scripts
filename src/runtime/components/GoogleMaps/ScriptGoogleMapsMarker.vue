@@ -10,31 +10,102 @@ export { MARKER_INJECTION_KEY } from './injectionKeys'
 
 <script setup lang="ts">
 const props = defineProps<{
+  /**
+   * The position of the marker on the map.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/marker#MarkerOptions.position
+   */
   position?: google.maps.LatLngLiteral | google.maps.LatLng
+  /**
+   * Configuration options for the legacy marker. Deprecated: use ScriptGoogleMapsAdvancedMarkerElement instead.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/marker#MarkerOptions
+   */
   options?: Omit<google.maps.MarkerOptions, 'map'>
 }>()
 
 const emit = defineEmits<{
+  /**
+   * Fired when the marker's animation property changes.
+   */
   animation_changed: []
+  /**
+   * Fired when the marker's clickable property changes.
+   */
   clickable_changed: []
+  /**
+   * Fired when the marker's cursor property changes.
+   */
   cursor_changed: []
+  /**
+   * Fired when the marker's draggable property changes.
+   */
   draggable_changed: []
+  /**
+   * Fired when the marker's flat property changes.
+   */
   flat_changed: []
+  /**
+   * Fired when the marker's icon property changes.
+   */
   icon_changed: []
+  /**
+   * Fired when the marker's position property changes.
+   */
   position_changed: []
+  /**
+   * Fired when the marker's shape property changes.
+   */
   shape_changed: []
+  /**
+   * Fired when the marker's title property changes.
+   */
   title_changed: []
+  /**
+   * Fired when the marker's visible property changes.
+   */
   visible_changed: []
+  /**
+   * Fired when the marker's zIndex property changes.
+   */
   zindex_changed: []
+  /**
+   * Fired when the marker is clicked.
+   */
   click: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the DOM contextmenu event is fired on the marker.
+   */
   contextmenu: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the marker is double clicked.
+   */
   dblclick: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired repeatedly while the user drags the marker.
+   */
   drag: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the user stops dragging the marker.
+   */
   dragend: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the user starts dragging the marker.
+   */
   dragstart: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the DOM mousedown event is fired on the marker.
+   */
   mousedown: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the mouse leaves the area of the marker.
+   */
   mouseout: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the mouse enters the area of the marker.
+   */
   mouseover: [payload: google.maps.MapMouseEvent]
+  /**
+   * Fired when the DOM mouseup event is fired on the marker.
+   */
   mouseup: [payload: google.maps.MapMouseEvent]
 }>()
 

@@ -3,6 +3,10 @@ import { watch } from 'vue'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
+  /**
+   * Configuration options for the heatmap layer visualization.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/visualization#HeatmapLayerOptions
+   */
   options?: Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>
 }>()
 

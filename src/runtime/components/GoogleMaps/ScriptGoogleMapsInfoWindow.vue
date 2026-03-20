@@ -5,18 +5,52 @@ import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MAP_INJECTION_KEY, MARKER_INJECT
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
+  /**
+   * Configuration options for the info window.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/info-window#InfoWindowOptions
+   */
   options?: google.maps.InfoWindowOptions
 }>()
 
 const emit = defineEmits<{
+  /**
+   * Fired when the info window is closed. Includes both user and programmatic close actions.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/info-window#InfoWindow.close
+   */
   close: []
+  /**
+   * Fired when the close button is clicked.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/info-window#InfoWindow.closeclick
+   */
   closeclick: []
+  /**
+   * Fired when the content of the info window changes.
+   */
   content_changed: []
+  /**
+   * Fired when the info window's `<div>` is attached to the DOM. Useful for computing dynamic content sizing.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/info-window#InfoWindow.domready
+   */
   domready: []
+  /**
+   * Fired when the header content of the info window changes.
+   */
   headercontent_changed: []
+  /**
+   * Fired when the header disabled state changes.
+   */
   headerdisabled_changed: []
+  /**
+   * Fired when the info window position changes.
+   */
   position_changed: []
+  /**
+   * Fired when the info window becomes visible.
+   */
   visible: []
+  /**
+   * Fired when the z-index of the info window changes.
+   */
   zindex_changed: []
 }>()
 

@@ -11,11 +11,34 @@ type OverlayPane = 'mapPane' | 'overlayLayer' | 'markerLayer'
   | 'overlayMouseTarget' | 'floatPane'
 
 const props = withDefaults(defineProps<{
+  /**
+   * Geographic position for the overlay. Falls back to parent marker position if omitted.
+   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView
+   */
   position?: google.maps.LatLngLiteral
+  /**
+   * Anchor point of the overlay relative to its position.
+   * @default 'bottom-center'
+   */
   anchor?: OverlayAnchor
+  /**
+   * Pixel offset from the anchor position.
+   */
   offset?: { x: number, y: number }
+  /**
+   * The map pane on which to render the overlay.
+   * @default 'floatPane'
+   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#MapPanes
+   */
   pane?: OverlayPane
+  /**
+   * CSS z-index for the overlay element.
+   */
   zIndex?: number
+  /**
+   * Whether to block map click and gesture events from passing through the overlay.
+   * @default true
+   */
   blockMapInteraction?: boolean
 }>(), {
   anchor: 'bottom-center',
