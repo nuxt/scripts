@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { watch } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
@@ -32,7 +33,10 @@ const eventsWithMapMouseEventPayload = [
 const rectangle = useGoogleMapsResource<google.maps.Rectangle>({
   create({ mapsApi, map }) {
     const r = new mapsApi.Rectangle({ map, ...props.options })
-    setupEventListeners(r)
+    bindGoogleMapsEvents(r, emit, {
+      noPayload: eventsWithoutPayload,
+      withPayload: eventsWithMapMouseEventPayload,
+    })
     return r
   },
   cleanup(r, { mapsApi }) {
@@ -46,15 +50,6 @@ watch(() => props.options, (options) => {
     rectangle.value.setOptions(options)
   }
 }, { deep: true })
-
-function setupEventListeners(r: google.maps.Rectangle) {
-  eventsWithoutPayload.forEach((event) => {
-    r.addListener(event, () => emit(event))
-  })
-  eventsWithMapMouseEventPayload.forEach((event) => {
-    r.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
-  })
-}
 </script>
 
 <template>

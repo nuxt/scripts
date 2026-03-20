@@ -202,7 +202,7 @@
       {
         "name": "ScriptGoogleMapsAdvancedMarkerElementEvents",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsAdvancedMarkerElementEvents {\n  animation_changed: -\n  clickable_changed: -\n  cursor_changed: -\n  draggable_changed: -\n  flat_changed: -\n  icon_changed: -\n  position_changed: -\n  shape_changed: -\n  title_changed: -\n  visible_changed: -\n  zindex_changed: -\n  click: google.maps.MapMouseEvent\n  contextmenu: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n}"
+        "code": "interface ScriptGoogleMapsAdvancedMarkerElementEvents {\n  click: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n}"
       },
       {
         "name": "ScriptGoogleMapsCircleProps",
@@ -213,6 +213,16 @@
         "name": "ScriptGoogleMapsCircleEvents",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsCircleEvents {\n  center_changed: -\n  radius_changed: -\n  click: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mousemove: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n  rightclick: google.maps.MapMouseEvent\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsGeoJsonProps",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsGeoJsonProps {\n  src: string | object\n  style?: google.maps.Data.StylingFunction | google.maps.Data.StyleOptions\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsGeoJsonEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsGeoJsonEvents {\n  click: google.maps.Data.MouseEvent\n  contextmenu: google.maps.Data.MouseEvent\n  dblclick: google.maps.Data.MouseEvent\n  mousedown: google.maps.Data.MouseEvent\n  mousemove: google.maps.Data.MouseEvent\n  mouseout: google.maps.Data.MouseEvent\n  mouseover: google.maps.Data.MouseEvent\n  mouseup: google.maps.Data.MouseEvent\n  addfeature: google.maps.Data.AddFeatureEvent\n  removefeature: google.maps.Data.RemoveFeatureEvent\n  setgeometry: google.maps.Data.SetGeometryEvent\n  setproperty: google.maps.Data.SetPropertyEvent\n  removeproperty: google.maps.Data.RemovePropertyEvent\n}"
       },
       {
         "name": "ScriptGoogleMapsHeatmapLayerProps",
@@ -2116,72 +2126,7 @@
     ],
     "ScriptGoogleMapsAdvancedMarkerElementEvents": [
       {
-        "name": "animation_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "clickable_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "cursor_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "draggable_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "flat_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "icon_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "position_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "shape_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "title_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "visible_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "zindex_changed",
-        "type": "-",
-        "required": false
-      },
-      {
         "name": "click",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "contextmenu",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "dblclick",
         "type": "google.maps.MapMouseEvent",
         "required": false
       },
@@ -2197,26 +2142,6 @@
       },
       {
         "name": "dragstart",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mousedown",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mouseout",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mouseover",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mouseup",
         "type": "google.maps.MapMouseEvent",
         "required": false
       }
@@ -2292,6 +2217,85 @@
       {
         "name": "rightclick",
         "type": "google.maps.MapMouseEvent",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsGeoJsonProps": [
+      {
+        "name": "src",
+        "type": "string | object",
+        "required": true
+      },
+      {
+        "name": "style",
+        "type": "google.maps.Data.StylingFunction | google.maps.Data.StyleOptions",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsGeoJsonEvents": [
+      {
+        "name": "click",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousemove",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseup",
+        "type": "google.maps.Data.MouseEvent",
+        "required": false
+      },
+      {
+        "name": "addfeature",
+        "type": "google.maps.Data.AddFeatureEvent",
+        "required": false
+      },
+      {
+        "name": "removefeature",
+        "type": "google.maps.Data.RemoveFeatureEvent",
+        "required": false
+      },
+      {
+        "name": "setgeometry",
+        "type": "google.maps.Data.SetGeometryEvent",
+        "required": false
+      },
+      {
+        "name": "setproperty",
+        "type": "google.maps.Data.SetPropertyEvent",
+        "required": false
+      },
+      {
+        "name": "removeproperty",
+        "type": "google.maps.Data.RemovePropertyEvent",
         "required": false
       }
     ],

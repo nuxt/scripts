@@ -13,11 +13,6 @@ interface ExtractedDeclaration {
   code: string
 }
 
-interface ExtractedProps {
-  code: string
-  defaults: Record<string, string>
-}
-
 // --- Helpers ---
 
 function getName(node: any): string | null {
@@ -549,6 +544,8 @@ const componentToSlug: Record<string, string> = {
   ScriptGoogleMapsPolygon: 'google-maps',
   ScriptGoogleMapsPolyline: 'google-maps',
   ScriptGoogleMapsRectangle: 'google-maps',
+  ScriptGoogleMapsOverlayView: 'google-maps',
+  ScriptGoogleMapsGeoJson: 'google-maps',
   ScriptCarbonAds: 'carbon-ads',
   ScriptCrisp: 'crisp',
   ScriptIntercom: 'intercom',

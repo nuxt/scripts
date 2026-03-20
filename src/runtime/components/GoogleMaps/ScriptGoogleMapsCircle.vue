@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { watch } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
@@ -33,7 +34,10 @@ const eventsWithMapMouseEventPayload = [
 const circle = useGoogleMapsResource<google.maps.Circle>({
   create({ mapsApi, map }) {
     const c = new mapsApi.Circle({ map, ...props.options })
-    setupEventListeners(c)
+    bindGoogleMapsEvents(c, emit, {
+      noPayload: eventsWithoutPayload,
+      withPayload: eventsWithMapMouseEventPayload,
+    })
     return c
   },
   cleanup(c, { mapsApi }) {
@@ -47,15 +51,6 @@ watch(() => props.options, (options) => {
     circle.value.setOptions(options)
   }
 }, { deep: true })
-
-function setupEventListeners(c: google.maps.Circle) {
-  eventsWithoutPayload.forEach((event) => {
-    c.addListener(event, () => emit(event))
-  })
-  eventsWithMapMouseEventPayload.forEach((event) => {
-    c.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
-  })
-}
 </script>
 
 <template>

@@ -1,5 +1,6 @@
 <script lang="ts">
-import { inject, provide, watch } from 'vue'
+import { inject, provide, useSlots, useTemplateRef, watch } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './injectionKeys'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
@@ -9,6 +10,7 @@ export { ADVANCED_MARKER_ELEMENT_INJECTION_KEY } from './injectionKeys'
 
 <script setup lang="ts">
 const props = defineProps<{
+  position?: google.maps.LatLngLiteral | google.maps.LatLng
   options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>
 }>()
 
@@ -17,40 +19,40 @@ const emit = defineEmits<{
   (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
-const eventsWithoutPayload = [
-  'animation_changed',
-  'clickable_changed',
-  'cursor_changed',
-  'draggable_changed',
-  'flat_changed',
-  'icon_changed',
-  'position_changed',
-  'shape_changed',
-  'title_changed',
-  'visible_changed',
-  'zindex_changed',
-] as const
+// AdvancedMarkerElement supported events only
+// See https://developers.google.com/maps/documentation/javascript/reference/advanced-markers
+const eventsWithoutPayload = [] as const
 
 const eventsWithMapMouseEventPayload = [
   'click',
-  'contextmenu',
-  'dblclick',
   'drag',
   'dragend',
   'dragstart',
-  'mousedown',
-  'mouseout',
-  'mouseover',
-  'mouseup',
 ] as const
 
+const slots = useSlots()
+const markerContent = useTemplateRef('marker-content')
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedMarkerElement>({
+  ready: () => !slots.content || !!markerContent.value,
   async create({ mapsApi, map }) {
     await mapsApi.importLibrary('marker')
-    const marker = new mapsApi.marker.AdvancedMarkerElement(props.options)
-    setupEventListeners(marker)
+    const marker = new mapsApi.marker.AdvancedMarkerElement({
+      ...props.options,
+      ...(props.position ? { position: props.position } : {}),
+    })
+
+    // Use #content slot as marker visual if provided
+    if (markerContent.value) {
+      marker.content = markerContent.value
+    }
+
+    bindGoogleMapsEvents(marker, emit, {
+      noPayload: eventsWithoutPayload,
+      withPayload: eventsWithMapMouseEventPayload,
+    })
+
     if (markerClustererContext?.markerClusterer.value) {
       markerClustererContext.markerClusterer.value.addMarker(marker, true)
       markerClustererContext.requestRerender()
@@ -72,24 +74,29 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
   },
 })
 
-watch(() => props.options, (options) => {
-  if (advancedMarkerElement.value && options) {
-    Object.assign(advancedMarkerElement.value, options)
-  }
-}, { deep: true })
+watch(
+  () => [props.position?.lat, props.position?.lng, props.position, props.options],
+  () => {
+    if (!advancedMarkerElement.value)
+      return
+
+    if (props.options)
+      Object.assign(advancedMarkerElement.value, props.options)
+    advancedMarkerElement.value.position = props.position ?? props.options?.position
+  },
+  { deep: true },
+)
 
 provide(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, { advancedMarkerElement })
-
-function setupEventListeners(marker: google.maps.marker.AdvancedMarkerElement) {
-  eventsWithoutPayload.forEach((event) => {
-    marker.addListener(event, () => emit(event))
-  })
-  eventsWithMapMouseEventPayload.forEach((event) => {
-    marker.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
-  })
-}
 </script>
 
 <template>
+  <!-- Hidden container for #content slot — becomes the marker visual -->
+  <div v-if="$slots.content" style="display: none;">
+    <div ref="marker-content">
+      <slot name="content" />
+    </div>
+  </div>
+  <!-- Default slot for child components (InfoWindow, OverlayView, etc.) -->
   <slot v-if="advancedMarkerElement" />
 </template>
