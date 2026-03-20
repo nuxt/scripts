@@ -73,6 +73,11 @@
         "name": "ScriptCrispProps",
         "kind": "interface",
         "code": "interface ScriptCrispProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  id: string\n  runtimeConfig?: {\n    locale: string\n  }\n  tokenId?: string\n  cookieDomain?: string\n  cookieExpiry?: number\n}"
+      },
+      {
+        "name": "ScriptCrispEvents",
+        "kind": "interface",
+        "code": "interface ScriptCrispEvents {\n  ready: ReturnType<typeof useScriptCrisp>\n  error: -\n}"
       }
     ],
     "databuddy-analytics": [
@@ -114,6 +119,11 @@
         "name": "ScriptGoogleAdsenseProps",
         "kind": "interface",
         "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+      },
+      {
+        "name": "ScriptGoogleAdsenseEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleAdsenseEvents {\n  ready: ReturnType<typeof useScriptGoogleAdsense>\n  error: -\n}"
       }
     ],
     "google-analytics": [
@@ -193,6 +203,11 @@
         "name": "ScriptGoogleMapsProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Is Google Maps being rendered above the fold?\n   * This will load the placeholder image with higher priority.\n   */\n  aboveTheFold?: boolean\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Zoom level for the map (0-21). Reactive: changing this will update the map.\n   * Takes precedence over mapOptions.zoom when provided.\n   */\n  zoom?: number\n  /**\n   * Should a marker be displayed on the map where the centre is.\n   */\n  centerMarker?: boolean\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map\n   */\n  height?: number | string\n  /**\n   * Customize the placeholder image attributes.\n   *\n   * @see https://developers.google.com/maps/documentation/maps-static/start.\n   */\n  placeholderOptions?: PlaceholderOptions\n  /**\n   * Customize the placeholder image attributes.\n   */\n  placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Extra Markers to add to the map.\n   */\n  markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light', 'dark', or a reactive ref.\n   */\n  colorMode?: 'light' | 'dark'\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsEvents",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsEvents {\n  ready: typeof googleMaps\n  error: -\n}"
       },
       {
         "name": "ScriptGoogleMapsAdvancedMarkerElementProps",
@@ -457,6 +472,11 @@
         "name": "ScriptIntercomProps",
         "kind": "interface",
         "code": "interface ScriptIntercomProps {\n  appId: string\n  apiBase?: string\n  name?: string\n  email?: string\n  userId?: string\n  // customizing the messenger\n  alignment?: 'left' | 'right'\n  horizontalPadding?: number\n  verticalPadding?: number\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+      },
+      {
+        "name": "ScriptIntercomEvents",
+        "kind": "interface",
+        "code": "interface ScriptIntercomEvents {\n  ready: ReturnType<typeof useScriptIntercom>\n  error: -\n}"
       }
     ],
     "lemon-squeezy": [
@@ -474,6 +494,11 @@
         "name": "ScriptLemonSqueezyProps",
         "kind": "interface",
         "code": "interface ScriptLemonSqueezyProps {\n  trigger?: ElementScriptTrigger\n}"
+      },
+      {
+        "name": "ScriptLemonSqueezyEvents",
+        "kind": "interface",
+        "code": "interface ScriptLemonSqueezyEvents {\n  ready: ReturnType<typeof useScriptLemonSqueezy>\n  lemonSqueezyEvent: LemonSqueezyEventPayload\n}"
       }
     ],
     "matomo-analytics": [
@@ -566,9 +591,19 @@
         "code": "interface ScriptPayPalButtonsProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The v6 SDK components to load.\n   * @default ['paypal-payments']\n   */\n  components?: Components[]\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * The merchant ID(s).\n   */\n  merchantId?: string | string[]\n  /**\n   * Partner attribution ID for revenue sharing.\n   */\n  partnerAttributionId?: string\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
       },
       {
+        "name": "ScriptPayPalButtonsEvents",
+        "kind": "interface",
+        "code": "interface ScriptPayPalButtonsEvents {\n  ready: SdkInstance<Components[]>\n  error: unknown\n}"
+      },
+      {
         "name": "ScriptPayPalMessagesProps",
         "kind": "interface",
         "code": "interface ScriptPayPalMessagesProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The merchant ID for the paypal script.\n   */\n  merchantId?: string | string[]\n  /**\n   * The partner attribution ID.\n   */\n  partnerAttributionId?: string\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * Options for the PayPal Messages session.\n   */\n  messagesOptions?: PayPalMessagesOptions\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
+      },
+      {
+        "name": "ScriptPayPalMessagesEvents",
+        "kind": "interface",
+        "code": "interface ScriptPayPalMessagesEvents {\n  ready: PayPalMessagesSession\n  error: unknown\n}"
       }
     ],
     "plausible-analytics": [
@@ -713,6 +748,11 @@
         "name": "ScriptStripePricingTableProps",
         "kind": "interface",
         "code": "interface ScriptStripePricingTableProps {\n  trigger?: ElementScriptTrigger\n  publishableKey: string\n  pricingTableId: string\n  clientReferenceId?: string\n  customerEmail?: string\n  customerSessionClientSecret?: string\n}"
+      },
+      {
+        "name": "ScriptStripePricingTableEvents",
+        "kind": "interface",
+        "code": "interface ScriptStripePricingTableEvents {\n  ready: ReturnType<typeof useScript>\n  error: -\n}"
       }
     ],
     "tiktok-pixel": [
@@ -862,6 +902,11 @@
         "name": "ScriptYouTubePlayerProps",
         "kind": "interface",
         "code": "interface ScriptYouTubePlayerProps {\n  placeholderAttrs?: ImgHTMLAttributes\n  rootAttrs?: HTMLAttributes\n  aboveTheFold?: boolean\n  trigger?: ElementScriptTrigger\n  videoId: string\n  playerVars?: YT.PlayerVars\n  width?: number\n  height?: number\n  ratio?: string\n  /**\n   * Whether to use youtube-nocookie.com for embedding.\n   *\n   * @default false\n   */\n  cookies?: boolean\n  playerOptions?: YT.PlayerOptions\n  thumbnailSize?: YoutubeThumbnailSize\n  webp?: boolean\n  /**\n   * Object-fit for the placeholder image.\n   *\n   * @default 'cover'\n   */\n  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'\n}"
+      },
+      {
+        "name": "ScriptYouTubePlayerEvents",
+        "kind": "interface",
+        "code": "interface ScriptYouTubePlayerEvents {\n  ready: YT.PlayerEvent\n  state-change: YT.OnStateChangeEvent\n  playback-quality-change: YT.OnPlaybackQualityChangeEvent\n  playback-rate-change: YT.OnPlaybackRateChangeEvent\n  error: YT.OnErrorEvent\n  api-change: YT.PlayerEvent\n}"
       }
     ],
     "carbon-ads": [
@@ -869,6 +914,11 @@
         "name": "ScriptCarbonAdsProps",
         "kind": "interface",
         "code": "interface ScriptCarbonAdsProps {\n  serve: string\n  placement: string\n  format: string\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+      },
+      {
+        "name": "ScriptCarbonAdsEvents",
+        "kind": "interface",
+        "code": "interface ScriptCarbonAdsEvents {\n  error: string | Event\n  ready: HTMLScriptElement\n}"
       }
     ]
   },
@@ -2112,6 +2162,18 @@
         "required": false
       }
     ],
+    "ScriptGoogleMapsEvents": [
+      {
+        "name": "ready",
+        "type": "typeof googleMaps",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptGoogleMapsAdvancedMarkerElementProps": [
       {
         "name": "position",
@@ -2788,6 +2850,18 @@
         "required": false
       }
     ],
+    "ScriptCarbonAdsEvents": [
+      {
+        "name": "error",
+        "type": "string | Event",
+        "required": false
+      },
+      {
+        "name": "ready",
+        "type": "HTMLScriptElement",
+        "required": false
+      }
+    ],
     "ScriptCrispProps": [
       {
         "name": "trigger",
@@ -2820,6 +2894,18 @@
         "required": false
       }
     ],
+    "ScriptCrispEvents": [
+      {
+        "name": "ready",
+        "type": "ReturnType<typeof useScriptCrisp>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptGoogleAdsenseProps": [
       {
         "name": "dataAdClient",
@@ -2849,6 +2935,18 @@
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
+        "required": false
+      }
+    ],
+    "ScriptGoogleAdsenseEvents": [
+      {
+        "name": "ready",
+        "type": "ReturnType<typeof useScriptGoogleAdsense>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
         "required": false
       }
     ],
@@ -2921,10 +3019,34 @@
         "required": false
       }
     ],
+    "ScriptIntercomEvents": [
+      {
+        "name": "ready",
+        "type": "ReturnType<typeof useScriptIntercom>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptLemonSqueezyProps": [
       {
         "name": "trigger",
         "type": "ElementScriptTrigger",
+        "required": false
+      }
+    ],
+    "ScriptLemonSqueezyEvents": [
+      {
+        "name": "ready",
+        "type": "ReturnType<typeof useScriptLemonSqueezy>",
+        "required": false
+      },
+      {
+        "name": "lemonSqueezyEvent",
+        "type": "LemonSqueezyEventPayload",
         "required": false
       }
     ],
@@ -2980,6 +3102,18 @@
         "required": false
       }
     ],
+    "ScriptPayPalButtonsEvents": [
+      {
+        "name": "ready",
+        "type": "SdkInstance<Components[]>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "unknown",
+        "required": false
+      }
+    ],
     "ScriptPayPalMessagesProps": [
       {
         "name": "rootAttrs",
@@ -3032,6 +3166,18 @@
         "required": false
       }
     ],
+    "ScriptPayPalMessagesEvents": [
+      {
+        "name": "ready",
+        "type": "PayPalMessagesSession",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "unknown",
+        "required": false
+      }
+    ],
     "ScriptStripePricingTableProps": [
       {
         "name": "trigger",
@@ -3061,6 +3207,18 @@
       {
         "name": "customerSessionClientSecret",
         "type": "string",
+        "required": false
+      }
+    ],
+    "ScriptStripePricingTableEvents": [
+      {
+        "name": "ready",
+        "type": "ReturnType<typeof useScript>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
         "required": false
       }
     ],
@@ -3202,6 +3360,38 @@
       {
         "name": "placeholderObjectFit",
         "type": "'cover' | 'contain' | 'fill' | 'none' | 'scale-down'",
+        "required": false
+      }
+    ],
+    "ScriptYouTubePlayerEvents": [
+      {
+        "name": "ready",
+        "type": "YT.PlayerEvent",
+        "required": false
+      },
+      {
+        "name": "state-change",
+        "type": "YT.OnStateChangeEvent",
+        "required": false
+      },
+      {
+        "name": "playback-quality-change",
+        "type": "YT.OnPlaybackQualityChangeEvent",
+        "required": false
+      },
+      {
+        "name": "playback-rate-change",
+        "type": "YT.OnPlaybackRateChangeEvent",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "YT.OnErrorEvent",
+        "required": false
+      },
+      {
+        "name": "api-change",
+        "type": "YT.PlayerEvent",
         "required": false
       }
     ]

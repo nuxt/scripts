@@ -9,15 +9,15 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'close'): void
-  (event: 'closeclick'): void
-  (event: 'content_changed'): void
-  (event: 'domready'): void
-  (event: 'headercontent_changed'): void
-  (event: 'headerdisabled_changed'): void
-  (event: 'position_changed'): void
-  (event: 'visible'): void
-  (event: 'zindex_changed'): void
+  close: []
+  closeclick: []
+  content_changed: []
+  domready: []
+  headercontent_changed: []
+  headerdisabled_changed: []
+  position_changed: []
+  visible: []
+  zindex_changed: []
 }>()
 
 const infoWindowEvents = [

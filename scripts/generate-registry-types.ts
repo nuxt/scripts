@@ -376,15 +376,52 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
         return
       }
 
-      // defineEmits<{...}>()
+      // defineEmits<{...}>() or defineEmits([...])
       if (node.callee?.name === 'defineEmits') {
+        // Runtime array syntax: defineEmits(['click', 'drag'])
+        const arrayArg = node.arguments?.[0]
+        if (arrayArg?.type === 'ArrayExpression') {
+          for (const el of arrayArg.elements || []) {
+            if ((el.type === 'StringLiteral' || el.type === 'Literal') && typeof el.value === 'string') {
+              events.push({ name: el.value, type: '-', required: false })
+            }
+          }
+          return
+        }
+
         const typeArg = node.typeArguments?.params?.[0]
         if (!typeArg)
           return
 
-        // Parse call signatures: (event: typeof arr[number], payload?: T): void
+        // Parse call signatures or object syntax from TSTypeLiteral
         if (typeArg.type === 'TSTypeLiteral') {
           for (const member of typeArg.members || []) {
+            // Object syntax: { click: [payload: Type] } or { close: [] }
+            if (member.type === 'TSPropertySignature') {
+              const eventName = member.key?.name || member.key?.value
+              if (!eventName)
+                continue
+              const valueType = member.typeAnnotation?.typeAnnotation
+              // TSTupleType with elements → extract first element's type as payload
+              if (valueType?.type === 'TSTupleType') {
+                const elements = valueType.elementTypes || []
+                let payloadType: string | undefined
+                if (elements.length > 0) {
+                  // Named tuple: [payload: Type] → TSNamedTupleMember with elementType
+                  const el = elements[0]
+                  const typeNode = el.elementType || el.typeAnnotation || el
+                  payloadType = resolveTSType(typeNode, scriptSource)
+                }
+                events.push({
+                  name: eventName,
+                  type: payloadType || '-',
+                  required: false,
+                })
+              }
+              continue
+            }
+
+            // Call signature syntax: (event: 'click', payload: Type): void
             if (member.type !== 'TSCallSignatureDeclaration')
               continue
             const params = member.params || []

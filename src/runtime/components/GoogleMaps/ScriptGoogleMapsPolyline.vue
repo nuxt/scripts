@@ -8,17 +8,17 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'click', payload: google.maps.PolyMouseEvent): void
-  (event: 'contextmenu', payload: google.maps.PolyMouseEvent): void
-  (event: 'dblclick', payload: google.maps.PolyMouseEvent): void
-  (event: 'mousedown', payload: google.maps.PolyMouseEvent): void
-  (event: 'mousemove', payload: google.maps.PolyMouseEvent): void
-  (event: 'mouseout', payload: google.maps.PolyMouseEvent): void
-  (event: 'mouseover', payload: google.maps.PolyMouseEvent): void
-  (event: 'mouseup', payload: google.maps.PolyMouseEvent): void
-  (event: 'drag', payload: google.maps.MapMouseEvent): void
-  (event: 'dragend', payload: google.maps.MapMouseEvent): void
-  (event: 'dragstart', payload: google.maps.MapMouseEvent): void
+  click: [payload: google.maps.PolyMouseEvent]
+  contextmenu: [payload: google.maps.PolyMouseEvent]
+  dblclick: [payload: google.maps.PolyMouseEvent]
+  mousedown: [payload: google.maps.PolyMouseEvent]
+  mousemove: [payload: google.maps.PolyMouseEvent]
+  mouseout: [payload: google.maps.PolyMouseEvent]
+  mouseover: [payload: google.maps.PolyMouseEvent]
+  mouseup: [payload: google.maps.PolyMouseEvent]
+  drag: [payload: google.maps.MapMouseEvent]
+  dragend: [payload: google.maps.MapMouseEvent]
+  dragstart: [payload: google.maps.MapMouseEvent]
 }>()
 
 const eventsWithPolyMouseEventPayload = [

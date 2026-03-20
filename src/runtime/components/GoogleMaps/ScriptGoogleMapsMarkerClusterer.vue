@@ -33,9 +33,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'click', payload: MarkerClustererInstance): void
-  (event: 'clusteringbegin', payload: MarkerClustererInstance): void
-  (event: 'clusteringend', payload: MarkerClustererInstance): void
+  click: [payload: MarkerClustererInstance]
+  clusteringbegin: [payload: MarkerClustererInstance]
+  clusteringend: [payload: MarkerClustererInstance]
 }>()
 
 const markerClustererEvents = [
