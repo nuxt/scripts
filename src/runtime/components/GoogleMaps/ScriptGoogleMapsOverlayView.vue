@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<{
   blockMapInteraction: true,
 })
 
-const open = defineModel<boolean>('open')
+const open = defineModel<boolean>('open', { default: undefined })
 
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
 const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
