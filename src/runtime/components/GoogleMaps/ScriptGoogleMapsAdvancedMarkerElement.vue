@@ -14,25 +14,14 @@ const props = defineProps<{
   options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>
 }>()
 
-const emit = defineEmits<{
-  (event: typeof eventsWithoutPayload[number]): void
-  (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
-}>()
-
-// AdvancedMarkerElement supported events only
-// See https://developers.google.com/maps/documentation/javascript/reference/advanced-markers
-const eventsWithoutPayload = [] as const
-
-const eventsWithMapMouseEventPayload = [
-  'click',
-  'drag',
-  'dragend',
-  'dragstart',
-] as const
-
+const emit = defineEmits(['click', 'drag', 'dragend', 'dragstart'])
+const dragEvents = ['drag', 'dragend', 'dragstart'] as const
 const slots = useSlots()
 const markerContent = useTemplateRef('marker-content')
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
+
+// gmp-click handler for cleanup (AdvancedMarkerElement uses DOM gmp-click instead of Maps addListener click)
+let gmpClickHandler: ((e: any) => void) | undefined
 
 const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedMarkerElement>({
   ready: () => !slots.content || !!markerContent.value,
@@ -40,6 +29,7 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
     await mapsApi.importLibrary('marker')
     const marker = new mapsApi.marker.AdvancedMarkerElement({
       ...props.options,
+      gmpClickable: true,
       ...(props.position ? { position: props.position } : {}),
     })
 
@@ -48,11 +38,6 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
       marker.content = markerContent.value
     }
 
-    bindGoogleMapsEvents(marker, emit, {
-      noPayload: eventsWithoutPayload,
-      withPayload: eventsWithMapMouseEventPayload,
-    })
-
     if (markerClustererContext?.markerClusterer.value) {
       markerClustererContext.markerClusterer.value.addMarker(marker, true)
       markerClustererContext.requestRerender()
@@ -60,9 +45,23 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
     else {
       marker.map = map
     }
+
+    // AdvancedMarkerElement: use gmp-click DOM event (addListener('click') is deprecated)
+    gmpClickHandler = (e: any) => emit('click', e)
+    marker.addEventListener('gmp-click', gmpClickHandler)
+
+    // Drag events still use Maps API addListener
+    bindGoogleMapsEvents(marker, emit, {
+      withPayload: dragEvents,
+    })
+
     return marker
   },
   cleanup(marker, { mapsApi }) {
+    if (gmpClickHandler) {
+      marker.removeEventListener('gmp-click', gmpClickHandler)
+      gmpClickHandler = undefined
+    }
     mapsApi.event.clearInstanceListeners(marker)
     if (markerClustererContext?.markerClusterer.value) {
       markerClustererContext.markerClusterer.value.removeMarker(marker, true)

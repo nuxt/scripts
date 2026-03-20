@@ -13,7 +13,10 @@ export function createMockAdvancedMarkerElement() {
     map: null,
     content: null,
     position: null,
+    gmpClickable: false,
     addListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   }
 }
 

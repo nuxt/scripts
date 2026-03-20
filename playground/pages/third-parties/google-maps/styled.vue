@@ -16,30 +16,5 @@ const mapOptions = {
         :map-options="mapOptions"
       />
     </div>
-    <div class="button-container">
-      <button
-        class="button"
-        @click="changeQuery"
-      >
-        change query
-      </button>
-    </div>
   </div>
 </template>
-
-<style>
-.button-container {
-  margin: 20px 0;
-}
-
-.button {
-  background-color: orange;
-  border-radius: 8px;
-  padding: 4px 8px;
-  cursor: pointer;
-}
-
-.button:not(:last-child) {
-  margin-right: 8px;
-}
-</style>

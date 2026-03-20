@@ -334,7 +334,18 @@ const googleMaps = {
 
 defineExpose(googleMaps)
 
-provide(MAP_INJECTION_KEY, { map, mapsApi })
+// Shared InfoWindow group: only one InfoWindow open at a time within this map
+let activeInfoWindow: google.maps.InfoWindow | undefined
+provide(MAP_INJECTION_KEY, {
+  map,
+  mapsApi,
+  activateInfoWindow(iw: google.maps.InfoWindow) {
+    if (activeInfoWindow && activeInfoWindow !== iw) {
+      activeInfoWindow.close()
+    }
+    activeInfoWindow = iw
+  },
+})
 
 onMounted(() => {
   watch(ready, (v) => {
