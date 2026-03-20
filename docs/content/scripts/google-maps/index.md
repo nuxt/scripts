@@ -8,7 +8,7 @@ links:
     size: xs
   - label: "<ScriptGoogleMaps>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGoogleMaps.vue
+    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/GoogleMaps/ScriptGoogleMaps.vue
     size: xs
 ---
 
@@ -120,7 +120,7 @@ function handleReady({ map }) {
         ref="maps"
         :center="query"
         :markers="markers"
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
+        api-key="YOUR_API_KEY"
         class="group"
         above-the-fold
         @ready="handleReady"
@@ -181,13 +181,17 @@ function handleReady({ map }) {
 The `#content` slot replaces the default pin with any Vue template.
 
 ```vue
-<ScriptGoogleMapsAdvancedMarkerElement :position="{ lat: -33.8688, lng: 151.2093 }">
-  <template #content>
-    <div style="background: #1a73e8; color: white; padding: 4px 10px; border-radius: 16px; font-weight: bold;">
-      $1.2M
-    </div>
-  </template>
-</ScriptGoogleMapsAdvancedMarkerElement>
+<template>
+  <ScriptGoogleMaps :center="{ lat: -33.8688, lng: 151.2093 }" :zoom="12">
+    <ScriptGoogleMapsAdvancedMarkerElement :position="{ lat: -33.8688, lng: 151.2093 }">
+      <template #content>
+        <div style="background: #1a73e8; color: white; padding: 4px 10px; border-radius: 16px; font-weight: bold;">
+          $1.2M
+        </div>
+      </template>
+    </ScriptGoogleMapsAdvancedMarkerElement>
+  </ScriptGoogleMaps>
+</template>
 ```
 
 ### Custom Popups
@@ -200,22 +204,24 @@ const showPopup = ref(false)
 </script>
 
 <template>
-  <ScriptGoogleMapsAdvancedMarkerElement
-    :position="{ lat: -33.8688, lng: 151.2093 }"
-    @click="showPopup = !showPopup"
-  >
-    <ScriptGoogleMapsOverlayView
-      v-model:open="showPopup"
-      anchor="bottom-center"
-      :offset="{ x: 0, y: -50 }"
+  <ScriptGoogleMaps :center="{ lat: -33.8688, lng: 151.2093 }" :zoom="12">
+    <ScriptGoogleMapsAdvancedMarkerElement
+      :position="{ lat: -33.8688, lng: 151.2093 }"
+      @click="showPopup = !showPopup"
     >
-      <div class="popup">
-        <p>Any Vue content, fully styled</p>
-        <button @click.stop="showPopup = false">
-          Close
-        </button>
-      </div>
-    </ScriptGoogleMapsOverlayView>
-  </ScriptGoogleMapsAdvancedMarkerElement>
+      <ScriptGoogleMapsOverlayView
+        v-model:open="showPopup"
+        anchor="bottom-center"
+        :offset="{ x: 0, y: -50 }"
+      >
+        <div class="popup">
+          <p>Any Vue content, fully styled</p>
+          <button @click.stop="showPopup = false">
+            Close
+          </button>
+        </div>
+      </ScriptGoogleMapsOverlayView>
+    </ScriptGoogleMapsAdvancedMarkerElement>
+  </ScriptGoogleMaps>
 </template>
 ```

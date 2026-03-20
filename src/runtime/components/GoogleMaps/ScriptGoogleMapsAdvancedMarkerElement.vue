@@ -19,31 +19,15 @@ const emit = defineEmits<{
   (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
 
-const eventsWithoutPayload = [
-  'animation_changed',
-  'clickable_changed',
-  'cursor_changed',
-  'draggable_changed',
-  'flat_changed',
-  'icon_changed',
-  'position_changed',
-  'shape_changed',
-  'title_changed',
-  'visible_changed',
-  'zindex_changed',
-] as const
+// AdvancedMarkerElement supported events only
+// See https://developers.google.com/maps/documentation/javascript/reference/advanced-markers
+const eventsWithoutPayload = [] as const
 
 const eventsWithMapMouseEventPayload = [
   'click',
-  'contextmenu',
-  'dblclick',
   'drag',
   'dragend',
   'dragstart',
-  'mousedown',
-  'mouseout',
-  'mouseover',
-  'mouseup',
 ] as const
 
 const slots = useSlots()
@@ -90,17 +74,18 @@ const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedM
   },
 })
 
-watch(() => props.position, (position) => {
-  if (advancedMarkerElement.value && position) {
-    advancedMarkerElement.value.position = position
-  }
-})
+watch(
+  () => [props.position?.lat, props.position?.lng, props.position, props.options],
+  () => {
+    if (!advancedMarkerElement.value)
+      return
 
-watch(() => props.options, (options) => {
-  if (advancedMarkerElement.value && options) {
-    Object.assign(advancedMarkerElement.value, options)
-  }
-}, { deep: true })
+    if (props.options)
+      Object.assign(advancedMarkerElement.value, props.options)
+    advancedMarkerElement.value.position = props.position ?? props.options?.position
+  },
+  { deep: true },
+)
 
 provide(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, { advancedMarkerElement })
 </script>

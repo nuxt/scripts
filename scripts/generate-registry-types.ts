@@ -13,11 +13,6 @@ interface ExtractedDeclaration {
   code: string
 }
 
-interface ExtractedProps {
-  code: string
-  defaults: Record<string, string>
-}
-
 // --- Helpers ---
 
 function getName(node: any): string | null {

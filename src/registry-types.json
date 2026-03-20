@@ -202,7 +202,7 @@
       {
         "name": "ScriptGoogleMapsAdvancedMarkerElementEvents",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsAdvancedMarkerElementEvents {\n  animation_changed: -\n  clickable_changed: -\n  cursor_changed: -\n  draggable_changed: -\n  flat_changed: -\n  icon_changed: -\n  position_changed: -\n  shape_changed: -\n  title_changed: -\n  visible_changed: -\n  zindex_changed: -\n  click: google.maps.MapMouseEvent\n  contextmenu: google.maps.MapMouseEvent\n  dblclick: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n  mousedown: google.maps.MapMouseEvent\n  mouseout: google.maps.MapMouseEvent\n  mouseover: google.maps.MapMouseEvent\n  mouseup: google.maps.MapMouseEvent\n}"
+        "code": "interface ScriptGoogleMapsAdvancedMarkerElementEvents {\n  click: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n}"
       },
       {
         "name": "ScriptGoogleMapsCircleProps",
@@ -2126,72 +2126,7 @@
     ],
     "ScriptGoogleMapsAdvancedMarkerElementEvents": [
       {
-        "name": "animation_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "clickable_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "cursor_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "draggable_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "flat_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "icon_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "position_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "shape_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "title_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "visible_changed",
-        "type": "-",
-        "required": false
-      },
-      {
-        "name": "zindex_changed",
-        "type": "-",
-        "required": false
-      },
-      {
         "name": "click",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "contextmenu",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "dblclick",
         "type": "google.maps.MapMouseEvent",
         "required": false
       },
@@ -2207,26 +2142,6 @@
       },
       {
         "name": "dragstart",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mousedown",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mouseout",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mouseover",
-        "type": "google.maps.MapMouseEvent",
-        "required": false
-      },
-      {
-        "name": "mouseup",
         "type": "google.maps.MapMouseEvent",
         "required": false
       }

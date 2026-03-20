@@ -93,16 +93,22 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
         }
 
         const position = getResolvedPosition()
-        if (!position)
+        if (!position) {
+          el.style.visibility = 'hidden'
           return
+        }
         const projection = this.getProjection()
-        if (!projection)
+        if (!projection) {
+          el.style.visibility = 'hidden'
           return
+        }
         const pos = projection.fromLatLngToDivPixel(
           new mapsApi.LatLng(position.lat, position.lng),
         )
-        if (!pos)
+        if (!pos) {
+          el.style.visibility = 'hidden'
           return
+        }
         el.style.position = 'absolute'
         el.style.left = `${pos.x + (props.offset?.x ?? 0)}px`
         el.style.top = `${pos.y + (props.offset?.y ?? 0)}px`
@@ -147,6 +153,22 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
     ov.setMap(null)
   },
 })
+
+// AdvancedMarkerElement doesn't fire position_changed, so watch the reactive ref
+// for programmatic position updates (drag is handled by event listeners above)
+if (advancedMarkerElementContext) {
+  watch(
+    () => {
+      const pos = advancedMarkerElementContext.advancedMarkerElement.value?.position
+      if (!pos)
+        return undefined
+      if ('lat' in pos && typeof pos.lat === 'function')
+        return { lat: (pos as google.maps.LatLng).lat(), lng: (pos as google.maps.LatLng).lng() }
+      return pos as google.maps.LatLngLiteral
+    },
+    () => { overlay.value?.draw() },
+  )
+}
 
 // Reposition on prop changes (draw() is designed to be called repeatedly)
 // Only watches explicit props — marker position changes are handled by event listeners above
