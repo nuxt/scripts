@@ -319,24 +319,6 @@ export default defineNuxtModule<ModuleOptions>({
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
-    const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
-    nuxt.options.runtimeConfig['nuxt-scripts'] = {
-      version: version!,
-      // Private proxy config with API key (server-side only)
-      googleStaticMapsProxy: googleMapsEnabled
-        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
-        : undefined,
-    } as any
-    nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
-      // expose for devtools
-      version: nuxt.options.dev ? version : undefined,
-      defaultScriptOptions: config.defaultScriptOptions as any,
-      // Only expose enabled and cacheMaxAge to client, not apiKey
-      googleStaticMapsProxy: googleMapsEnabled
-        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge ?? 3600 }
-        : undefined,
-    } as any
-
     // Normalize registry entries to [input, scriptOptions?] tuple form
     // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
@@ -372,6 +354,26 @@ export default defineNuxtModule<ModuleOptions>({
         registryWithDefaults,
       )
     }
+
+    // Setup runtimeConfig for proxies and devtools.
+    // Must run AFTER env var resolution above so the API key is populated.
+    const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
+    nuxt.options.runtimeConfig['nuxt-scripts'] = {
+      version: version!,
+      // Private proxy config with API key (server-side only)
+      googleStaticMapsProxy: googleMapsEnabled
+        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
+        : undefined,
+    } as any
+    nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
+      // expose for devtools
+      version: nuxt.options.dev ? version : undefined,
+      defaultScriptOptions: config.defaultScriptOptions as any,
+      // Only expose enabled and cacheMaxAge to client, not apiKey
+      googleStaticMapsProxy: googleMapsEnabled
+        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge ?? 3600 }
+        : undefined,
+    } as any
 
     // Handle deprecation of bundle option
     if (config.defaultScriptOptions?.bundle !== undefined) {
