@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, useTemplateRef, watch } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
@@ -39,7 +40,7 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
       ...props.options,
     })
 
-    setupEventListeners(iw)
+    bindGoogleMapsEvents(iw, emit, { noPayload: infoWindowEvents })
 
     if (markerContext?.marker.value) {
       markerClickListener = markerContext.marker.value.addListener('click', () => {
@@ -77,12 +78,6 @@ watch(() => props.options, (options) => {
     infoWindow.value.setOptions(options)
   }
 }, { deep: true })
-
-function setupEventListeners(iw: google.maps.InfoWindow) {
-  infoWindowEvents.forEach((event) => {
-    iw.addListener(event, () => emit(event))
-  })
-}
 </script>
 
 <template>

@@ -58,6 +58,19 @@ const geoJsonData = {
   ],
 }
 
+const isOverlayViewShown = ref(false)
+
+const isOverlayViewOnMarkerShown = ref(false)
+
+const isOverlayViewOnAdvancedMarkerShown = ref(false)
+
+const isCustomMarkerContentShown = ref(false)
+
+const isOverlayPopupShown = ref(false)
+const overlayPopupOpen = ref(false)
+
+const zoom = ref(8)
+
 const googleMapsRef = useTemplateRef('googleMapsRef')
 
 whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
@@ -88,9 +101,9 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
       :width="1280"
       :height="720"
       above-the-fold
+      :zoom="zoom"
       :map-options="{
         center: { lat: -34.397, lng: 150.644 },
-        zoom: 8,
         mapId: 'DEMO_MAP_ID',
       }"
     >
@@ -224,6 +237,80 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         }"
       />
 
+      <ScriptGoogleMapsOverlayView
+        v-if="isOverlayViewShown"
+        :position="{ lat: -33.8688, lng: 151.2093 }"
+        anchor="bottom-center"
+        :offset="{ x: 0, y: -10 }"
+      >
+        <div style="background: white; padding: 8px 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); font-family: sans-serif;">
+          <strong>Custom Overlay</strong>
+          <p style="margin: 4px 0 0;">Vue slot content with full reactivity</p>
+        </div>
+      </ScriptGoogleMapsOverlayView>
+
+      <ScriptGoogleMapsMarker
+        v-if="isOverlayViewOnMarkerShown"
+        :options="{ position: { lat: -34.0, lng: 150.8 }, draggable: true }"
+      >
+        <ScriptGoogleMapsOverlayView
+          anchor="bottom-center"
+          :offset="{ x: 0, y: -40 }"
+        >
+          <div style="background: #1a73e8; color: white; padding: 6px 12px; border-radius: 20px; font-family: sans-serif; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+            Drag me! Custom overlay on Marker
+          </div>
+        </ScriptGoogleMapsOverlayView>
+      </ScriptGoogleMapsMarker>
+
+      <ScriptGoogleMapsAdvancedMarkerElement
+        v-if="isOverlayViewOnAdvancedMarkerShown"
+        :options="{ position: { lat: -34.2, lng: 150.9 }, gmpDraggable: true }"
+      >
+        <ScriptGoogleMapsOverlayView
+          anchor="bottom-center"
+          :offset="{ x: 0, y: -50 }"
+        >
+          <div style="background: #ea4335; color: white; padding: 8px 16px; border-radius: 8px; font-family: sans-serif; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            <strong>Custom tooltip</strong>
+            <div style="font-size: 11px; opacity: 0.9;">OverlayView on AdvancedMarker</div>
+          </div>
+        </ScriptGoogleMapsOverlayView>
+      </ScriptGoogleMapsAdvancedMarkerElement>
+
+      <!-- Custom marker content via #content slot -->
+      <ScriptGoogleMapsAdvancedMarkerElement
+        v-if="isCustomMarkerContentShown"
+        :options="{ position: { lat: -34.5, lng: 150.7 } }"
+      >
+        <template #content>
+          <div style="background: #34a853; color: white; padding: 4px 10px; border-radius: 16px; font-family: sans-serif; font-size: 12px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;">
+            $420k
+          </div>
+        </template>
+      </ScriptGoogleMapsAdvancedMarkerElement>
+
+      <!-- OverlayView with v-model:open (click marker to toggle popup) -->
+      <ScriptGoogleMapsAdvancedMarkerElement
+        v-if="isOverlayPopupShown"
+        :options="{ position: { lat: -34.3, lng: 151.0 } }"
+        @click="overlayPopupOpen = !overlayPopupOpen"
+      >
+        <ScriptGoogleMapsOverlayView
+          v-model:open="overlayPopupOpen"
+          anchor="bottom-center"
+          :offset="{ x: 0, y: -50 }"
+        >
+          <div style="background: white; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-family: sans-serif; font-size: 13px; min-width: 150px;">
+            <strong>Custom Popup</strong>
+            <p style="margin: 4px 0 0; color: #666;">v-model:open, no remount</p>
+            <button style="margin-top: 8px; background: #ea4335; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer;" @click.stop="overlayPopupOpen = false">
+              Close
+            </button>
+          </div>
+        </ScriptGoogleMapsOverlayView>
+      </ScriptGoogleMapsAdvancedMarkerElement>
+
       <ScriptGoogleMapsCircle
         v-if="isCircleShown"
         :options="{
@@ -311,10 +398,56 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
 
       <button
         class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isOverlayViewShown = !isOverlayViewShown"
+      >
+        {{ `${isOverlayViewShown ? 'Hide' : 'Show'} overlay view` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isOverlayViewOnMarkerShown = !isOverlayViewOnMarkerShown"
+      >
+        {{ `${isOverlayViewOnMarkerShown ? 'Hide' : 'Show'} overlay on marker` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isOverlayViewOnAdvancedMarkerShown = !isOverlayViewOnAdvancedMarkerShown"
+      >
+        {{ `${isOverlayViewOnAdvancedMarkerShown ? 'Hide' : 'Show'} overlay on advanced marker` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isCustomMarkerContentShown = !isCustomMarkerContentShown"
+      >
+        {{ `${isCustomMarkerContentShown ? 'Hide' : 'Show'} custom marker content` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
+        @click="isOverlayPopupShown = !isOverlayPopupShown"
+      >
+        {{ `${isOverlayPopupShown ? 'Hide' : 'Show'} overlay popup (v-model:open)` }}
+      </button>
+
+      <button
+        class="bg-[#ffa500] rounded-lg px-2 py-1"
         @click="isCircleShown = !isCircleShown"
       >
         {{ `${isCircleShown ? 'Hide' : 'Show'} circle` }}
       </button>
+
+      <div class="flex items-center gap-2">
+        <label>Zoom: {{ zoom }}</label>
+        <input
+          v-model.number="zoom"
+          type="range"
+          min="1"
+          max="20"
+          class="w-32"
+        >
+      </div>
     </div>
   </div>
 </template>

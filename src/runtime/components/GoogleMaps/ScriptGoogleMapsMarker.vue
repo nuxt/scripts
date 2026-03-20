@@ -1,5 +1,6 @@
 <script lang="ts">
 import { inject, provide, watch } from 'vue'
+import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
 import { MARKER_INJECTION_KEY } from './injectionKeys'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
@@ -9,6 +10,7 @@ export { MARKER_INJECTION_KEY } from './injectionKeys'
 
 <script setup lang="ts">
 const props = defineProps<{
+  position?: google.maps.LatLngLiteral | google.maps.LatLng
   options?: Omit<google.maps.MarkerOptions, 'map'>
 }>()
 
@@ -16,6 +18,10 @@ const emit = defineEmits<{
   (event: typeof eventsWithoutPayload[number]): void
   (event: typeof eventsWithMapMouseEventPayload[number], payload: google.maps.MapMouseEvent): void
 }>()
+
+if (import.meta.dev) {
+  console.warn('[nuxt-scripts] ScriptGoogleMapsMarker uses the deprecated google.maps.Marker class. Use ScriptGoogleMapsAdvancedMarkerElement instead.')
+}
 
 const eventsWithoutPayload = [
   'animation_changed',
@@ -48,8 +54,14 @@ const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 const marker = useGoogleMapsResource<google.maps.Marker>({
   create({ mapsApi, map }) {
-    const m = new mapsApi.Marker(props.options)
-    setupEventListeners(m)
+    const m = new mapsApi.Marker({
+      ...props.options,
+      ...(props.position ? { position: props.position } : {}),
+    })
+    bindGoogleMapsEvents(m, emit, {
+      noPayload: eventsWithoutPayload,
+      withPayload: eventsWithMapMouseEventPayload,
+    })
     if (markerClustererContext?.markerClusterer.value) {
       markerClustererContext.markerClusterer.value.addMarker(m, true)
       markerClustererContext.requestRerender()
@@ -71,6 +83,12 @@ const marker = useGoogleMapsResource<google.maps.Marker>({
   },
 })
 
+watch(() => props.position, (position) => {
+  if (marker.value && position) {
+    marker.value.setPosition(position)
+  }
+})
+
 watch(() => props.options, (options) => {
   if (marker.value && options) {
     marker.value.setOptions(options)
@@ -78,15 +96,6 @@ watch(() => props.options, (options) => {
 }, { deep: true })
 
 provide(MARKER_INJECTION_KEY, { marker })
-
-function setupEventListeners(m: google.maps.Marker) {
-  eventsWithoutPayload.forEach((event) => {
-    m.addListener(event, () => emit(event))
-  })
-  eventsWithMapMouseEventPayload.forEach((event) => {
-    m.addListener(event, (payload: google.maps.MapMouseEvent) => emit(event, payload))
-  })
-}
 </script>
 
 <template>
