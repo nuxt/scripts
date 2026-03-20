@@ -53,8 +53,9 @@ export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) 
     route: assetsBaseURL,
     handler: lazyEventHandler(async () => {
       return eventHandler(async (event) => {
-        const filename = event.path.slice(1)
-        const scriptDescriptor = renderedScript.get(join(assetsBaseURL, event.path.slice(1)))
+        const cleanPath = event.path.split('?')[0].slice(1)
+        const filename = cleanPath
+        const scriptDescriptor = renderedScript.get(join(assetsBaseURL, cleanPath))
 
         if (!scriptDescriptor || scriptDescriptor instanceof Error)
           throw createError({ statusCode: 404 })
