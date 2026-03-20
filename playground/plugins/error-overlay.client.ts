@@ -85,6 +85,7 @@ export default defineNuxtPlugin(() => {
 
   function safeStringify(a: unknown): string {
     if (typeof a === 'string') return a
+    if (a instanceof Error) return a.stack || `${a.name}: ${a.message}`
     try { return JSON.stringify(a) }
     catch { return String(a) }
   }

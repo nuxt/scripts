@@ -93,8 +93,13 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (perScriptInput === undefined && debug) {
-    log('[proxy] No privacy config for domain', domain, '— defaulting to full anonymization')
+  if (perScriptInput === undefined) {
+    log('[proxy] Rejected: domain not in allowlist:', domain)
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Domain not allowed',
+      message: `Proxy domain not in allowlist: ${domain}`,
+    })
   }
 
   const targetBase = `https://${domain}`
