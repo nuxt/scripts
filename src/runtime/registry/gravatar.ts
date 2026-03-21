@@ -9,7 +9,7 @@ export type GravatarInput = RegistryScriptInput<typeof GravatarOptions>
 export interface GravatarApi {
   /**
    * Get a proxied avatar URL for a given SHA256 email hash.
-   * When firstParty mode is enabled, this routes through your server.
+   * When proxy mode is enabled, this routes through your server.
    */
   getAvatarUrl: (hash: string, options?: { size?: number, default?: string, rating?: string }) => string
   /**

@@ -379,7 +379,6 @@ export default defineEventHandler(async (event) => {
     })
   }
   catch (err) {
-    clearTimeout(timeoutId)
     log('[proxy] Upstream error:', err)
     throw createError({
       statusCode: 502,

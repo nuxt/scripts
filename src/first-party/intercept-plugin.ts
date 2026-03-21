@@ -54,7 +54,11 @@ export function generateInterceptPluginContents(proxyPrefix: string): string {
 
     globalThis.__nuxtScripts = {
       sendBeacon: (url, data) => origBeacon(proxyUrl(url), data),
-      fetch: (url, opts) => origFetch(typeof url === 'string' ? proxyUrl(url) : url, opts),
+      fetch: (url, opts) => {
+        if (typeof url === 'string') return origFetch(proxyUrl(url), opts);
+        if (url instanceof Request) return origFetch(new Request(proxyUrl(url.url), url), opts);
+        return origFetch(url, opts);
+      },
       XMLHttpRequest: ProxiedXHR,
       Image: ProxiedImage,
     };

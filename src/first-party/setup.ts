@@ -1,3 +1,4 @@
+import type { NormalizedRegistryEntry } from '../normalize'
 import type { ProxyPrivacyInput } from '../runtime/server/utils/privacy'
 import type { NuxtConfigScriptRegistry, RegistryScript, RegistryScriptKey } from '../runtime/types'
 import type { ProxyAutoInject, ProxyConfig } from './types'
@@ -5,7 +6,7 @@ import { addPluginTemplate, addServerHandler } from '@nuxt/kit'
 import { logger } from '../logger'
 
 import { generateInterceptPluginContents } from './intercept-plugin'
-import { getAllProxyConfigs } from './proxy-configs'
+import { buildProxyConfigsFromRegistry } from './proxy-configs'
 
 export interface FirstPartyConfig {
   enabled: boolean
@@ -16,34 +17,33 @@ export interface FirstPartyConfig {
   proxyConfigs: Partial<Record<RegistryScriptKey, ProxyConfig>>
 }
 
-export interface ModuleFirstPartyOptions {
-  firstParty?: boolean | import('./types').FirstPartyOptions
+export interface ModuleProxyOptions {
+  proxy?: false | { prefix?: string, privacy?: import('./types').FirstPartyPrivacy }
   assets?: { prefix?: string }
 }
 
 /**
- * Setup first-party mode: resolve config, build proxy configs once, register proxy handler.
- * Call before modules:done. Returns the config needed by finalizeFirstParty and the transform plugin.
+ * Setup first-party mode: register proxy handler unconditionally.
+ * The handler rejects unknown domains at runtime, so it's safe to register always.
+ * Actual proxy configs are built in finalizeFirstParty when registry scripts are available.
  */
 export async function setupFirstParty(
-  config: ModuleFirstPartyOptions,
+  config: ModuleProxyOptions,
   resolvePath: (path: string) => Promise<string>,
 ): Promise<FirstPartyConfig> {
-  const enabled = !!config.firstParty
-  const proxyPrefix = typeof config.firstParty === 'object'
-    ? config.firstParty.proxyPrefix || '/_scripts/p'
+  const proxyDisabled = config.proxy === false
+  const proxyPrefix = typeof config.proxy === 'object'
+    ? config.proxy.prefix || '/_scripts/p'
     : '/_scripts/p'
-  const privacy: ProxyPrivacyInput | undefined = typeof config.firstParty === 'object'
-    ? config.firstParty.privacy
+  const privacy: ProxyPrivacyInput | undefined = typeof config.proxy === 'object'
+    ? config.proxy.privacy
     : undefined
   const assetsPrefix = config.assets?.prefix || '/_scripts/assets'
 
-  // Build all proxy configs once — reused by finalize and transform plugin
-  const proxyConfigs = enabled ? getAllProxyConfigs(proxyPrefix) : {}
+  // enabled starts as !proxyDisabled; finalizeFirstParty may flip it to false if no scripts need proxy
+  const firstParty: FirstPartyConfig = { enabled: !proxyDisabled, proxyPrefix, privacy, assetsPrefix, proxyConfigs: {} }
 
-  const firstParty: FirstPartyConfig = { enabled, proxyPrefix, privacy, assetsPrefix, proxyConfigs }
-
-  if (enabled) {
+  if (!proxyDisabled) {
     const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
     logger.debug('[nuxt-scripts] Registering proxy handler:', `${proxyPrefix}/**`, '->', proxyHandlerPath)
     addServerHandler({
@@ -66,15 +66,15 @@ export function applyAutoInject(
   registryKey: string,
   autoInject: ProxyAutoInject,
 ): void {
-  const entry = registry[registryKey as keyof NuxtConfigScriptRegistry] as [Record<string, any>, any?] | undefined
+  const entry = registry[registryKey as keyof NuxtConfigScriptRegistry] as NormalizedRegistryEntry | undefined
   if (!entry)
     return
 
   const input = entry[0]
-  const scriptOptions = entry[1] as Record<string, any> | undefined
+  const scriptOptions = entry[1]
 
-  // Per-script firstParty opt-out (in input or scriptOptions)
-  if (input?.firstParty === false || scriptOptions?.firstParty === false)
+  // Per-script reverseProxyIntercept opt-out (in input or scriptOptions)
+  if (input?.reverseProxyIntercept === false || scriptOptions?.reverseProxyIntercept === false)
     return
   const rtScripts = runtimeConfig.public?.scripts as Record<string, any> | undefined
   const rtEntry = rtScripts?.[registryKey]
@@ -142,7 +142,12 @@ export function finalizeFirstParty(opts: {
   nuxtOptions: { dev: boolean, runtimeConfig: Record<string, any> }
 }): FinalizeFirstPartyResult {
   const { firstParty, registryScripts, nuxtOptions } = opts
-  const { proxyConfigs, proxyPrefix } = firstParty
+  const { proxyPrefix } = firstParty
+
+  // Build proxy configs from registry (single source of truth)
+  const proxyConfigs = buildProxyConfigsFromRegistry(registryScripts)
+  // Update firstParty config for transform plugin consumers
+  firstParty.proxyConfigs = proxyConfigs
   const registryKeys = Object.keys(opts.registry || {})
 
   // Build lookup: registryKey → RegistryScript
@@ -168,23 +173,23 @@ export function finalizeFirstParty(opts: {
       continue
     }
 
-    if (script.proxy === false)
+    // Skip scripts that don't support reverseProxyIntercept
+    if (!script.capabilities?.reverseProxyIntercept)
       continue
 
-    // Check per-script firstParty opt-out in registry config entry
+    // Check per-script opt-out in registry config entry
     // Entries are normalized to [input, scriptOptions?] tuple form
-    const registryEntry = opts.registry?.[key as keyof NuxtConfigScriptRegistry] as [Record<string, any>, Record<string, any>?] | undefined
+    const registryEntry = opts.registry?.[key as keyof NuxtConfigScriptRegistry] as NormalizedRegistryEntry | undefined
     const entryScriptOptions = registryEntry?.[1]
     const entryInput = registryEntry?.[0]
-    if (entryScriptOptions?.firstParty === false || entryInput?.firstParty === false)
+    if (entryScriptOptions?.reverseProxyIntercept === false || entryInput?.reverseProxyIntercept === false)
       continue
 
-    const configKey = (script.proxy || key) as RegistryScriptKey
+    const configKey = (script.proxyConfig || key) as RegistryScriptKey
     const proxyConfig = proxyConfigs[configKey]
 
     if (!proxyConfig) {
-      if (script.scriptBundling !== false)
-        unsupportedScripts.push(key)
+      unsupportedScripts.push(key)
       continue
     }
 
@@ -275,7 +280,7 @@ export function finalizeFirstParty(opts: {
       + 'Options:\n'
       + '  1. Configure platform rewrites (Vercel, Netlify, Cloudflare)\n'
       + '  2. Switch to server-rendered mode (ssr: true)\n'
-      + '  3. Disable with firstParty: false\n'
+      + '  3. Disable with proxy: false\n'
       + '\n'
       + 'See: https://scripts.nuxt.com/docs/guides/first-party#static-hosting',
     )

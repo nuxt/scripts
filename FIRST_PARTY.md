@@ -44,7 +44,7 @@ Some Path A scripts also define `autoInject` on their proxy config to set SDK en
 - **Rybbit**: `analyticsHost` → `/_scripts/p/app.rybbit.io/api`
 - **Databuddy**: `apiUrl` → `/_scripts/p/basket.databuddy.cc`
 
-Auto-inject respects per-script `firstParty: false` opt-out (see "Per-script opt-out" below).
+Auto-inject respects per-script `reverseProxyIntercept: false` opt-out (see "Per-script opt-out" below).
 
 ### SDK-specific post-processing (`postProcess` on ProxyConfig)
 Some SDKs have quirks that require targeted regex patches after AST rewriting. These are defined as `postProcess` functions directly on each script's `ProxyConfig`:
@@ -61,34 +61,34 @@ The only exception is `googleAdsense` which sets `proxy: 'googleAnalytics'` to s
 
 ## Per-script opt-out
 
-Scripts can opt out of first-party mode at two levels:
+Scripts can opt out of first-party mode at three levels:
 
-### Registry level (`proxy: false`)
-Set `proxy: false` in `registry.ts` for scripts that should never be proxied. Used for scripts that require fingerprinting for core functionality:
+### Registry level (no `reverseProxyIntercept` capability)
+Scripts without the `reverseProxyIntercept` capability in `registry.ts` are never proxied. Used for scripts that require fingerprinting for core functionality:
 - **Stripe**, **PayPal**: Fraud detection requires real client IP and browser fingerprints
 - **Google reCAPTCHA**: Bot detection requires real fingerprints
 - **Google Sign-In**: Auth integrity requires direct connection
 
 These scripts also have `scriptBundling: false` to prevent AST rewriting.
 
-### Config level (`firstParty: false` in registry config)
+### Config level (`reverseProxyIntercept: false` in registry config)
 Users can opt out per-script in `nuxt.config.ts`:
 
 ```
-scripts.registry.plausibleAnalytics = { domain: 'mysite.com', firstParty: false }
+scripts.registry.plausibleAnalytics = { domain: 'mysite.com', reverseProxyIntercept: false }
 ```
 
 Or in tuple form with scriptOptions:
 ```
-scripts.registry.plausibleAnalytics = [{ domain: 'mysite.com' }, { firstParty: false }]
+scripts.registry.plausibleAnalytics = [{ domain: 'mysite.com' }, { reverseProxyIntercept: false }]
 ```
 
 This skips domain registration, auto-inject, and AST rewriting for that script. Important for scripts with `autoInject` (Plausible, PostHog, Umami, Rybbit, Databuddy) since `autoInject` runs at module setup before transforms.
 
-### Composable level (`scriptOptions: { firstParty: false }`)
+### Composable level (`scriptOptions: { reverseProxyIntercept: false }`)
 ```ts
 useScriptPlausibleAnalytics({
-  scriptOptions: { firstParty: false }
+  scriptOptions: { reverseProxyIntercept: false }
 })
 ```
 
@@ -102,7 +102,7 @@ This only affects AST rewriting (the transform plugin skips proxy rewrites for t
 
 For npm-mode scripts (no download), define `autoInject` to configure the SDK's endpoint field.
 
-For scripts that need fingerprinting (payments, CAPTCHA, auth), set `proxy: false` and `scriptBundling: false` in the registry entry.
+For scripts that need fingerprinting (payments, CAPTCHA, auth), omit the `reverseProxyIntercept` capability and set `scriptBundling: false` in the registry entry.
 
 ## Privacy presets
 
@@ -167,8 +167,8 @@ The server handler extracts the target domain directly from the proxy path (`/_s
 
 ### Two-phase setup, configs built once
 `module.ts` calls two functions:
-1. `setupFirstParty(config, resolvePath)` — resolves config, builds all proxy configs once, registers proxy handler. Returns `FirstPartyConfig` with pre-built `proxyConfigs` map.
-2. `finalizeFirstParty({...})` (in `modules:done`) — uses the pre-built configs to collect domain privacy mappings, apply auto-injects, register intercept plugin, populate runtimeConfig. Respects per-entry `firstParty: false` opt-out.
+1. `setupFirstParty(config, resolvePath)` — registers the proxy handler unconditionally (handler rejects unknown domains at runtime). Returns `FirstPartyConfig`.
+2. In `modules:done`: resolves capabilities for each configured script via `resolveCapabilities()`, then calls `finalizeFirstParty({...})` which builds proxy configs from the registry, collects domain privacy mappings, applies auto-injects, registers the intercept plugin, and populates runtimeConfig. Respects per-entry `reverseProxyIntercept: false` opt-out.
 
 The transform plugin receives the pre-built `proxyConfigs` map via options — direct lookup per-script, no rebuilding.
 

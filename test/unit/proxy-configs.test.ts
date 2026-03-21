@@ -1,7 +1,15 @@
 import type { ProxyRewrite } from '../../src/runtime/utils/pure'
 import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs } from '../../src/first-party'
+import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
+import { registry } from '../../src/registry'
+
+let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
+async function getProxyConfigs() {
+  if (!_proxyConfigs)
+    _proxyConfigs = buildProxyConfigsFromRegistry(await registry())
+  return _proxyConfigs
+}
 
 const fn = (c: string, r: ProxyRewrite[]) => rewriteScriptUrlsAST(c, 'test.js', r)
 
@@ -309,65 +317,64 @@ describe('proxy configs', () => {
   })
 
   describe('proxy config lookup', () => {
-    it('returns proxy config for googleAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').googleAnalytics
+    it('returns proxy config for googleAnalytics', async () => {
+      const config = (await getProxyConfigs()).googleAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('www.google-analytics.com')
       expect(config?.domains).toContain('analytics.google.com')
     })
 
-    it('returns proxy config for googleTagManager', () => {
-      const config = getAllProxyConfigs('/_scripts/c').googleTagManager
-      expect(config).toBeDefined()
-      expect(config?.domains).toContain('www.googletagmanager.com')
+    it('does not return proxy config for googleTagManager (removed: dynamic script loading)', async () => {
+      const config = (await getProxyConfigs()).googleTagManager
+      expect(config).toBeUndefined()
     })
 
-    it('returns proxy config for metaPixel', () => {
-      const config = getAllProxyConfigs('/_scripts/c').metaPixel
+    it('returns proxy config for metaPixel', async () => {
+      const config = (await getProxyConfigs()).metaPixel
       expect(config).toBeDefined()
       expect(config?.domains).toContain('connect.facebook.net')
     })
 
-    it('returns proxy config for plausibleAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').plausibleAnalytics
+    it('returns proxy config for plausibleAnalytics', async () => {
+      const config = (await getProxyConfigs()).plausibleAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('plausible.io')
     })
 
-    it('returns proxy config for cloudflareWebAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').cloudflareWebAnalytics
+    it('returns proxy config for cloudflareWebAnalytics', async () => {
+      const config = (await getProxyConfigs()).cloudflareWebAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('static.cloudflareinsights.com')
       expect(config?.domains).toContain('cloudflareinsights.com')
     })
 
-    it('returns proxy config for rybbitAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').rybbitAnalytics
+    it('returns proxy config for rybbitAnalytics', async () => {
+      const config = (await getProxyConfigs()).rybbitAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('app.rybbit.io')
     })
 
-    it('returns proxy config for umamiAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').umamiAnalytics
+    it('returns proxy config for umamiAnalytics', async () => {
+      const config = (await getProxyConfigs()).umamiAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('cloud.umami.is')
     })
 
-    it('returns proxy config for databuddyAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').databuddyAnalytics
+    it('returns proxy config for databuddyAnalytics', async () => {
+      const config = (await getProxyConfigs()).databuddyAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('cdn.databuddy.cc')
       expect(config?.domains).toContain('basket.databuddy.cc')
     })
 
-    it('returns proxy config for fathomAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').fathomAnalytics
+    it('returns proxy config for fathomAnalytics', async () => {
+      const config = (await getProxyConfigs()).fathomAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('cdn.usefathom.com')
     })
 
-    it('returns proxy config for intercom', () => {
-      const config = getAllProxyConfigs('/_scripts/c').intercom
+    it('returns proxy config for intercom', async () => {
+      const config = (await getProxyConfigs()).intercom
       expect(config).toBeDefined()
       expect(config?.domains).toContain('widget.intercom.io')
       expect(config?.domains).toContain('api-iam.intercom.io')
@@ -376,33 +383,31 @@ describe('proxy configs', () => {
       expect(config?.privacy.ip).toBe(true)
     })
 
-    it('returns proxy config for crisp', () => {
-      const config = getAllProxyConfigs('/_scripts/c').crisp
-      expect(config).toBeDefined()
-      expect(config?.domains).toContain('client.crisp.chat')
-      expect(config?.privacy.ip).toBe(true)
+    it('does not return proxy config for crisp (removed: SDK loads secondary scripts)', async () => {
+      const config = (await getProxyConfigs()).crisp
+      expect(config).toBeUndefined()
     })
 
-    it('returns proxy config for vercelAnalytics', () => {
-      const config = getAllProxyConfigs('/_scripts/c').vercelAnalytics
+    it('returns proxy config for vercelAnalytics', async () => {
+      const config = (await getProxyConfigs()).vercelAnalytics
       expect(config).toBeDefined()
       expect(config?.domains).toContain('va.vercel-scripts.com')
     })
 
-    it('returns undefined for unsupported scripts', () => {
-      const config = (getAllProxyConfigs('/_scripts/c') as Record<string, any>).unknownScript
+    it('returns undefined for unsupported scripts', async () => {
+      const config = (await getProxyConfigs() as Record<string, any>).unknownScript
       expect(config).toBeUndefined()
     })
   })
 
-  describe('getAllProxyConfigs', () => {
-    it('returns all proxy configs', () => {
-      const configs = getAllProxyConfigs('/_scripts/c')
+  describe('getProxyConfigs', () => {
+    it('returns all proxy configs (excluding removed: GTM, Segment, Crisp)', async () => {
+      const configs = await getProxyConfigs()
       expect(configs).toHaveProperty('googleAnalytics')
-      expect(configs).toHaveProperty('googleTagManager')
+      expect(configs).not.toHaveProperty('googleTagManager')
       expect(configs).toHaveProperty('metaPixel')
       expect(configs).toHaveProperty('tiktokPixel')
-      expect(configs).toHaveProperty('segment')
+      expect(configs).not.toHaveProperty('segment')
       expect(configs).toHaveProperty('clarity')
       expect(configs).toHaveProperty('hotjar')
       expect(configs).toHaveProperty('xPixel')
@@ -416,15 +421,15 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('databuddyAnalytics')
       expect(configs).toHaveProperty('fathomAnalytics')
       expect(configs).toHaveProperty('intercom')
-      expect(configs).toHaveProperty('crisp')
+      expect(configs).not.toHaveProperty('crisp')
       expect(configs).toHaveProperty('vercelAnalytics')
       expect(configs).toHaveProperty('gravatar')
     })
 
-    it('all configs have valid structure', () => {
-      const configs = getAllProxyConfigs('/_scripts/c')
+    it('all configs have valid structure', async () => {
+      const configs = await getProxyConfigs()
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
-      const passthrough = ['segment', 'googleTagManager', 'posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics']
+      const passthrough = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have domains`).toHaveProperty('domains')
         expect(Array.isArray(config.domains), `${key}.domains should be an array`).toBe(true)

@@ -195,7 +195,7 @@ function resolveCalleeTarget(callee: any, scopeTracker: ScopeTracker): string | 
  * Uses oxc-walker with ScopeTracker to precisely identify string literals,
  * resolve aliased globals, and rewrite API calls through the proxy.
  */
-export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], postProcess?: (output: string, rewrites: ProxyRewrite[]) => string, options?: { skipApiRewrites?: boolean }): string {
+export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], postProcess?: (output: string, rewrites: ProxyRewrite[]) => string, options?: { skipApiRewrites?: boolean, neutralizeCanvas?: boolean }): string {
   const s = new MagicString(content)
 
   // In minified JS, keywords like `return` can directly precede string literals
@@ -275,9 +275,12 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       if (node.type === 'CallExpression' && !options?.skipApiRewrites) {
         const callee = (node as any).callee
 
-        // Canvas fingerprinting neutralization — only affects downloaded third-party scripts.
-        // Resolves aliased objects through the scope chain to avoid false positives.
-        const canvasPropName = callee?.type === 'MemberExpression'
+        // Canvas fingerprinting neutralization — gated on hardware privacy flag.
+        // Only scripts with hardware anonymization enabled get canvas neutralized.
+        // Scripts with PRIVACY_NONE (e.g. Plausible, PostHog) skip this since they
+        // don't canvas fingerprint and may use canvas APIs legitimately.
+        const shouldNeutralizeCanvas = options?.neutralizeCanvas !== false
+        const canvasPropName = shouldNeutralizeCanvas && callee?.type === 'MemberExpression'
           ? (callee.computed
               ? (callee.property?.type === 'Literal' && typeof callee.property.value === 'string' ? callee.property.value : null)
               : callee.property?.name)

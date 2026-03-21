@@ -1,5 +1,5 @@
 import type { FetchOptions } from 'ofetch'
-import type { FirstPartyOptions, FirstPartyPrivacy } from './first-party'
+import type { FirstPartyPrivacy } from './first-party'
 import type {
   NuxtConfigScriptRegistry,
   NuxtUseScriptInput,
@@ -26,6 +26,7 @@ import { readPackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { setupDevToolsUI } from './devtools'
 import { finalizeFirstParty, generatePartytownResolveUrl, setupFirstParty } from './first-party'
+import { resolveCapabilities } from './first-party/resolve-capabilities'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
 import { normalizeRegistryConfig } from './normalize'
@@ -34,7 +35,7 @@ import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { registry } from './registry'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 
-export type { FirstPartyOptions, FirstPartyPrivacy }
+export type { FirstPartyPrivacy }
 
 /**
  * Partytown forward config for registry scripts.
@@ -160,11 +161,11 @@ const PARTYTOWN_FORWARDS: Partial<Record<RegistryScriptKey, string[]>> = {
 
 export interface ModuleOptions {
   /**
-   * Route third-party scripts through your domain for improved privacy.
+   * Proxy configuration for routing third-party scripts through your domain.
    *
-   * When enabled, scripts are downloaded at build time and served from your domain.
-   * Collection endpoints (analytics, pixels) are also routed through your server,
-   * keeping user IPs private and eliminating third-party cookies.
+   * By default (undefined), proxy infrastructure is auto-registered when any
+   * configured script has `reverseProxyIntercept` capability enabled. Set to
+   * `false` to globally disable all proxying.
    *
    * **Benefits:**
    * - User IPs stay private (third parties see your server's IP)
@@ -172,28 +173,30 @@ export interface ModuleOptions {
    * - Works with ad blockers (requests appear first-party)
    * - Faster loads (no extra DNS lookups)
    *
-   * **Options:**
-   * - `true` - Enable for all supported scripts (default)
-   * - `false` - Disable (scripts load directly from third parties)
-   * - `{ proxyPrefix: '/_analytics' }` - Enable with custom paths
+   * Per-script opt-out: set `reverseProxyIntercept: false` in a script's options.
+   * Per-script opt-in for partytown: set `partytown: true` in a script's options.
    *
-   * For static hosting, scripts are bundled but proxy endpoints require
-   * platform rewrites (see docs). A warning is shown for static presets.
-   *
-   * @default true
+   * @default undefined (auto-inferred from script capabilities)
    * @see https://scripts.nuxt.com/docs/guides/first-party
    */
-  firstParty?: boolean | FirstPartyOptions
+  proxy?: false | {
+    /**
+     * Path prefix for proxy endpoints.
+     * @default '/_scripts/p'
+     * @example '/_tracking'
+     */
+    prefix?: string
+    /**
+     * Global privacy override for all proxied scripts.
+     * By default, each script uses its own privacy controls from the registry.
+     * @default undefined (per-script defaults)
+     */
+    privacy?: FirstPartyPrivacy
+  }
   /**
    * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
    */
   registry?: NuxtConfigScriptRegistry
-  /**
-   * Registry scripts to load via Partytown (web worker).
-   * Shorthand for setting `partytown: true` on individual registry scripts.
-   * @example ['googleAnalytics', 'plausible', 'fathom']
-   */
-  partytown?: (keyof NuxtConfigScriptRegistry)[]
   /**
    * Default options for scripts.
    */
@@ -283,7 +286,6 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
-    firstParty: true,
     defaultScriptOptions: {
       trigger: 'onNuxtReady',
     },
@@ -379,50 +381,16 @@ export default defineNuxtModule<ModuleOptions>({
     if (config.defaultScriptOptions?.bundle !== undefined) {
       logger.warn(
         '`scripts.defaultScriptOptions.bundle` is deprecated. '
-        + 'Use `scripts.firstParty: true` instead. First-party mode is now enabled by default.',
+        + 'Bundling is now auto-enabled per-script via capabilities. '
+        + 'Set `bundle: false` per-script to disable.',
       )
     }
 
-    // Setup first-party mode: resolve config, build proxy configs, register proxy handler
+    // Setup first-party mode: register proxy handler unconditionally.
+    // The handler rejects unknown domains at runtime, so it's safe to register even
+    // when no scripts end up using proxy. Actual proxy configs are built in modules:done.
     const firstParty = await setupFirstParty(config, resolvePath)
     const assetsPrefix = firstParty.assetsPrefix
-
-    // Process partytown shorthand - add partytown: true to specified registry scripts
-    // and auto-configure @nuxtjs/partytown forward array
-    if (config.partytown?.length) {
-      config.registry = config.registry || {}
-      const requiredForwards: string[] = []
-
-      for (const scriptKey of config.partytown) {
-        // Collect required forwards for this script
-        const forwards = PARTYTOWN_FORWARDS[scriptKey as RegistryScriptKey]
-        if (forwards) {
-          requiredForwards.push(...forwards)
-        }
-        else if (import.meta.dev) {
-          logger.warn(`[partytown] "${scriptKey}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
-        }
-
-        // After normalizeRegistryConfig, all entries are [input, scriptOptions?]
-        const reg = config.registry as Record<string, any>
-        const existing = reg[scriptKey]
-        if (existing) {
-          existing[1] = { ...existing[1], partytown: true }
-        }
-        else {
-          reg[scriptKey] = [{}, { partytown: true }]
-        }
-      }
-
-      // Auto-configure @nuxtjs/partytown forward array
-      if (requiredForwards.length && hasNuxtModule('@nuxtjs/partytown')) {
-        const partytownConfig = (nuxt.options as any).partytown || {}
-        const existingForwards = partytownConfig.forward || []
-        const newForwards = [...new Set([...existingForwards, ...requiredForwards])]
-          ; (nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
-        logger.info(`[partytown] Auto-configured forwards: ${requiredForwards.join(', ')}`)
-      }
-    }
 
     const composables = [
       'useScript',
@@ -501,6 +469,54 @@ export default defineNuxtModule<ModuleOptions>({
       }
       const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
+      // Resolve capabilities for each configured script and auto-detect partytown scripts
+      const partytownScripts = new Set<string>()
+      const scriptByKey = new Map<string, RegistryScript>()
+      for (const script of registryScripts) {
+        if (script.registryKey)
+          scriptByKey.set(script.registryKey, script)
+      }
+
+      let anyNeedsProxy = false
+      const registryKeys = Object.keys(config.registry || {})
+      for (const key of registryKeys) {
+        const script = scriptByKey.get(key)
+        if (!script)
+          continue
+
+        // Get per-script options from normalized [input, scriptOptions?] entries
+        const entry = (config.registry as Record<string, any>)?.[key]
+        const scriptOptions = entry?.[1] || {}
+        const inputOptions = entry?.[0] || {}
+        // Merge: scriptOptions takes priority over input-level overrides
+        const mergedOverrides = { ...inputOptions, ...scriptOptions }
+
+        const resolved = resolveCapabilities(script, mergedOverrides)
+
+        if (resolved.reverseProxyIntercept)
+          anyNeedsProxy = true
+
+        if (resolved.partytown) {
+          partytownScripts.add(key)
+          // Auto-configure @nuxtjs/partytown forwards
+          const forwards = PARTYTOWN_FORWARDS[key as RegistryScriptKey]
+          if (forwards?.length && hasNuxtModule('@nuxtjs/partytown')) {
+            const partytownConfig = (nuxt.options as any).partytown || {}
+            const existingForwards = partytownConfig.forward || []
+            const newForwards = [...new Set([...existingForwards, ...forwards])]
+            ;(nuxt.options as any).partytown = { ...partytownConfig, forward: newForwards }
+          }
+          else if (!forwards && import.meta.dev) {
+            logger.warn(`[partytown] "${key}" has no known Partytown forwards configured. It may not work correctly or may require manual forward configuration.`)
+          }
+        }
+      }
+
+      // If proxy is globally disabled or no scripts need it, skip proxy finalization
+      if (firstParty.enabled && !anyNeedsProxy) {
+        firstParty.enabled = false
+      }
+
       // Finalize first-party proxy setup
       if (firstParty.enabled) {
         const { proxyPrefix, devtools: devtoolsData } = finalizeFirstParty({
@@ -514,7 +530,7 @@ export default defineNuxtModule<ModuleOptions>({
           nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = devtoolsData as any
         }
         // Auto-configure Partytown resolveUrl for first-party proxy
-        if (config.partytown?.length && hasNuxtModule('@nuxtjs/partytown')) {
+        if (partytownScripts.size && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
             partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix)
@@ -522,7 +538,7 @@ export default defineNuxtModule<ModuleOptions>({
             logger.info('[partytown] Auto-configured resolveUrl for first-party proxy')
           }
           else {
-            logger.warn('[partytown] Custom resolveUrl already set — first-party proxy URLs will not be auto-rewritten in Partytown worker. Add first-party proxy rules to your resolveUrl manually.')
+            logger.warn('[partytown] Custom resolveUrl already set. Add first-party proxy rules to your resolveUrl manually.')
           }
         }
       }
@@ -538,7 +554,7 @@ export default defineNuxtModule<ModuleOptions>({
         defaultBundle: firstParty.enabled || config.defaultScriptOptions?.bundle,
         proxyConfigs: firstParty.proxyConfigs,
         proxyPrefix: firstParty.proxyPrefix,
-        partytownScripts: new Set(config.partytown || []),
+        partytownScripts,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
             moduleInstallPromises.set(module, () => installNuxtModule(module))

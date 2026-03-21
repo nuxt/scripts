@@ -72,16 +72,16 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    *
    * Note: Using 'force' may significantly increase build time as scripts will be re-downloaded on every build.
    *
-   * @deprecated Use `scripts.firstParty: true` in nuxt.config instead for bundling and routing scripts through your domain.
+   * @deprecated Bundling is now auto-enabled per-script via capabilities. Set `bundle: false` per-script to disable.
    */
   bundle?: boolean | 'force'
   /**
-   * Opt-out of first-party routing for this specific script when global `scripts.firstParty` is enabled.
-   * Set to `false` to load this script directly from its original source instead of through your domain.
-   *
-   * Note: This option only works as an opt-out. To enable first-party routing, use the global `scripts.firstParty` option in nuxt.config.
+   * Control reverse proxy interception for this script.
+   * When `false`, collection requests go directly to the third-party server.
+   * When `true`, collection requests are proxied through `/_scripts/p/`.
+   * Defaults to the script's `defaultCapability.reverseProxyIntercept` from the registry.
    */
-  firstParty?: false
+  reverseProxyIntercept?: boolean
   /**
    * Load the script in a web worker using Partytown.
    * When enabled, adds `type="text/partytown"` to the script tag.
@@ -263,6 +263,38 @@ export interface RegistryScriptServerHandler {
   middleware?: boolean
 }
 
+/**
+ * Declares what optimization modes a script supports and what's active by default.
+ * Each flag is an independent capability that must be explicitly opted into.
+ */
+export interface ScriptCapabilities {
+  /** Script can be downloaded at build time and served from `/_scripts/assets/`. */
+  bundle?: boolean
+  /**
+   * Collection requests can be proxied through `/_scripts/p/`.
+   * When combined with `bundle`: AST URL rewriting + runtime intercept.
+   * Without `bundle` (npm mode): autoInject sets SDK endpoint to proxy URL.
+   */
+  reverseProxyIntercept?: boolean
+  /** Script can run in a web worker via Partytown. */
+  partytown?: boolean
+}
+
+/**
+ * A third-party domain the script communicates with.
+ * Used for proxy routing, AST rewriting, and connection warming (dns-prefetch/preconnect).
+ */
+export interface ScriptDomain {
+  /** The domain hostname (e.g., 'www.google-analytics.com') */
+  domain: string
+  /**
+   * Whether this domain is used lazily (e.g., only after user interaction or SDK initialization).
+   * When `true`, connection warming uses `dns-prefetch` instead of `preconnect`.
+   * @default false
+   */
+  lazy?: boolean
+}
+
 export interface RegistryScript {
   /**
    * The config key used in `scripts.registry` in nuxt.config (e.g., 'googleAnalytics', 'plausibleAnalytics').
@@ -272,14 +304,42 @@ export interface RegistryScript {
   import?: Import // might just be a component
   scriptBundling?: false | ((options?: any) => string | false)
   /**
-   * First-party proxy config alias. Only needed when a script shares another script's
-   * proxy config (e.g., googleAdsense uses `proxy: 'googleAnalytics'`).
-   *
-   * By default, the proxy config is looked up by `registryKey`. Set to `false` to
-   * explicitly disable first-party routing for this script.
-   * @internal
+   * What optimization modes this script supports (the ceiling).
+   * Each capability must be explicitly opted in. Omitted flags default to false.
    */
-  proxy?: RegistryScriptKey | false
+  capabilities?: ScriptCapabilities
+  /**
+   * What capabilities are active by default for users (subset of capabilities).
+   * Users inherit these and can toggle individual flags via scriptOptions.
+   * Omitted flags are not active by default (e.g., partytown requires user opt-in).
+   */
+  defaultCapability?: ScriptCapabilities
+  /**
+   * Third-party domains this script communicates with.
+   * Used for: proxy routing, AST URL rewriting, connection warming (dns-prefetch/preconnect).
+   * Domains marked `lazy: true` use dns-prefetch; others use preconnect for immediate scripts.
+   */
+  domains?: (string | ScriptDomain)[]
+  /**
+   * Privacy controls for proxied requests to this script's domains.
+   * Only relevant when reverseProxyIntercept capability is active.
+   */
+  privacy?: import('../runtime/server/utils/privacy').ProxyPrivacyInput
+  /**
+   * Auto-inject proxy endpoint config into the script's SDK options.
+   * For scripts that let you configure the collection endpoint (PostHog, Plausible, etc.).
+   */
+  autoInject?: import('../first-party/types').ProxyAutoInject
+  /**
+   * SDK-specific post-processing applied after AST URL rewriting.
+   * Used for regex patches that can't be handled by the generic AST rewriter.
+   */
+  postProcess?: (output: string, rewrites: import('../runtime/utils/pure').ProxyRewrite[]) => string
+  /**
+   * Proxy config alias. When set, inherits domains/privacy/autoInject/postProcess
+   * from another script (e.g., googleAdsense → 'googleAnalytics').
+   */
+  proxyConfig?: RegistryScriptKey
   label?: string
   src?: string | false
   category?: string

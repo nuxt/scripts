@@ -277,7 +277,7 @@
       {
         "name": "ScriptGoogleMapsOverlayViewProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsOverlayViewProps {\n  /**\n   * Geographic position for the overlay. Falls back to parent marker position if omitted.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView\n   */\n  position?: google.maps.LatLngLiteral\n  /**\n   * Anchor point of the overlay relative to its position.\n   * @default 'bottom-center'\n   */\n  anchor?: OverlayAnchor\n  /**\n   * Pixel offset from the anchor position.\n   */\n  offset?: { x: number, y: number }\n  /**\n   * The map pane on which to render the overlay.\n   * @default 'floatPane'\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#MapPanes\n   */\n  pane?: OverlayPane\n  /**\n   * CSS z-index for the overlay element.\n   */\n  zIndex?: number\n  /**\n   * Whether to block map click and gesture events from passing through the overlay.\n   * @default true\n   */\n  blockMapInteraction?: boolean\n}"
+        "code": "interface ScriptGoogleMapsOverlayViewProps {\n  /**\n   * Geographic position for the overlay. Falls back to parent marker position if omitted.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView\n   */\n  position?: google.maps.LatLngLiteral\n  /**\n   * Anchor point of the overlay relative to its position.\n   * @default 'bottom-center'\n   */\n  anchor?: OverlayAnchor\n  /**\n   * Pixel offset from the anchor position.\n   */\n  offset?: { x: number, y: number }\n  /**\n   * The map pane on which to render the overlay.\n   * @default 'floatPane'\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#MapPanes\n   */\n  pane?: OverlayPane\n  /**\n   * CSS z-index for the overlay element.\n   */\n  zIndex?: number\n  /**\n   * Whether to block map click and gesture events from passing through the overlay.\n   * @default true\n   */\n  blockMapInteraction?: boolean\n  /**\n   * Pan the map so the overlay is fully visible when opened, similar to InfoWindow behavior.\n   * Set to `true` for default 40px padding, or a number for custom padding.\n   * @default true\n   */\n  panOnOpen?: boolean | number\n  /**\n   * Automatically hide the overlay when its parent marker joins a cluster (on zoom out).\n   * Only applies when nested inside a ScriptGoogleMapsMarkerClusterer.\n   * @default true\n   */\n  hideWhenClustered?: boolean\n}"
       },
       {
         "name": "ScriptGoogleMapsPinElementProps",
@@ -430,7 +430,7 @@
       {
         "name": "GravatarApi",
         "kind": "interface",
-        "code": "export interface GravatarApi {\n  /**\n   * Get a proxied avatar URL for a given SHA256 email hash.\n   * When firstParty mode is enabled, this routes through your server.\n   */\n  getAvatarUrl: (hash: string, options?: { size?: number, default?: string, rating?: string }) => string\n  /**\n   * Get a proxied avatar URL using the server-side hashing endpoint.\n   * The email is sent to YOUR server (not Gravatar) for hashing.\n   * Only available when the gravatar proxy is enabled.\n   */\n  getAvatarUrlFromEmail: (email: string, options?: { size?: number, default?: string, rating?: string }) => string\n}"
+        "code": "export interface GravatarApi {\n  /**\n   * Get a proxied avatar URL for a given SHA256 email hash.\n   * When proxy mode is enabled, this routes through your server.\n   */\n  getAvatarUrl: (hash: string, options?: { size?: number, default?: string, rating?: string }) => string\n  /**\n   * Get a proxied avatar URL using the server-side hashing endpoint.\n   * The email is sent to YOUR server (not Gravatar) for hashing.\n   * Only available when the gravatar proxy is enabled.\n   */\n  getAvatarUrlFromEmail: (email: string, options?: { size?: number, default?: string, rating?: string }) => string\n}"
       }
     ],
     "hotjar": [
@@ -2696,6 +2696,20 @@
         "type": "boolean",
         "required": false,
         "description": "Whether to block map click and gesture events from passing through the overlay.",
+        "defaultValue": "true"
+      },
+      {
+        "name": "panOnOpen",
+        "type": "boolean | number",
+        "required": false,
+        "description": "Pan the map so the overlay is fully visible when opened, similar to InfoWindow behavior. Set to `true` for default 40px padding, or a number for custom padding.",
+        "defaultValue": "true"
+      },
+      {
+        "name": "hideWhenClustered",
+        "type": "boolean",
+        "required": false,
+        "description": "Automatically hide the overlay when its parent marker joins a cluster (on zoom out). Only applies when nested inside a ScriptGoogleMapsMarkerClusterer.",
         "defaultValue": "true"
       },
       {

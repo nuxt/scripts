@@ -392,6 +392,14 @@ export function anonymizeDeviceInfo(value: string): string {
  * When `privacy` is provided, only categories with their flag set to `true` are processed.
  * Default (no arg) = all categories active, so existing callers work unchanged.
  */
+function matchesParam(key: string, params: string[]): boolean {
+  const lk = key.toLowerCase()
+  return params.some((pm) => {
+    const lp = pm.toLowerCase()
+    return lk === lp || lk.startsWith(`${lp}[`)
+  })
+}
+
 export function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
   privacy?: ResolvedProxyPrivacy,
@@ -413,14 +421,6 @@ export function stripPayloadFingerprinting(
 
   for (const [key, value] of Object.entries(payload)) {
     const lowerKey = key.toLowerCase()
-
-    const matchesParam = (key: string, params: string[]) => {
-      const lk = key.toLowerCase()
-      return params.some((pm) => {
-        const lp = pm.toLowerCase()
-        return lk === lp || lk.startsWith(`${lp}[`)
-      })
-    }
 
     // Language params — controlled by language flag
     const isLanguageParam = NORMALIZE_PARAMS.language.some(pm => lowerKey === pm.toLowerCase())

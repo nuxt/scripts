@@ -19,31 +19,6 @@ export type { ProxyRewrite } from '../runtime/utils/pure'
  */
 export type FirstPartyPrivacy = ProxyPrivacyInput
 
-export interface FirstPartyOptions {
-  /**
-   * Path prefix for proxy endpoints.
-   *
-   * Analytics collection requests are proxied through these paths.
-   * For example, Google Analytics collection goes to `/_scripts/p/www.google-analytics.com/g/collect`.
-   * @default '/_scripts/p'
-   * @example '/_tracking'
-   */
-  proxyPrefix?: string
-  /**
-   * Global privacy override for all proxied scripts.
-   *
-   * By default, each script uses its own privacy controls from the registry.
-   * Set this to override all scripts at once:
-   *
-   * - `true` - Full anonymize for all scripts
-   * - `false` - Passthrough for all scripts (still strips sensitive auth headers)
-   * - `{ ip: false }` - Selective override (unset flags inherit per-script defaults)
-   *
-   * @default undefined
-   */
-  privacy?: FirstPartyPrivacy
-}
-
 /**
  * Auto-inject configuration for scripts that need explicit endpoint config.
  * For example, PostHog needs `apiHost` set to the proxy endpoint, Plausible needs `endpoint`.
@@ -74,7 +49,7 @@ export interface ProxyConfig {
    * - `false` = passthrough (still strips sensitive auth headers)
    * - `{ ip: false }` = selective (unset flags default to `false`)
    *
-   * Users can override per-script defaults via `firstParty.privacy` in nuxt.config.
+   * Users can override per-script defaults via `proxy.privacy` in nuxt.config.
    */
   privacy: ProxyPrivacyInput
   /** Auto-inject proxy endpoint config into the script's SDK options */

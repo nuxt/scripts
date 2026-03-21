@@ -1,7 +1,16 @@
 import type { ProxyRewrite } from '../../src/first-party'
 import { describe, expect, it } from 'vitest'
-import { generatePartytownResolveUrl, getAllProxyConfigs } from '../../src/first-party'
+import { generatePartytownResolveUrl } from '../../src/first-party'
+import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
 import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
+import { registry } from '../../src/registry'
+
+let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
+async function getProxyConfigs() {
+  if (!_proxyConfigs)
+    _proxyConfigs = buildProxyConfigsFromRegistry(await registry())
+  return _proxyConfigs
+}
 
 function deriveRewrites(domains: string[], proxyPrefix: string): ProxyRewrite[] {
   return domains.map(domain => ({ from: domain, to: `${proxyPrefix}/${domain}` }))
@@ -189,34 +198,38 @@ describe('rewriteScriptUrlsAST', () => {
   })
 
   describe('rybbit SDK host derivation patching', () => {
-    const rybbitConfig = getAllProxyConfigs('/_scripts/p').rybbitAnalytics
-    const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
-
-    function rewriteRybbit(code: string): string {
-      return rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
+    async function getRybbitConfig() {
+      const configs = await getProxyConfigs()
+      return configs.rybbitAnalytics
     }
 
-    it('patches e.split("/script.js")[0] with proxy path', () => {
+    it('patches e.split("/script.js")[0] with proxy path', async () => {
+      const rybbitConfig = await getRybbitConfig()
+      const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
       const code = 'let e=n.getAttribute("src");let t=e.split("/script.js")[0];'
-      const result = rewriteRybbit(code)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
       expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
       expect(result).not.toContain('.split("/script.js")[0]')
     })
 
-    it('patches with single quotes', () => {
+    it('patches with single quotes', async () => {
+      const rybbitConfig = await getRybbitConfig()
+      const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
       const code = 'let e=n.getAttribute(\'src\');let t=e.split(\'/script.js\')[0];'
-      const result = rewriteRybbit(code)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
       expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
     })
 
-    it('patches with different variable names', () => {
+    it('patches with different variable names', async () => {
+      const rybbitConfig = await getRybbitConfig()
+      const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
       const code = 'var src=el.getAttribute("src");var host=src.split("/script.js")[0];'
-      const result = rewriteRybbit(code)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
       expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
     })
 
-    it('uses custom proxyPrefix', () => {
-      const customConfig = getAllProxyConfigs('/_analytics').rybbitAnalytics
+    it('uses custom proxyPrefix', async () => {
+      const customConfig = (await getProxyConfigs()).rybbitAnalytics
       const customRewrites = deriveRewrites(customConfig.domains, '/_analytics')
       const code = 'let t=e.split("/script.js")[0];'
       const result = rewriteScriptUrlsAST(code, 'rybbit.js', customRewrites, customConfig.postProcess)

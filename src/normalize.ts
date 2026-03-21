@@ -1,3 +1,6 @@
+/** Normalized registry entry: [input, scriptOptions?] tuple form. */
+export type NormalizedRegistryEntry = [input: Record<string, any>, scriptOptions?: Record<string, any>]
+
 /**
  * Normalize all registry config entries in-place to [input, scriptOptions?] tuple form.
  * Eliminates the 4-shape polymorphism (true | 'mock' | object | [object, options])

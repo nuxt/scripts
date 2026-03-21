@@ -117,8 +117,9 @@ async function downloadScript(opts: {
   postProcess?: ProxyConfig['postProcess']
   integrity?: boolean | IntegrityAlgorithm
   skipApiRewrites?: boolean
+  neutralizeCanvas?: boolean
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess, skipApiRewrites } = opts
+  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess, skipApiRewrites, neutralizeCanvas } = opts
   if (src === url || !filename) {
     return
   }
@@ -162,7 +163,7 @@ async function downloadScript(opts: {
     // Apply URL rewrites for proxy mode (AST-based at build time)
     if (proxyRewrites?.length && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess, { skipApiRewrites })
+      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess, { skipApiRewrites, neutralizeCanvas })
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
@@ -397,39 +398,37 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
                     forceDownload = bundleValue === 'force'
                   }
-                  // Check for per-script first-party opt-out (firstParty: false)
+                  // Check for per-script reverseProxyIntercept opt-out
                   // Check in three locations:
-                  // 1. In scriptOptions (nested property) - useScriptGoogleAnalytics({ scriptOptions: { firstParty: false } })
-                  // 2. In the second argument for direct options - useScript('...', { firstParty: false })
-                  // 3. In the first argument's direct properties - useScript({ src: '...', firstParty: false })
+                  // 1. In scriptOptions (nested) - useScriptGA({ scriptOptions: { reverseProxyIntercept: false } })
+                  // 2. In second argument (direct) - useScript('...', { reverseProxyIntercept: false })
+                  // 3. In first argument's properties - useScript({ src: '...', reverseProxyIntercept: false })
 
-                  // Check in scriptOptions (nested)
-                  const firstPartyOption = scriptOptions?.value.properties?.find((prop: any) => {
-                    return prop.type === 'Property' && prop.key?.name === 'firstParty' && prop.value.type === 'Literal'
+                  const rpiOption = scriptOptions?.value.properties?.find((prop: any) => {
+                    return prop.type === 'Property' && prop.key?.name === 'reverseProxyIntercept' && prop.value.type === 'Literal'
                   })
-                  let firstPartyOptOut = firstPartyOption?.value.value === false
+                  let firstPartyOptOut = rpiOption?.value.value === false
 
-                  // Check in second argument (direct options)
                   if (!firstPartyOptOut && node.arguments[1]?.type === 'ObjectExpression') {
-                    const secondArgFirstPartyProp = node.arguments[1].properties.find(
-                      (p: any) => p.type === 'Property' && p.key?.name === 'firstParty' && p.value.type === 'Literal',
+                    const secondArgProp = node.arguments[1].properties.find(
+                      (p: any) => p.type === 'Property' && p.key?.name === 'reverseProxyIntercept' && p.value.type === 'Literal',
                     )
-                    firstPartyOptOut = secondArgFirstPartyProp?.value.value === false
+                    firstPartyOptOut = secondArgProp?.value.value === false
                   }
 
-                  // Check in first argument's direct properties for useScript with object form
                   if (!firstPartyOptOut && node.arguments[0]?.type === 'ObjectExpression') {
-                    const firstArgFirstPartyProp = node.arguments[0].properties.find(
-                      (p: any) => p.type === 'Property' && p.key?.name === 'firstParty' && p.value.type === 'Literal',
+                    const firstArgProp = node.arguments[0].properties.find(
+                      (p: any) => p.type === 'Property' && p.key?.name === 'reverseProxyIntercept' && p.value.type === 'Literal',
                     )
-                    firstPartyOptOut = firstArgFirstPartyProp?.value.value === false
+                    firstPartyOptOut = firstArgProp?.value.value === false
                   }
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
-                    // Use script's proxy field if defined, otherwise fall back to registry key
+                    // Use script's proxyConfig alias if defined, otherwise fall back to registry key
                     const script = options.scripts?.find(s => s.import.name === fnName)
-                    const proxyConfigKey = script?.proxy !== false ? (script?.proxy || registryKey) : undefined
+                    const hasReverseProxy = script?.capabilities?.reverseProxyIntercept
+                    const proxyConfigKey = hasReverseProxy ? (script?.proxyConfig || registryKey) : undefined
                     const proxyConfig = !firstPartyOptOut && proxyConfigKey
                       ? options.proxyConfigs?.[proxyConfigKey]
                       : undefined
@@ -440,12 +439,17 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     }))
                     const postProcess = proxyConfig?.postProcess
                     const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
+                    // Gate canvas fingerprinting neutralization on the script's hardware privacy flag
+                    const neutralizeCanvas = proxyConfig?.privacy !== undefined
+                      && typeof proxyConfig.privacy === 'object'
+                      ? (proxyConfig.privacy.hardware ?? true)
+                      : true
 
                     // Defer async download + MagicString operations
                     deferredOps.push(async () => {
                       let url = _url
                       try {
-                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity, skipApiRewrites }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity, skipApiRewrites, neutralizeCanvas }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                       }
                       catch (e: any) {
                         if (options.fallbackOnSrcOnBundleFail) {

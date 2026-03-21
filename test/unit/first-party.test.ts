@@ -1,6 +1,6 @@
 import type { RegistryScript } from '../../src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { getAllProxyConfigs } from '../../src/first-party'
+import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
 import { registry } from '../../src/registry'
 import {
   anonymizeIP,
@@ -15,11 +15,18 @@ import {
 } from '../../src/runtime/server/utils/privacy'
 
 let _registryScripts: RegistryScript[] | undefined
+let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
 
 async function getRegistryScripts(): Promise<RegistryScript[]> {
   if (!_registryScripts)
     _registryScripts = await registry()
   return _registryScripts
+}
+
+async function getProxyConfigs() {
+  if (!_proxyConfigs)
+    _proxyConfigs = buildProxyConfigsFromRegistry(await getRegistryScripts())
+  return _proxyConfigs
 }
 
 describe('first-party mode', () => {
@@ -54,30 +61,30 @@ describe('first-party mode', () => {
   })
 
   describe('proxy config ↔ registry consistency', () => {
-    it('every script with proxy alias has a valid proxy config', async () => {
+    it('every script with proxyConfig alias has a valid proxy config', async () => {
       const scripts = await getRegistryScripts()
-      const configs = getAllProxyConfigs('/_proxy')
+      const configs = await getProxyConfigs()
       const proxyConfigKeys = Object.keys(configs)
 
       for (const script of scripts) {
-        if (script.proxy && script.proxy !== false) {
+        if (script.proxyConfig) {
           expect(
             proxyConfigKeys,
-            `Script "${script.registryKey}" references proxy alias "${script.proxy}" but no config exists`,
-          ).toContain(script.proxy)
+            `Script "${script.registryKey}" references proxyConfig "${script.proxyConfig}" but no config exists`,
+          ).toContain(script.proxyConfig)
         }
       }
     })
 
-    it('every proxy config is referenced by at least one registry script (by registryKey or alias)', async () => {
+    it('every proxy config is referenced by at least one registry script with reverseProxyIntercept', async () => {
       const scripts = await getRegistryScripts()
-      const configs = getAllProxyConfigs('/_proxy')
+      const configs = await getProxyConfigs()
       const usedProxyKeys = new Set<string>()
       for (const s of scripts) {
-        if (s.proxy === false)
+        if (!s.capabilities?.reverseProxyIntercept)
           continue
-        if (s.proxy)
-          usedProxyKeys.add(s.proxy)
+        if (s.proxyConfig)
+          usedProxyKeys.add(s.proxyConfig)
         if (s.registryKey)
           usedProxyKeys.add(s.registryKey)
       }
@@ -90,16 +97,16 @@ describe('first-party mode', () => {
       }
     })
 
-    it('every proxy config has domains', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('every proxy config has domains', async () => {
+      const configs = await getProxyConfigs()
       for (const [key, config] of Object.entries(configs)) {
         expect(config.domains, `Proxy config "${key}" is missing domains`).toBeDefined()
         expect(config.domains.length, `Proxy config "${key}" has empty domains`).toBeGreaterThan(0)
       }
     })
 
-    it('every proxy config has valid privacy settings', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('every proxy config has valid privacy settings', async () => {
+      const configs = await getProxyConfigs()
       const privacyFlags = ['ip', 'userAgent', 'language', 'screen', 'timezone', 'hardware'] as const
 
       for (const [key, config] of Object.entries(configs)) {
@@ -115,8 +122,8 @@ describe('first-party mode', () => {
   })
 
   describe('auto-inject integrity', () => {
-    it('auto-inject configs produce correct endpoint values', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('auto-inject configs produce correct endpoint values', async () => {
+      const configs = await getProxyConfigs()
 
       // posthog US
       expect(configs.posthog.autoInject).toBeDefined()
@@ -147,30 +154,30 @@ describe('first-party mode', () => {
       expect(configs.databuddyAnalytics.autoInject!.computeValue('/_proxy', {})).toBe('/_proxy/basket.databuddy.cc')
     })
 
-    it('auto-inject configs use custom proxyPrefix', () => {
-      const configs = getAllProxyConfigs('/_custom')
+    it('auto-inject configs use custom proxyPrefix', async () => {
+      const configs = await getProxyConfigs()
       expect(configs.posthog.autoInject!.computeValue('/_custom', {})).toBe('/_custom/us.i.posthog.com')
       expect(configs.plausibleAnalytics.autoInject!.computeValue('/_custom', {})).toBe('/_custom/plausible.io/api/event')
     })
 
-    it('scripts without auto-inject do not have the property', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('scripts without auto-inject do not have the property', async () => {
+      const configs = await getProxyConfigs()
       expect(configs.googleAnalytics.autoInject).toBeUndefined()
       expect(configs.metaPixel.autoInject).toBeUndefined()
       expect(configs.clarity.autoInject).toBeUndefined()
     })
   })
 
-  describe('full chain: config key → registry script → proxy config → domains', () => {
-    it('every script with proxy support gets domains via registryKey lookup', async () => {
+  describe('full chain: capabilities → proxy config → domains', () => {
+    it('every script with reverseProxyIntercept gets domains via registryKey lookup', async () => {
       const scripts = await getRegistryScripts()
-      const configs = getAllProxyConfigs('/_proxy')
+      const configs = await getProxyConfigs()
 
       for (const script of scripts) {
-        if (script.proxy === false || !script.registryKey)
+        if (!script.capabilities?.reverseProxyIntercept || !script.registryKey)
           continue
 
-        const configKey = script.proxy || script.registryKey
+        const configKey = script.proxyConfig || script.registryKey
         const proxyConfig = configs[configKey]
         if (!proxyConfig)
           continue
@@ -184,13 +191,13 @@ describe('first-party mode', () => {
 
     it('collects a significant number of domains across all proxy configs', async () => {
       const scripts = await getRegistryScripts()
-      const configs = getAllProxyConfigs('/_proxy')
+      const configs = await getProxyConfigs()
 
       const allDomains = new Set<string>()
       for (const script of scripts) {
-        if (script.proxy === false || !script.registryKey)
+        if (!script.capabilities?.reverseProxyIntercept || !script.registryKey)
           continue
-        const configKey = script.proxy || script.registryKey
+        const configKey = script.proxyConfig || script.registryKey
         const proxyConfig = configs[configKey]
         if (proxyConfig) {
           for (const domain of proxyConfig.domains)
@@ -204,18 +211,16 @@ describe('first-party mode', () => {
 
   describe('default configuration', () => {
     it('proxy configs are available for all supported scripts', async () => {
-      const configs = getAllProxyConfigs('/_scripts/p')
+      const configs = await getProxyConfigs()
       expect(Object.keys(configs).length).toBeGreaterThan(0)
     })
 
-    it('all supported scripts have domains and privacy', () => {
-      const configs = getAllProxyConfigs('/_scripts/p')
+    it('all supported scripts have domains and privacy', async () => {
+      const configs = await getProxyConfigs()
       const supportedScripts = [
         'googleAnalytics',
-        'googleTagManager',
         'metaPixel',
         'tiktokPixel',
-        'segment',
         'xPixel',
         'snapchatPixel',
         'redditPixel',
@@ -233,20 +238,20 @@ describe('first-party mode', () => {
     })
   })
 
-  describe('scripts that need fingerprinting opt out of proxy', () => {
-    it('stripe, paypal, googleRecaptcha, googleSignIn have proxy: false', async () => {
+  describe('scripts that need fingerprinting have no reverseProxyIntercept', () => {
+    it('stripe, paypal, googleRecaptcha, googleSignIn have no reverseProxyIntercept capability', async () => {
       const scripts = await getRegistryScripts()
       const fingerprintScripts = ['stripe', 'paypal', 'googleRecaptcha', 'googleSignIn']
 
       for (const key of fingerprintScripts) {
         const script = scripts.find(s => s.registryKey === key)
         expect(script, `${key} should exist in registry`).toBeDefined()
-        expect(script!.proxy, `${key} should have proxy: false`).toBe(false)
+        expect(script!.capabilities?.reverseProxyIntercept, `${key} should not have reverseProxyIntercept`).toBeFalsy()
       }
     })
 
-    it('fingerprinting scripts have no proxy configs', () => {
-      const configs = getAllProxyConfigs('/_scripts/p')
+    it('fingerprinting scripts have no proxy configs', async () => {
+      const configs = await getProxyConfigs()
       expect(configs.stripe).toBeUndefined()
       expect(configs.paypal).toBeUndefined()
       expect(configs.googleRecaptcha).toBeUndefined()
@@ -392,22 +397,22 @@ describe('proxy handler', () => {
   })
 
   describe('domain-based matching', () => {
-    it('getAllProxyConfigs returns domains for known providers', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('getProxyConfigs returns domains for known providers', async () => {
+      const configs = await getProxyConfigs()
       const gaConfig = configs.googleAnalytics
       expect(gaConfig).toBeDefined()
       expect(gaConfig.domains).toBeDefined()
       expect(gaConfig.domains.length).toBeGreaterThan(0)
     })
 
-    it('plausibleAnalytics has domains', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('plausibleAnalytics has domains', async () => {
+      const configs = await getProxyConfigs()
       expect(configs.plausibleAnalytics).toBeDefined()
       expect(configs.plausibleAnalytics.domains.length).toBeGreaterThan(0)
     })
 
-    it('hotjar has domains', () => {
-      const configs = getAllProxyConfigs('/_proxy')
+    it('hotjar has domains', async () => {
+      const configs = await getProxyConfigs()
       expect(configs.hotjar).toBeDefined()
       expect(configs.hotjar.domains.length).toBeGreaterThan(0)
     })

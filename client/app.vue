@@ -204,6 +204,44 @@ function privacyLevelBg(level: string) {
   return 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
 }
 
+// Capability visualization helpers
+const capabilityDefs = [
+  { key: 'bundle', label: 'Bundle', icon: 'carbon:archive', desc: 'Downloaded at build time, served from your domain' },
+  { key: 'reverseProxyIntercept', label: 'Proxy', icon: 'carbon:security', desc: 'Collection requests routed through your server' },
+  { key: 'partytown', label: 'Partytown', icon: 'carbon:container-software', desc: 'Can run in a web worker via Partytown' },
+] as const
+
+type CapState = 'active' | 'available' | 'off'
+
+function capState(script: any, capKey: string): CapState {
+  const supported = script.capabilities?.[capKey]
+  if (!supported) return 'off'
+  const active = script.defaultCapability?.[capKey]
+  return active ? 'active' : 'available'
+}
+
+function capStateClass(state: CapState): string {
+  if (state === 'active')
+    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+  if (state === 'available')
+    return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 border-dashed'
+  return 'opacity-20 border-transparent'
+}
+
+function capStateLabel(state: CapState): string {
+  if (state === 'active') return 'Active by default'
+  if (state === 'available') return 'Supported (opt-in)'
+  return 'Not supported'
+}
+
+function capSummary(script: any): string {
+  const parts: string[] = []
+  if (script.capabilities?.bundle) parts.push('bundle')
+  if (script.capabilities?.reverseProxyIntercept) parts.push('proxy')
+  if (script.capabilities?.partytown) parts.push('partytown')
+  return parts.length ? parts.join(' · ') : 'none'
+}
+
 function mechanismLabel(m: string) {
   return m === 'bundle-rewrite-intercept' ? 'Bundle + Rewrite' : 'Config Injection'
 }
@@ -476,7 +514,7 @@ function scriptLogo(script: any) {
               First-Party Mode is not enabled
             </p>
             <p class="text-sm opacity-60">
-              Enable in nuxt.config: <code class="px-1.5 py-0.5 n-bg-active rounded text-xs font-mono">scripts: { firstParty: true }</code>
+              Proxy is auto-enabled when scripts with proxy capabilities are configured. Ensure <code class="px-1.5 py-0.5 n-bg-active rounded text-xs font-mono">scripts: { proxy: false }</code> is not set.
             </p>
             <NLink href="https://scripts.nuxt.com/docs/guides/first-party" target="_blank" class="text-sm opacity-70 underline mt-2">
               View Documentation
@@ -686,54 +724,160 @@ function scriptLogo(script: any) {
         </div>
 
         <!-- Registry Tab -->
-        <div v-else-if="tab === 'registry'" class="h-full relative max-h-full p-4">
+        <div v-else-if="tab === 'registry'" class="h-full relative max-h-full p-4 overflow-y-auto">
           <div v-if="!scriptRegistry?.length" class="text-sm opacity-50">
             No registry scripts available.
           </div>
-          <div class="space-y-4">
-            <div v-for="(script, index) in scriptRegistry" :key="index" class="rounded-lg p-4 hover:n-bg-active transition-colors">
-              <div class="flex items-start justify-between">
-                <div class="flex items-center gap-3">
+
+          <!-- Capability Legend -->
+          <div class="flex items-center gap-4 mb-4 px-1">
+            <div class="flex items-center gap-1.5 text-[10px]">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+              <span class="opacity-50">Active by default</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-[10px]">
+              <span class="inline-block w-2 h-2 rounded-full border border-dashed border-amber-500" />
+              <span class="opacity-50">Supported (opt-in)</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-[10px]">
+              <span class="inline-block w-2 h-2 rounded-full bg-gray-400/20" />
+              <span class="opacity-50">Not supported</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div
+              v-for="(script, index) in scriptRegistry"
+              :key="index"
+              class="rounded-lg border n-border-base overflow-hidden hover:border-emerald-500/30 transition-colors group"
+            >
+              <div class="px-4 py-3 flex items-center gap-3">
+                <!-- Logo -->
+                <div class="w-7 h-7 flex items-center justify-center flex-shrink-0">
                   <img
                     v-if="script.logo && typeof script.logo === 'string' && script.logo.startsWith('http')"
-                    class="max-w-8 h-8"
+                    class="max-w-7 h-7"
                     :src="typeof script.logo === 'object' ? script.logo.dark || script.logo.light : script.logo"
                     alt="Script logo"
                   >
                   <div
                     v-else-if="script.logo"
-                    class="max-w-8 h-8 flex items-center"
+                    class="max-w-7 h-7 flex items-center [&>svg]:max-h-7 [&>svg]:max-w-7"
                     v-html="typeof script.logo === 'object' ? (script.logo.dark || script.logo.light) : script.logo"
                   />
-                  <div v-else class="max-w-8 h-8 flex items-center">
-                    <NIcon icon="carbon:script" class="text-blue-500 dark:text-blue-300 text-2xl" />
+                  <NIcon v-else icon="carbon:script" class="text-lg opacity-40" />
+                </div>
+
+                <!-- Name + Category -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm truncate">{{ script.label }}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded n-bg-active opacity-50 flex-shrink-0">{{ script.category }}</span>
                   </div>
-                  <div>
-                    <h3 class="font-semibold text-lg">{{ script.label }}</h3>
-                    <p class="text-sm opacity-60">{{ script.description }}</p>
-                    <div class="flex items-center gap-2 mt-2">
-                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded">
-                        {{ script.category }}
-                      </span>
-                      <span v-if="script.src" class="text-xs opacity-40">{{ script.src }}</span>
-                    </div>
+                  <div v-if="script.src && script.src !== false" class="text-[10px] font-mono opacity-30 truncate mt-0.5">
+                    {{ script.src }}
+                  </div>
+                  <div v-else-if="script.src === false" class="text-[10px] font-mono opacity-30 mt-0.5">
+                    npm (no script download)
                   </div>
                 </div>
+
+                <!-- Capability Indicators -->
+                <div class="flex items-center gap-1 flex-shrink-0">
+                  <VTooltip v-for="cap in capabilityDefs" :key="cap.key">
+                    <div
+                      class="w-7 h-7 rounded-md border flex items-center justify-center transition-all"
+                      :class="capStateClass(capState(script, cap.key))"
+                    >
+                      <NIcon :icon="cap.icon" class="text-sm" />
+                    </div>
+                    <template #popper>
+                      <div class="text-xs">
+                        <div class="font-semibold">{{ cap.label }}</div>
+                        <div class="opacity-70 mt-0.5">{{ capStateLabel(capState(script, cap.key)) }}</div>
+                        <div class="opacity-50 mt-1 max-w-48">{{ cap.desc }}</div>
+                      </div>
+                    </template>
+                  </VTooltip>
+                </div>
+
+                <!-- Docs link -->
                 <a
                   :href="`https://scripts.nuxt.com/scripts/${script.label.toLowerCase().replace(/ /g, '-')}`"
                   target="_blank"
-                  class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline flex-shrink-0"
+                  class="opacity-0 group-hover:opacity-60 transition-opacity ml-1 flex-shrink-0"
                 >
-                  View docs
+                  <NIcon icon="carbon:launch" class="text-sm" />
                 </a>
               </div>
-              <div class="mt-3">
-                <OCodeBlock
-                  :code="`const script = use${script.label.replace(/\s+/g, '')}()`"
-                  lang="typescript"
-                  class="text-sm rounded"
-                />
-              </div>
+            </div>
+          </div>
+
+          <!-- Capability Matrix -->
+          <div v-if="scriptRegistry.length > 3" class="mt-6 rounded-lg border n-border-base overflow-hidden">
+            <div class="px-4 py-2.5 border-b n-border-base n-bg-active">
+              <h4 class="text-xs font-medium uppercase tracking-wider opacity-50 flex items-center gap-1.5">
+                <NIcon icon="carbon:data-table" class="text-sm" />
+                Capability Matrix
+              </h4>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b n-border-base">
+                    <th class="px-4 py-2 text-left font-medium opacity-40">Script</th>
+                    <th
+                      v-for="cap in capabilityDefs"
+                      :key="cap.key"
+                      class="px-3 py-2 text-center font-medium opacity-40 whitespace-nowrap"
+                    >
+                      <VTooltip>
+                        <span class="flex items-center justify-center gap-1">
+                          <NIcon :icon="cap.icon" class="text-xs" />
+                          {{ cap.label }}
+                        </span>
+                        <template #popper>
+                          <span class="text-xs">{{ cap.desc }}</span>
+                        </template>
+                      </VTooltip>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="script in scriptRegistry"
+                    :key="script.registryKey || script.label"
+                    class="border-b n-border-base last:border-b-0 hover:n-bg-active transition-colors"
+                  >
+                    <td class="px-4 py-2 font-medium whitespace-nowrap">
+                      <div class="flex items-center gap-2">
+                        <div
+                          v-if="script.logo"
+                          class="w-4 h-4 flex items-center [&>svg]:max-h-4 [&>svg]:max-w-4"
+                          v-html="typeof script.logo === 'object' ? (script.logo.dark || script.logo.light) : script.logo"
+                        />
+                        <NIcon v-else icon="carbon:script" class="text-xs opacity-40" />
+                        {{ script.label }}
+                      </div>
+                    </td>
+                    <td v-for="cap in capabilityDefs" :key="cap.key" class="px-3 py-2 text-center">
+                      <VTooltip>
+                        <div
+                          class="w-3 h-3 rounded-full mx-auto transition-colors"
+                          :class="{
+                            'bg-emerald-500': capState(script, cap.key) === 'active',
+                            'border-2 border-dashed border-amber-500/60': capState(script, cap.key) === 'available',
+                            'bg-gray-400/15': capState(script, cap.key) === 'off',
+                          }"
+                        />
+                        <template #popper>
+                          <span class="text-xs">{{ capStateLabel(capState(script, cap.key)) }}</span>
+                        </template>
+                      </VTooltip>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
