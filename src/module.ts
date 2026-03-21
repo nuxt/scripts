@@ -503,7 +503,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       // Finalize first-party proxy setup
       if (firstParty.enabled) {
-        const { interceptRules, devtools: devtoolsData } = finalizeFirstParty({
+        const { proxyPrefix, devtools: devtoolsData } = finalizeFirstParty({
           firstParty,
           registry: config.registry,
           registryScripts,
@@ -514,10 +514,10 @@ export default defineNuxtModule<ModuleOptions>({
           nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = devtoolsData as any
         }
         // Auto-configure Partytown resolveUrl for first-party proxy
-        if (config.partytown?.length && hasNuxtModule('@nuxtjs/partytown') && interceptRules.length) {
+        if (config.partytown?.length && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
-            partytownConfig.resolveUrl = generatePartytownResolveUrl(interceptRules)
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix)
             ;(nuxt.options as any).partytown = partytownConfig
             logger.info('[partytown] Auto-configured resolveUrl for first-party proxy')
           }
@@ -537,6 +537,7 @@ export default defineNuxtModule<ModuleOptions>({
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         defaultBundle: firstParty.enabled || config.defaultScriptOptions?.bundle,
         proxyConfigs: firstParty.proxyConfigs,
+        proxyPrefix: firstParty.proxyPrefix,
         partytownScripts: new Set(config.partytown || []),
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))

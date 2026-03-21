@@ -6,8 +6,7 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and the script state
-const instance = useScriptIntercom({ app_id: 'nu034r2a' })
-const { status, Intercom } = instance
+const { status, proxy } = useScriptIntercom({ app_id: 'nu034r2a' })
 </script>
 
 <template>
@@ -17,19 +16,19 @@ const { status, Intercom } = instance
         status: {{ status }}
       </div>
       <div>
-        <button @click="Intercom('show')">
+        <UButton @click="proxy.Intercom('show')">
           Show
-        </button>
+        </UButton>
       </div>
       <div>
-        <button @click="Intercom('hide')">
+        <UButton @click="proxy.Intercom('hide')">
           Hide
-        </button>
+        </UButton>
       </div>
       <div>
-        <button @click="Intercom('showNewMessage', 'hey!')">
+        <UButton @click="proxy.Intercom('showNewMessage', 'hey!')">
           Hello
-        </button>
+        </UButton>
       </div>
     </ClientOnly>
   </div>

@@ -24,7 +24,7 @@ export interface FirstPartyOptions {
    * Path prefix for proxy endpoints.
    *
    * Analytics collection requests are proxied through these paths.
-   * For example, Google Analytics collection goes to `/_scripts/p/ga/g/collect`.
+   * For example, Google Analytics collection goes to `/_scripts/p/www.google-analytics.com/g/collect`.
    * @default '/_scripts/p'
    * @example '/_tracking'
    */
@@ -57,15 +57,17 @@ export interface ProxyAutoInject {
 
 /**
  * Proxy configuration for third-party scripts.
- * Defines URL rewrites, route rules, privacy controls, auto-inject, and post-processing.
- * Each supported script has one ProxyConfig that is the single source of truth
- * for all first-party routing behavior.
+ * Each supported script declares its domains, privacy controls, and optional SDK-specific hooks.
+ *
+ * The AST rewriter derives rewrite rules automatically from domains:
+ *   { from: domain, to: proxyPrefix + '/' + domain }
+ *
+ * The runtime intercept plugin catches any remaining dynamic URLs at the
+ * fetch/sendBeacon/XHR/Image call site.
  */
 export interface ProxyConfig {
-  /** URL rewrites to apply to downloaded script content */
-  rewrite?: import('../runtime/utils/pure').ProxyRewrite[]
-  /** Nitro route rules to inject for proxying requests */
-  routes?: Record<string, { proxy: string }>
+  /** Third-party domains to proxy. AST rewrites are derived automatically. */
+  domains: string[]
   /**
    * Per-script privacy controls. Each script declares what it needs.
    * - `true` (default) = full anonymize: IP, UA, language, screen, timezone, hardware fingerprints
@@ -80,16 +82,7 @@ export interface ProxyConfig {
   /**
    * SDK-specific post-processing applied after AST URL rewriting.
    * Used for regex patches that can't be handled by the generic AST rewriter
-   * (e.g., GA dynamic URL construction, Fathom self-hosted detection, Rybbit host derivation).
+   * (e.g., Fathom self-hosted detection, Rybbit host derivation).
    */
   postProcess?: (output: string, rewrites: import('../runtime/utils/pure').ProxyRewrite[]) => string
-}
-
-export interface InterceptRule {
-  /** Domain to match (exact match or implicit subdomain suffix match, e.g. google-analytics.com matches *.google-analytics.com) */
-  pattern: string
-  /** Path prefix to match and strip from the original URL (e.g., /tr for www.facebook.com/tr) */
-  pathPrefix: string
-  /** Local path prefix to rewrite to */
-  target: string
 }

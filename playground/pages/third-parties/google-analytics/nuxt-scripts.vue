@@ -26,14 +26,22 @@ function triggerConversion() {
 </script>
 
 <template>
-  <div>
-    <ClientOnly>
-      <div>
-        status: {{ status }}
-      </div>
-    </ClientOnly>
-    <button @click="triggerConversion">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold">
+        Google Analytics
+      </h1>
+    </div>
+
+    <div>
+      <span class="font-medium">Status:</span>
+      <span class="ml-2 px-2 py-1 rounded text-sm" :class="status === 'loaded' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
+        {{ status }}
+      </span>
+    </div>
+
+    <UButton :disabled="status !== 'loaded'" @click="triggerConversion">
       Trigger Conversion
-    </button>
+    </UButton>
   </div>
 </template>

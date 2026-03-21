@@ -5,44 +5,50 @@ useHead({
   title: 'Google Analytics',
 })
 
-// composables return the underlying api as a proxy object and a $script with the script state
-const { gtag: gtag1, $script: $script1 } = useScriptGoogleAnalytics({
+const { proxy: proxy1, status: status1 } = useScriptGoogleAnalytics({
   id: 'G-TR58L0EF8P',
   dataLayerName: 'dataLayer1',
 })
 
-const { gtag: gtag2, $script: $script2 } = useScriptGoogleAnalytics({
+const { proxy: proxy2, status: status2 } = useScriptGoogleAnalytics({
   key: 'test',
   id: 'G-123456',
   dataLayerName: 'dataLayer2',
 })
 
-// id set via nuxt scripts module config
-gtag1('event', 'page_view', {
+proxy1.gtag('event', 'page_view', {
   page_title: 'Google Analytics',
   page_location: 'https://harlanzw.com/third-parties/google-analytics',
   page_path: '/third-parties/google-analytics',
 })
 
 function triggerConversion() {
-  gtag2('event', 'conversion')
+  proxy2.gtag('event', 'conversion')
 }
 </script>
 
 <template>
-  <div>
-    <ClientOnly>
-      <div>
-        1 status: {{ $script1.status.value }}
-      </div>
-    </ClientOnly>
-    <ClientOnly>
-      <div>
-        2 status: {{ $script2.status.value }}
-      </div>
-    </ClientOnly>
-    <button @click="triggerConversion">
-      Trigger Conversion
-    </button>
+  <div class="space-y-6">
+    <h1 class="text-3xl font-bold">
+      GA Datalayers
+    </h1>
+
+    <div>
+      <span class="font-medium">GA 1 Status:</span>
+      <span class="ml-2 px-2 py-1 rounded text-sm" :class="status1 === 'loaded' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
+        {{ status1 }}
+      </span>
+    </div>
+
+    <div>
+      <span class="font-medium">GA 2 Status:</span>
+      <span class="ml-2 px-2 py-1 rounded text-sm" :class="status2 === 'loaded' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'">
+        {{ status2 }}
+      </span>
+    </div>
+
+    <UButton :disabled="status2 !== 'loaded'" @click="triggerConversion">
+      Trigger Conversion (GA 2)
+    </UButton>
   </div>
 </template>

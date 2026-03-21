@@ -6,10 +6,10 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { status, fbq } = useScriptMetaPixel({ id: '3925006' })
-// this will be triggered once the script is ready async
+const { status, proxy } = useScriptMetaPixel({ id: '3925006' })
+
 function triggerEvent() {
-  fbq('track', 'ViewContent', {
+  proxy.fbq('track', 'ViewContent', {
     value: 123,
     status: 'completed',
   })

@@ -25,7 +25,7 @@ function changeQuery() {
         :height="600"
         :map-options="mapOptions"
         above-the-fold
-        @init="setupGoogleMaps"
+        @ready="() => {}"
       />
     </div>
     <div class="button-container">

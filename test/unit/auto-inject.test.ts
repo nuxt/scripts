@@ -30,8 +30,8 @@ describe('autoInject via proxy configs', () => {
       autoInjectAll(registry, rt, '/_proxy')
 
       // After normalization, object entries become [input]
-      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph')
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/us.i.posthog.com')
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
     })
 
     it('injects endpoint for plausible config object', () => {
@@ -40,8 +40,8 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.plausibleAnalytics[0].endpoint).toBe('/_proxy/plausible/api/event')
-      expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible/api/event')
+      expect(registry.plausibleAnalytics[0].endpoint).toBe('/_proxy/plausible.io/api/event')
+      expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible.io/api/event')
     })
 
     it('does not override existing config field', () => {
@@ -60,7 +60,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph-eu')
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/eu.i.posthog.com')
     })
   })
 
@@ -71,8 +71,8 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph')
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/us.i.posthog.com')
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
     })
 
     it('skips empty array entries', () => {
@@ -93,8 +93,8 @@ describe('autoInject via proxy configs', () => {
       autoInjectAll(registry, rt, '/_proxy')
 
       // After normalization, true becomes [{}] — both input and runtimeConfig get the value
-      expect(registry.posthog[0].apiHost).toBe('/_proxy/ph')
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
+      expect(registry.posthog[0].apiHost).toBe('/_proxy/us.i.posthog.com')
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
     })
 
     it('uses EU prefix for posthog: true when runtime region is eu', () => {
@@ -103,7 +103,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph-eu')
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/eu.i.posthog.com')
     })
 
     it('injects into runtimeConfig for plausibleAnalytics: true', () => {
@@ -112,7 +112,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible/api/event')
+      expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible.io/api/event')
     })
 
     it('injects into runtimeConfig for umamiAnalytics: true', () => {
@@ -121,7 +121,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.umamiAnalytics.hostUrl).toBe('/_proxy/umami')
+      expect(rt.public.scripts.umamiAnalytics.hostUrl).toBe('/_proxy/cloud.umami.is')
     })
 
     it('injects into runtimeConfig for rybbitAnalytics: true', () => {
@@ -130,7 +130,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.rybbitAnalytics.analyticsHost).toBe('/_proxy/rybbit/api')
+      expect(rt.public.scripts.rybbitAnalytics.analyticsHost).toBe('/_proxy/app.rybbit.io/api')
     })
 
     it('injects into runtimeConfig for databuddyAnalytics: true', () => {
@@ -139,7 +139,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.databuddyAnalytics.apiUrl).toBe('/_proxy/databuddy-api')
+      expect(rt.public.scripts.databuddyAnalytics.apiUrl).toBe('/_proxy/basket.databuddy.cc')
     })
   })
 
@@ -150,7 +150,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/ph')
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
     })
   })
 
@@ -183,6 +183,28 @@ describe('autoInject via proxy configs', () => {
     })
   })
 
+  describe('firstParty opt-out', () => {
+    it('skips auto-inject when input has firstParty: false', () => {
+      const registry: any = { plausibleAnalytics: { domain: 'example.com', firstParty: false } }
+      const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: 'example.com' } })
+
+      autoInjectAll(registry, rt, '/_proxy')
+
+      expect(registry.plausibleAnalytics[0].endpoint).toBeUndefined()
+      expect(rt.public.scripts.plausibleAnalytics.endpoint).toBeUndefined()
+    })
+
+    it('skips auto-inject when scriptOptions has firstParty: false', () => {
+      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { firstParty: false }] }
+      const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
+
+      autoInjectAll(registry, rt, '/_proxy')
+
+      expect(registry.posthog[0].apiHost).toBeUndefined()
+      expect(rt.public.scripts.posthog.apiHost).toBeUndefined()
+    })
+  })
+
   describe('custom proxyPrefix', () => {
     it('uses custom prefix in computed values', () => {
       const registry: any = { posthog: true }
@@ -190,7 +212,7 @@ describe('autoInject via proxy configs', () => {
 
       autoInjectAll(registry, rt, '/_analytics')
 
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_analytics/ph')
+      expect(rt.public.scripts.posthog.apiHost).toBe('/_analytics/us.i.posthog.com')
     })
   })
 })

@@ -1,11 +1,11 @@
 import type { ProxyPrivacyInput } from '../runtime/server/utils/privacy'
-import type { BuiltInRegistryScriptKey, NuxtConfigScriptRegistry, RegistryScript, RegistryScriptKey } from '../runtime/types'
-import type { InterceptRule, ProxyAutoInject, ProxyConfig } from './types'
+import type { NuxtConfigScriptRegistry, RegistryScript, RegistryScriptKey } from '../runtime/types'
+import type { ProxyAutoInject, ProxyConfig } from './types'
 import { addPluginTemplate, addServerHandler } from '@nuxt/kit'
 import { logger } from '../logger'
-import { scriptMeta } from '../script-meta'
+
 import { generateInterceptPluginContents } from './intercept-plugin'
-import { getAllProxyConfigs, routesToInterceptRules } from './proxy-configs'
+import { getAllProxyConfigs } from './proxy-configs'
 
 export interface FirstPartyConfig {
   enabled: boolean
@@ -71,6 +71,11 @@ export function applyAutoInject(
     return
 
   const input = entry[0]
+  const scriptOptions = entry[1] as Record<string, any> | undefined
+
+  // Per-script firstParty opt-out (in input or scriptOptions)
+  if (input?.firstParty === false || scriptOptions?.firstParty === false)
+    return
   const rtScripts = runtimeConfig.public?.scripts as Record<string, any> | undefined
   const rtEntry = rtScripts?.[registryKey]
 
@@ -101,8 +106,6 @@ export interface FirstPartyDevtoolsScript {
   privacy: { ip: boolean, userAgent: boolean, language: boolean, screen: boolean, timezone: boolean, hardware: boolean }
   privacyLevel: 'full' | 'partial' | 'none'
   domains: string[]
-  routes: Array<{ local: string, target: string }>
-  interceptRules: Array<{ pattern: string, pathPrefix: string, target: string }>
 }
 
 export interface FirstPartyDevtoolsData {
@@ -110,20 +113,7 @@ export interface FirstPartyDevtoolsData {
   proxyPrefix: string
   privacyMode: string
   scripts: FirstPartyDevtoolsScript[]
-  totalRoutes: number
   totalDomains: number
-}
-
-const DOMAIN_RE = /^https?:\/\/([^/]+)/
-
-function extractDomains(routes: Record<string, { proxy: string }>): string[] {
-  const domains = new Set<string>()
-  for (const { proxy } of Object.values(routes)) {
-    const match = proxy.match(DOMAIN_RE)
-    if (match?.[1])
-      domains.add(match[1])
-  }
-  return [...domains].sort()
 }
 
 function computePrivacyLevel(privacy: Record<string, boolean>): 'full' | 'partial' | 'none' {
@@ -136,7 +126,7 @@ function computePrivacyLevel(privacy: Record<string, boolean>): 'full' | 'partia
 }
 
 export interface FinalizeFirstPartyResult {
-  interceptRules: InterceptRule[]
+  proxyPrefix: string
   devtools?: FirstPartyDevtoolsData
 }
 
@@ -162,11 +152,11 @@ export function finalizeFirstParty(opts: {
       scriptByKey.set(script.registryKey, script)
   }
 
-  // Collect routes and privacy overrides
-  const neededRoutes: Record<string, { proxy: string }> = {}
-  const routePrivacyOverrides: Record<string, ProxyPrivacyInput> = {}
+  // Collect domain privacy mappings
+  const domainPrivacy: Record<string, ProxyPrivacyInput> = {}
   const unsupportedScripts: string[] = []
   const unmatchedScripts: string[] = []
+  let totalDomains = 0
 
   // Devtools: per-script data
   const devtoolsScripts: FirstPartyDevtoolsScript[] = []
@@ -180,6 +170,15 @@ export function finalizeFirstParty(opts: {
 
     if (script.proxy === false)
       continue
+
+    // Check per-script firstParty opt-out in registry config entry
+    // Entries are normalized to [input, scriptOptions?] tuple form
+    const registryEntry = opts.registry?.[key as keyof NuxtConfigScriptRegistry] as [Record<string, any>, Record<string, any>?] | undefined
+    const entryScriptOptions = registryEntry?.[1]
+    const entryInput = registryEntry?.[0]
+    if (entryScriptOptions?.firstParty === false || entryInput?.firstParty === false)
+      continue
+
     const configKey = (script.proxy || key) as RegistryScriptKey
     const proxyConfig = proxyConfigs[configKey]
 
@@ -189,11 +188,10 @@ export function finalizeFirstParty(opts: {
       continue
     }
 
-    const scriptRoutes = proxyConfig.routes || {}
-    if (proxyConfig.routes) {
-      Object.assign(neededRoutes, proxyConfig.routes)
-      for (const routePath of Object.keys(proxyConfig.routes))
-        routePrivacyOverrides[routePath] = proxyConfig.privacy
+    // Map each domain to its privacy config
+    for (const domain of proxyConfig.domains) {
+      domainPrivacy[domain] = proxyConfig.privacy
+      totalDomains++
     }
 
     // Auto-inject proxy endpoint config
@@ -211,10 +209,8 @@ export function finalizeFirstParty(opts: {
         timezone: !!privacy.timezone,
         hardware: !!privacy.hardware,
       }
-      const _meta = scriptMeta[key as BuiltInRegistryScriptKey]
       const logo = script.logo
       const logoStr = typeof logo === 'object' ? (logo.dark || logo.light) : (logo || '')
-      const interceptRules = routesToInterceptRules(scriptRoutes)
 
       devtoolsScripts.push({
         registryKey: key,
@@ -228,9 +224,7 @@ export function finalizeFirstParty(opts: {
         hasPostProcess: !!proxyConfig.postProcess,
         privacy: normalizedPrivacy,
         privacyLevel: computePrivacyLevel(normalizedPrivacy),
-        domains: extractDomains(scriptRoutes),
-        routes: Object.entries(scriptRoutes).map(([local, { proxy }]) => ({ local, target: proxy })),
-        interceptRules,
+        domains: [...proxyConfig.domains],
       })
     }
   }
@@ -249,35 +243,25 @@ export function finalizeFirstParty(opts: {
   }
 
   // Register intercept plugin
-  const interceptRules = routesToInterceptRules(neededRoutes)
   addPluginTemplate({
     filename: 'nuxt-scripts-intercept.client.mjs',
     getContents() {
-      return generateInterceptPluginContents(interceptRules)
+      return generateInterceptPluginContents(proxyPrefix)
     },
   })
 
   // Server-side config
-  const flatRoutes: Record<string, string> = {}
-  for (const [path, config] of Object.entries(neededRoutes))
-    flatRoutes[path] = config.proxy
-
   nuxtOptions.runtimeConfig['nuxt-scripts-proxy'] = {
-    routes: flatRoutes,
+    proxyPrefix,
+    domainPrivacy,
     privacy: firstParty.privacy,
-    routePrivacy: routePrivacyOverrides,
   } as any
 
   const privacyLabel = firstParty.privacy === undefined ? 'per-script' : typeof firstParty.privacy === 'boolean' ? (firstParty.privacy ? 'anonymize' : 'passthrough') : 'custom'
 
-  if (Object.keys(neededRoutes).length && nuxtOptions.dev) {
-    const routeCount = Object.keys(neededRoutes).length
+  if (totalDomains > 0 && nuxtOptions.dev) {
     const scriptsCount = registryKeys.length
-    logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${routeCount} proxy route(s) configured (privacy: ${privacyLabel})`)
-    if (logger.level >= 4) {
-      for (const [path, config] of Object.entries(neededRoutes))
-        logger.debug(`  ${path} → ${config.proxy}`)
-    }
+    logger.success(`First-party mode enabled for ${scriptsCount} script(s), ${totalDomains} domain(s) proxied (privacy: ${privacyLabel})`)
   }
 
   // Warn for static presets
@@ -311,10 +295,9 @@ export function finalizeFirstParty(opts: {
       proxyPrefix,
       privacyMode: privacyLabel,
       scripts: devtoolsScripts,
-      totalRoutes: Object.keys(neededRoutes).length,
       totalDomains: allDomains.size,
     }
   }
 
-  return { interceptRules, devtools }
+  return { proxyPrefix, devtools }
 }
