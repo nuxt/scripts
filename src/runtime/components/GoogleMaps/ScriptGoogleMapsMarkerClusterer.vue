@@ -94,11 +94,12 @@ watch(
   (ready) => {
     if (!ready)
       return
-    rerenderPending.value = false
     // Guard: map projection must be ready, otherwise MarkerClusterer.render()
     // throws "Cannot read properties of null (reading 'fromLatLngToDivPixel')"
+    // Keep rerenderPending true so the request isn't lost
     if (!mapContext?.map.value?.getProjection())
       return
+    rerenderPending.value = false
     try {
       markerClusterer.value!.render()
     }
