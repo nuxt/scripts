@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject, useTemplateRef, watch } from 'vue'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
+import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 type OverlayAnchor = 'center' | 'top-left' | 'top-center' | 'top-right'
@@ -40,16 +41,31 @@ const props = withDefaults(defineProps<{
    * @default true
    */
   blockMapInteraction?: boolean
+  /**
+   * Pan the map so the overlay is fully visible when opened, similar to InfoWindow behavior.
+   * Set to `true` for default 40px padding, or a number for custom padding.
+   * @default true
+   */
+  panOnOpen?: boolean | number
+  /**
+   * Automatically hide the overlay when its parent marker joins a cluster (on zoom out).
+   * Only applies when nested inside a ScriptGoogleMapsMarkerClusterer.
+   * @default true
+   */
+  hideWhenClustered?: boolean
 }>(), {
   anchor: 'bottom-center',
   pane: 'floatPane',
   blockMapInteraction: true,
+  panOnOpen: true,
+  hideWhenClustered: true,
 })
 
 const open = defineModel<boolean>('open', { default: undefined })
 
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
 const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
+const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 // Read position fresh each call — NOT a computed, because Google Maps object
 // internal state (marker.getPosition()) is invisible to Vue's reactivity.
@@ -91,6 +107,26 @@ const overlayContent = useTemplateRef('overlay-content')
 // Track all event listeners for clean teardown
 const listeners: google.maps.MapsEventListener[] = []
 
+function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: number) {
+  const child = el.firstElementChild
+  if (!child)
+    return
+  const overlayRect = child.getBoundingClientRect()
+  const mapRect = map.getDiv().getBoundingClientRect()
+  let panX = 0
+  let panY = 0
+  if (overlayRect.top - padding < mapRect.top)
+    panY = overlayRect.top - mapRect.top - padding
+  if (overlayRect.bottom + padding > mapRect.bottom)
+    panY = overlayRect.bottom - mapRect.bottom + padding
+  if (overlayRect.left - padding < mapRect.left)
+    panX = overlayRect.left - mapRect.left - padding
+  else if (overlayRect.right + padding > mapRect.right)
+    panX = overlayRect.right - mapRect.right + padding
+  if (panX !== 0 || panY !== 0)
+    map.panBy(panX, panY)
+}
+
 const overlay = useGoogleMapsResource<google.maps.OverlayView>({
   // ready condition accesses .value on ShallowRefs — tracked by whenever() in useGoogleMapsResource
   ready: () => !!overlayContent.value
@@ -105,6 +141,13 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
           panes[props.pane].appendChild(el)
           if (props.blockMapInteraction)
             mapsApi.OverlayView.preventMapHitsAndGesturesFrom(el)
+        }
+        if (props.panOnOpen) {
+          // Wait for draw() to position the element, then pan
+          const padding = typeof props.panOnOpen === 'number' ? props.panOnOpen : 40
+          requestAnimationFrame(() => {
+            panMapToFitOverlay(el, map, padding)
+          })
         }
       }
 
@@ -216,6 +259,29 @@ watch([() => props.pane, () => props.blockMapInteraction], () => {
       overlay.value.setMap(map)
   }
 })
+
+// Auto-hide overlay when its parent marker joins a cluster
+if (markerClustererContext && (markerContext || advancedMarkerElementContext)) {
+  watch(
+    () => markerClustererContext.clusteringVersion.value,
+    () => {
+      if (!props.hideWhenClustered || open.value === false)
+        return
+      const clusterer = markerClustererContext.markerClusterer.value as any
+      if (!clusterer?.clusters)
+        return
+      const parentMarker = advancedMarkerElementContext?.advancedMarkerElement.value
+        ?? markerContext?.marker.value
+      if (!parentMarker)
+        return
+      const isClustered = clusterer.clusters.some(
+        (cluster: any) => cluster.count > 1 && cluster.markers?.includes(parentMarker),
+      )
+      if (isClustered)
+        open.value = false
+    },
+  )
+}
 
 defineExpose({ overlay })
 </script>

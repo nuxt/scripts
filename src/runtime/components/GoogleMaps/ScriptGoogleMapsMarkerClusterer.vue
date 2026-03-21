@@ -1,7 +1,8 @@
 <script lang="ts">
 import type { InjectionKey, ShallowRef } from 'vue'
-import { provide, shallowRef, watch } from 'vue'
+import { inject, provide, shallowRef, watch } from 'vue'
 import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
+import { MAP_INJECTION_KEY } from './injectionKeys'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 // Inline types to avoid requiring @googlemaps/markerclusterer as a build-time dependency
@@ -20,10 +21,14 @@ export interface MarkerClustererOptions {
   onClusterClick?: unknown
 }
 
-export const MARKER_CLUSTERER_INJECTION_KEY = Symbol('marker-clusterer') as InjectionKey<{
+export interface MarkerClustererContext {
   markerClusterer: ShallowRef<MarkerClustererInstance | undefined>
   requestRerender: () => void
-}>
+  /** Increments after each clustering cycle; watch to detect cluster membership changes */
+  clusteringVersion: ShallowRef<number>
+}
+
+export const MARKER_CLUSTERER_INJECTION_KEY = Symbol('marker-clusterer') as InjectionKey<MarkerClustererContext>
 </script>
 
 <script setup lang="ts">
@@ -56,6 +61,9 @@ const markerClustererEvents = [
   'clusteringend',
 ] as const
 
+const mapContext = inject(MAP_INJECTION_KEY, undefined)
+const clusteringVersion = shallowRef(0)
+
 const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
   async create({ map }) {
     const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
@@ -64,6 +72,9 @@ const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
       ...props.options,
     } as any) as MarkerClustererInstance
     bindGoogleMapsEvents(clusterer, emit, { withPayload: markerClustererEvents })
+    clusterer.addListener('clusteringend', () => {
+      clusteringVersion.value++
+    })
     return clusterer
   },
   cleanup(clusterer, { mapsApi }) {
@@ -84,6 +95,10 @@ watch(
     if (!ready)
       return
     rerenderPending.value = false
+    // Guard: map projection must be ready, otherwise MarkerClusterer.render()
+    // throws "Cannot read properties of null (reading 'fromLatLngToDivPixel')"
+    if (!mapContext?.map.value?.getProjection())
+      return
     try {
       markerClusterer.value!.render()
     }
@@ -100,6 +115,7 @@ provide(
   {
     markerClusterer,
     requestRerender,
+    clusteringVersion,
   },
 )
 </script>
