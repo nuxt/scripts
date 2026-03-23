@@ -207,7 +207,7 @@ function privacyLevelBg(level: string) {
 // Capability visualization helpers
 const capabilityDefs = [
   { key: 'bundle', label: 'Bundle', icon: 'carbon:archive', desc: 'Downloaded at build time, served from your domain' },
-  { key: 'reverseProxyIntercept', label: 'Proxy', icon: 'carbon:security', desc: 'Collection requests routed through your server' },
+  { key: 'proxy', label: 'Proxy', icon: 'carbon:security', desc: 'Collection requests routed through your server' },
   { key: 'partytown', label: 'Partytown', icon: 'carbon:container-software', desc: 'Can run in a web worker via Partytown' },
 ] as const
 
@@ -237,7 +237,7 @@ function capStateLabel(state: CapState): string {
 function capSummary(script: any): string {
   const parts: string[] = []
   if (script.capabilities?.bundle) parts.push('bundle')
-  if (script.capabilities?.reverseProxyIntercept) parts.push('proxy')
+  if (script.capabilities?.proxy) parts.push('proxy')
   if (script.capabilities?.partytown) parts.push('partytown')
   return parts.length ? parts.join(' · ') : 'none'
 }

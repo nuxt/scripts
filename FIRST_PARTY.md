@@ -78,9 +78,9 @@ Users can opt out per-script in `nuxt.config.ts`:
 scripts.registry.plausibleAnalytics = { domain: 'mysite.com', proxy: false }
 ```
 
-Or in tuple form with scriptOptions:
+Using flat config syntax:
 ```
-scripts.registry.plausibleAnalytics = [{ domain: 'mysite.com' }, { proxy: false }]
+scripts.registry.plausibleAnalytics = { domain: 'mysite.com', proxy: false }
 ```
 
 This skips domain registration, auto-inject, and AST rewriting for that script. Important for scripts with `autoInject` (Plausible, PostHog, Umami, Rybbit, Databuddy) since `autoInject` runs at module setup before transforms.
