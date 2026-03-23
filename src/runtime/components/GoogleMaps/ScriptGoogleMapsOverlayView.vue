@@ -318,7 +318,7 @@ defineExpose({ overlay, dataState })
 <template>
   <div style="display: none;">
     <div ref="overlay-content" :data-state="dataState">
-      <slot :data-state="dataState" :open="isPositioned" />
+      <slot />
     </div>
   </div>
 </template>
