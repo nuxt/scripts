@@ -2,13 +2,12 @@
 /// <reference types="google.maps" />
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type { QueryObject } from 'ufo'
-import type { HTMLAttributes, ImgHTMLAttributes, Ref, ReservedProps, ShallowRef } from 'vue'
+import type { HTMLAttributes, ImgHTMLAttributes, ReservedProps, ShallowRef } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { hash } from 'ohash'
 import { withQuery } from 'ufo'
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
@@ -63,10 +62,6 @@ const props = withDefaults(defineProps<{
    */
   zoom?: number
   /**
-   * Should a marker be displayed on the map where the centre is.
-   */
-  centerMarker?: boolean
-  /**
    * Options for the map.
    */
   mapOptions?: google.maps.MapOptions
@@ -105,10 +100,6 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
   /**
-   * Extra Markers to add to the map.
-   */
-  markers?: (`${string},${string}` | google.maps.marker.AdvancedMarkerElementOptions)[]
-  /**
    * Map IDs for light and dark color modes.
    * When provided, the map will automatically switch styles based on color mode.
    * Requires @nuxtjs/color-mode or manual colorMode prop.
@@ -124,7 +115,6 @@ const props = withDefaults(defineProps<{
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
   width: 640,
   height: 400,
-  centerMarker: true,
 })
 
 const emits = defineEmits<{
@@ -169,8 +159,6 @@ if (import.meta.dev) {
     console.warn('[nuxt-scripts] Google Maps proxy is not enabled. Enable `googleMaps` in your nuxt.config registry to keep your API key server-side. See: https://scripts.nuxt.com/scripts/google-maps#setup')
 }
 
-// TODO allow a null center may need to be resolved via an API function
-
 const rootEl = ref<HTMLElement>()
 const mapEl = ref<HTMLElement>()
 
@@ -197,55 +185,9 @@ const options = computed(() => {
 const ready = ref(false)
 
 const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
-const mapMarkers: Ref<Map<string, Promise<google.maps.marker.AdvancedMarkerElement>>> = ref(new Map())
 
 function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
-}
-
-async function resetMapMarkerMap(_marker: google.maps.marker.AdvancedMarkerElement | Promise<google.maps.marker.AdvancedMarkerElement>) {
-  const marker = _marker instanceof Promise ? await _marker : _marker
-  if (marker) {
-    // @ts-expect-error broken type
-    marker.setMap(null)
-  }
-}
-
-function normalizeAdvancedMapMarkerOptions(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
-  const opts = typeof _options === 'string'
-    ? {
-        position: {
-          lat: Number.parseFloat(_options.split(',')[0] || '0'),
-          lng: Number.parseFloat(_options.split(',')[1] || '0'),
-        },
-      }
-    : _options || {}
-  if (!opts.position) {
-    // set default
-    opts.position = {
-      lat: 0,
-      lng: 0,
-    }
-  }
-  return opts
-}
-
-async function createAdvancedMapMarker(_options?: google.maps.marker.AdvancedMarkerElementOptions | `${string},${string}`) {
-  if (!_options)
-    return
-  const normalizedOptions = normalizeAdvancedMapMarkerOptions(_options)
-  const key = hash({ position: normalizedOptions.position })
-  if (mapMarkers.value.has(key))
-    return mapMarkers.value.get(key)
-  const p = importLibrary('marker').then((lib) => {
-    const mapMarkerOptions = {
-      ...toRaw(normalizedOptions),
-      map: toRaw(map.value!),
-    }
-    return new lib.AdvancedMarkerElement(mapMarkerOptions)
-  })
-  mapMarkers.value.set(key, p)
-  return p
 }
 
 const queryToLatLngCache = new Map<string, google.maps.LatLng | google.maps.LatLngLiteral>()
@@ -332,7 +274,6 @@ function importLibrary<T>(key: string): Promise<T> {
 const googleMaps = {
   googleMaps: mapsApi,
   map,
-  createAdvancedMapMarker,
   resolveQueryToLatLng,
   importLibrary,
 } as const
@@ -366,67 +307,16 @@ onMounted(() => {
   watch(options, () => {
     map.value?.setOptions(options.value)
   })
-  watch([() => props.markers, map], async () => {
-    if (!map.value) {
-      return
-    }
-    // mapMarkers is a map where we hash the next array entry as the map key
-    // we need to do a diff to see what we remove or add
-    const nextMap = new Map((props.markers || []).map(m => [hash({ position: normalizeAdvancedMapMarkerOptions(m).position }), m]))
-    // compare idsToMatch in nextMap, if we're missing an id, we need to remove it
-    const toRemove = new Set([
-      ...mapMarkers.value.keys(),
-    ].filter(k => !nextMap.has(k)))
-    // compare to existing
-    const toAdd = new Set([...nextMap.keys()].filter(k => !mapMarkers.value.has(k)))
-    // do a diff of next and prev
-    const centerHash = hash({ position: options.value.center })
-    for (const key of toRemove) {
-      if (props.centerMarker && key === centerHash) {
-        continue
-      }
-      const marker = await mapMarkers.value.get(key)
-      if (marker) {
-        resetMapMarkerMap(marker)
-          .then(() => {
-            mapMarkers.value.delete(key)
-          })
-      }
-    }
-    for (const k of toAdd) {
-      createAdvancedMapMarker(nextMap.get(k))
-    }
-  }, {
-    immediate: true,
-    deep: true,
-  })
-  watch([() => options.value.center, ready, map], async (next, prev) => {
+  watch([() => options.value.center, ready, map], async (next) => {
     if (!map.value) {
       return
     }
     let center = toRaw(next[0])
     if (center) {
       if (isLocationQuery(center) && ready.value) {
-        // need to resolve center from query
         center = await resolveQueryToLatLng(center as string)
       }
       map.value!.setCenter(center as google.maps.LatLng)
-      if (props.centerMarker) {
-        if (options.value.mapId) {
-          // not allowed to use advanced markers with styles
-          return
-        }
-        if (prev[0]) {
-          const prevCenterHash = hash({ position: prev[0] })
-          if (mapMarkers.value.has(prevCenterHash)) {
-            resetMapMarkerMap(mapMarkers.value.get(prevCenterHash)!)
-              .then(() => {
-                mapMarkers.value.delete(prevCenterHash)
-              })
-          }
-        }
-        createAdvancedMapMarker({ position: center })
-      }
     }
   }, {
     immediate: true,
@@ -442,7 +332,6 @@ onMounted(() => {
     }
     map.value = new mapsApi.value!.Map(mapEl.value!, _options)
     if (center && isLocationQuery(center)) {
-      // need to resolve center
       centerOverride.value = await resolveQueryToLatLng(center)
       map.value?.setCenter(centerOverride.value)
     }
@@ -494,21 +383,6 @@ const placeholder = computed(() => {
     scale: 2, // we assume a high DPI to avoid hydration issues
     style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
     map_id: currentMapId.value,
-    markers: [
-      ...(props.markers || []),
-      props.centerMarker && center,
-    ]
-      .filter(Boolean)
-      .map((m) => {
-        if (typeof m === 'object' && m.location) {
-          m = m.location
-        }
-        if (typeof m === 'object' && m.lat) {
-          return `${m.lat},${m.lng}`
-        }
-        return m
-      })
-      .join('|'),
   })
 
   const baseUrl = proxyConfig?.enabled
@@ -564,10 +438,6 @@ onBeforeUnmount(() => {
   mapEl.value?.firstChild?.remove()
   libraries.clear()
   queryToLatLngCache.clear()
-
-  // Async marker cleanup (fire-and-forget — markers are already detached from the nulled map)
-  Promise.all(Array.from(mapMarkers.value.entries(), ([, marker]) => resetMapMarkerMap(marker)))
-  mapMarkers.value.clear()
 })
 </script>
 

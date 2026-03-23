@@ -39,7 +39,7 @@ function close(id: number) {
       above-the-fold
       :map-options="{ mapId: 'DEMO_MAP_ID' }"
     >
-      <ScriptGoogleMapsAdvancedMarkerElement
+      <ScriptGoogleMapsMarker
         v-for="place in places"
         :key="place.id"
         :position="place.position"
@@ -76,7 +76,7 @@ function close(id: number) {
             </div>
           </template>
         </ScriptGoogleMapsOverlayView>
-      </ScriptGoogleMapsAdvancedMarkerElement>
+      </ScriptGoogleMapsMarker>
     </ScriptGoogleMaps>
   </div>
 </template>

@@ -35,20 +35,10 @@ describe('google Maps SFC Components Logic', () => {
   })
 
   describe('google Maps API Integration', () => {
-    it('should create marker with provided options', () => {
-      const options = TEST_OPTIONS.marker
-
-      // Simulate what ScriptGoogleMapsMarker component does
-      const marker = new mocks.mockMapsApi.Marker(options)
-
-      expect(mocks.mockMapsApi.Marker).toHaveBeenCalledWith(options)
-      expect(marker).toBe(mocks.mockMarker)
-    })
-
-    it('should create advanced marker element with position', async () => {
+    it('should create marker with position', async () => {
       const options = { position: { lat: 15, lng: 25 } }
 
-      // Simulate what ScriptGoogleMapsAdvancedMarkerElement component does
+      // Simulate what ScriptGoogleMapsMarker component does
       await mocks.mockMapsApi.importLibrary('marker')
       const advancedMarker = new mocks.mockMapsApi.marker.AdvancedMarkerElement(options)
 
@@ -69,10 +59,10 @@ describe('google Maps SFC Components Logic', () => {
       expect(infoWindow).toBe(mocks.mockInfoWindow)
     })
 
-    it('should create pin element for advanced markers', async () => {
+    it('should create pin element for markers', async () => {
       const options = { scale: 1.5, background: '#FF0000' }
 
-      // Simulate what ScriptGoogleMapsPinElement component does
+      // Simulate pin element creation via marker #content slot
       await mocks.mockMapsApi.importLibrary('marker')
       const pinElement = new mocks.mockMapsApi.marker.PinElement(options)
 
@@ -104,7 +94,7 @@ describe('google Maps SFC Components Logic', () => {
       const clusterer = mocks.mockMarkerClusterer
       const marker = mocks.mockMarker
 
-      // Simulate marker removal logic from ScriptGoogleMapsMarker
+      // Simulate marker removal logic from ScriptGoogleMapsMarkerClusterer
       clusterer.removeMarker(marker, true)
 
       expect(clusterer.removeMarker).toHaveBeenCalledWith(marker, true)

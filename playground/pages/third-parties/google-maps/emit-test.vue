@@ -75,12 +75,12 @@ const circleOptions = {
           @clusteringbegin="(p: any) => log('MarkerClusterer', 'clusteringbegin', p)"
           @clusteringend="(p: any) => log('MarkerClusterer', 'clusteringend', p)"
         >
-          <ScriptGoogleMapsAdvancedMarkerElement
+          <ScriptGoogleMapsMarker
             v-for="m in markers"
             :key="`${m.position.lat},${m.position.lng}`"
             :position="m.position"
-            @click="(p: any) => log('AdvancedMarker', 'click', p)"
-            @drag="(p: any) => log('AdvancedMarker', 'drag', p)"
+            @click="(p: any) => log('Marker', 'click', p)"
+            @drag="(p: any) => log('Marker', 'drag', p)"
           />
         </ScriptGoogleMapsMarkerClusterer>
 

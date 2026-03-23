@@ -6,13 +6,7 @@ const isInfoWindowShown = ref(false)
 
 const isMarkerShown = ref(false)
 
-const markerOptions = ref({
-  position: { lat: -33.8688, lng: 151.2093 },
-})
-
-const isAdvancedMarkerElementShown = ref(false)
-
-const isAdvancedMarkerElementWithPinElementShown = ref(false)
+const isMarkerWithCustomContentShown = ref(false)
 
 const isMarkerClustererShown = ref(false)
 
@@ -61,8 +55,6 @@ const geoJsonData = {
 const isOverlayViewShown = ref(false)
 
 const isOverlayViewOnMarkerShown = ref(false)
-
-const isOverlayViewOnAdvancedMarkerShown = ref(false)
 
 const isCustomMarkerContentShown = ref(false)
 
@@ -118,46 +110,33 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
 
       <ScriptGoogleMapsMarker
         v-if="isMarkerShown"
-        :options="markerOptions"
+        :position="{ lat: -33.8688, lng: 151.2093 }"
       >
         <ScriptGoogleMapsInfoWindow>
           info window content
         </ScriptGoogleMapsInfoWindow>
       </ScriptGoogleMapsMarker>
 
-      <ScriptGoogleMapsAdvancedMarkerElement
-        v-if="isAdvancedMarkerElementShown"
-        :options="{
-          position: { lat: -33.8688, lng: 151.2093 },
-        }"
+      <ScriptGoogleMapsMarker
+        v-if="isMarkerWithCustomContentShown"
+        :position="{ lat: -33.8688, lng: 151.2093 }"
       >
-        <ScriptGoogleMapsInfoWindow>
-          info window content
-        </ScriptGoogleMapsInfoWindow>
-      </ScriptGoogleMapsAdvancedMarkerElement>
-
-      <ScriptGoogleMapsAdvancedMarkerElement
-        v-if="isAdvancedMarkerElementWithPinElementShown"
-        :options="{
-          position: { lat: -33.8688, lng: 151.2093 },
-        }"
-      >
-        <ScriptGoogleMapsPinElement
-          :options="{
-            scale: 1.5,
-          }"
-        />
+        <template #content>
+          <div style="background: #34a853; color: white; padding: 4px 10px; border-radius: 16px; font-family: sans-serif; font-size: 12px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;">
+            Custom Pin
+          </div>
+        </template>
 
         <ScriptGoogleMapsInfoWindow>
           info window content
         </ScriptGoogleMapsInfoWindow>
-      </ScriptGoogleMapsAdvancedMarkerElement>
+      </ScriptGoogleMapsMarker>
 
       <ScriptGoogleMapsMarkerClusterer v-if="isMarkerClustererShown">
         <ScriptGoogleMapsMarker
           v-for="marker in markers"
           :key="marker.position.lat + marker.position.lng"
-          :options="{ position: marker.position }"
+          :position="marker.position"
         >
           <ScriptGoogleMapsInfoWindow>
             info window content
@@ -251,11 +230,12 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
 
       <ScriptGoogleMapsMarker
         v-if="isOverlayViewOnMarkerShown"
-        :options="{ position: { lat: -34.0, lng: 150.8 }, draggable: true }"
+        :position="{ lat: -34.0, lng: 150.8 }"
+        :options="{ gmpDraggable: true }"
       >
         <ScriptGoogleMapsOverlayView
           anchor="bottom-center"
-          :offset="{ x: 0, y: -40 }"
+          :offset="{ x: 0, y: -50 }"
         >
           <div style="background: #1a73e8; color: white; padding: 6px 12px; border-radius: 20px; font-family: sans-serif; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
             Drag me! Custom overlay on Marker
@@ -263,37 +243,22 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         </ScriptGoogleMapsOverlayView>
       </ScriptGoogleMapsMarker>
 
-      <ScriptGoogleMapsAdvancedMarkerElement
-        v-if="isOverlayViewOnAdvancedMarkerShown"
-        :options="{ position: { lat: -34.2, lng: 150.9 }, gmpDraggable: true }"
-      >
-        <ScriptGoogleMapsOverlayView
-          anchor="bottom-center"
-          :offset="{ x: 0, y: -50 }"
-        >
-          <div style="background: #ea4335; color: white; padding: 8px 16px; border-radius: 8px; font-family: sans-serif; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-            <strong>Custom tooltip</strong>
-            <div style="font-size: 11px; opacity: 0.9;">OverlayView on AdvancedMarker</div>
-          </div>
-        </ScriptGoogleMapsOverlayView>
-      </ScriptGoogleMapsAdvancedMarkerElement>
-
       <!-- Custom marker content via #content slot -->
-      <ScriptGoogleMapsAdvancedMarkerElement
+      <ScriptGoogleMapsMarker
         v-if="isCustomMarkerContentShown"
-        :options="{ position: { lat: -34.5, lng: 150.7 } }"
+        :position="{ lat: -34.5, lng: 150.7 }"
       >
         <template #content>
           <div style="background: #34a853; color: white; padding: 4px 10px; border-radius: 16px; font-family: sans-serif; font-size: 12px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;">
             $420k
           </div>
         </template>
-      </ScriptGoogleMapsAdvancedMarkerElement>
+      </ScriptGoogleMapsMarker>
 
       <!-- OverlayView with v-model:open (click marker to toggle popup) -->
-      <ScriptGoogleMapsAdvancedMarkerElement
+      <ScriptGoogleMapsMarker
         v-if="isOverlayPopupShown"
-        :options="{ position: { lat: -34.3, lng: 151.0 } }"
+        :position="{ lat: -34.3, lng: 151.0 }"
         @click="overlayPopupOpen = !overlayPopupOpen"
       >
         <ScriptGoogleMapsOverlayView
@@ -309,7 +274,7 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
             </button>
           </div>
         </ScriptGoogleMapsOverlayView>
-      </ScriptGoogleMapsAdvancedMarkerElement>
+      </ScriptGoogleMapsMarker>
 
       <ScriptGoogleMapsCircle
         v-if="isCircleShown"
@@ -342,16 +307,9 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
 
       <button
         class="bg-[#ffa500] rounded-lg px-2 py-1"
-        @click="isAdvancedMarkerElementShown = !isAdvancedMarkerElementShown"
+        @click="isMarkerWithCustomContentShown = !isMarkerWithCustomContentShown"
       >
-        {{ `${isAdvancedMarkerElementShown ? 'Hide' : 'Show'} advanced marker element` }}
-      </button>
-
-      <button
-        class="bg-[#ffa500] rounded-lg px-2 py-1"
-        @click="isAdvancedMarkerElementWithPinElementShown = !isAdvancedMarkerElementWithPinElementShown"
-      >
-        {{ `${isAdvancedMarkerElementWithPinElementShown ? 'Hide' : 'Show'} advanced marker element with pin element` }}
+        {{ `${isMarkerWithCustomContentShown ? 'Hide' : 'Show'} marker with custom content` }}
       </button>
 
       <button
@@ -408,13 +366,6 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         @click="isOverlayViewOnMarkerShown = !isOverlayViewOnMarkerShown"
       >
         {{ `${isOverlayViewOnMarkerShown ? 'Hide' : 'Show'} overlay on marker` }}
-      </button>
-
-      <button
-        class="bg-[#ffa500] rounded-lg px-2 py-1"
-        @click="isOverlayViewOnAdvancedMarkerShown = !isOverlayViewOnAdvancedMarkerShown"
-      >
-        {{ `${isOverlayViewOnAdvancedMarkerShown ? 'Hide' : 'Show'} overlay on advanced marker` }}
       </button>
 
       <button

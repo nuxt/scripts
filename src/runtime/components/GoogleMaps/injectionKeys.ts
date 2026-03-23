@@ -7,10 +7,6 @@ export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
   activateInfoWindow: (iw: google.maps.InfoWindow) => void
 }>
 
-export const ADVANCED_MARKER_ELEMENT_INJECTION_KEY = Symbol('marker') as InjectionKey<{
-  advancedMarkerElement: ShallowRef<google.maps.marker.AdvancedMarkerElement | undefined>
-}>
-
 export const MARKER_INJECTION_KEY = Symbol('marker') as InjectionKey<{
-  marker: ShallowRef<google.maps.Marker | undefined>
+  advancedMarkerElement: ShallowRef<google.maps.marker.AdvancedMarkerElement | undefined>
 }>
