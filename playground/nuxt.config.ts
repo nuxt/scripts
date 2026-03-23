@@ -101,6 +101,9 @@ export default defineNuxtConfig({
       youtubePlayer: [true, { trigger: 'manual' }],
       vimeoPlayer: [true, { trigger: 'manual' }],
 
+      // Maps
+      googleMaps: [true, { trigger: 'manual' }],
+
       // Other
       gravatar: [true, { trigger: 'manual' }],
       carbonAds: [{ serve: 'CKYIE53L', placement: 'nuxtcom' }, { trigger: 'manual' }],

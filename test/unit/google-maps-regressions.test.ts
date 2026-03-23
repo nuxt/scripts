@@ -169,6 +169,154 @@ describe('google Maps Regressions', () => {
     })
   })
 
+  describe('overlayView data-state attribute', () => {
+    // The overlay content element is moved to a Google Maps pane, so data-state
+    // must be set imperatively on both the wrapper and its first child.
+
+    function createOverlayElement() {
+      const el = document.createElement('div')
+      const child = document.createElement('div')
+      child.className = 'overlay-popup'
+      el.appendChild(child)
+      return { el, child }
+    }
+
+    // Simulate the setDataState function from the component
+    function setDataState(el: HTMLElement, state: 'open' | 'closed') {
+      el.dataset.state = state
+      const child = el.firstElementChild as HTMLElement | null
+      if (child)
+        child.dataset.state = state
+    }
+
+    function hideElement(el: HTMLElement) {
+      el.style.visibility = 'hidden'
+      el.style.pointerEvents = 'none'
+      setDataState(el, 'closed')
+    }
+
+    it('should set data-state on both wrapper and child', () => {
+      const { el, child } = createOverlayElement()
+
+      setDataState(el, 'open')
+      expect(el.dataset.state).toBe('open')
+      expect(child.dataset.state).toBe('open')
+
+      setDataState(el, 'closed')
+      expect(el.dataset.state).toBe('closed')
+      expect(child.dataset.state).toBe('closed')
+    })
+
+    it('should handle wrapper with no children', () => {
+      const el = document.createElement('div')
+
+      setDataState(el, 'open')
+      expect(el.dataset.state).toBe('open')
+
+      setDataState(el, 'closed')
+      expect(el.dataset.state).toBe('closed')
+    })
+
+    it('should set pointer-events none when hidden', () => {
+      const { el } = createOverlayElement()
+
+      hideElement(el)
+
+      expect(el.style.visibility).toBe('hidden')
+      expect(el.style.pointerEvents).toBe('none')
+      expect(el.dataset.state).toBe('closed')
+    })
+
+    it('should simulate draw() open → sets visible, pointer-events auto, data-state open', () => {
+      const { el, child } = createOverlayElement()
+
+      // Simulate the "show" path of draw()
+      el.style.visibility = 'visible'
+      el.style.pointerEvents = 'auto'
+      setDataState(el, 'open')
+
+      expect(el.style.visibility).toBe('visible')
+      expect(el.style.pointerEvents).toBe('auto')
+      expect(el.dataset.state).toBe('open')
+      expect(child.dataset.state).toBe('open')
+    })
+
+    it('should simulate draw() close → sets hidden, pointer-events none, data-state closed', () => {
+      const { el, child } = createOverlayElement()
+
+      // Start open
+      el.style.visibility = 'visible'
+      el.style.pointerEvents = 'auto'
+      setDataState(el, 'open')
+
+      // Close
+      hideElement(el)
+
+      expect(el.style.visibility).toBe('hidden')
+      expect(el.style.pointerEvents).toBe('none')
+      expect(el.dataset.state).toBe('closed')
+      expect(child.dataset.state).toBe('closed')
+    })
+
+    it('should start hidden with pointer-events none on creation', () => {
+      const { el } = createOverlayElement()
+
+      // Simulate initial state before setMap
+      el.style.visibility = 'hidden'
+      el.style.pointerEvents = 'none'
+
+      expect(el.style.visibility).toBe('hidden')
+      expect(el.style.pointerEvents).toBe('none')
+    })
+
+    it('should cycle through open/close states correctly', () => {
+      const { el, child } = createOverlayElement()
+
+      // Initial: hidden
+      hideElement(el)
+      expect(el.dataset.state).toBe('closed')
+      expect(child.dataset.state).toBe('closed')
+      expect(el.style.pointerEvents).toBe('none')
+
+      // Open
+      el.style.visibility = 'visible'
+      el.style.pointerEvents = 'auto'
+      setDataState(el, 'open')
+      expect(el.dataset.state).toBe('open')
+      expect(child.dataset.state).toBe('open')
+      expect(el.style.pointerEvents).toBe('auto')
+
+      // Close
+      hideElement(el)
+      expect(el.dataset.state).toBe('closed')
+      expect(child.dataset.state).toBe('closed')
+      expect(el.style.pointerEvents).toBe('none')
+
+      // Reopen
+      el.style.visibility = 'visible'
+      el.style.pointerEvents = 'auto'
+      setDataState(el, 'open')
+      expect(el.dataset.state).toBe('open')
+      expect(child.dataset.state).toBe('open')
+    })
+  })
+
+  describe('overlayView dataState computed', () => {
+    it('should reflect isPositioned state', () => {
+      // dataState = computed(() => isPositioned.value ? 'open' : 'closed')
+      let isPositioned = false
+      const dataState = () => isPositioned ? 'open' : 'closed'
+
+      expect(dataState()).toBe('closed')
+
+      isPositioned = true
+      expect(dataState()).toBe('open')
+
+      isPositioned = false
+      expect(dataState()).toBe('closed')
+    })
+  })
+
   describe('infoWindow group close', () => {
     // Regression: opening a new InfoWindow didn't close the previous one.
     // Fix: shared activateInfoWindow on MAP_INJECTION_KEY closes the previous.

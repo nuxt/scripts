@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch } from 'vue'
+import { computed, inject, ref, useTemplateRef, watch } from 'vue'
 import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
@@ -104,8 +104,28 @@ const ANCHOR_TRANSFORMS: Record<OverlayAnchor, string> = {
 
 const overlayContent = useTemplateRef('overlay-content')
 
+// Reactive open/closed state for CSS animations via data-state attribute.
+// Tracks whether the overlay content is positioned and should be visually open.
+const isPositioned = ref(false)
+const dataState = computed(() => isPositioned.value ? 'open' : 'closed')
+
 // Track all event listeners for clean teardown
 const listeners: google.maps.MapsEventListener[] = []
+
+function setDataState(el: HTMLElement, state: 'open' | 'closed') {
+  el.dataset.state = state
+  // Propagate to the slot's root element imperatively (Vue template bindings
+  // don't reliably patch elements that have been moved to Google Maps panes)
+  const child = el.firstElementChild as HTMLElement | null
+  if (child)
+    child.dataset.state = state
+}
+
+function hideElement(el: HTMLElement) {
+  el.style.visibility = 'hidden'
+  el.style.pointerEvents = 'none'
+  setDataState(el, 'closed')
+}
 
 function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: number) {
   const child = el.firstElementChild
@@ -154,27 +174,32 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
       override draw() {
         // v-model:open support: hide when explicitly closed
         if (open.value === false) {
-          el.style.visibility = 'hidden'
+          isPositioned.value = false
+          hideElement(el)
           return
         }
 
         const position = getResolvedPosition()
         if (!position) {
-          el.style.visibility = 'hidden'
+          isPositioned.value = false
+          hideElement(el)
           return
         }
         const projection = this.getProjection()
         if (!projection) {
-          el.style.visibility = 'hidden'
+          isPositioned.value = false
+          hideElement(el)
           return
         }
         const pos = projection.fromLatLngToDivPixel(
           new mapsApi.LatLng(position.lat, position.lng),
         )
         if (!pos) {
-          el.style.visibility = 'hidden'
+          isPositioned.value = false
+          hideElement(el)
           return
         }
+
         el.style.position = 'absolute'
         el.style.left = `${pos.x + (props.offset?.x ?? 0)}px`
         el.style.top = `${pos.y + (props.offset?.y ?? 0)}px`
@@ -182,6 +207,9 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
         if (props.zIndex !== undefined)
           el.style.zIndex = String(props.zIndex)
         el.style.visibility = 'visible'
+        el.style.pointerEvents = 'auto'
+        setDataState(el, 'open')
+        isPositioned.value = true
       }
 
       override onRemove() {
@@ -191,6 +219,7 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
 
     // Prevent flash: hide until first draw() positions content
     el.style.visibility = 'hidden'
+    el.style.pointerEvents = 'none'
 
     const ov = new CustomOverlay()
     ov.setMap(map)
@@ -283,13 +312,13 @@ if (markerClustererContext && (markerContext || advancedMarkerElementContext)) {
   )
 }
 
-defineExpose({ overlay })
+defineExpose({ overlay, dataState })
 </script>
 
 <template>
   <div style="display: none;">
-    <div ref="overlay-content">
-      <slot />
+    <div ref="overlay-content" :data-state="dataState">
+      <slot :data-state="dataState" :open="isPositioned" />
     </div>
   </div>
 </template>
