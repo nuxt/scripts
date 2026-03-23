@@ -44,7 +44,7 @@ Some Path A scripts also define `autoInject` on their proxy config to set SDK en
 - **Rybbit**: `analyticsHost` → `/_scripts/p/app.rybbit.io/api`
 - **Databuddy**: `apiUrl` → `/_scripts/p/basket.databuddy.cc`
 
-Auto-inject respects per-script `reverseProxyIntercept: false` opt-out (see "Per-script opt-out" below).
+Auto-inject respects per-script `proxy: false` opt-out (see "Per-script opt-out" below).
 
 ### SDK-specific post-processing (`postProcess` on ProxyConfig)
 Some SDKs have quirks that require targeted regex patches after AST rewriting. These are defined as `postProcess` functions directly on each script's `ProxyConfig`:
@@ -63,32 +63,32 @@ The only exception is `googleAdsense` which sets `proxy: 'googleAnalytics'` to s
 
 Scripts can opt out of first-party mode at three levels:
 
-### Registry level (no `reverseProxyIntercept` capability)
-Scripts without the `reverseProxyIntercept` capability in `registry.ts` are never proxied. Used for scripts that require fingerprinting for core functionality:
+### Registry level (no `proxy` capability)
+Scripts without the `proxy` capability in `registry.ts` are never proxied. Used for scripts that require fingerprinting for core functionality:
 - **Stripe**, **PayPal**: Fraud detection requires real client IP and browser fingerprints
 - **Google reCAPTCHA**: Bot detection requires real fingerprints
 - **Google Sign-In**: Auth integrity requires direct connection
 
 These scripts also have `scriptBundling: false` to prevent AST rewriting.
 
-### Config level (`reverseProxyIntercept: false` in registry config)
+### Config level (`proxy: false` in registry config)
 Users can opt out per-script in `nuxt.config.ts`:
 
 ```
-scripts.registry.plausibleAnalytics = { domain: 'mysite.com', reverseProxyIntercept: false }
+scripts.registry.plausibleAnalytics = { domain: 'mysite.com', proxy: false }
 ```
 
-Or in tuple form with scriptOptions:
+Using flat config syntax:
 ```
-scripts.registry.plausibleAnalytics = [{ domain: 'mysite.com' }, { reverseProxyIntercept: false }]
+scripts.registry.plausibleAnalytics = { domain: 'mysite.com', proxy: false }
 ```
 
 This skips domain registration, auto-inject, and AST rewriting for that script. Important for scripts with `autoInject` (Plausible, PostHog, Umami, Rybbit, Databuddy) since `autoInject` runs at module setup before transforms.
 
-### Composable level (`scriptOptions: { reverseProxyIntercept: false }`)
+### Composable level (`scriptOptions: { proxy: false }`)
 ```ts
 useScriptPlausibleAnalytics({
-  scriptOptions: { reverseProxyIntercept: false }
+  scriptOptions: { proxy: false }
 })
 ```
 
@@ -102,49 +102,51 @@ This only affects AST rewriting (the transform plugin skips proxy rewrites for t
 
 For npm-mode scripts (no download), define `autoInject` to configure the SDK's endpoint field.
 
-For scripts that need fingerprinting (payments, CAPTCHA, auth), omit the `reverseProxyIntercept` capability and set `scriptBundling: false` in the registry entry.
+For scripts that need fingerprinting (payments, CAPTCHA, auth), omit the `proxy` capability and set `scriptBundling: false` in the registry entry.
 
 ## Privacy presets
 
-Four presets in `proxy-configs.ts` cover all scripts:
+Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 
 | Preset | Flags | Used by |
 |---|---|---|
-| `PRIVACY_NONE` | all false | GTM, PostHog, Plausible, Umami, Rybbit, Databuddy, Fathom, CF Web Analytics, Vercel, Segment, Carbon Ads, Lemon Squeezy, Matomo |
+| `PRIVACY_NONE` | all false | (not currently assigned to any script) |
 | `PRIVACY_FULL` | all true | Meta, TikTok, X, Snap, Reddit |
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
-| `PRIVACY_IP_ONLY` | ip only | Intercom, Crisp, Gravatar, YouTube, Vimeo |
+| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo |
+
+Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capability), so no privacy transforms are applied.
 
 ## Script Support
 
 | Config Key | Registry Scripts | Privacy | Mechanism |
 |---|---|---|---|
 | `googleAnalytics` | googleAnalytics, **googleAdsense** | `PRIVACY_HEATMAP` | Path A |
-| `googleTagManager` | googleTagManager | `PRIVACY_NONE` | Path A |
 | `metaPixel` | metaPixel | `PRIVACY_FULL` | Path A |
 | `tiktokPixel` | tiktokPixel | `PRIVACY_FULL` | Path A |
 | `xPixel` | xPixel | `PRIVACY_FULL` | Path A |
 | `snapchatPixel` | snapchatPixel | `PRIVACY_FULL` | Path A |
 | `redditPixel` | redditPixel | `PRIVACY_FULL` | Path A |
-| `carbonAds` | carbonAds | `PRIVACY_NONE` | Path A |
-| `lemonSqueezy` | lemonSqueezy | `PRIVACY_NONE` | Path A |
-| `matomoAnalytics` | matomoAnalytics | `PRIVACY_NONE` | Path A |
-| `youtubePlayer` | youtubePlayer | `PRIVACY_IP_ONLY` | Path A |
-| `vimeoPlayer` | vimeoPlayer | `PRIVACY_IP_ONLY` | Path A |
-| `segment` | segment | `PRIVACY_NONE` | Path A |
 | `clarity` | clarity | `PRIVACY_HEATMAP` | Path A |
 | `hotjar` | hotjar | `PRIVACY_HEATMAP` | Path A |
-| `posthog` | posthog | `PRIVACY_NONE` | **Path B** (npm-only) + autoInject |
-| `plausibleAnalytics` | plausibleAnalytics | `PRIVACY_NONE` | Path A + autoInject |
-| `umamiAnalytics` | umamiAnalytics | `PRIVACY_NONE` | Path A + autoInject |
-| `rybbitAnalytics` | rybbitAnalytics | `PRIVACY_NONE` | Path A + autoInject + postProcess |
-| `databuddyAnalytics` | databuddyAnalytics | `PRIVACY_NONE` | Path A + autoInject |
-| `fathomAnalytics` | fathomAnalytics | `PRIVACY_NONE` | Path A + postProcess |
-| `cloudflareWebAnalytics` | cloudflareWebAnalytics | `PRIVACY_NONE` | Path A |
-| `vercelAnalytics` | vercelAnalytics | `PRIVACY_NONE` | Path A |
+| `posthog` | posthog | `PRIVACY_IP_ONLY` | **Path B** (npm-only) + autoInject |
+| `plausibleAnalytics` | plausibleAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
+| `umamiAnalytics` | umamiAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
+| `rybbitAnalytics` | rybbitAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject + postProcess |
+| `databuddyAnalytics` | databuddyAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
+| `fathomAnalytics` | fathomAnalytics | `PRIVACY_IP_ONLY` | Path A + postProcess |
+| `cloudflareWebAnalytics` | cloudflareWebAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `vercelAnalytics` | vercelAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `matomoAnalytics` | matomoAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `carbonAds` | carbonAds | `PRIVACY_IP_ONLY` | Path A |
+| `lemonSqueezy` | lemonSqueezy | `PRIVACY_IP_ONLY` | Path A |
+| `youtubePlayer` | youtubePlayer | `PRIVACY_IP_ONLY` | Path A |
+| `vimeoPlayer` | vimeoPlayer | `PRIVACY_IP_ONLY` | Path A |
 | `intercom` | intercom | `PRIVACY_IP_ONLY` | Path A |
-| `crisp` | crisp | `PRIVACY_IP_ONLY` | Path A |
 | `gravatar` | gravatar | `PRIVACY_IP_ONLY` | Path A |
+| `googleTagManager` | googleTagManager | n/a | Bundle only |
+| `segment` | segment | n/a | Bundle only |
+| `crisp` | crisp | n/a | Bundle only |
 
 ### Excluded from first-party mode (`proxy: false`)
 
@@ -168,7 +170,7 @@ The server handler extracts the target domain directly from the proxy path (`/_s
 ### Two-phase setup, configs built once
 `module.ts` calls two functions:
 1. `setupFirstParty(config, resolvePath)` — registers the proxy handler unconditionally (handler rejects unknown domains at runtime). Returns `FirstPartyConfig`.
-2. In `modules:done`: resolves capabilities for each configured script via `resolveCapabilities()`, then calls `finalizeFirstParty({...})` which builds proxy configs from the registry, collects domain privacy mappings, applies auto-injects, registers the intercept plugin, and populates runtimeConfig. Respects per-entry `reverseProxyIntercept: false` opt-out.
+2. In `modules:done`: resolves capabilities for each configured script via `resolveCapabilities()`, then calls `finalizeFirstParty({...})` which builds proxy configs from the registry, collects domain privacy mappings, applies auto-injects, registers the intercept plugin, and populates runtimeConfig. Respects per-entry `proxy: false` opt-out.
 
 The transform plugin receives the pre-built `proxyConfigs` map via options — direct lookup per-script, no rebuilding.
 
@@ -201,8 +203,8 @@ GA defaults (`PRIVACY_HEATMAP`): anonymizes ip/language/hardware, passes through
 - `docs/content/docs/1.guides/2.first-party.md` — main docs page
 
 ### Config options
-- `firstParty: true | false | { proxyPrefix?, privacy? }` — module-level option
-- `proxyPrefix` — proxy endpoint path prefix (default: `/_scripts/p`)
+- `proxy: false | { prefix?, privacy? }` — module-level option (auto-inferred when any script has proxy capability)
+- `proxy.prefix` — proxy endpoint path prefix (default: `/_scripts/p`)
 - `assets.prefix` — bundled script asset path (default: `/_scripts/assets`)
-- Per-script `firstParty: false` — in registry config input or scriptOptions to opt out individual scripts
-- Per-script `proxy: false` — in registry.ts for scripts that must never be proxied (fingerprinting requirements)
+- Per-script `proxy: false` — in flat config or scriptOptions to opt out individual scripts
+- Registry-level `proxy: false` — in registry.ts capabilities for scripts that must never be proxied (fingerprinting requirements)

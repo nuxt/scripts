@@ -2,10 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { normalizeRegistryConfig } from '../../src/normalize'
 
 describe('normalizeRegistryConfig', () => {
-  it('normalizes true to [{}]', () => {
+  it('normalizes true to [{}, { trigger: "onNuxtReady" }]', () => {
     const registry: Record<string, any> = { plausible: true }
     normalizeRegistryConfig(registry)
-    expect(registry.plausible).toEqual([{}])
+    expect(registry.plausible).toEqual([{}, { trigger: 'onNuxtReady' }])
+  })
+
+  it('throws on "proxy-only" with migration message', () => {
+    const registry: Record<string, any> = { ga: 'proxy-only' }
+    expect(() => normalizeRegistryConfig(registry)).toThrowError(/proxy-only.*no longer supported/)
   })
 
   it('normalizes "mock" to [{}, { trigger: "manual", skipValidation: true }]', () => {
@@ -14,14 +19,50 @@ describe('normalizeRegistryConfig', () => {
     expect(registry.plausible).toEqual([{}, { trigger: 'manual', skipValidation: true }])
   })
 
-  it('wraps plain object in array', () => {
+  it('wraps empty object in array', () => {
+    const registry: Record<string, any> = { plausible: {} }
+    normalizeRegistryConfig(registry)
+    expect(registry.plausible).toEqual([{}])
+  })
+
+  it('wraps plain object without hoisted keys in array', () => {
     const registry: Record<string, any> = { plausible: { domain: 'mysite.com' } }
     normalizeRegistryConfig(registry)
     expect(registry.plausible).toEqual([{ domain: 'mysite.com' }])
   })
 
+  it('hoists trigger to scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: 'onNuxtReady' } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: 'onNuxtReady' }])
+  })
+
+  it('hoists proxy to scriptOptions', () => {
+    const registry: Record<string, any> = { plausible: { domain: 'mysite.com', proxy: false } }
+    normalizeRegistryConfig(registry)
+    expect(registry.plausible).toEqual([{ domain: 'mysite.com' }, { proxy: false }])
+  })
+
+  it('hoists bundle and partytown to scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', bundle: false, partytown: true } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { bundle: false, partytown: true }])
+  })
+
+  it('merges hoisted keys with scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: 'onNuxtReady', scriptOptions: { warmupStrategy: 'preconnect' } } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: 'onNuxtReady', warmupStrategy: 'preconnect' }])
+  })
+
+  it('top-level flags take precedence over scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', proxy: true, scriptOptions: { proxy: false } } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { proxy: true }])
+  })
+
   it('leaves valid tuple unchanged', () => {
-    const entry = [{ domain: 'mysite.com' }, { reverseProxyIntercept: false }]
+    const entry = [{ domain: 'mysite.com' }, { proxy: false }]
     const registry: Record<string, any> = { plausible: entry }
     normalizeRegistryConfig(registry)
     expect(registry.plausible).toBe(entry)
@@ -57,13 +98,11 @@ describe('normalizeRegistryConfig', () => {
 
   it('handles multiple entries in one pass', () => {
     const registry: Record<string, any> = {
-      plausible: true,
       ga: { id: 'G-XXX' },
       posthog: 'mock',
       stripe: false,
     }
     normalizeRegistryConfig(registry)
-    expect(registry.plausible).toEqual([{}])
     expect(registry.ga).toEqual([{ id: 'G-XXX' }])
     expect(registry.posthog).toEqual([{}, { trigger: 'manual', skipValidation: true }])
     expect(registry.stripe).toBeUndefined()

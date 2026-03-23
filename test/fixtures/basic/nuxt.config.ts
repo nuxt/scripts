@@ -6,10 +6,10 @@ export default defineNuxtConfig({
   ],
   scripts: {
     registry: {
-      xEmbed: true,
-      instagramEmbed: true,
-      blueskyEmbed: true,
-      gravatar: true,
+      xEmbed: {},
+      instagramEmbed: {},
+      blueskyEmbed: {},
+      gravatar: {},
     },
   },
   devtools: {

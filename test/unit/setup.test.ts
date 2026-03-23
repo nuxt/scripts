@@ -52,15 +52,15 @@ describe('applyAutoInject', () => {
     expect((registry as any).posthog[0].apiHost).toBe('https://custom.host')
   })
 
-  it('skips when input has reverseProxyIntercept: false', () => {
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123', reverseProxyIntercept: false }])
+  it('skips when input has proxy: false', () => {
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123', proxy: false }])
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBeUndefined()
   })
 
-  it('skips when scriptOptions has reverseProxyIntercept: false', () => {
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { reverseProxyIntercept: false }])
+  it('skips when scriptOptions has proxy: false', () => {
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { proxy: false }])
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBeUndefined()

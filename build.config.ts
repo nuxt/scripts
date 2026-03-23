@@ -7,9 +7,6 @@ export default defineBuildConfig({
     './src/stats',
     './src/types-source',
   ],
-  alias: {
-    '#nuxt-scripts-validator': 'valibot',
-  },
   externals: [
     'nuxt',
     'nuxt/schema',

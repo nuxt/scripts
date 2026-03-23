@@ -429,7 +429,7 @@ describe('proxy configs', () => {
     it('all configs have valid structure', async () => {
       const configs = await getProxyConfigs()
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
-      const passthrough = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics']
+      const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have domains`).toHaveProperty('domains')
         expect(Array.isArray(config.domains), `${key}.domains should be an array`).toBe(true)
@@ -452,10 +452,13 @@ describe('proxy configs', () => {
             hardware: true,
           })
         }
-        if (passthrough.includes(key)) {
-          for (const flag of Object.values(config.privacy)) {
-            expect(flag, `${key} privacy flags should be false`).toBe(false)
-          }
+        if (ipOnly.includes(key)) {
+          expect(config.privacy.ip, `${key} should anonymize IP`).toBe(true)
+          expect(config.privacy.userAgent, `${key} should not anonymize userAgent`).toBe(false)
+          expect(config.privacy.language, `${key} should not anonymize language`).toBe(false)
+          expect(config.privacy.screen, `${key} should not anonymize screen`).toBe(false)
+          expect(config.privacy.timezone, `${key} should not anonymize timezone`).toBe(false)
+          expect(config.privacy.hardware, `${key} should not anonymize hardware`).toBe(false)
         }
       }
     })

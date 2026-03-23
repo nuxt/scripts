@@ -9,10 +9,10 @@ import type {
 } from '#nuxt-scripts/types'
 import type { UseScriptInput } from '@unhead/vue'
 import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
-import { parse } from '#nuxt-scripts-validator'
 import { defu } from 'defu'
 import { createError, useRuntimeConfig } from 'nuxt/app'
 import { parseQuery, parseURL, withQuery } from 'ufo'
+import { parse } from 'valibot'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
 
@@ -23,7 +23,7 @@ const CLEAN_CALLER_RE = /^\s*at\s+/
 
 export type MaybePromise<T> = Promise<T> | T
 
-function validateScriptInputSchema<T extends GenericSchema>(key: string, schema: T, options?: InferInput<T>) {
+function validateScriptInputSchema<T extends GenericSchema>(schema: T, options?: InferInput<T>) {
   if (import.meta.dev) {
     try {
       parse(schema, options)
@@ -135,11 +135,10 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     }
 
     scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom })
-    if (options.schema) {
+    if (options.schema && 'entries' in options.schema) {
       const registryMeta: Record<string, string> = {}
-      const entries = 'entries' in options.schema ? options.schema.entries as Record<string, { type: string }> : undefined
-      for (const k in entries) {
-        if (entries[k]?.type !== 'optional') {
+      for (const k in options.schema.entries) {
+        if (options.schema.entries[k]?.type !== 'optional') {
           registryMeta[k] = String(userOptions[k as any as keyof typeof userOptions])
         }
       }
@@ -153,7 +152,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       // a manual trigger also means it was disabled by nuxt.config
       // overriding the src will skip validation
       if (!userOptions.scriptInput?.src && !scriptOptions.skipValidation && options.schema) {
-        return validateScriptInputSchema(registryKey, options.schema, userOptions)
+        return validateScriptInputSchema(options.schema, userOptions)
       }
     }
   }

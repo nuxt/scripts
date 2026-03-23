@@ -93,20 +93,20 @@ describe('autoInject via proxy configs', () => {
     })
   })
 
-  describe('boolean entries', () => {
-    it('injects into runtimeConfig for posthog: true', async () => {
-      const registry: any = { posthog: true }
+  describe('empty object entries (env var driven)', () => {
+    it('injects into runtimeConfig for posthog: {}', async () => {
+      const registry: any = { posthog: {} }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
-      // After normalization, true becomes [{}] — both input and runtimeConfig get the value
+      // After normalization, {} becomes [{}] — both input and runtimeConfig get the value
       expect(registry.posthog[0].apiHost).toBe('/_proxy/us.i.posthog.com')
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
     })
 
-    it('uses EU prefix for posthog: true when runtime region is eu', async () => {
-      const registry: any = { posthog: true }
+    it('uses EU prefix for posthog: {} when runtime region is eu', async () => {
+      const registry: any = { posthog: {} }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '', region: 'eu' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -114,8 +114,8 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/eu.i.posthog.com')
     })
 
-    it('injects into runtimeConfig for plausibleAnalytics: true', async () => {
-      const registry: any = { plausibleAnalytics: true }
+    it('injects into runtimeConfig for plausibleAnalytics: {}', async () => {
+      const registry: any = { plausibleAnalytics: {} }
       const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: '' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -123,8 +123,8 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.plausibleAnalytics.endpoint).toBe('/_proxy/plausible.io/api/event')
     })
 
-    it('injects into runtimeConfig for umamiAnalytics: true', async () => {
-      const registry: any = { umamiAnalytics: true }
+    it('injects into runtimeConfig for umamiAnalytics: {}', async () => {
+      const registry: any = { umamiAnalytics: {} }
       const rt = makeRuntimeConfig({ umamiAnalytics: { websiteId: '' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -132,8 +132,8 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.umamiAnalytics.hostUrl).toBe('/_proxy/cloud.umami.is')
     })
 
-    it('injects into runtimeConfig for rybbitAnalytics: true', async () => {
-      const registry: any = { rybbitAnalytics: true }
+    it('injects into runtimeConfig for rybbitAnalytics: {}', async () => {
+      const registry: any = { rybbitAnalytics: {} }
       const rt = makeRuntimeConfig({ rybbitAnalytics: { siteId: '' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -141,8 +141,8 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.rybbitAnalytics.analyticsHost).toBe('/_proxy/app.rybbit.io/api')
     })
 
-    it('injects into runtimeConfig for databuddyAnalytics: true', async () => {
-      const registry: any = { databuddyAnalytics: true }
+    it('injects into runtimeConfig for databuddyAnalytics: {}', async () => {
+      const registry: any = { databuddyAnalytics: {} }
       const rt = makeRuntimeConfig({ databuddyAnalytics: { clientId: '' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -191,9 +191,9 @@ describe('autoInject via proxy configs', () => {
     })
   })
 
-  describe('reverseProxyIntercept opt-out', () => {
-    it('skips auto-inject when input has reverseProxyIntercept: false', async () => {
-      const registry: any = { plausibleAnalytics: { domain: 'example.com', reverseProxyIntercept: false } }
+  describe('proxy opt-out', () => {
+    it('skips auto-inject when input has proxy: false', async () => {
+      const registry: any = { plausibleAnalytics: { domain: 'example.com', proxy: false } }
       const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: 'example.com' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -202,8 +202,8 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.plausibleAnalytics.endpoint).toBeUndefined()
     })
 
-    it('skips auto-inject when scriptOptions has reverseProxyIntercept: false', async () => {
-      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { reverseProxyIntercept: false }] }
+    it('skips auto-inject when scriptOptions has proxy: false', async () => {
+      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { proxy: false }] }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -215,7 +215,7 @@ describe('autoInject via proxy configs', () => {
 
   describe('custom proxyPrefix', () => {
     it('uses custom prefix in computed values', async () => {
-      const registry: any = { posthog: true }
+      const registry: any = { posthog: {} }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
       await autoInjectAll(registry, rt, '/_analytics')

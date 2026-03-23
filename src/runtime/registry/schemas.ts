@@ -1,4 +1,4 @@
-import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from '#nuxt-scripts-validator'
+import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
 
 export const BlueskyEmbedOptions = object({
   /**
