@@ -43,7 +43,7 @@ catalog:
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.0.0
-  typescript: ^5.9.3
+  typescript: ^6.0.2
   ufo: ^1.6.3
   ultrahtml: ^1.6.0
   unplugin: ^3.0.0
