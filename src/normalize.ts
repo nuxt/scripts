@@ -1,8 +1,27 @@
+import type { NuxtUseScriptOptionsSerializable, RegistryScript } from './runtime/types'
+
 /** Normalized registry entry: [input, scriptOptions?] tuple form. */
-export type NormalizedRegistryEntry = [input: Record<string, any>, scriptOptions?: Record<string, any>]
+export type NormalizedRegistryEntry = [input: Record<string, unknown>, scriptOptions?: NormalizedScriptOptions]
+
+export type NormalizedScriptOptions = Partial<Omit<NuxtUseScriptOptionsSerializable, 'trigger'>> & {
+  trigger?: NuxtUseScriptOptionsSerializable['trigger'] | 'manual'
+  skipValidation?: boolean
+}
 
 /** Keys hoisted from the flat config object into scriptOptions during normalization. */
-const SCRIPT_OPTION_KEYS = ['trigger', 'proxy', 'bundle', 'partytown'] as const
+const SCRIPT_OPTION_KEYS = ['trigger', 'proxy', 'bundle', 'partytown'] as const satisfies readonly (keyof NuxtUseScriptOptionsSerializable)[]
+
+/**
+ * Extract required field names from a valibot object schema.
+ * Fields wrapped in `optional()` have `type: 'optional'`; everything else is required.
+ */
+export function extractRequiredFields(schema: RegistryScript['schema']): string[] {
+  if (!schema)
+    return []
+  return Object.entries(schema.entries)
+    .filter(([, field]) => field?.type !== 'optional')
+    .map(([key]) => key)
+}
 
 /**
  * Normalize all registry config entries in-place to [input, scriptOptions?] tuple form.
@@ -15,11 +34,11 @@ const SCRIPT_OPTION_KEYS = ['trigger', 'proxy', 'bundle', 'partytown'] as const
  * - `{ id: '...', proxy: false }` → `[{ id: '...' }, { proxy: false }]`
  * - `[input, scriptOptions]` → unchanged (internal/backwards compat)
  *
- * Removed:
- * - `true` → build error with migration message
+ * Aliases:
+ * - `true` → `[{}, { trigger: 'onNuxtReady' }]` (auto-load globally)
  * - `'proxy-only'` → build error with migration message
  */
-export function normalizeRegistryConfig(registry: Record<string, any>): void {
+export function normalizeRegistryConfig(registry: Record<string, unknown>): void {
   for (const key of Object.keys(registry)) {
     const entry = registry[key]
     if (!entry) {
@@ -27,10 +46,8 @@ export function normalizeRegistryConfig(registry: Record<string, any>): void {
       continue
     }
     if (entry === true) {
-      throw new Error(
-        `[nuxt-scripts] registry.${key}: boolean \`true\` is no longer supported. `
-        + `Use \`{}\` for infrastructure only (composable/component driven) or \`{ trigger: 'onNuxtReady' }\` for global auto-loading.`,
-      )
+      registry[key] = [{}, { trigger: 'onNuxtReady' }] satisfies NormalizedRegistryEntry
+      continue
     }
     if (entry === 'proxy-only') {
       throw new Error(
@@ -39,7 +56,7 @@ export function normalizeRegistryConfig(registry: Record<string, any>): void {
       )
     }
     if (entry === 'mock') {
-      registry[key] = [{}, { trigger: 'manual', skipValidation: true }]
+      registry[key] = [{}, { trigger: 'manual', skipValidation: true }] satisfies NormalizedRegistryEntry
     }
     else if (Array.isArray(entry)) {
       if (!entry[0] && !entry[1]) {
@@ -50,9 +67,13 @@ export function normalizeRegistryConfig(registry: Record<string, any>): void {
         entry[0] = {}
     }
     else if (typeof entry === 'object') {
-      const { scriptOptions, ...rest } = entry
-      const input: Record<string, any> = {}
-      const mergedScriptOptions: Record<string, any> = {}
+      const { scriptOptions, ...rest } = entry as Record<string, unknown>
+      const input: Record<string, unknown> = {}
+      const mergedScriptOptions: Record<string, unknown> = {}
+
+      // Apply legacy scriptOptions first so top-level flags take precedence
+      if (scriptOptions && typeof scriptOptions === 'object')
+        Object.assign(mergedScriptOptions, scriptOptions)
 
       for (const [k, v] of Object.entries(rest)) {
         if ((SCRIPT_OPTION_KEYS as readonly string[]).includes(k))
@@ -60,9 +81,6 @@ export function normalizeRegistryConfig(registry: Record<string, any>): void {
         else
           input[k] = v
       }
-
-      if (scriptOptions)
-        Object.assign(mergedScriptOptions, scriptOptions)
 
       registry[key] = Object.keys(mergedScriptOptions).length > 0
         ? [input, mergedScriptOptions]

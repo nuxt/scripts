@@ -78,7 +78,6 @@
       "esbuild",
       "unimport",
       "#nuxt-scripts/types",
-      "#nuxt-scripts-validator",
       "posthog-js"
     ]
   },

@@ -429,7 +429,7 @@ describe('proxy configs', () => {
     it('all configs have valid structure', async () => {
       const configs = await getProxyConfigs()
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
-      const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics']
+      const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have domains`).toHaveProperty('domains')
         expect(Array.isArray(config.domains), `${key}.domains should be an array`).toBe(true)

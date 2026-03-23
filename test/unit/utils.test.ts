@@ -10,10 +10,6 @@ vi.mock('../../src/runtime/composables/useScript', () => ({
   useScript: vi.fn((input, options) => ({ input, options })),
 }))
 
-vi.mock('#nuxt-scripts-validator', () => ({
-  parse: vi.fn(),
-}))
-
 describe('useRegistryScript scriptOptions', () => {
   it('should not mutate user-provided scriptOptions', () => {
     const mockOptionsFunction = vi.fn((_opts, _ctx) => ({

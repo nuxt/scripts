@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { normalizeRegistryConfig } from '../../src/normalize'
 
 describe('normalizeRegistryConfig', () => {
-  it('throws on boolean true with migration message', () => {
+  it('normalizes true to [{}, { trigger: "onNuxtReady" }]', () => {
     const registry: Record<string, any> = { plausible: true }
-    expect(() => normalizeRegistryConfig(registry)).toThrowError(/boolean.*true.*no longer supported/)
+    normalizeRegistryConfig(registry)
+    expect(registry.plausible).toEqual([{}, { trigger: 'onNuxtReady' }])
   })
 
   it('throws on "proxy-only" with migration message', () => {
@@ -52,6 +53,12 @@ describe('normalizeRegistryConfig', () => {
     const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: 'onNuxtReady', scriptOptions: { warmupStrategy: 'preconnect' } } }
     normalizeRegistryConfig(registry)
     expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: 'onNuxtReady', warmupStrategy: 'preconnect' }])
+  })
+
+  it('top-level flags take precedence over scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', proxy: true, scriptOptions: { proxy: false } } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { proxy: true }])
   })
 
   it('leaves valid tuple unchanged', () => {

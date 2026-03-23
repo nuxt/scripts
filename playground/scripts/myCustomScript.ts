@@ -1,5 +1,5 @@
 import { useRegistryScript } from '#nuxt-scripts/utils'
-import { object, string } from '#nuxt-scripts-validator'
+import { object, string } from 'valibot'
 import type { NuxtUseScriptOptions } from '#nuxt-scripts/types'
 
 export interface MyCustomScriptApi {

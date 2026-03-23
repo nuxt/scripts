@@ -106,45 +106,47 @@ For scripts that need fingerprinting (payments, CAPTCHA, auth), omit the `proxy`
 
 ## Privacy presets
 
-Four presets in `proxy-configs.ts` cover all scripts:
+Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 
 | Preset | Flags | Used by |
 |---|---|---|
-| `PRIVACY_NONE` | all false | GTM, PostHog, Plausible, Umami, Rybbit, Databuddy, Fathom, CF Web Analytics, Vercel, Segment, Carbon Ads, Lemon Squeezy, Matomo |
+| `PRIVACY_NONE` | all false | (not currently assigned to any script) |
 | `PRIVACY_FULL` | all true | Meta, TikTok, X, Snap, Reddit |
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
-| `PRIVACY_IP_ONLY` | ip only | Intercom, Crisp, Gravatar, YouTube, Vimeo |
+| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo |
+
+Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capability), so no privacy transforms are applied.
 
 ## Script Support
 
 | Config Key | Registry Scripts | Privacy | Mechanism |
 |---|---|---|---|
 | `googleAnalytics` | googleAnalytics, **googleAdsense** | `PRIVACY_HEATMAP` | Path A |
-| `googleTagManager` | googleTagManager | `PRIVACY_NONE` | Path A |
 | `metaPixel` | metaPixel | `PRIVACY_FULL` | Path A |
 | `tiktokPixel` | tiktokPixel | `PRIVACY_FULL` | Path A |
 | `xPixel` | xPixel | `PRIVACY_FULL` | Path A |
 | `snapchatPixel` | snapchatPixel | `PRIVACY_FULL` | Path A |
 | `redditPixel` | redditPixel | `PRIVACY_FULL` | Path A |
-| `carbonAds` | carbonAds | `PRIVACY_NONE` | Path A |
-| `lemonSqueezy` | lemonSqueezy | `PRIVACY_NONE` | Path A |
-| `matomoAnalytics` | matomoAnalytics | `PRIVACY_NONE` | Path A |
-| `youtubePlayer` | youtubePlayer | `PRIVACY_IP_ONLY` | Path A |
-| `vimeoPlayer` | vimeoPlayer | `PRIVACY_IP_ONLY` | Path A |
-| `segment` | segment | `PRIVACY_NONE` | Path A |
 | `clarity` | clarity | `PRIVACY_HEATMAP` | Path A |
 | `hotjar` | hotjar | `PRIVACY_HEATMAP` | Path A |
-| `posthog` | posthog | `PRIVACY_NONE` | **Path B** (npm-only) + autoInject |
-| `plausibleAnalytics` | plausibleAnalytics | `PRIVACY_NONE` | Path A + autoInject |
-| `umamiAnalytics` | umamiAnalytics | `PRIVACY_NONE` | Path A + autoInject |
-| `rybbitAnalytics` | rybbitAnalytics | `PRIVACY_NONE` | Path A + autoInject + postProcess |
-| `databuddyAnalytics` | databuddyAnalytics | `PRIVACY_NONE` | Path A + autoInject |
-| `fathomAnalytics` | fathomAnalytics | `PRIVACY_NONE` | Path A + postProcess |
-| `cloudflareWebAnalytics` | cloudflareWebAnalytics | `PRIVACY_NONE` | Path A |
-| `vercelAnalytics` | vercelAnalytics | `PRIVACY_NONE` | Path A |
+| `posthog` | posthog | `PRIVACY_IP_ONLY` | **Path B** (npm-only) + autoInject |
+| `plausibleAnalytics` | plausibleAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
+| `umamiAnalytics` | umamiAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
+| `rybbitAnalytics` | rybbitAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject + postProcess |
+| `databuddyAnalytics` | databuddyAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
+| `fathomAnalytics` | fathomAnalytics | `PRIVACY_IP_ONLY` | Path A + postProcess |
+| `cloudflareWebAnalytics` | cloudflareWebAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `vercelAnalytics` | vercelAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `matomoAnalytics` | matomoAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `carbonAds` | carbonAds | `PRIVACY_IP_ONLY` | Path A |
+| `lemonSqueezy` | lemonSqueezy | `PRIVACY_IP_ONLY` | Path A |
+| `youtubePlayer` | youtubePlayer | `PRIVACY_IP_ONLY` | Path A |
+| `vimeoPlayer` | vimeoPlayer | `PRIVACY_IP_ONLY` | Path A |
 | `intercom` | intercom | `PRIVACY_IP_ONLY` | Path A |
-| `crisp` | crisp | `PRIVACY_IP_ONLY` | Path A |
 | `gravatar` | gravatar | `PRIVACY_IP_ONLY` | Path A |
+| `googleTagManager` | googleTagManager | n/a | Bundle only |
+| `segment` | segment | n/a | Bundle only |
+| `crisp` | crisp | n/a | Bundle only |
 
 ### Excluded from first-party mode (`proxy: false`)
 
@@ -201,8 +203,8 @@ GA defaults (`PRIVACY_HEATMAP`): anonymizes ip/language/hardware, passes through
 - `docs/content/docs/1.guides/2.first-party.md` — main docs page
 
 ### Config options
-- `firstParty: true | false | { proxyPrefix?, privacy? }` — module-level option
-- `proxyPrefix` — proxy endpoint path prefix (default: `/_scripts/p`)
+- `proxy: false | { prefix?, privacy? }` — module-level option (auto-inferred when any script has proxy capability)
+- `proxy.prefix` — proxy endpoint path prefix (default: `/_scripts/p`)
 - `assets.prefix` — bundled script asset path (default: `/_scripts/assets`)
-- Per-script `firstParty: false` — in registry config input or scriptOptions to opt out individual scripts
-- Per-script `proxy: false` — in registry.ts for scripts that must never be proxied (fingerprinting requirements)
+- Per-script `proxy: false` — in flat config or scriptOptions to opt out individual scripts
+- Registry-level `proxy: false` — in registry.ts capabilities for scripts that must never be proxied (fingerprinting requirements)

@@ -107,7 +107,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   if (Array.isArray(config.globals)) {
     // convert to object
     config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
-    logger.warn('The `globals` array option is deprecated, please convert to an object.')
+    logger.warn('The `globals` array option is deprecated. Convert to an object: `globals: { myScript: \'https://example.com/script.js\' }`')
   }
   const imports = []
   const inits = []

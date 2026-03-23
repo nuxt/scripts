@@ -29,7 +29,7 @@ import { finalizeFirstParty, generatePartytownResolveUrl, setupFirstParty } from
 import { resolveCapabilities } from './first-party/resolve-capabilities'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
-import { normalizeRegistryConfig } from './normalize'
+import { extractRequiredFields, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { registry } from './registry'
@@ -307,7 +307,6 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(config, nuxt) {
     const { resolvePath } = createResolver(import.meta.url)
     const { version, name } = await readPackageJSON(await resolvePath('../package.json'))
-    nuxt.options.alias['#nuxt-scripts-validator'] = await resolvePath(`./runtime/validation/${(nuxt.options.dev || nuxt.options._prepare) ? 'valibot' : 'mock'}`)
     nuxt.options.alias['#nuxt-scripts'] = await resolvePath('./runtime')
     logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
@@ -442,6 +441,25 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
 
+    // Validate required fields using schemas from registry scripts
+    if (config.registry) {
+      for (const [key, entry] of Object.entries(config.registry)) {
+        if (!entry || entry === false)
+          continue
+        const [input, scriptOptions] = entry as [Record<string, any>, any?]
+        if (scriptOptions?.skipValidation)
+          continue
+        const script = scripts.find(s => s.registryKey === key)
+        if (!script?.schema)
+          continue
+        const requiredFields = extractRequiredFields(script.schema)
+        const missing = requiredFields.filter(f => !input[f])
+        if (missing.length) {
+          logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
+        }
+      }
+    }
+
     nuxt.hooks.hook('modules:done', async () => {
       const registryScripts = [...scripts]
 
@@ -470,13 +488,15 @@ export default defineNuxtModule<ModuleOptions>({
       }
       const { renderedScript } = setupPublicAssetStrategy(config.assets)
 
-      // Resolve capabilities for each configured script and auto-detect partytown scripts
-      const partytownScripts = new Set<string>()
+      // Build scriptByKey once, shared across capabilities resolution and first-party finalization
       const scriptByKey = new Map<string, RegistryScript>()
       for (const script of registryScripts) {
         if (script.registryKey)
           scriptByKey.set(script.registryKey, script)
       }
+
+      // Resolve capabilities for each configured script and auto-detect partytown scripts
+      const partytownScripts = new Set<string>()
 
       let anyNeedsProxy = false
       const registryKeys = Object.keys(config.registry || {})
@@ -524,6 +544,7 @@ export default defineNuxtModule<ModuleOptions>({
           firstParty,
           registry: config.registry,
           registryScripts,
+          scriptByKey,
           nuxtOptions: nuxt.options,
         })
         // Expose first-party data for devtools

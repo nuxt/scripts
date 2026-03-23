@@ -3,7 +3,7 @@ import type {
   Script,
 } from '@unhead/vue/types'
 import type { Import } from 'unimport'
-import type { InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
+import type { InferInput, ObjectEntries, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import type { ComputedRef, Ref } from 'vue'
 import type { BingUetInput } from './registry/bing-uet'
 import type { BlueskyEmbedInput } from './registry/bluesky-embed'
@@ -42,7 +42,6 @@ import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XEmbedInput } from './registry/x-embed'
 import type { XPixelInput } from './registry/x-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
-import { object } from '#nuxt-scripts-validator'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
@@ -226,7 +225,9 @@ export type BuiltInRegistryScriptKey
  */
 export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
-export type NuxtConfigScriptRegistryEntry<T> = false | 'mock' | (T & { trigger?: NuxtUseScriptOptionsSerializable['trigger'], proxy?: boolean, bundle?: boolean, partytown?: boolean, scriptOptions?: Omit<NuxtUseScriptOptionsSerializable, 'trigger'> }) | [T, NuxtUseScriptOptionsSerializable]
+type RegistryConfigInput<T> = [T] extends [true] ? Record<string, never> : T
+
+export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'], proxy?: boolean, bundle?: boolean, partytown?: boolean, scriptOptions?: Omit<NuxtUseScriptOptionsSerializable, 'trigger'> }) | [RegistryConfigInput<T>, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
@@ -235,9 +236,7 @@ export type UseFunctionType<T, U> = T extends {
   use: infer V
 } ? V extends (...args: any) => any ? ReturnType<V> : U : U
 
-const _emptyOptions = object({})
-
-export type EmptyOptionsSchema = typeof _emptyOptions
+export type EmptyOptionsSchema = ObjectSchema<ObjectEntries, undefined>
 
 type ScriptInput = Script
 
@@ -348,6 +347,11 @@ export interface RegistryScript {
    * Server handlers (routes/middleware) to register when this script is enabled via registry config.
    */
   serverHandlers?: RegistryScriptServerHandler[]
+  /**
+   * Valibot schema for the script's input options.
+   * Used for build-time validation (extracting required fields) and runtime validation in dev mode.
+   */
+  schema?: ObjectSchema<ObjectEntries, any>
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false

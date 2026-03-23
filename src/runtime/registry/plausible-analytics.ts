@@ -1,6 +1,6 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { UseScriptInput } from '@unhead/vue'
-import { any, array, boolean, literal, object, optional, record, string, union } from '#nuxt-scripts-validator'
+import { any, array, boolean, literal, object, optional, record, string, union } from 'valibot'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
 
