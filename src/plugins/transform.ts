@@ -398,27 +398,27 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
                     forceDownload = bundleValue === 'force'
                   }
-                  // Check for per-script reverseProxyIntercept opt-out
+                  // Check for per-script proxy opt-out
                   // Check in three locations:
-                  // 1. In scriptOptions (nested) - useScriptGA({ scriptOptions: { reverseProxyIntercept: false } })
-                  // 2. In second argument (direct) - useScript('...', { reverseProxyIntercept: false })
-                  // 3. In first argument's properties - useScript({ src: '...', reverseProxyIntercept: false })
+                  // 1. In scriptOptions (nested) - useScriptGA({ scriptOptions: { proxy: false } })
+                  // 2. In second argument (direct) - useScript('...', { proxy: false })
+                  // 3. In first argument's properties - useScript({ src: '...', proxy: false })
 
                   const rpiOption = scriptOptions?.value.properties?.find((prop: any) => {
-                    return prop.type === 'Property' && prop.key?.name === 'reverseProxyIntercept' && prop.value.type === 'Literal'
+                    return prop.type === 'Property' && prop.key?.name === 'proxy' && prop.value.type === 'Literal'
                   })
                   let firstPartyOptOut = rpiOption?.value.value === false
 
                   if (!firstPartyOptOut && node.arguments[1]?.type === 'ObjectExpression') {
                     const secondArgProp = node.arguments[1].properties.find(
-                      (p: any) => p.type === 'Property' && p.key?.name === 'reverseProxyIntercept' && p.value.type === 'Literal',
+                      (p: any) => p.type === 'Property' && p.key?.name === 'proxy' && p.value.type === 'Literal',
                     )
                     firstPartyOptOut = secondArgProp?.value.value === false
                   }
 
                   if (!firstPartyOptOut && node.arguments[0]?.type === 'ObjectExpression') {
                     const firstArgProp = node.arguments[0].properties.find(
-                      (p: any) => p.type === 'Property' && p.key?.name === 'reverseProxyIntercept' && p.value.type === 'Literal',
+                      (p: any) => p.type === 'Property' && p.key?.name === 'proxy' && p.value.type === 'Literal',
                     )
                     firstPartyOptOut = firstArgProp?.value.value === false
                   }
@@ -427,7 +427,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
                     // Use script's proxyConfig alias if defined, otherwise fall back to registry key
                     const script = options.scripts?.find(s => s.import.name === fnName)
-                    const hasReverseProxy = script?.capabilities?.reverseProxyIntercept
+                    const hasReverseProxy = script?.capabilities?.proxy
                     const proxyConfigKey = hasReverseProxy ? (script?.proxyConfig || registryKey) : undefined
                     const proxyConfig = !firstPartyOptOut && proxyConfigKey
                       ? options.proxyConfigs?.[proxyConfigKey]

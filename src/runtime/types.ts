@@ -76,12 +76,12 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    */
   bundle?: boolean | 'force'
   /**
-   * Control reverse proxy interception for this script.
+   * Control proxying for this script.
    * When `false`, collection requests go directly to the third-party server.
    * When `true`, collection requests are proxied through `/_scripts/p/`.
-   * Defaults to the script's `defaultCapability.reverseProxyIntercept` from the registry.
+   * Defaults to the script's `defaultCapability.proxy` from the registry.
    */
-  reverseProxyIntercept?: boolean
+  proxy?: boolean
   /**
    * Load the script in a web worker using Partytown.
    * When enabled, adds `type="text/partytown"` to the script tag.
@@ -226,7 +226,7 @@ export type BuiltInRegistryScriptKey
  */
 export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
-export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | T | [T, NuxtUseScriptOptionsSerializable]
+export type NuxtConfigScriptRegistryEntry<T> = false | 'mock' | (T & { trigger?: NuxtUseScriptOptionsSerializable['trigger'], proxy?: boolean, bundle?: boolean, partytown?: boolean, scriptOptions?: Omit<NuxtUseScriptOptionsSerializable, 'trigger'> }) | [T, NuxtUseScriptOptionsSerializable]
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
@@ -275,7 +275,7 @@ export interface ScriptCapabilities {
    * When combined with `bundle`: AST URL rewriting + runtime intercept.
    * Without `bundle` (npm mode): autoInject sets SDK endpoint to proxy URL.
    */
-  reverseProxyIntercept?: boolean
+  proxy?: boolean
   /** Script can run in a web worker via Partytown. */
   partytown?: boolean
 }
@@ -322,7 +322,7 @@ export interface RegistryScript {
   domains?: (string | ScriptDomain)[]
   /**
    * Privacy controls for proxied requests to this script's domains.
-   * Only relevant when reverseProxyIntercept capability is active.
+   * Only relevant when proxy capability is active.
    */
   privacy?: import('../runtime/server/utils/privacy').ProxyPrivacyInput
   /**

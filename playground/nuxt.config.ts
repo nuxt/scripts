@@ -77,7 +77,7 @@ export default defineNuxtConfig({
       fathomAnalytics: [{ site: 'BRDEJWKJ' }, { trigger: 'manual' }],
       cloudflareWebAnalytics: [{ token: 'ade278253a19413c9bd923b079870902' }, { trigger: 'manual' }],
       matomoAnalytics: [{ matomoUrl: 'https://cdn.matomo.cloud', siteId: '1' }, { trigger: 'manual' }],
-      vercelAnalytics: [true, { trigger: 'manual' }],
+      vercelAnalytics: [{}, { trigger: 'manual' }],
       rybbitAnalytics: [{ siteId: '874' }, { trigger: 'manual' }],
       databuddyAnalytics: [{ clientId: 'demo-client-123' }, { trigger: 'manual' }],
       segment: [{ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' }, { trigger: 'manual' }],
@@ -98,16 +98,16 @@ export default defineNuxtConfig({
       crisp: [{ id: 'b1021910-7ace-425a-9ef5-07f49e5ce417' }, { trigger: 'manual' }],
 
       // Media
-      youtubePlayer: [true, { trigger: 'manual' }],
-      vimeoPlayer: [true, { trigger: 'manual' }],
+      youtubePlayer: [{}, { trigger: 'manual' }],
+      vimeoPlayer: [{}, { trigger: 'manual' }],
 
       // Maps
-      googleMaps: [true, { trigger: 'manual' }],
+      googleMaps: [{}, { trigger: 'manual' }],
 
       // Other
-      gravatar: [true, { trigger: 'manual' }],
+      gravatar: [{}, { trigger: 'manual' }],
       carbonAds: [{ serve: 'CKYIE53L', placement: 'nuxtcom' }, { trigger: 'manual' }],
-      lemonSqueezy: [true, { trigger: 'manual' }],
+      lemonSqueezy: [{}, { trigger: 'manual' }],
 
       // Excluded from first-party (proxy: false) — fingerprinting required:
       // stripe, paypal, googleRecaptcha, googleSignIn

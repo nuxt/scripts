@@ -73,8 +73,8 @@ export function applyAutoInject(
   const input = entry[0]
   const scriptOptions = entry[1]
 
-  // Per-script reverseProxyIntercept opt-out (in input or scriptOptions)
-  if (input?.reverseProxyIntercept === false || scriptOptions?.reverseProxyIntercept === false)
+  // Per-script proxy opt-out (in input or scriptOptions)
+  if (input?.proxy === false || scriptOptions?.proxy === false)
     return
   const rtScripts = runtimeConfig.public?.scripts as Record<string, any> | undefined
   const rtEntry = rtScripts?.[registryKey]
@@ -173,8 +173,8 @@ export function finalizeFirstParty(opts: {
       continue
     }
 
-    // Skip scripts that don't support reverseProxyIntercept
-    if (!script.capabilities?.reverseProxyIntercept)
+    // Skip scripts that don't support proxy
+    if (!script.capabilities?.proxy)
       continue
 
     // Check per-script opt-out in registry config entry
@@ -182,7 +182,7 @@ export function finalizeFirstParty(opts: {
     const registryEntry = opts.registry?.[key as keyof NuxtConfigScriptRegistry] as NormalizedRegistryEntry | undefined
     const entryScriptOptions = registryEntry?.[1]
     const entryInput = registryEntry?.[0]
-    if (entryScriptOptions?.reverseProxyIntercept === false || entryInput?.reverseProxyIntercept === false)
+    if (entryScriptOptions?.proxy === false || entryInput?.proxy === false)
       continue
 
     const configKey = (script.proxyConfig || key) as RegistryScriptKey

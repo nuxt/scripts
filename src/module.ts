@@ -164,7 +164,7 @@ export interface ModuleOptions {
    * Proxy configuration for routing third-party scripts through your domain.
    *
    * By default (undefined), proxy infrastructure is auto-registered when any
-   * configured script has `reverseProxyIntercept` capability enabled. Set to
+   * configured script has `proxy` capability enabled. Set to
    * `false` to globally disable all proxying.
    *
    * **Benefits:**
@@ -173,7 +173,7 @@ export interface ModuleOptions {
    * - Works with ad blockers (requests appear first-party)
    * - Faster loads (no extra DNS lookups)
    *
-   * Per-script opt-out: set `reverseProxyIntercept: false` in a script's options.
+   * Per-script opt-out: set `proxy: false` in a script's options.
    * Per-script opt-in for partytown: set `partytown: true` in a script's options.
    *
    * @default undefined (auto-inferred from script capabilities)
@@ -194,7 +194,8 @@ export interface ModuleOptions {
     privacy?: FirstPartyPrivacy
   }
   /**
-   * The registry of supported third-party scripts. Loads the scripts in globally using the default script options.
+   * The registry of supported third-party scripts. Presence enables infrastructure (proxy routes, types, bundling, composable auto-imports).
+   * Scripts only auto-load globally when `trigger` is explicitly set in the config object.
    */
   registry?: NuxtConfigScriptRegistry
   /**
@@ -493,7 +494,7 @@ export default defineNuxtModule<ModuleOptions>({
 
         const resolved = resolveCapabilities(script, mergedOverrides)
 
-        if (resolved.reverseProxyIntercept)
+        if (resolved.proxy)
           anyNeedsProxy = true
 
         if (resolved.partytown) {

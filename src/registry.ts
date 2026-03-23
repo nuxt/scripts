@@ -28,14 +28,14 @@ const RYBBIT_HOST_SPLIT_RE = /\w+\.split\(["']\/script\.js["']\)\[0\]/g
 
 // Common capability presets for registry scripts.
 // partytown: true only for scripts with known PARTYTOWN_FORWARDS in module.ts.
-const CAP_FULL_PT: ScriptCapabilities = { bundle: true, reverseProxyIntercept: true, partytown: true }
-const CAP_FULL: ScriptCapabilities = { bundle: true, reverseProxyIntercept: true }
+const CAP_FULL_PT: ScriptCapabilities = { bundle: true, proxy: true, partytown: true }
+const CAP_FULL: ScriptCapabilities = { bundle: true, proxy: true }
 const CAP_BUNDLE_PT: ScriptCapabilities = { bundle: true, partytown: true }
 const CAP_BUNDLE: ScriptCapabilities = { bundle: true }
-const CAP_PROXY: ScriptCapabilities = { reverseProxyIntercept: true }
-const DEF_FULL: ScriptCapabilities = { bundle: true, reverseProxyIntercept: true }
+const CAP_PROXY: ScriptCapabilities = { proxy: true }
+const DEF_FULL: ScriptCapabilities = { bundle: true, proxy: true }
 const DEF_BUNDLE: ScriptCapabilities = { bundle: true }
-const DEF_PROXY: ScriptCapabilities = { reverseProxyIntercept: true }
+const DEF_PROXY: ScriptCapabilities = { proxy: true }
 
 export async function registry(resolve?: (path: string, opts?: ResolvePathOptions | undefined) => Promise<string>): Promise<RegistryScript[]> {
   resolve = resolve || ((s: string) => Promise.resolve(s))
@@ -48,7 +48,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL_PT,
       defaultCapability: DEF_FULL,
       domains: ['plausible.io'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       autoInject: { configField: 'endpoint', computeValue: proxyPrefix => `${proxyPrefix}/plausible.io/api/event` },
       scriptBundling: (options?: PlausibleAnalyticsInput) => {
         if (options?.scriptId)
@@ -70,7 +70,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL_PT,
       defaultCapability: DEF_FULL,
       domains: ['static.cloudflareinsights.com', 'cloudflareinsights.com'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       logo: LOGOS.cloudflareWebAnalytics,
       import: {
         name: 'useScriptCloudflareWebAnalytics',
@@ -85,7 +85,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL,
       defaultCapability: DEF_FULL,
       domains: ['va.vercel-scripts.com'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       logo: LOGOS.vercelAnalytics,
       import: {
         name: 'useScriptVercelAnalytics',
@@ -100,7 +100,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_PROXY,
       defaultCapability: DEF_PROXY,
       domains: ['us-assets.i.posthog.com', 'us.i.posthog.com', 'eu-assets.i.posthog.com', 'eu.i.posthog.com'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       autoInject: {
         configField: 'apiHost',
         computeValue: (proxyPrefix, config) => {
@@ -124,7 +124,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL_PT,
       defaultCapability: DEF_FULL,
       domains: ['cdn.usefathom.com'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       postProcess(output) { return output.replace(FATHOM_SELF_HOSTED_RE, '.src.indexOf("cdn.usefathom.com")<-1') },
       logo: LOGOS.fathomAnalytics,
       import: {
@@ -139,7 +139,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL_PT,
       defaultCapability: DEF_FULL,
       domains: ['cdn.matomo.cloud'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       category: 'analytics',
       logo: LOGOS.matomoAnalytics,
       import: {
@@ -153,7 +153,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL,
       defaultCapability: DEF_FULL,
       domains: ['app.rybbit.io'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       autoInject: { configField: 'analyticsHost', computeValue: proxyPrefix => `${proxyPrefix}/app.rybbit.io/api` },
       postProcess(output, rewrites) {
         const rybbitRewrite = rewrites.find(r => r.from === 'app.rybbit.io')
@@ -184,7 +184,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL,
       defaultCapability: DEF_FULL,
       domains: ['cdn.databuddy.cc', 'basket.databuddy.cc'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       autoInject: { configField: 'apiUrl', computeValue: proxyPrefix => `${proxyPrefix}/basket.databuddy.cc` },
       scriptBundling: () => 'https://cdn.databuddy.cc/databuddy.js',
       category: 'analytics',
@@ -197,7 +197,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'segment',
       label: 'Segment',
-      capabilities: CAP_BUNDLE_PT, // reverseProxyIntercept fails: SDK constructs API URLs dynamically
+      capabilities: CAP_BUNDLE_PT, // proxy fails: SDK constructs API URLs dynamically
       defaultCapability: DEF_BUNDLE,
       scriptBundling: (options?: SegmentInput) => {
         return joinURL('https://cdn.segment.com/analytics.js/v1', options?.writeKey || '', 'analytics.min.js')
@@ -347,7 +347,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL,
       defaultCapability: DEF_FULL,
       domains: ['cdn.carbonads.com'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       category: 'ad',
       logo: LOGOS.carbonAds,
     },
@@ -433,7 +433,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL,
       defaultCapability: DEF_FULL,
       domains: ['assets.lemonsqueezy.com'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       category: 'payments',
       logo: LOGOS.lemonSqueezy,
       import: {
@@ -530,7 +530,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'crisp',
       label: 'Crisp',
-      capabilities: CAP_BUNDLE, // reverseProxyIntercept fails: SDK loads secondary scripts at runtime
+      capabilities: CAP_BUNDLE, // proxy fails: SDK loads secondary scripts at runtime
       defaultCapability: DEF_BUNDLE,
       category: 'support',
       logo: LOGOS.crisp,
@@ -580,7 +580,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
     {
       registryKey: 'googleTagManager',
       label: 'Google Tag Manager',
-      capabilities: CAP_BUNDLE, // reverseProxyIntercept fails: GTM dynamically loads scripts at runtime
+      capabilities: CAP_BUNDLE, // proxy fails: GTM dynamically loads scripts at runtime
       defaultCapability: DEF_BUNDLE,
       category: 'tag-manager',
       import: {
@@ -632,7 +632,7 @@ export async function registry(resolve?: (path: string, opts?: ResolvePathOption
       capabilities: CAP_FULL_PT,
       defaultCapability: DEF_FULL,
       domains: ['cloud.umami.is', 'api-gateway.umami.dev'],
-      privacy: PRIVACY_NONE,
+      privacy: PRIVACY_IP_ONLY,
       autoInject: { configField: 'hostUrl', computeValue: proxyPrefix => `${proxyPrefix}/cloud.umami.is` },
       scriptBundling: () => 'https://cloud.umami.is/script.js',
       category: 'analytics',

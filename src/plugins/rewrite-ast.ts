@@ -277,8 +277,8 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
 
         // Canvas fingerprinting neutralization — gated on hardware privacy flag.
         // Only scripts with hardware anonymization enabled get canvas neutralized.
-        // Scripts with PRIVACY_NONE (e.g. Plausible, PostHog) skip this since they
-        // don't canvas fingerprint and may use canvas APIs legitimately.
+        // Scripts without hardware anonymization skip this since they don't
+        // canvas fingerprint and may use canvas APIs legitimately.
         const shouldNeutralizeCanvas = options?.neutralizeCanvas !== false
         const canvasPropName = shouldNeutralizeCanvas && callee?.type === 'MemberExpression'
           ? (callee.computed

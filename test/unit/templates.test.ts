@@ -110,7 +110,7 @@ describe('template plugin file', () => {
     `)
   })
   // registry
-  it('registry object', async () => {
+  it('registry object without trigger (infrastructure only, no composable call)', async () => {
     const res = templatePluginNormalized({
       globals: {},
       registry: {
@@ -125,9 +125,27 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptStripe({"id":"test"})')
+    expect(res).not.toContain('useScriptStripe')
   })
-  it('registry array', async () => {
+  it('registry object with trigger (auto-loads globally)', async () => {
+    const res = templatePluginNormalized({
+      globals: {},
+      registry: {
+        stripe: {
+          id: 'test',
+          trigger: 'onNuxtReady',
+        },
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptStripe',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
+  })
+  it('registry array with trigger', async () => {
     const res = templatePluginNormalized({
       globals: {},
       registry: {
@@ -150,7 +168,7 @@ describe('template plugin file', () => {
     expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
   })
 
-  it('registry with partytown option', async () => {
+  it('registry with partytown but no trigger (no composable call)', async () => {
     const res = templatePluginNormalized({
       globals: {},
       registry: {
@@ -166,7 +184,26 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptGoogleAnalytics({"id":"G-XXXXX","scriptOptions":{"partytown":true}})')
+    expect(res).not.toContain('useScriptGoogleAnalytics')
+  })
+
+  it('registry with partytown and trigger', async () => {
+    const res = templatePluginNormalized({
+      globals: {},
+      registry: {
+        googleAnalytics: [
+          { id: 'G-XXXXX' },
+          { partytown: true, trigger: 'onNuxtReady' },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"G-XXXXX","scriptOptions":{"partytown":true,"trigger":"onNuxtReady"}})')
   })
 
   // Test idleTimeout trigger in globals

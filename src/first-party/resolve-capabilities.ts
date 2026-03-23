@@ -4,7 +4,7 @@ import { logger } from '../logger'
 /**
  * Resolve the effective capabilities for a script by merging:
  * 1. Start with script.defaultCapability (or {} if absent)
- * 2. Apply user overrides from scriptOptions (reverseProxyIntercept, bundle, partytown)
+ * 2. Apply user overrides from scriptOptions (proxy, bundle, partytown)
  * 3. Clamp to script.capabilities ceiling (user can't enable unsupported capabilities)
  * 4. Warn in dev if user tries to exceed ceiling
  */
@@ -20,7 +20,7 @@ export function resolveCapabilities(
   if (!scriptOptions)
     return resolved
 
-  const overrideKeys: (keyof ScriptCapabilities)[] = ['reverseProxyIntercept', 'bundle', 'partytown']
+  const overrideKeys: (keyof ScriptCapabilities)[] = ['proxy', 'bundle', 'partytown']
 
   for (const key of overrideKeys) {
     if (key in scriptOptions) {

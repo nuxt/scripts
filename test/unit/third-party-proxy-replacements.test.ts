@@ -37,7 +37,7 @@ const testCases: ScriptTestCase[] = [
     expectedPatterns: ['www.google.com/g/collect', 'googletagmanager.com'],
     forbiddenAfterRewrite: ['www.google.com/g/collect'],
   },
-  // GTM removed: reverseProxyIntercept not supported (dynamic script loading)
+  // GTM removed: proxy not supported (dynamic script loading)
   {
     name: 'Meta Pixel (fbevents.js)',
     url: 'https://connect.facebook.net/en_US/fbevents.js',
@@ -66,7 +66,7 @@ const testCases: ScriptTestCase[] = [
     expectedPatterns: ['hotjar'],
     forbiddenAfterRewrite: ['static.hotjar.com', 'vars.hotjar.com'],
   },
-  // Segment removed: reverseProxyIntercept not supported (dynamic API URL construction)
+  // Segment removed: proxy not supported (dynamic API URL construction)
 ]
 
 describe('third-party script proxy replacements', () => {

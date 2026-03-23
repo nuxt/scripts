@@ -76,12 +76,12 @@ describe('first-party mode', () => {
       }
     })
 
-    it('every proxy config is referenced by at least one registry script with reverseProxyIntercept', async () => {
+    it('every proxy config is referenced by at least one registry script with proxy', async () => {
       const scripts = await getRegistryScripts()
       const configs = await getProxyConfigs()
       const usedProxyKeys = new Set<string>()
       for (const s of scripts) {
-        if (!s.capabilities?.reverseProxyIntercept)
+        if (!s.capabilities?.proxy)
           continue
         if (s.proxyConfig)
           usedProxyKeys.add(s.proxyConfig)
@@ -169,12 +169,12 @@ describe('first-party mode', () => {
   })
 
   describe('full chain: capabilities → proxy config → domains', () => {
-    it('every script with reverseProxyIntercept gets domains via registryKey lookup', async () => {
+    it('every script with proxy gets domains via registryKey lookup', async () => {
       const scripts = await getRegistryScripts()
       const configs = await getProxyConfigs()
 
       for (const script of scripts) {
-        if (!script.capabilities?.reverseProxyIntercept || !script.registryKey)
+        if (!script.capabilities?.proxy || !script.registryKey)
           continue
 
         const configKey = script.proxyConfig || script.registryKey
@@ -195,7 +195,7 @@ describe('first-party mode', () => {
 
       const allDomains = new Set<string>()
       for (const script of scripts) {
-        if (!script.capabilities?.reverseProxyIntercept || !script.registryKey)
+        if (!script.capabilities?.proxy || !script.registryKey)
           continue
         const configKey = script.proxyConfig || script.registryKey
         const proxyConfig = configs[configKey]
@@ -238,15 +238,15 @@ describe('first-party mode', () => {
     })
   })
 
-  describe('scripts that need fingerprinting have no reverseProxyIntercept', () => {
-    it('stripe, paypal, googleRecaptcha, googleSignIn have no reverseProxyIntercept capability', async () => {
+  describe('scripts that need fingerprinting have no proxy', () => {
+    it('stripe, paypal, googleRecaptcha, googleSignIn have no proxy capability', async () => {
       const scripts = await getRegistryScripts()
       const fingerprintScripts = ['stripe', 'paypal', 'googleRecaptcha', 'googleSignIn']
 
       for (const key of fingerprintScripts) {
         const script = scripts.find(s => s.registryKey === key)
         expect(script, `${key} should exist in registry`).toBeDefined()
-        expect(script!.capabilities?.reverseProxyIntercept, `${key} should not have reverseProxyIntercept`).toBeFalsy()
+        expect(script!.capabilities?.proxy, `${key} should not have proxy`).toBeFalsy()
       }
     })
 

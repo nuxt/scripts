@@ -551,7 +551,7 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
     const id = entry.registryKey || deriveMetaKey(entry.import?.name, entry.label) as RegistryScriptKey
     const meta = id && id in scriptMeta ? scriptMeta[id as keyof typeof scriptMeta] : undefined
     const size = sizes[id || '']
-    const proxyConfigKey = !entry.capabilities?.reverseProxyIntercept ? undefined : (entry.proxyConfig || entry.registryKey)
+    const proxyConfigKey = !entry.capabilities?.proxy ? undefined : (entry.proxyConfig || entry.registryKey)
     const proxyConfig = proxyConfigKey ? proxyConfigs[proxyConfigKey] : undefined
 
     // Determine loading method

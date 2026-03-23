@@ -5,7 +5,7 @@ export { PRIVACY_FULL, PRIVACY_HEATMAP, PRIVACY_IP_ONLY, PRIVACY_NONE } from '..
 
 /**
  * Build proxy configs from registry scripts.
- * Each script with reverseProxyIntercept capability and domains gets a proxy config.
+ * Each script with proxy capability and domains gets a proxy config.
  * Scripts with proxyConfig alias inherit from the referenced script.
  */
 export function buildProxyConfigsFromRegistry(scripts: RegistryScript[]): Partial<Record<RegistryScriptKey, ProxyConfig>> {
@@ -18,7 +18,7 @@ export function buildProxyConfigsFromRegistry(scripts: RegistryScript[]): Partia
   }
 
   for (const script of scripts) {
-    if (!script.registryKey || !script.capabilities?.reverseProxyIntercept)
+    if (!script.registryKey || !script.capabilities?.proxy)
       continue
 
     // Scripts with proxyConfig alias inherit from another script
