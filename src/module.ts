@@ -444,7 +444,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Validate required fields using schemas from registry scripts
     if (config.registry) {
       for (const [key, entry] of Object.entries(config.registry)) {
-        if (!entry || entry === false)
+        if (!entry)
           continue
         const [input, scriptOptions] = entry as [Record<string, any>, any?]
         if (scriptOptions?.skipValidation)
