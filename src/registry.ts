@@ -69,8 +69,10 @@ const CAP_PROXY: ScriptCapabilities = { proxy: true }
 
 // -- defineRegistryScript helper --
 
+const UPPER_CASE_RE = /[A-Z]/g
+
 function camelToKebab(str: string): string {
-  return str.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)
+  return str.replace(UPPER_CASE_RE, m => `-${m.toLowerCase()}`)
 }
 
 /** Derive defaultCapability from capabilities: same flags minus partytown. */
