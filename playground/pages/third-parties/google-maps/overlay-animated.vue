@@ -51,8 +51,7 @@ function close(id: number) {
           :offset="{ x: 0, y: -50 }"
           @update:open="(v: boolean) => { if (!v) close(place.id) }"
         >
-          <template #default="{ dataState }">
-            <div class="overlay-popup" :data-state="dataState">
+            <div class="overlay-popup">
               <div class="flex items-start justify-between gap-2">
                 <h3 class="text-sm font-semibold text-gray-900">
                   {{ place.name }}
@@ -74,7 +73,6 @@ function close(id: number) {
                 {{ place.desc }}
               </p>
             </div>
-          </template>
         </ScriptGoogleMapsOverlayView>
       </ScriptGoogleMapsAdvancedMarkerElement>
     </ScriptGoogleMaps>
