@@ -3,7 +3,7 @@ shellEmulator: true
 trustPolicy: no-downgrade
 packages:
   - playground
-  - client
+  - devtools
   - '!examples/**'
 
 catalog:

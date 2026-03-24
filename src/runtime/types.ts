@@ -117,6 +117,11 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
      * @internal
      */
     registryMeta?: Record<string, string>
+    /**
+     * Known third-party domains this script communicates with.
+     * @internal
+     */
+    domains?: string[]
   }
   /**
    * @internal
@@ -148,10 +153,27 @@ export interface ConsentScriptTriggerOptions {
   postConsentTrigger?: ExcludePromises<NuxtUseScriptOptions['trigger']> | (() => Promise<any>)
 }
 
+export interface NuxtDevToolsNetworkRequest {
+  url: string
+  startTime: number
+  duration: number
+  transferSize: number
+  encodedBodySize: number
+  decodedBodySize: number
+  initiatorType: string
+  dns: number
+  connect: number
+  ssl: number
+  ttfb: number
+  download: number
+  isProxied: boolean
+}
+
 export interface NuxtDevToolsScriptInstance {
   registryKey?: string
   registryMeta?: Record<string, string>
   src: string
+  domains?: string[]
   $script: VueScriptInstance<any>
   events: {
     type: string
@@ -161,6 +183,7 @@ export interface NuxtDevToolsScriptInstance {
     trigger?: NuxtUseScriptOptions['trigger']
     at: number
   }[]
+  networkRequests: NuxtDevToolsNetworkRequest[]
 }
 
 export interface ScriptRegistry {

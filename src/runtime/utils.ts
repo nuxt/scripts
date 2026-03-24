@@ -134,7 +134,10 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       }
     }
 
-    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom })
+    // Extract known domains for this script from devtools runtime config
+    const devtoolsConfig = useRuntimeConfig().public['nuxt-scripts-devtools'] as any
+    const registryDomains = devtoolsConfig?.scripts?.find((s: any) => s.registryKey === registryKey)?.domains as string[] | undefined
+    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom, domains: registryDomains })
     if (options.schema && 'entries' in options.schema) {
       const registryMeta: Record<string, string> = {}
       for (const k in options.schema.entries) {
