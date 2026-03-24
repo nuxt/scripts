@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, useTemplateRef, watch } from 'vue'
 import { bindGoogleMapsEvents } from './bindGoogleMapsEvents'
-import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MAP_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
+import { MAP_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
 const props = defineProps<{
@@ -68,12 +68,10 @@ const infoWindowEvents = [
 
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
-const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
 
 const infoWindowContainer = useTemplateRef('info-window-container')
 
 // Track click listener on parent marker so it can be removed on cleanup
-let markerClickListener: google.maps.MapsEventListener | undefined
 let gmpClickHandler: ((e: any) => void) | undefined
 let isOpen = false
 
@@ -107,13 +105,8 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
       }
     }
 
-    if (markerContext?.marker.value) {
-      markerClickListener = markerContext.marker.value.addListener('click', () => {
-        toggleOpen(markerContext.marker.value)
-      })
-    }
-    else if (advancedMarkerElementContext?.advancedMarkerElement.value) {
-      const ame = advancedMarkerElementContext.advancedMarkerElement.value
+    if (markerContext?.advancedMarkerElement.value) {
+      const ame = markerContext.advancedMarkerElement.value
       ame.gmpClickable = true
       gmpClickHandler = () => toggleOpen(ame)
       ame.addEventListener('gmp-click', gmpClickHandler)
@@ -127,10 +120,8 @@ const infoWindow = useGoogleMapsResource<google.maps.InfoWindow>({
     return iw
   },
   cleanup(iw, { mapsApi }) {
-    markerClickListener?.remove()
-    markerClickListener = undefined
-    if (gmpClickHandler && advancedMarkerElementContext?.advancedMarkerElement.value) {
-      advancedMarkerElementContext.advancedMarkerElement.value.removeEventListener('gmp-click', gmpClickHandler)
+    if (gmpClickHandler && markerContext?.advancedMarkerElement.value) {
+      markerContext.advancedMarkerElement.value.removeEventListener('gmp-click', gmpClickHandler)
       gmpClickHandler = undefined
     }
     mapsApi.event.clearInstanceListeners(iw)

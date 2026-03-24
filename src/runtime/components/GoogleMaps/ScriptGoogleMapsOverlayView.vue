@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, ref, useTemplateRef, watch } from 'vue'
-import { ADVANCED_MARKER_ELEMENT_INJECTION_KEY, MARKER_INJECTION_KEY } from './injectionKeys'
+import { MARKER_INJECTION_KEY } from './injectionKeys'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
 import { useGoogleMapsResource } from './useGoogleMapsResource'
 
@@ -64,7 +64,6 @@ const props = withDefaults(defineProps<{
 const open = defineModel<boolean>('open', { default: undefined })
 
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
-const advancedMarkerElementContext = inject(ADVANCED_MARKER_ELEMENT_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
 // Read position fresh each call — NOT a computed, because Google Maps object
@@ -73,13 +72,8 @@ const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 function getResolvedPosition(): google.maps.LatLngLiteral | undefined {
   if (props.position)
     return props.position
-  if (markerContext?.marker.value) {
-    const pos = markerContext.marker.value.getPosition()
-    if (pos)
-      return { lat: pos.lat(), lng: pos.lng() }
-  }
-  if (advancedMarkerElementContext?.advancedMarkerElement.value) {
-    const pos = advancedMarkerElementContext.advancedMarkerElement.value.position
+  if (markerContext?.advancedMarkerElement.value) {
+    const pos = markerContext.advancedMarkerElement.value.position
     if (pos) {
       // position can be LatLng or LatLngLiteral
       if ('lat' in pos && typeof pos.lat === 'function')
@@ -150,7 +144,7 @@ function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: numb
 const overlay = useGoogleMapsResource<google.maps.OverlayView>({
   // ready condition accesses .value on ShallowRefs — tracked by whenever() in useGoogleMapsResource
   ready: () => !!overlayContent.value
-    && !!(props.position || markerContext?.marker.value || advancedMarkerElementContext?.advancedMarkerElement.value),
+    && !!(props.position || markerContext?.advancedMarkerElement.value),
   create({ mapsApi, map }) {
     const el = overlayContent.value!
 
@@ -225,14 +219,8 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
     ov.setMap(map)
 
     // Follow parent marker position changes
-    if (markerContext?.marker.value) {
-      // Legacy Marker fires position_changed on drag and programmatic moves
-      listeners.push(
-        markerContext.marker.value.addListener('position_changed', () => ov.draw()),
-      )
-    }
-    else if (advancedMarkerElementContext?.advancedMarkerElement.value) {
-      const ame = advancedMarkerElementContext.advancedMarkerElement.value
+    if (markerContext?.advancedMarkerElement.value) {
+      const ame = markerContext.advancedMarkerElement.value
       // AdvancedMarkerElement fires drag continuously during drag
       listeners.push(
         ame.addListener('drag', () => ov.draw()),
@@ -251,10 +239,10 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
 
 // AdvancedMarkerElement doesn't fire position_changed, so watch the reactive ref
 // for programmatic position updates (drag is handled by event listeners above)
-if (advancedMarkerElementContext) {
+if (markerContext) {
   watch(
     () => {
-      const pos = advancedMarkerElementContext.advancedMarkerElement.value?.position
+      const pos = markerContext.advancedMarkerElement.value?.position
       if (!pos)
         return undefined
       if ('lat' in pos && typeof pos.lat === 'function')
@@ -290,7 +278,7 @@ watch([() => props.pane, () => props.blockMapInteraction], () => {
 })
 
 // Auto-hide overlay when its parent marker joins a cluster
-if (markerClustererContext && (markerContext || advancedMarkerElementContext)) {
+if (markerClustererContext && markerContext) {
   watch(
     () => markerClustererContext.clusteringVersion.value,
     () => {
@@ -299,8 +287,7 @@ if (markerClustererContext && (markerContext || advancedMarkerElementContext)) {
       const clusterer = markerClustererContext.markerClusterer.value as any
       if (!clusterer?.clusters)
         return
-      const parentMarker = advancedMarkerElementContext?.advancedMarkerElement.value
-        ?? markerContext?.marker.value
+      const parentMarker = markerContext.advancedMarkerElement.value
       if (!parentMarker)
         return
       const isClustered = clusterer.clusters.some(

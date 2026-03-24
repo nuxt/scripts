@@ -26,7 +26,7 @@ const places = [
       above-the-fold
       :map-options="{ mapId: 'DEMO_MAP_ID' }"
     >
-      <ScriptGoogleMapsAdvancedMarkerElement
+      <ScriptGoogleMapsMarker
         v-for="place in places"
         :key="place.id"
         :position="place.position"
@@ -63,7 +63,7 @@ const places = [
             </button>
           </div>
         </ScriptGoogleMapsOverlayView>
-      </ScriptGoogleMapsAdvancedMarkerElement>
+      </ScriptGoogleMapsMarker>
     </ScriptGoogleMaps>
   </div>
 </template>
