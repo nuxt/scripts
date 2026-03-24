@@ -11,6 +11,10 @@ type OverlayAnchor = 'center' | 'top-left' | 'top-center' | 'top-right'
 type OverlayPane = 'mapPane' | 'overlayLayer' | 'markerLayer'
   | 'overlayMouseTarget' | 'floatPane'
 
+defineOptions({
+  inheritAttrs: false,
+})
+
 const props = withDefaults(defineProps<{
   /**
    * Geographic position for the overlay. Falls back to parent marker position if omitted.
