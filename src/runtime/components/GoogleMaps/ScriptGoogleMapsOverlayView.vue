@@ -304,7 +304,7 @@ defineExpose({ overlay, dataState })
 
 <template>
   <div style="display: none;">
-    <div ref="overlay-content" :data-state="dataState">
+    <div ref="overlay-content" :data-state="dataState" v-bind="$attrs">
       <slot />
     </div>
   </div>
