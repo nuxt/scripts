@@ -11,6 +11,10 @@ type OverlayAnchor = 'center' | 'top-left' | 'top-center' | 'top-right'
 type OverlayPane = 'mapPane' | 'overlayLayer' | 'markerLayer'
   | 'overlayMouseTarget' | 'floatPane'
 
+defineOptions({
+  inheritAttrs: false,
+})
+
 const props = withDefaults(defineProps<{
   /**
    * Geographic position for the overlay. Falls back to parent marker position if omitted.
@@ -304,7 +308,7 @@ defineExpose({ overlay, dataState })
 
 <template>
   <div style="display: none;">
-    <div ref="overlay-content" :data-state="dataState">
+    <div ref="overlay-content" :data-state="dataState" v-bind="$attrs">
       <slot />
     </div>
   </div>
