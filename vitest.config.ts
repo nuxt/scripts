@@ -32,6 +32,7 @@ export default defineConfig({
             './test/e2e-dev/**/*.test.ts',
             '**/*.nuxt.test.ts',
             '**/node_modules/**',
+            '.claude/worktrees/**',
           ],
         },
       }),

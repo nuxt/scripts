@@ -1,5 +1,5 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
-import type { NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
+import type { NuxtDevToolsNetworkRequest, NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { useScript as _useScript } from '@unhead/vue/scripts'
@@ -11,6 +11,118 @@ import { logger } from '../logger'
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
   $scripts: Record<string, UseScriptContext<any> | undefined>
   _scripts: Record<string, NuxtDevToolsScriptInstance>
+}
+
+/**
+ * Devtools network tracking utilities.
+ * All functions below are only called inside `import.meta.dev` guards,
+ * so bundlers eliminate them (and their closures) in production builds.
+ */
+
+function resolveProxyPrefix(): string {
+  const devtoolsConfig = useRuntimeConfig().public['nuxt-scripts-devtools'] as any
+  return devtoolsConfig?.proxyPrefix || '/_scripts/p'
+}
+
+function toNetworkRequest(entry: PerformanceResourceTiming, proxyPrefix: string): NuxtDevToolsNetworkRequest {
+  const isProxied = entry.name.includes(`${proxyPrefix}/`)
+  return {
+    url: entry.name,
+    startTime: entry.startTime,
+    duration: entry.duration,
+    transferSize: entry.transferSize,
+    encodedBodySize: entry.encodedBodySize,
+    decodedBodySize: entry.decodedBodySize,
+    initiatorType: entry.initiatorType,
+    dns: entry.domainLookupEnd - entry.domainLookupStart,
+    connect: entry.connectEnd - entry.connectStart,
+    ssl: entry.secureConnectionStart > 0 ? entry.connectEnd - entry.secureConnectionStart : 0,
+    ttfb: entry.responseStart - entry.requestStart,
+    download: entry.responseEnd - entry.responseStart,
+    isProxied,
+  }
+}
+
+function createDomainMatcher(domains: Set<string>, proxyPrefix: string) {
+  const localHostname = window.location.hostname
+  return function matchesScript(entry: PerformanceResourceTiming): boolean {
+    try {
+      const entryUrl = new URL(entry.name, window.location.origin)
+      // Skip same-origin hostname matching to avoid capturing unrelated
+      // same-origin requests (API calls, images, HMR, etc.)
+      if (entryUrl.hostname !== localHostname && domains.has(entryUrl.hostname))
+        return true
+      // match proxied paths: <proxyPrefix>/<domain>/...
+      const proxyPath = `${proxyPrefix}/`
+      const proxyIdx = entryUrl.pathname.indexOf(proxyPath)
+      if (proxyIdx !== -1) {
+        const afterPrefix = entryUrl.pathname.slice(proxyIdx + proxyPath.length)
+        const proxyDomain = afterPrefix.split('/')[0]
+        if (proxyDomain && domains.has(proxyDomain))
+          return true
+      }
+    }
+    catch {} // malformed URLs are expected, safe to ignore
+    return false
+  }
+}
+
+function observeNetworkRequests(
+  payload: NuxtDevToolsScriptInstance,
+  domains: Set<string>,
+  onUpdate: () => void,
+): () => void {
+  if (typeof PerformanceObserver === 'undefined')
+    return () => {}
+
+  const proxyPrefix = resolveProxyPrefix()
+  const matchesScript = createDomainMatcher(domains, proxyPrefix)
+  const seen = new Set<string>()
+
+  function entryKey(entry: PerformanceResourceTiming): string {
+    return `${entry.name}@${entry.startTime}`
+  }
+
+  function processEntry(entry: PerformanceResourceTiming): boolean {
+    const key = entryKey(entry)
+    if (seen.has(key))
+      return false
+    if (!matchesScript(entry))
+      return false
+    seen.add(key)
+    payload.networkRequests.push(toNetworkRequest(entry, proxyPrefix))
+    return true
+  }
+
+  for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[])
+    processEntry(entry)
+
+  const observer = new PerformanceObserver((list) => {
+    let added = false
+    for (const entry of list.getEntries() as PerformanceResourceTiming[]) {
+      if (processEntry(entry))
+        added = true
+    }
+    if (added)
+      onUpdate()
+  })
+  observer.observe({ type: 'resource', buffered: false })
+
+  return () => observer.disconnect()
+}
+
+/**
+ * Extract a non-local hostname from a script src, or empty string.
+ * Skips same-origin hostnames so they don't match all local resources.
+ */
+function extractExternalHostname(src: string | undefined): string {
+  if (!src)
+    return ''
+  try {
+    const hostname = new URL(src, window.location.origin).hostname
+    return hostname === window.location.hostname ? '' : hostname
+  }
+  catch { return '' }
 }
 
 function ensureScripts(nuxtApp: NuxtScriptsApp) {
@@ -46,18 +158,50 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     useHead({
       script: [{ src, type: 'text/partytown' }],
     })
-    // Register with nuxtApp.$scripts for DevTools visibility
     const nuxtApp = useNuxtApp() as NuxtScriptsApp
     ensureScripts(nuxtApp)
     const status = ref('loaded')
+    let disconnectObserver = () => {}
     const stub = {
       id: src,
       status,
       load: () => Promise.resolve({} as T),
-      remove: () => false,
+      remove: () => {
+        disconnectObserver()
+        return false
+      },
       entry: undefined,
     } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
     nuxtApp.$scripts[src] = stub
+
+    // Partytown devtools: partytown routes requests through the first-party proxy
+    // (same-origin), so they appear in the main thread's Performance API
+    if (import.meta.dev && import.meta.client) {
+      nuxtApp._scripts = nuxtApp._scripts || {}
+      const scriptHostname = extractExternalHostname(src)
+      const domains = new Set<string>([
+        ...(scriptHostname ? [scriptHostname] : []),
+        ...(options.devtools?.domains || []),
+      ])
+      const payload: NuxtDevToolsScriptInstance = {
+        ...options.devtools,
+        src,
+        $script: stub as any,
+        events: [
+          { type: 'status', status: 'loaded', at: Date.now() },
+        ],
+        networkRequests: [],
+      }
+
+      function syncScripts() {
+        nuxtApp._scripts[src] = payload
+        nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
+      }
+
+      disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+      syncScripts()
+    }
+
     return stub
   }
 
@@ -148,6 +292,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       src: input.src,
       $script: null as any as VueScriptInstance<T>,
       events: [],
+      networkRequests: [],
     }
     nuxtApp._scripts = nuxtApp._scripts! || {}
 
@@ -196,6 +341,29 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         trigger: options?.trigger,
         at: Date.now(),
       })
+
+      // Network request tracking via Resource Timing API
+      const scriptHostname = extractExternalHostname(input.src)
+      const domains = new Set<string>([
+        ...(scriptHostname ? [scriptHostname] : []),
+        ...(options.devtools?.domains || []),
+      ])
+      let disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+      // Clean up observer when script is removed, but keep it alive across reload()
+      const _origRemove = instance.remove
+      const _origReload = instance.reload
+      instance.remove = () => {
+        disconnectObserver()
+        return _origRemove()
+      }
+      instance.reload = async () => {
+        // Disconnect before reload, reconnect after so new network entries are tracked
+        disconnectObserver()
+        const result = await _origReload()
+        disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+        return result
+      }
+
       syncScripts()
     }
   }

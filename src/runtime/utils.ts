@@ -16,6 +16,7 @@ import { parse } from 'valibot'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
 
+// Dev-only: stack trace parsing for component location detection (only referenced inside import.meta.dev)
 const URL_MATCH_RE = /https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/
 const URL_PAREN_MATCH_RE = /\(https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)\)/
 const VUE_MATCH_RE = /([^/\s]+\.vue):(\d+):(\d+)/
@@ -134,7 +135,10 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       }
     }
 
-    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom })
+    // Extract known domains for this script from devtools runtime config
+    const devtoolsConfig = useRuntimeConfig().public['nuxt-scripts-devtools'] as any
+    const registryDomains = devtoolsConfig?.scripts?.find((s: any) => s.registryKey === registryKey)?.domains as string[] | undefined
+    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom, domains: registryDomains })
     if (options.schema && 'entries' in options.schema) {
       const registryMeta: Record<string, string> = {}
       for (const k in options.schema.entries) {

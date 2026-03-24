@@ -7,7 +7,7 @@ import { extendViteConfig, useNuxt } from '@nuxt/kit'
 import { DEVTOOLS_UI_LOCAL_PORT, DEVTOOLS_UI_ROUTE } from './constants'
 
 export async function setupDevToolsUI(options: ModuleOptions, resolve: Resolver['resolvePath'], nuxt: Nuxt = useNuxt()) {
-  const clientPath = await resolve('./client')
+  const clientPath = await resolve('./devtools')
   const isProductionBuild = existsSync(clientPath)
 
   // Serve production-built client (used when package is published)
