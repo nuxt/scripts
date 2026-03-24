@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { humanFriendlyTimestamp, urlToOrigin } from '~/utils/formatting'
 import {
-  formatScriptInterface,
   firstPartyData,
+  formatScriptInterface,
   getActiveTab,
   getFirstPartyScript,
   isFirstPartyScript,
   scriptErrors,
   scriptLogo,
-  scriptSizes,
   scripts,
+  scriptSizes,
   setActiveTab,
 } from '~/composables/state'
+import { humanFriendlyTimestamp, urlToOrigin } from '~/utils/formatting'
 
 const subTabDefs = [
   { label: 'Events', value: 'events', icon: 'i-carbon-list' },
@@ -38,8 +38,12 @@ function statusBadgeClass(status: string) {
       <div class="w-12 h-12 rounded-xl bg-(--color-surface-elevated) border border-(--color-border) flex items-center justify-center">
         <UIcon name="i-carbon-script" class="text-2xl text-(--color-text-subtle)" />
       </div>
-      <p class="text-sm font-medium text-(--color-text-muted)">No scripts loaded</p>
-      <p class="text-xs text-(--color-text-subtle)">Scripts will appear here as they are registered</p>
+      <p class="text-sm font-medium text-(--color-text-muted)">
+        No scripts loaded
+      </p>
+      <p class="text-xs text-(--color-text-subtle)">
+        Scripts will appear here as they are registered
+      </p>
     </div>
 
     <div class="stagger-children space-y-3">

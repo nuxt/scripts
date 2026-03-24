@@ -4,14 +4,28 @@ import { firstPartyData } from '~/composables/state'
 
 const privacyFlags = ['ip', 'userAgent', 'language', 'screen', 'timezone', 'hardware'] as const
 const privacyFlagLabels: Record<string, string> = {
-  ip: 'IP Address', userAgent: 'User Agent', language: 'Language', screen: 'Screen', timezone: 'Timezone', hardware: 'Hardware',
+  ip: 'IP Address',
+  userAgent: 'User Agent',
+  language: 'Language',
+  screen: 'Screen',
+  timezone: 'Timezone',
+  hardware: 'Hardware',
 }
 const privacyFlagShort: Record<string, string> = {
-  ip: 'IP', userAgent: 'UA', language: 'Lang', screen: 'Screen', timezone: 'TZ', hardware: 'HW',
+  ip: 'IP',
+  userAgent: 'UA',
+  language: 'Lang',
+  screen: 'Screen',
+  timezone: 'TZ',
+  hardware: 'HW',
 }
 const privacyFlagIcons: Record<string, string> = {
-  ip: 'i-carbon-location', userAgent: 'i-carbon-user-profile', language: 'i-carbon-translate',
-  screen: 'i-carbon-screen', timezone: 'i-carbon-time', hardware: 'i-carbon-chip',
+  ip: 'i-carbon-location',
+  userAgent: 'i-carbon-user-profile',
+  language: 'i-carbon-translate',
+  screen: 'i-carbon-screen',
+  timezone: 'i-carbon-time',
+  hardware: 'i-carbon-chip',
 }
 const expandedRoutes = reactive<Record<string, boolean>>({})
 
@@ -20,8 +34,10 @@ function toggleRoutes(key: string) {
 }
 
 function privacyLevelClass(level: string) {
-  if (level === 'full') return 'privacy-full'
-  if (level === 'partial') return 'privacy-partial'
+  if (level === 'full')
+    return 'privacy-full'
+  if (level === 'partial')
+    return 'privacy-partial'
   return 'privacy-none'
 }
 
@@ -42,7 +58,9 @@ function mechanismLabel(m: string) {
         <UIcon name="i-carbon-security" class="text-3xl text-(--color-text-subtle)" />
       </div>
       <div class="text-center space-y-1.5">
-        <p class="text-sm font-semibold text-(--color-text-muted)">First-Party Mode is not enabled</p>
+        <p class="text-sm font-semibold text-(--color-text-muted)">
+          First-Party Mode is not enabled
+        </p>
         <p class="text-xs text-(--color-text-subtle) max-w-sm">
           Proxy is auto-enabled when scripts with proxy capabilities are configured.
         </p>
@@ -67,27 +85,45 @@ function mechanismLabel(m: string) {
       <!-- Stats row -->
       <div class="flex flex-wrap gap-2.5">
         <div class="stat-card">
-          <div class="stat-label">Status</div>
+          <div class="stat-label">
+            Status
+          </div>
           <div class="flex items-center gap-1.5">
             <span class="stat-dot stat-dot-active" />
             <span class="text-sm font-semibold" style="color: oklch(55% 0.18 145);">Active</span>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Scripts</div>
-          <div class="stat-value">{{ firstPartyData.scripts.length }}</div>
+          <div class="stat-label">
+            Scripts
+          </div>
+          <div class="stat-value">
+            {{ firstPartyData.scripts.length }}
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Routes</div>
-          <div class="stat-value">{{ firstPartyData.totalRoutes }}</div>
+          <div class="stat-label">
+            Routes
+          </div>
+          <div class="stat-value">
+            {{ firstPartyData.totalRoutes }}
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Domains</div>
-          <div class="stat-value">{{ firstPartyData.totalDomains }}</div>
+          <div class="stat-label">
+            Domains
+          </div>
+          <div class="stat-value">
+            {{ firstPartyData.totalDomains }}
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Privacy</div>
-          <div class="stat-value capitalize text-sm">{{ firstPartyData.privacyMode }}</div>
+          <div class="stat-label">
+            Privacy
+          </div>
+          <div class="stat-value capitalize text-sm">
+            {{ firstPartyData.privacyMode }}
+          </div>
         </div>
       </div>
 
@@ -196,7 +232,9 @@ function mechanismLabel(m: string) {
                 </div>
               </div>
               <div v-if="s.interceptRules.length" class="border-t border-(--color-border-subtle) px-4 py-2">
-                <div class="text-[10px] uppercase tracking-wider text-(--color-text-subtle) mb-1 font-medium">Intercept Rules</div>
+                <div class="text-[10px] uppercase tracking-wider text-(--color-text-subtle) mb-1 font-medium">
+                  Intercept Rules
+                </div>
                 <div
                   v-for="(ir, iri) in s.interceptRules" :key="iri"
                   class="py-1 flex items-center gap-2 text-[11px] font-mono"
@@ -223,14 +261,18 @@ function mechanismLabel(m: string) {
           <table class="w-full text-xs">
             <thead>
               <tr class="border-b border-(--color-border-subtle)">
-                <th class="px-4 py-2 text-left font-medium text-(--color-text-subtle)">Script</th>
+                <th class="px-4 py-2 text-left font-medium text-(--color-text-subtle)">
+                  Script
+                </th>
                 <th
                   v-for="flag in privacyFlags" :key="flag"
                   class="px-2.5 py-2 text-center font-medium text-(--color-text-subtle) whitespace-nowrap"
                 >
                   {{ privacyFlagShort[flag] }}
                 </th>
-                <th class="px-2.5 py-2 text-center font-medium text-(--color-text-subtle)">Level</th>
+                <th class="px-2.5 py-2 text-center font-medium text-(--color-text-subtle)">
+                  Level
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -238,7 +280,9 @@ function mechanismLabel(m: string) {
                 v-for="s in firstPartyData.scripts" :key="s.registryKey"
                 class="border-b border-(--color-border-subtle) last:border-b-0 hover:bg-(--color-surface-sunken) transition-colors"
               >
-                <td class="px-4 py-2 font-medium whitespace-nowrap">{{ s.label }}</td>
+                <td class="px-4 py-2 font-medium whitespace-nowrap">
+                  {{ s.label }}
+                </td>
                 <td v-for="flag in privacyFlags" :key="flag" class="px-2.5 py-2 text-center">
                   <div
                     class="w-2.5 h-2.5 rounded-full mx-auto"

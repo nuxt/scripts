@@ -11,14 +11,17 @@ type CapState = 'active' | 'available' | 'off'
 
 function capState(script: any, capKey: string): CapState {
   const supported = script.capabilities?.[capKey]
-  if (!supported) return 'off'
+  if (!supported)
+    return 'off'
   const active = script.defaultCapability?.[capKey]
   return active ? 'active' : 'available'
 }
 
 function capStateLabel(state: CapState): string {
-  if (state === 'active') return 'Active by default'
-  if (state === 'available') return 'Supported (opt-in)'
+  if (state === 'active')
+    return 'Active by default'
+  if (state === 'available')
+    return 'Supported (opt-in)'
   return 'Not supported'
 }
 </script>
@@ -29,7 +32,9 @@ function capStateLabel(state: CapState): string {
       <div class="w-12 h-12 rounded-xl bg-(--color-surface-elevated) border border-(--color-border) flex items-center justify-center">
         <UIcon name="i-carbon-catalog" class="text-2xl text-(--color-text-subtle)" />
       </div>
-      <p class="text-sm font-medium text-(--color-text-muted)">No registry scripts available</p>
+      <p class="text-sm font-medium text-(--color-text-muted)">
+        No registry scripts available
+      </p>
     </div>
 
     <template v-else>
@@ -94,9 +99,15 @@ function capStateLabel(state: CapState): string {
                 </div>
                 <template #content>
                   <div class="text-xs space-y-0.5">
-                    <div class="font-semibold">{{ cap.label }}</div>
-                    <div class="opacity-70">{{ capStateLabel(capState(script, cap.key)) }}</div>
-                    <div class="opacity-50 mt-1 max-w-48 text-[11px]">{{ cap.desc }}</div>
+                    <div class="font-semibold">
+                      {{ cap.label }}
+                    </div>
+                    <div class="opacity-70">
+                      {{ capStateLabel(capState(script, cap.key)) }}
+                    </div>
+                    <div class="opacity-50 mt-1 max-w-48 text-[11px]">
+                      {{ cap.desc }}
+                    </div>
                   </div>
                 </template>
               </UTooltip>
@@ -127,7 +138,9 @@ function capStateLabel(state: CapState): string {
           <table class="w-full text-xs">
             <thead>
               <tr class="border-b border-(--color-border-subtle)">
-                <th class="px-4 py-2 text-left font-medium text-(--color-text-subtle)">Script</th>
+                <th class="px-4 py-2 text-left font-medium text-(--color-text-subtle)">
+                  Script
+                </th>
                 <th
                   v-for="cap in capabilityDefs"
                   :key="cap.key"

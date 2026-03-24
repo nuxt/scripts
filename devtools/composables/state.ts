@@ -1,7 +1,7 @@
 import { reactive, ref } from 'vue'
-import { registry } from '../../src/registry'
 import { fetchScript } from '~/utils/fetch'
 import { msToHumanReadable } from '~/utils/formatting'
+import { registry } from '../../src/registry'
 
 export interface FirstPartyDevtoolsScript {
   registryKey: string
@@ -44,9 +44,12 @@ export async function initRegistry() {
   scriptRegistry.value = await _registryPromise
 }
 
+const wordSepPattern = /([\s_-])+/g
+
 function titleToCamelCase(s: string) {
-  return s.replace(/([\s_-])+/g, ' ').split(' ').map((w, i) => {
-    if (i === 0) return w.toLowerCase()
+  return s.replace(wordSepPattern, ' ').split(' ').map((w, i) => {
+    if (i === 0)
+      return w.toLowerCase()
     return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
   }).join('')
 }
@@ -61,7 +64,7 @@ export function syncScripts(_scripts: any[]) {
       .map(([key, script]: [string, any]) => {
         script.registry = scriptRegistry.value.find(s => titleToCamelCase(s.label) === script.registryKey)
         if (script.registry) {
-          const kebabCaseLabel = script.registry.label.toLowerCase().replace(/ /g, '-')
+          const kebabCaseLabel = script.registry.label.toLowerCase().replaceAll(' ', '-')
           script.docs = `https://scripts.nuxt.com/scripts/${kebabCaseLabel}`
         }
         const loadingAt = script.events?.find((e: any) => e.status === 'loading')?.at || 0
@@ -89,12 +92,14 @@ export function syncScripts(_scripts: any[]) {
 
 // First-party helpers
 export function isFirstPartyScript(registryKey: string | undefined): boolean {
-  if (!registryKey || !firstPartyData.value?.enabled) return false
+  if (!registryKey || !firstPartyData.value?.enabled)
+    return false
   return firstPartyData.value.scripts.some(s => s.registryKey === registryKey)
 }
 
 export function getFirstPartyScript(registryKey: string | undefined): FirstPartyDevtoolsScript | undefined {
-  if (!registryKey || !firstPartyData.value?.enabled) return undefined
+  if (!registryKey || !firstPartyData.value?.enabled)
+    return undefined
   return firstPartyData.value.scripts.find(s => s.registryKey === registryKey)
 }
 
@@ -110,21 +115,26 @@ export function setActiveTab(scriptSrc: string, tab: string) {
 // Script logo helper
 export function scriptLogo(script: any) {
   const logo = script.registry?.logo
-  if (!logo) return null
+  if (!logo)
+    return null
   return typeof logo === 'object' ? (logo.dark || logo.light) : logo
 }
 
 // Interface formatting
+const paramPattern = /\(([^)]*)\)/
+
 export function formatFunctionSignature(name: string, func: (...args: any[]) => any): string {
   const funcStr = func.toString()
-  const paramMatch = funcStr.match(/\(([^)]*)\)/)
+  const paramMatch = funcStr.match(paramPattern)
   const params = paramMatch?.[1]?.trim() || ''
 
   const formattedParams = params
     ? params.split(',').map((param, index) => {
         const trimmed = param.trim()
-        if (!trimmed) return ''
-        if (trimmed.includes(':')) return trimmed
+        if (!trimmed)
+          return ''
+        if (trimmed.includes(':'))
+          return trimmed
         const paramName = trimmed || `param${index + 1}`
         return `${paramName}: any`
       }).filter(Boolean).join(', ')

@@ -81,6 +81,9 @@ catalogs:
     nuxt:
       specifier: ^4.4.2
       version: 4.4.2
+    nuxtseo-layer-devtools:
+      specifier: ^0.2.5
+      version: 0.2.8
     ofetch:
       specifier: ^1.5.1
       version: 1.5.1
@@ -313,22 +316,22 @@ importers:
   devtools:
     devDependencies:
       '@nuxt/devtools-kit':
-        specifier: ^3.2.4
+        specifier: 'catalog:'
         version: 3.2.4(magicast@0.5.2)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.2))
       '@nuxt/kit':
-        specifier: ^4.4.2
+        specifier: 'catalog:'
         version: 4.4.2(magicast@0.5.2)
       nuxt:
-        specifier: ^4.4.2
+        specifier: 'catalog:'
         version: 4.4.2(@babel/core@7.29.0)(@babel/plugin-syntax-jsx@7.28.6(@babel/core@7.29.0))(@parcel/watcher@2.5.6)(@types/node@25.5.0)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(db0@0.3.4)(eslint@10.1.0(jiti@2.6.1))(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(optionator@0.9.4)(rollup-plugin-visualizer@6.0.11(rollup@4.59.0))(rollup@4.59.0)(terser@5.46.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.2))(vue-tsc@3.2.6(typescript@6.0.2))(yaml@2.8.2)
       nuxtseo-layer-devtools:
-        specifier: ^0.2.5
+        specifier: 'catalog:'
         version: 0.2.8(6d32d8e67453bdeff5334495c672c2e3)
       vue:
-        specifier: ^3.5.30
+        specifier: 'catalog:'
         version: 3.5.30(typescript@6.0.2)
       vue-router:
-        specifier: latest
+        specifier: 'catalog:'
         version: 5.0.4(@vue/compiler-sfc@3.5.30)(vue@3.5.30(typescript@6.0.2))
 
   playground:

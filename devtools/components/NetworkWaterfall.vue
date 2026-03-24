@@ -42,7 +42,8 @@ const phases = [
 const sorted = computed(() => [...requests].sort((a, b) => a.startTime - b.startTime))
 
 const timeRange = computed(() => {
-  if (!sorted.value.length) return { min: 0, max: 1 }
+  if (!sorted.value.length)
+    return { min: 0, max: 1 }
   const min = sorted.value[0].startTime
   const max = Math.max(...sorted.value.map(r => r.startTime + r.duration))
   return { min, max: max || min + 1 }
@@ -59,7 +60,8 @@ const domainBreakdown = computed(() => {
     const existing = map.get(hostname) || { count: 0, transfer: 0, proxied: false }
     existing.count++
     existing.transfer += req.transferSize
-    if (req.isProxied) existing.proxied = true
+    if (req.isProxied)
+      existing.proxied = true
     map.set(hostname, existing)
   }
   return [...map.entries()]
@@ -72,10 +74,14 @@ const domainBreakdown = computed(() => {
     }))
 })
 
+const proxyPattern = /\/_scripts\/p\/([^/]+)/
+
 function extractHostname(url: string): string {
-  try { return new URL(url).hostname }
+  try {
+    return new URL(url).hostname
+  }
   catch {
-    const match = url.match(/\/_scripts\/p\/([^/]+)/)
+    const match = url.match(proxyPattern)
     return match?.[1] || 'localhost'
   }
 }
@@ -87,7 +93,8 @@ function barStyle(req: NetworkRequest) {
 }
 
 function phaseWidth(req: NetworkRequest, phase: typeof phases[number]) {
-  if (req.duration === 0) return '0%'
+  if (req.duration === 0)
+    return '0%'
   const val = req[phase.key]
   return `${Math.max((val / req.duration) * 100, val > 0 ? 2 : 0)}%`
 }
@@ -108,8 +115,12 @@ function initiatorLabel(type: string) {
 
 function initiatorIcon(type: string) {
   const map: Record<string, string> = {
-    script: 'i-carbon-code', xmlhttprequest: 'i-carbon-send-alt', fetch: 'i-carbon-send-alt',
-    img: 'i-carbon-image', css: 'i-carbon-paint-brush', beacon: 'i-carbon-satellite-radar',
+    script: 'i-carbon-code',
+    xmlhttprequest: 'i-carbon-send-alt',
+    fetch: 'i-carbon-send-alt',
+    img: 'i-carbon-image',
+    css: 'i-carbon-paint-brush',
+    beacon: 'i-carbon-satellite-radar',
   }
   return map[type] || 'i-carbon-document'
 }
@@ -122,7 +133,9 @@ function statusCode(req: NetworkRequest) {
 <template>
   <div v-if="!requests.length" class="panel-grids flex flex-col items-center justify-center py-8 gap-1.5 rounded-b-xl">
     <UIcon name="i-carbon-network-4" class="text-xl text-(--color-text-subtle)" />
-    <p class="text-xs text-(--color-text-subtle)">Requests appear as the script loads</p>
+    <p class="text-xs text-(--color-text-subtle)">
+      Requests appear as the script loads
+    </p>
   </div>
 
   <div v-else class="waterfall-container">
@@ -151,7 +164,9 @@ function statusCode(req: NetworkRequest) {
           </span>
           <template #content>
             <div class="text-xs space-y-1 max-w-60">
-              <div class="font-semibold">First-Party Proxy</div>
+              <div class="font-semibold">
+                First-Party Proxy
+              </div>
               <div class="opacity-70">
                 {{ proxiedCount }} request{{ proxiedCount !== 1 ? 's' : '' }} routed through
                 <code class="px-1 py-px rounded bg-white/10 text-[10px]">{{ proxyPrefix || '/_scripts/p' }}</code>
@@ -175,10 +190,18 @@ function statusCode(req: NetworkRequest) {
             </span>
             <template #content>
               <div class="text-xs space-y-0.5">
-                <div class="font-mono font-semibold">{{ d.domain }}</div>
-                <div class="opacity-70">{{ d.count }} req &middot; {{ bytesToHumanReadable(d.transfer) }}</div>
-                <div v-if="d.proxyRoute" class="opacity-60">{{ d.proxyRoute.target }} &rarr; {{ d.proxyRoute.local }}</div>
-                <div v-if="d.proxied" class="text-emerald-400">Proxied through first-party</div>
+                <div class="font-mono font-semibold">
+                  {{ d.domain }}
+                </div>
+                <div class="opacity-70">
+                  {{ d.count }} req &middot; {{ bytesToHumanReadable(d.transfer) }}
+                </div>
+                <div v-if="d.proxyRoute" class="opacity-60">
+                  {{ d.proxyRoute.target }} &rarr; {{ d.proxyRoute.local }}
+                </div>
+                <div v-if="d.proxied" class="text-emerald-400">
+                  Proxied through first-party
+                </div>
               </div>
             </template>
           </UTooltip>
@@ -211,7 +234,9 @@ function statusCode(req: NetworkRequest) {
               class="waterfall-row-icon"
               :class="req.isProxied ? 'waterfall-row-icon-proxied' : ''"
             />
-            <div class="waterfall-url">{{ shortUrl(req.url) }}</div>
+            <div class="waterfall-url">
+              {{ shortUrl(req.url) }}
+            </div>
             <div class="waterfall-bar-track">
               <div class="waterfall-bar" :style="barStyle(req)">
                 <div
@@ -221,12 +246,16 @@ function statusCode(req: NetworkRequest) {
                 />
               </div>
             </div>
-            <div class="waterfall-duration">{{ msToHumanReadable(Math.round(req.duration)) }}</div>
+            <div class="waterfall-duration">
+              {{ msToHumanReadable(Math.round(req.duration)) }}
+            </div>
           </div>
 
           <template #content>
             <div class="text-xs space-y-1.5 max-w-80">
-              <div class="font-mono text-[11px] break-all opacity-90">{{ req.url }}</div>
+              <div class="font-mono text-[11px] break-all opacity-90">
+                {{ req.url }}
+              </div>
               <div class="flex items-center gap-2 opacity-70">
                 <span>{{ initiatorLabel(req.initiatorType) }}</span>
                 <span class="opacity-30">&middot;</span>
@@ -243,7 +272,9 @@ function statusCode(req: NetworkRequest) {
                       <span class="w-1.5 h-1.5 rounded-sm inline-block" :style="{ background: phase.color }" />
                       {{ phase.label }}
                     </div>
-                    <div class="tabular-nums text-right">{{ req[phase.key].toFixed(1) }}ms</div>
+                    <div class="tabular-nums text-right">
+                      {{ req[phase.key].toFixed(1) }}ms
+                    </div>
                   </template>
                 </template>
               </div>

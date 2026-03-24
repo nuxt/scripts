@@ -153,7 +153,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       id: src,
       status,
       load: () => Promise.resolve({} as T),
-      remove: () => { disconnectObserver(); return false },
+      remove: () => {
+        disconnectObserver()
+        return false
+      },
       entry: undefined,
     } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
     nuxtApp.$scripts[src] = stub
@@ -163,8 +166,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     if (import.meta.dev && import.meta.client) {
       nuxtApp._scripts = nuxtApp._scripts || {}
       const scriptHostname = (() => {
-        try { return new URL(src, window.location.origin).hostname }
-        catch { return '' }
+        try {
+          return new URL(src, window.location.origin).hostname
+        }
+        catch {
+          return ''
+        }
       })()
       const domains = new Set<string>([
         ...(scriptHostname ? [scriptHostname] : []),
@@ -331,8 +338,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
       // Network request tracking via Resource Timing API
       const scriptHostname = (() => {
-        try { return new URL(input.src, window.location.origin).hostname }
-        catch { return '' }
+        try {
+          return new URL(input.src, window.location.origin).hostname
+        }
+        catch {
+          return ''
+        }
       })()
       const domains = new Set<string>([
         ...(scriptHostname ? [scriptHostname] : []),
@@ -341,7 +352,10 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       const disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
       // Clean up observer when script is removed
       const _origRemove = instance.remove
-      instance.remove = () => { disconnectObserver(); return _origRemove() }
+      instance.remove = () => {
+        disconnectObserver()
+        return _origRemove()
+      }
 
       syncScripts()
     }
