@@ -11,17 +11,20 @@ type CapState = 'active' | 'available' | 'off'
 
 function capState(script: any, capKey: string): CapState {
   const supported = script.capabilities?.[capKey]
-  if (!supported)
+  if (!supported) {
     return 'off'
+  }
   const active = script.defaultCapability?.[capKey]
   return active ? 'active' : 'available'
 }
 
 function capStateLabel(state: CapState): string {
-  if (state === 'active')
+  if (state === 'active') {
     return 'Active by default'
-  if (state === 'available')
+  }
+  if (state === 'available') {
     return 'Supported (opt-in)'
+  }
   return 'Not supported'
 }
 </script>
@@ -117,7 +120,7 @@ function capStateLabel(state: CapState): string {
             <a
               :href="`https://scripts.nuxt.com/scripts/${script.label.toLowerCase().replace(/ /g, '-')}`"
               target="_blank"
-              class="opacity-0 group-hover:opacity-60 transition-opacity flex-shrink-0"
+              class="opacity-0 group-hover:opacity-60 focus-visible:opacity-60 transition-opacity flex-shrink-0"
               aria-label="View documentation"
             >
               <UIcon name="i-carbon-launch" class="text-sm" />
@@ -163,8 +166,14 @@ function capStateLabel(state: CapState): string {
               >
                 <td class="px-4 py-2 font-medium whitespace-nowrap">
                   <div class="flex items-center gap-2">
+                    <img
+                      v-if="script.logo && typeof script.logo === 'string' && script.logo.startsWith('http')"
+                      class="w-4 h-4 object-contain"
+                      :src="typeof script.logo === 'object' ? script.logo.dark || script.logo.light : script.logo"
+                      alt=""
+                    >
                     <div
-                      v-if="script.logo"
+                      v-else-if="script.logo"
                       class="w-4 h-4 flex items-center [&>svg]:max-h-4 [&>svg]:max-w-4"
                       v-html="typeof script.logo === 'object' ? (script.logo.dark || script.logo.light) : script.logo"
                     />

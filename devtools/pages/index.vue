@@ -189,7 +189,7 @@ function statusBadgeClass(status: string) {
                       {{ event.status }}
                     </span>
                     <span class="text-[11px] text-(--color-text-subtle) truncate">
-                      {{ event.args.issues.map((i: any) => `${key}.${i.path?.map((i: any) => i.key).join(',')}: ${i.message}`).join(',') }}
+                      {{ event.args.issues.map((i: any) => `${i.path?.map((p: any) => p.key).join('.')}: ${i.message}`).join(', ') }}
                     </span>
                   </div>
                   <span v-else class="event-badge" :class="statusBadgeClass(event.status)">

@@ -5,14 +5,16 @@ const { status, error } = defineProps<{
 }>()
 
 const displayStatus = computed(() => {
-  if (error)
+  if (error) {
     return error === 'TypeError: Failed to fetch' ? 'CORS Error' : error
+  }
   return status || 'unknown'
 })
 
 const statusClass = computed(() => {
-  if (error || status === 'error')
+  if (error || status === 'error') {
     return 'status-error'
+  }
   switch (status) {
     case 'loaded': return 'status-loaded'
     case 'loading': return 'status-loading'

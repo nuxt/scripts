@@ -44,10 +44,12 @@ export async function initRegistry() {
   scriptRegistry.value = await _registryPromise
 }
 
-const wordSepPattern = /([\s_-])+/g
+const WORD_SEPARATOR_RE = /([\s_-])+/g
+const SPACE_RE = / /g
+const FUNC_PARAMS_RE = /\(([^)]*)\)/
 
 function titleToCamelCase(s: string) {
-  return s.replace(wordSepPattern, ' ').split(' ').map((w, i) => {
+  return s.replace(WORD_SEPARATOR_RE, ' ').split(' ').map((w, i) => {
     if (i === 0)
       return w.toLowerCase()
     return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
@@ -64,7 +66,7 @@ export function syncScripts(_scripts: any[]) {
       .map(([key, script]: [string, any]) => {
         script.registry = scriptRegistry.value.find(s => titleToCamelCase(s.label) === script.registryKey)
         if (script.registry) {
-          const kebabCaseLabel = script.registry.label.toLowerCase().replaceAll(' ', '-')
+          const kebabCaseLabel = script.registry.label.toLowerCase().replace(SPACE_RE, '-')
           script.docs = `https://scripts.nuxt.com/scripts/${kebabCaseLabel}`
         }
         const loadingAt = script.events?.find((e: any) => e.status === 'loading')?.at || 0
@@ -80,8 +82,8 @@ export function syncScripts(_scripts: any[]) {
                 script.size = res.size
               }
               if (res.error) {
-                scriptErrors[scriptSizeKey] = res.error
-                script.error = res.error
+                scriptErrors[scriptSizeKey] = res.error instanceof Error ? res.error.message : String(res.error)
+                script.error = scriptErrors[scriptSizeKey]
               }
             })
         }
@@ -121,11 +123,9 @@ export function scriptLogo(script: any) {
 }
 
 // Interface formatting
-const paramPattern = /\(([^)]*)\)/
-
 export function formatFunctionSignature(name: string, func: (...args: any[]) => any): string {
   const funcStr = func.toString()
-  const paramMatch = funcStr.match(paramPattern)
+  const paramMatch = funcStr.match(FUNC_PARAMS_RE)
   const params = paramMatch?.[1]?.trim() || ''
 
   const formattedParams = params

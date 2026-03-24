@@ -30,7 +30,7 @@ const runtimeVersion = computed(() => version.value)
 
 <template>
   <DevtoolsLayout
-    v-model:active-tab="currentTab"
+    :active-tab="currentTab"
     title="Scripts"
     icon="carbon:script"
     :version="runtimeVersion"

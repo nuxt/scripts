@@ -16,6 +16,7 @@ import { parse } from 'valibot'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
 
+// Dev-only: stack trace parsing for component location detection (only referenced inside import.meta.dev)
 const URL_MATCH_RE = /https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/
 const URL_PAREN_MATCH_RE = /\(https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)\)/
 const VUE_MATCH_RE = /([^/\s]+\.vue):(\d+):(\d+)/

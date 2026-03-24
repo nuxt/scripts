@@ -14,8 +14,11 @@ type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
 }
 
 /**
- * Resolve the proxy prefix from runtime config. Falls back to the default `/_scripts/p`.
+ * Devtools network tracking utilities.
+ * All functions below are only called inside `import.meta.dev` guards,
+ * so bundlers eliminate them (and their closures) in production builds.
  */
+
 function resolveProxyPrefix(): string {
   const devtoolsConfig = useRuntimeConfig().public['nuxt-scripts-devtools'] as any
   return devtoolsConfig?.proxyPrefix || '/_scripts/p'
@@ -41,10 +44,13 @@ function toNetworkRequest(entry: PerformanceResourceTiming, proxyPrefix: string)
 }
 
 function createDomainMatcher(domains: Set<string>, proxyPrefix: string) {
+  const localHostname = window.location.hostname
   return function matchesScript(entry: PerformanceResourceTiming): boolean {
     try {
       const entryUrl = new URL(entry.name, window.location.origin)
-      if (domains.has(entryUrl.hostname))
+      // Skip same-origin hostname matching to avoid capturing unrelated
+      // same-origin requests (API calls, images, HMR, etc.)
+      if (entryUrl.hostname !== localHostname && domains.has(entryUrl.hostname))
         return true
       // match proxied paths: <proxyPrefix>/<domain>/...
       const proxyPath = `${proxyPrefix}/`
@@ -56,15 +62,11 @@ function createDomainMatcher(domains: Set<string>, proxyPrefix: string) {
           return true
       }
     }
-    catch {}
+    catch {} // malformed URLs are expected, safe to ignore
     return false
   }
 }
 
-/**
- * Observe network requests matching a set of domains and push them into the payload.
- * Returns a cleanup function that disconnects the observer.
- */
 function observeNetworkRequests(
   payload: NuxtDevToolsScriptInstance,
   domains: Set<string>,
@@ -75,7 +77,6 @@ function observeNetworkRequests(
 
   const proxyPrefix = resolveProxyPrefix()
   const matchesScript = createDomainMatcher(domains, proxyPrefix)
-  // Track seen entries to prevent duplicates between getEntriesByType and observer
   const seen = new Set<string>()
 
   function entryKey(entry: PerformanceResourceTiming): string {
@@ -93,11 +94,9 @@ function observeNetworkRequests(
     return true
   }
 
-  // capture existing entries
   for (const entry of performance.getEntriesByType('resource') as PerformanceResourceTiming[])
     processEntry(entry)
 
-  // observe new entries
   const observer = new PerformanceObserver((list) => {
     let added = false
     for (const entry of list.getEntries() as PerformanceResourceTiming[]) {
@@ -110,6 +109,20 @@ function observeNetworkRequests(
   observer.observe({ type: 'resource', buffered: false })
 
   return () => observer.disconnect()
+}
+
+/**
+ * Extract a non-local hostname from a script src, or empty string.
+ * Skips same-origin hostnames so they don't match all local resources.
+ */
+function extractExternalHostname(src: string | undefined): string {
+  if (!src)
+    return ''
+  try {
+    const hostname = new URL(src, window.location.origin).hostname
+    return hostname === window.location.hostname ? '' : hostname
+  }
+  catch { return '' }
 }
 
 function ensureScripts(nuxtApp: NuxtScriptsApp) {
@@ -165,14 +178,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     // (same-origin), so they appear in the main thread's Performance API
     if (import.meta.dev && import.meta.client) {
       nuxtApp._scripts = nuxtApp._scripts || {}
-      const scriptHostname = (() => {
-        try {
-          return new URL(src, window.location.origin).hostname
-        }
-        catch {
-          return ''
-        }
-      })()
+      const scriptHostname = extractExternalHostname(src)
       const domains = new Set<string>([
         ...(scriptHostname ? [scriptHostname] : []),
         ...(options.devtools?.domains || []),
@@ -337,24 +343,25 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       })
 
       // Network request tracking via Resource Timing API
-      const scriptHostname = (() => {
-        try {
-          return new URL(input.src, window.location.origin).hostname
-        }
-        catch {
-          return ''
-        }
-      })()
+      const scriptHostname = extractExternalHostname(input.src)
       const domains = new Set<string>([
         ...(scriptHostname ? [scriptHostname] : []),
         ...(options.devtools?.domains || []),
       ])
-      const disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
-      // Clean up observer when script is removed
+      let disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+      // Clean up observer when script is removed, but keep it alive across reload()
       const _origRemove = instance.remove
+      const _origReload = instance.reload
       instance.remove = () => {
         disconnectObserver()
         return _origRemove()
+      }
+      instance.reload = async () => {
+        // Disconnect before reload, reconnect after so new network entries are tracked
+        disconnectObserver()
+        const result = await _origReload()
+        disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+        return result
       }
 
       syncScripts()
