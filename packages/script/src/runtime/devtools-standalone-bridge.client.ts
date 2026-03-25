@@ -56,7 +56,7 @@ function serializeScripts(scripts: Record<string, any>): Record<string, any> {
       key: script.key,
       registryKey: script.registryKey,
       registryMeta: script.registryMeta,
-      loadedFrom: script.loadedFrom,
+      loadedFrom: script.loadedFrom && script.loadedFrom !== 'unknown' ? script.loadedFrom : undefined,
       events: script.events,
       networkRequests: script.networkRequests,
       // Serialize $script status as a plain string (methods won't transfer)

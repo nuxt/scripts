@@ -21,6 +21,30 @@ const subTabDefs = [
   { label: 'API', value: 'api', icon: 'i-carbon-code' },
 ]
 
+type StatusFilter = 'all' | 'active' | 'awaiting'
+const statusFilter = ref<StatusFilter>('all')
+
+const scriptCounts = computed(() => {
+  const entries = Object.values(scripts.value || {})
+  const active = entries.filter(s => getScriptStatus(s) !== 'awaitingLoad').length
+  const awaiting = entries.filter(s => getScriptStatus(s) === 'awaitingLoad').length
+  return { total: entries.length, active, awaiting }
+})
+
+const filteredScripts = computed(() => {
+  const all = scripts.value || {}
+  if (statusFilter.value === 'all')
+    return all
+  return Object.fromEntries(
+    Object.entries(all).filter(([, s]) => {
+      const status = getScriptStatus(s)
+      return statusFilter.value === 'active'
+        ? status !== 'awaitingLoad'
+        : status === 'awaitingLoad'
+    }),
+  )
+})
+
 function statusBadgeClass(status: string) {
   switch (status) {
     case 'loaded': return 'status-badge-loaded'
@@ -48,197 +72,267 @@ function statusBadgeClass(status: string) {
       </p>
     </div>
 
-    <div class="stagger-children space-y-3">
-      <div
-        v-for="(script, id) in scripts"
-        :key="id"
-        class="card overflow-hidden"
-      >
-        <!-- Script header -->
-        <div class="px-4 py-3 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-7 h-7 rounded-lg bg-(--color-surface-sunken) border border-(--color-border-subtle) flex items-center justify-center flex-shrink-0 overflow-hidden">
-              <img
-                v-if="scriptLogo(script) && typeof scriptLogo(script) === 'string' && scriptLogo(script).startsWith('http')"
-                class="w-5 h-5 object-contain"
-                :src="scriptLogo(script)"
-                alt=""
-              >
-              <div
-                v-else-if="scriptLogo(script)"
-                class="w-5 h-5 flex items-center [&>svg]:max-w-5 [&>svg]:max-h-5"
-                v-html="scriptLogo(script)"
-              />
-              <img
-                v-else-if="script.src && !script.src.startsWith('/')"
-                :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`"
-                class="w-4 h-4 rounded-sm"
-                alt=""
-              >
-              <UIcon v-else name="i-carbon-script" class="text-sm text-(--color-text-subtle)" />
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <a
-                  :href="script.src"
-                  target="_blank"
-                  class="text-sm font-semibold tracking-tight truncate link-external"
-                  :title="script.src"
+    <template v-else>
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <button
+          v-for="f in ([
+            { key: 'all' as StatusFilter, label: 'All', count: scriptCounts.total },
+            { key: 'active' as StatusFilter, label: 'Active', count: scriptCounts.active },
+            { key: 'awaiting' as StatusFilter, label: 'Awaiting', count: scriptCounts.awaiting },
+          ])"
+          :key="f.key"
+          class="filter-chip"
+          :class="statusFilter === f.key ? 'filter-chip-active' : ''"
+          @click="statusFilter = f.key"
+        >
+          {{ f.label }}
+          <span class="filter-chip-count">{{ f.count }}</span>
+        </button>
+      </div>
+
+      <div class="stagger-children space-y-3">
+        <div
+          v-for="(script, id) in filteredScripts"
+          :key="id"
+          class="card overflow-hidden"
+        >
+          <!-- Script header -->
+          <div class="px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-7 h-7 rounded-lg bg-(--color-surface-sunken) border border-(--color-border-subtle) flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img
+                  v-if="scriptLogo(script) && typeof scriptLogo(script) === 'string' && scriptLogo(script).startsWith('http')"
+                  class="w-5 h-5 object-contain"
+                  :src="scriptLogo(script)"
+                  alt=""
                 >
-                  {{ script.registry?.label || script.key || script.src }}
-                </a>
-                <a
-                  v-if="script.docs"
-                  :href="script.docs"
-                  target="_blank"
-                  class="text-[10px] font-medium text-(--color-text-subtle) hover:text-(--color-text-muted) transition-colors"
+                <div
+                  v-else-if="scriptLogo(script)"
+                  class="w-5 h-5 flex items-center [&>svg]:max-w-5 [&>svg]:max-h-5"
+                  v-html="scriptLogo(script)"
+                />
+                <img
+                  v-else-if="script.src && !script.src.startsWith('/')"
+                  :src="`https://www.google.com/s2/favicons?domain=${urlToOrigin(script.src)}`"
+                  class="w-4 h-4 rounded-sm"
+                  alt=""
                 >
-                  docs
-                </a>
+                <UIcon v-else name="i-carbon-script" class="text-sm text-(--color-text-subtle)" />
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <a
+                    :href="script.src"
+                    target="_blank"
+                    class="text-sm font-semibold tracking-tight truncate link-external"
+                    :title="script.src"
+                  >
+                    {{ script.registry?.label || script.key || script.src }}
+                  </a>
+                  <a
+                    v-if="script.docs"
+                    :href="script.docs"
+                    target="_blank"
+                    class="text-[10px] font-medium text-(--color-text-subtle) hover:text-(--color-text-muted) transition-colors"
+                  >
+                    docs
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-          <UButton
-            v-if="canControlScript(script) && getScriptStatus(script) === 'awaitingLoad'"
-            size="xs"
-            color="primary"
-            variant="soft"
-            icon="i-carbon-play-filled-alt"
-            @click="script.$script.load()"
-          >
-            Load
-          </UButton>
-          <UButton
-            v-else-if="canControlScript(script) && getScriptStatus(script) === 'loaded'"
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            icon="i-carbon-close"
-            @click="script.$script.remove()"
-          >
-            Remove
-          </UButton>
-        </div>
-
-        <!-- Status row -->
-        <div class="px-4 pb-3 flex items-center gap-2 flex-wrap">
-          <ScriptStatus
-            :status="getScriptStatus(script)"
-            :error="scriptErrors[script.src]"
-          />
-          <span
-            v-if="isFirstPartyScript(script.registryKey)"
-            class="status-enabled"
-          >
-            <UIcon name="i-carbon-security" class="text-xs" />
-            First-Party
-          </span>
-          <ScriptSize :size="scriptSizes[script.src]" />
-          <ScriptLoadTime :load-time="script.loadTime" />
-          <span v-if="script.loadedFrom" class="inline-flex items-center gap-1 text-[11px] text-(--color-text-subtle) font-mono">
-            <svg xmlns="http://www.w3.org/2000/svg" height="10" viewBox="0 0 256 221" class="opacity-60">
-              <path fill="#41B883" d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0z" />
-              <path fill="#41B883" d="m0 0l128 220.8L256 0h-51.2L128 132.48L50.56 0z" />
-              <path fill="#35495E" d="M50.56 0L128 133.12L204.8 0h-47.36L128 51.2L97.92 0z" />
-            </svg>
-            {{ script.loadedFrom }}
-          </span>
-          <span
-            v-for="k in Object.keys(script.registryMeta || {})"
-            :key="k"
-            class="text-[11px] text-(--color-text-subtle) font-mono"
-          >
-            {{ k }}: {{ script.registryMeta[k] }}
-          </span>
-        </div>
-
-        <!-- Sub-tabs -->
-        <div class="border-t border-(--color-border-subtle)">
-          <div class="flex items-center border-b border-(--color-border-subtle)">
-            <button
-              v-for="tabOption in subTabDefs"
-              :key="tabOption.value"
-              class="sub-tab"
-              :class="getActiveTab(script.src) === tabOption.value ? 'sub-tab-active' : ''"
-              @click="setActiveTab(script.src, tabOption.value)"
+            <UButton
+              v-if="canControlScript(script) && getScriptStatus(script) === 'awaitingLoad'"
+              size="xs"
+              color="primary"
+              variant="soft"
+              icon="i-carbon-play-filled-alt"
+              @click="script.$script.load()"
             >
-              <UIcon :name="tabOption.icon" class="text-xs" />
-              {{ tabOption.label }}
-              <span
-                v-if="tabOption.value === 'network' && script.networkRequests?.length"
-                class="text-[9px] px-1 py-px rounded-full bg-(--color-surface-sunken) tabular-nums font-mono"
-              >{{ script.networkRequests.length }}</span>
-            </button>
+              Load
+            </UButton>
+            <UButton
+              v-else-if="canControlScript(script) && getScriptStatus(script) === 'loaded'"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              icon="i-carbon-close"
+              @click="script.$script.remove()"
+            >
+              Remove
+            </UButton>
           </div>
 
-          <!-- Events -->
-          <div v-if="getActiveTab(script.src) === 'events'" class="p-3">
-            <div v-if="!script.events?.length" class="text-xs text-(--color-text-subtle) py-2 text-center">
-              No events recorded
-            </div>
-            <div v-else class="event-timeline">
-              <div
-                v-for="(event, key) in script.events"
-                :key="key"
-                class="event-row"
+          <!-- Status row -->
+          <div class="px-4 pb-3 flex items-center gap-2 flex-wrap">
+            <ScriptStatus
+              :status="getScriptStatus(script)"
+              :error="scriptErrors[script.src]"
+            />
+            <span
+              v-if="isFirstPartyScript(script.registryKey)"
+              class="status-enabled"
+            >
+              <UIcon name="i-carbon-security" class="text-xs" />
+              First-Party
+            </span>
+            <ScriptSize :size="scriptSizes[script.src]" />
+            <ScriptLoadTime :load-time="script.loadTime" />
+            <span v-if="script.loadedFrom && script.loadedFrom !== 'unknown'" class="inline-flex items-center gap-1 text-[11px] text-(--color-text-subtle) font-mono">
+              <svg xmlns="http://www.w3.org/2000/svg" height="10" viewBox="0 0 256 221" class="opacity-60">
+                <path fill="#41B883" d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0z" />
+                <path fill="#41B883" d="m0 0l128 220.8L256 0h-51.2L128 132.48L50.56 0z" />
+                <path fill="#35495E" d="M50.56 0L128 133.12L204.8 0h-47.36L128 51.2L97.92 0z" />
+              </svg>
+              {{ script.loadedFrom }}
+            </span>
+            <span
+              v-for="k in Object.keys(script.registryMeta || {})"
+              :key="k"
+              class="text-[11px] text-(--color-text-subtle) font-mono"
+            >
+              {{ k }}: {{ script.registryMeta[k] }}
+            </span>
+          </div>
+
+          <!-- Sub-tabs -->
+          <div class="border-t border-(--color-border-subtle)">
+            <div class="flex items-center border-b border-(--color-border-subtle)">
+              <button
+                v-for="tabOption in subTabDefs"
+                :key="tabOption.value"
+                class="sub-tab"
+                :class="getActiveTab(script.src) === tabOption.value ? 'sub-tab-active' : ''"
+                @click="setActiveTab(script.src, tabOption.value)"
               >
-                <div class="event-time">
-                  {{ humanFriendlyTimestamp(event.at) }}
-                </div>
-                <template v-if="event.type === 'status'">
-                  <div v-if="event.status === 'validation-failed'" class="flex items-center gap-2 min-w-0">
-                    <span class="event-badge" :class="statusBadgeClass(event.status)">
+                <UIcon :name="tabOption.icon" class="text-xs" />
+                {{ tabOption.label }}
+                <span
+                  v-if="tabOption.value === 'network' && script.networkRequests?.length"
+                  class="text-[9px] px-1 py-px rounded-full bg-(--color-surface-sunken) tabular-nums font-mono"
+                >{{ script.networkRequests.length }}</span>
+              </button>
+            </div>
+
+            <!-- Events -->
+            <div v-if="getActiveTab(script.src) === 'events'" class="p-3">
+              <div v-if="!script.events?.length" class="text-xs text-(--color-text-subtle) py-2 text-center">
+                No events recorded
+              </div>
+              <div v-else class="event-timeline">
+                <div
+                  v-for="(event, key) in script.events"
+                  :key="key"
+                  class="event-row"
+                >
+                  <div class="event-time">
+                    {{ humanFriendlyTimestamp(event.at) }}
+                  </div>
+                  <template v-if="event.type === 'status'">
+                    <div v-if="event.status === 'validation-failed'" class="flex items-center gap-2 min-w-0">
+                      <span class="event-badge" :class="statusBadgeClass(event.status)">
+                        {{ event.status }}
+                      </span>
+                      <span class="text-[11px] text-(--color-text-subtle) truncate">
+                        {{ event.args.issues.map((i: any) => `${i.path?.map((p: any) => p.key).join('.')}: ${i.message}`).join(', ') }}
+                      </span>
+                    </div>
+                    <span v-else class="event-badge" :class="statusBadgeClass(event.status)">
                       {{ event.status }}
                     </span>
-                    <span class="text-[11px] text-(--color-text-subtle) truncate">
-                      {{ event.args.issues.map((i: any) => `${i.path?.map((p: any) => p.key).join('.')}: ${i.message}`).join(', ') }}
-                    </span>
-                  </div>
-                  <span v-else class="event-badge" :class="statusBadgeClass(event.status)">
-                    {{ event.status }}
+                  </template>
+                  <span
+                    v-else-if="event.type === 'fn-call'"
+                    class="event-fn"
+                  >
+                    <template v-if="event.args">
+                      {{ `${event.fn}(${event.args?.map((a: any) => JSON.stringify(a, null, 2)).join(', ') || ''})` }}
+                    </template>
+                    <template v-else>
+                      <span class="opacity-40">QUEUED</span> {{ event.fn }}
+                    </template>
                   </span>
-                </template>
-                <span
-                  v-else-if="event.type === 'fn-call'"
-                  class="event-fn"
-                >
-                  <template v-if="event.args">
-                    {{ `${event.fn}(${event.args?.map((a: any) => JSON.stringify(a, null, 2)).join(', ') || ''})` }}
-                  </template>
-                  <template v-else>
-                    <span class="opacity-40">QUEUED</span> {{ event.fn }}
-                  </template>
-                </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Network -->
-          <div v-else-if="getActiveTab(script.src) === 'network'">
-            <NetworkWaterfall
-              :requests="script.networkRequests || []"
-              :domains="getFirstPartyScript(script.registryKey)?.domains"
-              :proxy-routes="getFirstPartyScript(script.registryKey)?.routes"
-              :privacy-level="getFirstPartyScript(script.registryKey)?.privacyLevel"
-              :proxy-prefix="firstPartyData?.proxyPrefix"
-              :is-first-party="isFirstPartyScript(script.registryKey)"
-            />
-          </div>
+            <!-- Network -->
+            <div v-else-if="getActiveTab(script.src) === 'network'">
+              <NetworkWaterfall
+                :requests="script.networkRequests || []"
+                :domains="getFirstPartyScript(script.registryKey)?.domains"
+                :proxy-routes="getFirstPartyScript(script.registryKey)?.routes"
+                :privacy-level="getFirstPartyScript(script.registryKey)?.privacyLevel"
+                :proxy-prefix="firstPartyData?.proxyPrefix"
+                :is-first-party="isFirstPartyScript(script.registryKey)"
+              />
+            </div>
 
-          <!-- API -->
-          <div v-else-if="getActiveTab(script.src) === 'api'" class="p-3">
-            <DevtoolsSnippet
-              :code="formatScriptInterface(script.$script?.instance)"
-              lang="js"
-            />
+            <!-- API -->
+            <div v-else-if="getActiveTab(script.src) === 'api'" class="p-3">
+              <DevtoolsSnippet
+                :code="formatScriptInterface(script.$script?.instance)"
+                lang="js"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-subtle);
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.filter-chip:hover {
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.filter-chip-active {
+  color: var(--color-text);
+  background: var(--color-surface-sunken);
+  border-color: var(--color-border);
+}
+
+.filter-chip-count {
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-subtle);
+  min-width: 1.25rem;
+  text-align: center;
+}
+
+.filter-chip-active .filter-chip-count {
+  background: var(--color-surface-elevated);
+}
+
 /* Sub-tabs */
 .sub-tab {
   display: flex;

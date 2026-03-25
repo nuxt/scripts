@@ -194,7 +194,7 @@ function mechanismLabel(m: string) {
           </div>
 
           <!-- Domains -->
-          <div v-if="s.domains.length" class="px-4 pb-3 flex items-center gap-1.5 flex-wrap">
+          <div v-if="s.domains?.length" class="px-4 pb-3 flex items-center gap-1.5 flex-wrap">
             <span class="text-[10px] text-(--color-text-subtle) mr-0.5">Proxying:</span>
             <span
               v-for="d in s.domains" :key="d"
@@ -203,7 +203,7 @@ function mechanismLabel(m: string) {
           </div>
 
           <!-- Routes -->
-          <div v-if="s.routes.length" class="border-t border-(--color-border-subtle)">
+          <div v-if="s.routes?.length" class="border-t border-(--color-border-subtle)">
             <button
               class="w-full px-4 py-2 flex items-center justify-between text-xs text-(--color-text-subtle) hover:text-(--color-text-muted) transition-colors cursor-pointer"
               @click="toggleRoutes(s.registryKey)"
@@ -211,7 +211,7 @@ function mechanismLabel(m: string) {
               <span class="flex items-center gap-1.5">
                 <UIcon name="i-carbon-arrows-horizontal" class="text-xs" />
                 {{ s.routes.length }} route{{ s.routes.length > 1 ? 's' : '' }}
-                <span v-if="s.interceptRules.length" class="opacity-50">
+                <span v-if="s.interceptRules?.length" class="opacity-50">
                   &middot; {{ s.interceptRules.length }} intercept rule{{ s.interceptRules.length > 1 ? 's' : '' }}
                 </span>
               </span>
@@ -231,7 +231,7 @@ function mechanismLabel(m: string) {
                   <span class="text-(--color-text-subtle) min-w-0 truncate">{{ r.target }}</span>
                 </div>
               </div>
-              <div v-if="s.interceptRules.length" class="border-t border-(--color-border-subtle) px-4 py-2">
+              <div v-if="s.interceptRules?.length" class="border-t border-(--color-border-subtle) px-4 py-2">
                 <div class="text-[10px] uppercase tracking-wider text-(--color-text-subtle) mb-1 font-medium">
                   Intercept Rules
                 </div>

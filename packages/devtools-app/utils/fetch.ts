@@ -14,6 +14,11 @@ export async function fetchScript(url: string) {
       error: new Error(`Failed to fetch ${compressedResponse.status} ${compressedResponse.statusText}`),
     }
   }
+  // Guard against measuring HTML error pages as script sizes
+  const contentType = compressedResponse.headers.get('Content-Type') || ''
+  if (contentType.includes('text/html')) {
+    return { size: null }
+  }
   const size = await getResponseSize(compressedResponse)
   if (!size) {
     return {

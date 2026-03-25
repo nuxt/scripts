@@ -117,7 +117,8 @@ export function syncScripts(_scripts: any[]) {
         if (loadingAt && loadedAt)
           script.loadTime = msToHumanReadable(loadedAt - loadingAt)
         const scriptSizeKey = script.src
-        if (!scriptSizes[scriptSizeKey] && script.src) {
+        // Skip size fetching in standalone mode (cross-origin fetch blocked by CORS)
+        if (!scriptSizes[scriptSizeKey] && script.src && !isStandalone.value) {
           fetchScript(script.src)
             .then((res) => {
               if (res.size) {
