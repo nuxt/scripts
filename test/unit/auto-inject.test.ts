@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
-import { applyAutoInject } from '../../src/first-party/setup'
-import { normalizeRegistryConfig } from '../../src/normalize'
-import { registry } from '../../src/registry'
+import { applyAutoInject, buildProxyConfigsFromRegistry } from '../../packages/script/src/first-party/setup'
+import { normalizeRegistryConfig } from '../../packages/script/src/normalize'
+import { registry } from '../../packages/script/src/registry'
 
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
 async function getProxyConfigs() {

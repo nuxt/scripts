@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 // Mock registry-types.json before importing the module
-vi.mock('../../src/registry-types.json', () => ({
+vi.mock('../../packages/script/src/registry-types.json', () => ({
   default: {
     types: {
       'test-script': [
@@ -46,7 +46,7 @@ vi.mock('../../src/registry-types.json', () => ({
   },
 }))
 
-const { getRegistryTypes, getRegistrySchemaFields } = await import('../../src/types-source')
+const { getRegistryTypes, getRegistrySchemaFields } = await import('../../packages/script/src/types-source')
 
 describe('getRegistryTypes', () => {
   it('returns all declarations keyed by script name', () => {
@@ -99,13 +99,13 @@ describe('getRegistrySchemaFields', () => {
 
   it('returns empty object when no schema fields exist', async () => {
     vi.resetModules()
-    vi.doMock('../../src/registry-types.json', () => ({
+    vi.doMock('../../packages/script/src/registry-types.json', () => ({
       default: {
         types: {},
       },
     }))
 
-    const mod = await import('../../src/types-source')
+    const mod = await import('../../packages/script/src/types-source')
     expect(mod.getRegistrySchemaFields()).toEqual({})
   })
 })
@@ -113,7 +113,7 @@ describe('getRegistrySchemaFields', () => {
 describe('backwards compatibility', () => {
   it('handles legacy JSON format without types/schemaFields wrapper', async () => {
     vi.resetModules()
-    vi.doMock('../../src/registry-types.json', () => ({
+    vi.doMock('../../packages/script/src/registry-types.json', () => ({
       default: {
         'test-script': [
           {
@@ -125,7 +125,7 @@ describe('backwards compatibility', () => {
       },
     }))
 
-    const mod = await import('../../src/types-source')
+    const mod = await import('../../packages/script/src/types-source')
     const types = mod.getRegistryTypes()
     expect(types['test-script']).toHaveLength(1)
     expect(mod.getRegistrySchemaFields()).toEqual({})

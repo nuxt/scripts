@@ -1,9 +1,9 @@
 /**
  * Legacy name for the same function, preserved for test compatibility.
  */
-import { stripPayloadFingerprinting } from '../../src/runtime/server/utils/privacy'
+import { stripPayloadFingerprinting } from '../../packages/script/src/runtime/server/utils/privacy'
 
-export * from '../../src/runtime/server/utils/privacy'
+export * from '../../packages/script/src/runtime/server/utils/privacy'
 export const stripFingerprintingFromPayload = stripPayloadFingerprinting
 
 /**

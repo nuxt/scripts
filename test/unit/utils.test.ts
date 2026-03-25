@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { useRegistryScript } from '../../src/runtime/utils'
+import { useRegistryScript } from '../../packages/script/src/runtime/utils'
 
 // Mock dependencies
 vi.mock('nuxt/app', () => ({
   useRuntimeConfig: () => ({ public: { scripts: {} } }),
 }))
 
-vi.mock('../../src/runtime/composables/useScript', () => ({
+vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
   useScript: vi.fn((input, options) => ({ input, options })),
 }))
 

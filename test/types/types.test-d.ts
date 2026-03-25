@@ -1,12 +1,12 @@
-import type { ModuleOptions } from '../../src/module'
-import type { CrispApi } from '../../src/runtime/registry/crisp'
-import type { DefaultEventName } from '../../src/runtime/registry/google-analytics'
+import type { ModuleOptions } from '../../packages/script/src/module'
+import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
+import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
 import type {
   NuxtUseScriptOptions,
   RegistryScriptInput,
   ScriptRegistry,
   UseScriptContext,
-} from '../../src/runtime/types'
+} from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
 describe('module options registry', () => {

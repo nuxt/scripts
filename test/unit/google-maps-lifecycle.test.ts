@@ -4,8 +4,7 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, onUnmounted, provide, ref, shallowRef } from 'vue'
-import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'
-import { useGoogleMapsResource } from '../../src/runtime/components/GoogleMaps/useGoogleMapsResource'
+import { MAP_INJECTION_KEY, useGoogleMapsResource } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import { createMockGoogleMapsAPI } from './__mocks__/google-maps-api'
 
 // Helper to create a wrapper component that provides mock map context

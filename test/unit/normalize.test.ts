@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeRegistryConfig } from '../../src/normalize'
+import { normalizeRegistryConfig } from '../../packages/script/src/normalize'
 
 describe('normalizeRegistryConfig', () => {
   it('normalizes true to [{}, { trigger: "onNuxtReady" }]', () => {

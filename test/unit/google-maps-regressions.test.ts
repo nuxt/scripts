@@ -4,7 +4,7 @@
  * Regression tests for Google Maps component fixes.
  */
 import { describe, expect, it, vi } from 'vitest'
-import { bindGoogleMapsEvents } from '../../src/runtime/components/GoogleMaps/bindGoogleMapsEvents'
+import { bindGoogleMapsEvents } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import { createMockAdvancedMarkerElement, createMockGoogleMapsAPIWithInstances, createMockInfoWindow } from './__mocks__/google-maps-api'
 
 describe('google Maps Regressions', () => {

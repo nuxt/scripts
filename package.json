@@ -1,63 +1,25 @@
 {
-  "name": "@nuxt/scripts",
+  "name": "nuxt-scripts-monorepo",
   "type": "module",
   "version": "1.0.0-beta.32",
+  "private": true,
   "packageManager": "pnpm@10.32.1",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
-  "author": {
-    "name": "Harlan Wilton",
-    "email": "harlan@harlanzw.com",
-    "url": "https://harlanzw.com"
-  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuxt/scripts.git"
   },
-  "bugs": {
-    "url": "https://github.com/nuxt/scripts/issues"
-  },
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/types.d.mts",
-      "import": "./dist/module.mjs"
-    },
-    "./registry": "./dist/registry.mjs",
-    "./stats": "./dist/stats.mjs",
-    "./types-source": "./dist/types-source.mjs"
-  },
-  "main": "./dist/module.mjs",
-  "types": "./dist/types.d.mts",
-  "typesVersions": {
-    "*": {
-      ".": [
-        "./dist/types.d.mts"
-      ],
-      "registry": [
-        "./dist/registry.d.mts"
-      ],
-      "stats": [
-        "./dist/stats.d.mts"
-      ],
-      "types-source": [
-        "./dist/types-source.d.mts"
-      ]
-    }
-  },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "pnpm dev:prepare && pnpm prepack",
+    "build": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
     "generate:types": "pnpm dlx tsx scripts/generate-registry-types.ts",
-    "prepack": "pnpm generate:types && nuxt-module-build build --stub && nuxt-module-build prepare && nuxt-module-build build && pnpm devtools:build",
-    "devtools:build": "nuxi generate devtools",
-    "devtools:dev": "nuxi dev devtools --port 3300",
-    "dev": "nuxi dev playground",
-    "dev:ssl": "nuxi dev playground --https",
-    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground && pnpm prepare:fixtures",
-    "prepare:fixtures": "nuxi prepare test/fixtures/basic && nuxi prepare test/fixtures/cdn && nuxi prepare test/fixtures/extend-registry && nuxi prepare test/fixtures/partytown && nuxi prepare test/fixtures/first-party",
+    "prepack": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
+    "devtools": "nuxt dev packages/devtools-app --port 3030",
+    "devtools:build": "nuxt generate packages/devtools-app",
+    "dev": "nuxt dev playground",
+    "dev:ssl": "nuxt dev playground --https",
+    "dev:prepare": "pnpm -r dev:prepare && nuxt prepare playground && pnpm prepare:fixtures",
+    "prepare:fixtures": "nuxt prepare test/fixtures/basic && nuxt prepare test/fixtures/cdn && nuxt prepare test/fixtures/extend-registry && nuxt prepare test/fixtures/partytown && nuxt prepare test/fixtures/first-party",
     "typecheck": "nuxt typecheck",
     "release": "pnpm build && bumpp --output=CHANGELOG.md",
     "lint": "eslint .",
@@ -67,102 +29,27 @@
     "test:e2e-dev": "vitest run --project e2e-dev",
     "test:types": "vitest run --project typecheck"
   },
-  "build": {
-    "externals": [
-      "@unhead/vue",
-      "@unhead/schema",
-      "knitwork",
-      "#build/modules/nuxt-scripts-gtm",
-      "#build/modules/nuxt-scripts-ga",
-      "@vimeo/player",
-      "esbuild",
-      "unimport",
-      "#nuxt-scripts/types",
-      "posthog-js"
-    ]
-  },
-  "peerDependencies": {
-    "@googlemaps/markerclusterer": "^2.6.2",
-    "@paypal/paypal-js": "^8.1.2 || ^9.0.0",
-    "@stripe/stripe-js": "^7.0.0 || ^8.0.0",
-    "@types/google.maps": "^3.58.1",
-    "@types/vimeo__player": "^2.18.3",
-    "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3",
-    "posthog-js": "^1.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@googlemaps/markerclusterer": {
-      "optional": true
-    },
-    "@paypal/paypal-js": {
-      "optional": true
-    },
-    "@stripe/stripe-js": {
-      "optional": true
-    },
-    "@types/google.maps": {
-      "optional": true
-    },
-    "@types/vimeo__player": {
-      "optional": true
-    },
-    "@types/youtube": {
-      "optional": true
-    },
-    "posthog-js": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@nuxt/devtools-kit": "catalog:",
-    "@nuxt/kit": "catalog:",
-    "@vueuse/core": "catalog:",
-    "consola": "catalog:",
-    "defu": "catalog:",
-    "h3": "catalog:",
-    "magic-string": "catalog:",
-    "ofetch": "catalog:",
-    "ohash": "catalog:",
-    "oxc-parser": "catalog:",
-    "oxc-walker": "catalog:",
-    "pathe": "catalog:",
-    "pkg-types": "catalog:",
-    "sirv": "catalog:",
-    "std-env": "catalog:",
-    "ufo": "catalog:",
-    "ultrahtml": "catalog:",
-    "unplugin": "catalog:",
-    "unstorage": "catalog:",
-    "valibot": "catalog:"
-  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
-    "@nuxt/devtools-ui-kit": "catalog:",
-    "@nuxt/module-builder": "catalog:",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "catalog:",
     "@nuxtjs/partytown": "catalog:",
     "@paypal/paypal-js": "catalog:",
+    "@types/google.maps": "catalog:",
     "@types/jest-image-snapshot": "catalog:",
-    "@types/semver": "catalog:",
     "@types/youtube": "catalog:",
-    "@typescript-eslint/typescript-estree": "catalog:",
     "@vue/test-utils": "catalog:",
     "bumpp": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-harlanzw": "catalog:",
     "happy-dom": "catalog:",
     "jest-image-snapshot": "catalog:",
-    "knitwork": "catalog:",
     "nuxt": "catalog:",
     "playwright-core": "catalog:",
     "posthog-js": "catalog:",
-    "shiki": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vue": "catalog:",
-    "vue-router": "catalog:",
     "vue-tsc": "catalog:"
   },
   "resolutions": {

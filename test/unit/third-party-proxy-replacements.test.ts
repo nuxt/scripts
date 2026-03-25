@@ -1,9 +1,9 @@
-import type { ProxyRewrite } from '../../src/first-party'
+import type { ProxyRewrite } from '../../packages/script/src/first-party/types'
 import { $fetch } from 'ofetch'
 import { describe, expect, it } from 'vitest'
-import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
-import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
-import { registry } from '../../src/registry'
+import { buildProxyConfigsFromRegistry } from '../../packages/script/src/first-party/setup'
+import { rewriteScriptUrlsAST } from '../../packages/script/src/plugins/rewrite-ast'
+import { registry } from '../../packages/script/src/registry'
 import { stripFingerprintingFromPayload } from '../utils/proxy-privacy'
 
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined

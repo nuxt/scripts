@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeRegistryConfig } from '../../src/normalize'
-import { resolveTriggerForTemplate, templatePlugin } from '../../src/templates'
+import { normalizeRegistryConfig } from '../../packages/script/src/normalize'
+import { resolveTriggerForTemplate, templatePlugin } from '../../packages/script/src/templates'
 
 /** Normalize registry config before passing to templatePlugin (mirrors module.ts behavior) */
 function templatePluginNormalized(config: Parameters<typeof templatePlugin>[0], registry: Parameters<typeof templatePlugin>[1]) {

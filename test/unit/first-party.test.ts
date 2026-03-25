@@ -1,7 +1,7 @@
-import type { RegistryScript } from '../../src/runtime/types'
+import type { RegistryScript } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
-import { registry } from '../../src/registry'
+import { buildProxyConfigsFromRegistry } from '../../packages/script/src/first-party/setup'
+import { registry } from '../../packages/script/src/registry'
 import {
   anonymizeIP,
   FINGERPRINT_HEADERS,
@@ -12,7 +12,7 @@ import {
   resolvePrivacy,
   SENSITIVE_HEADERS,
   stripPayloadFingerprinting,
-} from '../../src/runtime/server/utils/privacy'
+} from '../../packages/script/src/runtime/server/utils/privacy'
 
 let _registryScripts: RegistryScript[] | undefined
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined

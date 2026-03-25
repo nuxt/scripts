@@ -1,6 +1,6 @@
-import type { NuxtConfigScriptRegistry } from '../../src/runtime/types'
+import type { NuxtConfigScriptRegistry } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { applyAutoInject } from '../../src/first-party/setup'
+import { applyAutoInject } from '../../packages/script/src/first-party/setup'
 
 describe('applyAutoInject', () => {
   const posthogAutoInject = {

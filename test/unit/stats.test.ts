@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { scriptMeta } from '../../src/script-meta'
-import { getScriptStats } from '../../src/stats'
+import { scriptMeta } from '../../packages/script/src/script-meta'
+import { getScriptStats } from '../../packages/script/src/stats'
 
 describe('getScriptStats', () => {
   it('returns stats for all registry entries', async () => {

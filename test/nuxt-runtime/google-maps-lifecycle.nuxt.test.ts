@@ -2,8 +2,7 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue'
-import { MAP_INJECTION_KEY } from '../../src/runtime/components/GoogleMaps/injectionKeys'
-import { useGoogleMapsResource } from '../../src/runtime/components/GoogleMaps/useGoogleMapsResource'
+import { MAP_INJECTION_KEY, useGoogleMapsResource } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import { createMockGoogleMapsAPI } from '../unit/__mocks__/google-maps-api'
 
 type MockAPI = ReturnType<typeof createMockGoogleMapsAPI>

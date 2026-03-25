@@ -1,11 +1,11 @@
-import type { AssetBundlerTransformerOptions } from '../../src/plugins/transform'
+import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
 import type { IntercomInput } from '~/src/runtime/registry/intercom'
 import type { NpmInput } from '~/src/runtime/registry/npm'
 import { $fetch } from 'ofetch'
 import { hash } from 'ohash'
 import { hasProtocol, joinURL, withBase } from 'ufo'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { NuxtScriptBundleTransformer } from '../../src/plugins/transform'
+import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
 
 const ohash = (await vi.importActual<typeof import('ohash')>('ohash')).hash
 vi.mock('ohash', async (og) => {
@@ -44,7 +44,7 @@ const mockBundleStorage: any = {
   setItemRaw: vi.fn(),
   hasItem: vi.fn(),
 }
-vi.mock('../../src/assets', () => ({
+vi.mock('../../packages/script/src/assets', () => ({
   bundleStorage: vi.fn(() => mockBundleStorage),
 }))
 vi.stubGlobal('fetch', vi.fn(() => {
@@ -541,7 +541,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       mockBundleStorage.getItem.mockResolvedValue(null)
 
       // Import the isCacheExpired function - we need to access it for testing
-      const { isCacheExpired } = await import('../../src/plugins/transform')
+      const { isCacheExpired } = await import('../../packages/script/src/plugins/transform')
 
       const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js')
       expect(isExpired).toBe(true)
@@ -552,7 +552,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       // Mock storage to have metadata without timestamp
       mockBundleStorage.getItem.mockResolvedValue({})
 
-      const { isCacheExpired } = await import('../../src/plugins/transform')
+      const { isCacheExpired } = await import('../../packages/script/src/plugins/transform')
 
       const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js')
       expect(isExpired).toBe(true)
@@ -566,7 +566,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       // Mock storage to have old timestamp
       mockBundleStorage.getItem.mockResolvedValue({ timestamp: twoDaysAgo })
 
-      const { isCacheExpired } = await import('../../src/plugins/transform')
+      const { isCacheExpired } = await import('../../packages/script/src/plugins/transform')
 
       const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js', oneDayInMs)
       expect(isExpired).toBe(true)
@@ -580,7 +580,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       // Mock storage to have recent timestamp
       mockBundleStorage.getItem.mockResolvedValue({ timestamp: oneHourAgo })
 
-      const { isCacheExpired } = await import('../../src/plugins/transform')
+      const { isCacheExpired } = await import('../../packages/script/src/plugins/transform')
 
       const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js', oneDayInMs)
       expect(isExpired).toBe(false)
@@ -594,7 +594,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       // Mock storage to have timestamp older than custom maxAge
       mockBundleStorage.getItem.mockResolvedValue({ timestamp: twoHoursAgo })
 
-      const { isCacheExpired } = await import('../../src/plugins/transform')
+      const { isCacheExpired } = await import('../../packages/script/src/plugins/transform')
 
       const isExpired = await isCacheExpired(mockBundleStorage, 'test-file.js', oneHourInMs)
       expect(isExpired).toBe(true)

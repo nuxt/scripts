@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LOGOS } from '../../src/registry-logos'
+import { LOGOS } from '../../packages/script/src/registry-logos'
 
 describe('registry logos', () => {
   it('googleRecaptcha uses same logo as googleSignIn', () => {

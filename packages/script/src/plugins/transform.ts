@@ -1,0 +1,552 @@
+import type { RegistryScript } from '#nuxt-scripts/types'
+import type { FetchOptions } from 'ofetch'
+import type { SourceMapInput } from 'rollup'
+import type { InferInput } from 'valibot'
+import type { ProxyConfig, ProxyRewrite } from '../first-party/types'
+import { createHash } from 'node:crypto'
+import fsp from 'node:fs/promises'
+import { tryUseNuxt, useNuxt } from '@nuxt/kit'
+import { colors } from 'consola/utils'
+import MagicString from 'magic-string'
+import { $fetch } from 'ofetch'
+import { hash as ohash } from 'ohash'
+import { parseAndWalk } from 'oxc-walker'
+import { join } from 'pathe'
+import { hasProtocol, joinURL, parseURL } from 'ufo'
+import { createUnplugin } from 'unplugin'
+import { bundleStorage } from '../assets'
+import { logger } from '../logger'
+import { rewriteScriptUrlsAST } from './rewrite-ast'
+import { isJS, isVue } from './util'
+
+const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
+
+const PROTOCOL_RELATIVE_RE = /^\/\//
+const VUE_RE = /\.vue/
+const JS_RE = /\.[cm]?[jt]sx?$/
+const TEST_RE = /\.(?:test|spec)\./
+const UPPERCASE_RE = /^[A-Z]$/
+const USE_SCRIPT_RE = /^useScript/
+
+export type IntegrityAlgorithm = 'sha256' | 'sha384' | 'sha512'
+
+function calculateIntegrity(content: Buffer, algorithm: IntegrityAlgorithm = 'sha384'): string {
+  const hash = createHash(algorithm).update(content).digest('base64')
+  return `${algorithm}-${hash}`
+}
+
+export async function isCacheExpired(storage: any, filename: string, cacheMaxAge: number = SEVEN_DAYS_IN_MS): Promise<boolean> {
+  const metaKey = `bundle-meta:${filename}`
+  const meta = await storage.getItem(metaKey)
+  if (!meta || !meta.timestamp) {
+    return true // No metadata means expired/invalid cache
+  }
+  return Date.now() - meta.timestamp > cacheMaxAge
+}
+
+export interface RenderedScriptMeta {
+  content: Buffer
+  /**
+   * in kb
+   */
+  size: number
+  encoding?: string
+  src: string
+  filename?: string
+  integrity?: string
+}
+
+export interface AssetBundlerTransformerOptions {
+  moduleDetected?: (module: string) => void
+  defaultBundle?: boolean | 'force'
+  assetsBaseURL?: string
+  scripts?: Required<RegistryScript>[]
+  /**
+   * Merged configuration from both scripts.registry and runtimeConfig.public.scripts
+   * Used to provide default options to script bundling functions when no arguments are provided
+   */
+  registryConfig?: Record<string, any>
+  /**
+   * Pre-built proxy configs from setupFirstParty. Empty object if first-party is disabled.
+   */
+  proxyConfigs?: Record<string, ProxyConfig>
+  /**
+   * Proxy prefix for first-party mode. Used to derive rewrite targets from domains.
+   */
+  proxyPrefix?: string
+  fallbackOnSrcOnBundleFail?: boolean
+  fetchOptions?: FetchOptions
+  cacheMaxAge?: number
+  /**
+   * Enable automatic integrity hash generation for bundled scripts.
+   * When enabled, calculates SRI hash and injects integrity attribute.
+   * @default false
+   */
+  integrity?: boolean | IntegrityAlgorithm
+  renderedScript?: Map<string, RenderedScriptMeta | Error>
+  /**
+   * Set of registry script keys that use Partytown.
+   * Scripts in this set skip API call rewrites (__nuxtScripts.*) since Partytown's
+   * resolveUrl hook handles network interception in the web worker instead.
+   */
+  partytownScripts?: Set<string>
+}
+
+function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts/assets'): { url: string, filename?: string } {
+  if (hasProtocol(src, { acceptRelative: true })) {
+    src = src.replace(PROTOCOL_RELATIVE_RE, 'https://')
+    const url = parseURL(src)
+    const h = ohash(url)
+    // Prefix hashes starting with '-' — Nitro's publicAssets handler cannot serve
+    // files whose names begin with a dash (they get omitted from the asset manifest).
+    const file = `${h.startsWith('-') ? `_${h.slice(1)}` : h}.js`
+    const nuxt = tryUseNuxt()
+    // Use cdnURL if available, otherwise fall back to baseURL
+    const cdnURL = nuxt?.options.runtimeConfig?.app?.cdnURL || nuxt?.options.app?.cdnURL || ''
+    const baseURL = cdnURL || nuxt?.options.app.baseURL || ''
+    return { url: joinURL(joinURL(baseURL, assetsBaseURL), file), filename: file }
+  }
+  return { url: src }
+}
+async function downloadScript(opts: {
+  src: string
+  url: string
+  filename?: string
+  forceDownload?: boolean
+  proxyRewrites?: ProxyRewrite[]
+  postProcess?: ProxyConfig['postProcess']
+  integrity?: boolean | IntegrityAlgorithm
+  skipApiRewrites?: boolean
+  neutralizeCanvas?: boolean
+}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
+  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess, skipApiRewrites, neutralizeCanvas } = opts
+  if (src === url || !filename) {
+    return
+  }
+  const storage = bundleStorage()
+  const scriptContent = renderedScript.get(src)
+  let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
+  if (!res) {
+    // Use storage to cache the font data between builds
+    // Include proxy in cache key to differentiate proxied vs non-proxied versions
+    // Also include a hash of proxyRewrites content to handle different proxyPrefix values
+    const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
+    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename.replace('.js', `${proxyRewritesHash}.js`)}` : `bundle:${filename}`
+    const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
+
+    if (shouldUseCache) {
+      const cachedContent = await storage.getItemRaw<Buffer>(cacheKey)
+      const meta = await storage.getItem(`bundle-meta:${filename}`) as { integrity?: string } | null
+      renderedScript.set(url, {
+        content: cachedContent!,
+        size: cachedContent!.length / 1024,
+        encoding: 'utf-8',
+        src,
+        filename,
+        integrity: meta?.integrity,
+      })
+      return
+    }
+    let encoding
+    let size = 0
+    res = await $fetch.raw(src, { ...fetchOptions, responseType: 'arrayBuffer' }).then(async (r) => {
+      if (!r.ok) {
+        throw new Error(`Failed to fetch ${src} (HTTP ${r.status})`)
+      }
+      encoding = r.headers.get('content-encoding')
+      const contentLength = r.headers.get('content-length')
+      size = contentLength ? Number(contentLength) / 1024 : 0
+      return Buffer.from(r._data || await r.arrayBuffer())
+    })
+
+    await storage.setItemRaw(`bundle:${filename}`, res)
+    // Apply URL rewrites for proxy mode (AST-based at build time)
+    if (proxyRewrites?.length && res) {
+      const content = res.toString('utf-8')
+      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess, { skipApiRewrites, neutralizeCanvas })
+      res = Buffer.from(rewritten, 'utf-8')
+      logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
+    }
+
+    // Calculate integrity hash after rewrites so the hash matches the served content
+    const integrityHash = integrity && res
+      ? calculateIntegrity(res, integrity === true ? 'sha384' : integrity)
+      : undefined
+
+    await storage.setItemRaw(cacheKey, res)
+    // Save metadata with timestamp for cache expiration
+    await storage.setItem(`bundle-meta:${filename}`, {
+      timestamp: Date.now(),
+      src,
+      filename,
+      integrity: integrityHash,
+    })
+    size = size || res!.length / 1024
+    logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})${integrityHash ? ` [${integrityHash.slice(0, 15)}...]` : ''}`)}`)
+    renderedScript.set(url, {
+      content: res!,
+      size,
+      encoding,
+      src,
+      filename,
+      integrity: integrityHash,
+    })
+  }
+}
+
+export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
+  renderedScript: new Map(),
+}) {
+  const nuxt = useNuxt()
+  const { renderedScript = new Map() } = options
+  const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
+
+  // done after all transformation is done
+  // copy all scripts to build
+  nuxt.hooks.hook('build:done', async () => {
+    if (nuxt.options._prepare) {
+      return
+    }
+    const scripts = [...renderedScript]
+    if (!scripts.length) {
+      logger.debug('[bundle-script-transformer] No scripts to bundle...')
+      return
+    }
+    logger.debug('[bundle-script-transformer] Bundling scripts...')
+    // less aggressive cache clearing in dev
+    if (!nuxt.options.dev) {
+      await fsp.rm(cacheDir, { recursive: true, force: true })
+    }
+    // ensure dir
+    await fsp.mkdir(cacheDir, { recursive: true })
+    await Promise.all(scripts.map(async ([url, content]) => {
+      if (content instanceof Error || !content.filename)
+        return
+      await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
+      logger.debug(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
+    }))
+  })
+
+  return createUnplugin(() => {
+    return {
+      name: 'nuxt:scripts:bundler-transformer',
+
+      transform: {
+        filter: {
+          id: {
+            include: [VUE_RE, JS_RE],
+            exclude: [TEST_RE],
+          },
+        },
+        async handler(code, id) {
+          if (!isVue(id, { type: ['template', 'script'] }) && !isJS(id))
+            return
+          if (!code.includes('useScript')) // all integrations should start with useScriptX
+            return
+
+          const s = new MagicString(code)
+          const deferredOps: (() => Promise<void>)[] = []
+          parseAndWalk(code, id, (_node) => {
+            const calleeName = (_node as any).callee?.name
+            if (!calleeName)
+              return
+            // check it starts with useScriptX where X must be a A-Z alphabetical letter
+            const isValidCallee = calleeName === 'useScript' || (calleeName?.startsWith('useScript') && UPPERCASE_RE.test(calleeName?.charAt(9)) && !calleeName.startsWith('useScriptTrigger') && !calleeName.startsWith('useScriptEvent'))
+            if (
+              _node.type === 'CallExpression'
+              && (_node as any).callee.type === 'Identifier'
+              && isValidCallee
+            ) {
+            // we're either dealing with useScript or an integration such as useScriptHotjar, we need to handle
+            // both cases
+              const fnName = (_node as any).callee?.name
+              const node = _node as any
+              let scriptSrcNode: { start: number, end: number, value: any } | undefined
+              let src: false | string | undefined
+              // Compute registryKey for proxy config lookup
+              let registryKey: string | undefined
+              if (fnName !== 'useScript') {
+                const baseName = fnName.replace(USE_SCRIPT_RE, '')
+                registryKey = baseName.length > 0 ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : undefined
+              }
+              if (fnName === 'useScript') {
+              // do easy case first where first argument is a literal
+                if (node.arguments[0]?.type === 'Literal') {
+                  scriptSrcNode = node.arguments[0]
+                }
+                else if (node.arguments[0]?.type === 'ObjectExpression') {
+                  const srcProperty = node.arguments[0].properties.find(
+                    (p: any) => (p.key?.name === 'src' || p.key?.value === 'src') && p?.value.type === 'Literal',
+                  )
+                  scriptSrcNode = srcProperty?.value
+                }
+              }
+              else {
+              // find the registry node
+                const registryNode = options.scripts?.find(i => i.import.name === fnName)
+                if (!registryNode) {
+                // silent failure
+                  return
+                }
+                // this is only needed when we have a dynamic src that we need to compute
+                if (!registryNode.scriptBundling && !registryNode.src)
+                  return
+
+                // integration case
+                // Get registry config for this script
+                const registryConfig = options.registryConfig?.[registryKey || ''] || {}
+
+                const fnArg0: Record<string, any> = {}
+
+                // extract the options as the first argument that we'll use to reconstruct the src
+                if (node.arguments[0]?.type === 'ObjectExpression') {
+                  const optionsNode = node.arguments[0]
+                  // extract literal values from the object to reconstruct the options
+                  for (const prop of optionsNode.properties) {
+                    if (prop.type === 'Property' && prop.value.type === 'Literal' && prop.key && 'name' in prop.key)
+                      fnArg0[prop.key.name] = prop.value.value
+                  }
+
+                  const srcProperty = node.arguments[0].properties.find(
+                    (p: any) => (p.key?.name === 'src' || p.key?.value === 'src') && p?.value.type === 'Literal' && p.type === 'Property',
+                  )
+                  if (srcProperty?.value?.value) {
+                    scriptSrcNode = srcProperty?.value
+                  }
+                }
+
+                // If no src was found from function arguments, try to generate from registry config
+                if (!scriptSrcNode) {
+                // Merge registry config with function arguments (function args take precedence)
+                  const mergedOptions = { ...registryConfig, ...fnArg0 }
+
+                  src = registryNode.scriptBundling && registryNode.scriptBundling(mergedOptions as InferInput<any>)
+                  // not supported
+                  if (src === false)
+                    return
+                  if (!src && registryNode.src)
+                    src = registryNode.src
+                }
+              }
+
+              // Check for dynamic src with bundle option - warn user and replace with 'unsupported'
+              if (!scriptSrcNode && !src) {
+              // This is a dynamic src case, check if bundle option is specified
+                const hasBundleOption = node.arguments[1]?.type === 'ObjectExpression'
+                  && node.arguments[1].properties.some(
+                    (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                  )
+
+                if (hasBundleOption) {
+                  const scriptOptionsArg = node.arguments[1]
+                  const bundleProperty = scriptOptionsArg.properties.find(
+                    (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                  )
+
+                  if (bundleProperty && bundleProperty.value.type === 'Literal') {
+                    const bundleValue = bundleProperty.value.value
+                    if (bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true') {
+                    // Replace bundle value with 'unsupported' - runtime will handle the warning
+                      s.overwrite(bundleProperty.value.start, bundleProperty.value.end, `'unsupported'`)
+                    }
+                  }
+                }
+                return
+              }
+
+              if (scriptSrcNode || src) {
+                src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
+                if (src) {
+                  let canBundle = options.defaultBundle === true || options.defaultBundle === 'force'
+                  let forceDownload = options.defaultBundle === 'force'
+                  // useScript
+                  if (node.arguments[1]?.type === 'ObjectExpression') {
+                    const scriptOptionsArg = node.arguments[1]
+                    // second node needs to be an object with an property of assetStrategy and a value of 'bundle'
+                    const bundleProperty = scriptOptionsArg.properties.find(
+                      (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
+                    )
+                    if (bundleProperty && bundleProperty.value.type === 'Literal') {
+                      const bundleValue = bundleProperty.value.value
+                      if (bundleValue !== true && bundleValue !== 'force' && String(bundleValue) !== 'true') {
+                        canBundle = false
+                        return
+                      }
+                      // if bundle was the only argument then strip the argument
+                      if (scriptOptionsArg.properties.length === 1) {
+                        s.remove(scriptOptionsArg.start, scriptOptionsArg.end)
+                      }
+                      else {
+                        const nextProperty = scriptOptionsArg.properties.find(
+                          (p: any) => p.start > bundleProperty.end && p.type === 'Property',
+                        )
+                        s.remove(bundleProperty.start, nextProperty ? nextProperty.start : bundleProperty.end)
+                      }
+                      canBundle = true
+                      forceDownload = bundleValue === 'force'
+                    }
+                  }
+                  const scriptOptions = node.arguments[0]?.properties?.find(
+                    (p: any) => (p.key?.name === 'scriptOptions'),
+                  )
+                  // we need to check if scriptOptions contains bundle: true/false/'force', if it exists
+                  const bundleOption = scriptOptions?.value.properties?.find((prop: any) => {
+                    return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
+                  })
+                  if (bundleOption) {
+                    const bundleValue = bundleOption.value.value
+                    canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
+                    forceDownload = bundleValue === 'force'
+                  }
+                  // Check for per-script proxy opt-out
+                  // Check in three locations:
+                  // 1. In scriptOptions (nested) - useScriptGA({ scriptOptions: { proxy: false } })
+                  // 2. In second argument (direct) - useScript('...', { proxy: false })
+                  // 3. In first argument's properties - useScript({ src: '...', proxy: false })
+
+                  const rpiOption = scriptOptions?.value.properties?.find((prop: any) => {
+                    return prop.type === 'Property' && prop.key?.name === 'proxy' && prop.value.type === 'Literal'
+                  })
+                  let firstPartyOptOut = rpiOption?.value.value === false
+
+                  if (!firstPartyOptOut && node.arguments[1]?.type === 'ObjectExpression') {
+                    const secondArgProp = node.arguments[1].properties.find(
+                      (p: any) => p.type === 'Property' && p.key?.name === 'proxy' && p.value.type === 'Literal',
+                    )
+                    firstPartyOptOut = secondArgProp?.value.value === false
+                  }
+
+                  if (!firstPartyOptOut && node.arguments[0]?.type === 'ObjectExpression') {
+                    const firstArgProp = node.arguments[0].properties.find(
+                      (p: any) => p.type === 'Property' && p.key?.name === 'proxy' && p.value.type === 'Literal',
+                    )
+                    firstPartyOptOut = firstArgProp?.value.value === false
+                  }
+                  if (canBundle) {
+                    const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
+                    // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
+                    // Use script's proxyConfig alias if defined, otherwise fall back to registry key
+                    const script = options.scripts?.find(s => s.import.name === fnName)
+                    const hasReverseProxy = script?.capabilities?.proxy
+                    const proxyConfigKey = hasReverseProxy ? (script?.proxyConfig || registryKey) : undefined
+                    const proxyConfig = !firstPartyOptOut && proxyConfigKey
+                      ? options.proxyConfigs?.[proxyConfigKey]
+                      : undefined
+                    // Derive rewrites from domains: { from: domain, to: proxyPrefix/domain }
+                    const proxyRewrites = proxyConfig?.domains?.map(domain => ({
+                      from: domain,
+                      to: `${options.proxyPrefix}/${domain}`,
+                    }))
+                    const postProcess = proxyConfig?.postProcess
+                    const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
+                    // Gate canvas fingerprinting neutralization on the script's hardware privacy flag
+                    const neutralizeCanvas = proxyConfig?.privacy !== undefined
+                      && typeof proxyConfig.privacy === 'object'
+                      ? (proxyConfig.privacy.hardware ?? true)
+                      : true
+
+                    // Defer async download + MagicString operations
+                    deferredOps.push(async () => {
+                      let url = _url
+                      try {
+                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity, skipApiRewrites, neutralizeCanvas }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                      }
+                      catch (e: any) {
+                        if (options.fallbackOnSrcOnBundleFail) {
+                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
+                          url = src as string
+                        }
+                        else {
+                        // Provide more helpful error message, especially for Docker/network issues
+                          const errorMessage = e?.message || 'Unknown error'
+                          if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('certificate')) {
+                            logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
+                            logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
+                          }
+                          throw e
+                        }
+                      }
+
+                      if (src === url) {
+                        if (src && (src as string).startsWith('/'))
+                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
+                        else
+                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
+                      }
+
+                      // Get the integrity hash from rendered script
+                      const scriptMeta = renderedScript.get(url)
+                      const integrityHash = scriptMeta instanceof Error ? undefined : scriptMeta?.integrity
+
+                      if (scriptSrcNode) {
+                      // For useScript('src') pattern, we need to convert to object form to add integrity
+                        if (integrityHash && fnName === 'useScript' && node.arguments[0]?.type === 'Literal') {
+                          s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `{ src: '${url}', integrity: '${integrityHash}', crossorigin: 'anonymous' }`)
+                        }
+                        else if (integrityHash && fnName === 'useScript' && node.arguments[0]?.type === 'ObjectExpression') {
+                        // For useScript({ src: '...' }) pattern, update src and add integrity
+                          s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
+                          s.appendLeft(node.arguments[0].end - 1, `, integrity: '${integrityHash}', crossorigin: 'anonymous'`)
+                        }
+                        else {
+                          s.overwrite(scriptSrcNode.start, scriptSrcNode.end, `'${url}'`)
+                        }
+                      }
+                      else {
+                      // Handle case where we need to add scriptInput (registry scripts)
+                        const integrityProps = integrityHash ? `, integrity: '${integrityHash}', crossorigin: 'anonymous'` : ''
+                        if (node.arguments[0]) {
+                        // There's at least one argument
+                          const optionsNode = node.arguments[0]
+                          // check if there's a scriptInput property
+                          const scriptInputProperty = optionsNode.properties.find(
+                            (p: any) => p.key?.name === 'scriptInput' || p.key?.value === 'scriptInput',
+                          )
+                          // see if there is a script input on it
+                          if (scriptInputProperty) {
+                            const scriptInput = scriptInputProperty.value
+                            if (scriptInput.type === 'ObjectExpression') {
+                              const srcProperty = scriptInput.properties.find(
+                                (p: any) => p.key?.name === 'src' || p.key?.value === 'src',
+                              )
+                              if (srcProperty) {
+                                s.overwrite(srcProperty.value.start, srcProperty.value.end, `'${url}'`)
+                                if (integrityHash)
+                                  s.appendLeft(scriptInput.end - 1, integrityProps)
+                              }
+                              else {
+                                s.appendRight(scriptInput.end - 1, `, src: '${url}'${integrityProps}`)
+                              }
+                            }
+                          }
+                          else {
+                            s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}'${integrityProps} }, `)
+                          }
+                        }
+                        else {
+                        // No arguments at all, replace empty () with new argument
+                          s.overwrite(node.callee.end, node.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
+                        }
+                      }
+                    })
+                  }
+                }
+              }
+            }
+          })
+
+          for (const op of deferredOps) {
+            await op()
+          }
+
+          if (s.hasChanged()) {
+            return {
+              code: s.toString(),
+              map: s.generateMap({ includeContent: true, source: id }) as SourceMapInput,
+            }
+          }
+        },
+      },
+    }
+  })
+}

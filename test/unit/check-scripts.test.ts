@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NuxtScriptsCheckScripts } from '../../src/plugins/check-scripts'
+import { NuxtScriptsCheckScripts } from '../../packages/script/src/plugins/check-scripts'
 
 const plugin = NuxtScriptsCheckScripts().vite() as any
 

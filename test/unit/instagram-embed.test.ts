@@ -5,7 +5,7 @@ import {
   rewriteUrl,
   rewriteUrlsInText,
   scopeCss,
-} from '../../src/runtime/server/instagram-embed'
+} from '../../packages/script/src/runtime/server/instagram-embed'
 
 describe('instagram-embed: URL rewriting', () => {
   it('proxies scontent CDN image URLs', () => {

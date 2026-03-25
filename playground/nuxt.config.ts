@@ -1,4 +1,4 @@
-import NuxtScripts from '../src/module'
+import NuxtScripts from '../packages/script/src/module'
 import { createResolver } from '@nuxt/kit'
 
 const { resolve } = createResolver(import.meta.url)
@@ -65,6 +65,7 @@ export default defineNuxtConfig({
 
   scripts: {
     debug: true,
+    standaloneDevtools: true,
     registry: {
       // v1 flat config syntax: presence = infrastructure, trigger = auto-load
       // Scripts without `trigger` are composable-driven (load when composable is called)

@@ -3,7 +3,7 @@ import type {
   NuxtUseScriptOptions,
   ScriptRegistry,
   UseScriptContext,
-} from '../../src/runtime/types'
+} from '../../packages/script/src/runtime/types'
 
 // Import from the generated augments file to test it's a valid module
 // This tests the fix for issue #570 - the file must have `export {}`

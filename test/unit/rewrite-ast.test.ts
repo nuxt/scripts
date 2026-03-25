@@ -1,9 +1,8 @@
-import type { ProxyRewrite } from '../../src/first-party'
+import type { ProxyRewrite } from '../../packages/script/src/first-party/types'
 import { describe, expect, it } from 'vitest'
-import { generatePartytownResolveUrl } from '../../src/first-party'
-import { buildProxyConfigsFromRegistry } from '../../src/first-party/proxy-configs'
-import { rewriteScriptUrlsAST } from '../../src/plugins/rewrite-ast'
-import { registry } from '../../src/registry'
+import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl } from '../../packages/script/src/first-party/setup'
+import { rewriteScriptUrlsAST } from '../../packages/script/src/plugins/rewrite-ast'
+import { registry } from '../../packages/script/src/registry'
 
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
 async function getProxyConfigs() {
@@ -240,6 +239,27 @@ describe('rewriteScriptUrlsAST', () => {
       const code = 'let t=e.split("/script.js")[0];'
       const result = rewrite(code) // uses default rewrites (example.com), no postProcess
       expect(result).toContain('.split("/script.js")[0]')
+    })
+  })
+
+  describe('split protocol+URL concatenation', () => {
+    it('rewrites "https:" + "//example.com/api" as a single expression', () => {
+      const result = rewrite('var u = "https:" + "//example.com/api"')
+      expect(result).toContain('self.location.origin+"/_proxy/ex/api"')
+      expect(result).not.toContain('"https:"')
+    })
+
+    it('rewrites "http:" + "//example.com/api" as a single expression', () => {
+      const result = rewrite('var u = "http:" + "//example.com/api"')
+      expect(result).toContain('self.location.origin+"/_proxy/ex/api"')
+      expect(result).not.toContain('"http:"')
+    })
+
+    it('does not collapse when left operand is not a protocol string', () => {
+      const result = rewrite('var u = prefix + "//example.com/api"')
+      expect(result).toContain('self.location.origin+"/_proxy/ex/api"')
+      // prefix variable should still be there (not collapsed)
+      expect(result).toContain('prefix')
     })
   })
 

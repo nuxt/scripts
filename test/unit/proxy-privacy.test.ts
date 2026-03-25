@@ -1,6 +1,6 @@
-import type { ResolvedProxyPrivacy } from '../../src/runtime/server/utils/privacy'
+import type { ResolvedProxyPrivacy } from '../../packages/script/src/runtime/server/utils/privacy'
 import { describe, expect, it } from 'vitest'
-import { mergePrivacy, resolvePrivacy, stripPayloadFingerprinting } from '../../src/runtime/server/utils/privacy'
+import { mergePrivacy, resolvePrivacy, stripPayloadFingerprinting } from '../../packages/script/src/runtime/server/utils/privacy'
 import {
   ALLOWED_PARAMS,
   NORMALIZE_PARAMS,

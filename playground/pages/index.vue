@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useHead } from '#imports'
-import { registry } from '../../src/registry'
+import { registry } from '../../packages/script/src/registry'
 
 useHead({
   title: 'Nuxt Scripts Playground',
