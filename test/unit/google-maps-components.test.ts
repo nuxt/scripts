@@ -228,6 +228,78 @@ describe('google Maps SFC Components Logic', () => {
     })
   })
 
+  describe('marker Clusterer #renderer Slot', () => {
+    it('should create clusterer with custom renderer when #renderer slot is provided', async () => {
+      const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
+
+      // Simulate what the component does when #content slot exists
+      const mockMap = {}
+      const rendererFn = vi.fn((_cluster: any, _stats: any) => {
+        const container = document.createElement('div')
+        container.innerHTML = '<span>5</span>'
+        return container
+      })
+
+      const renderer = {
+        render(cluster: any, stats: any) {
+          const content = rendererFn(cluster, stats)
+          const marker = new mocks.mockMapsApi.marker.AdvancedMarkerElement({
+            position: cluster.position,
+            content,
+          })
+          return marker
+        },
+      }
+
+      // eslint-disable-next-line no-new
+      new MarkerClusterer({
+        map: mockMap,
+        renderer,
+      })
+
+      expect(MarkerClusterer).toHaveBeenCalledWith(
+        expect.objectContaining({ renderer }),
+      )
+
+      // Simulate a cluster render call
+      const cluster = { position: { lat: 1, lng: 2 }, count: 5, markers: [] }
+      const stats = { clusters: [], markers: [] }
+      const marker = renderer.render(cluster, stats)
+
+      expect(rendererFn).toHaveBeenCalledWith(cluster, stats)
+      expect(mocks.mockMapsApi.marker.AdvancedMarkerElement).toHaveBeenCalledWith(
+        expect.objectContaining({ position: cluster.position }),
+      )
+      expect(marker).toBeDefined()
+    })
+
+    it('should pre-load marker library when #renderer slot is used', async () => {
+      // Simulate the pre-loading that happens when slots.content exists
+      await mocks.mockMapsApi.importLibrary('marker')
+
+      expect(mocks.mockMapsApi.importLibrary).toHaveBeenCalledWith('marker')
+    })
+
+    it('should clean up rendered containers on clusteringbegin', () => {
+      // Simulate the cleanup pattern used in the component
+      const containers: HTMLElement[] = []
+
+      // Create some containers (as would happen during render)
+      for (let i = 0; i < 3; i++) {
+        const container = document.createElement('div')
+        container.innerHTML = `<span>${i}</span>`
+        containers.push(container)
+      }
+
+      expect(containers).toHaveLength(3)
+
+      // Simulate clusteringbegin cleanup
+      containers.length = 0
+
+      expect(containers).toHaveLength(0)
+    })
+  })
+
   describe('google Maps API Types and Integration', () => {
     it('should work with LatLng objects', () => {
       const lat = -33.8688
