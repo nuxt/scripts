@@ -74,7 +74,7 @@ The [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component is 
         </p>
         <!-- Photos -->
         <div v-if="photos?.length" class="mb-3 rounded-xl overflow-hidden">
-          <img v-for="photo in photos" :key="photo.URL" :src="photo.proxiedURL" class="w-full">
+          <img v-for="photo in photos" :key="photo.url" :src="photo.proxiedUrl" class="w-full">
         </div>
         <!-- Footer -->
         <div class="flex items-center gap-4 text-gray-500 text-sm">
@@ -128,7 +128,7 @@ interface SlotProps {
   // Media
   photos?: Array<{
     URL: string
-    proxiedURL: string
+    proxiedUrl: string
     width: number
     height: number
   }>
@@ -138,8 +138,8 @@ interface SlotProps {
     variants: Array<{ type: string, src: string }>
   }
   // Links
-  tweetURL: string
-  userURL: string
+  tweetUrl: string
+  userUrl: string
   // Quote tweet
   quotedTweet?: XEmbedTweetData
   // Reply context

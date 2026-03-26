@@ -215,7 +215,7 @@ YouTube thumbnail for the video. You can display it however you like.
 The [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable lets you have fine-grain control over the YouTube Player SDK. It provides a way to load the YouTube Player SDK and interact with it programmatically.
 
 ```ts
-export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options?: YouTubePlayerInput) {}
+export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput) {}
 ```
 
 Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.

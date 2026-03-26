@@ -49,11 +49,126 @@ import {
 
 // avoid nuxt/kit dependency here so we can use in docs
 
+// -- Registry metadata types --
+
+export interface RegistryScriptMeta {
+  /** Registry key (e.g. 'plausibleAnalytics') */
+  key: string
+  /** Human-readable label */
+  label: string
+  /** Category slug */
+  category: string
+  /** Composable function name, or false for component-only scripts */
+  composableName: string | false
+  /** What first-party capabilities the script supports */
+  capabilities: ScriptCapabilities
+  /** Privacy preset applied when proxy is active, null if no proxy */
+  privacy: ProxyPrivacyInput | null
+}
+
+export interface PrivacyDescription {
+  label: string
+  description: string
+}
+
 // Privacy presets
 export const PRIVACY_NONE: ProxyPrivacyInput = { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
 export const PRIVACY_FULL: ProxyPrivacyInput = { ip: true, userAgent: true, language: true, screen: true, timezone: true, hardware: true }
 export const PRIVACY_HEATMAP: ProxyPrivacyInput = { ip: true, userAgent: false, language: true, screen: false, timezone: false, hardware: true }
 export const PRIVACY_IP_ONLY: ProxyPrivacyInput = { ip: true, userAgent: false, language: false, screen: false, timezone: false, hardware: false }
+
+// -- Privacy descriptions --
+
+export const PRIVACY_DESCRIPTIONS: Record<string, PrivacyDescription> = {
+  'ip-only': { label: 'IP Only', description: 'Anonymises IP addresses; other data passes through.' },
+  'full': { label: 'Full', description: 'All identifying data is anonymised: IP, user agent, language, screen, timezone, and hardware.' },
+  'heatmap': { label: 'Heatmap', description: 'IP, language, and hardware fingerprints anonymised; screen data preserved for heatmap accuracy.' },
+  'none': { label: 'None', description: 'No data is anonymised. Sensitive auth headers (cookies, authorization) are still stripped.' },
+}
+
+/** Resolve a privacy preset to a human-readable label + description. */
+export function getPrivacyDescription(privacy: ProxyPrivacyInput | null | undefined): PrivacyDescription | null {
+  if (!privacy || privacy === false)
+    return null
+  if (privacy === true)
+    return PRIVACY_DESCRIPTIONS.full!
+  if (privacy.ip && privacy.userAgent && privacy.language && privacy.screen && privacy.timezone && privacy.hardware)
+    return PRIVACY_DESCRIPTIONS.full!
+  if (privacy.ip && privacy.language && privacy.hardware && !privacy.screen && !privacy.timezone && !privacy.userAgent)
+    return PRIVACY_DESCRIPTIONS.heatmap!
+  if (privacy.ip && !privacy.userAgent && !privacy.language && !privacy.screen && !privacy.timezone && !privacy.hardware)
+    return PRIVACY_DESCRIPTIONS['ip-only']!
+  return PRIVACY_DESCRIPTIONS.none!
+}
+
+// -- Registry metadata (sync, importable by docs site) --
+
+function m(key: string, label: string, category: string, composableName: string | false, capabilities: ScriptCapabilities, privacy: ProxyPrivacyInput | null = null): RegistryScriptMeta {
+  return { key, label, category, composableName, capabilities, privacy }
+}
+
+/** Static registry metadata for all scripts. Importable without async resolution. */
+export const registryMeta: RegistryScriptMeta[] = [
+  // analytics
+  m('googleAnalytics', 'Google Analytics', 'analytics', 'useScriptGoogleAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_HEATMAP),
+  m('plausibleAnalytics', 'Plausible Analytics', 'analytics', 'useScriptPlausibleAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  m('cloudflareWebAnalytics', 'Cloudflare Web Analytics', 'analytics', 'useScriptCloudflareWebAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  m('posthog', 'PostHog', 'analytics', 'useScriptPostHog', { proxy: true }, PRIVACY_IP_ONLY),
+  m('fathomAnalytics', 'Fathom Analytics', 'analytics', 'useScriptFathomAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  m('matomoAnalytics', 'Matomo Analytics', 'analytics', 'useScriptMatomoAnalytics', { proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  m('rybbitAnalytics', 'Rybbit Analytics', 'analytics', 'useScriptRybbitAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  m('databuddyAnalytics', 'Databuddy Analytics', 'analytics', 'useScriptDatabuddyAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  m('umamiAnalytics', 'Umami Analytics', 'analytics', 'useScriptUmamiAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  m('segment', 'Segment', 'analytics', 'useScriptSegment', { bundle: true, partytown: true }, null),
+  m('hotjar', 'Hotjar', 'analytics', 'useScriptHotjar', { bundle: true, proxy: true }, PRIVACY_HEATMAP),
+  m('clarity', 'Clarity', 'analytics', 'useScriptClarity', { bundle: true, proxy: true, partytown: true }, PRIVACY_HEATMAP),
+  m('vercelAnalytics', 'Vercel Analytics', 'analytics', 'useScriptVercelAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  m('mixpanelAnalytics', 'Mixpanel', 'analytics', 'useScriptMixpanelAnalytics', { bundle: true, partytown: true }, null),
+  // ad
+  m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
+  m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('xPixel', 'X Pixel', 'ad', 'useScriptXPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('tiktokPixel', 'TikTok Pixel', 'ad', 'useScriptTikTokPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('snapchatPixel', 'Snapchat Pixel', 'ad', 'useScriptSnapchatPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('redditPixel', 'Reddit Pixel', 'ad', 'useScriptRedditPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('googleAdsense', 'Google Adsense', 'ad', 'useScriptGoogleAdsense', { bundle: true, proxy: true }, PRIVACY_HEATMAP),
+  m('carbonAds', 'Carbon Ads', 'ad', false, { proxy: true }, PRIVACY_IP_ONLY),
+  // tag-manager
+  m('googleTagManager', 'Google Tag Manager', 'tag-manager', 'useScriptGoogleTagManager', { bundle: true }, null),
+  // payments
+  m('stripe', 'Stripe', 'payments', 'useScriptStripe', {}, null),
+  m('lemonSqueezy', 'Lemon Squeezy', 'payments', 'useScriptLemonSqueezy', { proxy: true }, PRIVACY_IP_ONLY),
+  m('paypal', 'PayPal', 'payments', 'useScriptPayPal', {}, null),
+  // video
+  m('youtubePlayer', 'YouTube Player', 'video', 'useScriptYouTubePlayer', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  m('vimeoPlayer', 'Vimeo Player', 'video', 'useScriptVimeoPlayer', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  // content
+  m('googleMaps', 'Google Maps', 'content', 'useScriptGoogleMaps', {}, null),
+  m('instagramEmbed', 'Instagram Embed', 'content', false, {}, null),
+  m('xEmbed', 'X Embed', 'content', false, {}, null),
+  m('blueskyEmbed', 'Bluesky Embed', 'content', false, {}, null),
+  // support
+  m('intercom', 'Intercom', 'support', 'useScriptIntercom', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  m('crisp', 'Crisp', 'support', 'useScriptCrisp', { bundle: true }, null),
+  // cdn
+  m('npm', 'NPM', 'cdn', 'useScriptNpm', {}, null),
+  // utility
+  m('googleRecaptcha', 'Google reCAPTCHA', 'utility', 'useScriptGoogleRecaptcha', {}, null),
+  m('googleSignIn', 'Google Sign-In', 'utility', 'useScriptGoogleSignIn', {}, null),
+  m('gravatar', 'Gravatar', 'utility', 'useScriptGravatar', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+]
+
+export const REGISTRY_CATEGORIES = [
+  { key: 'analytics', label: 'Analytics' },
+  { key: 'ad', label: 'Advertising' },
+  { key: 'tag-manager', label: 'Tag Manager' },
+  { key: 'video', label: 'Video' },
+  { key: 'content', label: 'Content' },
+  { key: 'support', label: 'Support' },
+  { key: 'cdn', label: 'CDN' },
+  { key: 'utility', label: 'Utility' },
+  { key: 'payments', label: 'Payments' },
+] as const
 
 // -- Helpers --
 

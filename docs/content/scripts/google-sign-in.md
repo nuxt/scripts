@@ -206,7 +206,7 @@ The One Tap prompt provides a simplified sign-in experience:
 <script setup lang="ts">
 const { onLoaded } = useScriptGoogleSignIn()
 
-function handleCredentialResponse(response: CredentialResponse) {
+async function handleCredentialResponse(response: CredentialResponse) {
   // Send the credential to your backend for verification
   await $fetch('/api/auth/google', {
     method: 'POST',

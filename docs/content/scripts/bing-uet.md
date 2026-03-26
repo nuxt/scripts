@@ -30,9 +30,10 @@ Nuxt Scripts provides a registry script composable [`useScriptBingUet()`{lang="t
 const { proxy } = useScriptBingUet()
 
 function trackPurchase() {
-  proxy.uetq.push('event', 'purchase', {
-    revenue_value: 49.99,
-    currency: 'USD',
+  proxy.uetq.push({
+    ec: 'purchase',
+    ev: 49.99,
+    gc: 'USD',
   })
 }
 </script>
@@ -45,9 +46,10 @@ function trackPurchase() {
 const { proxy } = useScriptBingUet()
 
 function trackSignup() {
-  proxy.uetq.push('event', 'sign_up', {
-    event_category: 'engagement',
-    event_label: 'newsletter',
+  proxy.uetq.push({
+    ec: 'sign_up',
+    el: 'newsletter',
+    ea: 'engagement',
   })
 }
 </script>

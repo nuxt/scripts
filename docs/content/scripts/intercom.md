@@ -131,13 +131,13 @@ function onReady(intercom) {
 
 ### Intercom API
 
-The component exposes a `intercom` instance that you can access the basic Intercom API.
+The component exposes an `intercom` instance (the return value of `useScriptIntercom()`{lang="ts"}) that you can use to call the Intercom API.
 
 ```vue
 <script setup lang="ts">
 const intercomEl = ref()
 onMounted(() => {
-  intercomEl.value.intercom.do('chat:open')
+  intercomEl.value.intercom.proxy.Intercom('show')
 })
 </script>
 
