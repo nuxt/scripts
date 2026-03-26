@@ -22,8 +22,17 @@ function changeQuery() {
         :width="640"
         :height="500"
         :map-options="mapOptions"
-        above-the-fold
-      />
+      >
+        <template #placeholder>
+          <ScriptGoogleMapsStaticMap
+            :center="mapOptions.center"
+            :width="640"
+            :height="500"
+            loading="eager"
+            api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
+          />
+        </template>
+      </ScriptGoogleMaps>
     </div>
     <div class="button-container">
       <button

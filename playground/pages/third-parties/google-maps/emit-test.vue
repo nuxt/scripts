@@ -62,7 +62,6 @@ const circleOptions = {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="800"
         :height="500"
-        above-the-fold
         :zoom="12"
         :map-options="{
           center: { lat: -33.87, lng: 151.21 },

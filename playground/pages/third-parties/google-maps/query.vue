@@ -21,7 +21,6 @@ function changeQuery() {
         :width="1200"
         :height="600"
         :center="center"
-        above-the-fold
       />
     </div>
     <div class="button-container">
