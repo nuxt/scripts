@@ -113,10 +113,7 @@ const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
                   render: () => slots.renderer?.({ cluster, stats, map }),
                 })
                 if (instance) {
-                  vnode.appContext = {
-                    ...instance.appContext,
-                    provides: instance.provides,
-                  } as any
+                  vnode.appContext = instance.appContext
                 }
                 vueRender(vnode, container)
                 renderedContainers.push(container)
