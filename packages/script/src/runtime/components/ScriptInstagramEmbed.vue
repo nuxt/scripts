@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
 import { extractInstagramShortcode } from '../registry/instagram-embed'
-import { requireRegistryEndpoint } from '../utils'
+import { requireRegistryEndpoint, scriptsPrefix } from '../utils'
 
 const props = withDefaults(defineProps<{
   /**
@@ -18,7 +18,6 @@ const props = withDefaults(defineProps<{
   captions?: boolean
   /**
    * Custom API endpoint for fetching embed HTML
-   * @default '/_scripts/embed/instagram'
    */
   apiEndpoint?: string
   /**
@@ -27,16 +26,20 @@ const props = withDefaults(defineProps<{
   rootAttrs?: HTMLAttributes
 }>(), {
   captions: true,
-  apiEndpoint: '/_scripts/embed/instagram',
+  apiEndpoint: undefined,
 })
-if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/instagram')
+
+const prefix = scriptsPrefix()
+
+const apiEndpoint = computed(() => props.apiEndpoint || `${prefix}/embed/instagram`)
+if (!props.apiEndpoint)
   requireRegistryEndpoint('ScriptInstagramEmbed', 'instagramEmbed')
 
 const shortcode = computed(() => extractInstagramShortcode(props.postUrl))
 
 const { data: html, status, error } = useAsyncData<string>(
   `instagram-embed-${props.postUrl}`,
-  () => $fetch(`${props.apiEndpoint}?url=${encodeURIComponent(props.postUrl)}&captions=${props.captions}`),
+  () => $fetch(`${apiEndpoint.value}?url=${encodeURIComponent(props.postUrl)}&captions=${props.captions}`),
   { watch: [() => props.postUrl, () => props.captions] },
 )
 

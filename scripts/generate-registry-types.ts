@@ -3,9 +3,9 @@ import { join } from 'node:path'
 import { parseSync } from 'oxc-parser'
 import { walk } from 'oxc-walker'
 
-const registryDir = join(import.meta.dirname, '..', 'src', 'runtime', 'registry')
-const componentsDir = join(import.meta.dirname, '..', 'src', 'runtime', 'components')
-const outputPath = join(import.meta.dirname, '..', 'src', 'registry-types.json')
+const registryDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'registry')
+const componentsDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'components')
+const outputPath = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'registry-types.json')
 
 interface ExtractedDeclaration {
   name: string

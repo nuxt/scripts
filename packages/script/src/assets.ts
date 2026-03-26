@@ -1,5 +1,4 @@
 import type { NitroConfig } from 'nitropack'
-import type { ModuleOptions } from './module'
 import { addDevServerHandler, extendRouteRules, tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { createError, eventHandler, lazyEventHandler } from 'h3'
 import { fetch } from 'ofetch'
@@ -43,8 +42,7 @@ export function bundleStorage() {
 }
 
 // TODO: replace this with nuxt/assets when it is released
-export function setupPublicAssetStrategy(options: ModuleOptions['assets'] = {}) {
-  const assetsBaseURL = options.prefix || '/_scripts/assets'
+export function setupPublicAssetStrategy(assetsBaseURL: string) {
   const nuxt = useNuxt()
   const storage = bundleStorage()
 

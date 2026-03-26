@@ -1227,7 +1227,7 @@ async function main() {
   await browser.close()
   close()
 
-  const outPath = resolve(import.meta.dirname, '../src/script-sizes.json')
+  const outPath = resolve(import.meta.dirname, '../packages/script/src/script-sizes.json')
   writeFileSync(outPath, `${JSON.stringify(sizes, null, 2)}\n`)
   console.log(`\nWrote ${outPath}`)
 }

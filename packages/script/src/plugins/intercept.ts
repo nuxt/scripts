@@ -1,7 +1,7 @@
 /**
  * Generate the client-side intercept plugin contents.
  * This plugin provides __nuxtScripts runtime helpers (sendBeacon, fetch, XMLHttpRequest, Image)
- * that route matching URLs through the first-party proxy. AST rewriting transforms
+ * that route matching URLs through the proxy. AST rewriting transforms
  * native API calls to use these wrappers at build time.
  *
  * Any non-same-origin URL is proxied through `proxyPrefix/<host><path>`.

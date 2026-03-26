@@ -1,6 +1,0 @@
-export { generatePartytownResolveUrl } from './partytown-resolve'
-export { buildProxyConfigsFromRegistry, PRIVACY_FULL, PRIVACY_HEATMAP, PRIVACY_IP_ONLY, PRIVACY_NONE } from './proxy-configs'
-export { resolveCapabilities } from './resolve-capabilities'
-export { finalizeFirstParty, isProxyDisabled, setupFirstParty } from './setup'
-export type { FinalizeFirstPartyResult, FirstPartyConfig, FirstPartyDevtoolsData, FirstPartyDevtoolsScript } from './setup'
-export type { FirstPartyPrivacy, ProxyAutoInject, ProxyConfig, ProxyRewrite } from './types'

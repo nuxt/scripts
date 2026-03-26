@@ -42,6 +42,7 @@ import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XEmbedInput } from './registry/x-embed'
 import type { XPixelInput } from './registry/x-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
+import type { ProxyPrivacyInput } from './server/utils/privacy'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
@@ -78,7 +79,7 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
    * Control proxying for this script.
    * When `false`, collection requests go directly to the third-party server.
    * When `true`, collection requests are proxied through `/_scripts/p/`.
-   * Defaults to the script's `defaultCapability.proxy` from the registry.
+   * Defaults based on whether the script has a `proxy` capability in the registry.
    */
   proxy?: boolean
   /**
@@ -250,7 +251,7 @@ export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
 type RegistryConfigInput<T> = [T] extends [true] ? Record<string, never> : T
 
-export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'], proxy?: boolean, bundle?: boolean, partytown?: boolean, scriptOptions?: Omit<NuxtUseScriptOptionsSerializable, 'trigger'> }) | [RegistryConfigInput<T>, NuxtUseScriptOptionsSerializable]
+export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'], proxy?: boolean, bundle?: boolean, partytown?: boolean, privacy?: ProxyPrivacyInput })
 export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
   [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
 }> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
@@ -317,66 +318,173 @@ export interface ScriptDomain {
   lazy?: boolean
 }
 
+/**
+ * Bundle capability config. When present, the script can be downloaded at
+ * build time and served from `/_scripts/assets/`.
+ */
+export interface BundleCapability {
+  /** Custom URL resolution. If omitted, the script's `src` is used. */
+  resolve?: (options?: any) => string | false
+}
+
+/**
+ * Proxy capability config. When present, collection requests can be
+ * proxied through `/_scripts/p/`.
+ * When combined with bundle: AST URL rewriting + runtime intercept.
+ * Without bundle (npm/config mode): autoInject sets SDK endpoint to proxy URL.
+ */
+export interface ProxyCapability {
+  /** Third-party domains this script communicates with. */
+  domains: (string | ScriptDomain)[]
+  /** Privacy controls for proxied requests. */
+  privacy: import('../runtime/server/utils/privacy').ProxyPrivacyInput
+  /** Auto-inject proxy endpoint into the script's SDK config. */
+  autoInject?: ProxyAutoInject
+  /** AST-level SDK patches applied during URL rewriting. */
+  sdkPatches?: SdkPatch[]
+}
+
+/**
+ * Declarative SDK patch applied during AST rewriting.
+ * Replaces fragile regex-based postProcess with targeted AST visitors.
+ */
+export type SdkPatch
+  /**
+   * Neutralize self-hosted detection checks like `.indexOf("cdn.example.com") < 0`.
+   * When a script is proxied, its src no longer contains the original CDN domain,
+   * causing these checks to incorrectly detect "self-hosted" mode.
+   * This patch makes such comparisons always evaluate to false.
+   */
+  = | { type: 'neutralize-domain-check' }
+  /**
+   * Replace `<expr>.split("<separator>")[0]` patterns used by SDKs that derive
+   * their API host from `document.currentScript.src`. When bundled, the script src
+   * changes, breaking this derivation. This patch replaces the expression with
+   * the correct proxy path.
+   */
+    | { type: 'replace-src-split', separator: string, fromDomain: string, appendPath?: string }
+
+/**
+ * Partytown capability config. When present, the script can run in a
+ * web worker via Partytown.
+ */
+export interface PartytownCapability {
+  /** Global API forward declarations for Partytown. */
+  forwards: string[]
+}
+
 export interface RegistryScript {
   /**
    * The config key used in `scripts.registry` in nuxt.config (e.g., 'googleAnalytics', 'plausibleAnalytics').
-   * Used for direct lookup from config to script — avoids fragile import name convention matching.
+   * Used for direct lookup from config to script.
    */
   registryKey?: RegistryScriptKey
-  import?: Import // might just be a component
-  scriptBundling?: false | ((options?: any) => string | false)
-  /**
-   * What optimization modes this script supports (the ceiling).
-   * Each capability must be explicitly opted in. Omitted flags default to false.
-   */
-  capabilities?: ScriptCapabilities
-  /**
-   * What capabilities are active by default for users (subset of capabilities).
-   * Users inherit these and can toggle individual flags via scriptOptions.
-   * Omitted flags are not active by default (e.g., partytown requires user opt-in).
-   */
-  defaultCapability?: ScriptCapabilities
-  /**
-   * Third-party domains this script communicates with.
-   * Used for: proxy routing, AST URL rewriting, connection warming (dns-prefetch/preconnect).
-   * Domains marked `lazy: true` use dns-prefetch; others use preconnect for immediate scripts.
-   */
-  domains?: (string | ScriptDomain)[]
-  /**
-   * Privacy controls for proxied requests to this script's domains.
-   * Only relevant when proxy capability is active.
-   */
-  privacy?: import('../runtime/server/utils/privacy').ProxyPrivacyInput
-  /**
-   * Auto-inject proxy endpoint config into the script's SDK options.
-   * For scripts that let you configure the collection endpoint (PostHog, Plausible, etc.).
-   */
-  autoInject?: import('../first-party/types').ProxyAutoInject
-  /**
-   * SDK-specific post-processing applied after AST URL rewriting.
-   * Used for regex patches that can't be handled by the generic AST rewriter.
-   */
-  postProcess?: (output: string, rewrites: { from: string, to: string }[]) => string
-  /**
-   * Proxy config alias. When set, inherits domains/privacy/autoInject/postProcess
-   * from another script (e.g., googleAdsense → 'googleAnalytics').
-   */
-  proxyConfig?: RegistryScriptKey
+  import?: Import
   label?: string
   src?: string | false
   category?: string
   logo?: string | { light: string, dark: string }
-  /**
-   * Server handlers (routes/middleware) to register when this script is enabled via registry config.
-   */
+  /** Server handlers (routes/middleware) to register when this script is enabled. */
   serverHandlers?: RegistryScriptServerHandler[]
-  /**
-   * Valibot schema for the script's input options.
-   * Used for build-time validation (extracting required fields) and runtime validation in dev mode.
-   */
+  /** Valibot schema for the script's input options. */
   schema?: ObjectSchema<ObjectEntries, any>
+  /** Default env var field names and values for NUXT_PUBLIC_SCRIPTS_<SCRIPT>_<KEY> resolution. */
+  envDefaults?: Record<string, string>
+
+  /**
+   * Bundle capability. Script can be downloaded at build time and served locally.
+   * - `true`: bundleable using the script's `src` URL
+   * - `{ resolve }`: bundleable with a custom URL resolution function
+   * - absent: not bundleable
+   */
+  bundle?: BundleCapability | true
+  /**
+   * Proxy capability. Collection requests are proxied through `/_scripts/p/`.
+   * - `ProxyCapability`: proxy-capable with inline config (domains, privacy, etc.)
+   * - `RegistryScriptKey` string: alias, inherits proxy config from the referenced script
+   * - absent: not proxy-capable
+   */
+  proxy?: ProxyCapability | RegistryScriptKey
+  /**
+   * Partytown capability. Script can run in a web worker via Partytown.
+   * - `PartytownCapability`: partytown-capable with forward declarations
+   * - absent: not partytown-capable
+   */
+  partytown?: PartytownCapability
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false
 
 export type RegistryScripts = RegistryScript[]
+
+// -- Proxy types (used by bundling, AST rewriting, and proxy routing) --
+
+export interface ProxyRewrite {
+  /** Domain and path to match (e.g., 'www.google-analytics.com/g/collect') */
+  from: string
+  /** Local path to rewrite to (e.g., '/_scripts/p/ga/g/collect') */
+  to: string
+}
+
+/**
+ * Global privacy override for all proxied requests.
+ *
+ * By default (`undefined`), each script uses its own privacy controls declared in the registry.
+ * Setting this overrides all per-script defaults:
+ *
+ * - `true`: full anonymization (IP, UA, language, screen, timezone, hardware)
+ * - `false`: passthrough (still strips sensitive auth headers)
+ * - `{ ip: false }`: selective override per flag
+ */
+export type FirstPartyPrivacy = ProxyPrivacyInput
+
+/**
+ * Auto-inject proxy endpoint into the script's SDK config.
+ * Used by scripts that let you configure the collection endpoint (PostHog, Plausible, etc.).
+ *
+ * Simple form: `{ field, target }` where target is appended to proxyPrefix.
+ * Complex form: `{ field, resolve }` for dynamic endpoint computation.
+ */
+export interface ProxyAutoInject {
+  /** The config field name to set (e.g., 'apiHost', 'endpoint') */
+  field: string
+  /** Domain and path appended to proxyPrefix. Sugar for `resolve: (p) => p + '/' + target`. */
+  target?: string
+  /** Compute the proxy endpoint value from the proxyPrefix and script config. Use for dynamic logic (e.g., region-based endpoints). */
+  resolve?: (proxyPrefix: string, config: Record<string, any>) => string
+}
+
+/**
+ * Resolved auto-inject config with a guaranteed computeValue function.
+ * Used in ProxyConfig output after normalization.
+ */
+export interface ResolvedProxyAutoInject {
+  configField: string
+  computeValue: (proxyPrefix: string, config: Record<string, any>) => string
+}
+
+/**
+ * Proxy configuration for third-party scripts.
+ * Each supported script declares its domains, privacy controls, and optional SDK-specific hooks.
+ *
+ * The AST rewriter derives rewrite rules automatically from domains:
+ *   { from: domain, to: proxyPrefix + '/' + domain }
+ *
+ * The runtime intercept plugin catches any remaining dynamic URLs at the
+ * fetch/sendBeacon/XHR/Image call site.
+ */
+export interface ProxyConfig {
+  /** Third-party domains to proxy. AST rewrites are derived automatically. */
+  domains: string[]
+  /**
+   * Per-script privacy controls. Each script declares what it needs.
+   * - `true` (default) = full anonymize: IP, UA, language, screen, timezone, hardware fingerprints
+   * - `false` = passthrough (still strips sensitive auth headers)
+   * - `{ ip: false }` = selective (unset flags default to `false`)
+   */
+  privacy: ProxyPrivacyInput
+  /** Auto-inject proxy endpoint config into the script's SDK options (resolved form) */
+  autoInject?: ResolvedProxyAutoInject
+  /** AST-level SDK patches applied during URL rewriting. */
+  sdkPatches?: SdkPatch[]
+}

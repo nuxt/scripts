@@ -13,35 +13,36 @@ export const INSTAGRAM_ASSET_HOST = 'static.cdninstagram.com'
 const CHARSET_RE = /@charset\s[^;]+;/gi
 const IMPORT_RE = /@import\s[^;]+;/gi
 const WHITESPACE_RE = /\s/
+const EMBED_INSTAGRAM_SUFFIX_RE = /\/embed\/instagram$/
 const AT_RULE_NAME_RE = /@([\w-]+)/
 const MULTI_SPACE_RE = /\s+/g
 const SRCSET_SPLIT_RE = /\s+/
 
-export function proxyImageUrl(url: string): string {
-  return `/_scripts/embed/instagram-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
+export function proxyImageUrl(url: string, prefix = '/_scripts'): string {
+  return `${prefix}/embed/instagram-image?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
 
-export function proxyAssetUrl(url: string): string {
-  return `/_scripts/embed/instagram-asset?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
+export function proxyAssetUrl(url: string, prefix = '/_scripts'): string {
+  return `${prefix}/embed/instagram-asset?url=${encodeURIComponent(url.replace(AMP_RE, '&'))}`
 }
 
-export function rewriteUrl(url: string): string {
+export function rewriteUrl(url: string, prefix = '/_scripts'): string {
   try {
     const parsed = new URL(url)
     if (parsed.hostname === INSTAGRAM_ASSET_HOST)
-      return proxyAssetUrl(url)
+      return proxyAssetUrl(url, prefix)
     if (INSTAGRAM_IMAGE_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith(`.cdninstagram.com`)))
-      return proxyImageUrl(url)
+      return proxyImageUrl(url, prefix)
   }
   catch {}
   return url
 }
 
-export function rewriteUrlsInText(text: string): string {
+export function rewriteUrlsInText(text: string, prefix = '/_scripts'): string {
   return text
-    .replace(SCONTENT_RE, m => proxyImageUrl(m))
-    .replace(STATIC_CDN_RE, m => proxyAssetUrl(m))
-    .replace(LOOKASIDE_RE, m => proxyImageUrl(m))
+    .replace(SCONTENT_RE, m => proxyImageUrl(m, prefix))
+    .replace(STATIC_CDN_RE, m => proxyAssetUrl(m, prefix))
+    .replace(LOOKASIDE_RE, m => proxyImageUrl(m, prefix))
 }
 
 /**
@@ -186,6 +187,11 @@ function extractBlock(css: string, openBrace: number): { content: string, end: n
 }
 
 export default defineEventHandler(async (event) => {
+  // Derive the scripts prefix from the handler's own route path.
+  // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
+  const handlerPath = event.path?.split('?')[0] || ''
+  const prefix = handlerPath.replace(EMBED_INSTAGRAM_SUFFIX_RE, '') || '/_scripts'
+
   const query = getQuery(event)
   const postUrl = query.url as string
   const captions = query.captions === 'true'
@@ -256,7 +262,7 @@ export default defineEventHandler(async (event) => {
     // Rewrite image/asset URLs in attributes
     for (const attr of ['src', 'poster']) {
       if (node.attributes[attr])
-        node.attributes[attr] = rewriteUrl(node.attributes[attr])
+        node.attributes[attr] = rewriteUrl(node.attributes[attr], prefix)
     }
 
     // srcset is comma-separated "<url> <descriptor>" entries
@@ -267,20 +273,20 @@ export default defineEventHandler(async (event) => {
           const parts = entry.trim().split(SRCSET_SPLIT_RE)
           const url = parts[0]
           const descriptor = parts.slice(1).join(' ')
-          return url ? `${rewriteUrl(url)}${descriptor ? ` ${descriptor}` : ''}` : entry
+          return url ? `${rewriteUrl(url, prefix)}${descriptor ? ` ${descriptor}` : ''}` : entry
         })
         .join(', ')
     }
 
     // Rewrite URLs in style attributes
     if (node.attributes.style)
-      node.attributes.style = rewriteUrlsInText(node.attributes.style)
+      node.attributes.style = rewriteUrlsInText(node.attributes.style, prefix)
   })
 
   // Also rewrite URLs in text nodes (inline styles in CSS blocks, etc.)
   walkSync(ast, (node) => {
     if (node.type === TEXT_NODE && node.value)
-      node.value = rewriteUrlsInText(node.value)
+      node.value = rewriteUrlsInText(node.value, prefix)
   })
 
   // Extract body content only (avoid leaking <html id="facebook"> onto the page)
@@ -307,9 +313,9 @@ export default defineEventHandler(async (event) => {
   let combinedCss = cssContents.join('\n')
   combinedCss = combinedCss.replace(
     RSRC_RE,
-    (_m, path) => `url(/_scripts/embed/instagram-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
+    (_m, path) => `url(${prefix}/embed/instagram-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
   )
-  combinedCss = rewriteUrlsInText(combinedCss)
+  combinedCss = rewriteUrlsInText(combinedCss, prefix)
   combinedCss = scopeCss(combinedCss, '.instagram-embed-root')
 
   const baseStyles = `

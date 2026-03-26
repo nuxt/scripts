@@ -2,7 +2,7 @@
   "plausibleAnalytics": {
     "totalTransferKb": 1.9,
     "totalDecodedKb": 2.9,
-    "loadTimeMs": 71,
+    "loadTimeMs": 70,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -62,16 +62,16 @@
         "transferKb": 1.9,
         "decodedKb": 2.9,
         "encoding": "zstd",
-        "durationMs": 71,
+        "durationMs": 70,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "cloudflareWebAnalytics": {
-    "totalTransferKb": 10.8,
+    "totalTransferKb": 10.7,
     "totalDecodedKb": 30.4,
-    "loadTimeMs": 93,
+    "loadTimeMs": 76,
     "collectsWebVitals": true,
     "apis": {
       "cookies": false,
@@ -117,30 +117,30 @@
         "static.cloudflareinsights.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 11075,
+      "inboundBytes": 10993,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 6,
+      "taskDurationMs": 7,
       "scriptDurationMs": 1,
       "heapDeltaKb": 784
     },
     "scripts": [
       {
         "url": "https://static.cloudflareinsights.com/beacon.min.js",
-        "transferKb": 10.8,
+        "transferKb": 10.7,
         "decodedKb": 30.4,
         "encoding": "gzip",
-        "durationMs": 93,
+        "durationMs": 76,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "posthog": {
-    "totalTransferKb": 132.5,
-    "totalDecodedKb": 358,
-    "loadTimeMs": 1514,
+    "totalTransferKb": 129.6,
+    "totalDecodedKb": 343.8,
+    "loadTimeMs": 1161,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -187,7 +187,7 @@
         "us.i.posthog.com"
       ],
       "outboundBytes": 269,
-      "inboundBytes": 135643,
+      "inboundBytes": 132649,
       "injectedElements": [
         {
           "tag": "script",
@@ -200,44 +200,44 @@
       ]
     },
     "performance": {
-      "taskDurationMs": 36,
-      "scriptDurationMs": 21,
-      "heapDeltaKb": 1886
+      "taskDurationMs": 38,
+      "scriptDurationMs": 24,
+      "heapDeltaKb": 1865
     },
     "scripts": [
       {
         "url": "https://us-assets.i.posthog.com/static/array.js",
-        "transferKb": 65.9,
-        "decodedKb": 178.9,
+        "transferKb": 64.5,
+        "decodedKb": 171.8,
         "encoding": "gzip",
-        "durationMs": 98,
+        "durationMs": 86,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
         "url": "https://us.i.posthog.com/static/array.js",
-        "transferKb": 66,
-        "decodedKb": 178.9,
+        "transferKb": 64.5,
+        "decodedKb": 171.8,
         "encoding": "gzip",
-        "durationMs": 1514,
+        "durationMs": 1161,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://us-assets.i.posthog.com/array/phc_test/config?ip=0&_=1773925874485&ver=1.361.1",
+        "url": "https://us-assets.i.posthog.com/array/phc_test/config?ip=0&_=1774508607672&ver=1.363.5",
         "transferKb": 0.2,
         "decodedKb": 0.1,
         "encoding": "gzip",
-        "durationMs": 261,
+        "durationMs": 257,
         "initiatorType": "fetch",
         "protocol": "unknown"
       },
       {
-        "url": "https://us.i.posthog.com/flags/?v=2&ip=0&_=1773925874758&ver=1.361.1&compression=base64",
+        "url": "https://us.i.posthog.com/flags/?v=2&ip=0&_=1774508607942&ver=1.363.5&compression=base64",
         "transferKb": 0.4,
         "decodedKb": 0.1,
         "encoding": "gzip",
-        "durationMs": 908,
+        "durationMs": 691,
         "initiatorType": "fetch",
         "protocol": "unknown"
       }
@@ -246,7 +246,7 @@
   "fathomAnalytics": {
     "totalTransferKb": 3,
     "totalDecodedKb": 6.7,
-    "loadTimeMs": 316,
+    "loadTimeMs": 303,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -292,11 +292,11 @@
         "cdn.usefathom.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 3077,
+      "inboundBytes": 3078,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 11,
+      "taskDurationMs": 8,
       "scriptDurationMs": 1,
       "heapDeltaKb": 760
     },
@@ -306,25 +306,25 @@
         "transferKb": 2.7,
         "decodedKb": 6.7,
         "encoding": "zstd",
-        "durationMs": 73,
+        "durationMs": 67,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://cdn.usefathom.com/?h=http%3A%2F%2F127.0.0.1&p=%2FfathomAnalytics&r=&sid=null&qs=%7B%7D&cid=95566347",
+        "url": "https://cdn.usefathom.com/?h=http%3A%2F%2F127.0.0.1&p=%2FfathomAnalytics&r=&sid=null&qs=%7B%7D&cid=47534997",
         "transferKb": 0.3,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 316,
+        "durationMs": 303,
         "initiatorType": "img",
         "protocol": "unknown"
       }
     ]
   },
   "matomoAnalytics": {
-    "totalTransferKb": 60.4,
+    "totalTransferKb": 61.5,
     "totalDecodedKb": 218.6,
-    "loadTimeMs": 96,
+    "loadTimeMs": 103,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -370,30 +370,30 @@
         "cdn.matomo.cloud"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 61877,
+      "inboundBytes": 63013,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 18,
-      "scriptDurationMs": 5,
+      "taskDurationMs": 21,
+      "scriptDurationMs": 6,
       "heapDeltaKb": 1393
     },
     "scripts": [
       {
         "url": "https://cdn.matomo.cloud/demo.matomo.cloud/matomo.js",
-        "transferKb": 60.4,
+        "transferKb": 61.5,
         "decodedKb": 218.6,
         "encoding": "br",
-        "durationMs": 96,
+        "durationMs": 103,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "rybbitAnalytics": {
-    "totalTransferKb": 9,
-    "totalDecodedKb": 25.4,
-    "loadTimeMs": 1154,
+    "totalTransferKb": 9.3,
+    "totalDecodedKb": 26,
+    "loadTimeMs": 1099,
     "collectsWebVitals": true,
     "apis": {
       "cookies": false,
@@ -401,19 +401,19 @@
       "sessionStorage": true,
       "indexedDB": false,
       "canvas": false,
-      "webgl": false,
+      "webgl": true,
       "audioContext": false,
-      "userAgent": false,
+      "userAgent": true,
       "doNotTrack": false,
       "hardwareConcurrency": false,
       "deviceMemory": false,
-      "plugins": false,
+      "plugins": true,
       "languages": true,
       "screen": true,
       "timezone": false,
       "platform": false,
       "vendor": false,
-      "connection": false,
+      "connection": true,
       "maxTouchPoints": false,
       "devicePixelRatio": false,
       "mediaDevices": false,
@@ -439,21 +439,21 @@
         "app.rybbit.io"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 9198,
+      "inboundBytes": 9486,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
-      "scriptDurationMs": 1,
+      "taskDurationMs": 8,
+      "scriptDurationMs": 2,
       "heapDeltaKb": 755
     },
     "scripts": [
       {
         "url": "https://app.rybbit.io/api/script.js",
-        "transferKb": 9,
-        "decodedKb": 25.4,
+        "transferKb": 9.3,
+        "decodedKb": 26,
         "encoding": "zstd",
-        "durationMs": 1154,
+        "durationMs": 1099,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -461,8 +461,8 @@
   },
   "databuddyAnalytics": {
     "totalTransferKb": 10.6,
-    "totalDecodedKb": 29.2,
-    "loadTimeMs": 76,
+    "totalDecodedKb": 28.8,
+    "loadTimeMs": 83,
     "collectsWebVitals": true,
     "apis": {
       "cookies": false,
@@ -508,30 +508,30 @@
         "cdn.databuddy.cc"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 10865,
+      "inboundBytes": 10813,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 6,
+      "taskDurationMs": 8,
       "scriptDurationMs": 1,
-      "heapDeltaKb": 803
+      "heapDeltaKb": 804
     },
     "scripts": [
       {
         "url": "https://cdn.databuddy.cc/databuddy.js",
         "transferKb": 10.6,
-        "decodedKb": 29.2,
+        "decodedKb": 28.8,
         "encoding": "zstd",
-        "durationMs": 76,
+        "durationMs": 83,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "mixpanelAnalytics": {
-    "totalTransferKb": 31,
-    "totalDecodedKb": 93.9,
-    "loadTimeMs": 66,
+    "totalTransferKb": 31.6,
+    "totalDecodedKb": 95.5,
+    "loadTimeMs": 76,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -577,30 +577,30 @@
         "cdn.mxpnl.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 31793,
+      "inboundBytes": 32330,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 12,
-      "scriptDurationMs": 6,
-      "heapDeltaKb": 1167
+      "taskDurationMs": 16,
+      "scriptDurationMs": 8,
+      "heapDeltaKb": 1170
     },
     "scripts": [
       {
         "url": "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js",
-        "transferKb": 31,
-        "decodedKb": 93.9,
+        "transferKb": 31.6,
+        "decodedKb": 95.5,
         "encoding": "gzip",
-        "durationMs": 66,
+        "durationMs": 76,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "segment": {
-    "totalTransferKb": 29.6,
+    "totalTransferKb": 30.2,
     "totalDecodedKb": 107,
-    "loadTimeMs": 772,
+    "loadTimeMs": 703,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -647,21 +647,21 @@
         "cdn.segment.com"
       ],
       "outboundBytes": 1006,
-      "inboundBytes": 30283,
+      "inboundBytes": 30906,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 19,
+      "taskDurationMs": 22,
       "scriptDurationMs": 4,
       "heapDeltaKb": 1328
     },
     "scripts": [
       {
         "url": "https://cdn.segment.com/analytics.js/v1/KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C/analytics.min.js",
-        "transferKb": 28.2,
+        "transferKb": 28.8,
         "decodedKb": 106.4,
         "encoding": "br",
-        "durationMs": 551,
+        "durationMs": 556,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -670,7 +670,7 @@
         "transferKb": 1.2,
         "decodedKb": 0.6,
         "encoding": "none",
-        "durationMs": 58,
+        "durationMs": 49,
         "initiatorType": "fetch",
         "protocol": "unknown"
       },
@@ -679,16 +679,16 @@
         "transferKb": 0.2,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 772,
+        "durationMs": 703,
         "initiatorType": "fetch",
         "protocol": "unknown"
       }
     ]
   },
   "googleAnalytics": {
-    "totalTransferKb": 154.2,
-    "totalDecodedKb": 454.1,
-    "loadTimeMs": 516,
+    "totalTransferKb": 155.3,
+    "totalDecodedKb": 454.2,
+    "loadTimeMs": 519,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -729,36 +729,50 @@
     },
     "cookies": [],
     "network": {
-      "requestCount": 1,
+      "requestCount": 2,
       "domains": [
         "www.googletagmanager.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 157890,
-      "injectedElements": []
+      "inboundBytes": 159048,
+      "injectedElements": [
+        {
+          "tag": "img",
+          "src": "https://www.googletagmanager.com/td?id=G-TR58L0EF8P&v=3&t=t&pid=585024461&gtm=45je63p0h2v9184293781za200zd9184293781&seq=1&exp=103116026~103200004~115938466~115938468~116024733~117484252~118199987&dl=127.0.0.1%2FgoogleAnalytics&tdp=G-TR58L0EF8P;184293781;0;0;0&frm=0&rtg=184293781&slo=0&hlo=1&lst=3&bt=0&ct=3&jsp=1~3&z=0"
+        }
+      ]
     },
     "performance": {
-      "taskDurationMs": 26,
-      "scriptDurationMs": 15,
-      "heapDeltaKb": 2593
+      "taskDurationMs": 31,
+      "scriptDurationMs": 17,
+      "heapDeltaKb": 2673
     },
     "scripts": [
       {
         "url": "https://www.googletagmanager.com/gtag/js?id=G-TR58L0EF8P",
-        "transferKb": 154.2,
-        "decodedKb": 454.1,
+        "transferKb": 154.9,
+        "decodedKb": 454.2,
         "encoding": "zstd",
-        "durationMs": 516,
+        "durationMs": 519,
         "initiatorType": "script",
+        "protocol": "unknown"
+      },
+      {
+        "url": "https://www.googletagmanager.com/td?id=G-TR58L0EF8P&v=3&t=t&pid=585024461&gtm=45je63p0h2v9184293781za200zd9184293781&seq=1&exp=103116026~103200004~115938466~115938468~116024733~117484252~118199987&dl=127.0.0.1%2FgoogleAnalytics&tdp=G-TR58L0EF8P;184293781;0;0;0&frm=0&rtg=184293781&slo=0&hlo=1&lst=3&bt=0&ct=3&jsp=1~3&z=0",
+        "transferKb": 0.4,
+        "decodedKb": 0,
+        "encoding": "none",
+        "durationMs": 159,
+        "initiatorType": "img",
         "protocol": "unknown"
       }
     ]
   },
   "umamiAnalytics": {
-    "totalTransferKb": 2.4,
-    "totalDecodedKb": 2.6,
-    "loadTimeMs": 81,
-    "collectsWebVitals": false,
+    "totalTransferKb": 3.2,
+    "totalDecodedKb": 4.5,
+    "loadTimeMs": 63,
+    "collectsWebVitals": true,
     "apis": {
       "cookies": false,
       "localStorage": true,
@@ -793,7 +807,7 @@
       "xhr": false,
       "websocket": false,
       "mutationObserver": false,
-      "performanceObserver": false,
+      "performanceObserver": true,
       "intersectionObserver": false
     },
     "cookies": [],
@@ -803,21 +817,21 @@
         "cloud.umami.is"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 2468,
+      "inboundBytes": 3261,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 5,
+      "taskDurationMs": 6,
       "scriptDurationMs": 0,
-      "heapDeltaKb": 725
+      "heapDeltaKb": 727
     },
     "scripts": [
       {
         "url": "https://cloud.umami.is/script.js",
-        "transferKb": 2.4,
-        "decodedKb": 2.6,
+        "transferKb": 3.2,
+        "decodedKb": 4.5,
         "encoding": "br",
-        "durationMs": 81,
+        "durationMs": 63,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -826,7 +840,7 @@
   "vercelAnalytics": {
     "totalTransferKb": 1.6,
     "totalDecodedKb": 2.4,
-    "loadTimeMs": 81,
+    "loadTimeMs": 78,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -872,7 +886,7 @@
         "va.vercel-scripts.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 1606,
+      "inboundBytes": 1599,
       "injectedElements": []
     },
     "performance": {
@@ -886,7 +900,7 @@
         "transferKb": 1.6,
         "decodedKb": 2.4,
         "encoding": "br",
-        "durationMs": 81,
+        "durationMs": 78,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -895,7 +909,7 @@
   "bingUet": {
     "totalTransferKb": 16.2,
     "totalDecodedKb": 54,
-    "loadTimeMs": 207,
+    "loadTimeMs": 218,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -964,7 +978,7 @@
         "bat.bing.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 16545,
+      "inboundBytes": 16546,
       "injectedElements": [
         {
           "tag": "script",
@@ -972,14 +986,14 @@
         },
         {
           "tag": "img",
-          "src": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=7a9bdab7-4d77-4f32-b498-848d8200a897&bo=1&sid=3a3e3280239511f1bc041d004afba8b8&vid=3a3e5040239511f1a83b357b18badf3c&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A34289%2FbingUet&r=&lt=213&evt=pageLoad&sv=2&cdb=AQAQ&rn=134697"
+          "src": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=8901ef97-57ee-4183-aa71-23783ffb50eb&bo=1&sid=0235bb9028e211f18b0429a389f9a801&vid=0235db6028e211f1a480ef3c78abb001&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A41347%2FbingUet&r=&lt=224&evt=pageLoad&sv=2&cdb=AQAQ&rn=125792"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 11,
-      "scriptDurationMs": 4,
-      "heapDeltaKb": 919
+      "taskDurationMs": 13,
+      "scriptDurationMs": 5,
+      "heapDeltaKb": 983
     },
     "scripts": [
       {
@@ -987,7 +1001,7 @@
         "transferKb": 15.4,
         "decodedKb": 53.6,
         "encoding": "gzip",
-        "durationMs": 207,
+        "durationMs": 218,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -996,16 +1010,16 @@
         "transferKb": 0.4,
         "decodedKb": 0.4,
         "encoding": "br",
-        "durationMs": 148,
+        "durationMs": 157,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=7a9bdab7-4d77-4f32-b498-848d8200a897&bo=1&sid=3a3e3280239511f1bc041d004afba8b8&vid=3a3e5040239511f1a83b357b18badf3c&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A34289%2FbingUet&r=&lt=213&evt=pageLoad&sv=2&cdb=AQAQ&rn=134697",
+        "url": "https://bat.bing.com/action/0?ti=247021147&Ver=2&mid=8901ef97-57ee-4183-aa71-23783ffb50eb&bo=1&sid=0235bb9028e211f18b0429a389f9a801&vid=0235db6028e211f1a480ef3c78abb001&vids=1&msclkid=N&pi=0&lg=en-GB&sw=1280&sh=720&sc=24&nwd=1&p=http%3A%2F%2F127.0.0.1%3A41347%2FbingUet&r=&lt=224&evt=pageLoad&sv=2&cdb=AQAQ&rn=125792",
         "transferKb": 0.4,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 150,
+        "durationMs": 156,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -1014,7 +1028,7 @@
   "metaPixel": {
     "totalTransferKb": 97.1,
     "totalDecodedKb": 364.7,
-    "loadTimeMs": 232,
+    "loadTimeMs": 116,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -1061,22 +1075,22 @@
         "www.facebook.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 102421,
+      "inboundBytes": 102480,
       "injectedElements": [
         {
           "tag": "script",
-          "src": "https://connect.facebook.net/signals/config/3925006?v=2.9.280&r=stable&domain=127.0.0.1&hme=b758cff5989f970d61536a685dcccfaabd7a9508da12548b3811a55c83b2e4ae&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C264%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C251%2C252%2C250%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C280%2C201%2C190%2C191%2C189%2C283%2C275%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157"
+          "src": "https://connect.facebook.net/signals/config/3925006?v=2.9.281&r=stable&domain=127.0.0.1&hme=7561e8db2489737df4c74b634c943d82cefbf4e67acc7fda2493ff919471f0aa&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C264%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C251%2C252%2C250%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C280%2C201%2C190%2C191%2C189%2C283%2C275%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157"
         },
         {
           "tag": "img",
-          "src": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A34289%2FmetaPixel&rl=&if=false&ts=1773925931003&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773925930767&coo=false&expv2[0]=pl1&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=im1&expv2[6]=hf1&rqm=GET"
+          "src": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A41347%2FmetaPixel&rl=&if=false&ts=1774508663855&sw=1280&sh=720&v=2.9.281&r=stable&ec=0&o=156&it=1774508663834&coo=false&exp=s1&expv2[0]=pl0&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct1&expv2[6]=hf0&rqm=GET"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 31,
-      "scriptDurationMs": 20,
-      "heapDeltaKb": 1949
+      "taskDurationMs": 41,
+      "scriptDurationMs": 23,
+      "heapDeltaKb": 1970
     },
     "scripts": [
       {
@@ -1084,25 +1098,25 @@
         "transferKb": 94.7,
         "decodedKb": 356.5,
         "encoding": "gzip",
-        "durationMs": 122,
+        "durationMs": 116,
         "initiatorType": "script",
         "protocol": "h2"
       },
       {
-        "url": "https://connect.facebook.net/signals/config/3925006?v=2.9.280&r=stable&domain=127.0.0.1&hme=b758cff5989f970d61536a685dcccfaabd7a9508da12548b3811a55c83b2e4ae&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C264%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C251%2C252%2C250%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C280%2C201%2C190%2C191%2C189%2C283%2C275%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+        "url": "https://connect.facebook.net/signals/config/3925006?v=2.9.281&r=stable&domain=127.0.0.1&hme=7561e8db2489737df4c74b634c943d82cefbf4e67acc7fda2493ff919471f0aa&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C264%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C251%2C252%2C250%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C280%2C201%2C190%2C191%2C189%2C283%2C275%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
         "transferKb": 2.1,
         "decodedKb": 8.2,
         "encoding": "gzip",
-        "durationMs": 232,
+        "durationMs": 18,
         "initiatorType": "script",
         "protocol": "h2"
       },
       {
-        "url": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A34289%2FmetaPixel&rl=&if=false&ts=1773925931003&sw=1280&sh=720&v=2.9.280&r=stable&ec=0&o=156&it=1773925930767&coo=false&expv2[0]=pl1&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=im1&expv2[6]=hf1&rqm=GET",
+        "url": "https://www.facebook.com/tr/?id=3925006&ev=PageView&dl=http%3A%2F%2F127.0.0.1%3A41347%2FmetaPixel&rl=&if=false&ts=1774508663855&sw=1280&sh=720&v=2.9.281&r=stable&ec=0&o=156&it=1774508663834&coo=false&exp=s1&expv2[0]=pl0&expv2[1]=el2&expv2[2]=bc1&expv2[3]=ra0&expv2[4]=rp0&expv2[5]=ct1&expv2[6]=hf0&rqm=GET",
         "transferKb": 0.3,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 66,
+        "durationMs": 70,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -1111,7 +1125,7 @@
   "xPixel": {
     "totalTransferKb": 15.1,
     "totalDecodedKb": 47.1,
-    "loadTimeMs": 244,
+    "loadTimeMs": 231,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1151,6 +1165,17 @@
       "intersectionObserver": false
     },
     "cookies": [
+      {
+        "name": "muc_ads",
+        "domain": ".t.co",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 400,
+        "firstParty": false
+      },
       {
         "name": "guest_id_marketing",
         "domain": ".twitter.com",
@@ -1194,17 +1219,6 @@
         "session": false,
         "lifetimeDays": 400,
         "firstParty": false
-      },
-      {
-        "name": "muc_ads",
-        "domain": ".t.co",
-        "path": "/",
-        "httpOnly": false,
-        "secure": true,
-        "sameSite": "None",
-        "session": false,
-        "lifetimeDays": 400,
-        "firstParty": false
       }
     ],
     "network": {
@@ -1219,16 +1233,16 @@
       "injectedElements": [
         {
           "tag": "img",
-          "src": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=0dd7a522-b52f-4df6-ad0c-3e8267168de4&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=4fa6174e-7802-4a87-91ab-999c3b670981&tw_document_href=http%3A%2F%2F127.0.0.1%3A34289%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773925936211.218994066508596888&txn_id=ol7lz&type=javascript&version=2.3.50"
+          "src": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=292057f4-8d02-41b4-8183-5fd91c73b9d3&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=24a0ed6e-9f98-4aea-9e37-d169b36cf844&tw_document_href=http%3A%2F%2F127.0.0.1%3A41347%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1774508668567.148914703390933075&txn_id=ol7lz&type=javascript&version=2.3.50"
         },
         {
           "tag": "img",
-          "src": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=0dd7a522-b52f-4df6-ad0c-3e8267168de4&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=4fa6174e-7802-4a87-91ab-999c3b670981&tw_document_href=http%3A%2F%2F127.0.0.1%3A34289%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773925936211.218994066508596888&txn_id=ol7lz&type=javascript&version=2.3.50"
+          "src": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=292057f4-8d02-41b4-8183-5fd91c73b9d3&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=24a0ed6e-9f98-4aea-9e37-d169b36cf844&tw_document_href=http%3A%2F%2F127.0.0.1%3A41347%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1774508668567.148914703390933075&txn_id=ol7lz&type=javascript&version=2.3.50"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 15,
+      "taskDurationMs": 16,
       "scriptDurationMs": 2,
       "heapDeltaKb": 1035
     },
@@ -1238,34 +1252,34 @@
         "transferKb": 13.5,
         "decodedKb": 47.1,
         "encoding": "gzip",
-        "durationMs": 70,
+        "durationMs": 66,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=0dd7a522-b52f-4df6-ad0c-3e8267168de4&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=4fa6174e-7802-4a87-91ab-999c3b670981&tw_document_href=http%3A%2F%2F127.0.0.1%3A34289%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773925936211.218994066508596888&txn_id=ol7lz&type=javascript&version=2.3.50",
-        "transferKb": 1,
+        "url": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=292057f4-8d02-41b4-8183-5fd91c73b9d3&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=24a0ed6e-9f98-4aea-9e37-d169b36cf844&tw_document_href=http%3A%2F%2F127.0.0.1%3A41347%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1774508668567.148914703390933075&txn_id=ol7lz&type=javascript&version=2.3.50",
+        "transferKb": 0.6,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 230,
+        "durationMs": 231,
         "initiatorType": "img",
         "protocol": "unknown"
       },
       {
-        "url": "https://t.co/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=0dd7a522-b52f-4df6-ad0c-3e8267168de4&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=4fa6174e-7802-4a87-91ab-999c3b670981&tw_document_href=http%3A%2F%2F127.0.0.1%3A34289%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1773925936211.218994066508596888&txn_id=ol7lz&type=javascript&version=2.3.50",
-        "transferKb": 0.6,
+        "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=Australia%2FMelbourne%26en-GB%26Google%20Inc.%26Linux%20x86_64%26255%261280%26720%2624%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=292057f4-8d02-41b4-8183-5fd91c73b9d3&integration=advertiser&p_id=Twitter&p_user_id=0&pl_id=24a0ed6e-9f98-4aea-9e37-d169b36cf844&tw_document_href=http%3A%2F%2F127.0.0.1%3A41347%2FxPixel&tw_iframe_status=0&tw_pid_src=1&twpid=tw.1774508668567.148914703390933075&txn_id=ol7lz&type=javascript&version=2.3.50",
+        "transferKb": 1,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 244,
+        "durationMs": 231,
         "initiatorType": "img",
         "protocol": "unknown"
       }
     ]
   },
   "tiktokPixel": {
-    "totalTransferKb": 1889.6,
-    "totalDecodedKb": 2365,
-    "loadTimeMs": 270,
+    "totalTransferKb": 1889.7,
+    "totalDecodedKb": 2365.4,
+    "loadTimeMs": 282,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -1323,48 +1337,48 @@
         "analytics.tiktok.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 151441,
+      "inboundBytes": 151648,
       "injectedElements": [
         {
           "tag": "script",
-          "src": "https://analytics.tiktok.com/i18n/pixel/static/identify_31760074.js"
+          "src": "https://analytics.tiktok.com/i18n/pixel/static/identify_5cff1caf.js"
         },
         {
           "tag": "script",
-          "src": "https://analytics.tiktok.com/i18n/pixel/static/main.MTEwMjY2ZTExMA.js"
+          "src": "https://analytics.tiktok.com/i18n/pixel/static/main.MTJlMjhkNzMyMA.js"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 50,
-      "scriptDurationMs": 25,
-      "heapDeltaKb": 2297
+      "taskDurationMs": 59,
+      "scriptDurationMs": 29,
+      "heapDeltaKb": 2298
     },
     "scripts": [
       {
         "url": "https://analytics.tiktok.com/i18n/pixel/events.js",
-        "transferKb": 2.6,
+        "transferKb": 2.8,
         "decodedKb": 7.6,
         "encoding": "gzip",
-        "durationMs": 270,
+        "durationMs": 282,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://analytics.tiktok.com/i18n/pixel/static/main.MTEwMjY2ZTExMA.js",
-        "transferKb": 105.8,
-        "decodedKb": 463.4,
+        "url": "https://analytics.tiktok.com/i18n/pixel/static/main.MTJlMjhkNzMyMA.js",
+        "transferKb": 105.7,
+        "decodedKb": 463.8,
         "encoding": "gzip",
         "durationMs": 50,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://analytics.tiktok.com/i18n/pixel/static/identify_31760074.js",
+        "url": "https://analytics.tiktok.com/i18n/pixel/static/identify_5cff1caf.js",
         "transferKb": 39.5,
         "decodedKb": 152,
         "encoding": "gzip",
-        "durationMs": 20,
+        "durationMs": 21,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1391,7 +1405,7 @@
   "snapchatPixel": {
     "totalTransferKb": 1.3,
     "totalDecodedKb": 58.2,
-    "loadTimeMs": 579,
+    "loadTimeMs": 561,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1443,17 +1457,6 @@
         "firstParty": false
       },
       {
-        "name": "sc_at",
-        "domain": ".snapchat.com",
-        "path": "/",
-        "httpOnly": false,
-        "secure": true,
-        "sameSite": "None",
-        "session": false,
-        "lifetimeDays": 390,
-        "firstParty": false
-      },
-      {
         "name": "TapAd_TS",
         "domain": ".tapad.com",
         "path": "/",
@@ -1485,6 +1488,17 @@
         "session": false,
         "lifetimeDays": 60,
         "firstParty": false
+      },
+      {
+        "name": "sc_at",
+        "domain": ".snapchat.com",
+        "path": "/",
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "None",
+        "session": false,
+        "lifetimeDays": 390,
+        "firstParty": false
       }
     ],
     "network": {
@@ -1494,14 +1508,14 @@
         "sc-static.net",
         "tr.snapchat.com"
       ],
-      "outboundBytes": 3041,
-      "inboundBytes": 26692,
+      "outboundBytes": 3045,
+      "inboundBytes": 26667,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 40,
-      "scriptDurationMs": 25,
-      "heapDeltaKb": 2476
+      "taskDurationMs": 42,
+      "scriptDurationMs": 26,
+      "heapDeltaKb": 2447
     },
     "scripts": [
       {
@@ -1509,25 +1523,25 @@
         "transferKb": 0,
         "decodedKb": 57.4,
         "encoding": "gzip",
-        "durationMs": 579,
+        "durationMs": 561,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://tr.snapchat.com/config/1/2295cbcc-cb3f-4727-8c09-1133b742722c.json?v=3.54.3-2603171656",
+        "url": "https://tr.snapchat.com/config/1/2295cbcc-cb3f-4727-8c09-1133b742722c.json?v=3.54.4-2603251834",
         "transferKb": 0.3,
         "decodedKb": 0.1,
         "encoding": "none",
-        "durationMs": 396,
+        "durationMs": 391,
         "initiatorType": "fetch",
         "protocol": "unknown"
       },
       {
-        "url": "https://tr.snapchat.com/cm/i?pid=2295cbcc-cb3f-4727-8c09-1133b742722c&u_scsid=8f048205-5fb8-4c6c-98ea-2992ed17b098&u_sclid=26c261d8-bcad-4186-a3be-fcbce2f60474",
+        "url": "https://tr.snapchat.com/cm/i?pid=2295cbcc-cb3f-4727-8c09-1133b742722c&u_scsid=2d9efdcf-bc69-41aa-8022-097ed265c888&u_sclid=54cae0d2-4f80-4cf2-a37d-843432ed64ec",
         "transferKb": 1,
         "decodedKb": 0.7,
         "encoding": "none",
-        "durationMs": 183,
+        "durationMs": 186,
         "initiatorType": "iframe",
         "protocol": "unknown"
       },
@@ -1536,7 +1550,7 @@
         "transferKb": 0,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 116,
+        "durationMs": 115,
         "initiatorType": "beacon",
         "protocol": "unknown"
       }
@@ -1545,7 +1559,7 @@
   "redditPixel": {
     "totalTransferKb": 19.5,
     "totalDecodedKb": 65.3,
-    "loadTimeMs": 319,
+    "loadTimeMs": 325,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1597,13 +1611,13 @@
       "injectedElements": [
         {
           "tag": "img",
-          "src": "https://alb.reddit.com/rp.gif?ts=1773925952972&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=feae778e-0f4b-41f7-a5fa-840388c4cbc4&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc="
+          "src": "https://alb.reddit.com/rp.gif?ts=1774508685700&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=94e2ee00-74ea-446e-a303-a52f6481ebd8&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc="
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 16,
-      "scriptDurationMs": 8,
+      "taskDurationMs": 14,
+      "scriptDurationMs": 6,
       "heapDeltaKb": 965
     },
     "scripts": [
@@ -1612,7 +1626,7 @@
         "transferKb": 18.8,
         "decodedKb": 65.3,
         "encoding": "gzip",
-        "durationMs": 105,
+        "durationMs": 117,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1621,16 +1635,16 @@
         "transferKb": 0.1,
         "decodedKb": 0,
         "encoding": "gzip",
-        "durationMs": 106,
+        "durationMs": 119,
         "initiatorType": "xmlhttprequest",
         "protocol": "unknown"
       },
       {
-        "url": "https://alb.reddit.com/rp.gif?ts=1773925952972&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=feae778e-0f4b-41f7-a5fa-840388c4cbc4&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc=",
+        "url": "https://alb.reddit.com/rp.gif?ts=1774508685700&id=a2_ilz4u0kbdr3v&event=PageVisit&m.itemCount=&m.value=&m.valueDecimal=&m.currency=&m.transactionId=&m.customEventName=&m.products=&m.conversionId=&uuid=94e2ee00-74ea-446e-a303-a52f6481ebd8&aaid=&em=&pn=&external_id=&idfa=&integration=reddit&partner=&partner_version=&opt_out=0&sh=1280&sw=720&v=rdt_79aa2193&dpm=&dpcc=&dprc=",
         "transferKb": 0.6,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 319,
+        "durationMs": 325,
         "initiatorType": "img",
         "protocol": "unknown"
       }
@@ -1638,8 +1652,8 @@
   },
   "googleAdsense": {
     "totalTransferKb": 69.8,
-    "totalDecodedKb": 198.2,
-    "loadTimeMs": 300,
+    "totalDecodedKb": 198.1,
+    "loadTimeMs": 292,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -1685,21 +1699,21 @@
         "pagead2.googlesyndication.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 64713,
+      "inboundBytes": 64712,
       "injectedElements": []
     },
     "performance": {
       "taskDurationMs": 15,
-      "scriptDurationMs": 7,
-      "heapDeltaKb": 1835
+      "scriptDurationMs": 6,
+      "heapDeltaKb": 1804
     },
     "scripts": [
       {
         "url": "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
         "transferKb": 63,
-        "decodedKb": 191.4,
+        "decodedKb": 191.3,
         "encoding": "br",
-        "durationMs": 300,
+        "durationMs": 292,
         "initiatorType": "script",
         "protocol": "h2"
       },
@@ -1715,9 +1729,9 @@
     ]
   },
   "carbonAds": {
-    "totalTransferKb": 10.4,
+    "totalTransferKb": 10.5,
     "totalDecodedKb": 34.5,
-    "loadTimeMs": 82,
+    "loadTimeMs": 75,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1763,21 +1777,21 @@
         "cdn.carbonads.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 10653,
+      "inboundBytes": 10748,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
+      "taskDurationMs": 6,
       "scriptDurationMs": 1,
-      "heapDeltaKb": 730
+      "heapDeltaKb": 729
     },
     "scripts": [
       {
         "url": "https://cdn.carbonads.com/carbon.js?serve=CW7DTKJL&placement=unlighthousedev&format=cover",
-        "transferKb": 10.4,
+        "transferKb": 10.5,
         "decodedKb": 34.5,
         "encoding": "gzip",
-        "durationMs": 82,
+        "durationMs": 75,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -1786,7 +1800,7 @@
   "hotjar": {
     "totalTransferKb": 62.2,
     "totalDecodedKb": 242.5,
-    "loadTimeMs": 338,
+    "loadTimeMs": 334,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -1832,13 +1846,13 @@
         "static.hotjar.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 6335,
+      "inboundBytes": 6332,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 8,
+      "taskDurationMs": 7,
       "scriptDurationMs": 1,
-      "heapDeltaKb": 757
+      "heapDeltaKb": 756
     },
     "scripts": [
       {
@@ -1846,12 +1860,12 @@
         "transferKb": 6.2,
         "decodedKb": 15,
         "encoding": "br",
-        "durationMs": 338,
+        "durationMs": 334,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://script.hotjar.com/modules.a7ec23974042e4df49ed.js",
+        "url": "https://script.hotjar.com/modules.6a0f3932cb1341a35c18.js",
         "transferKb": 56,
         "decodedKb": 227.5,
         "encoding": "br",
@@ -1864,7 +1878,7 @@
   "clarity": {
     "totalTransferKb": 27.2,
     "totalDecodedKb": 80.2,
-    "loadTimeMs": 648,
+    "loadTimeMs": 746,
     "collectsWebVitals": true,
     "apis": {
       "cookies": true,
@@ -1911,8 +1925,8 @@
         "scripts.clarity.ms",
         "www.clarity.ms"
       ],
-      "outboundBytes": 756,
-      "inboundBytes": 27824,
+      "outboundBytes": 752,
+      "inboundBytes": 27855,
       "injectedElements": [
         {
           "tag": "script",
@@ -1921,8 +1935,8 @@
       ]
     },
     "performance": {
-      "taskDurationMs": 20,
-      "scriptDurationMs": 9,
+      "taskDurationMs": 19,
+      "scriptDurationMs": 10,
       "heapDeltaKb": 1199
     },
     "scripts": [
@@ -1931,7 +1945,7 @@
         "transferKb": 0.8,
         "decodedKb": 0.6,
         "encoding": "none",
-        "durationMs": 354,
+        "durationMs": 355,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1940,7 +1954,7 @@
         "transferKb": 26.1,
         "decodedKb": 79.6,
         "encoding": "br",
-        "durationMs": 178,
+        "durationMs": 346,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -1949,16 +1963,16 @@
         "transferKb": 0.3,
         "decodedKb": 0,
         "encoding": "none",
-        "durationMs": 648,
+        "durationMs": 746,
         "initiatorType": "xmlhttprequest",
         "protocol": "unknown"
       }
     ]
   },
   "googleTagManager": {
-    "totalTransferKb": 108.6,
-    "totalDecodedKb": 302.5,
-    "loadTimeMs": 460,
+    "totalTransferKb": 109.2,
+    "totalDecodedKb": 303.2,
+    "loadTimeMs": 607,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2004,30 +2018,30 @@
         "www.googletagmanager.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 111254,
+      "inboundBytes": 111826,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 15,
+      "taskDurationMs": 17,
       "scriptDurationMs": 6,
-      "heapDeltaKb": 1810
+      "heapDeltaKb": 1809
     },
     "scripts": [
       {
         "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MWW974PF",
-        "transferKb": 108.6,
-        "decodedKb": 302.5,
+        "transferKb": 109.2,
+        "decodedKb": 303.2,
         "encoding": "zstd",
-        "durationMs": 460,
+        "durationMs": 607,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "intercom": {
-    "totalTransferKb": 9669.5,
-    "totalDecodedKb": 10437.8,
-    "loadTimeMs": 724,
+    "totalTransferKb": 9669.9,
+    "totalDecodedKb": 10438.5,
+    "loadTimeMs": 75,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2073,11 +2087,11 @@
         "widget.intercom.io"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 3706,
+      "inboundBytes": 3715,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 6,
+      "taskDurationMs": 7,
       "scriptDurationMs": 0,
       "heapDeltaKb": 726
     },
@@ -2087,7 +2101,7 @@
         "transferKb": 3.6,
         "decodedKb": 7.4,
         "encoding": "gzip",
-        "durationMs": 724,
+        "durationMs": 75,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -2102,9 +2116,9 @@
       },
       {
         "url": "https://js.intercomcdn.com/intersection/assets/styles.js",
-        "transferKb": 2167.9,
-        "decodedKb": 2167.9,
-        "encoding": "br",
+        "transferKb": 2168.3,
+        "decodedKb": 2168.3,
+        "encoding": "gzip",
         "durationMs": 0,
         "initiatorType": "secondary",
         "protocol": "unknown"
@@ -2119,9 +2133,9 @@
         "protocol": "unknown"
       },
       {
-        "url": "https://js.intercomcdn.com/frame-modern.458ee37e.js",
+        "url": "https://js.intercomcdn.com/frame-modern.3f051244.js",
         "transferKb": 190,
-        "decodedKb": 630.3,
+        "decodedKb": 630.6,
         "encoding": "gzip",
         "durationMs": 0,
         "initiatorType": "secondary",
@@ -2130,9 +2144,9 @@
     ]
   },
   "crisp": {
-    "totalTransferKb": 324.9,
-    "totalDecodedKb": 329.1,
-    "loadTimeMs": 98,
+    "totalTransferKb": 321.4,
+    "totalDecodedKb": 325.6,
+    "loadTimeMs": 63,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2178,7 +2192,7 @@
         "client.crisp.chat"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 3374,
+      "inboundBytes": 3378,
       "injectedElements": []
     },
     "performance": {
@@ -2192,14 +2206,14 @@
         "transferKb": 3.3,
         "decodedKb": 7.5,
         "encoding": "br",
-        "durationMs": 98,
+        "durationMs": 63,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://client.crisp.chat/static/javascripts/client_default_db1a904.js",
-        "transferKb": 321.6,
-        "decodedKb": 321.6,
+        "url": "https://client.crisp.chat/static/javascripts/client_default_508c63f.js",
+        "transferKb": 318.1,
+        "decodedKb": 318.1,
         "encoding": "br",
         "durationMs": 0,
         "initiatorType": "secondary",
@@ -2208,9 +2222,9 @@
     ]
   },
   "stripe": {
-    "totalTransferKb": 214.4,
-    "totalDecodedKb": 926.5,
-    "loadTimeMs": 171,
+    "totalTransferKb": 222.4,
+    "totalDecodedKb": 942.9,
+    "loadTimeMs": 126,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2268,35 +2282,35 @@
         "js.stripe.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 219407,
+      "inboundBytes": 227693,
       "injectedElements": [
         {
           "tag": "iframe",
-          "src": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A34289%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3"
+          "src": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A41347%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 90,
-      "scriptDurationMs": 13,
+      "taskDurationMs": 107,
+      "scriptDurationMs": 21,
       "heapDeltaKb": 4113
     },
     "scripts": [
       {
         "url": "https://js.stripe.com/v3/",
-        "transferKb": 214,
-        "decodedKb": 926.3,
+        "transferKb": 221.9,
+        "decodedKb": 942.7,
         "encoding": "br",
-        "durationMs": 171,
+        "durationMs": 126,
         "initiatorType": "script",
         "protocol": "h2"
       },
       {
-        "url": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A34289%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3",
-        "transferKb": 0.4,
+        "url": "https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=http%3A%2F%2F127.0.0.1%3A41347%2Fstripe&title=&referrer=&muid=NA&sid=NA&version=6&preview=false&__shared_params__[version]=v3",
+        "transferKb": 0.5,
         "decodedKb": 0.2,
         "encoding": "none",
-        "durationMs": 29,
+        "durationMs": 22,
         "initiatorType": "iframe",
         "protocol": "h2"
       }
@@ -2305,7 +2319,7 @@
   "lemonSqueezy": {
     "totalTransferKb": 1.8,
     "totalDecodedKb": 3.8,
-    "loadTimeMs": 104,
+    "loadTimeMs": 66,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2351,11 +2365,11 @@
         "assets.lemonsqueezy.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 1839,
+      "inboundBytes": 1832,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 5,
+      "taskDurationMs": 6,
       "scriptDurationMs": 0,
       "heapDeltaKb": 720
     },
@@ -2365,16 +2379,16 @@
         "transferKb": 1.8,
         "decodedKb": 3.8,
         "encoding": "br",
-        "durationMs": 104,
+        "durationMs": 66,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "paypal": {
-    "totalTransferKb": 95.5,
-    "totalDecodedKb": 288.8,
-    "loadTimeMs": 159,
+    "totalTransferKb": 95.3,
+    "totalDecodedKb": 289.3,
+    "loadTimeMs": 147,
     "collectsWebVitals": false,
     "apis": {
       "cookies": true,
@@ -2420,7 +2434,7 @@
         "www.paypal.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 49994,
+      "inboundBytes": 50025,
       "injectedElements": []
     },
     "performance": {
@@ -2431,17 +2445,17 @@
     "scripts": [
       {
         "url": "https://www.paypal.com/web-sdk/v6/core",
-        "transferKb": 48.8,
-        "decodedKb": 148,
+        "transferKb": 48.9,
+        "decodedKb": 148.1,
         "encoding": "gzip",
-        "durationMs": 159,
+        "durationMs": 147,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
         "url": "https://c.paypal.com/da/r/fb.js?${d}`:",
-        "transferKb": 23.3,
-        "decodedKb": 70.4,
+        "transferKb": 23.1,
+        "decodedKb": 70.6,
         "encoding": "gzip",
         "durationMs": 0,
         "initiatorType": "secondary",
@@ -2449,8 +2463,8 @@
       },
       {
         "url": "https://c.paypal.com/da/r/fb.js",
-        "transferKb": 23.4,
-        "decodedKb": 70.4,
+        "transferKb": 23.3,
+        "decodedKb": 70.6,
         "encoding": "gzip",
         "durationMs": 0,
         "initiatorType": "secondary",
@@ -2461,7 +2475,7 @@
   "vimeoPlayer": {
     "totalTransferKb": 8.9,
     "totalDecodedKb": 23.8,
-    "loadTimeMs": 96,
+    "loadTimeMs": 97,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2534,9 +2548,9 @@
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 7,
+      "taskDurationMs": 6,
       "scriptDurationMs": 0,
-      "heapDeltaKb": 742
+      "heapDeltaKb": 741
     },
     "scripts": [
       {
@@ -2544,16 +2558,16 @@
         "transferKb": 8.9,
         "decodedKb": 23.8,
         "encoding": "gzip",
-        "durationMs": 96,
+        "durationMs": 97,
         "initiatorType": "script",
         "protocol": "unknown"
       }
     ]
   },
   "youtubePlayer": {
-    "totalTransferKb": 14,
+    "totalTransferKb": 13.7,
     "totalDecodedKb": 32.4,
-    "loadTimeMs": 289,
+    "loadTimeMs": 320,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2655,35 +2669,35 @@
         "www.youtube.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 14267,
+      "inboundBytes": 14031,
       "injectedElements": [
         {
           "tag": "script",
-          "src": "https://www.youtube.com/s/player/f4f314f0/www-widgetapi.vflset/www-widgetapi.js"
+          "src": "https://www.youtube.com/s/player/5e4f1adf/www-widgetapi.vflset/www-widgetapi.js"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 7,
+      "taskDurationMs": 8,
       "scriptDurationMs": 1,
       "heapDeltaKb": 811
     },
     "scripts": [
       {
         "url": "https://www.youtube.com/iframe_api",
-        "transferKb": 3.4,
+        "transferKb": 3.1,
         "decodedKb": 1,
         "encoding": "br",
-        "durationMs": 289,
+        "durationMs": 320,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://www.youtube.com/s/player/f4f314f0/www-widgetapi.vflset/www-widgetapi.js",
+        "url": "https://www.youtube.com/s/player/5e4f1adf/www-widgetapi.vflset/www-widgetapi.js",
         "transferKb": 10.6,
         "decodedKb": 31.4,
         "encoding": "br",
-        "durationMs": 20,
+        "durationMs": 19,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -2806,7 +2820,7 @@
   "googleRecaptcha": {
     "totalTransferKb": 363.9,
     "totalDecodedKb": 852,
-    "loadTimeMs": 250,
+    "loadTimeMs": 248,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2853,7 +2867,7 @@
         "www.gstatic.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 373010,
+      "inboundBytes": 373011,
       "injectedElements": [
         {
           "tag": "script",
@@ -2862,9 +2876,9 @@
       ]
     },
     "performance": {
-      "taskDurationMs": 68,
-      "scriptDurationMs": 38,
-      "heapDeltaKb": 3011
+      "taskDurationMs": 78,
+      "scriptDurationMs": 42,
+      "heapDeltaKb": 3066
     },
     "scripts": [
       {
@@ -2872,7 +2886,7 @@
         "transferKb": 1.5,
         "decodedKb": 1.5,
         "encoding": "gzip",
-        "durationMs": 250,
+        "durationMs": 248,
         "initiatorType": "script",
         "protocol": "unknown"
       },
@@ -2881,16 +2895,16 @@
         "transferKb": 362.4,
         "decodedKb": 850.5,
         "encoding": "gzip",
-        "durationMs": 235,
+        "durationMs": 239,
         "initiatorType": "script",
         "protocol": "h2"
       }
     ]
   },
   "googleSignIn": {
-    "totalTransferKb": 92.1,
-    "totalDecodedKb": 247.6,
-    "loadTimeMs": 563,
+    "totalTransferKb": 93.4,
+    "totalDecodedKb": 251.5,
+    "loadTimeMs": 587,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -2936,21 +2950,21 @@
         "accounts.google.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 94339,
+      "inboundBytes": 95605,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 11,
-      "scriptDurationMs": 2,
-      "heapDeltaKb": 1210
+      "taskDurationMs": 13,
+      "scriptDurationMs": 3,
+      "heapDeltaKb": 1211
     },
     "scripts": [
       {
         "url": "https://accounts.google.com/gsi/client",
-        "transferKb": 92.1,
-        "decodedKb": 247.6,
+        "transferKb": 93.4,
+        "decodedKb": 251.5,
         "encoding": "gzip",
-        "durationMs": 563,
+        "durationMs": 587,
         "initiatorType": "script",
         "protocol": "unknown"
       }
@@ -3016,7 +3030,7 @@
   "instagramEmbed": {
     "totalTransferKb": 33.9,
     "totalDecodedKb": 102.2,
-    "loadTimeMs": 338,
+    "loadTimeMs": 340,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -3062,11 +3076,11 @@
         "www.instagram.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 36788,
+      "inboundBytes": 36790,
       "injectedElements": []
     },
     "performance": {
-      "taskDurationMs": 11,
+      "taskDurationMs": 12,
       "scriptDurationMs": 5,
       "heapDeltaKb": 886
     },
@@ -3076,7 +3090,7 @@
         "transferKb": 33.9,
         "decodedKb": 102.2,
         "encoding": "zstd",
-        "durationMs": 338,
+        "durationMs": 340,
         "initiatorType": "script",
         "protocol": "h2"
       }
@@ -3085,7 +3099,7 @@
   "xEmbed": {
     "totalTransferKb": 130.5,
     "totalDecodedKb": 410.4,
-    "loadTimeMs": 72,
+    "loadTimeMs": 73,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -3132,17 +3146,17 @@
         "syndication.twitter.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 134601,
+      "inboundBytes": 134602,
       "injectedElements": [
         {
           "tag": "iframe",
-          "src": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A34289"
+          "src": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A41347"
         }
       ]
     },
     "performance": {
-      "taskDurationMs": 40,
-      "scriptDurationMs": 13,
+      "taskDurationMs": 47,
+      "scriptDurationMs": 16,
       "heapDeltaKb": 2476
     },
     "scripts": [
@@ -3151,16 +3165,16 @@
         "transferKb": 27.3,
         "decodedKb": 90.9,
         "encoding": "gzip",
-        "durationMs": 72,
+        "durationMs": 73,
         "initiatorType": "script",
         "protocol": "unknown"
       },
       {
-        "url": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A34289",
+        "url": "https://platform.twitter.com/widgets/widget_iframe.2f70fb173b9000da126c79afe2098f02.html?origin=http%3A%2F%2F127.0.0.1%3A41347",
         "transferKb": 103.2,
         "decodedKb": 319.5,
         "encoding": "gzip",
-        "durationMs": 50,
+        "durationMs": 51,
         "initiatorType": "iframe",
         "protocol": "unknown"
       }
@@ -3168,8 +3182,8 @@
   },
   "gravatar": {
     "totalTransferKb": 7.1,
-    "totalDecodedKb": 21.3,
-    "loadTimeMs": 65,
+    "totalDecodedKb": 21.4,
+    "loadTimeMs": 69,
     "collectsWebVitals": false,
     "apis": {
       "cookies": false,
@@ -3215,7 +3229,7 @@
         "secure.gravatar.com"
       ],
       "outboundBytes": 0,
-      "inboundBytes": 7295,
+      "inboundBytes": 7313,
       "injectedElements": []
     },
     "performance": {
@@ -3227,9 +3241,9 @@
       {
         "url": "https://secure.gravatar.com/js/gprofiles.js",
         "transferKb": 7.1,
-        "decodedKb": 21.3,
+        "decodedKb": 21.4,
         "encoding": "br",
-        "durationMs": 65,
+        "durationMs": 69,
         "initiatorType": "script",
         "protocol": "unknown"
       }

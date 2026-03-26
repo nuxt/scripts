@@ -4,7 +4,7 @@ import type { XEmbedTweetData } from '../registry/x-embed'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
 import { formatCount, formatTweetDate, proxyXImageUrl } from '../registry/x-embed'
-import { requireRegistryEndpoint } from '../utils'
+import { requireRegistryEndpoint, scriptsPrefix } from '../utils'
 
 const props = withDefaults(defineProps<{
   /**
@@ -13,12 +13,10 @@ const props = withDefaults(defineProps<{
   tweetId: string
   /**
    * Custom API endpoint for fetching tweet data
-   * @default '/_scripts/embed/x'
    */
   apiEndpoint?: string
   /**
    * Custom image proxy endpoint
-   * @default '/_scripts/embed/x-image'
    */
   imageProxyEndpoint?: string
   /**
@@ -26,17 +24,22 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes
 }>(), {
-  apiEndpoint: '/_scripts/embed/x',
-  imageProxyEndpoint: '/_scripts/embed/x-image',
+  apiEndpoint: undefined,
+  imageProxyEndpoint: undefined,
 })
-if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/x')
+
+const prefix = scriptsPrefix()
+
+const apiEndpoint = computed(() => props.apiEndpoint || `${prefix}/embed/x`)
+const resolvedImageProxyEndpoint = computed((): string => props.imageProxyEndpoint || `${prefix}/embed/x-image`)
+if (!props.apiEndpoint)
   requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
 
 const cacheKey = computed(() => `x-embed-${props.tweetId}`)
 
 const { data: tweet, status, error } = useAsyncData<XEmbedTweetData>(
   cacheKey,
-  () => $fetch(`${props.apiEndpoint}?id=${props.tweetId}`),
+  () => $fetch(`${apiEndpoint.value}?id=${props.tweetId}`),
 )
 
 const slotProps = computed(() => {
@@ -50,7 +53,7 @@ const slotProps = computed(() => {
     // User info
     userName: t.user.name,
     userHandle: t.user.screen_name,
-    userAvatar: proxyXImageUrl(t.user.profile_image_url_https, props.imageProxyEndpoint),
+    userAvatar: proxyXImageUrl(t.user.profile_image_url_https, resolvedImageProxyEndpoint.value),
     userAvatarOriginal: t.user.profile_image_url_https,
     isVerified: t.user.verified || t.user.is_blue_verified,
     // Tweet content
@@ -65,12 +68,12 @@ const slotProps = computed(() => {
     // Media
     photos: t.photos?.map(p => ({
       ...p,
-      proxiedUrl: proxyXImageUrl(p.url, props.imageProxyEndpoint),
+      proxiedUrl: proxyXImageUrl(p.url, resolvedImageProxyEndpoint.value),
     })),
     video: t.video
       ? {
           ...t.video,
-          posterProxied: proxyXImageUrl(t.video.poster, props.imageProxyEndpoint),
+          posterProxied: proxyXImageUrl(t.video.poster, resolvedImageProxyEndpoint.value),
         }
       : null,
     // Links
@@ -82,7 +85,7 @@ const slotProps = computed(() => {
     isReply: !!t.parent,
     replyToUser: t.parent?.user.screen_name,
     // Helpers
-    proxyImage: (url: string) => proxyXImageUrl(url, props.imageProxyEndpoint),
+    proxyImage: (url: string) => proxyXImageUrl(url, resolvedImageProxyEndpoint.value),
   }
 })
 

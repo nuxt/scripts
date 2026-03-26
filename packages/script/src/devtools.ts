@@ -1,5 +1,6 @@
 import type { Nuxt } from '@nuxt/schema'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { ProxyConfig, RegistryScript } from './runtime/types'
 import { existsSync } from 'node:fs'
 import { createResolver, extendViteConfig } from '@nuxt/kit'
 
@@ -103,4 +104,91 @@ function setupStandaloneApi(nuxt: Nuxt) {
       res.end('method not allowed')
     })
   })
+}
+
+// -- Proxy devtools data --
+
+export interface ProxyDevtoolsScript {
+  registryKey: string
+  label: string
+  logo: string
+  category: string
+  configKey: string
+  mechanism: 'bundle-rewrite-intercept' | 'config-injection-proxy'
+  hasAutoInject: boolean
+  autoInjectField?: string
+  hasPostProcess: boolean
+  privacy: { ip: boolean, userAgent: boolean, language: boolean, screen: boolean, timezone: boolean, hardware: boolean }
+  privacyLevel: 'full' | 'partial' | 'none'
+  domains: string[]
+}
+
+export interface ProxyDevtoolsData {
+  enabled: boolean
+  proxyPrefix: string
+  privacyMode: string
+  scripts: ProxyDevtoolsScript[]
+  totalDomains: number
+}
+
+function computeDevtoolsPrivacyLevel(privacy: Record<string, boolean>): 'full' | 'partial' | 'none' {
+  const flags = Object.values(privacy)
+  if (flags.every(Boolean))
+    return 'full'
+  if (flags.some(Boolean))
+    return 'partial'
+  return 'none'
+}
+
+export function buildDevtoolsEntry(
+  key: string,
+  script: RegistryScript,
+  configKey: string,
+  proxyConfig: ProxyConfig,
+): ProxyDevtoolsScript {
+  const privacy = proxyConfig.privacy as Record<string, boolean>
+  const normalizedPrivacy = {
+    ip: !!privacy.ip,
+    userAgent: !!privacy.userAgent,
+    language: !!privacy.language,
+    screen: !!privacy.screen,
+    timezone: !!privacy.timezone,
+    hardware: !!privacy.hardware,
+  }
+  const logo = script.logo
+  const logoStr = typeof logo === 'object' ? (logo.dark || logo.light) : (logo || '')
+
+  return {
+    registryKey: key,
+    label: script.label || key,
+    logo: logoStr,
+    category: script.category || 'unknown',
+    configKey,
+    mechanism: script.src === false ? 'config-injection-proxy' : 'bundle-rewrite-intercept',
+    hasAutoInject: !!proxyConfig.autoInject,
+    autoInjectField: proxyConfig.autoInject?.configField,
+    hasPostProcess: !!(proxyConfig.sdkPatches?.length),
+    privacy: normalizedPrivacy,
+    privacyLevel: computeDevtoolsPrivacyLevel(normalizedPrivacy),
+    domains: [...proxyConfig.domains],
+  }
+}
+
+export function buildDevtoolsData(
+  proxyPrefix: string,
+  privacyLabel: string,
+  scripts: ProxyDevtoolsScript[],
+): ProxyDevtoolsData {
+  const allDomains = new Set<string>()
+  for (const s of scripts) {
+    for (const d of s.domains)
+      allDomains.add(d)
+  }
+  return {
+    enabled: true,
+    proxyPrefix,
+    privacyMode: privacyLabel,
+    scripts,
+    totalDomains: allDomains.size,
+  }
 }

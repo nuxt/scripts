@@ -59,16 +59,16 @@ function mechanismLabel(m: string) {
       </div>
       <div class="text-center space-y-1.5">
         <p class="text-sm font-semibold text-(--color-text-muted)">
-          First-Party Mode is not enabled
+          Privacy Proxy is not active
         </p>
         <p class="text-xs text-(--color-text-subtle) max-w-sm">
-          Proxy is auto-enabled when scripts with proxy capabilities are configured.
+          The reverse proxy is auto-enabled when scripts with proxy capabilities are configured in the registry.
         </p>
       </div>
       <div class="hint-callout text-xs max-w-sm">
         <UIcon name="i-carbon-information" class="hint-callout-icon text-base flex-shrink-0" />
         <div>
-          Ensure <code class="px-1 py-0.5 rounded text-[11px] font-mono bg-(--color-surface-sunken)">scripts: { proxy: false }</code> is not set in your config.
+          Check that your registry scripts have not set <code class="px-1 py-0.5 rounded text-[11px] font-mono bg-(--color-surface-sunken)">proxy: false</code> or <code class="px-1 py-0.5 rounded text-[11px] font-mono bg-(--color-surface-sunken)">bundle: false</code>.
         </div>
       </div>
       <a
@@ -164,7 +164,7 @@ function mechanismLabel(m: string) {
                 <UTooltip
                   v-for="flag in privacyFlags"
                   :key="flag"
-                  :text="`${privacyFlagLabels[flag]}: ${s.privacy[flag] ? 'Anonymized' : 'Passthrough'}`"
+                  :text="`${privacyFlagLabels[flag]}: ${s.privacy[flag] ? 'Anonymised' : 'Passthrough'}`"
                 >
                   <div class="privacy-flag" :class="s.privacy[flag] ? 'privacy-flag-on' : 'privacy-flag-off'">
                     <UIcon :name="privacyFlagIcons[flag]" class="text-xs" />
@@ -187,8 +187,8 @@ function mechanismLabel(m: string) {
               <span v-if="s.canvasFingerprinting" class="fp-badge fp-badge-warn">
                 Canvas FP neutralized
               </span>
-              <span v-if="s.hasPostProcess" class="fp-badge fp-badge-muted">
-                Post-process
+              <span v-if="s.hasSdkPatches" class="fp-badge fp-badge-muted">
+                SDK patches
               </span>
             </div>
           </div>
@@ -306,7 +306,7 @@ function mechanismLabel(m: string) {
           target="_blank"
           class="link-external text-xs"
         >
-          First-Party Mode Documentation
+          First-Party Mode: Privacy Focused Proxy
         </a>
       </div>
     </div>

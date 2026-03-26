@@ -1,5 +1,5 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { useRegistryScript } from '#nuxt-scripts/utils'
+import { scriptsPrefix, useRegistryScript } from '#nuxt-scripts/utils'
 import { GravatarOptions } from './schemas'
 
 export { GravatarOptions } from './schemas'
@@ -40,14 +40,17 @@ export function useScriptGravatar<T extends GravatarApi>(_options?: GravatarInpu
       },
       schema: import.meta.dev ? GravatarOptions : undefined,
       scriptOptions: {
-        use: () => ({
-          getAvatarUrl: (hash: string, overrides?: { size?: number, default?: string, rating?: string }) => {
-            return `/_scripts/proxy/gravatar?hash=${encodeURIComponent(hash)}&${buildQuery(overrides)}`
-          },
-          getAvatarUrlFromEmail: (email: string, overrides?: { size?: number, default?: string, rating?: string }) => {
-            return `/_scripts/proxy/gravatar?email=${encodeURIComponent(email)}&${buildQuery(overrides)}`
-          },
-        }),
+        use: () => {
+          const prefix = scriptsPrefix()
+          return {
+            getAvatarUrl: (hash: string, overrides?: { size?: number, default?: string, rating?: string }) => {
+              return `${prefix}/proxy/gravatar?hash=${encodeURIComponent(hash)}&${buildQuery(overrides)}`
+            },
+            getAvatarUrlFromEmail: (email: string, overrides?: { size?: number, default?: string, rating?: string }) => {
+              return `${prefix}/proxy/gravatar?email=${encodeURIComponent(email)}&${buildQuery(overrides)}`
+            },
+          }
+        },
       },
     }
   }, _options)

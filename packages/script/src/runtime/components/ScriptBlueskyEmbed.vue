@@ -4,7 +4,7 @@ import type { BlueskyEmbedPostData } from '../registry/bluesky-embed'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
 import { extractBlueskyPostId, facetsToHtml, formatBlueskyDate, formatCount, proxyBlueskyImageUrl } from '../registry/bluesky-embed'
-import { requireRegistryEndpoint } from '../utils'
+import { requireRegistryEndpoint, scriptsPrefix } from '../utils'
 
 const props = withDefaults(defineProps<{
   /**
@@ -14,12 +14,10 @@ const props = withDefaults(defineProps<{
   postUrl: string
   /**
    * Custom API endpoint for fetching post data
-   * @default '/_scripts/embed/bluesky'
    */
   apiEndpoint?: string
   /**
    * Custom image proxy endpoint
-   * @default '/_scripts/embed/bluesky-image'
    */
   imageProxyEndpoint?: string
   /**
@@ -27,10 +25,15 @@ const props = withDefaults(defineProps<{
    */
   rootAttrs?: HTMLAttributes
 }>(), {
-  apiEndpoint: '/_scripts/embed/bluesky',
-  imageProxyEndpoint: '/_scripts/embed/bluesky-image',
+  apiEndpoint: undefined,
+  imageProxyEndpoint: undefined,
 })
-if (!props.apiEndpoint || props.apiEndpoint === '/_scripts/embed/bluesky')
+
+const prefix = scriptsPrefix()
+
+const resolvedApiEndpoint = computed((): string => props.apiEndpoint || `${prefix}/embed/bluesky`)
+const resolvedImageProxyEndpoint = computed((): string => props.imageProxyEndpoint || `${prefix}/embed/bluesky-image`)
+if (!props.apiEndpoint)
   requireRegistryEndpoint('ScriptBlueskyEmbed', 'blueskyEmbed')
 
 const postId = computed(() => extractBlueskyPostId(props.postUrl))
@@ -38,7 +41,7 @@ const cacheKey = computed(() => `bluesky-embed-${postId.value?.actor}-${postId.v
 
 const { data: post, status, error } = useAsyncData<BlueskyEmbedPostData>(
   cacheKey,
-  () => $fetch(`${props.apiEndpoint}?url=${encodeURIComponent(props.postUrl)}`),
+  () => $fetch(`${resolvedApiEndpoint.value}?url=${encodeURIComponent(props.postUrl)}`),
 )
 
 const slotProps = computed(() => {
@@ -52,7 +55,7 @@ const slotProps = computed(() => {
     // Author info
     displayName: p.author.displayName,
     handle: p.author.handle,
-    avatar: proxyBlueskyImageUrl(p.author.avatar, props.imageProxyEndpoint),
+    avatar: proxyBlueskyImageUrl(p.author.avatar, resolvedImageProxyEndpoint.value),
     avatarOriginal: p.author.avatar,
     isVerified: p.author.verification?.verifiedStatus === 'valid',
     // Post content
@@ -72,8 +75,8 @@ const slotProps = computed(() => {
     quotesFormatted: formatCount(p.quoteCount),
     // Media
     images: p.embed?.images?.map(img => ({
-      thumb: proxyBlueskyImageUrl(img.thumb, props.imageProxyEndpoint),
-      fullsize: proxyBlueskyImageUrl(img.fullsize, props.imageProxyEndpoint),
+      thumb: proxyBlueskyImageUrl(img.thumb, resolvedImageProxyEndpoint.value),
+      fullsize: proxyBlueskyImageUrl(img.fullsize, resolvedImageProxyEndpoint.value),
       alt: img.alt,
       aspectRatio: img.aspectRatio,
     })),
@@ -83,7 +86,7 @@ const slotProps = computed(() => {
           title: p.embed.external.title,
           description: p.embed.external.description,
           thumb: p.embed.external.thumb
-            ? proxyBlueskyImageUrl(p.embed.external.thumb, props.imageProxyEndpoint)
+            ? proxyBlueskyImageUrl(p.embed.external.thumb, resolvedImageProxyEndpoint.value)
             : undefined,
         }
       : undefined,
@@ -91,7 +94,7 @@ const slotProps = computed(() => {
     postUrl: props.postUrl,
     authorUrl: `https://bsky.app/profile/${p.author.handle}`,
     // Helpers
-    proxyImage: (url: string) => proxyBlueskyImageUrl(url, props.imageProxyEndpoint),
+    proxyImage: (url: string) => proxyBlueskyImageUrl(url, resolvedImageProxyEndpoint.value),
   }
 })
 

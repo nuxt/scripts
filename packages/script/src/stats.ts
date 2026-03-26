@@ -1,6 +1,6 @@
 import type { RegistryScriptKey } from './runtime/types'
 import type { TrackedDataType } from './script-meta'
-import { buildProxyConfigsFromRegistry } from './first-party/setup'
+import { buildProxyConfigsFromRegistry } from './registry'
 import { scriptMeta } from './script-meta'
 import scriptSizes from './script-sizes.json'
 
@@ -551,14 +551,14 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
     const id = entry.registryKey || deriveMetaKey(entry.import?.name, entry.label) as RegistryScriptKey
     const meta = id && id in scriptMeta ? scriptMeta[id as keyof typeof scriptMeta] : undefined
     const size = sizes[id || '']
-    const proxyConfigKey = !entry.capabilities?.proxy ? undefined : (entry.proxyConfig || entry.registryKey)
+    const proxyConfigKey = !entry.proxy ? undefined : (typeof entry.proxy === 'string' ? entry.proxy : entry.registryKey)
     const proxyConfig = proxyConfigKey ? proxyConfigs[proxyConfigKey] : undefined
 
     // Determine loading method
     let loadingMethod: ScriptStats['loadingMethod'] = 'cdn'
     if (entry.src === false)
       loadingMethod = 'npm'
-    else if (!entry.src && typeof entry.scriptBundling === 'function')
+    else if (!entry.src && typeof entry.bundle === 'object' && entry.bundle?.resolve)
       loadingMethod = 'dynamic'
 
     // Extract proxy info
@@ -606,7 +606,7 @@ export async function getScriptStats(): Promise<ScriptStats[]> {
       performance: perf,
       performanceRating: computePerformanceRating(perf, primaryTransferKb, network, cwvEstimate),
       cwvEstimate,
-      hasBundling: entry.scriptBundling !== false && entry.scriptBundling !== undefined,
+      hasBundling: !!entry.bundle,
       hasProxy: !!proxyConfig,
       proxyDomains: domains,
       proxyEndpoints: endpoints,

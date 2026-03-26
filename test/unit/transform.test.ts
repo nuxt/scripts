@@ -149,11 +149,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptFathomAnalytics({ src: 'https://cdn.fathom/custom.js' }, { bundle: true, })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://cdn.usefathom.com/script.js'
+            bundle: {
+              resolve() {
+                return 'https://cdn.usefathom.com/script.js'
+              },
             },
             import: {
               name: 'useScriptFathomAnalytics',
@@ -176,11 +177,12 @@ describe('nuxtScriptTransformer', () => {
         }
       })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://www.googletagmanager.com/gtag/js'
+            bundle: {
+              resolve() {
+                return 'https://www.googletagmanager.com/gtag/js'
+              },
             },
             import: {
               name: 'useScriptGoogleAnalytics',
@@ -209,11 +211,12 @@ describe('nuxtScriptTransformer', () => {
         bundle: true
       })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://www.googletagmanager.com/gtag/js'
+            bundle: {
+              resolve() {
+                return 'https://www.googletagmanager.com/gtag/js'
+              },
             },
             import: {
               name: 'useScriptGoogleAnalytics',
@@ -234,11 +237,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptFathomAnalytics({ site: '123' }, { bundle: true, })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://cdn.usefathom.com/script.js'
+            bundle: {
+              resolve() {
+                return 'https://cdn.usefathom.com/script.js'
+              },
             },
             import: {
               name: 'useScriptFathomAnalytics',
@@ -255,11 +259,13 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptFathomAnalytics({ site: '123' }, { bundle: false })`,
       {
-        defaultBundle: true,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://cdn.usefathom.com/script.js'
+            capabilities: { bundle: true },
+            bundle: {
+              resolve() {
+                return 'https://cdn.usefathom.com/script.js'
+              },
             },
             import: {
               name: 'useScriptFathomAnalytics',
@@ -278,11 +284,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptIntercom({ app_id: '123' })`,
       {
-        defaultBundle: true,
         scripts: [
           {
-            scriptBundling(options?: IntercomInput) {
-              return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            bundle: {
+              resolve(options?: IntercomInput) {
+                return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+              },
             },
             import: {
               name: 'useScriptIntercom',
@@ -300,11 +307,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptIntercom({ app_id: '123' }, { bundle: false })`,
       {
-        defaultBundle: true,
         scripts: [
           {
-            scriptBundling(options?: IntercomInput) {
-              return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            bundle: {
+              resolve(options?: IntercomInput) {
+                return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+              },
             },
             import: {
               name: 'useScriptIntercom',
@@ -323,11 +331,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptIntercom({ app_id: '123' }, { bundle: true })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling(options?: IntercomInput) {
-              return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            bundle: {
+              resolve(options?: IntercomInput) {
+                return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+              },
             },
             import: {
               name: 'useScriptIntercom',
@@ -345,11 +354,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       [`const instance = useScriptIntercom({ app_id: '123' }, { bundle: true })`, `const instance2 = useScriptIntercom()`].join('\n'),
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling(options?: IntercomInput) {
-              return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+            bundle: {
+              resolve(options?: IntercomInput) {
+                return joinURL(`https://widget.intercom.io/widget`, options?.app_id || '')
+              },
             },
             import: {
               name: 'useScriptIntercom',
@@ -361,7 +371,7 @@ describe('nuxtScriptTransformer', () => {
     )
     expect(code).toMatchInlineSnapshot(`
       "const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' }, )
-      const instance2 = useScriptIntercom()"
+      const instance2 = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget.js' } })"
     `)
   })
 
@@ -370,11 +380,12 @@ describe('nuxtScriptTransformer', () => {
     const code = await transform(
       `const instance = useScriptNpm({ packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })`,
       {
-        defaultBundle: true,
         scripts: [
           {
-            scriptBundling(options?: NpmInput) {
-              return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
+            bundle: {
+              resolve(options?: NpmInput) {
+                return withBase(options?.file || '', `https://unpkg.com/${options?.packageName || ''}@${options?.version || 'latest'}`)
+              },
             },
             import: {
               name: 'useScriptNpm',
@@ -454,11 +465,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         }
       })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://www.googletagmanager.com/gtag/js'
+            bundle: {
+              resolve() {
+                return 'https://www.googletagmanager.com/gtag/js'
+              },
             },
             import: {
               name: 'useScriptGoogleAnalytics',
@@ -487,11 +499,12 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         bundle: 'force'
       })`,
       {
-        defaultBundle: false,
         scripts: [
           {
-            scriptBundling() {
-              return 'https://www.googletagmanager.com/gtag/js'
+            bundle: {
+              resolve() {
+                return 'https://www.googletagmanager.com/gtag/js'
+              },
             },
             import: {
               name: 'useScriptGoogleAnalytics',
@@ -708,12 +721,11 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     })
   })
 
-  it('registry config is passed to scriptBundling functions - no function arguments', async () => {
+  it('registry config is passed to bundle resolve functions - no function arguments', async () => {
     vi.mocked(hash).mockImplementationOnce(src => src.pathname)
     const code = await transform(
       `const instance = useScriptGoogleTagManager()`,
       {
-        defaultBundle: true,
         registryConfig: {
           googleTagManager: {
             id: 'GTM-REGISTRY-CONFIG',
@@ -721,11 +733,13 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
         scripts: [
           {
-            scriptBundling(options: any) {
-              if (!options?.id) {
-                return false
-              }
-              return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+            bundle: {
+              resolve(options: any) {
+                if (!options?.id) {
+                  return false
+                }
+                return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+              },
             },
             import: {
               name: 'useScriptGoogleTagManager',
@@ -744,7 +758,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const code = await transform(
         `const instance = useScriptGoogleTagManager()`,
         {
-          defaultBundle: true,
           // This simulates the merged config where runtimeConfig.public.scripts overrides scripts.registry
           registryConfig: {
             googleTagManager: {
@@ -754,16 +767,18 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
-              scriptBundling(options: any) {
-                if (!options?.id) {
-                  return false
-                }
-                const url = new URL('https://www.googletagmanager.com/gtm.js')
-                url.searchParams.set('id', options.id)
-                if (options.debug) {
-                  url.searchParams.set('debug', '1')
-                }
-                return url.toString()
+              bundle: {
+                resolve(options: any) {
+                  if (!options?.id) {
+                    return false
+                  }
+                  const url = new URL('https://www.googletagmanager.com/gtm.js')
+                  url.searchParams.set('id', options.id)
+                  if (options.debug) {
+                    url.searchParams.set('debug', '1')
+                  }
+                  return url.toString()
+                },
               },
               import: {
                 name: 'useScriptGoogleTagManager',
@@ -781,7 +796,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const code = await transform(
         `const instance = useScriptGoogleTagManager()`,
         {
-          defaultBundle: true,
           registryConfig: {
             googleTagManager: {
               id: 'GTM-CONFIG-ID',
@@ -792,19 +806,21 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
-              scriptBundling(options: any) {
-                if (!options?.id) {
-                  return false
-                }
-                const url = new URL('https://www.googletagmanager.com/gtm.js')
-                url.searchParams.set('id', options.id)
-                if (options.l)
-                  url.searchParams.set('l', options.l)
-                if (options.auth)
-                  url.searchParams.set('gtm_auth', options.auth)
-                if (options.debug)
-                  url.searchParams.set('gtm_debug', 'x')
-                return url.toString()
+              bundle: {
+                resolve(options: any) {
+                  if (!options?.id) {
+                    return false
+                  }
+                  const url = new URL('https://www.googletagmanager.com/gtm.js')
+                  url.searchParams.set('id', options.id)
+                  if (options.l)
+                    url.searchParams.set('l', options.l)
+                  if (options.auth)
+                    url.searchParams.set('gtm_auth', options.auth)
+                  if (options.debug)
+                    url.searchParams.set('gtm_debug', 'x')
+                  return url.toString()
+                },
               },
               import: {
                 name: 'useScriptGoogleTagManager',
@@ -822,7 +838,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const code = await transform(
         `const instance = useScriptGoogleTagManager({ id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })`,
         {
-          defaultBundle: true,
           registryConfig: {
             googleTagManager: {
               id: 'GTM-CONFIG-ID',
@@ -832,19 +847,21 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
-              scriptBundling(options: any) {
-                if (!options?.id) {
-                  return false
-                }
-                const url = new URL('https://www.googletagmanager.com/gtm.js')
-                url.searchParams.set('id', options.id)
-                if (options.l)
-                  url.searchParams.set('l', options.l)
-                if (options.debug)
-                  url.searchParams.set('gtm_debug', 'x')
-                if (options.customParam)
-                  url.searchParams.set('custom', options.customParam)
-                return url.toString()
+              bundle: {
+                resolve(options: any) {
+                  if (!options?.id) {
+                    return false
+                  }
+                  const url = new URL('https://www.googletagmanager.com/gtm.js')
+                  url.searchParams.set('id', options.id)
+                  if (options.l)
+                    url.searchParams.set('l', options.l)
+                  if (options.debug)
+                    url.searchParams.set('gtm_debug', 'x')
+                  if (options.customParam)
+                    url.searchParams.set('custom', options.customParam)
+                  return url.toString()
+                },
               },
               import: {
                 name: 'useScriptGoogleTagManager',
@@ -862,15 +879,16 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const code = await transform(
         `const instance = useScriptGoogleTagManager()`,
         {
-          defaultBundle: true,
           registryConfig: {}, // Empty registry config
           scripts: [
             {
-              scriptBundling(options: any) {
-                if (!options?.id) {
-                  return false // Should return false since no id provided
-                }
-                return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+              bundle: {
+                resolve(options: any) {
+                  if (!options?.id) {
+                    return false // Should return false since no id provided
+                  }
+                  return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+                },
               },
               import: {
                 name: 'useScriptGoogleTagManager',
@@ -880,7 +898,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      // Should not transform since scriptBundling returns false
+      // Should not transform since bundle resolve returns false
       expect(code).toBeUndefined()
     })
 
@@ -888,15 +906,16 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const code = await transform(
         `const instance = useScriptGoogleTagManager()`,
         {
-          defaultBundle: true,
           registryConfig: undefined, // No registry config
           scripts: [
             {
-              scriptBundling(options: any) {
-                if (!options?.id) {
-                  return false // Should return false since no id provided
-                }
-                return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+              bundle: {
+                resolve(options: any) {
+                  if (!options?.id) {
+                    return false // Should return false since no id provided
+                  }
+                  return `https://www.googletagmanager.com/gtm.js?id=${options.id}`
+                },
               },
               import: {
                 name: 'useScriptGoogleTagManager',
@@ -906,7 +925,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      // Should not transform since scriptBundling returns false
+      // Should not transform since bundle resolve returns false
       expect(code).toBeUndefined()
     })
 
@@ -915,7 +934,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       const code = await transform(
         `const instance = useScriptGoogleAnalytics()`,
         {
-          defaultBundle: true,
           registryConfig: {
             googleAnalytics: {
               id: 'GA-CONFIG-ID',
@@ -931,13 +949,15 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
-              scriptBundling(options: any) {
-                if (!options?.id) {
-                  return false
-                }
-                const url = new URL('https://www.googletagmanager.com/gtag/js')
-                url.searchParams.set('id', options.id)
-                return url.toString()
+              bundle: {
+                resolve(options: any) {
+                  if (!options?.id) {
+                    return false
+                  }
+                  const url = new URL('https://www.googletagmanager.com/gtag/js')
+                  url.searchParams.set('id', options.id)
+                  return url.toString()
+                },
               },
               import: {
                 name: 'useScriptGoogleAnalytics',
@@ -956,7 +976,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     const code = await transform(
       `const instance = useScriptGoogleTagManager({ id: 'GTM-FUNCTION-ARG' })`,
       {
-        defaultBundle: true,
         registryConfig: {
           googleTagManager: {
             id: 'GTM-REGISTRY-CONFIG',
@@ -965,16 +984,18 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
         scripts: [
           {
-            scriptBundling(options: any) {
-              if (!options?.id) {
-                return false
-              }
-              const url = new URL('https://www.googletagmanager.com/gtm.js')
-              url.searchParams.set('id', options.id)
-              if (options.debug) {
-                url.searchParams.set('debug', '1')
-              }
-              return url.toString()
+            bundle: {
+              resolve(options: any) {
+                if (!options?.id) {
+                  return false
+                }
+                const url = new URL('https://www.googletagmanager.com/gtm.js')
+                url.searchParams.set('id', options.id)
+                if (options.debug) {
+                  url.searchParams.set('debug', '1')
+                }
+                return url.toString()
+              },
             },
             import: {
               name: 'useScriptGoogleTagManager',
@@ -1071,8 +1092,10 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           renderedScript: new Map(),
           scripts: [
             {
-              scriptBundling() {
-                return 'https://www.googletagmanager.com/gtag/js'
+              bundle: {
+                resolve() {
+                  return 'https://www.googletagmanager.com/gtag/js'
+                },
               },
               import: {
                 name: 'useScriptGoogleAnalytics',
@@ -1229,8 +1252,10 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 
     const scripts = [{
       label: 'NPM',
-      scriptBundling() {
-        return 'bundle.js'
+      bundle: {
+        resolve() {
+          return 'bundle.js'
+        },
       },
       logo: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="#C12127" d="M0 256V0h256v256z"/><path fill="#FFF" d="M48 48h160v160h-32V80h-48v128H48z"/></svg>`,
       category: 'utility',

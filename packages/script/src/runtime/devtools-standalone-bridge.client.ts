@@ -2,7 +2,7 @@ import { defineNuxtPlugin, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 
 /**
  * Dev-only client plugin that bridges script state to the standalone devtools API.
- * When `standaloneDevtools` is enabled, this plugin listens for `scripts:updated`
+ * When `_standaloneDevtools` is enabled, this plugin listens for `scripts:updated`
  * and POSTs a serializable snapshot of script state to `/__nuxt-scripts-api/state`.
  * Also syncs the current route path so standalone devtools can show which page the user is on.
  */

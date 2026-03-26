@@ -65,7 +65,7 @@ export default defineNuxtConfig({
 
   scripts: {
     debug: true,
-    standaloneDevtools: true,
+    _standaloneDevtools: true,
     registry: {
       // v1 flat config syntax: presence = infrastructure, trigger = auto-load
       // Scripts without `trigger` are composable-driven (load when composable is called)

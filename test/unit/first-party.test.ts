@@ -1,7 +1,6 @@
 import type { RegistryScript } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { buildProxyConfigsFromRegistry } from '../../packages/script/src/first-party/setup'
-import { registry } from '../../packages/script/src/registry'
+import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
 import {
   anonymizeIP,
   FINGERPRINT_HEADERS,
@@ -61,17 +60,17 @@ describe('first-party mode', () => {
   })
 
   describe('proxy config ↔ registry consistency', () => {
-    it('every script with proxyConfig alias has a valid proxy config', async () => {
+    it('every script with proxy alias has a valid proxy config', async () => {
       const scripts = await getRegistryScripts()
       const configs = await getProxyConfigs()
       const proxyConfigKeys = Object.keys(configs)
 
       for (const script of scripts) {
-        if (script.proxyConfig) {
+        if (typeof script.proxy === 'string') {
           expect(
             proxyConfigKeys,
-            `Script "${script.registryKey}" references proxyConfig "${script.proxyConfig}" but no config exists`,
-          ).toContain(script.proxyConfig)
+            `Script "${script.registryKey}" references proxy alias "${script.proxy}" but no config exists`,
+          ).toContain(script.proxy)
         }
       }
     })
@@ -81,10 +80,10 @@ describe('first-party mode', () => {
       const configs = await getProxyConfigs()
       const usedProxyKeys = new Set<string>()
       for (const s of scripts) {
-        if (!s.capabilities?.proxy)
+        if (!s.proxy)
           continue
-        if (s.proxyConfig)
-          usedProxyKeys.add(s.proxyConfig)
+        if (typeof s.proxy === 'string')
+          usedProxyKeys.add(s.proxy)
         if (s.registryKey)
           usedProxyKeys.add(s.registryKey)
       }
@@ -174,10 +173,10 @@ describe('first-party mode', () => {
       const configs = await getProxyConfigs()
 
       for (const script of scripts) {
-        if (!script.capabilities?.proxy || !script.registryKey)
+        if (!script.proxy || !script.registryKey)
           continue
 
-        const configKey = script.proxyConfig || script.registryKey
+        const configKey = typeof script.proxy === 'string' ? script.proxy : script.registryKey
         const proxyConfig = configs[configKey]
         if (!proxyConfig)
           continue
@@ -195,9 +194,9 @@ describe('first-party mode', () => {
 
       const allDomains = new Set<string>()
       for (const script of scripts) {
-        if (!script.capabilities?.proxy || !script.registryKey)
+        if (!script.proxy || !script.registryKey)
           continue
-        const configKey = script.proxyConfig || script.registryKey
+        const configKey = typeof script.proxy === 'string' ? script.proxy : script.registryKey
         const proxyConfig = configs[configKey]
         if (proxyConfig) {
           for (const domain of proxyConfig.domains)
@@ -246,7 +245,7 @@ describe('first-party mode', () => {
       for (const key of fingerprintScripts) {
         const script = scripts.find(s => s.registryKey === key)
         expect(script, `${key} should exist in registry`).toBeDefined()
-        expect(script!.capabilities?.proxy, `${key} should not have proxy`).toBeFalsy()
+        expect(script!.proxy, `${key} should not have proxy`).toBeFalsy()
       }
     })
 

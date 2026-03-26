@@ -5,7 +5,7 @@ import type { QueryObject } from 'ufo'
 import type { HTMLAttributes, ImgHTMLAttributes, ReservedProps, ShallowRef } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
-import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
+import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { withQuery } from 'ufo'
@@ -13,6 +13,9 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, 
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 
 import { MAP_INJECTION_KEY } from './useGoogleMapsResource'
+
+const DIGITS_ONLY_RE = /^\d+$/
+const DIGITS_PX_RE = /^\d+px$/i
 
 export { MAP_INJECTION_KEY } from './useGoogleMapsResource'
 </script>
@@ -87,10 +90,11 @@ const props = withDefaults(defineProps<{
   height?: number | string
   /**
    * Customize the placeholder image attributes.
+   * Set to `false` to disable the static map placeholder entirely.
    *
    * @see https://developers.google.com/maps/documentation/maps-static/start.
    */
-  placeholderOptions?: PlaceholderOptions
+  placeholderOptions?: PlaceholderOptions | false
   /**
    * Customize the placeholder image attributes.
    */
@@ -202,7 +206,7 @@ async function resolveQueryToLatLng(query: string) {
   // Use geocode proxy if available (avoids loading Places library client-side)
   const endpoints = (runtimeConfig.public['nuxt-scripts'] as any)?.endpoints
   if (endpoints?.googleMaps) {
-    const data = await $fetch<{ results: Array<{ geometry: { location: { lat: number, lng: number } } }>, status: string }>('/_scripts/proxy/google-maps-geocode', {
+    const data = await $fetch<{ results: Array<{ geometry: { location: { lat: number, lng: number } } }>, status: string }>(`${scriptsPrefix()}/proxy/google-maps-geocode`, {
       params: { address: query },
     })
     if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
@@ -366,7 +370,17 @@ function transformMapStyles(styles: google.maps.MapTypeStyle[]) {
   }).filter(Boolean)
 }
 
+const placeholderEnabled = computed(() => {
+  if (props.placeholderOptions === false)
+    return false
+  // Static Maps API requires pixel dimensions, percentage values are invalid
+  return isPixelValue(props.width) && isPixelValue(props.height)
+})
+
 const placeholder = computed(() => {
+  if (!placeholderEnabled.value)
+    return undefined
+
   let center = options.value.center
   if (center && typeof center === 'object') {
     center = `${center.lat},${center.lng}`
@@ -377,7 +391,7 @@ const placeholder = computed(() => {
     zoom: options.value.zoom,
     center,
   }, {
-    size: `${props.width}x${props.height}`,
+    size: `${Number.parseInt(String(props.width))}x${Number.parseInt(String(props.height))}`,
     // Only include API key if not using proxy (proxy injects it server-side)
     key: proxyConfig?.enabled ? undefined : apiKey,
     scale: 2, // we assume a high DPI to avoid hydration issues
@@ -386,15 +400,15 @@ const placeholder = computed(() => {
   })
 
   const baseUrl = proxyConfig?.enabled
-    ? '/_scripts/proxy/google-static-maps'
+    ? `${scriptsPrefix()}/proxy/google-static-maps`
     : 'https://maps.googleapis.com/maps/api/staticmap'
 
   return withQuery(baseUrl, placeholderOptions as QueryObject)
 })
 
-const placeholderAttrs = computed(() => {
+const placeholderAttrs = computed((): ImgHTMLAttributes => {
   return defu(props.placeholderAttrs, {
-    src: placeholder.value,
+    src: placeholder.value ?? undefined,
     alt: 'Google Maps Static Map',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     style: {
@@ -403,7 +417,7 @@ const placeholderAttrs = computed(() => {
       objectFit: 'cover',
       height: '100%',
     },
-  } satisfies ImgHTMLAttributes)
+  } satisfies ImgHTMLAttributes) as ImgHTMLAttributes
 })
 
 const rootAttrs = computed(() => {
@@ -420,13 +434,29 @@ const rootAttrs = computed(() => {
       cursor: 'pointer',
       position: 'relative',
       maxWidth: '100%',
-      width: `${props.width}px`,
-      height: `'auto'`,
-      aspectRatio: `${props.width}/${props.height}`,
+      width: toCssUnit(props.width),
+      height: isPixelValue(props.width) && isPixelValue(props.height) ? 'auto' : toCssUnit(props.height),
+      aspectRatio: isPixelValue(props.width) && isPixelValue(props.height) ? `${props.width}/${props.height}` : undefined,
     },
     ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
   }) as HTMLAttributes
 })
+
+function toCssUnit(value: string | number | undefined): string | undefined {
+  if (value === undefined)
+    return undefined
+  if (typeof value === 'number')
+    return `${value}px`
+  return value
+}
+
+function isPixelValue(value: string | number | undefined): boolean {
+  if (typeof value === 'number')
+    return true
+  if (typeof value === 'string')
+    return DIGITS_ONLY_RE.test(value) || DIGITS_PX_RE.test(value)
+  return false
+}
 
 onBeforeUnmount(() => {
   // Synchronous cleanup — Vue does not await async lifecycle hooks,
@@ -445,7 +475,7 @@ onBeforeUnmount(() => {
   <div ref="rootEl" v-bind="rootAttrs">
     <div v-show="ready" ref="mapEl" :style="{ width: '100%', height: '100%', maxWidth: '100%' }" />
     <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
-      <img v-bind="placeholderAttrs">
+      <img v-if="placeholderEnabled" v-bind="placeholderAttrs">
     </slot>
     <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
       <ScriptAriaLoadingIndicator />

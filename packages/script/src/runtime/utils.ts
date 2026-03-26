@@ -48,6 +48,10 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
+export function scriptsPrefix(): string {
+  return (useRuntimeConfig().public['nuxt-scripts'] as any)?.prefix || '/_scripts'
+}
+
 export function requireRegistryEndpoint(componentName: string, registryKey: string): void {
   const endpoints = (useRuntimeConfig().public['nuxt-scripts'] as any)?.endpoints
   if (!endpoints?.[registryKey]) {

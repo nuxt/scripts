@@ -1,8 +1,7 @@
-import type { ProxyRewrite } from '../../packages/script/src/first-party/types'
+import type { ProxyRewrite } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl } from '../../packages/script/src/first-party/setup'
 import { rewriteScriptUrlsAST } from '../../packages/script/src/plugins/rewrite-ast'
-import { registry } from '../../packages/script/src/registry'
+import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, registry } from '../../packages/script/src/registry'
 
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
 async function getProxyConfigs() {
@@ -206,7 +205,7 @@ describe('rewriteScriptUrlsAST', () => {
       const rybbitConfig = await getRybbitConfig()
       const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
       const code = 'let e=n.getAttribute("src");let t=e.split("/script.js")[0];'
-      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.sdkPatches)
       expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
       expect(result).not.toContain('.split("/script.js")[0]')
     })
@@ -215,7 +214,7 @@ describe('rewriteScriptUrlsAST', () => {
       const rybbitConfig = await getRybbitConfig()
       const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
       const code = 'let e=n.getAttribute(\'src\');let t=e.split(\'/script.js\')[0];'
-      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.sdkPatches)
       expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
     })
 
@@ -223,7 +222,7 @@ describe('rewriteScriptUrlsAST', () => {
       const rybbitConfig = await getRybbitConfig()
       const rybbitRewrites = deriveRewrites(rybbitConfig.domains, '/_scripts/p')
       const code = 'var src=el.getAttribute("src");var host=src.split("/script.js")[0];'
-      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.postProcess)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', rybbitRewrites, rybbitConfig.sdkPatches)
       expect(result).toContain('self.location.origin+"/_scripts/p/app.rybbit.io/api"')
     })
 
@@ -231,14 +230,53 @@ describe('rewriteScriptUrlsAST', () => {
       const customConfig = (await getProxyConfigs()).rybbitAnalytics
       const customRewrites = deriveRewrites(customConfig.domains, '/_analytics')
       const code = 'let t=e.split("/script.js")[0];'
-      const result = rewriteScriptUrlsAST(code, 'rybbit.js', customRewrites, customConfig.postProcess)
+      const result = rewriteScriptUrlsAST(code, 'rybbit.js', customRewrites, customConfig.sdkPatches)
       expect(result).toContain('self.location.origin+"/_analytics/app.rybbit.io/api"')
     })
 
-    it('does not patch when no rybbit postProcess is provided', () => {
+    it('does not patch when no sdkPatches are provided', () => {
       const code = 'let t=e.split("/script.js")[0];'
-      const result = rewrite(code) // uses default rewrites (example.com), no postProcess
+      const result = rewrite(code) // uses default rewrites (example.com), no sdkPatches
       expect(result).toContain('.split("/script.js")[0]')
+    })
+  })
+
+  describe('fathom SDK self-hosted detection patching', () => {
+    async function getFathomConfig() {
+      const configs = await getProxyConfigs()
+      return configs.fathomAnalytics
+    }
+
+    it('neutralizes .indexOf("cdn.usefathom.com") < 0', async () => {
+      const fathomConfig = await getFathomConfig()
+      const fathomRewrites = deriveRewrites(fathomConfig.domains, '/_scripts/p')
+      const code = 'if(e.src.indexOf("cdn.usefathom.com")<0){t="custom"}'
+      const result = rewriteScriptUrlsAST(code, 'fathom.js', fathomRewrites, fathomConfig.sdkPatches)
+      expect(result).toContain('<-1')
+      expect(result).not.toContain('<0')
+    })
+
+    it('neutralizes with whitespace around operator', async () => {
+      const fathomConfig = await getFathomConfig()
+      const fathomRewrites = deriveRewrites(fathomConfig.domains, '/_scripts/p')
+      const code = 'if(e.src.indexOf("cdn.usefathom.com") < 0){t="custom"}'
+      const result = rewriteScriptUrlsAST(code, 'fathom.js', fathomRewrites, fathomConfig.sdkPatches)
+      expect(result).toContain('< -1')
+      expect(result).not.toContain('< 0')
+    })
+
+    it('does not neutralize indexOf for non-rewrite domains', async () => {
+      const fathomConfig = await getFathomConfig()
+      const fathomRewrites = deriveRewrites(fathomConfig.domains, '/_scripts/p')
+      const code = 'if(e.indexOf("other.com")<0){}'
+      const result = rewriteScriptUrlsAST(code, 'fathom.js', fathomRewrites, fathomConfig.sdkPatches)
+      expect(result).toContain('<0')
+    })
+
+    it('does not neutralize without sdkPatches', () => {
+      const code = 'if(e.src.indexOf("example.com")<0){}'
+      const result = rewrite(code)
+      expect(result).toContain('<0')
     })
   })
 

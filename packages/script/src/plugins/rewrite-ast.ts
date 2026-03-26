@@ -1,9 +1,10 @@
-import type { ProxyRewrite } from '../first-party/types'
+import type { ProxyRewrite, SdkPatch } from '../runtime/types'
 import MagicString from 'magic-string'
 import { parseAndWalk, ScopeTracker, ScopeTrackerFunction, ScopeTrackerFunctionParam, ScopeTrackerIdentifier, ScopeTrackerVariable, walk } from 'oxc-walker'
 import { joinURL, parseURL } from 'ufo'
 
 const WORD_OR_DOLLAR_RE = /[\w$]/
+const PROTOCOL_PREFIX_RE = /^https?:$/
 // Static blank 1x1 transparent PNG — every user gets the same value, defeating canvas fingerprinting
 // while returning a valid data URL that won't break scripts checking format/truthiness.
 const BLANK_CANVAS_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIHWNgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12NgYGBgAAAABQABXvMqOgAAAABJRU5ErkJggg=='
@@ -195,7 +196,7 @@ function resolveCalleeTarget(callee: any, scopeTracker: ScopeTracker): string | 
  * Uses oxc-walker with ScopeTracker to precisely identify string literals,
  * resolve aliased globals, and rewrite API calls through the proxy.
  */
-export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], postProcess?: (output: string, rewrites: ProxyRewrite[]) => string, options?: { skipApiRewrites?: boolean, neutralizeCanvas?: boolean }): string {
+export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], sdkPatches?: SdkPatch[], options?: { skipApiRewrites?: boolean, neutralizeCanvas?: boolean }): string {
   const s = new MagicString(content)
 
   // In minified JS, keywords like `return` can directly precede string literals
@@ -232,7 +233,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
           // Without this, the rewrite would produce "https:" + self.location.origin+"/_proxy/..."
           // which creates a malformed "https:http://localhost:3001/..." URL
           const sibling = ctx.key === 'right' ? parent.left : parent.right
-          if (sibling?.type === 'Literal' && typeof sibling.value === 'string' && /^https?:$/.test(sibling.value)) {
+          if (sibling?.type === 'Literal' && typeof sibling.value === 'string' && PROTOCOL_PREFIX_RE.test(sibling.value)) {
             s.overwrite(parent.start, parent.end, `${needsLeadingSpace(parent.start)}self.location.origin+${quote}${rewritten}${quote}`)
           }
           else {
@@ -355,6 +356,59 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
         }
       }
 
+      // SDK patch: neutralize-domain-check
+      // Matches `.indexOf("...domain...") < 0` and rewrites `< 0` to `< -1`
+      if (sdkPatches?.some(p => p.type === 'neutralize-domain-check')
+        && node.type === 'BinaryExpression'
+        && (node as any).operator === '<') {
+        const left = (node as any).left
+        const right = (node as any).right
+        if (right?.type === 'Literal' && right.value === 0
+          && left?.type === 'CallExpression'
+          && left.callee?.type === 'MemberExpression') {
+          const prop = left.callee.computed
+            ? (left.callee.property?.type === 'Literal' && typeof left.callee.property.value === 'string' ? left.callee.property.value : null)
+            : left.callee.property?.name
+          if (prop === 'indexOf' && left.arguments?.length === 1) {
+            const arg = left.arguments[0]
+            if (arg?.type === 'Literal' && typeof arg.value === 'string'
+              && rewrites.some(r => arg.value.includes(r.from))) {
+              s.overwrite(right.start, right.end, '-1')
+            }
+          }
+        }
+      }
+
+      // SDK patch: replace-src-split
+      // Matches `<expr>.split("<separator>")[0]` and replaces with proxy path
+      if (sdkPatches?.some(p => p.type === 'replace-src-split')
+        && node.type === 'MemberExpression'
+        && (node as any).computed) {
+        const prop = (node as any).property
+        const obj = (node as any).object
+        if (prop?.type === 'Literal' && prop.value === 0
+          && obj?.type === 'CallExpression'
+          && obj.callee?.type === 'MemberExpression') {
+          const callProp = obj.callee.computed
+            ? (obj.callee.property?.type === 'Literal' && typeof obj.callee.property.value === 'string' ? obj.callee.property.value : null)
+            : obj.callee.property?.name
+          if (callProp === 'split' && obj.arguments?.length === 1) {
+            const arg = obj.arguments[0]
+            if (arg?.type === 'Literal' && typeof arg.value === 'string') {
+              for (const patch of sdkPatches) {
+                if (patch.type !== 'replace-src-split' || patch.separator !== arg.value)
+                  continue
+                const rewrite = rewrites.find(r => r.from === patch.fromDomain)
+                if (!rewrite)
+                  continue
+                const proxyPath = patch.appendPath ? `${rewrite.to}/${patch.appendPath}` : rewrite.to
+                s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+"${proxyPath}"`)
+              }
+            }
+          }
+        }
+      }
+
       // new XMLHttpRequest / new Image / new x.XMLHttpRequest / new x.Image
       if (node.type === 'NewExpression' && !options?.skipApiRewrites) {
         const callee = (node as any).callee
@@ -396,11 +450,5 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
     },
   })
 
-  // Apply SDK-specific post-processing from the proxy config
-  let output = s.toString()
-  if (postProcess) {
-    output = postProcess(output, rewrites)
-  }
-
-  return output
+  return s.toString()
 }

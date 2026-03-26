@@ -2,7 +2,7 @@ import type { RegistryScript } from '#nuxt-scripts/types'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
 import type { InferInput } from 'valibot'
-import type { ProxyConfig, ProxyRewrite } from '../first-party/types'
+import type { ProxyConfig, ProxyRewrite } from '../runtime/types'
 import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'
 import { tryUseNuxt, useNuxt } from '@nuxt/kit'
@@ -16,6 +16,7 @@ import { hasProtocol, joinURL, parseURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
 import { bundleStorage } from '../assets'
 import { logger } from '../logger'
+import { getBundleResolve } from '../registry'
 import { rewriteScriptUrlsAST } from './rewrite-ast'
 import { isJS, isVue } from './util'
 
@@ -58,7 +59,6 @@ export interface RenderedScriptMeta {
 
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
-  defaultBundle?: boolean | 'force'
   assetsBaseURL?: string
   scripts?: Required<RegistryScript>[]
   /**
@@ -114,12 +114,12 @@ async function downloadScript(opts: {
   filename?: string
   forceDownload?: boolean
   proxyRewrites?: ProxyRewrite[]
-  postProcess?: ProxyConfig['postProcess']
+  sdkPatches?: ProxyConfig['sdkPatches']
   integrity?: boolean | IntegrityAlgorithm
   skipApiRewrites?: boolean
   neutralizeCanvas?: boolean
 }, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload, integrity, proxyRewrites, postProcess, skipApiRewrites, neutralizeCanvas } = opts
+  const { src, url, filename, forceDownload, integrity, proxyRewrites, sdkPatches, skipApiRewrites, neutralizeCanvas } = opts
   if (src === url || !filename) {
     return
   }
@@ -163,7 +163,7 @@ async function downloadScript(opts: {
     // Apply URL rewrites for proxy mode (AST-based at build time)
     if (proxyRewrites?.length && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, postProcess, { skipApiRewrites, neutralizeCanvas })
+      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, sdkPatches, { skipApiRewrites, neutralizeCanvas })
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
@@ -289,7 +289,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   return
                 }
                 // this is only needed when we have a dynamic src that we need to compute
-                if (!registryNode.scriptBundling && !registryNode.src)
+                const bundleResolve = getBundleResolve(registryNode as RegistryScript)
+                if (!bundleResolve && !registryNode.src)
                   return
 
                 // integration case
@@ -320,7 +321,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                 // Merge registry config with function arguments (function args take precedence)
                   const mergedOptions = { ...registryConfig, ...fnArg0 }
 
-                  src = registryNode.scriptBundling && registryNode.scriptBundling(mergedOptions as InferInput<any>)
+                  src = bundleResolve && bundleResolve(mergedOptions as InferInput<any>)
                   // not supported
                   if (src === false)
                     return
@@ -357,8 +358,13 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               if (scriptSrcNode || src) {
                 src = src || (typeof scriptSrcNode?.value === 'string' ? scriptSrcNode?.value : false)
                 if (src) {
-                  let canBundle = options.defaultBundle === true || options.defaultBundle === 'force'
-                  let forceDownload = options.defaultBundle === 'force'
+                  // Registry composables: bundle when the script declares bundle capability.
+                  // Plain useScript() calls require explicit bundle: true opt-in.
+                  const registryScript = fnName !== 'useScript'
+                    ? options.scripts?.find(s => s.import.name === fnName)
+                    : undefined
+                  let canBundle = !!registryScript?.bundle
+                  let forceDownload = false
                   // useScript
                   if (node.arguments[1]?.type === 'ObjectExpression') {
                     const scriptOptionsArg = node.arguments[1]
@@ -425,10 +431,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
                     // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
-                    // Use script's proxyConfig alias if defined, otherwise fall back to registry key
+                    // Use script's proxy alias if defined, otherwise fall back to registry key
                     const script = options.scripts?.find(s => s.import.name === fnName)
-                    const hasReverseProxy = script?.capabilities?.proxy
-                    const proxyConfigKey = hasReverseProxy ? (script?.proxyConfig || registryKey) : undefined
+                    const hasReverseProxy = !!script?.proxy
+                    const proxyConfigKey = hasReverseProxy ? (typeof script?.proxy === 'string' ? script.proxy : registryKey) : undefined
                     const proxyConfig = !firstPartyOptOut && proxyConfigKey
                       ? options.proxyConfigs?.[proxyConfigKey]
                       : undefined
@@ -437,7 +443,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       from: domain,
                       to: `${options.proxyPrefix}/${domain}`,
                     }))
-                    const postProcess = proxyConfig?.postProcess
+                    const sdkPatches = proxyConfig?.sdkPatches
                     const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
                     // Gate canvas fingerprinting neutralization on the script's hardware privacy flag
                     const neutralizeCanvas = proxyConfig?.privacy !== undefined
@@ -449,7 +455,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     deferredOps.push(async () => {
                       let url = _url
                       try {
-                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, postProcess, integrity: options.integrity, skipApiRewrites, neutralizeCanvas }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, sdkPatches, integrity: options.integrity, skipApiRewrites, neutralizeCanvas }, renderedScript, options.fetchOptions, options.cacheMaxAge)
                       }
                       catch (e: any) {
                         if (options.fallbackOnSrcOnBundleFail) {

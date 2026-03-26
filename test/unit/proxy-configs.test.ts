@@ -1,8 +1,7 @@
-import type { ProxyRewrite } from '../../packages/script/src/first-party/types'
+import type { ProxyRewrite } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { buildProxyConfigsFromRegistry } from '../../packages/script/src/first-party/setup'
 import { rewriteScriptUrlsAST } from '../../packages/script/src/plugins/rewrite-ast'
-import { registry } from '../../packages/script/src/registry'
+import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
 
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
 async function getProxyConfigs() {

@@ -55,7 +55,7 @@ export interface FirstPartyDevtoolsScript {
   mechanism: 'bundle-rewrite-intercept' | 'config-injection-proxy'
   hasAutoInject: boolean
   autoInjectField?: string
-  hasPostProcess: boolean
+  hasSdkPatches: boolean
   canvasFingerprinting: boolean
   privacy: { ip: boolean, userAgent: boolean, language: boolean, screen: boolean, timezone: boolean, hardware: boolean }
   privacyLevel: 'full' | 'partial' | 'none'
