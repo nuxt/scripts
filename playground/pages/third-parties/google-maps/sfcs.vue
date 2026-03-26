@@ -92,7 +92,6 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
       api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
       :width="1280"
       :height="720"
-      above-the-fold
       :zoom="zoom"
       :map-options="{
         center: { lat: -34.397, lng: 150.644 },

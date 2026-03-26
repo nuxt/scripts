@@ -23,7 +23,6 @@ const places = [
       :zoom="12"
       :width="800"
       :height="500"
-      above-the-fold
       :map-options="{ mapId: 'DEMO_MAP_ID' }"
     >
       <ScriptGoogleMapsMarker
