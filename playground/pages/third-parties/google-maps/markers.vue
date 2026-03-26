@@ -32,7 +32,6 @@ function removeMarkers() {
         :width="1200"
         :height="600"
         :map-options="{ center }"
-        above-the-fold
       >
         <ScriptGoogleMapsMarker
           v-for="(marker, i) in markers"

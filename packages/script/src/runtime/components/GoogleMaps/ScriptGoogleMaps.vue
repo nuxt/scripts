@@ -1,14 +1,12 @@
 <script lang="ts">
 /// <reference types="google.maps" />
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import type { QueryObject } from 'ufo'
-import type { HTMLAttributes, ImgHTMLAttributes, ReservedProps, ShallowRef } from 'vue'
+import type { HTMLAttributes, ReservedProps, ShallowRef } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { withQuery } from 'ufo'
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 
@@ -21,36 +19,11 @@ export { MAP_INJECTION_KEY } from './useGoogleMapsResource'
 </script>
 
 <script lang="ts" setup>
-export interface PlaceholderOptions {
-  width?: string | number
-  height?: string | number
-  center?: string
-  zoom?: number
-  size?: string
-  scale?: number
-  format?: 'png' | 'jpg' | 'gif' | 'png8' | 'png32' | 'jpg-baseline'
-  maptype?: 'roadmap' | 'satellite' | 'terrain' | 'hybrid'
-  language?: string
-  region?: string
-  markers?: string
-  path?: string
-  visible?: string
-  style?: string
-  map_id?: string
-  key?: string
-  signature?: string
-}
-
 const props = withDefaults(defineProps<{
   /**
    * Defines the trigger event to load the script.
    */
   trigger?: ElementScriptTrigger
-  /**
-   * Is Google Maps being rendered above the fold?
-   * This will load the placeholder image with higher priority.
-   */
-  aboveTheFold?: boolean
   /**
    * Defines the Google Maps API key. Must have access to the Static Maps API as well.
    */
@@ -89,17 +62,6 @@ const props = withDefaults(defineProps<{
    */
   height?: number | string
   /**
-   * Customize the placeholder image attributes.
-   * Set to `false` to disable the static map placeholder entirely.
-   *
-   * @see https://developers.google.com/maps/documentation/maps-static/start.
-   */
-  placeholderOptions?: PlaceholderOptions | false
-  /**
-   * Customize the placeholder image attributes.
-   */
-  placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>
-  /**
    * Customize the root element attributes.
    */
   rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
@@ -134,7 +96,6 @@ const emits = defineEmits<{
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 const runtimeConfig = useRuntimeConfig()
-const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
 
 // Color mode support - try to auto-detect from @nuxtjs/color-mode
 const nuxtApp = tryUseNuxtApp()
@@ -159,8 +120,6 @@ const mapsApi = ref<typeof google.maps | undefined>()
 if (import.meta.dev) {
   if (!apiKey)
     throw new Error('GoogleMaps requires an API key. Enable it in your nuxt.config:\n\n  scripts: {\n    registry: {\n      googleMaps: true\n    }\n  }\n\nThen set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env file.\n\nAlternatively, pass `api-key` directly on the <ScriptGoogleMaps> component (note: this exposes the key client-side).')
-  if (!proxyConfig?.enabled && !props.apiKey)
-    console.warn('[nuxt-scripts] Google Maps proxy is not enabled. Enable `googleMaps` in your nuxt.config registry to keep your API key server-side. See: https://scripts.nuxt.com/scripts/google-maps#setup')
 }
 
 const rootEl = ref<HTMLElement>()
@@ -343,104 +302,16 @@ onMounted(() => {
   })
 })
 
-if (import.meta.server && !proxyConfig?.enabled) {
+if (import.meta.server) {
   useHead({
     link: [
       {
-        rel: props.aboveTheFold ? 'preconnect' : 'dns-prefetch',
+        rel: 'dns-prefetch',
         href: 'https://maps.googleapis.com',
       },
     ],
   })
 }
-
-function transformMapStyles(styles: google.maps.MapTypeStyle[]) {
-  return styles.map((style) => {
-    const feature = style.featureType ? `feature:${style.featureType}` : ''
-    const element = style.elementType ? `element:${style.elementType}` : ''
-    const rules = (style.stylers || []).map((styler) => {
-      return Object.entries(styler).map(([key, value]) => {
-        if (key === 'color' && typeof value === 'string') {
-          value = value.replace('#', '0x')
-        }
-        return `${key}:${value}`
-      }).join('|')
-    }).filter(Boolean).join('|')
-    return [feature, element, rules].filter(Boolean).join('|')
-  }).filter(Boolean)
-}
-
-const placeholderEnabled = computed(() => {
-  if (props.placeholderOptions === false)
-    return false
-  // Static Maps API requires pixel dimensions, percentage values are invalid
-  return isPixelValue(props.width) && isPixelValue(props.height)
-})
-
-const placeholder = computed(() => {
-  if (!placeholderEnabled.value)
-    return undefined
-
-  let center = options.value.center
-  if (center && typeof center === 'object') {
-    center = `${center.lat},${center.lng}`
-  }
-  // @ts-expect-error lazy type
-  const placeholderOptions: PlaceholderOptions = defu(props.placeholderOptions, {
-    // only map option values
-    zoom: options.value.zoom,
-    center,
-  }, {
-    size: `${Number.parseInt(String(props.width))}x${Number.parseInt(String(props.height))}`,
-    // Only include API key if not using proxy (proxy injects it server-side)
-    key: proxyConfig?.enabled ? undefined : apiKey,
-    scale: 2, // we assume a high DPI to avoid hydration issues
-    style: props.mapOptions?.styles ? transformMapStyles(props.mapOptions.styles) : undefined,
-    map_id: currentMapId.value,
-  })
-
-  const baseUrl = proxyConfig?.enabled
-    ? `${scriptsPrefix()}/proxy/google-static-maps`
-    : 'https://maps.googleapis.com/maps/api/staticmap'
-
-  return withQuery(baseUrl, placeholderOptions as QueryObject)
-})
-
-const placeholderAttrs = computed((): ImgHTMLAttributes => {
-  return defu(props.placeholderAttrs, {
-    src: placeholder.value ?? undefined,
-    alt: 'Google Maps Static Map',
-    loading: props.aboveTheFold ? 'eager' : 'lazy',
-    style: {
-      cursor: 'pointer',
-      width: '100%',
-      objectFit: 'cover',
-      height: '100%',
-    },
-  } satisfies ImgHTMLAttributes) as ImgHTMLAttributes
-})
-
-const rootAttrs = computed(() => {
-  return defu(props.rootAttrs, {
-    'aria-busy': status.value === 'loading',
-    'aria-label': status.value === 'awaitingLoad'
-      ? 'Google Maps Static Map'
-      : status.value === 'loading'
-        ? 'Google Maps Map Embed Loading'
-        : 'Google Maps Embed',
-    'aria-live': 'polite',
-    'role': 'application',
-    'style': {
-      cursor: 'pointer',
-      position: 'relative',
-      maxWidth: '100%',
-      width: toCssUnit(props.width),
-      height: isPixelValue(props.width) && isPixelValue(props.height) ? 'auto' : toCssUnit(props.height),
-      aspectRatio: isPixelValue(props.width) && isPixelValue(props.height) ? `${props.width}/${props.height}` : undefined,
-    },
-    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
-  }) as HTMLAttributes
-})
 
 function toCssUnit(value: string | number | undefined): string | undefined {
   if (value === undefined)
@@ -458,6 +329,28 @@ function isPixelValue(value: string | number | undefined): boolean {
   return false
 }
 
+const rootAttrs = computed(() => {
+  return defu(props.rootAttrs, {
+    'aria-busy': status.value === 'loading',
+    'aria-label': status.value === 'awaitingLoad'
+      ? 'Google Maps'
+      : status.value === 'loading'
+        ? 'Google Maps Loading'
+        : 'Google Maps',
+    'aria-live': 'polite',
+    'role': 'application',
+    'style': {
+      cursor: 'pointer',
+      position: 'relative',
+      maxWidth: '100%',
+      width: toCssUnit(props.width),
+      height: isPixelValue(props.width) && isPixelValue(props.height) ? 'auto' : toCssUnit(props.height),
+      aspectRatio: isPixelValue(props.width) && isPixelValue(props.height) ? `${props.width}/${props.height}` : undefined,
+    },
+    ...(trigger instanceof Promise ? trigger.ssrAttrs || {} : {}),
+  }) as HTMLAttributes
+})
+
 onBeforeUnmount(() => {
   // Synchronous cleanup — Vue does not await async lifecycle hooks,
   // so anything after an `await` runs as a detached microtask.
@@ -474,9 +367,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="rootEl" v-bind="rootAttrs">
     <div v-show="ready" ref="mapEl" :style="{ width: '100%', height: '100%', maxWidth: '100%' }" />
-    <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
-      <img v-if="placeholderEnabled" v-bind="placeholderAttrs">
-    </slot>
+    <slot v-if="!ready" name="placeholder" />
     <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
       <ScriptAriaLoadingIndicator />
     </slot>

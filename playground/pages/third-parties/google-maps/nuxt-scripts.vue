@@ -18,12 +18,19 @@ function changeQuery() {
     <div>
       <ScriptGoogleMaps
         ref="googleMapsRef"
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="640"
         :height="500"
         :map-options="mapOptions"
-        above-the-fold
-      />
+      >
+        <template #placeholder>
+          <ScriptGoogleMapsStaticMap
+            :center="mapOptions.center"
+            :width="640"
+            :height="500"
+            loading="eager"
+          />
+        </template>
+      </ScriptGoogleMaps>
     </div>
     <div class="button-container">
       <button

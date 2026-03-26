@@ -24,7 +24,6 @@ function changeQuery() {
         :width="1200"
         :height="600"
         :map-options="mapOptions"
-        above-the-fold
         @ready="() => {}"
       />
     </div>

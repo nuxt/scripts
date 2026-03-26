@@ -12,7 +12,6 @@ const mapOptions = {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
-        above-the-fold
         :map-options="mapOptions"
       />
     </div>

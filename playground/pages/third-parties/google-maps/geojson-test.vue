@@ -95,7 +95,6 @@ const secondGeoJson = {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="800"
         :height="450"
-        above-the-fold
         :zoom="13"
         :map-options="{ center: { lat: -33.875, lng: 151.22 } }"
       >
