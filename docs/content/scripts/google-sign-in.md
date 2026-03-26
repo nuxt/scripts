@@ -4,7 +4,7 @@ description: Add Google Sign-In to your Nuxt app with One Tap and personalized b
 links:
 - label: Source
   icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-sign-in.ts
+  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/google-sign-in.ts
   size: xs
 - label: Google Identity Services
   icon: i-simple-icons-google

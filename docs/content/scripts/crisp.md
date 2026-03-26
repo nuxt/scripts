@@ -4,11 +4,11 @@ description: Show performance-optimized Crisp in your Nuxt app.
 links:
   - label: useScriptCrisp
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/crisp.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/crisp.ts
     size: xs
   - label: "<ScriptCrisp>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptCrisp.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptCrisp.vue
     size: xs
 ---
 

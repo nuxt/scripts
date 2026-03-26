@@ -4,11 +4,11 @@ description: Use Intercom in your Nuxt app.
 links:
   - label: Source
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/intercom.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/intercom.ts
     size: xs
   - label: "<ScriptIntercom>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptIntercom.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptIntercom.vue
     size: xs
 ---
 

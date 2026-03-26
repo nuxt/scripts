@@ -4,11 +4,11 @@ description: Use Gravatar in your Nuxt app.
 links:
 - label: Source
   icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/gravatar.ts
+  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/gravatar.ts
   size: xs
 - label: "<ScriptGravatar>"
   icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGravatar.vue
+  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptGravatar.vue
   size: xs
 ---
 

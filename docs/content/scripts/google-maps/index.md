@@ -4,11 +4,11 @@ description: Show performance-optimized Google Maps in your Nuxt app.
 links:
   - label: useScriptGoogleMaps
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-maps.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/google-maps.ts
     size: xs
   - label: "<ScriptGoogleMaps>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/GoogleMaps/ScriptGoogleMaps.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/GoogleMaps/ScriptGoogleMaps.vue
     size: xs
 ---
 

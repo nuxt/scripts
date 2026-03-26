@@ -4,18 +4,18 @@ description: Use Stripe in your Nuxt app.
 links:
   - label: useScriptStripe
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/stripe.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/stripe.ts
     size: xs
   - label: "<ScriptStripePricingTable>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptStripePricingTable.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptStripePricingTable.vue
     size: xs
 ---
 
 [Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.
 
 Nuxt Scripts provides two Stripe features:
-- [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/v3/`.
+- [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/basil/stripe.js`.
 - `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site using `https://js.stripe.com/v3/pricing-table.js`.
 
 ::script-stats

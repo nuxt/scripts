@@ -34,7 +34,7 @@ export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?
         .filter(([key]) => ['site', 'spa', 'auto', 'canonical', 'honorDnt'].includes(key))
         .reduce((acc, [_key, value]) => {
           // need to convert camel case to kebab case
-          const key = _key === 'honourDnt' ? 'honor-dnt' : _key
+          const key = _key === 'honorDnt' ? 'honor-dnt' : _key
           // @ts-expect-error untyped
           acc[`data-${key}`] = value
           return acc

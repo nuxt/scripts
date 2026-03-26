@@ -4,7 +4,7 @@ description: Use Microsoft Advertising Universal Event Tracking in your Nuxt app
 links:
 - label: Source
   icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/bing-uet.ts
+  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/bing-uet.ts
   size: xs
 ---
 

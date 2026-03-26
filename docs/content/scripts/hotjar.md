@@ -4,7 +4,7 @@ description: Use Hotjar in your Nuxt app.
 links:
 - label: Source
   icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/hotjar.ts
+  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/hotjar.ts
   size: xs
 ---
 

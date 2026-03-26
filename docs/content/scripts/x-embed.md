@@ -4,7 +4,7 @@ description: Server-side rendered X (Twitter) embeds with zero client-side API c
 links:
   - label: ScriptXEmbed
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptXEmbed.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptXEmbed.vue
     size: xs
 ---
 

@@ -4,7 +4,7 @@ description: Server-side rendered Instagram embeds with zero client-side API cal
 links:
   - label: ScriptInstagramEmbed
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptInstagramEmbed.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptInstagramEmbed.vue
     size: xs
 ---
 

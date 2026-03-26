@@ -4,7 +4,7 @@ description: Use Cloudflare Web Analytics in your Nuxt app.
 links:
   - label: Source
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/cloudflare-web-analytics.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/cloudflare-web-analytics.ts
     size: xs
 ---
 
@@ -39,8 +39,8 @@ to access this you can do by awaiting the script.
 
 ```ts
 const { onLoaded } = useScriptCloudflareWebAnalytics()
-onLoaded(({ cfBeacon }) => {
-  console.log(cfBeacon)
+onLoaded(({ __cfBeacon }) => {
+  console.log(__cfBeacon)
 })
 ```
 

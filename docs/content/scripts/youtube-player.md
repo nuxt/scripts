@@ -4,11 +4,11 @@ description: Show performance-optimized YouTube videos in your Nuxt app.
 links:
   - label: useScriptYouTubePlayer
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/youtube-player.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/youtube-player.ts
     size: xs
   - label: "<ScriptYouTubePlayer>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptYouTubePlayer.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptYouTubePlayer.vue
     size: xs
 ---
 

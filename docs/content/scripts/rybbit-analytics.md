@@ -4,7 +4,7 @@ description: Use Rybbit Analytics in your Nuxt app.
 links:
   - label: Source
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/rybbit.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/rybbit-analytics.ts
     size: xs
 ---
 
@@ -22,9 +22,7 @@ If you are using a self-hosted version of Rybbit Analytics, you can provide a cu
 
 ```ts
 useScriptRybbitAnalytics({
-  scriptInput: {
-    src: 'https://your-rybbit-instance.com/api/script.js'
-  },
+  analyticsHost: 'https://your-rybbit-instance.com',
   siteId: 'YOUR_SITE_ID'
 })
 ```

@@ -4,11 +4,11 @@ description: Use Lemon Squeezy in your Nuxt app.
 links:
   - label: useScriptLemonSqueezy
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/lemon-squeezy.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/lemon-squeezy.ts
     size: xs
   - label: "<ScriptLemonSqueezy>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptLemonSqueezy.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptLemonSqueezy.vue
     size: xs
 ---
 

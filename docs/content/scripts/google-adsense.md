@@ -4,11 +4,11 @@ description: Show Google Adsense ads in your Nuxt app.
 links:
   - label: useScriptGoogleAdsense
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/google-adsense.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/google-adsense.ts
     size: xs
   - label: "<ScriptGoogleAdsense>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptGoogleAdsense.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptGoogleAdsense.vue
     size: xs
 ---
 

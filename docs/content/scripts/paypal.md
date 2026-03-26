@@ -4,15 +4,15 @@ description: Use PayPal in your Nuxt app.
 links:
   - label: useScriptPayPal
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/paypal.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/paypal.ts
     size: xs
   - label: "<ScriptPayPalButtons>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPayPalButtons.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptPayPalButtons.vue
     size: xs
   - label: "<ScriptPayPalMessages>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptPayPalMessages.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptPayPalMessages.vue
     size: xs
 ---
 

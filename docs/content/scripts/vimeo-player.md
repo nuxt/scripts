@@ -4,11 +4,11 @@ description: Show performance-optimized Vimeo videos in your Nuxt app.
 links:
   - label: useScriptVimeoPlayer
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/registry/vimeo-player.ts
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/vimeo-player.ts
     size: xs
   - label: "<ScriptVimeoPlayer>"
     icon: i-simple-icons-github
-    to: https://github.com/nuxt/scripts/blob/main/src/runtime/components/ScriptVimeoPlayer.vue
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptVimeoPlayer.vue
     size: xs
 ---
 
@@ -25,10 +25,10 @@ Nuxt Scripts provides a [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-pla
 ## Types
 
 To use Video Player with full TypeScript support, you will need
-to install the `@types/vimeo__player` dependency.
+to install the `@vimeo/player` dependency which includes its own types.
 
 ```bash
-pnpm add -D @types/vimeo__player
+pnpm add -D @vimeo/player
 ```
 
 ## [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"}
