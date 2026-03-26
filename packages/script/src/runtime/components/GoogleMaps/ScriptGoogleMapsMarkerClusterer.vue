@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { InjectionKey, ShallowRef } from 'vue'
-import { h, inject, onBeforeUnmount, provide, shallowRef, useSlots, render as vueRender, watch } from 'vue'
+import { getCurrentInstance, h, inject, onBeforeUnmount, provide, shallowRef, useSlots, render as vueRender, watch } from 'vue'
 import { bindGoogleMapsEvents, MAP_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
 // Inline types to avoid requiring @googlemaps/markerclusterer as a build-time dependency
@@ -28,8 +28,11 @@ export interface Cluster {
 }
 
 export interface ClusterStats {
-  clusters: { count: number, position: google.maps.LatLng }[]
-  markers: { count: number, position: google.maps.LatLng }[]
+  markers: { sum: number }
+  clusters: {
+    count: number
+    markers: { min: number, max: number, mean: number, sum: number }
+  }
 }
 
 export interface MarkerClustererContext {
@@ -73,6 +76,7 @@ const markerClustererEvents = [
 ] as const
 
 const slots = useSlots()
+const instance = getCurrentInstance()
 const mapContext = inject(MAP_INJECTION_KEY, undefined)
 const clusteringVersion = shallowRef(0)
 
@@ -105,8 +109,16 @@ const markerClusterer = useGoogleMapsResource<MarkerClustererInstance>({
             renderer: {
               render(cluster: Cluster, stats: ClusterStats) {
                 const container = document.createElement('div')
-                const vnodes = slots.renderer!({ cluster, stats, map })
-                vueRender(h({ render: () => vnodes }), container)
+                const vnode = h({
+                  render: () => slots.renderer?.({ cluster, stats, map }),
+                })
+                if (instance) {
+                  vnode.appContext = {
+                    ...instance.appContext,
+                    provides: instance.provides,
+                  } as any
+                }
+                vueRender(vnode, container)
                 renderedContainers.push(container)
 
                 const marker = new mapsApi.marker.AdvancedMarkerElement({
