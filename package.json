@@ -18,7 +18,7 @@
     "devtools:build": "nuxt generate packages/devtools-app",
     "dev": "nuxt dev playground",
     "dev:ssl": "nuxt dev playground --https",
-    "dev:prepare": "pnpm -r dev:prepare && nuxt prepare playground && pnpm prepare:fixtures",
+    "dev:prepare": "pnpm -r dev:prepare && nuxt prepare && nuxt prepare playground && pnpm prepare:fixtures",
     "prepare:fixtures": "nuxt prepare test/fixtures/basic && nuxt prepare test/fixtures/cdn && nuxt prepare test/fixtures/extend-registry && nuxt prepare test/fixtures/partytown && nuxt prepare test/fixtures/first-party",
     "typecheck": "nuxt typecheck",
     "release": "pnpm build && bumpp --output=CHANGELOG.md",
