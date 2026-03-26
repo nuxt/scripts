@@ -132,10 +132,12 @@ function toCssUnit(value: string | number): string {
   return typeof value === 'number' ? `${value}px` : value
 }
 
+const PIXEL_VALUE_RE = /^\d+(?:px)?$/i
+
 function isPixelValue(value: string | number): boolean {
   if (typeof value === 'number')
     return true
-  return /^\d+(px)?$/i.test(value)
+  return PIXEL_VALUE_RE.test(value)
 }
 
 function transformMapStyles(styles: google.maps.MapTypeStyle[]): string[] {
