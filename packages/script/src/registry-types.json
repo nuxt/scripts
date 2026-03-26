@@ -202,7 +202,7 @@
       {
         "name": "ScriptGoogleMapsProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Is Google Maps being rendered above the fold?\n   * This will load the placeholder image with higher priority.\n   */\n  aboveTheFold?: boolean\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Zoom level for the map (0-21). Reactive: changing this will update the map.\n   * Takes precedence over mapOptions.zoom when provided.\n   */\n  zoom?: number\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map\n   */\n  height?: number | string\n  /**\n   * Customize the placeholder image attributes.\n   * Set to `false` to disable the static map placeholder entirely.\n   *\n   * @see https://developers.google.com/maps/documentation/maps-static/start.\n   */\n  placeholderOptions?: PlaceholderOptions | false\n  /**\n   * Customize the placeholder image attributes.\n   */\n  placeholderAttrs?: ImgHTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light', 'dark', or a reactive ref.\n   */\n  colorMode?: 'light' | 'dark'\n}"
+        "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Zoom level for the map (0-21). Reactive: changing this will update the map.\n   * Takes precedence over mapOptions.zoom when provided.\n   */\n  zoom?: number\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map\n   */\n  height?: number | string\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light', 'dark', or a reactive ref.\n   */\n  colorMode?: 'light' | 'dark'\n}"
       },
       {
         "name": "ScriptGoogleMapsEvents",
@@ -2063,12 +2063,6 @@
         "description": "Defines the trigger event to load the script."
       },
       {
-        "name": "aboveTheFold",
-        "type": "boolean",
-        "required": false,
-        "description": "Is Google Maps being rendered above the fold? This will load the placeholder image with higher priority."
-      },
-      {
         "name": "apiKey",
         "type": "string",
         "required": false,
@@ -2121,18 +2115,6 @@
         "type": "number | string",
         "required": false,
         "description": "Defines the height of the map"
-      },
-      {
-        "name": "placeholderOptions",
-        "type": "PlaceholderOptions | false",
-        "required": false,
-        "description": "Customize the placeholder image attributes. Set to `false` to disable the static map placeholder entirely."
-      },
-      {
-        "name": "placeholderAttrs",
-        "type": "ImgHTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false,
-        "description": "Customize the placeholder image attributes."
       },
       {
         "name": "rootAttrs",

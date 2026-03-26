@@ -1,4 +1,4 @@
-name: Test
+name: CI
 
 on:
   push:
@@ -6,49 +6,76 @@ on:
       - '**/README.md'
       - 'docs/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  lint:
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v6
         with:
           node-version: lts/*
           cache: pnpm
-
       - run: pnpm i
+      - run: pnpm lint
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Prepare
-        run: pnpm dev:prepare
-
-      # https://github.com/vitejs/vite/blob/main/.github/workflows/ci.yml#L62
-      # Install playwright's binary under custom directory to cache
-      - name: Set Playwright path
-        run: echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/playwright-bin" >> $GITHUB_ENV
-
-      - name: Cache Playwright's binary
-        uses: actions/cache@v5
+  typecheck:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
         with:
-          key: ${{ runner.os }}-playwright-bin-v1
-          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm i
+      - run: pnpm dev:prepare
+      - run: pnpm typecheck
+      - run: pnpm run --if-present test:attw
 
-      - name: Install Playwright
-        run: pnpm playwright-core install chromium
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm i
+      - run: pnpm dev:prepare
+      - run: pnpm build
 
-      - name: Typecheck
-        run: pnpm typecheck
+  test:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm i
+      - run: pnpm dev:prepare
 
-      - name: Build
-        run: pnpm build
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-ubuntu-24.04-arm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: Test
-        run: pnpm vitest run --project typecheck --project unit --project e2e --project nuxt-runtime
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright-core install chromium
+        continue-on-error: true
+
+      - run: pnpm run --if-present prepare:fixtures
+      - run: pnpm vitest run --project typecheck --project unit --project e2e --project nuxt-runtime

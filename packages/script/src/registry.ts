@@ -1,4 +1,3 @@
-import type { ResolvePathOptions } from '@nuxt/kit'
 import type { ClarityInput } from './runtime/registry/clarity'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 import type { HotjarInput } from './runtime/registry/hotjar'
@@ -12,7 +11,6 @@ import type { TikTokPixelInput } from './runtime/registry/tiktok-pixel'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
-import { logger } from './logger'
 import { LOGOS } from './registry-logos'
 import {
   BingUetOptions,
@@ -117,7 +115,7 @@ type RegistryScriptDef = Omit<RegistryScript, 'registryKey' | 'import' | 'logo'>
 }
 
 async function defineScript(
-  resolve: (path: string, opts?: ResolvePathOptions) => Promise<string>,
+  resolve: (path: string) => Promise<string>,
   registryKey: string,
   script: RegistryScriptDef,
 ): Promise<RegistryScript> {
@@ -146,7 +144,7 @@ async function defineScript(
 
 // -- Registry --
 
-export async function registry(resolve?: (path: string, opts?: ResolvePathOptions | undefined) => Promise<string>): Promise<RegistryScript[]> {
+export async function registry(resolve?: (path: string) => Promise<string>): Promise<RegistryScript[]> {
   resolve = resolve || ((s: string) => Promise.resolve(s))
   const def = (key: string, script: RegistryScriptDef) => defineScript(resolve, key, script)
 
@@ -696,7 +694,8 @@ export function resolveCapabilities(
 
       if (userValue && !ceiling[key]) {
         if (import.meta.dev) {
-          logger.warn(
+          // we can't use our logger here it has deps on nuxt/kit
+          console.warn(
             `[nuxt-scripts] Script "${script.registryKey}" does not support capability "${key}". `
             + `This override will be ignored. Supported capabilities: ${JSON.stringify(ceiling)}`,
           )
