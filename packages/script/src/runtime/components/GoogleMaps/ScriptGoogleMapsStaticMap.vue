@@ -29,9 +29,9 @@ const props = withDefaults(defineProps<{
    */
   size?: `${number}x${number}`
   /**
-   * Device pixel ratio for the static map image (1, 2, or 4).
+   * Device pixel ratio for the static map image (1 or 2).
    */
-  scale?: 1 | 2 | 4
+  scale?: 1 | 2
   /**
    * Image format.
    */
@@ -107,24 +107,31 @@ const props = withDefaults(defineProps<{
   height: 400,
 })
 
-const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 const runtimeConfig = useRuntimeConfig()
 const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
+const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
+// Only use the proxy when no explicit API key is provided and the proxy is enabled
+const useProxy = !props.apiKey && proxyConfig?.enabled
 
 if (import.meta.dev) {
-  if (!apiKey && !proxyConfig?.enabled)
+  if (!apiKey && !useProxy)
     console.warn('[nuxt-scripts] ScriptGoogleMapsStaticMap requires a Google Maps API key with Static Maps API access. Set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env, or enable the proxy via `scripts.registry.googleMaps`.')
 }
 
 const rootEl = ref<HTMLElement>()
 const measuredSize = ref<string>()
 
+function clampStaticMapSize(width: number, height: number, max = 640): `${number}x${number}` {
+  const ratio = Math.min(1, max / Math.max(width, height))
+  return `${Math.max(1, Math.floor(width * ratio))}x${Math.max(1, Math.floor(height * ratio))}` as `${number}x${number}`
+}
+
 onMounted(() => {
   if (props.size || !rootEl.value)
     return
   const { offsetWidth, offsetHeight } = rootEl.value
   if (offsetWidth > 0 && offsetHeight > 0) {
-    measuredSize.value = `${offsetWidth}x${offsetHeight}`
+    measuredSize.value = clampStaticMapSize(offsetWidth, offsetHeight)
   }
 })
 
@@ -180,7 +187,7 @@ const resolvedSize = computed(() => {
     return measuredSize.value
   // SSR fallback: derive from width/height if both are pixel values
   if (isPixelValue(props.width) && isPixelValue(props.height))
-    return `${Number.parseInt(String(props.width))}x${Number.parseInt(String(props.height))}`
+    return clampStaticMapSize(Number.parseInt(String(props.width)), Number.parseInt(String(props.height)))
   return '640x400'
 })
 
@@ -200,7 +207,7 @@ const src = computed(() => {
     language: props.language,
     region: props.region,
     signature: props.signature,
-    key: proxyConfig?.enabled ? undefined : apiKey,
+    key: useProxy ? undefined : apiKey,
   }
 
   // Remove undefined values
@@ -209,7 +216,7 @@ const src = computed(() => {
       delete query[key]
   }
 
-  const baseUrl = proxyConfig?.enabled
+  const baseUrl = useProxy
     ? '/_scripts/proxy/google-static-maps'
     : 'https://maps.googleapis.com/maps/api/staticmap'
 
@@ -242,7 +249,7 @@ if (import.meta.server) {
     link: [
       {
         rel: props.loading === 'eager' ? 'preconnect' : 'dns-prefetch',
-        href: proxyConfig?.enabled ? undefined : 'https://maps.googleapis.com',
+        href: useProxy ? undefined : 'https://maps.googleapis.com',
       },
     ].filter(l => l.href),
   })

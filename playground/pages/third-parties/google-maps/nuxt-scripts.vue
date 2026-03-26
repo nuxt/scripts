@@ -18,7 +18,6 @@ function changeQuery() {
     <div>
       <ScriptGoogleMaps
         ref="googleMapsRef"
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="640"
         :height="500"
         :map-options="mapOptions"
@@ -29,7 +28,6 @@ function changeQuery() {
             :width="640"
             :height="500"
             loading="eager"
-            api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
           />
         </template>
       </ScriptGoogleMaps>
