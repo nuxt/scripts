@@ -24,6 +24,49 @@ export function extractRequiredFields(schema: RegistryScript['schema']): string[
 }
 
 /**
+ * Rewrite deprecated config keys in-place before normalization.
+ * Currently handles: `reverseProxyIntercept` → `proxy`.
+ */
+export function migrateDeprecatedRegistryKeys(
+  registry: Record<string, unknown>,
+  warn: (msg: string) => void,
+): void {
+  for (const key of Object.keys(registry)) {
+    const entry = registry[key]
+    if (!entry || typeof entry !== 'object')
+      continue
+
+    if (Array.isArray(entry)) {
+      // Array tuple: check scriptOptions (second element)
+      const opts = entry[1]
+      if (opts && typeof opts === 'object' && 'reverseProxyIntercept' in opts) {
+        warn(`registry.${key}: \`reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
+        const o = opts as Record<string, unknown>
+        o.proxy ??= o.reverseProxyIntercept
+        delete o.reverseProxyIntercept
+      }
+    }
+    else {
+      const obj = entry as Record<string, unknown>
+      // Top-level key
+      if ('reverseProxyIntercept' in obj) {
+        warn(`registry.${key}: \`reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
+        obj.proxy ??= obj.reverseProxyIntercept
+        delete obj.reverseProxyIntercept
+      }
+      // Nested scriptOptions
+      const so = obj.scriptOptions
+      if (so && typeof so === 'object' && 'reverseProxyIntercept' in so) {
+        warn(`registry.${key}: \`scriptOptions.reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
+        const s = so as Record<string, unknown>
+        s.proxy ??= s.reverseProxyIntercept
+        delete s.reverseProxyIntercept
+      }
+    }
+  }
+}
+
+/**
  * Normalize all registry config entries in-place to [input, scriptOptions?] tuple form.
  *
  * User-facing config shapes:

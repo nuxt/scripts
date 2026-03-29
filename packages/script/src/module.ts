@@ -32,7 +32,7 @@ import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
-import { extractRequiredFields, normalizeRegistryConfig } from './normalize'
+import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -332,6 +332,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Normalize registry entries to [input, scriptOptions?] tuple form
     // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
+      migrateDeprecatedRegistryKeys(config.registry as Record<string, any>, msg => logger.warn(msg))
       normalizeRegistryConfig(config.registry as Record<string, any>)
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
