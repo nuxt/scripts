@@ -107,7 +107,7 @@ If you prefer to configure your id using environment variables.
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      crisp: true,
+      crisp: { trigger: 'onNuxtReady' },
     }
   },
   // you need to provide a runtime config to access the environment variables

@@ -34,7 +34,7 @@ First-party mode is auto-enabled for Vercel Analytics. Nuxt bundles the analytic
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      vercelAnalytics: true,
+      vercelAnalytics: { trigger: 'onNuxtReady' },
     }
   }
 })

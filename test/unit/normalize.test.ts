@@ -8,6 +8,15 @@ describe('normalizeRegistryConfig', () => {
     expect(registry.plausible).toEqual([{}, { trigger: 'onNuxtReady' }])
   })
 
+  it('warns when true shorthand is used', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { plausible: true }
+    normalizeRegistryConfig(registry, warn)
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn.mock.calls[0][0]).toContain('true')
+    expect(warn.mock.calls[0][0]).toContain('deprecated')
+  })
+
   it('throws on "proxy-only" with migration message', () => {
     const registry: Record<string, any> = { ga: 'proxy-only' }
     expect(() => normalizeRegistryConfig(registry)).toThrowError(/proxy-only.*no longer supported/)
@@ -35,6 +44,12 @@ describe('normalizeRegistryConfig', () => {
     const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: 'onNuxtReady' } }
     normalizeRegistryConfig(registry)
     expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: 'onNuxtReady' }])
+  })
+
+  it('hoists trigger: false to scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: false } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: false }])
   })
 
   it('hoists proxy to scriptOptions', () => {

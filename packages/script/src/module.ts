@@ -332,7 +332,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Normalize registry entries to [input, scriptOptions?] tuple form
     // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
-      normalizeRegistryConfig(config.registry as Record<string, any>)
+      normalizeRegistryConfig(config.registry as Record<string, any>, msg => logger.warn(msg))
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
       // Auto-populate env var defaults for enabled registry scripts so that
@@ -459,12 +459,13 @@ export default defineNuxtModule<ModuleOptions>({
         if (missing.length) {
           logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
         }
-        // Warn when a user provides input config but no trigger: the script won't auto-load.
+        // Warn when a user provides input config but no explicit trigger.
         // In v0 all configured scripts auto-loaded; in v1 a trigger is required.
-        if (Object.keys(input).length > 0 && !scriptOptions?.trigger) {
+        // trigger: false is valid (explicit infrastructure-only).
+        if (Object.keys(input).length > 0 && (!scriptOptions || !('trigger' in scriptOptions))) {
           logger.warn(
             `[nuxt-scripts] registry.${key}: config provided without a \`trigger\`. `
-            + `The script will not auto-load. Add \`trigger: 'onNuxtReady'\` to auto-load, or use \`true\` as a shorthand. `
+            + `The script will not auto-load. Add \`trigger: 'onNuxtReady'\` to auto-load, or \`trigger: false\` for infrastructure only. `
             + `See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1`,
           )
         }

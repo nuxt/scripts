@@ -87,7 +87,7 @@ If you prefer to configure your app ID using environment variables.
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      intercom: true,
+      intercom: { trigger: 'onNuxtReady' },
     }
   },
   // you need to provide a runtime config to access the environment variables

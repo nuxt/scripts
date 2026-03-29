@@ -106,7 +106,7 @@ If you prefer to configure your client ID using environment variables.
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      paypal: true,
+      paypal: { trigger: 'onNuxtReady' },
     }
   },
   // you need to provide a runtime config to access the environment variables

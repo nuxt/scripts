@@ -43,7 +43,7 @@ Stripe recommends loading their script globally on your app to improve fraud det
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      stripe: true,
+      stripe: { trigger: 'onNuxtReady' },
     }
   }
 })
@@ -54,7 +54,7 @@ export default defineNuxtConfig({
   $production: {
     scripts: {
       registry: {
-        stripe: true,
+        stripe: { trigger: 'onNuxtReady' },
       }
     }
   }

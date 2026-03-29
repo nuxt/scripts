@@ -4,7 +4,7 @@ import type { NuxtUseScriptOptionsSerializable, RegistryScript } from './runtime
 export type NormalizedRegistryEntry = [input: Record<string, unknown>, scriptOptions?: NormalizedScriptOptions]
 
 export type NormalizedScriptOptions = Partial<Omit<NuxtUseScriptOptionsSerializable, 'trigger'>> & {
-  trigger?: NuxtUseScriptOptionsSerializable['trigger'] | 'manual'
+  trigger?: NuxtUseScriptOptionsSerializable['trigger'] | 'manual' | false
   skipValidation?: boolean
 }
 
@@ -78,10 +78,13 @@ export function migrateDeprecatedRegistryKeys(
  * - `[input, scriptOptions]` → unchanged (internal/backwards compat)
  *
  * Aliases:
- * - `true` → `[{}, { trigger: 'onNuxtReady' }]` (auto-load globally)
+ * - `true` → `[{}, { trigger: 'onNuxtReady' }]` (deprecated, use `{ trigger: 'onNuxtReady' }`)
  * - `'proxy-only'` → build error with migration message
  */
-export function normalizeRegistryConfig(registry: Record<string, unknown>): void {
+export function normalizeRegistryConfig(
+  registry: Record<string, unknown>,
+  warn?: (msg: string) => void,
+): void {
   for (const key of Object.keys(registry)) {
     const entry = registry[key]
     if (!entry) {
@@ -89,6 +92,7 @@ export function normalizeRegistryConfig(registry: Record<string, unknown>): void
       continue
     }
     if (entry === true) {
+      warn?.(`registry.${key}: \`true\` shorthand is deprecated. Use \`{ trigger: 'onNuxtReady' }\` instead.`)
       registry[key] = [{}, { trigger: 'onNuxtReady' }] satisfies NormalizedRegistryEntry
       continue
     }
