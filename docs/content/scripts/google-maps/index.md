@@ -36,7 +36,7 @@ Enable Google Maps in your `nuxt.config` and provide your API key via environmen
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      googleMaps: true,
+      googleMaps: { trigger: 'onNuxtReady' },
     },
   },
   runtimeConfig: {

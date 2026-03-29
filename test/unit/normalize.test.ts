@@ -1,11 +1,20 @@
-import { describe, expect, it } from 'vitest'
-import { normalizeRegistryConfig } from '../../packages/script/src/normalize'
+import { describe, expect, it, vi } from 'vitest'
+import { migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from '../../packages/script/src/normalize'
 
 describe('normalizeRegistryConfig', () => {
   it('normalizes true to [{}, { trigger: "onNuxtReady" }]', () => {
     const registry: Record<string, any> = { plausible: true }
     normalizeRegistryConfig(registry)
     expect(registry.plausible).toEqual([{}, { trigger: 'onNuxtReady' }])
+  })
+
+  it('warns when true shorthand is used', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { plausible: true }
+    normalizeRegistryConfig(registry, warn)
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn.mock.calls[0][0]).toContain('true')
+    expect(warn.mock.calls[0][0]).toContain('deprecated')
   })
 
   it('throws on "proxy-only" with migration message', () => {
@@ -35,6 +44,12 @@ describe('normalizeRegistryConfig', () => {
     const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: 'onNuxtReady' } }
     normalizeRegistryConfig(registry)
     expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: 'onNuxtReady' }])
+  })
+
+  it('hoists trigger: false to scriptOptions', () => {
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', trigger: false } }
+    normalizeRegistryConfig(registry)
+    expect(registry.ga).toEqual([{ id: 'G-xxx' }, { trigger: false }])
   })
 
   it('hoists proxy to scriptOptions', () => {
@@ -106,5 +121,55 @@ describe('normalizeRegistryConfig', () => {
     expect(registry.ga).toEqual([{ id: 'G-XXX' }])
     expect(registry.posthog).toEqual([{}, { trigger: 'manual', skipValidation: true }])
     expect(registry.stripe).toBeUndefined()
+  })
+})
+
+describe('migrateDeprecatedRegistryKeys', () => {
+  it('rewrites reverseProxyIntercept in flat object to proxy', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', reverseProxyIntercept: false } }
+    migrateDeprecatedRegistryKeys(registry, warn)
+    expect(registry.ga).toEqual({ id: 'G-xxx', proxy: false })
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn.mock.calls[0][0]).toContain('reverseProxyIntercept')
+  })
+
+  it('rewrites reverseProxyIntercept in nested scriptOptions', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', scriptOptions: { reverseProxyIntercept: false } } }
+    migrateDeprecatedRegistryKeys(registry, warn)
+    expect(registry.ga.scriptOptions).toEqual({ proxy: false })
+    expect(warn).toHaveBeenCalledOnce()
+  })
+
+  it('rewrites reverseProxyIntercept in array tuple scriptOptions', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { ga: [{ id: 'G-xxx' }, { reverseProxyIntercept: false }] }
+    migrateDeprecatedRegistryKeys(registry, warn)
+    expect(registry.ga[1]).toEqual({ proxy: false })
+    expect(warn).toHaveBeenCalledOnce()
+  })
+
+  it('does not clobber existing proxy when both are present', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', proxy: true, reverseProxyIntercept: false } }
+    migrateDeprecatedRegistryKeys(registry, warn)
+    expect(registry.ga).toEqual({ id: 'G-xxx', proxy: true })
+    expect(warn).toHaveBeenCalledOnce()
+  })
+
+  it('does not warn when reverseProxyIntercept is absent', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { ga: { id: 'G-xxx', proxy: false } }
+    migrateDeprecatedRegistryKeys(registry, warn)
+    expect(registry.ga).toEqual({ id: 'G-xxx', proxy: false })
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it('skips non-object entries', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { ga: true, posthog: 'mock', stripe: false }
+    migrateDeprecatedRegistryKeys(registry, warn)
+    expect(warn).not.toHaveBeenCalled()
   })
 })
