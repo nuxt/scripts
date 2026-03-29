@@ -304,7 +304,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'analytics',
       bundle: true,
       proxy: {
-        domains: ['va.vercel-scripts.com'],
+        domains: ['va.vercel-scripts.com', 'vitals.vercel-insights.com'],
         privacy: PRIVACY_IP_ONLY,
       },
     }),
@@ -336,7 +336,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       envDefaults: { site: '' },
       bundle: true,
       proxy: {
-        domains: ['cdn.usefathom.com'],
+        domains: ['cdn.usefathom.com', 'usefathom.com'],
         privacy: PRIVACY_IP_ONLY,
         sdkPatches: [{ type: 'neutralize-domain-check' }],
       },
@@ -463,7 +463,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       proxy: {
-        domains: ['analytics.tiktok.com'],
+        domains: ['analytics.tiktok.com', 'mon.tiktok.com', 'mcs.tiktok.com'],
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify'] },
@@ -513,7 +513,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'Carbon Ads',
       category: 'ad',
       proxy: {
-        domains: ['cdn.carbonads.com'],
+        domains: ['cdn.carbonads.com', 'srv.carbonads.net', 'cdn4.buysellads.net'],
         privacy: PRIVACY_IP_ONLY,
       },
     }),
@@ -565,7 +565,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       proxy: {
-        domains: ['www.clarity.ms', 'scripts.clarity.ms', 'd.clarity.ms', 'e.clarity.ms', 'k.clarity.ms'],
+        domains: ['www.clarity.ms', 'scripts.clarity.ms', 'd.clarity.ms', 'e.clarity.ms', 'k.clarity.ms', 'c.clarity.ms', 'a.clarity.ms', 'b.clarity.ms'],
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: [] },
@@ -581,7 +581,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: false,
       category: 'payments',
       proxy: {
-        domains: ['assets.lemonsqueezy.com'],
+        domains: ['assets.lemonsqueezy.com', 'app.lemonsqueezy.com'],
         privacy: PRIVACY_IP_ONLY,
       },
     }),
@@ -598,7 +598,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'video',
       bundle: true,
       proxy: {
-        domains: ['player.vimeo.com'],
+        domains: ['player.vimeo.com', 'i.vimeocdn.com', 'f.vimeocdn.com', 'fresnel.vimeocdn.com'],
         privacy: PRIVACY_IP_ONLY,
       },
     }),
@@ -608,7 +608,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'video',
       bundle: true,
       proxy: {
-        domains: ['www.youtube.com'],
+        domains: ['www.youtube.com', 'www.youtube-nocookie.com', 'i.ytimg.com', 'static.doubleclick.net'],
         privacy: PRIVACY_IP_ONLY,
       },
     }),
