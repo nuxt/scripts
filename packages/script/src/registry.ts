@@ -724,7 +724,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       proxy: {
-        domains: ['www.google-analytics.com', 'analytics.google.com', 'stats.g.doubleclick.net', 'pagead2.googlesyndication.com', 'www.googleadservices.com', 'googleads.g.doubleclick.net'],
+        domains: ['www.google-analytics.com', 'analytics.google.com', 'stats.g.doubleclick.net', 'pagead2.googlesyndication.com', 'www.googleadservices.com', 'googleads.g.doubleclick.net', 'www.google.com', 'www.googletagmanager.com'],
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['dataLayer.push', 'gtag'] },
