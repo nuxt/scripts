@@ -32,7 +32,7 @@ import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
-import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
+import { extractRequiredFields, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -332,7 +332,6 @@ export default defineNuxtModule<ModuleOptions>({
     // Normalize registry entries to [input, scriptOptions?] tuple form
     // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
-      migrateDeprecatedRegistryKeys(config.registry as Record<string, any>, msg => logger.warn(msg))
       normalizeRegistryConfig(config.registry as Record<string, any>)
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
@@ -459,6 +458,15 @@ export default defineNuxtModule<ModuleOptions>({
         const missing = requiredFields.filter(f => !input[f])
         if (missing.length) {
           logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
+        }
+        // Warn when a user provides input config but no trigger: the script won't auto-load.
+        // In v0 all configured scripts auto-loaded; in v1 a trigger is required.
+        if (Object.keys(input).length > 0 && !scriptOptions?.trigger) {
+          logger.warn(
+            `[nuxt-scripts] registry.${key}: config provided without a \`trigger\`. `
+            + `The script will not auto-load. Add \`trigger: 'onNuxtReady'\` to auto-load, or use \`true\` as a shorthand. `
+            + `See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1`,
+          )
         }
       }
     }
