@@ -88,7 +88,7 @@ export const PRIVACY_DESCRIPTIONS: Record<string, PrivacyDescription> = {
 
 /** Resolve a privacy preset to a human-readable label + description. */
 export function getPrivacyDescription(privacy: ProxyPrivacyInput | null | undefined): PrivacyDescription | null {
-  if (!privacy || privacy === false)
+  if (!privacy)
     return null
   if (privacy === true)
     return PRIVACY_DESCRIPTIONS.full!
