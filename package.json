@@ -1,7 +1,7 @@
 {
   "name": "nuxt-scripts-monorepo",
   "type": "module",
-  "version": "1.0.0-beta.32",
+  "version": "1.0.0-beta.33",
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
