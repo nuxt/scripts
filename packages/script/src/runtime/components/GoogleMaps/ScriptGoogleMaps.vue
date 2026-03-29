@@ -7,7 +7,7 @@ import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 
 import { MAP_INJECTION_KEY } from './useGoogleMapsResource'
@@ -120,6 +120,18 @@ const mapsApi = ref<typeof google.maps | undefined>()
 if (import.meta.dev) {
   if (!apiKey)
     throw new Error('GoogleMaps requires an API key. Enable it in your nuxt.config:\n\n  scripts: {\n    registry: {\n      googleMaps: true\n    }\n  }\n\nThen set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env file.\n\nAlternatively, pass `api-key` directly on the <ScriptGoogleMaps> component (note: this exposes the key client-side).')
+  const attrs = useAttrs()
+  const removedProps: Record<string, string> = {
+    markers: 'Use child <ScriptGoogleMapsMarker> components instead.',
+    centerMarker: 'Use a child <ScriptGoogleMapsMarker :position="center" /> instead.',
+    placeholderOptions: 'Use <ScriptGoogleMapsStaticMap> inside the #placeholder slot instead.',
+    placeholderAttrs: 'Use <ScriptGoogleMapsStaticMap> with :img-attrs instead.',
+    aboveTheFold: 'Use <ScriptGoogleMapsStaticMap loading="eager"> inside #placeholder instead.',
+  }
+  for (const [prop, message] of Object.entries(removedProps)) {
+    if (prop in attrs)
+      console.warn(`[nuxt-scripts] <ScriptGoogleMaps> prop "${prop}" was removed in v1. ${message} See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1`)
+  }
 }
 
 const rootEl = ref<HTMLElement>()
