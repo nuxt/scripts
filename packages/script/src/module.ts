@@ -32,7 +32,7 @@ import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
-import { extractRequiredFields, normalizeRegistryConfig } from './normalize'
+import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -332,6 +332,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Normalize registry entries to [input, scriptOptions?] tuple form
     // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
+      migrateDeprecatedRegistryKeys(config.registry as Record<string, any>, msg => logger.warn(msg))
       normalizeRegistryConfig(config.registry as Record<string, any>, msg => logger.warn(msg))
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
@@ -462,7 +463,10 @@ export default defineNuxtModule<ModuleOptions>({
         // Warn when a user provides input config but no explicit trigger.
         // In v0 all configured scripts auto-loaded; in v1 a trigger is required.
         // trigger: false is valid (explicit infrastructure-only).
-        if (Object.keys(input).length > 0 && (!scriptOptions || !('trigger' in scriptOptions))) {
+        // Only warn for user-provided fields (skip env-var-only defaults).
+        const envDefaultKeys = new Set(Object.keys(script.envDefaults || {}))
+        const userProvidedFields = Object.keys(input).filter(f => !envDefaultKeys.has(f))
+        if (userProvidedFields.length > 0 && (!scriptOptions || !('trigger' in scriptOptions))) {
           logger.warn(
             `[nuxt-scripts] registry.${key}: config provided without a \`trigger\`. `
             + `The script will not auto-load. Add \`trigger: 'onNuxtReady'\` to auto-load, or \`trigger: false\` for infrastructure only. `

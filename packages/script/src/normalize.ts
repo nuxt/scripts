@@ -40,7 +40,7 @@ export function migrateDeprecatedRegistryKeys(
       // Array tuple: check scriptOptions (second element)
       const opts = entry[1]
       if (opts && typeof opts === 'object' && 'reverseProxyIntercept' in opts) {
-        warn(`registry.${key}: \`reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
+        warn(`[nuxt-scripts] registry.${key}: \`reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
         const o = opts as Record<string, unknown>
         o.proxy ??= o.reverseProxyIntercept
         delete o.reverseProxyIntercept
@@ -50,14 +50,14 @@ export function migrateDeprecatedRegistryKeys(
       const obj = entry as Record<string, unknown>
       // Top-level key
       if ('reverseProxyIntercept' in obj) {
-        warn(`registry.${key}: \`reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
+        warn(`[nuxt-scripts] registry.${key}: \`reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
         obj.proxy ??= obj.reverseProxyIntercept
         delete obj.reverseProxyIntercept
       }
       // Nested scriptOptions
       const so = obj.scriptOptions
       if (so && typeof so === 'object' && 'reverseProxyIntercept' in so) {
-        warn(`registry.${key}: \`scriptOptions.reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
+        warn(`[nuxt-scripts] registry.${key}: \`scriptOptions.reverseProxyIntercept\` has been renamed to \`proxy\`. Please update your config. Auto-migrating for now.`)
         const s = so as Record<string, unknown>
         s.proxy ??= s.reverseProxyIntercept
         delete s.reverseProxyIntercept
@@ -92,7 +92,7 @@ export function normalizeRegistryConfig(
       continue
     }
     if (entry === true) {
-      warn?.(`registry.${key}: \`true\` shorthand is deprecated. Use \`{ trigger: 'onNuxtReady' }\` instead.`)
+      warn?.(`[nuxt-scripts] registry.${key}: \`true\` shorthand is deprecated. Use \`{ trigger: 'onNuxtReady' }\` instead.`)
       registry[key] = [{}, { trigger: 'onNuxtReady' }] satisfies NormalizedRegistryEntry
       continue
     }
