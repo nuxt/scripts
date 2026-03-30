@@ -9,7 +9,7 @@ import type { RybbitAnalyticsInput } from './runtime/registry/rybbit-analytics'
 import type { SegmentInput } from './runtime/registry/segment'
 import type { TikTokPixelInput } from './runtime/registry/tiktok-pixel'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
-import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
+import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
 import { LOGOS } from './registry-logos'
 import {
@@ -46,6 +46,8 @@ import {
   XEmbedOptions,
   XPixelOptions,
 } from './runtime/registry/schemas'
+
+export type { ScriptCapabilities } from './runtime/types'
 
 // avoid nuxt/kit dependency here so we can use in docs
 
