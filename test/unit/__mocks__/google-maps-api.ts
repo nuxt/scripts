@@ -1,5 +1,18 @@
 import { vi } from 'vitest'
 
+export function createMockMap() {
+  return {
+    setOptions: vi.fn(),
+    setCenter: vi.fn(),
+    setZoom: vi.fn(),
+    panBy: vi.fn(),
+    getDiv: vi.fn(() => document.createElement('div')),
+    getZoom: vi.fn(() => 15),
+    getCenter: vi.fn(() => ({ lat: () => 0, lng: () => 0 })),
+    unbindAll: vi.fn(),
+  }
+}
+
 export function createMockMarker() {
   return {
     setOptions: vi.fn(),
