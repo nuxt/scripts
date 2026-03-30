@@ -5,7 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 import { bindGoogleMapsEvents } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
-import { createMockAdvancedMarkerElement, createMockGoogleMapsAPIWithInstances, createMockInfoWindow } from './__mocks__/google-maps-api'
+import { createMockAdvancedMarkerElement, createMockGoogleMapsAPIWithInstances, createMockInfoWindow, createMockMap } from './__mocks__/google-maps-api'
 
 describe('google Maps Regressions', () => {
   describe('bindGoogleMapsEvents emit forwarding', () => {
@@ -314,6 +314,88 @@ describe('google Maps Regressions', () => {
 
       isPositioned = false
       expect(dataState()).toBe('closed')
+    })
+  })
+
+  describe('map setOptions should not reset zoom or center', () => {
+    // Regression: when parent component re-renders (e.g. overlay open/close toggling
+    // state in parent), the options computed re-evaluates (defu returns a new object),
+    // triggering watch(options) which called setOptions with the initial zoom and center,
+    // resetting any user pan/zoom interactions.
+    // Fix: exclude center and zoom from the generic setOptions call; use dedicated watchers.
+
+    // Simulate the old (broken) watcher: passed full options including center/zoom
+    function applyOptionsOld(map: ReturnType<typeof createMockMap>, options: Record<string, any>) {
+      map.setOptions(options)
+    }
+
+    // Simulate the fixed watcher: strips center and zoom before calling setOptions
+    function applyOptionsFixed(map: ReturnType<typeof createMockMap>, options: Record<string, any>) {
+      const { center: _, zoom: __, ...rest } = options
+      map.setOptions(rest)
+    }
+
+    it('old behavior: setOptions resets zoom and center on unrelated re-render', () => {
+      const map = createMockMap()
+      const options = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc' }
+
+      // User has panned/zoomed the map, but parent re-renders and the watcher fires.
+      // Old code passed full options, resetting zoom and center to initial values.
+      applyOptionsOld(map, options)
+
+      expect(map.setOptions).toHaveBeenCalledWith(
+        expect.objectContaining({ zoom: 12, center: { lat: 40, lng: -74 } }),
+      )
+    })
+
+    it('fixed behavior: setOptions excludes zoom and center', () => {
+      const map = createMockMap()
+      const options = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc' }
+
+      applyOptionsFixed(map, options)
+
+      expect(map.setOptions).toHaveBeenCalledWith({ mapId: 'abc' })
+      expect(map.setOptions).not.toHaveBeenCalledWith(
+        expect.objectContaining({ center: expect.anything() }),
+      )
+      expect(map.setOptions).not.toHaveBeenCalledWith(
+        expect.objectContaining({ zoom: expect.anything() }),
+      )
+    })
+
+    it('old behavior: repeated overlay toggles reset zoom/center every time', () => {
+      const map = createMockMap()
+      const baseOptions = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc', disableDefaultUI: true }
+
+      // Simulate 3 re-renders from overlay open/close/open
+      for (let i = 0; i < 3; i++) {
+        applyOptionsOld(map, { ...baseOptions })
+      }
+
+      // Every call leaked center and zoom, resetting user interactions each time
+      expect(map.setOptions).toHaveBeenCalledTimes(3)
+      for (const call of map.setOptions.mock.calls) {
+        expect(call[0]).toHaveProperty('center')
+        expect(call[0]).toHaveProperty('zoom')
+      }
+    })
+
+    it('fixed behavior: repeated overlay toggles never reset zoom/center', () => {
+      const map = createMockMap()
+      const baseOptions = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc', disableDefaultUI: true }
+
+      // Simulate 3 re-renders from overlay open/close/open
+      for (let i = 0; i < 3; i++) {
+        applyOptionsFixed(map, { ...baseOptions })
+      }
+
+      expect(map.setOptions).toHaveBeenCalledTimes(3)
+      for (const call of map.setOptions.mock.calls) {
+        expect(call[0]).not.toHaveProperty('center')
+        expect(call[0]).not.toHaveProperty('zoom')
+      }
+      expect(map.setCenter).not.toHaveBeenCalled()
+      expect(map.setZoom).not.toHaveBeenCalled()
     })
   })
 

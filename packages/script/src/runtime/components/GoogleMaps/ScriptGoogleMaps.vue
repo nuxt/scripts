@@ -288,7 +288,16 @@ onMounted(() => {
     }
   })
   watch(options, () => {
-    map.value?.setOptions(options.value)
+    if (!map.value)
+      return
+    // Exclude center and zoom — they have dedicated watchers that avoid
+    // resetting user interactions (pan/zoom) on unrelated re-renders.
+    const { center: _, zoom: __, ...rest } = options.value
+    map.value.setOptions(rest)
+  })
+  watch(() => options.value.zoom, (zoom) => {
+    if (map.value && zoom != null)
+      map.value.setZoom(zoom)
   })
   watch([() => options.value.center, ready, map], async (next) => {
     if (!map.value) {
