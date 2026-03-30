@@ -252,9 +252,25 @@ export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 type RegistryConfigInput<T> = [T] extends [true] ? Record<string, never> : T
 
 export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'] | false, proxy?: boolean, bundle?: boolean, partytown?: boolean, privacy?: ProxyPrivacyInput })
-export type NuxtConfigScriptRegistry<T extends keyof ScriptRegistry = keyof ScriptRegistry> = Partial<{
-  [key in T]: NuxtConfigScriptRegistryEntry<ScriptRegistry[key]>
-}> & Record<string & {}, NuxtConfigScriptRegistryEntry<any>>
+
+// Internal mapped type: derives config entry types from ScriptRegistry.
+// Excludes the `${string}-npm` pattern since it's covered by the string index signature.
+type _NuxtConfigScriptRegistryEntries = {
+  [K in keyof ScriptRegistry as K extends `${string}-npm` ? never : K]?: NuxtConfigScriptRegistryEntry<ScriptRegistry[K]>
+}
+
+// Interface (not intersection) ensures IDE displays specific types for known keys.
+// Explicit properties inherited via `extends` always take priority over the index
+// signature, making this immune to catch-all type contamination.
+// Augmenting ScriptRegistry automatically flows through to this type.
+//
+// The index signature uses `any` to satisfy TypeScript's constraint that all
+// inherited properties must be subtypes of the index type. This is safe because
+// in an interface, explicit properties always take priority over the index
+// signature for property access.
+export interface NuxtConfigScriptRegistry extends _NuxtConfigScriptRegistryEntries {
+  [key: string]: any
+}
 
 export type UseFunctionType<T, U> = T extends {
   use: infer V
