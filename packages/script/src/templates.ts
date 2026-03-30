@@ -115,14 +115,15 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   for (const [k, c] of Object.entries(config.registry || {})) {
     if (c === false)
       continue
-    const [, scriptOptions] = c as [Record<string, any>, any?]
+    const entry = c as unknown as [Record<string, any>, any?]
+    const [, scriptOptions] = entry
     if (!scriptOptions?.trigger)
       continue
     const importDefinition = registry.find(i => i.import.name.toLowerCase() === `usescript${k.toLowerCase()}`)
     if (importDefinition) {
       resolvedRegistryKeys.push(k)
       imports.unshift(`import { ${importDefinition.import.name} } from '${importDefinition.import.from}'`)
-      const [input] = c as [Record<string, any>, any?]
+      const [input] = entry
       const opts = { ...scriptOptions }
       const triggerResolved = resolveTriggerForTemplate(opts.trigger)
       if (triggerResolved) {

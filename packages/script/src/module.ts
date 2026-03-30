@@ -119,7 +119,7 @@ export function isProxyDisabled(
   registry?: NuxtConfigScriptRegistry,
   runtimeConfig?: Record<string, any>,
 ): boolean {
-  const entry = registry?.[registryKey as keyof NuxtConfigScriptRegistry] as NormalizedRegistryEntry | undefined
+  const entry = registry?.[registryKey] as NormalizedRegistryEntry | undefined
   if (!entry)
     return true
   const [input, scriptOptions] = entry
@@ -143,7 +143,7 @@ export function applyAutoInject(
   if (isProxyDisabled(registryKey, registry, runtimeConfig))
     return
 
-  const entry = registry[registryKey as keyof NuxtConfigScriptRegistry] as NormalizedRegistryEntry
+  const entry = registry[registryKey] as NormalizedRegistryEntry
   const input = entry[0]
 
   const rtScripts = runtimeConfig.public?.scripts as Record<string, any> | undefined
