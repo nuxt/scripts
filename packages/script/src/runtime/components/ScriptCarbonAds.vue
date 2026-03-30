@@ -19,6 +19,12 @@ const emit = defineEmits<{
   ready: [HTMLScriptElement]
 }>()
 
+defineSlots<{
+  awaitingLoad?: () => any
+  loading?: () => any
+  error?: () => any
+}>()
+
 const attrId = `_carbonads_js`
 const carbonadsEl = ref<HTMLElement | null>(import.meta.client ? document.getElementById(attrId) : null)
 // syncs to useScript status

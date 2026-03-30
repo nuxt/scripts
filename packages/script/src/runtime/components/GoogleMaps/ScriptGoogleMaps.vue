@@ -94,6 +94,14 @@ const emits = defineEmits<{
   error: []
 }>()
 
+defineSlots<{
+  default?: () => any
+  placeholder?: () => any
+  loading?: () => any
+  awaitingLoad?: () => any
+  error?: () => any
+}>()
+
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 const runtimeConfig = useRuntimeConfig()
 

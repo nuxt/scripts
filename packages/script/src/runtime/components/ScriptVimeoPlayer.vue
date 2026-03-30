@@ -67,6 +67,14 @@ const props = withDefaults(defineProps<{
 
 const emits = defineEmits<TEmits>()
 
+defineSlots<{
+  default?: () => any
+  placeholder?: (props: { placeholder: string | undefined }) => any
+  loading?: () => any
+  awaitingLoad?: () => any
+  error?: () => any
+}>()
+
 type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
 
 interface TEmits {

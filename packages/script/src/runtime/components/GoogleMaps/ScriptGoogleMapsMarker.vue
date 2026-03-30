@@ -42,6 +42,10 @@ const emit = defineEmits<{
    */
   dragstart: [payload: google.maps.MapMouseEvent]
 }>()
+defineSlots<{
+  default?: () => any
+  content?: () => any
+}>()
 const dragEvents = ['drag', 'dragend', 'dragstart'] as const
 const slots = useSlots()
 const markerContent = useTemplateRef('marker-content')

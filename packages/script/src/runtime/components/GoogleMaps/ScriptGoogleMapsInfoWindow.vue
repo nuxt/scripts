@@ -52,6 +52,10 @@ const emit = defineEmits<{
   zindex_changed: []
 }>()
 
+defineSlots<{
+  default?: () => any
+}>()
+
 const infoWindowEvents = [
   'close',
   'closeclick',

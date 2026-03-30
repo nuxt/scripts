@@ -72,6 +72,14 @@ const emits = defineEmits<{
   'error': [e: YT.OnErrorEvent, target: YT.Player]
   'api-change': [e: YT.PlayerEvent, target: YT.Player]
 }>()
+defineSlots<{
+  default?: () => any
+  placeholder?: (props: { placeholder: string }) => any
+  loading?: () => any
+  awaitingLoad?: () => any
+  error?: () => any
+}>()
+
 const events: (keyof YT.Events)[] = [
   'onReady',
   'onStateChange',

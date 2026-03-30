@@ -69,6 +69,11 @@ const emit = defineEmits<{
   clusteringend: [payload: MarkerClustererInstance]
 }>()
 
+defineSlots<{
+  default?: () => any
+  renderer?: (props: { cluster: Cluster, stats: ClusterStats, map: google.maps.Map }) => any
+}>()
+
 const markerClustererEvents = [
   'click',
   'clusteringbegin',
