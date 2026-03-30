@@ -20,6 +20,13 @@ const emit = defineEmits<{
   error: []
 }>()
 
+defineSlots<{
+  default?: () => any
+  loading?: () => any
+  awaitingLoad?: () => any
+  error?: () => any
+}>()
+
 const rootEl = ref<HTMLDivElement | undefined>()
 const containerEl = ref<HTMLDivElement | undefined>()
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })

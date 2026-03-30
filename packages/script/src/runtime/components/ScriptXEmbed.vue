@@ -28,6 +28,12 @@ const props = withDefaults(defineProps<{
   imageProxyEndpoint: undefined,
 })
 
+defineSlots<{
+  default?: (props: NonNullable<typeof slotProps.value>) => any
+  loading?: () => any
+  error?: (props: { error: typeof error.value }) => any
+}>()
+
 const prefix = scriptsPrefix()
 
 const apiEndpoint = computed(() => props.apiEndpoint || `${prefix}/embed/x`)

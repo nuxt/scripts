@@ -68,6 +68,14 @@ const emit = defineEmits<{
   error: [error: unknown]
 }>()
 
+defineSlots<{
+  default?: (props: { sdkInstance: SdkInstance<Components[]> | undefined }) => any
+  placeholder?: () => any
+  loading?: () => any
+  awaitingLoad?: () => any
+  error?: () => any
+}>()
+
 const el = ref<HTMLDivElement | null>(null)
 const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)

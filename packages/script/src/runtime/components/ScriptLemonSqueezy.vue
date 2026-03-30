@@ -16,6 +16,10 @@ const emits = defineEmits<{
   lemonSqueezyEvent: [LemonSqueezyEventPayload]
 }>()
 
+defineSlots<{
+  default?: () => any
+}>()
+
 const rootEl = ref<HTMLElement | null>(null)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const instance = useScriptLemonSqueezy({

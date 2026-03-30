@@ -107,6 +107,9 @@ const props = withDefaults(defineProps<{
   height: 400,
 })
 
+defineSlots<{
+  default?: (props: { src: string }) => any
+}>()
 const runtimeConfig = useRuntimeConfig()
 const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey

@@ -27,6 +27,12 @@ const emits = defineEmits<{
   error: []
 }>()
 
+defineSlots<{
+  awaitingLoad?: () => any
+  loading?: () => any
+  error?: () => any
+}>()
+
 const rootEl = ref(null)
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 

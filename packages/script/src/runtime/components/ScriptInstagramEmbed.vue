@@ -29,6 +29,12 @@ const props = withDefaults(defineProps<{
   apiEndpoint: undefined,
 })
 
+defineSlots<{
+  default?: (props: { html: string, shortcode: string | undefined, postUrl: string }) => any
+  loading?: () => any
+  error?: (props: { error: typeof error.value }) => any
+}>()
+
 const prefix = scriptsPrefix()
 
 const apiEndpoint = computed(() => props.apiEndpoint || `${prefix}/embed/instagram`)

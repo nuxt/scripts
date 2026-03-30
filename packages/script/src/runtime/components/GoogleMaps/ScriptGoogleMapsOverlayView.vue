@@ -64,6 +64,10 @@ const props = withDefaults(defineProps<{
   hideWhenClustered: true,
 })
 
+defineSlots<{
+  default?: () => any
+}>()
+
 const open = defineModel<boolean>('open', { default: undefined })
 
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
