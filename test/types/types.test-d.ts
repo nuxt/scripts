@@ -59,7 +59,7 @@ describe('module options registry', () => {
 
   it('known keys resolve to their exact entry type, not the catch-all', () => {
     // Known registry keys must resolve to NuxtConfigScriptRegistryEntry<SpecificInput>,
-    // not the index signature's NuxtConfigScriptRegistryEntry<Record<string, unknown>>.
+    // not the index signature's `any` catch-all.
     // The interface approach guarantees this: inherited properties from `extends` always
     // take priority over the index signature.
     type GoogleMapsEntry = NuxtConfigScriptRegistry['googleMaps']
