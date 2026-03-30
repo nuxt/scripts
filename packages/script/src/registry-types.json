@@ -27,6 +27,11 @@
         "name": "ScriptBlueskyEmbedProps",
         "kind": "interface",
         "code": "interface ScriptBlueskyEmbedProps {\n  /**\n   * The Bluesky post URL to embed\n   * @example 'https://bsky.app/profile/bsky.app/post/3mgnwwvj3u22a'\n   */\n  postUrl: string\n  /**\n   * Custom API endpoint for fetching post data\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+      },
+      {
+        "name": "ScriptBlueskyEmbedSlots",
+        "kind": "interface",
+        "code": "interface ScriptBlueskyEmbedSlots {\n  default?: (props: object) => any\n  loading?: () => any\n  error?: (props: object) => any\n}"
       }
     ],
     "clarity": [
@@ -78,6 +83,11 @@
         "name": "ScriptCrispEvents",
         "kind": "interface",
         "code": "interface ScriptCrispEvents {\n  ready: ReturnType<typeof useScriptCrisp>\n  error: -\n}"
+      },
+      {
+        "name": "ScriptCrispSlots",
+        "kind": "interface",
+        "code": "interface ScriptCrispSlots {\n  default?: (props: { ready: boolean }) => any\n  awaitingLoad?: () => any\n  loading?: () => any\n  error?: () => any\n}"
       }
     ],
     "databuddy-analytics": [
@@ -124,6 +134,11 @@
         "name": "ScriptGoogleAdsenseEvents",
         "kind": "interface",
         "code": "interface ScriptGoogleAdsenseEvents {\n  ready: ReturnType<typeof useScriptGoogleAdsense>\n  error: -\n}"
+      },
+      {
+        "name": "ScriptGoogleAdsenseSlots",
+        "kind": "interface",
+        "code": "interface ScriptGoogleAdsenseSlots {\n  awaitingLoad?: () => any\n  loading?: () => any\n  error?: () => any\n}"
       }
     ],
     "google-analytics": [
@@ -210,6 +225,11 @@
         "code": "interface ScriptGoogleMapsEvents {\n  ready: typeof googleMaps\n  error: -\n}"
       },
       {
+        "name": "ScriptGoogleMapsSlots",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsSlots {\n  default?: () => any\n  placeholder?: () => any\n  loading?: () => any\n  awaitingLoad?: () => any\n  error?: () => any\n}"
+      },
+      {
         "name": "ScriptGoogleMapsCircleProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsCircleProps {\n  /**\n   * Configuration options for the circle overlay.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/polygon#CircleOptions\n   */\n  options?: Omit<google.maps.CircleOptions, 'map'>\n}"
@@ -245,6 +265,11 @@
         "code": "interface ScriptGoogleMapsInfoWindowEvents {\n  close: -\n  closeclick: -\n  content_changed: -\n  domready: -\n  headercontent_changed: -\n  headerdisabled_changed: -\n  position_changed: -\n  visible: -\n  zindex_changed: -\n}"
       },
       {
+        "name": "ScriptGoogleMapsInfoWindowSlots",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsInfoWindowSlots {\n  default?: () => any\n}"
+      },
+      {
         "name": "ScriptGoogleMapsMarkerProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsMarkerProps {\n  /**\n   * The position of the marker on the map.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElementOptions.position\n   */\n  position?: google.maps.LatLngLiteral | google.maps.LatLng\n  /**\n   * Configuration options for the marker.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#AdvancedMarkerElementOptions\n   */\n  options?: Omit<google.maps.marker.AdvancedMarkerElementOptions, 'map'>\n}"
@@ -253,6 +278,11 @@
         "name": "ScriptGoogleMapsMarkerEvents",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsMarkerEvents {\n  click: google.maps.MapMouseEvent\n  drag: google.maps.MapMouseEvent\n  dragend: google.maps.MapMouseEvent\n  dragstart: google.maps.MapMouseEvent\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsMarkerSlots",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsMarkerSlots {\n  default?: () => any\n  content?: () => any\n}"
       },
       {
         "name": "ScriptGoogleMapsMarkerClustererProps",
@@ -265,9 +295,19 @@
         "code": "interface ScriptGoogleMapsMarkerClustererEvents {\n  click: MarkerClustererInstance\n  clusteringbegin: MarkerClustererInstance\n  clusteringend: MarkerClustererInstance\n}"
       },
       {
+        "name": "ScriptGoogleMapsMarkerClustererSlots",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsMarkerClustererSlots {\n  default?: () => any\n  renderer?: (props: { cluster: Cluster, stats: ClusterStats, map: google.maps.Map }) => any\n}"
+      },
+      {
         "name": "ScriptGoogleMapsOverlayViewProps",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsOverlayViewProps {\n  /**\n   * Geographic position for the overlay. Falls back to parent marker position if omitted.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView\n   */\n  position?: google.maps.LatLngLiteral\n  /**\n   * Anchor point of the overlay relative to its position.\n   * @default 'bottom-center'\n   */\n  anchor?: OverlayAnchor\n  /**\n   * Pixel offset from the anchor position.\n   */\n  offset?: { x: number, y: number }\n  /**\n   * The map pane on which to render the overlay.\n   * @default 'floatPane'\n   * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#MapPanes\n   */\n  pane?: OverlayPane\n  /**\n   * CSS z-index for the overlay element.\n   */\n  zIndex?: number\n  /**\n   * Whether to block map click and gesture events from passing through the overlay.\n   * @default true\n   */\n  blockMapInteraction?: boolean\n  /**\n   * Pan the map so the overlay is fully visible when opened, similar to InfoWindow behavior.\n   * Set to `true` for default 40px padding, or a number for custom padding.\n   * @default true\n   */\n  panOnOpen?: boolean | number\n  /**\n   * Automatically hide the overlay when its parent marker joins a cluster (on zoom out).\n   * Only applies when nested inside a ScriptGoogleMapsMarkerClusterer.\n   * @default true\n   */\n  hideWhenClustered?: boolean\n}"
+      },
+      {
+        "name": "ScriptGoogleMapsOverlayViewSlots",
+        "kind": "interface",
+        "code": "interface ScriptGoogleMapsOverlayViewSlots {\n  default?: () => any\n}"
       },
       {
         "name": "ScriptGoogleMapsPolygonProps",
@@ -440,6 +480,11 @@
         "name": "ScriptInstagramEmbedProps",
         "kind": "interface",
         "code": "interface ScriptInstagramEmbedProps {\n  /**\n   * The Instagram post URL to embed\n   * e.g., https://www.instagram.com/p/ABC123/\n   */\n  postUrl: string\n  /**\n   * Whether to include captions in the embed\n   * @default true\n   */\n  captions?: boolean\n  /**\n   * Custom API endpoint for fetching embed HTML\n   */\n  apiEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+      },
+      {
+        "name": "ScriptInstagramEmbedSlots",
+        "kind": "interface",
+        "code": "interface ScriptInstagramEmbedSlots {\n  default?: (props: { html: string, shortcode: string | undefined, postUrl: string }) => any\n  loading?: () => any\n  error?: (props: object) => any\n}"
       }
     ],
     "intercom": [
@@ -462,6 +507,11 @@
         "name": "ScriptIntercomEvents",
         "kind": "interface",
         "code": "interface ScriptIntercomEvents {\n  ready: ReturnType<typeof useScriptIntercom>\n  error: -\n}"
+      },
+      {
+        "name": "ScriptIntercomSlots",
+        "kind": "interface",
+        "code": "interface ScriptIntercomSlots {\n  default?: (props: { ready: boolean }) => any\n  awaitingLoad?: () => any\n  loading?: () => any\n  error?: () => any\n}"
       }
     ],
     "lemon-squeezy": [
@@ -484,6 +534,11 @@
         "name": "ScriptLemonSqueezyEvents",
         "kind": "interface",
         "code": "interface ScriptLemonSqueezyEvents {\n  ready: ReturnType<typeof useScriptLemonSqueezy>\n  lemonSqueezyEvent: LemonSqueezyEventPayload\n}"
+      },
+      {
+        "name": "ScriptLemonSqueezySlots",
+        "kind": "interface",
+        "code": "interface ScriptLemonSqueezySlots {\n  default?: () => any\n}"
       }
     ],
     "matomo-analytics": [
@@ -581,6 +636,11 @@
         "code": "interface ScriptPayPalButtonsEvents {\n  ready: SdkInstance<Components[]>\n  error: unknown\n}"
       },
       {
+        "name": "ScriptPayPalButtonsSlots",
+        "kind": "interface",
+        "code": "interface ScriptPayPalButtonsSlots {\n  default?: (props: { sdkInstance: SdkInstance<Components[]> | undefined }) => any\n  placeholder?: () => any\n  loading?: () => any\n  awaitingLoad?: () => any\n  error?: () => any\n}"
+      },
+      {
         "name": "ScriptPayPalMessagesProps",
         "kind": "interface",
         "code": "interface ScriptPayPalMessagesProps {\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Client ID or client token for PayPal SDK v6 authentication.\n   */\n  clientId?: string\n  /**\n   * Server-generated client token for SDK v6.\n   */\n  clientToken?: string\n  /**\n   * The merchant ID for the paypal script.\n   */\n  merchantId?: string | string[]\n  /**\n   * The partner attribution ID.\n   */\n  partnerAttributionId?: string\n  /**\n   * The page type context hint.\n   */\n  pageType?: PageTypes\n  /**\n   * The locale for the SDK (BCP-47 code).\n   */\n  locale?: string\n  /**\n   * Options for the PayPal Messages session.\n   */\n  messagesOptions?: PayPalMessagesOptions\n  /**\n   * The paypal script options.\n   */\n  paypalScriptOptions?: Partial<PayPalInput>\n}"
@@ -589,6 +649,11 @@
         "name": "ScriptPayPalMessagesEvents",
         "kind": "interface",
         "code": "interface ScriptPayPalMessagesEvents {\n  ready: PayPalMessagesSession\n  error: unknown\n}"
+      },
+      {
+        "name": "ScriptPayPalMessagesSlots",
+        "kind": "interface",
+        "code": "interface ScriptPayPalMessagesSlots {\n  default?: (props: { messagesSession: PayPalMessagesSession | undefined }) => any\n  placeholder?: () => any\n  loading?: () => any\n  awaitingLoad?: () => any\n  error?: () => any\n}"
       }
     ],
     "plausible-analytics": [
@@ -738,6 +803,11 @@
         "name": "ScriptStripePricingTableEvents",
         "kind": "interface",
         "code": "interface ScriptStripePricingTableEvents {\n  ready: ReturnType<typeof useScript>\n  error: -\n}"
+      },
+      {
+        "name": "ScriptStripePricingTableSlots",
+        "kind": "interface",
+        "code": "interface ScriptStripePricingTableSlots {\n  default?: () => any\n  loading?: () => any\n  awaitingLoad?: () => any\n  error?: () => any\n}"
       }
     ],
     "tiktok-pixel": [
@@ -831,6 +901,11 @@
         "name": "ScriptVimeoPlayerProps",
         "kind": "interface",
         "code": "interface ScriptVimeoPlayerProps {\n  // custom\n  trigger?: ElementScriptTrigger\n  placeholderAttrs?: ImgHTMLAttributes\n  rootAttrs?: HTMLAttributes\n  aboveTheFold?: boolean\n  vimeoOptions?: VimeoOptions\n  id?: number | undefined\n  url?: string | undefined\n  ratio?: string\n  /**\n   * Object-fit for the placeholder image.\n   *\n   * @default 'contain'\n   */\n  placeholderObjectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'\n}"
+      },
+      {
+        "name": "ScriptVimeoPlayerSlots",
+        "kind": "interface",
+        "code": "interface ScriptVimeoPlayerSlots {\n  default?: () => any\n  placeholder?: (props: { placeholder: string | undefined }) => any\n  loading?: () => any\n  awaitingLoad?: () => any\n  error?: () => any\n}"
       }
     ],
     "x-embed": [
@@ -848,6 +923,11 @@
         "name": "ScriptXEmbedProps",
         "kind": "interface",
         "code": "interface ScriptXEmbedProps {\n  /**\n   * The tweet ID to embed\n   */\n  tweetId: string\n  /**\n   * Custom API endpoint for fetching tweet data\n   */\n  apiEndpoint?: string\n  /**\n   * Custom image proxy endpoint\n   */\n  imageProxyEndpoint?: string\n  /**\n   * Root element attributes\n   */\n  rootAttrs?: HTMLAttributes\n}"
+      },
+      {
+        "name": "ScriptXEmbedSlots",
+        "kind": "interface",
+        "code": "interface ScriptXEmbedSlots {\n  default?: (props: object) => any\n  loading?: () => any\n  error?: (props: object) => any\n}"
       }
     ],
     "x-pixel": [
@@ -892,6 +972,11 @@
         "name": "ScriptYouTubePlayerEvents",
         "kind": "interface",
         "code": "interface ScriptYouTubePlayerEvents {\n  ready: YT.PlayerEvent\n  state-change: YT.OnStateChangeEvent\n  playback-quality-change: YT.OnPlaybackQualityChangeEvent\n  playback-rate-change: YT.OnPlaybackRateChangeEvent\n  error: YT.OnErrorEvent\n  api-change: YT.PlayerEvent\n}"
+      },
+      {
+        "name": "ScriptYouTubePlayerSlots",
+        "kind": "interface",
+        "code": "interface ScriptYouTubePlayerSlots {\n  default?: () => any\n  placeholder?: (props: { placeholder: string }) => any\n  loading?: () => any\n  awaitingLoad?: () => any\n  error?: () => any\n}"
       }
     ],
     "carbon-ads": [
@@ -904,6 +989,11 @@
         "name": "ScriptCarbonAdsEvents",
         "kind": "interface",
         "code": "interface ScriptCarbonAdsEvents {\n  error: string | Event\n  ready: HTMLScriptElement\n}"
+      },
+      {
+        "name": "ScriptCarbonAdsSlots",
+        "kind": "interface",
+        "code": "interface ScriptCarbonAdsSlots {\n  awaitingLoad?: () => any\n  loading?: () => any\n  error?: () => any\n}"
       }
     ]
   },
@@ -2149,6 +2239,33 @@
         "description": "Fired when the Google Maps script fails to load."
       }
     ],
+    "ScriptGoogleMapsSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "placeholder",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptGoogleMapsCircleProps": [
       {
         "name": "options",
@@ -2403,6 +2520,13 @@
         "description": "Fired when the z-index of the info window changes."
       }
     ],
+    "ScriptGoogleMapsInfoWindowSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptGoogleMapsMarkerProps": [
       {
         "name": "position",
@@ -2443,6 +2567,18 @@
         "description": "Fired when the user starts dragging the marker."
       }
     ],
+    "ScriptGoogleMapsMarkerSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "content",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptGoogleMapsMarkerClustererProps": [
       {
         "name": "options",
@@ -2469,6 +2605,18 @@
         "type": "MarkerClustererInstance",
         "required": false,
         "description": "Fired when the clusterer finishes clustering markers."
+      }
+    ],
+    "ScriptGoogleMapsMarkerClustererSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "renderer",
+        "type": "{ cluster: Cluster, stats: ClusterStats, map: google.maps.Map }",
+        "required": false
       }
     ],
     "ScriptGoogleMapsOverlayViewProps": [
@@ -2528,6 +2676,13 @@
       {
         "name": "v-model:open",
         "type": "boolean",
+        "required": false
+      }
+    ],
+    "ScriptGoogleMapsOverlayViewSlots": [
+      {
+        "name": "default",
+        "type": "-",
         "required": false
       }
     ],
@@ -2791,6 +2946,23 @@
         "description": "Root element attributes"
       }
     ],
+    "ScriptBlueskyEmbedSlots": [
+      {
+        "name": "default",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "object",
+        "required": false
+      }
+    ],
     "ScriptCarbonAdsProps": [
       {
         "name": "serve",
@@ -2823,6 +2995,23 @@
       {
         "name": "ready",
         "type": "HTMLScriptElement",
+        "required": false
+      }
+    ],
+    "ScriptCarbonAdsSlots": [
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
         "required": false
       }
     ],
@@ -2863,6 +3052,28 @@
       {
         "name": "ready",
         "type": "ReturnType<typeof useScriptCrisp>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
+    "ScriptCrispSlots": [
+      {
+        "name": "default",
+        "type": "{ ready: boolean }",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
         "required": false
       },
       {
@@ -2916,6 +3127,23 @@
         "required": false
       }
     ],
+    "ScriptGoogleAdsenseSlots": [
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptInstagramEmbedProps": [
       {
         "name": "postUrl",
@@ -2941,6 +3169,23 @@
         "type": "HTMLAttributes",
         "required": false,
         "description": "Root element attributes"
+      }
+    ],
+    "ScriptInstagramEmbedSlots": [
+      {
+        "name": "default",
+        "type": "{ html: string, shortcode: string | undefined, postUrl: string }",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "object",
+        "required": false
       }
     ],
     "ScriptIntercomProps": [
@@ -3003,6 +3248,28 @@
         "required": false
       }
     ],
+    "ScriptIntercomSlots": [
+      {
+        "name": "default",
+        "type": "{ ready: boolean }",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptLemonSqueezyProps": [
       {
         "name": "trigger",
@@ -3019,6 +3286,13 @@
       {
         "name": "lemonSqueezyEvent",
         "type": "LemonSqueezyEventPayload",
+        "required": false
+      }
+    ],
+    "ScriptLemonSqueezySlots": [
+      {
+        "name": "default",
+        "type": "-",
         "required": false
       }
     ],
@@ -3097,6 +3371,33 @@
         "required": false
       }
     ],
+    "ScriptPayPalButtonsSlots": [
+      {
+        "name": "default",
+        "type": "{ sdkInstance: SdkInstance<Components[]> | undefined }",
+        "required": false
+      },
+      {
+        "name": "placeholder",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptPayPalMessagesProps": [
       {
         "name": "rootAttrs",
@@ -3171,6 +3472,33 @@
         "required": false
       }
     ],
+    "ScriptPayPalMessagesSlots": [
+      {
+        "name": "default",
+        "type": "{ messagesSession: PayPalMessagesSession | undefined }",
+        "required": false
+      },
+      {
+        "name": "placeholder",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptStripePricingTableProps": [
       {
         "name": "trigger",
@@ -3207,6 +3535,28 @@
       {
         "name": "ready",
         "type": "ReturnType<typeof useScript>",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
+    "ScriptStripePricingTableSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
         "required": false
       },
       {
@@ -3264,6 +3614,33 @@
         "defaultValue": "'contain'"
       }
     ],
+    "ScriptVimeoPlayerSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "placeholder",
+        "type": "{ placeholder: string | undefined }",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
+        "required": false
+      }
+    ],
     "ScriptXEmbedProps": [
       {
         "name": "tweetId",
@@ -3288,6 +3665,23 @@
         "type": "HTMLAttributes",
         "required": false,
         "description": "Root element attributes"
+      }
+    ],
+    "ScriptXEmbedSlots": [
+      {
+        "name": "default",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "object",
+        "required": false
       }
     ],
     "ScriptYouTubePlayerProps": [
@@ -3395,6 +3789,33 @@
       {
         "name": "api-change",
         "type": "YT.PlayerEvent",
+        "required": false
+      }
+    ],
+    "ScriptYouTubePlayerSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "placeholder",
+        "type": "{ placeholder: string }",
+        "required": false
+      },
+      {
+        "name": "loading",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "awaitingLoad",
+        "type": "-",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "-",
         "required": false
       }
     ]

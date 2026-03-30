@@ -263,6 +263,7 @@ interface ComponentMeta {
   fields: SchemaFieldMeta[]
   events: SchemaFieldMeta[]
   models: SchemaFieldMeta[]
+  slots: SchemaFieldMeta[]
 }
 
 function resolveTSType(node: any, source: string): string {
@@ -340,6 +341,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
   let propsResult: { code: string, defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
   const events: SchemaFieldMeta[] = []
   const models: SchemaFieldMeta[] = []
+  const slots: SchemaFieldMeta[] = []
   const constArrays: Record<string, string[]> = {}
 
   // First pass: collect `as const` arrays for event name resolution
@@ -480,6 +482,44 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
         return
       }
 
+      // defineSlots<{...}>()
+      if (node.callee?.name === 'defineSlots') {
+        const typeArg = node.typeArguments?.params?.[0]
+        if (typeArg?.type === 'TSTypeLiteral') {
+          const slotsCode = scriptSource.slice(typeArg.start, typeArg.end)
+          const slotsComments = parseSchemaComments(slotsCode)
+
+          for (const member of typeArg.members || []) {
+            if (member.type !== 'TSPropertySignature')
+              continue
+            const slotName = member.key?.name || member.key?.value
+            if (!slotName)
+              continue
+
+            // Extract slot props type from the function signature: (props: { ... }) => any
+            let propsType = '-'
+            const fnType = member.typeAnnotation?.typeAnnotation
+            if (fnType?.type === 'TSFunctionType' && fnType.params?.length) {
+              const param = fnType.params[0]
+              const paramType = param?.typeAnnotation?.typeAnnotation
+              if (paramType) {
+                const resolved = resolveTSType(paramType, scriptSource)
+                // Avoid leaking unresolvable `typeof` references from runtime variables
+                propsType = resolved.includes('typeof') ? 'object' : resolved
+              }
+            }
+
+            slots.push({
+              name: slotName,
+              type: propsType,
+              required: !member.optional,
+              description: slotsComments[slotName]?.description,
+            })
+          }
+        }
+        return
+      }
+
       // defineProps / withDefaults(defineProps)
       let definePropsCall: any = null
       let defaultsObj: any = null
@@ -532,6 +572,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
     fields: [...propsResult.fields, ...models],
     events,
     models,
+    slots,
   }
 }
 
@@ -647,6 +688,16 @@ for (const [componentName, meta] of Object.entries(componentMetas)) {
       name: `${componentName}Events`,
       kind: 'interface',
       code: `interface ${componentName}Events {\n${meta.events.map(e => `  ${e.name}: ${e.type}`).join('\n')}\n}`,
+    })
+  }
+
+  // Store slots as schema fields under a separate key
+  if (meta.slots.length) {
+    schemaFields[`${componentName}Slots`] = meta.slots
+    types[slug].push({
+      name: `${componentName}Slots`,
+      kind: 'interface',
+      code: `interface ${componentName}Slots {\n${meta.slots.map(s => `  ${s.name}${s.required ? '' : '?'}: ${s.type === '-' ? '() => any' : `(props: ${s.type}) => any`}`).join('\n')}\n}`,
     })
   }
 }
