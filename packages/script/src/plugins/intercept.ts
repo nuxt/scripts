@@ -7,7 +7,8 @@
  * Any non-same-origin URL is proxied through `proxyPrefix/<host><path>`.
  * No domain allowlist needed: only AST-rewritten third-party scripts call __nuxtScripts.
  */
-export function generateInterceptPluginContents(proxyPrefix: string): string {
+export function generateInterceptPluginContents(proxyPrefix: string, options?: { testMode?: boolean }): string {
+  const testMode = options?.testMode ?? false
   return `export default defineNuxtPlugin({
   name: 'nuxt-scripts:intercept',
   enforce: 'pre',
@@ -52,8 +53,16 @@ export function generateInterceptPluginContents(proxyPrefix: string): string {
       return img;
     }
 
-    globalThis.__nuxtScripts = {
-      sendBeacon: (url, data) => origBeacon(proxyUrl(url), data),
+    globalThis.__nuxtScripts = {${testMode
+      ? `
+      // Test mode: replace sendBeacon with fetch for immediate, observable requests
+      sendBeacon: (url, data) => {
+        const proxied = proxyUrl(url);
+        origFetch(proxied, { method: 'POST', body: data, keepalive: true }).catch(() => {});
+        return true;
+      },`
+      : `
+      sendBeacon: (url, data) => origBeacon(proxyUrl(url), data),`}
       fetch: (url, opts) => {
         if (typeof url === 'string') return origFetch(proxyUrl(url), opts);
         if (url instanceof Request) return origFetch(new Request(proxyUrl(url.url), url), opts);

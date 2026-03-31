@@ -610,7 +610,7 @@ export default defineNuxtModule<ModuleOptions>({
         // Register intercept plugin
         addPluginTemplate({
           filename: 'nuxt-scripts-intercept.client.mjs',
-          getContents() { return generateInterceptPluginContents(proxyPrefix) },
+          getContents() { return generateInterceptPluginContents(proxyPrefix, { testMode: !!nuxt.options.test }) },
         })
 
         // Server-side proxy config

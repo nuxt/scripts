@@ -1,33 +1,33 @@
 <script lang="ts" setup>
-import { useHead, useScriptIntercom } from '#imports'
+import { useHead, useScriptMatomoAnalytics } from '#imports'
 import { ref } from 'vue'
 
-useHead({ title: 'Intercom - First Party' })
-const { status, proxy } = useScriptIntercom({ app_id: 'akg5rmxb' })
+useHead({ title: 'Matomo - First Party' })
+const { status, proxy } = useScriptMatomoAnalytics({ cloudId: 'demo.matomo.cloud', siteId: '1' })
 const result = ref('')
 
-function showMessenger() {
-  proxy.Intercom('show')
-  result.value = 'Messenger shown'
+function trackPageview() {
+  proxy._paq.push(['trackPageView'])
+  result.value = 'Pageview tracked'
 }
 
 function trackEvent() {
-  proxy.Intercom('trackEvent', 'test-event', { source: 'first-party-test' })
+  proxy._paq.push(['trackEvent', 'Test', 'Click', 'Button'])
   result.value = 'Event tracked'
 }
 </script>
 
 <template>
   <div>
-    <h1>Intercom First-Party Test</h1>
+    <h1>Matomo First-Party Test</h1>
     <ClientOnly>
       <div id="status">
         status: {{ status }}
       </div>
     </ClientOnly>
     <div style="margin-top: 20px;">
-      <button @click="showMessenger">
-        Show Messenger
+      <button @click="trackPageview">
+        Track Pageview
       </button>
       <button @click="trackEvent">
         Track Event

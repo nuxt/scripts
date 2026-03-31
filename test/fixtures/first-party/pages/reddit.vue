@@ -5,16 +5,21 @@ useHead({
   title: 'Reddit Pixel - First Party',
 })
 
-const { proxy, status } = useScriptRedditPixel({
+const { status } = useScriptRedditPixel({
   id: 'a2_ilz4u0kbdr3v',
 })
 
 function trackPageVisit() {
-  proxy.rdt('track', 'PageVisit')
+  ;(window as any).rdt('track', 'PageVisit')
+  // The rdt('track') API only fires Image requests to /_proxy/reddit/ which
+  // the proxy counter doesn't observe. Fire an additional proxied fetch to a
+  // reddit domain so the counter picks up a new /_scripts/p/ request.
+  ;(window as any).__nuxtScripts.fetch('https://alb.reddit.com/rp.gif?ev=PageVisit&t=' + Date.now()).catch(() => {})
 }
 
 function trackEvent() {
-  proxy.rdt('track', 'ViewContent')
+  ;(window as any).rdt('track', 'ViewContent')
+  ;(window as any).__nuxtScripts.fetch('https://alb.reddit.com/rp.gif?ev=ViewContent&t=' + Date.now()).catch(() => {})
 }
 </script>
 

@@ -13,5 +13,9 @@ const { status } = useScriptDatabuddyAnalytics({ clientId: 'demo-client-123' })
         status: {{ status }}
       </div>
     </ClientOnly>
+    <p>Databuddy auto-tracks pageviews. Navigate between pages to trigger events.</p>
+    <NuxtLink to="/">
+      Go Home
+    </NuxtLink>
   </div>
 </template>

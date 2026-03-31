@@ -13,5 +13,9 @@ const { status } = useScriptCloudflareWebAnalytics({ token: 'ade278253a19413c9bd
         status: {{ status }}
       </div>
     </ClientOnly>
+    <p>CFWA automatically tracks pageviews. Navigate between pages to trigger events.</p>
+    <NuxtLink to="/">
+      Go Home (triggers SPA pageview)
+    </NuxtLink>
   </div>
 </template>

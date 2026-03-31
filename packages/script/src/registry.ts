@@ -153,7 +153,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('intercom', 'Intercom', 'support', 'useScriptIntercom', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('crisp', 'Crisp', 'support', 'useScriptCrisp', { bundle: true }, null),
   // cdn
-  m('npm', 'NPM', 'cdn', 'useScriptNpm', {}, null),
+  m('npm', 'NPM', 'cdn', 'useScriptNpm', { bundle: true }, null),
   // utility
   m('googleRecaptcha', 'Google reCAPTCHA', 'utility', 'useScriptGoogleRecaptcha', {}, null),
   m('googleSignIn', 'Google Sign-In', 'utility', 'useScriptGoogleSignIn', {}, null),

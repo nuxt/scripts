@@ -1,25 +1,25 @@
 <script lang="ts" setup>
-import { useHead, useScriptRybbitAnalytics } from '#imports'
+import { useHead, useScriptMixpanelAnalytics } from '#imports'
 import { ref } from 'vue'
 
-useHead({ title: 'Rybbit - First Party' })
-const { status, proxy } = useScriptRybbitAnalytics({ siteId: '874' })
+useHead({ title: 'Mixpanel - First Party' })
+const { status, proxy } = useScriptMixpanelAnalytics({ token: '8fa1d44274ff7526b3788cf1c119050c' })
 const result = ref('')
 
-function trackPageview() {
-  proxy.rybbit.pageview()
-  result.value = 'Pageview tracked'
+function trackEvent() {
+  proxy.mixpanel.track('Test Button Click', { source: 'first-party-test' })
+  result.value = 'Event tracked'
 }
 
-function trackEvent() {
-  proxy.rybbit.event('test_click', { button: 'primary' })
-  result.value = 'Event tracked'
+function trackPageview() {
+  proxy.mixpanel.track('$mp_web_page_view')
+  result.value = 'Pageview tracked'
 }
 </script>
 
 <template>
   <div>
-    <h1>Rybbit First-Party Test</h1>
+    <h1>Mixpanel First-Party Test</h1>
     <ClientOnly>
       <div id="status">
         status: {{ status }}
