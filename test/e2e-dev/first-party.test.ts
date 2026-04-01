@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
 import { $fetch, getBrowser, setup, url } from '@nuxt/test-utils/e2e'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { getProxyDef, registry } from '@nuxt/scripts/registry'
 
 const { resolve } = createResolver(import.meta.url)
 const fixtureDir = resolve('../fixtures/first-party')
@@ -33,137 +34,22 @@ function clearCaptures() {
 
 /**
  * Provider-specific path prefixes for filtering captures.
- * Paths must match the actual proxy URL format: /_scripts/p/<full-domain>/...
- * These correspond to the `proxy.domains` arrays in registry.ts.
+ * Derived from `proxy.domains` in registry.ts so they never drift out of sync.
  */
-const PROVIDER_PATHS: Record<string, string[]> = {
-  googleAnalytics: [
-    '/_scripts/p/www.google-analytics.com',
-    '/_scripts/p/analytics.google.com',
-    '/_scripts/p/stats.g.doubleclick.net',
-    '/_scripts/p/pagead2.googlesyndication.com',
-    '/_scripts/p/www.googleadservices.com',
-    '/_scripts/p/googleads.g.doubleclick.net',
-    '/_scripts/p/www.google.com',
-    '/_scripts/p/www.googletagmanager.com',
-  ],
-  googleTagManager: ['/_scripts/p/www.googletagmanager.com'],
-  metaPixel: [
-    '/_scripts/p/connect.facebook.net',
-    '/_scripts/p/www.facebook.com',
-    '/_scripts/p/facebook.com',
-    '/_scripts/p/pixel.facebook.com',
-  ],
-  segment: ['/_scripts/p/cdn.segment.com', '/_scripts/p/api.segment.io'],
-  xPixel: [
-    '/_scripts/p/analytics.twitter.com',
-    '/_scripts/p/static.ads-twitter.com',
-    '/_scripts/p/t.co',
-  ],
-  snapchatPixel: [
-    '/_scripts/p/sc-static.net',
-    '/_scripts/p/tr.snapchat.com',
-    '/_scripts/p/pixel.tapad.com',
-  ],
-  clarity: [
-    '/_scripts/p/www.clarity.ms',
-    '/_scripts/p/scripts.clarity.ms',
-    '/_scripts/p/d.clarity.ms',
-    '/_scripts/p/e.clarity.ms',
-    '/_scripts/p/k.clarity.ms',
-    '/_scripts/p/c.clarity.ms',
-    '/_scripts/p/a.clarity.ms',
-    '/_scripts/p/b.clarity.ms',
-  ],
-  hotjar: [
-    '/_scripts/p/static.hotjar.com',
-    '/_scripts/p/script.hotjar.com',
-    '/_scripts/p/vars.hotjar.com',
-    '/_scripts/p/in.hotjar.com',
-    '/_scripts/p/vc.hotjar.com',
-    '/_scripts/p/vc.hotjar.io',
-    '/_scripts/p/metrics.hotjar.io',
-    '/_scripts/p/insights.hotjar.com',
-    '/_scripts/p/ask.hotjar.io',
-    '/_scripts/p/events.hotjar.io',
-    '/_scripts/p/identify.hotjar.com',
-    '/_scripts/p/surveystats.hotjar.io',
-  ],
-  tiktokPixel: [
-    '/_scripts/p/analytics.tiktok.com',
-    '/_scripts/p/mon.tiktok.com',
-    '/_scripts/p/mcs.tiktok.com',
-  ],
-  redditPixel: [
-    '/_scripts/p/www.redditstatic.com',
-    '/_scripts/p/alb.reddit.com',
-    '/_scripts/p/pixel-config.reddit.com',
-  ],
-  vercelAnalytics: [
-    '/_scripts/p/va.vercel-scripts.com',
-    '/_scripts/p/vitals.vercel-insights.com',
-  ],
-  posthog: [
-    '/_scripts/p/us-assets.i.posthog.com',
-    '/_scripts/p/us.i.posthog.com',
-    '/_scripts/p/eu-assets.i.posthog.com',
-    '/_scripts/p/eu.i.posthog.com',
-  ],
-  umamiAnalytics: [
-    '/_scripts/p/cloud.umami.is',
-    '/_scripts/p/api-gateway.umami.dev',
-  ],
-  plausibleAnalytics: ['/_scripts/p/plausible.io'],
-  cloudflareWebAnalytics: [
-    '/_scripts/p/static.cloudflareinsights.com',
-    '/_scripts/p/cloudflareinsights.com',
-  ],
-  fathomAnalytics: [
-    '/_scripts/p/cdn.usefathom.com',
-    '/_scripts/p/usefathom.com',
-  ],
-  intercom: [
-    '/_scripts/p/widget.intercom.io',
-    '/_scripts/p/api-iam.intercom.io',
-    '/_scripts/p/api-iam.eu.intercom.io',
-    '/_scripts/p/api-iam.au.intercom.io',
-    '/_scripts/p/js.intercomcdn.com',
-    '/_scripts/p/downloads.intercomcdn.com',
-    '/_scripts/p/video-messages.intercomcdn.com',
-  ],
-  crisp: ['/_scripts/p/crisp.chat'],
-  rybbitAnalytics: ['/_scripts/p/app.rybbit.io'],
-  databuddyAnalytics: [
-    '/_scripts/p/cdn.databuddy.cc',
-    '/_scripts/p/basket.databuddy.cc',
-  ],
-  matomoAnalytics: ['/_scripts/p/cdn.matomo.cloud'],
-  carbonAds: [
-    '/_scripts/p/cdn.carbonads.com',
-    '/_scripts/p/srv.carbonads.net',
-    '/_scripts/p/cdn4.buysellads.net',
-  ],
-  vimeoPlayer: [
-    '/_scripts/p/player.vimeo.com',
-    '/_scripts/p/i.vimeocdn.com',
-    '/_scripts/p/f.vimeocdn.com',
-    '/_scripts/p/fresnel.vimeocdn.com',
-  ],
-  youtubePlayer: [
-    '/_scripts/p/www.youtube.com',
-    '/_scripts/p/www.youtube-nocookie.com',
-    '/_scripts/p/i.ytimg.com',
-    '/_scripts/p/static.doubleclick.net',
-  ],
-  gravatar: [
-    '/_scripts/p/secure.gravatar.com',
-    '/_scripts/p/gravatar.com',
-  ],
-  lemonSqueezy: [
-    '/_scripts/p/assets.lemonsqueezy.com',
-    '/_scripts/p/app.lemonsqueezy.com',
-  ],
-}
+const PROXY_PREFIX = '/_scripts/p'
+const scripts = await registry()
+const scriptByKey = new Map(scripts.map(s => [s.registryKey, s]))
+const PROVIDER_PATHS: Record<string, string[]> = Object.fromEntries(
+  scripts
+    .filter(s => getProxyDef(s, scriptByKey))
+    .map((s) => {
+      const proxy = getProxyDef(s, scriptByKey)!
+      const paths = proxy.domains.map(d =>
+        `${PROXY_PREFIX}/${typeof d === 'string' ? d : d.domain}`,
+      )
+      return [s.registryKey, paths]
+    }),
+)
 
 /**
  * Fingerprinting parameters that stripPayloadFingerprinting removes, empties, or generalizes.
@@ -210,35 +96,6 @@ const ANONYMIZED_FINGERPRINT_PARAMS = [
   'client_user_agent',
 ]
 
-/**
- * User-id and PII parameters that are intentionally PRESERVED by stripPayloadFingerprinting.
- * Analytics services require these to function. Listed here for documentation;
- * these are NOT checked by verifyFingerprintingAnonymized.
- */
-const _PRESERVED_USER_PARAMS = [
-  // User identifiers (preserved for analytics)
-  'uid',
-  'user_id',
-  'userid',
-  'external_id',
-  'cid',
-  '_gid',
-  'fbp',
-  'fbc',
-  'sid',
-  'session_id',
-  'sessionid',
-  'pl_id',
-  'p_user_id',
-  'anonymousid',
-  'twclid',
-  // User data (PII — hashed by SDKs before sending, preserved for analytics)
-  'ud',
-  'user_data',
-  'userdata',
-  'email',
-  'phone',
-]
 
 /** Check that a capture has a fully-resolved privacy object with all six boolean flags. */
 function hasResolvedPrivacy(c: Record<string, any>): boolean {
