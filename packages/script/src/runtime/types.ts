@@ -44,6 +44,10 @@ import type { XPixelInput } from './registry/x-pixel'
 import type { YouTubePlayerInput } from './registry/youtube-player'
 import type { ProxyPrivacyInput } from './server/utils/privacy'
 
+// Google Maps component types (re-exported for easy user access)
+export type { Cluster, ClusterStats, MarkerClustererContext, MarkerClustererInstance, MarkerClustererOptions } from './components/GoogleMaps/types'
+export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
+
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
 export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {

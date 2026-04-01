@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, ref, useTemplateRef, watch } from 'vue'
-import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
+import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
 import { MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
 type OverlayAnchor = 'center' | 'top-left' | 'top-center' | 'top-right'

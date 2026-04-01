@@ -308,6 +308,15 @@ onMounted(() => {
       if (isLocationQuery(center) && ready.value) {
         center = await resolveQueryToLatLng(center as string)
       }
+      // Skip setCenter if the map is already at the same position to avoid
+      // resetting user pan interactions on unrelated re-renders.
+      const current = map.value!.getCenter()
+      if (current) {
+        const newLat = typeof (center as any).lat === 'function' ? (center as any).lat() : (center as any).lat
+        const newLng = typeof (center as any).lng === 'function' ? (center as any).lng() : (center as any).lng
+        if (current.lat() === newLat && current.lng() === newLng)
+          return
+      }
       map.value!.setCenter(center as google.maps.LatLng)
     }
   }, {

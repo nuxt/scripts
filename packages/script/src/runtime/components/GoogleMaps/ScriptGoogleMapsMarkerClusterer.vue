@@ -1,48 +1,10 @@
 <script lang="ts">
-import type { InjectionKey, ShallowRef } from 'vue'
 import { getCurrentInstance, h, inject, onBeforeUnmount, provide, shallowRef, useSlots, render as vueRender, watch } from 'vue'
 import { bindGoogleMapsEvents, MAP_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
-// Inline types to avoid requiring @googlemaps/markerclusterer as a build-time dependency
-export interface MarkerClustererInstance {
-  render: () => void
-  setMap: (map: google.maps.Map | null) => void
-  addListener: (event: string, handler: () => void) => void
-  addMarker: (marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker, noDraw?: boolean) => void
-  removeMarker: (marker: google.maps.marker.AdvancedMarkerElement | google.maps.Marker, noDraw?: boolean) => boolean
-}
-
-export interface MarkerClustererOptions {
-  markers?: google.maps.marker.AdvancedMarkerElement[]
-  algorithm?: unknown
-  renderer?: unknown
-  onClusterClick?: unknown
-}
-
-export interface Cluster {
-  marker: google.maps.marker.AdvancedMarkerElement
-  markers?: google.maps.marker.AdvancedMarkerElement[]
-  position: google.maps.LatLng
-  bounds: google.maps.LatLngBounds | undefined
-  count: number
-}
-
-export interface ClusterStats {
-  markers: { sum: number }
-  clusters: {
-    count: number
-    markers: { min: number, max: number, mean: number, sum: number }
-  }
-}
-
-export interface MarkerClustererContext {
-  markerClusterer: ShallowRef<MarkerClustererInstance | undefined>
-  requestRerender: () => void
-  /** Increments after each clustering cycle; watch to detect cluster membership changes */
-  clusteringVersion: ShallowRef<number>
-}
-
-export const MARKER_CLUSTERER_INJECTION_KEY = Symbol('marker-clusterer') as InjectionKey<MarkerClustererContext>
+// Re-export types so they're accessible from this component for backwards compat
+export type { Cluster, ClusterStats, MarkerClustererContext, MarkerClustererInstance, MarkerClustererOptions } from './types'
+export { MARKER_CLUSTERER_INJECTION_KEY } from './types'
 </script>
 
 <script setup lang="ts">
