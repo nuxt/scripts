@@ -2,9 +2,11 @@
 import { getCurrentInstance, h, inject, onBeforeUnmount, provide, shallowRef, useSlots, render as vueRender, watch } from 'vue'
 import { bindGoogleMapsEvents, MAP_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
-// Re-export types so they're accessible from this component for backwards compat
-export type { Cluster, ClusterStats, MarkerClustererContext, MarkerClustererInstance, MarkerClustererOptions } from './types'
-export { MARKER_CLUSTERER_INJECTION_KEY } from './types'
+// Import types locally (needed for <script setup> scope) and re-export for backwards compat
+import type { Cluster, ClusterStats, MarkerClustererContext, MarkerClustererInstance, MarkerClustererOptions } from './types'
+import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
+export type { Cluster, ClusterStats, MarkerClustererContext, MarkerClustererInstance, MarkerClustererOptions }
+export { MARKER_CLUSTERER_INJECTION_KEY }
 </script>
 
 <script setup lang="ts">
