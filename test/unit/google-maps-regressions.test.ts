@@ -399,6 +399,59 @@ describe('google Maps Regressions', () => {
     })
   })
 
+  describe('center watcher should skip setCenter when lat/lng unchanged', () => {
+    // Regression: when mapOptions is a plain (non-reactive) object, the `options`
+    // computed re-evaluates on any re-render (defu creates a new object ref),
+    // firing the center watcher even though lat/lng are identical. This resets the
+    // user's pan position.
+    // Fix: compare new center lat/lng against map.getCenter() before calling setCenter.
+
+    function applyCenterUpdate(
+      map: ReturnType<typeof createMockMap>,
+      newCenter: { lat: number, lng: number } | { lat: () => number, lng: () => number },
+    ) {
+      const current = map.getCenter()
+      if (current) {
+        const newLat = typeof (newCenter as any).lat === 'function' ? (newCenter as any).lat() : (newCenter as any).lat
+        const newLng = typeof (newCenter as any).lng === 'function' ? (newCenter as any).lng() : (newCenter as any).lng
+        if (current.lat() === newLat && current.lng() === newLng)
+          return
+      }
+      map.setCenter(newCenter)
+    }
+
+    it('should skip setCenter when lat/lng are unchanged', () => {
+      const map = createMockMap()
+      // Mock getCenter returns { lat: () => 40, lng: () => -74 }
+      map.getCenter.mockReturnValue({ lat: () => 40, lng: () => -74 })
+
+      // Same coordinates as current position — should NOT call setCenter
+      applyCenterUpdate(map, { lat: 40, lng: -74 })
+
+      expect(map.setCenter).not.toHaveBeenCalled()
+    })
+
+    it('should call setCenter when lat/lng actually change', () => {
+      const map = createMockMap()
+      map.getCenter.mockReturnValue({ lat: () => 40, lng: () => -74 })
+
+      // Different coordinates — should call setCenter
+      applyCenterUpdate(map, { lat: 41, lng: -73 })
+
+      expect(map.setCenter).toHaveBeenCalledWith({ lat: 41, lng: -73 })
+    })
+
+    it('should handle LatLng objects with function accessors', () => {
+      const map = createMockMap()
+      map.getCenter.mockReturnValue({ lat: () => 40, lng: () => -74 })
+
+      // Same coordinates via function accessors — should NOT call setCenter
+      applyCenterUpdate(map, { lat: () => 40, lng: () => -74 } as any)
+
+      expect(map.setCenter).not.toHaveBeenCalled()
+    })
+  })
+
   describe('infoWindow group close', () => {
     // Regression: opening a new InfoWindow didn't close the previous one.
     // Fix: shared activateInfoWindow on MAP_INJECTION_KEY closes the previous.

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { inject, provide, useSlots, useTemplateRef, watch } from 'vue'
-import { MARKER_CLUSTERER_INJECTION_KEY } from './ScriptGoogleMapsMarkerClusterer.vue'
+import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
 import { bindGoogleMapsEvents, MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
 export { MARKER_INJECTION_KEY } from './useGoogleMapsResource'
