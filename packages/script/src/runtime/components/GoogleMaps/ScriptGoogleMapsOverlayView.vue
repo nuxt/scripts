@@ -349,10 +349,11 @@ defineExpose<ScriptGoogleMapsOverlayViewExpose>({ overlayView, dataState })
     <div
       ref="overlay-anchor" :style="{
         position: 'absolute',
-        left: `${overlayPosition?.x ?? 0 + (props.offset?.x ?? 0)}px`,
-        top: `${overlayPosition?.y ?? 0 + (props.offset?.y ?? 0)}px`,
+        left: `${overlayPosition?.x ?? 0}px`,
+        top: `${overlayPosition?.y ?? 0}px`,
         transform: ANCHOR_TRANSFORMS[anchor],
         zIndex,
+        willChange: 'transform',
         visibility: open ? 'visible' : 'hidden',
         pointerEvents: open ? 'auto' : 'none',
       }"
