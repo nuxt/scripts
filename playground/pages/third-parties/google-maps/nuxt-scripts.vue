@@ -9,7 +9,7 @@ const mapOptions = ref({
 const googleMapsRef = useTemplateRef('googleMapsRef')
 
 async function changeQuery() {
-    const res = await googleMapsRef.value.resolveQueryToLatLng('Brooklyn+Bride,New+York+NY')
+    const res = await googleMapsRef.value.resolveQueryToLatLng('Brooklyn+Bridge,New+York+NY')
 
   mapOptions.value.center = res
 }

@@ -4,7 +4,7 @@ import { ref } from 'vue'
 
 const googleMapsRef = useTemplateRef('googleMapsRef')
 
-const query = ref('Brooklyn+Bride,New+York+NY')
+const query = ref('Brooklyn+Bridge,New+York+NY')
 
 const center = ref<google.maps.LatLng | google.maps.LatLngLiteral>({ lat: -34.397, lng: 150.644 })
 
@@ -14,7 +14,7 @@ async function changeQuery() {
     }
 
     query.value = query.value.startsWith('Statue')
-        ? 'Brooklyn+Bride,New+York+NY'
+        ? 'Brooklyn+Bridge,New+York+NY'
         : 'Statue+of+Liberty+National+Monument+New+York+NY'
 
     const queryLatLng = await googleMapsRef.value.resolveQueryToLatLng(
