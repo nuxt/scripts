@@ -250,6 +250,8 @@ async function resolveQueryToLatLng(query: string): Promise<google.maps.LatLng |
       const _ = watch(mapsApi, () => {
         _()
         resolve()
+      }, {
+        immediate: true,
       })
     })
   }
