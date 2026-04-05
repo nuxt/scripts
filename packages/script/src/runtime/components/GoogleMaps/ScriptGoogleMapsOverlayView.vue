@@ -305,7 +305,13 @@ if (markerContext) {
 // Reposition on prop changes (draw() is designed to be called repeatedly)
 // Only watches explicit props — marker position changes are handled by event listeners above
 watch(
-  () => [props.position?.lat, props.position?.lng, props.offset?.x, props.offset?.y, props.zIndex, props.anchor],
+  [
+    () => props.position,
+    () => props.offset?.x,
+    () => props.offset?.y,
+    () => props.zIndex,
+    () => props.anchor,
+  ],
   () => { overlayView.value?.draw() },
 )
 
@@ -322,7 +328,7 @@ watch([() => props.pane, () => props.blockMapInteraction], () => {
 // Auto-hide overlay when its parent marker joins a cluster
 if (markerClustererContext && markerContext) {
   watch(
-    () => markerClustererContext.clusteringVersion.value,
+    markerClustererContext.clusteringVersion,
     () => {
       if (!props.hideWhenClustered || open.value === false)
         return
