@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ShallowRef, WatchHandle } from 'vue'
 import { useVModel, whenever } from '@vueuse/core'
-import { computed, inject, useTemplateRef, watch } from 'vue'
+import { computed, inject, useTemplateRef, watch, shallowRef } from 'vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
 import { MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
@@ -100,7 +100,7 @@ defineSlots<{
 const open = useVModel(props, 'open', emit, {
   defaultValue: props.defaultOpen,
   passive: (props.open === undefined) as false,
-}) as Ref<boolean>
+}) as ShallowRef<boolean>
 
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
