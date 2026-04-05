@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
+import { getProxyDef, registry } from '@nuxt/scripts/registry'
 import { $fetch, getBrowser, setup, url } from '@nuxt/test-utils/e2e'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { getProxyDef, registry } from '@nuxt/scripts/registry'
 
 const { resolve } = createResolver(import.meta.url)
 const fixtureDir = resolve('../fixtures/first-party')
@@ -95,7 +95,6 @@ const ANONYMIZED_FINGERPRINT_PARAMS = [
   'user_agent',
   'client_user_agent',
 ]
-
 
 /** Check that a capture has a fully-resolved privacy object with all six boolean flags. */
 function hasResolvedPrivacy(c: Record<string, any>): boolean {
