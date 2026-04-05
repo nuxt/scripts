@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ShallowRef, WatchHandle } from 'vue'
 import { useVModel, whenever } from '@vueuse/core'
-import { computed, inject, useTemplateRef, watch, shallowRef } from 'vue'
+import { computed, inject, shallowRef, useTemplateRef, watch } from 'vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
 import { MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
