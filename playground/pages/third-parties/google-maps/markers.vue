@@ -25,7 +25,6 @@ function removeMarkers() {
   <div>
     <div>
       <ScriptGoogleMaps
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
         :map-options="{ center }"

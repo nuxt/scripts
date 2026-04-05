@@ -32,7 +32,6 @@ async function changeQuery() {
     <div>
       <ScriptGoogleMaps
         ref="googleMapsRef"
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
         :map-options="{

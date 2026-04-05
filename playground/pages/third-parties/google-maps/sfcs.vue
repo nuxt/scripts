@@ -89,7 +89,6 @@ whenever(() => googleMapsRef.value?.mapsApi, (mapsApi) => {
   <div>
     <ScriptGoogleMaps
       ref="googleMapsRef"
-      api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
       :width="1280"
       :height="720"
       :map-options="{

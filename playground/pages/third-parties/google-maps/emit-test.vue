@@ -58,7 +58,6 @@ const circleOptions = {
       </p>
 
       <ScriptGoogleMaps
-        api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="800"
         :height="500"
         :map-options="{
