@@ -95,8 +95,7 @@ const secondGeoJson = {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="800"
         :height="450"
-        :zoom="13"
-        :map-options="{ center: { lat: -33.875, lng: 151.22 } }"
+        :map-options="{ center: { lat: -33.875, lng: 151.22 }, zoom: 13 }"
       >
         <!-- Primary GeoJSON layer -->
         <ScriptGoogleMapsGeoJson

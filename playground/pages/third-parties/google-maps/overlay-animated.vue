@@ -32,11 +32,9 @@ function close(id: number) {
       Click a marker to open/close. Uses data-state attribute for CSS enter/leave animations.
     </p>
     <ScriptGoogleMaps
-      :center="{ lat: -33.8688, lng: 151.2093 }"
-      :zoom="12"
       :width="800"
       :height="500"
-      :map-options="{ mapId: 'DEMO_MAP_ID' }"
+      :map-options="{ mapId: 'DEMO_MAP_ID', center: { lat: -33.8688, lng: 151.2093 }, zoom: 12 }"
     >
       <ScriptGoogleMapsMarker
         v-for="place in places"
@@ -47,54 +45,37 @@ function close(id: number) {
         <ScriptGoogleMapsOverlayView
           :open="isOpen(place.id)"
           anchor="bottom-center"
+          class="bg-white rounded-lg p-4 w-64 shadow-lg data-[state=open]:animate-[overlayIn_200ms_ease-out]"
           :offset="{ x: 0, y: -50 }"
           @update:open="(v: boolean) => { if (!v) close(place.id) }"
         >
-            <div class="overlay-popup">
-              <div class="flex items-start justify-between gap-2">
-                <h3 class="text-sm font-semibold text-gray-900">
-                  {{ place.name }}
-                </h3>
-                <button
-                  class="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  @click.stop="close(place.id)"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-              <div class="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                <span class="font-medium text-yellow-500">★ {{ place.rating }}</span>
-                <span>({{ place.reviews }} reviews)</span>
-              </div>
-              <p class="mt-2 text-xs leading-relaxed text-gray-600">
-                {{ place.desc }}
-              </p>
+            <div class="flex items-start justify-between gap-2">
+            <h3 class="text-sm font-semibold text-gray-900">
+                {{ place.name }}
+            </h3>
+            <button
+                class="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                @click.stop="close(place.id)"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
             </div>
+            <div class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+            <span class="font-medium text-yellow-500">★ {{ place.rating }}</span>
+            <span>({{ place.reviews }} reviews)</span>
+            </div>
+            <p class="mt-2 text-xs leading-relaxed text-gray-600">
+            {{ place.desc }}
+            </p>
         </ScriptGoogleMapsOverlayView>
       </ScriptGoogleMapsMarker>
     </ScriptGoogleMaps>
   </div>
 </template>
 
-<style scoped>
-.overlay-popup {
-  width: 16rem;
-  border-radius: 0.75rem;
-  background: white;
-  padding: 1rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-.overlay-popup[data-state="open"] {
-  animation: overlayIn 200ms ease-out forwards;
-}
-
-.overlay-popup[data-state="closed"] {
-  animation: overlayOut 150ms ease-in forwards;
-}
-
+<style>
 @keyframes overlayIn {
   from {
     opacity: 0;
@@ -103,17 +84,6 @@ function close(id: number) {
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes overlayOut {
-  from {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95) translateY(4px);
   }
 }
 </style>

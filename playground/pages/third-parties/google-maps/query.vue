@@ -1,15 +1,29 @@
 <script setup lang="ts">
+import type { ScriptGoogleMapsProps } from '#nuxt-scripts/components/GoogleMaps/ScriptGoogleMaps.vue'
 import { ref } from 'vue'
 
-const center = ref<string>('Brooklyn+Bride,New+York+NY')
+const googleMapsRef = useTemplateRef('googleMapsRef')
 
-function changeQuery() {
-  if (center.value.startsWith('Statue')) {
-    center.value = 'Brooklyn+Bride,New+York+NY'
-  }
-  else {
-    center.value = 'Statue+of+Liberty+National+Monument+New+York+NY'
-  }
+const query = ref('Brooklyn+Bride,New+York+NY')
+
+const center = ref<google.maps.LatLng | google.maps.LatLngLiteral>({ lat: -34.397, lng: 150.644 })
+
+async function changeQuery() {
+    if (!googleMapsRef.value) {
+        return
+    }
+
+    query.value = query.value.startsWith('Statue')
+        ? 'Brooklyn+Bride,New+York+NY'
+        : 'Statue+of+Liberty+National+Monument+New+York+NY'
+
+    const queryLatLng = await googleMapsRef.value.resolveQueryToLatLng(
+        query.value
+    )
+
+    if (queryLatLng) {
+        center.value = queryLatLng
+    }
 }
 </script>
 
@@ -17,10 +31,13 @@ function changeQuery() {
   <div>
     <div>
       <ScriptGoogleMaps
+        ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
-        :center="center"
+        :map-options="{
+            center
+        }"
       />
     </div>
     <div class="button-container">

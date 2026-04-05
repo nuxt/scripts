@@ -6,10 +6,12 @@ const mapOptions = ref({
   center: { lat: -34.397, lng: 150.644 },
 })
 
-const googleMapsRef = ref()
+const googleMapsRef = useTemplateRef('googleMapsRef')
 
-function changeQuery() {
-  query.value = 'Brooklyn+Bride,New+York+NY'
+async function changeQuery() {
+    const res = await googleMapsRef.value.resolveQueryToLatLng('Brooklyn+Bride,New+York+NY')
+
+  mapOptions.value.center = res
 }
 </script>
 

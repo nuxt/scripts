@@ -7,8 +7,6 @@ const markers = ref([
   { lat: -34.397, lng: 150.642 },
 ])
 
-const googleMapsRef = ref()
-
 let increment = 1
 function addMarker() {
   const lat = (1000 * center.value.lat + increment) / 1000
@@ -27,7 +25,6 @@ function removeMarkers() {
   <div>
     <div>
       <ScriptGoogleMaps
-        ref="googleMapsRef"
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"

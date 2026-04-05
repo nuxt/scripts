@@ -65,22 +65,22 @@ const zoom = ref(8)
 
 const googleMapsRef = useTemplateRef('googleMapsRef')
 
-whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
+whenever(() => googleMapsRef.value?.mapsApi, (mapsApi) => {
   heatmapLayerData.value.push(...[
-    new googleMaps.LatLng(-33.8688, 151.2093),
-    new googleMaps.LatLng(-33.8690, 151.2100),
-    new googleMaps.LatLng(-33.8700, 151.2150),
-    new googleMaps.LatLng(-33.8710, 151.2200),
-    new googleMaps.LatLng(-33.8720, 151.2250),
-    new googleMaps.LatLng(-33.8730, 151.2300),
-    new googleMaps.LatLng(-33.8740, 151.2350),
-    new googleMaps.LatLng(-33.8750, 151.2400),
-    new googleMaps.LatLng(-33.8760, 151.2450),
-    new googleMaps.LatLng(-33.8770, 151.2500),
-    new googleMaps.LatLng(-33.8780, 151.2550),
-    new googleMaps.LatLng(-33.8790, 151.2600),
-    new googleMaps.LatLng(-33.8800, 151.2650),
-    new googleMaps.LatLng(-33.8810, 151.2700),
+    new mapsApi.LatLng(-33.8688, 151.2093),
+    new mapsApi.LatLng(-33.8690, 151.2100),
+    new mapsApi.LatLng(-33.8700, 151.2150),
+    new mapsApi.LatLng(-33.8710, 151.2200),
+    new mapsApi.LatLng(-33.8720, 151.2250),
+    new mapsApi.LatLng(-33.8730, 151.2300),
+    new mapsApi.LatLng(-33.8740, 151.2350),
+    new mapsApi.LatLng(-33.8750, 151.2400),
+    new mapsApi.LatLng(-33.8760, 151.2450),
+    new mapsApi.LatLng(-33.8770, 151.2500),
+    new mapsApi.LatLng(-33.8780, 151.2550),
+    new mapsApi.LatLng(-33.8790, 151.2600),
+    new mapsApi.LatLng(-33.8800, 151.2650),
+    new mapsApi.LatLng(-33.8810, 151.2700),
   ])
 })
 </script>
@@ -92,10 +92,10 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
       api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
       :width="1280"
       :height="720"
-      :zoom="zoom"
       :map-options="{
         center: { lat: -34.397, lng: 150.644 },
         mapId: 'DEMO_MAP_ID',
+        zoom,
       }"
     >
       <ScriptGoogleMapsInfoWindow

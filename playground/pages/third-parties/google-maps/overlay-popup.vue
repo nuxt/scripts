@@ -19,11 +19,9 @@ const places = [
       Click a marker to show a fully custom popup. Click again or press × to close. Uses v-if for multiple markers.
     </p>
     <ScriptGoogleMaps
-      :center="{ lat: -33.8688, lng: 151.2093 }"
-      :zoom="12"
       :width="800"
       :height="500"
-      :map-options="{ mapId: 'DEMO_MAP_ID' }"
+      :map-options="{ mapId: 'DEMO_MAP_ID', center: { lat: -33.8688, lng: 151.2093 }, zoom: 12 }"
     >
       <ScriptGoogleMapsMarker
         v-for="place in places"
@@ -34,9 +32,9 @@ const places = [
         <ScriptGoogleMapsOverlayView
           v-if="selected === place.id"
           anchor="bottom-center"
+          class="w-64 rounded-xl bg-white p-4 shadow-lg ring-1 ring-black/5 data-[state=open]:animate-[overlayIn_200ms_ease-out]"
           :offset="{ x: 0, y: -50 }"
         >
-          <div class="w-64 rounded-xl bg-white p-4 shadow-lg ring-1 ring-black/5">
             <div class="flex items-start justify-between gap-2">
               <h3 class="text-sm font-semibold text-gray-900">
                 {{ place.name }}
@@ -60,9 +58,22 @@ const places = [
             <button class="mt-3 w-full rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
               View details
             </button>
-          </div>
         </ScriptGoogleMapsOverlayView>
       </ScriptGoogleMapsMarker>
     </ScriptGoogleMaps>
   </div>
 </template>
+
+<style>
+@keyframes overlayIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+</style>

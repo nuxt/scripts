@@ -188,12 +188,6 @@ const content = registryScripts
       registryScript: null,
     },
     {
-      name: 'Google Maps (Styled)',
-      path: '/third-parties/google-maps/styled',
-      logo: registryScripts.find(s => s.label === 'Google Maps')?.logo,
-      registryScript: null,
-    },
-    {
       name: 'Google Maps (SFCs)',
       path: '/third-parties/google-maps/sfcs',
       logo: registryScripts.find(s => s.label === 'Google Maps')?.logo,

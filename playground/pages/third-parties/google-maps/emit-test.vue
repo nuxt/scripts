@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { ref, useTemplateRef } from 'vue'
+import { ref } from 'vue'
 
 const eventLog = ref<string[]>([])
 
@@ -62,9 +61,9 @@ const circleOptions = {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="800"
         :height="500"
-        :zoom="12"
         :map-options="{
           center: { lat: -33.87, lng: 151.21 },
+          zoom: 12,
           mapId: 'DEMO_MAP_ID',
         }"
       >

@@ -4,6 +4,7 @@ import { ref } from 'vue'
 const mapOptions = ref({
   center: { lat: -34.397, lng: 150.644 },
 })
+
 function changeQuery() {
   mapOptions.value = {
     center: {
