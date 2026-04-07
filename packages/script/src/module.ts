@@ -346,18 +346,26 @@ export default defineNuxtModule<ModuleOptions>({
         if (entry === false)
           continue
         const input = (entry as any[])[0]
+        const scriptOptions = (entry as any[])[1]
         const envDefaults = scripts.find(s => s.registryKey === key)?.envDefaults
+        const base: Record<string, any> = {}
         if (!envDefaults || !Object.keys(envDefaults).length) {
-          registryWithDefaults[key] = input
-          continue
+          Object.assign(base, input)
         }
-        // Read process.env for each field, falling back to the static default
-        const envResolved: Record<string, string> = {}
-        for (const [field, defaultValue] of Object.entries(envDefaults)) {
-          const envKey = `NUXT_PUBLIC_SCRIPTS_${toScreamingSnake(key)}_${toScreamingSnake(field)}`
-          envResolved[field] = process.env[envKey] || defaultValue
+        else {
+          // Read process.env for each field, falling back to the static default
+          const envResolved: Record<string, string> = {}
+          for (const [field, defaultValue] of Object.entries(envDefaults)) {
+            const envKey = `NUXT_PUBLIC_SCRIPTS_${toScreamingSnake(key)}_${toScreamingSnake(field)}`
+            envResolved[field] = process.env[envKey] || defaultValue
+          }
+          Object.assign(base, defu(input, envResolved))
         }
-        registryWithDefaults[key] = defu(input, envResolved)
+        // Include scriptOptions so composable instances inherit registry-level settings (e.g. bundle)
+        if (scriptOptions && Object.keys(scriptOptions).length > 0) {
+          base.scriptOptions = scriptOptions
+        }
+        registryWithDefaults[key] = base
       }
 
       nuxt.options.runtimeConfig.public.scripts = defu(
