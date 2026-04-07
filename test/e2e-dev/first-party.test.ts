@@ -38,7 +38,7 @@ function clearCaptures() {
  */
 const PROXY_PREFIX = '/_scripts/p'
 const scripts = await registry()
-const scriptByKey = new Map(scripts.map(s => [s.registryKey, s]))
+const scriptByKey = new Map(scripts.filter(s => s.registryKey).map(s => [s.registryKey!, s]))
 const PROVIDER_PATHS: Record<string, string[]> = Object.fromEntries(
   scripts
     .filter(s => getProxyDef(s, scriptByKey))
