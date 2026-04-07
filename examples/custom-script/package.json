@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@nuxt/scripts": "latest",
-    "@nuxt/ui": "^4.6.0",
+    "@nuxt/ui": "^4.6.1",
     "nuxt": "^4.4.2",
     "tailwindcss": "^4.2.2",
-    "vue": "^3.5.31"
+    "vue": "^3.5.32"
   }
 }
