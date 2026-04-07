@@ -263,6 +263,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               const node = _node as any
               let scriptSrcNode: { start: number, end: number, value: any } | undefined
               let src: false | string | undefined
+              let registryConfig: Record<string, any> = {}
               // Compute registryKey for proxy config lookup
               let registryKey: string | undefined
               if (fnName !== 'useScript') {
@@ -295,7 +296,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
                 // integration case
                 // Get registry config for this script
-                const registryConfig = options.registryConfig?.[registryKey || ''] || {}
+                registryConfig = options.registryConfig?.[registryKey || ''] || {}
 
                 const fnArg0: Record<string, any> = {}
 
@@ -365,6 +366,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     : undefined
                   let canBundle = !!registryScript?.bundle
                   let forceDownload = false
+                  let explicitBundleInCall = false
                   // useScript
                   if (node.arguments[1]?.type === 'ObjectExpression') {
                     const scriptOptionsArg = node.arguments[1]
@@ -373,6 +375,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       (p: any) => (p.key?.name === 'bundle' || p.key?.value === 'bundle') && p.type === 'Property',
                     )
                     if (bundleProperty && bundleProperty.value.type === 'Literal') {
+                      explicitBundleInCall = true
                       const bundleValue = bundleProperty.value.value
                       if (bundleValue !== true && bundleValue !== 'force' && String(bundleValue) !== 'true') {
                         canBundle = false
@@ -400,7 +403,14 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     return prop.type === 'Property' && prop.key?.name === 'bundle' && prop.value.type === 'Literal'
                   })
                   if (bundleOption) {
+                    explicitBundleInCall = true
                     const bundleValue = bundleOption.value.value
+                    canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
+                    forceDownload = bundleValue === 'force'
+                  }
+                  // Inherit bundle setting from registry config (nuxt.config) when not explicitly set in the call
+                  if (!explicitBundleInCall && registryConfig?.scriptOptions?.bundle !== undefined) {
+                    const bundleValue = registryConfig.scriptOptions.bundle
                     canBundle = bundleValue === true || bundleValue === 'force' || String(bundleValue) === 'true'
                     forceDownload = bundleValue === 'force'
                   }
