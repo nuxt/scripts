@@ -2,26 +2,13 @@
 /// <reference types="google.maps" />
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type { HTMLAttributes, ReservedProps, ShallowRef } from 'vue'
-import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
-import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
-import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
-import { defu } from 'defu'
-import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, watch } from 'vue'
-import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
-
-import { MAP_INJECTION_KEY } from './useGoogleMapsResource'
-
-const DIGITS_ONLY_RE = /^\d+$/
-const DIGITS_PX_RE = /^\d+px$/i
 
 export { MAP_INJECTION_KEY } from './useGoogleMapsResource'
-</script>
 
-<script lang="ts" setup>
-const props = withDefaults(defineProps<{
+export interface ScriptGoogleMapsProps {
   /**
    * Defines the trigger event to load the script.
+   * @default ['mouseenter', 'mouseover', 'mousedown']
    */
   trigger?: ElementScriptTrigger
   /**
@@ -46,19 +33,21 @@ const props = withDefaults(defineProps<{
    */
   region?: string
   /**
-   * Defines the language of the map
+   * Defines the language of the map.
    */
   language?: string
   /**
-   * Defines the version of google maps js API
+   * Defines the version of google maps js API.
    */
   version?: string
   /**
    * Defines the width of the map.
+   * @default 640
    */
   width?: number | string
   /**
-   * Defines the height of the map
+   * Defines the height of the map.
+   * @default 400
    */
   height?: number | string
   /**
@@ -73,49 +62,104 @@ const props = withDefaults(defineProps<{
   mapIds?: { light?: string, dark?: string }
   /**
    * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.
-   * Accepts 'light', 'dark', or a reactive ref.
+   * Accepts 'light' or 'dark'.
    */
   colorMode?: 'light' | 'dark'
-}>(), {
+}
+
+export interface ScriptGoogleMapsExpose {
+  /**
+   * A reference to the loaded Google Maps API, or `undefined` if not yet loaded.
+   */
+  googleMaps: ShallowRef<typeof google.maps | undefined>
+  /**
+   * A reference to the Google Map instance, or `undefined` if not yet initialized.
+   */
+  map: ShallowRef<google.maps.Map | undefined>
+  /**
+   * Utility function to resolve a location query (e.g. "New York, NY") to latitude/longitude coordinates.
+   * Uses a caching mechanism and a server-side proxy to avoid unnecessary client-side API calls.
+   */
+  resolveQueryToLatLng: (query: string) => Promise<google.maps.LatLng | google.maps.LatLngLiteral | undefined>
+  /**
+   * Utility function to dynamically import additional Google Maps libraries (e.g. "marker", "places").
+   * Caches imported libraries for efficient reuse.
+   */
+  importLibrary: {
+    (key: 'marker'): Promise<google.maps.MarkerLibrary>
+    (key: 'places'): Promise<google.maps.PlacesLibrary>
+    (key: 'geometry'): Promise<google.maps.GeometryLibrary>
+    (key: 'drawing'): Promise<google.maps.DrawingLibrary>
+    (key: 'visualization'): Promise<google.maps.VisualizationLibrary>
+    (key: string): Promise<any>
+  }
+}
+
+export interface ScriptGoogleMapsEmits {
+  /**
+   * Fired when the Google Maps instance is fully loaded and ready to use. Provides access to the maps API.
+   */
+  ready: [payload: ScriptGoogleMapsExpose]
+  /**
+   * Fired when the Google Maps script fails to load.
+   */
+  error: []
+}
+
+export interface ScriptGoogleMapsSlots {
+  /**
+   * Default slot for rendering child components (e.g. markers, info windows) that depend on the map being ready.
+   */
+  default?: () => any
+  /**
+   * Slot displayed while the map is loading. Can be used to show a custom loading indicator.
+   */
+  loading?: () => any
+  /**
+   * Slot displayed when the script is awaiting user interaction to load (based on the `trigger` prop).
+   */
+  awaitingLoad?: () => any
+  /**
+   * Slot displayed if the script fails to load.
+   */
+  error?: () => any
+  /**
+   * Slot displayed as a placeholder before the map is ready. Useful for showing a static map or skeleton.
+   */
+  placeholder?: () => any
+}
+</script>
+
+<script lang="ts" setup>
+import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
+import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
+import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
+import { defu } from 'defu'
+import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
+import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
+import { MAP_INJECTION_KEY } from './useGoogleMapsResource'
+
+const props = withDefaults(defineProps<ScriptGoogleMapsProps>(), {
   // @ts-expect-error untyped
   trigger: ['mouseenter', 'mouseover', 'mousedown'],
   width: 640,
   height: 400,
 })
-
-const emits = defineEmits<{
-  /**
-   * Fired when the Google Maps instance is fully loaded and ready to use. Provides access to the maps API.
-   */
-  ready: [e: typeof googleMaps]
-  /**
-   * Fired when the Google Maps script fails to load.
-   */
-  error: []
-}>()
-
-defineSlots<{
-  default?: () => any
-  placeholder?: () => any
-  loading?: () => any
-  awaitingLoad?: () => any
-  error?: () => any
-}>()
+const emits = defineEmits<ScriptGoogleMapsEmits>()
+defineSlots<ScriptGoogleMapsSlots>()
+const DIGITS_ONLY_RE = /^\d+$/
+const DIGITS_PX_RE = /^\d+px$/i
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 const runtimeConfig = useRuntimeConfig()
 
-// Color mode support - try to auto-detect from @nuxtjs/color-mode
-const nuxtApp = tryUseNuxtApp()
-const nuxtColorMode = nuxtApp?.$colorMode as { value: string } | undefined
-
-const currentColorMode = computed(() => {
-  if (props.colorMode)
-    return props.colorMode
-  if (nuxtColorMode?.value)
-    return nuxtColorMode.value === 'dark' ? 'dark' : 'light'
-  return 'light'
+const nuxtColorMode = computed(() => {
+  const value = (tryUseNuxtApp()?.$colorMode as { value: string } | undefined)?.value
+  return value === 'dark' || value === 'light' ? value : undefined
 })
+
+const currentColorMode = computed(() => props.colorMode || nuxtColorMode.value || 'light')
 
 const currentMapId = computed(() => {
   if (!props.mapIds)
@@ -123,7 +167,7 @@ const currentMapId = computed(() => {
   return props.mapIds[currentColorMode.value] || props.mapIds.light || props.mapOptions?.mapId
 })
 
-const mapsApi = ref<typeof google.maps | undefined>()
+const mapsApi = shallowRef<typeof google.maps | undefined>()
 
 if (import.meta.dev) {
   if (!apiKey)
@@ -142,8 +186,8 @@ if (import.meta.dev) {
   }
 }
 
-const rootEl = ref<HTMLElement>()
-const mapEl = ref<HTMLElement>()
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const mapEl = useTemplateRef<HTMLElement>('mapEl')
 
 const centerOverride = ref()
 
@@ -165,7 +209,7 @@ const options = computed(() => {
     zoom: 15,
   })
 })
-const ready = ref(false)
+const isMapReady = ref(false)
 
 const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
 
@@ -198,31 +242,37 @@ async function resolveQueryToLatLng(query: string) {
   }
 
   // Fallback: use Places API client-side
-  // eslint-disable-next-line no-async-promise-executor
-  return new Promise<google.maps.LatLng>(async (resolve, reject) => {
-    if (!mapsApi.value) {
-      await load()
-      // await new promise, watch until mapsApi is set
-      await new Promise<void>((resolve) => {
-        const _ = watch(mapsApi, () => {
-          _()
-          resolve()
-        })
+  if (!mapsApi.value) {
+    await load()
+    // await new promise, watch until mapsApi is set
+    await new Promise<void>((resolve) => {
+      const _ = watch(mapsApi, () => {
+        _()
+        resolve()
       })
-    }
-    const placesService = new mapsApi.value!.places.PlacesService(map.value!)
-    placesService.findPlaceFromQuery({
-      query,
-      fields: ['name', 'geometry'],
-    }, (results, status) => {
-      if (status === 'OK' && results?.[0]?.geometry?.location)
-        return resolve(results[0].geometry.location)
-      return reject(new Error(`No location found for ${query}`))
     })
-  }).then((res) => {
-    queryToLatLngCache.set(query, res)
-    return res
+  }
+
+  const placesService = new mapsApi.value!.places.PlacesService(map.value!)
+  const result = await new Promise<google.maps.LatLng>((resolve, reject) => {
+    placesService.findPlaceFromQuery(
+      {
+        query,
+        fields: ['name', 'geometry'],
+      },
+      (results, status) => {
+        if (status === 'OK' && results?.[0]?.geometry?.location) {
+          resolve(results[0].geometry.location)
+        }
+        else {
+          reject(new Error(`No location found for ${query}`))
+        }
+      },
+    )
   })
+
+  queryToLatLngCache.set(query, result)
+  return result
 }
 
 const libraries = new Map<string, any>()
@@ -254,14 +304,14 @@ function importLibrary<T>(key: string): Promise<T> {
   return cached as Promise<T>
 }
 
-const googleMaps = {
+const googleMaps: ScriptGoogleMapsExpose = {
   googleMaps: mapsApi,
   map,
   resolveQueryToLatLng,
   importLibrary,
-} as const
+}
 
-defineExpose(googleMaps)
+defineExpose<ScriptGoogleMapsExpose>(googleMaps)
 
 // Shared InfoWindow group: only one InfoWindow open at a time within this map
 let activeInfoWindow: google.maps.InfoWindow | undefined
@@ -277,7 +327,7 @@ provide(MAP_INJECTION_KEY, {
 })
 
 onMounted(() => {
-  watch(ready, (v) => {
+  watch(isMapReady, (v) => {
     if (v) {
       emits('ready', googleMaps)
     }
@@ -299,13 +349,13 @@ onMounted(() => {
     if (map.value && zoom != null)
       map.value.setZoom(zoom)
   })
-  watch([() => options.value.center, ready, map], async (next) => {
+  watch([() => options.value.center, isMapReady, map], async (next) => {
     if (!map.value) {
       return
     }
     let center = toRaw(next[0])
     if (center) {
-      if (isLocationQuery(center) && ready.value) {
+      if (isLocationQuery(center) && isMapReady.value) {
         center = await resolveQueryToLatLng(center as string)
       }
       // Skip setCenter if the map is already at the same position to avoid
@@ -334,9 +384,10 @@ onMounted(() => {
     map.value = new mapsApi.value!.Map(mapEl.value!, _options)
     if (center && isLocationQuery(center)) {
       centerOverride.value = await resolveQueryToLatLng(center)
-      map.value?.setCenter(centerOverride.value)
+      if (centerOverride.value)
+        map.value?.setCenter(centerOverride.value)
     }
-    ready.value = true
+    isMapReady.value = true
   })
 })
 
@@ -404,9 +455,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="rootEl" v-bind="rootAttrs">
-    <div v-show="ready" ref="mapEl" :style="{ width: '100%', height: '100%', maxWidth: '100%' }" />
-    <slot v-if="!ready" name="placeholder" />
-    <slot v-if="status !== 'awaitingLoad' && !ready" name="loading">
+    <div v-show="isMapReady" ref="mapEl" :style="{ width: '100%', height: '100%', maxWidth: '100%' }" />
+    <slot v-if="!isMapReady" name="placeholder" />
+    <slot v-if="status !== 'awaitingLoad' && !isMapReady" name="loading">
       <ScriptAriaLoadingIndicator />
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
