@@ -11,9 +11,21 @@ export type ScriptGoogleMapsOverlayPane = 'mapPane' | 'overlayLayer' | 'markerLa
 export interface ScriptGoogleMapsOverlayViewProps {
   /**
    * Geographic position for the overlay. Falls back to parent marker position if omitted.
+   *
+   * Accepts either a plain `LatLngLiteral` (`{ lat, lng }`) or a
+   * `google.maps.LatLng` instance.
    * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView
    */
-  position?: google.maps.LatLngLiteral
+  position?: google.maps.LatLng | google.maps.LatLngLiteral
+  /**
+   * Initial open state for the uncontrolled mode (when `v-model:open` is not
+   * bound). When omitted, the overlay opens on mount, matching v0 behaviour.
+   *
+   * Has no effect when `v-model:open` is used; pass an initial value to the
+   * bound ref instead.
+   * @default true
+   */
+  defaultOpen?: boolean
   /**
    * Anchor point of the overlay relative to its position.
    * @default 'bottom-center'
@@ -80,43 +92,58 @@ export interface ScriptGoogleMapsOverlayViewExpose {
 <script setup lang="ts">
 import { computed, inject, ref, useTemplateRef, watch } from 'vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
-import { defineDeprecatedAlias, MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
+import { defineDeprecatedAlias, MARKER_INJECTION_KEY, normalizeLatLng, useGoogleMapsResource } from './useGoogleMapsResource'
 
 defineOptions({
   inheritAttrs: false,
 })
 
-const props = withDefaults(defineProps<ScriptGoogleMapsOverlayViewProps>(), {
-  anchor: 'bottom-center',
-  pane: 'floatPane',
-  blockMapInteraction: true,
-  panOnOpen: true,
-  hideWhenClustered: true,
-})
-
-defineEmits<ScriptGoogleMapsOverlayViewEmits>()
+const {
+  position,
+  defaultOpen = true,
+  anchor = 'bottom-center',
+  offset,
+  pane = 'floatPane',
+  zIndex,
+  blockMapInteraction = true,
+  panOnOpen = true,
+  hideWhenClustered = true,
+} = defineProps<ScriptGoogleMapsOverlayViewProps>()
 
 defineSlots<ScriptGoogleMapsOverlayViewSlots>()
 
+// Controlled vs uncontrolled open state.
+//   - When the parent binds `v-model:open`, `open` becomes a controlled
+//     model that writes through `emit('update:open', value)`.
+//   - When the parent omits it, `open` is a local ref managed by the
+//     component, seeded from `defaultOpen` (which defaults to `true`,
+//     preserving v0 behaviour where the overlay opens on mount).
+//
+// `defineModel` is used here (rather than reactive prop destructure) because
+// it accepts `default: undefined`, which opts out of Vue's boolean prop
+// coercion that would otherwise turn an unset `open` into `false`. We then
+// seed the local default below if the model is uncontrolled.
 const open = defineModel<boolean>('open', { default: undefined })
+if (open.value === undefined)
+  open.value = defaultOpen ?? true
 
 const markerContext = inject(MARKER_INJECTION_KEY, undefined)
 const markerClustererContext = inject(MARKER_CLUSTERER_INJECTION_KEY, undefined)
 
-// Read position fresh each call — NOT a computed, because Google Maps object
-// internal state (marker.getPosition()) is invisible to Vue's reactivity.
-// A computed would cache stale coordinates after marker drag.
+// Read position fresh each call: NOT a computed, because Google Maps object
+// internal state (marker.getPosition()) is invisible to Vue's reactivity. A
+// computed would cache stale coordinates after marker drag.
+//
+// `position` may be either a `LatLngLiteral` or a `google.maps.LatLng` instance,
+// so we normalize through `normalizeLatLng` (which checks for callable `.lat`
+// rather than relying on `instanceof`, since mocked APIs in tests return plain
+// objects).
 function getResolvedPosition(): google.maps.LatLngLiteral | undefined {
-  if (props.position)
-    return props.position
-  if (markerContext?.advancedMarkerElement.value) {
-    const markerPosition = markerContext.advancedMarkerElement.value.position
-    if (markerPosition) {
-      return markerPosition instanceof google.maps.LatLng
-        ? { lat: markerPosition.lat(), lng: markerPosition.lng() }
-        : { lat: markerPosition.lat, lng: markerPosition.lng }
-    }
-  }
+  if (position)
+    return normalizeLatLng(position)
+  const markerPosition = markerContext?.advancedMarkerElement.value?.position
+  if (markerPosition)
+    return normalizeLatLng(markerPosition)
   return undefined
 }
 
@@ -180,7 +207,7 @@ function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: numb
 const overlay = useGoogleMapsResource<google.maps.OverlayView>({
   // ready condition accesses .value on ShallowRefs — tracked by whenever() in useGoogleMapsResource
   ready: () => !!overlayContent.value
-    && !!(props.position || markerContext?.advancedMarkerElement.value),
+    && !!(position || markerContext?.advancedMarkerElement.value),
   create({ mapsApi, map }) {
     const el = overlayContent.value!
 
@@ -188,13 +215,13 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
       override onAdd() {
         const panes = this.getPanes()
         if (panes) {
-          panes[props.pane].appendChild(el)
-          if (props.blockMapInteraction)
+          panes[pane].appendChild(el)
+          if (blockMapInteraction)
             mapsApi.OverlayView.preventMapHitsAndGesturesFrom(el)
         }
-        if (props.panOnOpen) {
+        if (panOnOpen) {
           // Wait for draw() to position the element, then pan
-          const padding = typeof props.panOnOpen === 'number' ? props.panOnOpen : 40
+          const padding = typeof panOnOpen === 'number' ? panOnOpen : 40
           requestAnimationFrame(() => {
             panMapToFitOverlay(el, map, padding)
           })
@@ -209,8 +236,8 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
           return
         }
 
-        const position = getResolvedPosition()
-        if (!position) {
+        const resolvedPosition = getResolvedPosition()
+        if (!resolvedPosition) {
           isPositioned.value = false
           hideElement(el)
           return
@@ -222,7 +249,7 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
           return
         }
         const pos = projection.fromLatLngToDivPixel(
-          new mapsApi.LatLng(position.lat, position.lng),
+          new mapsApi.LatLng(resolvedPosition.lat, resolvedPosition.lng),
         )
         if (!pos) {
           isPositioned.value = false
@@ -231,11 +258,11 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
         }
 
         el.style.position = 'absolute'
-        el.style.left = `${pos.x + (props.offset?.x ?? 0)}px`
-        el.style.top = `${pos.y + (props.offset?.y ?? 0)}px`
-        el.style.transform = ANCHOR_TRANSFORMS[props.anchor]
-        if (props.zIndex !== undefined)
-          el.style.zIndex = String(props.zIndex)
+        el.style.left = `${pos.x + (offset?.x ?? 0)}px`
+        el.style.top = `${pos.y + (offset?.y ?? 0)}px`
+        el.style.transform = ANCHOR_TRANSFORMS[anchor]
+        if (zIndex !== undefined)
+          el.style.zIndex = String(zIndex)
         el.style.visibility = 'visible'
         el.style.pointerEvents = 'auto'
         setDataState(el, 'open')
@@ -279,24 +306,25 @@ if (markerContext) {
   watch(
     () => {
       const markerPosition = markerContext.advancedMarkerElement.value?.position
-      if (!markerPosition)
-        return undefined
-      return markerPosition instanceof google.maps.LatLng
-        ? { lat: markerPosition.lat(), lng: markerPosition.lng() }
-        : { lat: markerPosition.lat, lng: markerPosition.lng }
+      return markerPosition ? normalizeLatLng(markerPosition) : undefined
     },
     () => { overlay.value?.draw() },
   )
 }
 
-// Reposition on prop changes (draw() is designed to be called repeatedly)
-// Only watches explicit props — marker position changes are handled by event listeners above
+// Reposition on prop changes (draw() is designed to be called repeatedly).
+// Only watches explicit props; marker position changes are handled by the
+// listeners above. `position` is normalized so that callable-coordinate
+// LatLng instances produce a stable identity in the watch source.
 watch(
-  () => [props.position?.lat, props.position?.lng, props.offset?.x, props.offset?.y, props.zIndex, props.anchor],
+  () => {
+    const p = position ? normalizeLatLng(position) : undefined
+    return [p?.lat, p?.lng, offset?.x, offset?.y, zIndex, anchor]
+  },
   () => { overlay.value?.draw() },
 )
 
-// v-model:open — toggle visibility without remounting the overlay
+// Toggle visibility without remounting the overlay when `open` changes.
 watch(() => open.value, () => {
   if (!overlay.value)
     return
@@ -304,7 +332,7 @@ watch(() => open.value, () => {
 })
 
 // Pane or blockMapInteraction change requires remount (setMap cycles onRemove + onAdd + draw)
-watch([() => props.pane, () => props.blockMapInteraction], () => {
+watch([() => pane, () => blockMapInteraction], () => {
   if (overlay.value) {
     const map = overlay.value.getMap()
     overlay.value.setMap(null)
@@ -318,7 +346,7 @@ if (markerClustererContext && markerContext) {
   watch(
     () => markerClustererContext.clusteringVersion.value,
     () => {
-      if (!props.hideWhenClustered || open.value === false)
+      if (!hideWhenClustered || open.value === false)
         return
       const clusterer = markerClustererContext.markerClusterer.value as any
       if (!clusterer?.clusters)
