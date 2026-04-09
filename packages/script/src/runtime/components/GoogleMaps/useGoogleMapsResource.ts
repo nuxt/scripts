@@ -42,6 +42,25 @@ export interface GoogleMapsResourceContext {
 }
 
 /**
+ * Normalizes a `LatLng | LatLngLiteral` value into a plain `LatLngLiteral`.
+ *
+ * Google's `LatLng` exposes coordinates via `.lat()`/`.lng()` methods, while
+ * `LatLngLiteral` exposes them as plain `lat`/`lng` numeric properties. The
+ * runtime distinguishes them by checking whether `.lat` is callable; this is
+ * preferred over `instanceof google.maps.LatLng` because mocked APIs in tests
+ * return plain objects rather than real `LatLng` instances.
+ */
+export function normalizeLatLng(
+  p: google.maps.LatLng | google.maps.LatLngLiteral,
+): google.maps.LatLngLiteral {
+  if (typeof p.lat === 'function') {
+    const ll = p as google.maps.LatLng
+    return { lat: ll.lat(), lng: ll.lng() }
+  }
+  return { lat: p.lat as number, lng: p.lng as number }
+}
+
+/**
  * Defines a deprecated property alias on an exposed object. Reading the alias
  * returns the value of the canonical key and emits a one-shot
  * `console.warn` (so repeated reads don't spam the console).
