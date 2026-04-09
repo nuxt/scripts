@@ -401,13 +401,9 @@ describe('waitForMapsReady', () => {
       return Promise.resolve()
     })
 
-    // Race against a timeout to detect the hang
-    await expect(
-      Promise.race([
-        waitForMapsReady({ mapsApi, map, status, load }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('hang')), 100)),
-      ]),
-    ).resolves.toBeUndefined()
+    // The original race would hang forever — vitest's per-test timeout
+    // is the deterministic backstop, no wall-clock setTimeout needed.
+    await expect(waitForMapsReady({ mapsApi, map, status, load })).resolves.toBeUndefined()
 
     expect(load).toHaveBeenCalledOnce()
   })
@@ -465,16 +461,18 @@ describe('waitForMapsReady', () => {
     const status = ref<string>('loading')
     const load = vi.fn(() => Promise.resolve())
 
-    const promise = waitForMapsReady({ mapsApi, map, status, load })
+    let settled = false
+    const promise = waitForMapsReady({ mapsApi, map, status, load }).then(() => {
+      settled = true
+    })
 
-    // Race against a short timeout: should NOT resolve yet
-    const racedEarly = await Promise.race([
-      promise.then(() => 'resolved'),
-      new Promise(resolve => setTimeout(resolve, 30, 'pending')),
-    ])
-    expect(racedEarly).toBe('pending')
+    // Flush microtasks: settlement should not happen while map is undefined
+    await nextTick()
+    await nextTick()
+    expect(settled).toBe(false)
 
     map.value = {}
     await expect(promise).resolves.toBeUndefined()
+    expect(settled).toBe(true)
   })
 })
