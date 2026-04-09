@@ -45,33 +45,32 @@ function close(id: number) {
         @click="toggle(place.id)"
       >
         <ScriptGoogleMapsOverlayView
+          class="overlay-popup"
           :open="isOpen(place.id)"
           anchor="bottom-center"
           :offset="{ x: 0, y: -50 }"
           @update:open="(v: boolean) => { if (!v) close(place.id) }"
         >
-            <div class="overlay-popup">
-              <div class="flex items-start justify-between gap-2">
-                <h3 class="text-sm font-semibold text-gray-900">
-                  {{ place.name }}
-                </h3>
-                <button
-                  class="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  @click.stop="close(place.id)"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-              <div class="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                <span class="font-medium text-yellow-500">★ {{ place.rating }}</span>
-                <span>({{ place.reviews }} reviews)</span>
-              </div>
-              <p class="mt-2 text-xs leading-relaxed text-gray-600">
-                {{ place.desc }}
-              </p>
-            </div>
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="text-sm font-semibold text-gray-900">
+              {{ place.name }}
+            </h3>
+            <button
+              class="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              @click.stop="close(place.id)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <div class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+            <span class="font-medium text-yellow-500">★ {{ place.rating }}</span>
+            <span>({{ place.reviews }} reviews)</span>
+          </div>
+          <p class="mt-2 text-xs leading-relaxed text-gray-600">
+            {{ place.desc }}
+          </p>
         </ScriptGoogleMapsOverlayView>
       </ScriptGoogleMapsMarker>
     </ScriptGoogleMaps>
@@ -79,7 +78,13 @@ function close(id: number) {
 </template>
 
 <style scoped>
-.overlay-popup {
+/*
+ * `.overlay-popup` is forwarded onto the OverlayView's internal content div
+ * (via `v-bind="$attrs"`). Scoped styles need `:deep()` to reach across the
+ * component boundary, since the rendered element belongs to the
+ * `<ScriptGoogleMapsOverlayView>` component, not this page.
+ */
+:deep(.overlay-popup) {
   width: 16rem;
   border-radius: 0.75rem;
   background: white;
@@ -87,11 +92,11 @@ function close(id: number) {
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
-.overlay-popup[data-state="open"] {
+:deep(.overlay-popup[data-state="open"]) {
   animation: overlayIn 200ms ease-out forwards;
 }
 
-.overlay-popup[data-state="closed"] {
+:deep(.overlay-popup[data-state="closed"]) {
   animation: overlayOut 150ms ease-in forwards;
 }
 

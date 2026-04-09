@@ -90,7 +90,7 @@ export interface ScriptGoogleMapsOverlayViewExpose {
 </script>
 
 <script setup lang="ts">
-import { computed, inject, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, shallowRef, useTemplateRef, watch } from 'vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
 import { defineDeprecatedAlias, MARKER_INJECTION_KEY, normalizeLatLng, useGoogleMapsResource } from './useGoogleMapsResource'
 
@@ -159,30 +159,45 @@ const ANCHOR_TRANSFORMS: Record<ScriptGoogleMapsOverlayAnchor, string> = {
   'right-center': 'translate(-100%, -50%)',
 }
 
-const overlayContent = useTemplateRef('overlay-content')
+const overlayAnchor = useTemplateRef('overlay-anchor')
 
-// Reactive open/closed state for CSS animations via data-state attribute.
-// Tracks whether the overlay content is positioned and should be visually open.
-const isPositioned = ref(false)
-const dataState = computed(() => isPositioned.value ? 'open' : 'closed')
+// Reactive pixel position written by `draw()`. The template style binding
+// on the anchor element reads it, so position updates flow through Vue's
+// reactivity instead of imperative `el.style.left/top` writes.
+const overlayPosition = shallowRef<{ x: number, y: number } | undefined>(undefined)
+
+// `dataState` reflects the visible/hidden state of the overlay. It is bound
+// directly on the content element so CSS animations targeting `[data-state]`
+// react without any imperative DOM writes.
+const dataState = computed<'open' | 'closed'>(() =>
+  open.value !== false && overlayPosition.value !== undefined ? 'open' : 'closed',
+)
+
+// Computed style for the anchor element. Vue patches the moved DOM node via
+// this binding even after Google Maps has reparented it into a pane.
+const overlayStyle = computed<Record<string, string | undefined>>(() => {
+  const visible = open.value !== false && overlayPosition.value !== undefined
+  if (!visible) {
+    return {
+      position: 'absolute',
+      visibility: 'hidden',
+      pointerEvents: 'none',
+    }
+  }
+  const { x, y } = overlayPosition.value!
+  return {
+    position: 'absolute',
+    left: `${x + (offset?.x ?? 0)}px`,
+    top: `${y + (offset?.y ?? 0)}px`,
+    transform: ANCHOR_TRANSFORMS[anchor],
+    zIndex: zIndex !== undefined ? String(zIndex) : undefined,
+    visibility: 'visible',
+    pointerEvents: 'auto',
+  }
+})
 
 // Track all event listeners for clean teardown
 const listeners: google.maps.MapsEventListener[] = []
-
-function setDataState(el: HTMLElement, state: 'open' | 'closed') {
-  el.dataset.state = state
-  // Propagate to the slot's root element imperatively (Vue template bindings
-  // don't reliably patch elements that have been moved to Google Maps panes)
-  const child = el.firstElementChild as HTMLElement | null
-  if (child)
-    child.dataset.state = state
-}
-
-function hideElement(el: HTMLElement) {
-  el.style.visibility = 'hidden'
-  el.style.pointerEvents = 'none'
-  setDataState(el, 'closed')
-}
 
 function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: number) {
   const child = el.firstElementChild
@@ -204,87 +219,76 @@ function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: numb
     map.panBy(panX, panY)
 }
 
-const overlay = useGoogleMapsResource<google.maps.OverlayView>({
-  // ready condition accesses .value on ShallowRefs — tracked by whenever() in useGoogleMapsResource
-  ready: () => !!overlayContent.value
-    && !!(position || markerContext?.advancedMarkerElement.value),
-  create({ mapsApi, map }) {
-    const el = overlayContent.value!
-
-    class CustomOverlay extends mapsApi.OverlayView {
-      override onAdd() {
-        const panes = this.getPanes()
-        if (panes) {
-          panes[pane].appendChild(el)
-          if (blockMapInteraction)
-            mapsApi.OverlayView.preventMapHitsAndGesturesFrom(el)
-        }
-        if (panOnOpen) {
-          // Wait for draw() to position the element, then pan
-          const padding = typeof panOnOpen === 'number' ? panOnOpen : 40
-          requestAnimationFrame(() => {
-            panMapToFitOverlay(el, map, padding)
-          })
-        }
+// Factory that builds the OverlayView subclass. Lifted out of `create()`
+// so the create callback stays focused on wiring (instantiation, listeners).
+// The class still has to extend `mapsApi.OverlayView`, which is only
+// available after the script loads, so this stays a function rather than
+// a top-level class declaration.
+function makeOverlayClass(mapsApi: typeof google.maps, map: google.maps.Map) {
+  return class CustomOverlay extends mapsApi.OverlayView {
+    override onAdd() {
+      const panes = this.getPanes()
+      const el = overlayAnchor.value
+      if (panes && el) {
+        panes[pane].appendChild(el)
+        if (blockMapInteraction)
+          mapsApi.OverlayView.preventMapHitsAndGesturesFrom(el)
       }
-
-      override draw() {
-        // v-model:open support: hide when explicitly closed
-        if (open.value === false) {
-          isPositioned.value = false
-          hideElement(el)
-          return
-        }
-
-        const resolvedPosition = getResolvedPosition()
-        if (!resolvedPosition) {
-          isPositioned.value = false
-          hideElement(el)
-          return
-        }
-        const projection = this.getProjection()
-        if (!projection) {
-          isPositioned.value = false
-          hideElement(el)
-          return
-        }
-        const pos = projection.fromLatLngToDivPixel(
-          new mapsApi.LatLng(resolvedPosition.lat, resolvedPosition.lng),
-        )
-        if (!pos) {
-          isPositioned.value = false
-          hideElement(el)
-          return
-        }
-
-        el.style.position = 'absolute'
-        el.style.left = `${pos.x + (offset?.x ?? 0)}px`
-        el.style.top = `${pos.y + (offset?.y ?? 0)}px`
-        el.style.transform = ANCHOR_TRANSFORMS[anchor]
-        if (zIndex !== undefined)
-          el.style.zIndex = String(zIndex)
-        el.style.visibility = 'visible'
-        el.style.pointerEvents = 'auto'
-        setDataState(el, 'open')
-        isPositioned.value = true
-      }
-
-      override onRemove() {
-        el.parentNode?.removeChild(el)
+      if (panOnOpen) {
+        // Wait for draw() to position the element, then pan
+        const padding = typeof panOnOpen === 'number' ? panOnOpen : 40
+        requestAnimationFrame(() => {
+          if (overlayAnchor.value)
+            panMapToFitOverlay(overlayAnchor.value, map, padding)
+        })
       }
     }
 
-    // Prevent flash: hide until first draw() positions content
-    el.style.visibility = 'hidden'
-    el.style.pointerEvents = 'none'
+    override draw() {
+      if (open.value === false) {
+        overlayPosition.value = undefined
+        return
+      }
+      const resolvedPosition = getResolvedPosition()
+      if (!resolvedPosition) {
+        overlayPosition.value = undefined
+        return
+      }
+      const projection = this.getProjection()
+      if (!projection) {
+        overlayPosition.value = undefined
+        return
+      }
+      const pos = projection.fromLatLngToDivPixel(
+        new mapsApi.LatLng(resolvedPosition.lat, resolvedPosition.lng),
+      )
+      if (!pos) {
+        overlayPosition.value = undefined
+        return
+      }
+      overlayPosition.value = { x: pos.x, y: pos.y }
+    }
 
+    override onRemove() {
+      const el = overlayAnchor.value
+      el?.parentNode?.removeChild(el)
+    }
+  }
+}
+
+const overlay = useGoogleMapsResource<google.maps.OverlayView>({
+  // ready condition accesses .value on ShallowRefs — tracked by whenever() in useGoogleMapsResource
+  ready: () => !!overlayAnchor.value
+    && !!(position || markerContext?.advancedMarkerElement.value),
+  create({ mapsApi, map }) {
+    const CustomOverlay = makeOverlayClass(mapsApi, map)
     const ov = new CustomOverlay()
     ov.setMap(map)
 
-    // Follow parent marker position changes
+    // Follow parent marker position changes. AdvancedMarkerElement fires
+    // `drag` continuously during drag, so the overlay tracks live.
     if (markerContext?.advancedMarkerElement.value) {
       const ame = markerContext.advancedMarkerElement.value
-      // AdvancedMarkerElement fires drag continuously during drag
       listeners.push(
         ame.addListener('drag', () => ov.draw()),
         ame.addListener('dragend', () => ov.draw()),
@@ -386,8 +390,20 @@ defineExpose<ScriptGoogleMapsOverlayViewExpose>(exposed)
 
 <template>
   <div style="display: none;">
-    <div ref="overlay-content" :data-state="dataState" v-bind="$attrs">
-      <slot />
+    <!--
+      Two-element structure:
+        - `overlay-anchor` is moved into a Google Maps pane on `onAdd()`. Its
+          inline style is reactively bound to `overlayStyle`, so position
+          updates from `draw()` flow through Vue's patcher even after the node
+          has been reparented out of the component tree.
+        - `overlay-content` carries `data-state`, attribute-based animations,
+          and forwards parent attrs (e.g. `class`) so consumers can target it
+          directly with `[data-state]` selectors.
+    -->
+    <div ref="overlay-anchor" :style="overlayStyle">
+      <div :data-state="dataState" v-bind="$attrs">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
