@@ -63,6 +63,14 @@ export interface ScriptGoogleMapsOverlayViewSlots {
 
 export interface ScriptGoogleMapsOverlayViewExpose {
   /** The underlying `OverlayView` instance. */
+  overlayView: ShallowRef<google.maps.OverlayView | undefined>
+  /**
+   * The underlying `OverlayView` instance.
+   *
+   * @deprecated Use `overlayView` instead. The `overlay` alias will be
+   * removed in a future major version.
+   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
+   */
   overlay: ShallowRef<google.maps.OverlayView | undefined>
   /** The current data-state of the overlay, either 'open' or 'closed'. */
   dataState: Readonly<ShallowRef<'open' | 'closed'>>
@@ -72,7 +80,7 @@ export interface ScriptGoogleMapsOverlayViewExpose {
 <script setup lang="ts">
 import { computed, inject, ref, useTemplateRef, watch } from 'vue'
 import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
-import { MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
+import { defineDeprecatedAlias, MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
 
 defineOptions({
   inheritAttrs: false,
@@ -327,7 +335,25 @@ if (markerClustererContext && markerContext) {
   )
 }
 
-defineExpose<ScriptGoogleMapsOverlayViewExpose>({ overlay, dataState })
+const exposed: ScriptGoogleMapsOverlayViewExpose = {
+  overlayView: overlay,
+  // Plain alias for production. In dev, replaced below with a getter that
+  // emits a one-shot deprecation warning. Both forms return the same
+  // shallow ref as `overlayView`.
+  overlay,
+  dataState,
+}
+
+if (import.meta.dev) {
+  defineDeprecatedAlias(
+    exposed,
+    'overlay',
+    'overlayView',
+    '[nuxt-scripts] <ScriptGoogleMapsOverlayView> expose key "overlay" is deprecated; use "overlayView" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+  )
+}
+
+defineExpose<ScriptGoogleMapsOverlayViewExpose>(exposed)
 </script>
 
 <template>

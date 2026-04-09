@@ -78,7 +78,17 @@ export interface ScriptGoogleMapsProps {
 
 export interface ScriptGoogleMapsExpose {
   /**
-   * A reference to the loaded Google Maps API, or `undefined` if not yet loaded.
+   * A reference to the loaded Google Maps API namespace (`google.maps`), or
+   * `undefined` if not yet loaded.
+   */
+  mapsApi: ShallowRef<typeof google.maps | undefined>
+  /**
+   * A reference to the loaded Google Maps API namespace, or `undefined` if not
+   * yet loaded.
+   *
+   * @deprecated Use `mapsApi` instead. The `googleMaps` alias will be removed
+   * in a future major version.
+   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
    */
   googleMaps: ShallowRef<typeof google.maps | undefined>
   /**
@@ -147,7 +157,7 @@ import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
-import { MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
+import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 
 const props = withDefaults(defineProps<ScriptGoogleMapsProps>(), {
   // @ts-expect-error untyped
@@ -315,14 +325,27 @@ function importLibrary<T>(key: string): Promise<T> {
   return cached as Promise<T>
 }
 
-const googleMaps: ScriptGoogleMapsExpose = {
+const exposed: ScriptGoogleMapsExpose = {
+  mapsApi,
+  // Plain alias for production. In dev, replaced below with a getter that
+  // emits a one-shot deprecation warning. Both forms return the same
+  // shallow ref as `mapsApi`.
   googleMaps: mapsApi,
   map,
   resolveQueryToLatLng,
   importLibrary,
 }
 
-defineExpose<ScriptGoogleMapsExpose>(googleMaps)
+if (import.meta.dev) {
+  defineDeprecatedAlias(
+    exposed,
+    'googleMaps',
+    'mapsApi',
+    '[nuxt-scripts] <ScriptGoogleMaps> expose key "googleMaps" is deprecated; use "mapsApi" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+  )
+}
+
+defineExpose<ScriptGoogleMapsExpose>(exposed)
 
 // Shared InfoWindow group: only one InfoWindow open at a time within this map
 let activeInfoWindow: google.maps.InfoWindow | undefined
@@ -340,7 +363,7 @@ provide(MAP_INJECTION_KEY, {
 onMounted(() => {
   watch(isMapReady, (v) => {
     if (v) {
-      emits('ready', googleMaps)
+      emits('ready', exposed)
     }
   })
   watch(status, (v) => {

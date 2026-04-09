@@ -4,8 +4,8 @@ import type { MocksType } from './__helpers__/google-maps-test-utils'
  */
 import { defu } from 'defu'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
-import { warnDeprecatedTopLevelMapProps } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
+import { ref, shallowRef } from 'vue'
+import { defineDeprecatedAlias, warnDeprecatedTopLevelMapProps } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import {
 
   simulateAdvancedMarkerLifecycle,
@@ -504,6 +504,144 @@ describe('scriptGoogleMaps top-level center/zoom deprecation', () => {
       })
 
       expect(merged.center).toEqual({ lat: 99, lng: 99 })
+    })
+  })
+})
+
+describe('defineDeprecatedAlias', () => {
+  // Backs the `googleMaps` → `mapsApi` and `overlay` → `overlayView` renames
+  // on the exposed objects of `<ScriptGoogleMaps>` and
+  // `<ScriptGoogleMapsOverlayView>`. Reading the alias must:
+  //   - return the same value as the canonical key (so existing call sites
+  //     keep working)
+  //   - emit a one-shot dev-mode console.warn (no spam on repeated reads)
+
+  let warnSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    warnSpy.mockRestore()
+  })
+
+  describe('googleMaps alias for mapsApi', () => {
+    function createMapExposed() {
+      const mapsApi = shallowRef<any>({ Marker: class {} })
+      const exposed: any = {
+        mapsApi,
+        googleMaps: mapsApi,
+      }
+      defineDeprecatedAlias(
+        exposed,
+        'googleMaps',
+        'mapsApi',
+        '[nuxt-scripts] <ScriptGoogleMaps> expose key "googleMaps" is deprecated; use "mapsApi" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+      )
+      return { exposed, mapsApi }
+    }
+
+    it('returns the same shallow ref as mapsApi', () => {
+      const { exposed, mapsApi } = createMapExposed()
+
+      expect(exposed.googleMaps).toBe(mapsApi)
+      expect(exposed.googleMaps).toBe(exposed.mapsApi)
+    })
+
+    it('fires a dev warning on first read', () => {
+      const { exposed } = createMapExposed()
+
+      // Touch the alias
+      void exposed.googleMaps
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"googleMaps" is deprecated')
+      expect(warnSpy.mock.calls[0]![0]).toContain('mapsApi')
+      expect(warnSpy.mock.calls[0]![0]).toContain('migration-guide/v0-to-v1')
+    })
+
+    it('does not spam the warning on repeated reads', () => {
+      const { exposed } = createMapExposed()
+
+      void exposed.googleMaps
+      void exposed.googleMaps
+      void exposed.googleMaps
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('reading the canonical mapsApi key does not warn', () => {
+      const { exposed } = createMapExposed()
+
+      void exposed.mapsApi
+      void exposed.mapsApi
+
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('alias points to live ref (updates with mapsApi changes)', () => {
+      const { exposed, mapsApi } = createMapExposed()
+
+      // Both keys should reflect the new value via the underlying ShallowRef
+      mapsApi.value = { newValue: true }
+
+      expect(exposed.mapsApi.value).toEqual({ newValue: true })
+      expect(exposed.googleMaps.value).toEqual({ newValue: true })
+    })
+  })
+
+  describe('overlay alias for overlayView', () => {
+    function createOverlayExposed() {
+      const overlayView = shallowRef<any>({ setMap: vi.fn() })
+      const exposed: any = {
+        overlayView,
+        overlay: overlayView,
+        dataState: shallowRef<'open' | 'closed'>('closed'),
+      }
+      defineDeprecatedAlias(
+        exposed,
+        'overlay',
+        'overlayView',
+        '[nuxt-scripts] <ScriptGoogleMapsOverlayView> expose key "overlay" is deprecated; use "overlayView" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+      )
+      return { exposed, overlayView }
+    }
+
+    it('returns the same shallow ref as overlayView', () => {
+      const { exposed, overlayView } = createOverlayExposed()
+
+      expect(exposed.overlay).toBe(overlayView)
+      expect(exposed.overlay).toBe(exposed.overlayView)
+    })
+
+    it('fires a dev warning on first read', () => {
+      const { exposed } = createOverlayExposed()
+
+      void exposed.overlay
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"overlay" is deprecated')
+      expect(warnSpy.mock.calls[0]![0]).toContain('overlayView')
+    })
+
+    it('does not spam the warning on repeated reads', () => {
+      const { exposed } = createOverlayExposed()
+
+      void exposed.overlay
+      void exposed.overlay
+      void exposed.overlay
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('reading the canonical overlayView key does not warn', () => {
+      const { exposed } = createOverlayExposed()
+
+      void exposed.overlayView
+      void exposed.dataState
+
+      expect(warnSpy).not.toHaveBeenCalled()
     })
   })
 })

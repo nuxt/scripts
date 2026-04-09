@@ -42,6 +42,37 @@ export interface GoogleMapsResourceContext {
 }
 
 /**
+ * Defines a deprecated property alias on an exposed object. Reading the alias
+ * returns the value of the canonical key and emits a one-shot
+ * `console.warn` (so repeated reads don't spam the console).
+ *
+ * Used to provide backward-compatible renames on `defineExpose` payloads
+ * without breaking existing template-ref consumers. Call sites should wrap
+ * this in `if (import.meta.dev)` so production builds skip the getter
+ * entirely and the alias stays a plain data property.
+ */
+export function defineDeprecatedAlias<T extends object, K extends keyof T>(
+  target: T,
+  alias: string,
+  canonicalKey: K,
+  message: string,
+): T {
+  let warned = false
+  Object.defineProperty(target, alias, {
+    get() {
+      if (!warned) {
+        warned = true
+        console.warn(message)
+      }
+      return target[canonicalKey]
+    },
+    enumerable: true,
+    configurable: true,
+  })
+  return target
+}
+
+/**
  * Emits dev-mode deprecation warnings for the legacy top-level `center` and
  * `zoom` props on `<ScriptGoogleMaps>`. Both props still work, but new code
  * should pass them via `mapOptions` instead.
