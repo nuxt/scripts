@@ -1,20 +1,14 @@
-<script setup lang="ts">
-import { computed, inject, ref, useTemplateRef, watch } from 'vue'
-import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
-import { MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
+<script lang="ts">
+import type { ShallowRef } from 'vue'
 
-type OverlayAnchor = 'center' | 'top-left' | 'top-center' | 'top-right'
+export type ScriptGoogleMapsOverlayAnchor = 'center' | 'top-left' | 'top-center' | 'top-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right'
   | 'left-center' | 'right-center'
 
-type OverlayPane = 'mapPane' | 'overlayLayer' | 'markerLayer'
+export type ScriptGoogleMapsOverlayPane = 'mapPane' | 'overlayLayer' | 'markerLayer'
   | 'overlayMouseTarget' | 'floatPane'
 
-defineOptions({
-  inheritAttrs: false,
-})
-
-const props = withDefaults(defineProps<{
+export interface ScriptGoogleMapsOverlayViewProps {
   /**
    * Geographic position for the overlay. Falls back to parent marker position if omitted.
    * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#OverlayView
@@ -24,7 +18,7 @@ const props = withDefaults(defineProps<{
    * Anchor point of the overlay relative to its position.
    * @default 'bottom-center'
    */
-  anchor?: OverlayAnchor
+  anchor?: ScriptGoogleMapsOverlayAnchor
   /**
    * Pixel offset from the anchor position.
    */
@@ -34,7 +28,7 @@ const props = withDefaults(defineProps<{
    * @default 'floatPane'
    * @see https://developers.google.com/maps/documentation/javascript/reference/overlay-view#MapPanes
    */
-  pane?: OverlayPane
+  pane?: ScriptGoogleMapsOverlayPane
   /**
    * CSS z-index for the overlay element.
    */
@@ -56,7 +50,35 @@ const props = withDefaults(defineProps<{
    * @default true
    */
   hideWhenClustered?: boolean
-}>(), {
+}
+
+export interface ScriptGoogleMapsOverlayViewEmits {
+  /** Event handler called when the open state of the overlay view changes. */
+  'update:open': [value: boolean]
+}
+
+export interface ScriptGoogleMapsOverlayViewSlots {
+  default?: () => any
+}
+
+export interface ScriptGoogleMapsOverlayViewExpose {
+  /** The underlying `OverlayView` instance. */
+  overlay: ShallowRef<google.maps.OverlayView | undefined>
+  /** The current data-state of the overlay, either 'open' or 'closed'. */
+  dataState: Readonly<ShallowRef<'open' | 'closed'>>
+}
+</script>
+
+<script setup lang="ts">
+import { computed, inject, ref, useTemplateRef, watch } from 'vue'
+import { MARKER_CLUSTERER_INJECTION_KEY } from './types'
+import { MARKER_INJECTION_KEY, useGoogleMapsResource } from './useGoogleMapsResource'
+
+defineOptions({
+  inheritAttrs: false,
+})
+
+const props = withDefaults(defineProps<ScriptGoogleMapsOverlayViewProps>(), {
   anchor: 'bottom-center',
   pane: 'floatPane',
   blockMapInteraction: true,
@@ -64,9 +86,9 @@ const props = withDefaults(defineProps<{
   hideWhenClustered: true,
 })
 
-defineSlots<{
-  default?: () => any
-}>()
+defineEmits<ScriptGoogleMapsOverlayViewEmits>()
+
+defineSlots<ScriptGoogleMapsOverlayViewSlots>()
 
 const open = defineModel<boolean>('open', { default: undefined })
 
@@ -80,18 +102,17 @@ function getResolvedPosition(): google.maps.LatLngLiteral | undefined {
   if (props.position)
     return props.position
   if (markerContext?.advancedMarkerElement.value) {
-    const pos = markerContext.advancedMarkerElement.value.position
-    if (pos) {
-      // position can be LatLng or LatLngLiteral
-      if ('lat' in pos && typeof pos.lat === 'function')
-        return { lat: (pos as google.maps.LatLng).lat(), lng: (pos as google.maps.LatLng).lng() }
-      return pos as google.maps.LatLngLiteral
+    const markerPosition = markerContext.advancedMarkerElement.value.position
+    if (markerPosition) {
+      return markerPosition instanceof google.maps.LatLng
+        ? { lat: markerPosition.lat(), lng: markerPosition.lng() }
+        : { lat: markerPosition.lat, lng: markerPosition.lng }
     }
   }
   return undefined
 }
 
-const ANCHOR_TRANSFORMS: Record<OverlayAnchor, string> = {
+const ANCHOR_TRANSFORMS: Record<ScriptGoogleMapsOverlayAnchor, string> = {
   'center': 'translate(-50%, -50%)',
   'top-left': 'translate(0, 0)',
   'top-center': 'translate(-50%, 0)',
@@ -249,12 +270,12 @@ const overlay = useGoogleMapsResource<google.maps.OverlayView>({
 if (markerContext) {
   watch(
     () => {
-      const pos = markerContext.advancedMarkerElement.value?.position
-      if (!pos)
+      const markerPosition = markerContext.advancedMarkerElement.value?.position
+      if (!markerPosition)
         return undefined
-      if ('lat' in pos && typeof pos.lat === 'function')
-        return { lat: (pos as google.maps.LatLng).lat(), lng: (pos as google.maps.LatLng).lng() }
-      return pos as google.maps.LatLngLiteral
+      return markerPosition instanceof google.maps.LatLng
+        ? { lat: markerPosition.lat(), lng: markerPosition.lng() }
+        : { lat: markerPosition.lat, lng: markerPosition.lng }
     },
     () => { overlay.value?.draw() },
   )
@@ -306,7 +327,7 @@ if (markerClustererContext && markerContext) {
   )
 }
 
-defineExpose({ overlay, dataState })
+defineExpose<ScriptGoogleMapsOverlayViewExpose>({ overlay, dataState })
 </script>
 
 <template>
