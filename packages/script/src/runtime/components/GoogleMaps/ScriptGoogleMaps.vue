@@ -219,12 +219,11 @@ function isLocationQuery(s: string | any) {
 
 const queryToLatLngCache = new Map<string, google.maps.LatLng | google.maps.LatLngLiteral>()
 
-async function resolveQueryToLatLng(query: string): Promise<google.maps.LatLng | google.maps.LatLngLiteral | undefined> {
-  const cached = queryToLatLngCache.get(query)
-  if (cached) {
-    return cached instanceof google.maps.LatLng
-      ? { lat: cached.lat(), lng: cached.lng() }
-      : { lat: cached.lat, lng: cached.lng }
+async function resolveQueryToLatLng(query: string) {
+  if (query && typeof query === 'object')
+    return Promise.resolve(query)
+  if (queryToLatLngCache.has(query)) {
+    return Promise.resolve(queryToLatLngCache.get(query))
   }
 
   // Use geocode proxy if available (avoids loading Places library client-side)
