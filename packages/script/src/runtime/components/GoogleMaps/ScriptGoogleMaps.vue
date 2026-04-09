@@ -138,7 +138,7 @@ import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
-import { MAP_INJECTION_KEY } from './useGoogleMapsResource'
+import { MAP_INJECTION_KEY, waitForMapsReady } from './useGoogleMapsResource'
 
 const props = withDefaults(defineProps<ScriptGoogleMapsProps>(), {
   // @ts-expect-error untyped
@@ -241,17 +241,11 @@ async function resolveQueryToLatLng(query: string) {
     throw new Error(`No location found for ${query}`)
   }
 
-  // Fallback: use Places API client-side
-  if (!mapsApi.value) {
-    await load()
-    // await new promise, watch until mapsApi is set
-    await new Promise<void>((resolve) => {
-      const _ = watch(mapsApi, () => {
-        _()
-        resolve()
-      })
-    })
-  }
+  // Fallback: use Places API client-side. Wait for both the maps API and a
+  // Map instance: resolveQueryToLatLng is publicly exposed and may be called
+  // before onLoaded has populated map.value, so constructing PlacesService
+  // without map would throw.
+  await waitForMapsReady({ mapsApi, map, status, load })
 
   const placesService = new mapsApi.value!.places.PlacesService(map.value!)
   const result = await new Promise<google.maps.LatLng>((resolve, reject) => {
