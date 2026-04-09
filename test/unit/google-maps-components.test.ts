@@ -2,8 +2,10 @@ import type { MocksType } from './__helpers__/google-maps-test-utils'
 /**
  * @vitest-environment happy-dom
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { defu } from 'defu'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
+import { warnDeprecatedTopLevelMapProps } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import {
 
   simulateAdvancedMarkerLifecycle,
@@ -363,6 +365,145 @@ describe('google Maps SFC Components Logic', () => {
       expect(clusterer.removeMarker).toHaveBeenCalledWith(markers[0], true)
       expect(clusterer.render).toHaveBeenCalled()
       expect(clusterer.setMap).toHaveBeenCalledWith(null)
+    })
+  })
+})
+
+describe('scriptGoogleMaps top-level center/zoom deprecation', () => {
+  // Guards the deprecation path introduced when migrating users from
+  // top-level `center`/`zoom` props to `mapOptions.{center,zoom}`. Both
+  // APIs must keep working; the new API takes precedence.
+
+  describe('warnDeprecatedTopLevelMapProps', () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      warnSpy.mockRestore()
+    })
+
+    it('warns when top-level center is set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({ center: { lat: 0, lng: 0 } })
+
+      expect(warned).toBe(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"center" is deprecated')
+      expect(warnSpy.mock.calls[0]![0]).toContain('map-options')
+      expect(warnSpy.mock.calls[0]![0]).toContain('migration-guide/v0-to-v1')
+    })
+
+    it('warns when top-level zoom is set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({ zoom: 12 })
+
+      expect(warned).toBe(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"zoom" is deprecated')
+    })
+
+    it('warns once for each prop when both are set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({ center: { lat: 0, lng: 0 }, zoom: 8 })
+
+      expect(warned).toBe(2)
+      expect(warnSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not warn when neither prop is set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({})
+
+      expect(warned).toBe(0)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('does not warn for explicit undefined values', () => {
+      // withDefaults leaves undeclared optional props as undefined; that
+      // must not trip the warning.
+      const warned = warnDeprecatedTopLevelMapProps({ center: undefined, zoom: undefined })
+
+      expect(warned).toBe(0)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('mapOptions precedence over deprecated top-level props', () => {
+    // Mirrors the precedence order used in ScriptGoogleMaps.vue's `options`
+    // computed: { centerOverride, mapId } > mapOptions > { props.center,
+    // props.zoom } > { zoom: 15 }. defu merges left-to-right, leftmost wins.
+    function mergeOptions(props: {
+      center?: any
+      zoom?: number
+      mapOptions?: Record<string, any>
+      centerOverride?: any
+      mapId?: string
+    }) {
+      return defu(
+        { center: props.centerOverride, mapId: props.mapId },
+        props.mapOptions,
+        { center: props.center, zoom: props.zoom },
+        { zoom: 15 },
+      )
+    }
+
+    it('mapOptions.center wins over deprecated top-level center', () => {
+      const merged = mergeOptions({
+        center: { lat: 1, lng: 1 },
+        mapOptions: { center: { lat: 2, lng: 2 } },
+      })
+
+      expect(merged.center).toEqual({ lat: 2, lng: 2 })
+    })
+
+    it('mapOptions.zoom wins over deprecated top-level zoom', () => {
+      const merged = mergeOptions({
+        zoom: 5,
+        mapOptions: { zoom: 10 },
+      })
+
+      expect(merged.zoom).toBe(10)
+    })
+
+    it('top-level center is used when mapOptions.center is absent', () => {
+      const merged = mergeOptions({
+        center: { lat: 3, lng: 4 },
+        mapOptions: { mapTypeId: 'roadmap' },
+      })
+
+      expect(merged.center).toEqual({ lat: 3, lng: 4 })
+      expect(merged.mapTypeId).toBe('roadmap')
+    })
+
+    it('top-level zoom is used when mapOptions.zoom is absent', () => {
+      const merged = mergeOptions({
+        zoom: 7,
+        mapOptions: { mapTypeId: 'satellite' },
+      })
+
+      expect(merged.zoom).toBe(7)
+    })
+
+    it('produces identical merged options for old and new APIs', () => {
+      const oldApi = mergeOptions({ center: { lat: 5, lng: 6 }, zoom: 14 })
+      const newApi = mergeOptions({ mapOptions: { center: { lat: 5, lng: 6 }, zoom: 14 } })
+
+      expect(oldApi).toEqual(newApi)
+    })
+
+    it('falls back to default zoom when nothing is set', () => {
+      const merged = mergeOptions({})
+
+      expect(merged.zoom).toBe(15)
+    })
+
+    it('centerOverride (resolved query result) wins over both APIs', () => {
+      const merged = mergeOptions({
+        center: { lat: 1, lng: 1 },
+        mapOptions: { center: { lat: 2, lng: 2 } },
+        centerOverride: { lat: 99, lng: 99 },
+      })
+
+      expect(merged.center).toEqual({ lat: 99, lng: 99 })
     })
   })
 })
