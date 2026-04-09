@@ -54,4 +54,14 @@ export default antfu(
       'no-new': 'off',
     },
   },
+  {
+    // SFCs with two <script> blocks (one for exported types, one for setup)
+    // confuse `import/first`: it concatenates the blocks and reports the
+    // setup-block imports as "below the body of the module" because the
+    // first block has exports.
+    files: ['**/*.vue'],
+    rules: {
+      'import/first': 'off',
+    },
+  },
 )
