@@ -4,7 +4,7 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, onUnmounted, provide, ref, shallowRef } from 'vue'
-import { MAP_INJECTION_KEY, useGoogleMapsResource } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
+import { MAP_INJECTION_KEY, useGoogleMapsResource, waitForMapsReady } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import { createMockGoogleMapsAPI } from './__mocks__/google-maps-api'
 
 // Helper to create a wrapper component that provides mock map context
@@ -365,5 +365,114 @@ describe('google Maps component lifecycle - memory leak prevention', () => {
       expect.objectContaining({ id: 'async-resource' }),
       expect.objectContaining({ mapsApi: mocks.mockMapsApi }),
     )
+  })
+})
+
+describe('waitForMapsReady', () => {
+  // Regression: the previous resolveQueryToLatLng wait pattern used a
+  // non-immediate watch after `await load()`. If load() populated mapsApi
+  // synchronously, the watcher missed the change and the promise hung
+  // forever. The fix re-checks state after load() and uses an immediate
+  // watcher (matching importLibrary's pattern). It also waits for `map`
+  // to be set, since PlacesService construction requires it.
+
+  it('returns immediately when both refs are already populated', async () => {
+    const mapsApi = shallowRef<any>({ places: {} })
+    const map = shallowRef<any>({})
+    const status = ref<string>('loaded')
+    const load = vi.fn(() => Promise.resolve())
+
+    await waitForMapsReady({ mapsApi, map, status, load })
+
+    // Should not have called load() at all
+    expect(load).not.toHaveBeenCalled()
+  })
+
+  it('does not hang when load() resolves synchronously', async () => {
+    // Reproduces the original race: load() populates mapsApi synchronously,
+    // so a non-immediate watcher would never fire.
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const load = vi.fn(() => {
+      // Synchronously populate both refs before returning the resolved promise
+      mapsApi.value = { places: {} }
+      map.value = {}
+      return Promise.resolve()
+    })
+
+    // The original race would hang forever — vitest's per-test timeout
+    // is the deterministic backstop, no wall-clock setTimeout needed.
+    await expect(waitForMapsReady({ mapsApi, map, status, load })).resolves.toBeUndefined()
+
+    expect(load).toHaveBeenCalledOnce()
+  })
+
+  it('resolves when refs are populated asynchronously after load()', async () => {
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const load = vi.fn(() => Promise.resolve())
+
+    const promise = waitForMapsReady({ mapsApi, map, status, load })
+
+    // Populate refs after a tick — simulates the normal onLoaded flow
+    await nextTick()
+    mapsApi.value = { places: {} }
+    await nextTick()
+    map.value = {}
+
+    await expect(promise).resolves.toBeUndefined()
+  })
+
+  it('rejects synchronously when status is already error', async () => {
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('error')
+    const load = vi.fn(() => Promise.resolve())
+
+    await expect(
+      waitForMapsReady({ mapsApi, map, status, load }),
+    ).rejects.toThrow('Google Maps script failed to load')
+
+    // Should bail before calling load()
+    expect(load).not.toHaveBeenCalled()
+  })
+
+  it('rejects when status transitions to error during the wait', async () => {
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const load = vi.fn(() => Promise.resolve())
+
+    const promise = waitForMapsReady({ mapsApi, map, status, load })
+
+    await nextTick()
+    status.value = 'error'
+
+    await expect(promise).rejects.toThrow('Google Maps script failed to load')
+  })
+
+  it('waits for map even when mapsApi is set first', async () => {
+    // Guards against the second bug: PlacesService construction needs
+    // map.value, not just mapsApi.value.
+    const mapsApi = shallowRef<any>({ places: {} })
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const load = vi.fn(() => Promise.resolve())
+
+    let settled = false
+    const promise = waitForMapsReady({ mapsApi, map, status, load }).then(() => {
+      settled = true
+    })
+
+    // Flush microtasks: settlement should not happen while map is undefined
+    await nextTick()
+    await nextTick()
+    expect(settled).toBe(false)
+
+    map.value = {}
+    await expect(promise).resolves.toBeUndefined()
+    expect(settled).toBe(true)
   })
 })

@@ -1,6 +1,6 @@
 import type { InjectionKey, Ref, ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
-import { inject, onUnmounted, ref, shallowRef } from 'vue'
+import { effectScope, inject, onUnmounted, ref, shallowRef, watch } from 'vue'
 
 export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
   map: ShallowRef<google.maps.Map | undefined>
@@ -39,6 +39,67 @@ export function bindGoogleMapsEvents(
 export interface GoogleMapsResourceContext {
   map: google.maps.Map
   mapsApi: typeof google.maps
+}
+
+/**
+ * Wait until the Google Maps API and a Map instance are both available.
+ *
+ * Triggers script loading via `load()` if not already loaded. Uses an
+ * immediate watcher (matching `importLibrary`'s pattern) to avoid the race
+ * where `load()` resolves synchronously: a non-immediate watcher would miss
+ * the change and the promise would hang forever.
+ *
+ * Rejects if `status` enters an `'error'` state before both refs are populated.
+ * Runs the watcher inside a detached effect scope so it is safe to call from
+ * any context (component setup, exposed methods, tests).
+ */
+export async function waitForMapsReady({
+  mapsApi,
+  map,
+  status,
+  load,
+}: {
+  mapsApi: ShallowRef<typeof google.maps | undefined>
+  map: ShallowRef<google.maps.Map | undefined>
+  status: Ref<string>
+  load: () => Promise<unknown> | unknown
+}): Promise<void> {
+  if (mapsApi.value && map.value)
+    return
+  if (status.value === 'error')
+    throw new Error('Google Maps script failed to load')
+
+  await load()
+
+  // load() may have populated both refs synchronously — re-check before
+  // installing a watcher to avoid the race that hangs the promise forever.
+  if (mapsApi.value && map.value)
+    return
+  if (status.value === 'error')
+    throw new Error('Google Maps script failed to load')
+
+  const scope = effectScope(true)
+  try {
+    await new Promise<void>((resolve, reject) => {
+      scope.run(() => {
+        watch(
+          [mapsApi, map, status],
+          ([api, m, s]) => {
+            if (api && m) {
+              resolve()
+              return
+            }
+            if (s === 'error')
+              reject(new Error('Google Maps script failed to load'))
+          },
+          { immediate: true },
+        )
+      })
+    })
+  }
+  finally {
+    scope.stop()
+  }
 }
 
 /**
