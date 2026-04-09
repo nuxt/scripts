@@ -234,11 +234,15 @@ function makeOverlayClass(mapsApi: typeof google.maps, map: google.maps.Map) {
         if (blockMapInteraction)
           mapsApi.OverlayView.preventMapHitsAndGesturesFrom(el)
       }
-      if (panOnOpen) {
-        // Wait for draw() to position the element, then pan
+      if (panOnOpen && open.value !== false) {
+        // Wait for draw() to position the element, then pan. Re-check inside
+        // the rAF callback so we don't pan when:
+        //   - the controlled `open` prop flipped to false during the frame
+        //   - draw() never resolved a position (closed/missing position)
+        //   - the anchor element is gone (component unmounted mid-frame)
         const padding = typeof panOnOpen === 'number' ? panOnOpen : 40
         requestAnimationFrame(() => {
-          if (overlayAnchor.value)
+          if (open.value !== false && overlayAnchor.value && overlayPosition.value)
             panMapToFitOverlay(overlayAnchor.value, map, padding)
         })
       }

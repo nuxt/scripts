@@ -1,6 +1,6 @@
 /// <reference types="google.maps" />
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, provide, shallowRef } from 'vue'
 import ScriptGoogleMapsOverlayView from '../../packages/script/src/runtime/components/GoogleMaps/ScriptGoogleMapsOverlayView.vue'
 import { MAP_INJECTION_KEY, normalizeLatLng } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
@@ -345,6 +345,65 @@ describe('scriptGoogleMapsOverlayView', () => {
 
       const { content } = getOverlayElements(overlayWrapper)
       expect(content.dataset.state).toBe('open')
+    })
+  })
+
+  describe('panOnOpen guard for closed/unpositioned overlays', () => {
+    // Regression: `onAdd()` previously scheduled `panMapToFitOverlay` whenever
+    // `panOnOpen` was enabled, even if the overlay started closed or never
+    // resolved a position. That caused unexpected map panning on initial mount
+    // and remount. The fix gates the rAF scheduling on `open !== false` and
+    // re-checks `open` + `overlayPosition` inside the callback before panning.
+
+    let rafSpy: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => {
+      rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame')
+    })
+
+    afterEach(() => {
+      rafSpy.mockRestore()
+    })
+
+    it('does not schedule pan-on-open when overlay starts closed (defaultOpen=false)', async () => {
+      const mocks = createOverlayMocks()
+      await mountOverlay(
+        { position: { lat: 10, lng: 20 }, defaultOpen: false },
+        mocks,
+      )
+
+      expect(rafSpy).not.toHaveBeenCalled()
+      expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
+    })
+
+    it('does not schedule pan-on-open when controlled :open is false on mount', async () => {
+      const mocks = createOverlayMocks()
+      await mountOverlay(
+        { position: { lat: 10, lng: 20 }, open: false },
+        mocks,
+      )
+
+      expect(rafSpy).not.toHaveBeenCalled()
+      expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
+    })
+
+    it('schedules pan-on-open when overlay starts open with a position', async () => {
+      const mocks = createOverlayMocks()
+      await mountOverlay({ position: { lat: 10, lng: 20 } }, mocks)
+
+      // The guard allows the rAF to be scheduled when the happy path applies
+      expect(rafSpy).toHaveBeenCalled()
+    })
+
+    it('respects panOnOpen=false even when overlay is open and positioned', async () => {
+      const mocks = createOverlayMocks()
+      await mountOverlay(
+        { position: { lat: 10, lng: 20 }, panOnOpen: false },
+        mocks,
+      )
+
+      expect(rafSpy).not.toHaveBeenCalled()
+      expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
     })
   })
 })
