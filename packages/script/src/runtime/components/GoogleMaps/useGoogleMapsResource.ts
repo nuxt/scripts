@@ -42,6 +42,33 @@ export interface GoogleMapsResourceContext {
 }
 
 /**
+ * Emits dev-mode deprecation warnings for the legacy top-level `center` and
+ * `zoom` props on `<ScriptGoogleMaps>`. Both props still work, but new code
+ * should pass them via `mapOptions` instead.
+ *
+ * Returns the number of warnings emitted (useful for tests).
+ */
+export function warnDeprecatedTopLevelMapProps(props: {
+  center?: unknown
+  zoom?: unknown
+}): number {
+  let warned = 0
+  if (props.center !== undefined) {
+    warned++
+    console.warn(
+      '[nuxt-scripts] <ScriptGoogleMaps> prop "center" is deprecated; use `:map-options="{ center: ... }"` instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+    )
+  }
+  if (props.zoom !== undefined) {
+    warned++
+    console.warn(
+      '[nuxt-scripts] <ScriptGoogleMaps> prop "zoom" is deprecated; use `:map-options="{ zoom: ... }"` instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+    )
+  }
+  return warned
+}
+
+/**
  * Wait until the Google Maps API and a Map instance are both available.
  *
  * Triggers script loading via `load()` if not already loaded. Uses an

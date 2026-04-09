@@ -17,11 +17,20 @@ export interface ScriptGoogleMapsProps {
   apiKey?: string
   /**
    * A latitude / longitude of where to focus the map.
+   *
+   * @deprecated Pass `center` via `mapOptions` instead. The top-level `center`
+   * prop will be removed in a future major version. When both are set,
+   * `mapOptions.center` wins.
+   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
    */
   center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`
   /**
    * Zoom level for the map (0-21). Reactive: changing this will update the map.
-   * Takes precedence over mapOptions.zoom when provided.
+   *
+   * @deprecated Pass `zoom` via `mapOptions` instead. The top-level `zoom`
+   * prop will be removed in a future major version. When both are set,
+   * `mapOptions.zoom` wins.
+   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
    */
   zoom?: number
   /**
@@ -138,7 +147,7 @@ import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
-import { MAP_INJECTION_KEY, waitForMapsReady } from './useGoogleMapsResource'
+import { MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 
 const props = withDefaults(defineProps<ScriptGoogleMapsProps>(), {
   // @ts-expect-error untyped
@@ -184,6 +193,7 @@ if (import.meta.dev) {
     if (prop in attrs)
       console.warn(`[nuxt-scripts] <ScriptGoogleMaps> prop "${prop}" was removed in v1. ${message} See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1`)
   }
+  warnDeprecatedTopLevelMapProps({ center: props.center, zoom: props.zoom })
 }
 
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
@@ -204,10 +214,17 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
 
 const options = computed(() => {
   const mapId = props.mapOptions?.styles ? undefined : (currentMapId.value || 'map')
-  return defu({ center: centerOverride.value, mapId, zoom: props.zoom }, props.mapOptions, {
-    center: props.center,
-    zoom: 15,
-  })
+  // Precedence (defu merges left-to-right, leftmost wins):
+  // 1. centerOverride: resolved query result, always wins for center
+  // 2. mapOptions: preferred public API
+  // 3. deprecated top-level: legacy fallback for center/zoom
+  // 4. defaults: { zoom: 15 } when nothing else is set
+  return defu(
+    { center: centerOverride.value, mapId },
+    props.mapOptions,
+    { center: props.center, zoom: props.zoom },
+    { zoom: 15 },
+  )
 })
 const isMapReady = ref(false)
 
