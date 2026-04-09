@@ -241,4 +241,110 @@ describe('scriptGoogleMapsOverlayView', () => {
       expect(mocks.mockMapsApi.LatLng).toHaveBeenCalledWith(33.8688, 151.2093)
     })
   })
+
+  describe('reactive position rendering (PR E refactor)', () => {
+    // Guards the migration from imperative `el.style.left/top` writes to a
+    // reactive `overlayPosition` shallowRef bound through Vue's `:style`
+    // patcher. The behaviours below are what consumers actually rely on:
+    //   1. The DOM has an anchor → content → slot structure
+    //   2. The anchor's inline style reflects the projected pixel position
+    //   3. data-state on the content div toggles via Vue reactivity, not
+    //      imperative dataset writes
+
+    function getOverlayElements(overlayWrapper: any) {
+      const anchor = overlayWrapper.vm.$refs['overlay-anchor'] as HTMLElement
+      const content = anchor.firstElementChild as HTMLElement
+      return { anchor, content }
+    }
+
+    it('renders the anchor → content → slot DOM structure', async () => {
+      const { overlayWrapper } = await mountOverlay({ position: { lat: 10, lng: 20 } })
+
+      // Anchor wraps the content; content wraps the slot. The hierarchy is
+      // load-bearing because Google Maps reparents the anchor into a pane on
+      // `onAdd()` while the content stays as the styling target for users.
+      const { anchor, content } = getOverlayElements(overlayWrapper)
+      expect(anchor).toBeTruthy()
+      expect(content).toBeTruthy()
+      expect(anchor.firstElementChild).toBe(content)
+      // The slot's first child must be a descendant of the content div
+      expect(content.firstElementChild).toBeTruthy()
+    })
+
+    it('writes the projected pixel position to the anchor inline style', async () => {
+      const { overlayWrapper } = await mountOverlay({
+        position: { lat: 10, lng: 20 },
+        offset: { x: 5, y: -10 },
+      })
+
+      const { anchor } = getOverlayElements(overlayWrapper)
+      // Mock projection returns { x: 100, y: 200 }; offset adds 5/-10
+      expect(anchor.style.left).toBe('105px')
+      expect(anchor.style.top).toBe('190px')
+      expect(anchor.style.position).toBe('absolute')
+      expect(anchor.style.visibility).toBe('visible')
+    })
+
+    it('reactively updates anchor visibility when open prop toggles to false', async () => {
+      const mocks = createOverlayMocks()
+      const Provider = createMapProvider(mocks)
+      const openState = shallowRef<boolean | undefined>(true)
+
+      const wrapper = await mountSuspended(Provider, {
+        slots: {
+          default: () => h(
+            ScriptGoogleMapsOverlayView,
+            {
+              'position': { lat: 10, lng: 20 },
+              'open': openState.value,
+              'onUpdate:open': (v: boolean) => { openState.value = v },
+            },
+            () => h('div'),
+          ),
+        },
+      })
+      await nextTick()
+      await nextTick()
+      await nextTick()
+
+      const overlayWrapper = wrapper.findComponent(ScriptGoogleMapsOverlayView)
+      const { anchor } = getOverlayElements(overlayWrapper)
+
+      // Initially open
+      expect((overlayWrapper.vm as any).dataState).toBe('open')
+      expect(anchor.style.visibility).toBe('visible')
+
+      // Toggle controlled `open` to false; the reactive style binding should
+      // patch visibility:hidden without any imperative DOM write.
+      openState.value = false
+      await wrapper.setProps({}) // re-render to flush the prop change
+      await nextTick()
+      await nextTick()
+
+      expect((overlayWrapper.vm as any).dataState).toBe('closed')
+      expect(anchor.style.visibility).toBe('hidden')
+    })
+
+    it('keeps the anchor element in the DOM when overlay closes (animation-friendly)', async () => {
+      const { overlayWrapper } = await mountOverlay({
+        position: { lat: 10, lng: 20 },
+        defaultOpen: false,
+      })
+
+      const { anchor, content } = getOverlayElements(overlayWrapper)
+      // Element exists in DOM (even when closed); CSS animations targeting
+      // [data-state="closed"] need the element present to run.
+      expect(anchor).toBeTruthy()
+      expect(anchor.style.visibility).toBe('hidden')
+      // The data-state attribute is on the content child, not the anchor
+      expect(content.dataset.state).toBe('closed')
+    })
+
+    it('exposes data-state on the content div for CSS targeting', async () => {
+      const { overlayWrapper } = await mountOverlay({ position: { lat: 10, lng: 20 } })
+
+      const { content } = getOverlayElements(overlayWrapper)
+      expect(content.dataset.state).toBe('open')
+    })
+  })
 })
