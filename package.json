@@ -51,8 +51,5 @@
     "vitest": "catalog:",
     "vue": "catalog:",
     "vue-tsc": "catalog:"
-  },
-  "resolutions": {
-    "@nuxt/scripts": "workspace:*"
   }
 }
