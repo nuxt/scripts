@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
+import { withSigning } from './utils/withSigning'
 
 interface PostThreadResponse {
   thread: {
@@ -22,7 +23,7 @@ interface PostThreadResponse {
 
 const BSKY_POST_URL_RE = /^https:\/\/bsky\.app\/profile\/([^/]+)\/post\/([^/?]+)$/
 
-export default defineEventHandler(async (event) => {
+export default withSigning(defineEventHandler(async (event) => {
   const query = getQuery(event)
   const postUrl = query.url as string
 
@@ -92,4 +93,4 @@ export default defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return post
-})
+}))

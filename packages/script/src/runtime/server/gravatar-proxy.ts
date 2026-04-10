@@ -2,8 +2,9 @@ import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { withSigning } from './utils/withSigning'
 
-export default defineEventHandler(async (event) => {
+export default withSigning(defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.gravatarProxy
 
@@ -55,4 +56,4 @@ export default defineEventHandler(async (event) => {
   setHeader(event, 'Vary', 'Accept-Encoding')
 
   return response._data
-})
+}))

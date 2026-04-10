@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
+import { withSigning } from './withSigning'
 
 const AMP_RE = /&amp;/g
 
@@ -25,7 +26,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     decodeAmpersands = false,
   } = config
 
-  return defineEventHandler(async (event) => {
+  return withSigning(defineEventHandler(async (event) => {
     const query = getQuery(event)
     let url = query.url as string
 
@@ -95,5 +96,5 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
 
     return response._data
-  })
+  }))
 }

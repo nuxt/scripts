@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
+import { withSigning } from './utils/withSigning'
 
 export const RSRC_RE = /url\(\/rsrc\.php([^)]+)\)/g
 export const AMP_RE = /&amp;/g
@@ -186,7 +187,7 @@ function extractBlock(css: string, openBrace: number): { content: string, end: n
   return null
 }
 
-export default defineEventHandler(async (event) => {
+export default withSigning(defineEventHandler(async (event) => {
   // Derive the scripts prefix from the handler's own route path.
   // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
   const handlerPath = event.path?.split('?')[0] || ''
@@ -331,4 +332,4 @@ export default defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return result
-})
+}))

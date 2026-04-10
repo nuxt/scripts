@@ -2,8 +2,9 @@ import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { withSigning } from './utils/withSigning'
 
-export default defineEventHandler(async (event) => {
+export default withSigning(defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleMapsGeocodeProxy
 
@@ -38,4 +39,4 @@ export default defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'public, max-age=86400, s-maxage=86400')
 
   return data
-})
+}))
