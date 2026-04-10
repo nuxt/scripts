@@ -480,28 +480,11 @@ export default defineNuxtModule<ModuleOptions>({
       )
     }
 
-    // Resolve the HMAC signing secret used to lock down proxy endpoints.
-    // Deterministic across deploys is mandatory: signed URLs embedded in prerendered
-    // HTML must still verify against the runtime server. The module auto-generates
-    // and persists one into `.env` in dev so users don't hit friction on first run.
-    const proxySecretResolved = resolveProxySecret(
-      nuxt.options.rootDir,
-      !!nuxt.options.dev,
-      config.security?.secret,
-      config.security?.autoGenerateSecret !== false,
-    )
-    if (proxySecretResolved?.source === 'dotenv-generated')
-      logger.info(`[security] Generated ${PROXY_SECRET_ENV_KEY} in .env for signed proxy URLs.`)
-    else if (proxySecretResolved?.source === 'memory-generated')
-      logger.warn(`[security] Generated an in-memory ${PROXY_SECRET_ENV_KEY} (could not write .env). Signed URLs will break across restarts.`)
-
     // Setup runtimeConfig for proxies and devtools.
     // Must run AFTER env var resolution above so the API key is populated.
     const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
     nuxt.options.runtimeConfig['nuxt-scripts'] = {
       version: version!,
-      // HMAC secret for signed proxy URLs (server-only private config)
-      proxySecret: proxySecretResolved?.secret || '',
       // Private proxy config with API key (server-side only)
       googleStaticMapsProxy: googleMapsEnabled
         ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
@@ -868,15 +851,38 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
     ) as any
 
-    // Fail hard if a signed endpoint is enabled in production without a secret.
-    // Dev falls back to auto-generated secrets above, so this only trips real
-    // deployments that forgot to set the env var.
-    if (anyHandlerRequiresSigning && !proxySecretResolved?.secret && !nuxt.options.dev) {
-      throw new Error(
-        `[@nuxt/scripts] ${PROXY_SECRET_ENV_KEY} is required in production when signed proxy endpoints are enabled.\n`
-        + 'Generate one with: npx @nuxt/scripts generate-secret\n'
-        + `Then set the env var: ${PROXY_SECRET_ENV_KEY}=<secret>`,
+    // Resolve the HMAC signing secret only when at least one handler needs it.
+    // This avoids writing NUXT_SCRIPTS_PROXY_SECRET to .env for users who only
+    // use client-side scripts (analytics, tracking) with no proxy endpoints.
+    if (anyHandlerRequiresSigning) {
+      const proxySecretResolved = resolveProxySecret(
+        nuxt.options.rootDir,
+        !!nuxt.options.dev,
+        config.security?.secret,
+        config.security?.autoGenerateSecret !== false,
       )
+      if (proxySecretResolved?.source === 'dotenv-generated')
+        logger.info(`[security] Generated ${PROXY_SECRET_ENV_KEY} in .env for signed proxy URLs.`)
+      else if (proxySecretResolved?.source === 'memory-generated')
+        logger.warn(`[security] Generated an in-memory ${PROXY_SECRET_ENV_KEY} (could not write .env). Signed URLs will break across restarts.`)
+
+      if (proxySecretResolved?.secret) {
+        nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
+          { proxySecret: proxySecretResolved.secret },
+          nuxt.options.runtimeConfig['nuxt-scripts'] as any,
+        ) as any
+      }
+      else if (!nuxt.options.dev) {
+        // Warn (not throw) so that nuxt prepare, nuxt build, and CI work without
+        // the secret. withSigning passes through when no secret is configured, so
+        // endpoints remain functional but unsigned. Users opt in to enforcement by
+        // setting the env var.
+        logger.warn(
+          `[security] ${PROXY_SECRET_ENV_KEY} is not set. Proxy endpoints are unprotected.\n`
+          + '  Generate one with: npx @nuxt/scripts generate-secret\n'
+          + `  Then set the env var: ${PROXY_SECRET_ENV_KEY}=<secret>`,
+        )
+      }
     }
   },
 })
