@@ -112,8 +112,8 @@ catalogs:
       specifier: ^1.59.1
       version: 1.59.1
     posthog-js:
-      specifier: ^1.366.1
-      version: 1.366.1
+      specifier: ^1.367.0
+      version: 1.367.0
     shiki:
       specifier: ^4.0.2
       version: 4.0.2
@@ -152,8 +152,8 @@ catalogs:
       version: 3.2.6
 
 overrides:
-  vitest-environment-nuxt: 1.0.1
   '@nuxt/scripts': workspace:*
+  vitest-environment-nuxt: 1.0.1
 
 importers:
 
@@ -209,7 +209,7 @@ importers:
         version: 1.59.1
       posthog-js:
         specifier: 'catalog:'
-        version: 1.366.1
+        version: 1.367.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -332,7 +332,7 @@ importers:
         version: 2.3.0
       posthog-js:
         specifier: ^1.0.0
-        version: 1.366.1
+        version: 1.367.0
       sirv:
         specifier: 'catalog:'
         version: 3.0.2
@@ -2021,8 +2021,8 @@ packages:
   '@posthog/core@1.25.2':
     resolution: {integrity: sha512-h2FO7ut/BbfwpAXWpwdDHTzQgUo9ibDFEs6ZO+3cI3KPWQt5XwczK1OLAuPprcjm8T/jl0SH8jSFo5XdU4RbTg==}
 
-  '@posthog/types@1.366.1':
-    resolution: {integrity: sha512-a5cQpQ4ESKgaw9YkSxvGpejrZ/+rd8Nsu86KPiFET8CBxrWcobTLacp5e1N5nuAL4VB4ZgmvmKSYcdWs3bv7lA==}
+  '@posthog/types@1.367.0':
+    resolution: {integrity: sha512-FUcTEAeKhuHKyCcTQPx/sTN3s8S+PusPsiP8T/LrG/T7pDkwMfNZG0/P630JX6fT6qiW0moVvVSsaXgZDJF7wg==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -5476,8 +5476,8 @@ packages:
     resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.366.1:
-    resolution: {integrity: sha512-+yWGZ3qTxEZMWc2ibYGshDXChtlPPuThoOXsfAYl1lec/UujZOx8N1PzT0dSECP5Wdc7iJKUTOjGUimxSoJfUg==}
+  posthog-js@1.367.0:
+    resolution: {integrity: sha512-jWNwB8XjlVUC9PbGaIlmsyohUDMBrwf7cvLuOY3lIOmWVO3L6VxTE3GZShjxpFKQtmWcPxFbf1hcbct1YCb6xg==}
 
   powershell-utils@0.1.0:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
@@ -8349,7 +8349,7 @@ snapshots:
 
   '@posthog/core@1.25.2': {}
 
-  '@posthog/types@1.366.1': {}
+  '@posthog/types@1.367.0': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -12352,7 +12352,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.366.1:
+  posthog-js@1.367.0:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.208.0
@@ -12360,7 +12360,7 @@ snapshots:
       '@opentelemetry/resources': 2.6.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
       '@posthog/core': 1.25.2
-      '@posthog/types': 1.366.1
+      '@posthog/types': 1.367.0
       core-js: 3.49.0
       dompurify: 3.3.3
       fflate: 0.4.8
