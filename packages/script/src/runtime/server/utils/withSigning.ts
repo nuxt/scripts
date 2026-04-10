@@ -10,12 +10,14 @@
  *
  * Behavior:
  * - Reads `runtimeConfig.nuxt-scripts.proxySecret` (server-only).
- * - If no secret is configured: 500 (the module is misconfigured).
- * - If the request's `sig` param is missing, malformed, or doesn't match: 403.
+ * - If no secret is configured: passes through (signing not yet enabled).
+ *   This allows shipping handler wiring before components emit signed URLs.
+ *   Once `NUXT_SCRIPTS_PROXY_SECRET` is set, verification is enforced.
+ * - If a secret IS configured and the request's signature is invalid: 403.
  * - Otherwise, delegates to the wrapped handler.
  *
- * The outer wrapper runs before any handler logic, so misconfigured / unauthorized
- * requests never reach the upstream fetch and cannot consume API quota.
+ * The outer wrapper runs before any handler logic, so unauthorized requests
+ * never reach the upstream fetch and cannot consume API quota.
  */
 
 import type { EventHandler, EventHandlerRequest, EventHandlerResponse } from 'h3'
@@ -30,13 +32,11 @@ export function withSigning<Req extends EventHandlerRequest = EventHandlerReques
     const runtimeConfig = useRuntimeConfig(event)
     const secret = (runtimeConfig['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
 
-    if (!secret) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Proxy secret not configured',
-        message: 'NUXT_SCRIPTS_PROXY_SECRET is not set. Run `npx @nuxt/scripts generate-secret` and set the env var.',
-      })
-    }
+    // No secret configured: pass through without verification. This lets the
+    // handler wiring ship before components emit signed URLs. Users opt in to
+    // enforcement by setting NUXT_SCRIPTS_PROXY_SECRET.
+    if (!secret)
+      return handler(event) as Res
 
     if (!verifyProxyRequest(event, secret)) {
       throw createError({
