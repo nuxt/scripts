@@ -1,3 +1,4 @@
+import type { H3Event } from 'h3'
 import { describe, expect, it } from 'vitest'
 import {
   buildSignedProxyUrl,
@@ -5,11 +6,26 @@ import {
   constantTimeEqual,
   generateProxyToken,
   PAGE_TOKEN_MAX_AGE,
+  PAGE_TOKEN_PARAM,
+  PAGE_TOKEN_TS_PARAM,
   SIG_LENGTH,
   SIG_PARAM,
   signProxyUrl,
+  verifyProxyRequest,
   verifyProxyToken,
 } from '../../packages/script/src/runtime/server/utils/sign'
+
+/** Create a minimal mock H3Event with a path and query params. */
+function mockEvent(url: string): H3Event {
+  const parsed = new URL(url, 'http://localhost')
+  const query: Record<string, string> = {}
+  for (const [k, v] of parsed.searchParams.entries())
+    query[k] = v
+  return {
+    path: parsed.pathname + parsed.search,
+    _query: query,
+  } as unknown as H3Event
+}
 
 const SECRET = 'test-secret-9f2c8b4e7a1d6f3c5b9e8a2d4f7c1b6e'
 
@@ -213,5 +229,62 @@ describe('verifyProxyToken', () => {
 
   it('rejects a token verified with the wrong secret', () => {
     expect(verifyProxyToken(token, ts, 'wrong-secret')).toBe(false)
+  })
+})
+
+describe('verifyProxyRequest', () => {
+  it('verifies a valid URL signature (mode 1)', () => {
+    const url = buildSignedProxyUrl('/_scripts/proxy/x', { center: 'Sydney' }, SECRET)
+    const event = mockEvent(url)
+    expect(verifyProxyRequest(event, SECRET)).toBe(true)
+  })
+
+  it('rejects a tampered URL signature', () => {
+    const url = buildSignedProxyUrl('/_scripts/proxy/x', { center: 'Sydney' }, SECRET)
+    const tampered = url.replace(/sig=[0-9a-f]+/, 'sig=0000000000000000')
+    const event = mockEvent(tampered)
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('rejects a request with no sig and no page token', () => {
+    const event = mockEvent('/_scripts/proxy/x?center=Sydney')
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('returns false when secret is empty', () => {
+    const url = buildSignedProxyUrl('/_scripts/proxy/x', { center: 'Sydney' }, SECRET)
+    const event = mockEvent(url)
+    expect(verifyProxyRequest(event, '')).toBe(false)
+  })
+
+  it('verifies a valid page token (mode 2)', () => {
+    const ts = Math.floor(Date.now() / 1000)
+    const token = generateProxyToken(SECRET, ts)
+    const event = mockEvent(`/_scripts/proxy/x?center=Sydney&${PAGE_TOKEN_PARAM}=${token}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(true)
+  })
+
+  it('rejects an expired page token', () => {
+    const ts = Math.floor(Date.now() / 1000) - PAGE_TOKEN_MAX_AGE - 100
+    const token = generateProxyToken(SECRET, ts)
+    const event = mockEvent(`/_scripts/proxy/x?center=Sydney&${PAGE_TOKEN_PARAM}=${token}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('allows page token with different query params than original (any-params mode)', () => {
+    const ts = Math.floor(Date.now() / 1000)
+    const token = generateProxyToken(SECRET, ts)
+    // Token was generated without any query context, so it works with any params
+    const event = mockEvent(`/_scripts/proxy/x?center=Melbourne&zoom=10&${PAGE_TOKEN_PARAM}=${token}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(true)
+  })
+
+  it('prefers URL signature over page token when both are present', () => {
+    const ts = Math.floor(Date.now() / 1000)
+    const pageToken = generateProxyToken(SECRET, ts)
+    // Build a signed URL and also add a page token
+    const signedUrl = buildSignedProxyUrl('/_scripts/proxy/x', { center: 'Sydney' }, SECRET)
+    const event = mockEvent(`${signedUrl}&${PAGE_TOKEN_PARAM}=${pageToken}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(true)
   })
 })
