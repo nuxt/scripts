@@ -3,9 +3,12 @@ import {
   buildSignedProxyUrl,
   canonicalizeQuery,
   constantTimeEqual,
+  generateProxyToken,
+  PAGE_TOKEN_MAX_AGE,
   SIG_LENGTH,
   SIG_PARAM,
   signProxyUrl,
+  verifyProxyToken,
 } from '../../packages/script/src/runtime/server/utils/sign'
 
 const SECRET = 'test-secret-9f2c8b4e7a1d6f3c5b9e8a2d4f7c1b6e'
@@ -143,5 +146,72 @@ describe('constantTimeEqual', () => {
 
   it('returns true for empty strings', () => {
     expect(constantTimeEqual('', '')).toBe(true)
+  })
+})
+
+describe('generateProxyToken', () => {
+  it('returns a 16-char hex token', () => {
+    const token = generateProxyToken(SECRET, 1712764800)
+    expect(token).toHaveLength(SIG_LENGTH)
+    expect(token).toMatch(/^[0-9a-f]+$/)
+  })
+
+  it('is deterministic for the same secret and timestamp', () => {
+    const a = generateProxyToken(SECRET, 1712764800)
+    const b = generateProxyToken(SECRET, 1712764800)
+    expect(a).toBe(b)
+  })
+
+  it('changes when timestamp changes', () => {
+    const a = generateProxyToken(SECRET, 1712764800)
+    const b = generateProxyToken(SECRET, 1712764801)
+    expect(a).not.toBe(b)
+  })
+
+  it('changes when secret changes', () => {
+    const a = generateProxyToken('secret-a', 1712764800)
+    const b = generateProxyToken('secret-b', 1712764800)
+    expect(a).not.toBe(b)
+  })
+})
+
+describe('verifyProxyToken', () => {
+  const ts = 1712764800
+  const token = generateProxyToken(SECRET, ts)
+
+  it('verifies a valid token within the time window', () => {
+    expect(verifyProxyToken(token, ts, SECRET, PAGE_TOKEN_MAX_AGE, ts + 100)).toBe(true)
+  })
+
+  it('verifies a token at the exact boundary', () => {
+    expect(verifyProxyToken(token, ts, SECRET, PAGE_TOKEN_MAX_AGE, ts + PAGE_TOKEN_MAX_AGE)).toBe(true)
+  })
+
+  it('rejects an expired token', () => {
+    expect(verifyProxyToken(token, ts, SECRET, PAGE_TOKEN_MAX_AGE, ts + PAGE_TOKEN_MAX_AGE + 1)).toBe(false)
+  })
+
+  it('rejects a token from the far future (clock skew > 60s)', () => {
+    expect(verifyProxyToken(token, ts, SECRET, PAGE_TOKEN_MAX_AGE, ts - 61)).toBe(false)
+  })
+
+  it('allows minor clock skew (up to 60s into the future)', () => {
+    expect(verifyProxyToken(token, ts, SECRET, PAGE_TOKEN_MAX_AGE, ts - 30)).toBe(true)
+  })
+
+  it('rejects a tampered token', () => {
+    expect(verifyProxyToken('0000000000000000', ts, SECRET)).toBe(false)
+  })
+
+  it('rejects a wrong-length token', () => {
+    expect(verifyProxyToken('abc', ts, SECRET)).toBe(false)
+  })
+
+  it('rejects empty secret', () => {
+    expect(verifyProxyToken(token, ts, '')).toBe(false)
+  })
+
+  it('rejects a token verified with the wrong secret', () => {
+    expect(verifyProxyToken(token, ts, 'wrong-secret')).toBe(false)
   })
 })

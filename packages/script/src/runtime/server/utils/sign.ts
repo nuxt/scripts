@@ -109,29 +109,104 @@ export function buildSignedProxyUrl(path: string, query: Record<string, unknown>
   return `${path}?${queryString}`
 }
 
+// ---------------------------------------------------------------------------
+// Page tokens: stateless, short-lived access tokens for client-side proxy use
+// ---------------------------------------------------------------------------
+
+/** Query param name for the page token. */
+export const PAGE_TOKEN_PARAM = '_pt'
+
+/** Query param name for the page token timestamp. */
+export const PAGE_TOKEN_TS_PARAM = '_ts'
+
+/** Default max age for page tokens in seconds (1 hour). */
+export const PAGE_TOKEN_MAX_AGE = 3600
+
 /**
- * Verify a request's signature against the current event's path and query.
+ * Generate a page token that authorizes client-side proxy requests.
  *
- * Reads the `sig` param from the query, reconstructs the canonical form from
- * the remaining params, and compares against a freshly computed HMAC. Returns
- * `false` if the sig is missing, malformed, or doesn't match.
+ * Embedded in the SSR payload so the browser can attach it to reactive proxy
+ * URL updates without needing a `/sign` round-trip. The token is scoped to
+ * a timestamp and expires after `PAGE_TOKEN_MAX_AGE` seconds.
  *
- * Uses constant-time comparison to prevent timing side-channels.
+ * Construction: first 16 hex chars of `HMAC(secret, "proxy-access:<timestamp>")`.
  */
-export function verifyProxyRequest(event: H3Event, secret: string): boolean {
+export function generateProxyToken(secret: string, timestamp: number): string {
+  return createHmac('sha256', secret)
+    .update(`proxy-access:${timestamp}`)
+    .digest('hex')
+    .slice(0, SIG_LENGTH)
+}
+
+/**
+ * Verify a page token against the current time.
+ *
+ * Returns `true` if the token matches the HMAC for the given timestamp AND
+ * the timestamp is within `maxAge` seconds of `now`.
+ */
+export function verifyProxyToken(
+  token: string,
+  timestamp: number,
+  secret: string,
+  maxAge: number = PAGE_TOKEN_MAX_AGE,
+  now: number = Math.floor(Date.now() / 1000),
+): boolean {
+  if (!token || !secret || typeof timestamp !== 'number')
+    return false
+  if (token.length !== SIG_LENGTH)
+    return false
+
+  // Reject expired or future tokens (future tolerance: 60s for clock skew)
+  const age = now - timestamp
+  if (age > maxAge || age < -60)
+    return false
+
+  const expected = generateProxyToken(secret, timestamp)
+  return constantTimeEqual(expected, token)
+}
+
+/**
+ * Verify a request against either a URL signature or a page token.
+ *
+ * Two verification modes, checked in order:
+ *
+ * 1. **URL signature** (`sig` param): the exact URL was signed server-side
+ *    during SSR/prerender. Locked to the specific path + query params.
+ *
+ * 2. **Page token** (`_pt` + `_ts` params): the client received a short-lived
+ *    token during SSR and is making a reactive proxy request with new params.
+ *    Valid for any params on the target path, but expires after `maxAge`.
+ *
+ * Returns `false` if neither mode validates.
+ */
+export function verifyProxyRequest(event: H3Event, secret: string, maxAge?: number): boolean {
   if (!secret)
     return false
 
   const query = getQuery(event) as Record<string, unknown>
+
+  // Mode 1: exact URL signature
   const rawSig = query[SIG_PARAM]
   const sig = Array.isArray(rawSig) ? rawSig[0] : rawSig
-  if (typeof sig !== 'string' || sig.length !== SIG_LENGTH)
-    return false
+  if (typeof sig === 'string' && sig.length === SIG_LENGTH) {
+    const path = (event.path || '').split('?')[0] || ''
+    const expected = signProxyUrl(path, query, secret)
+    if (constantTimeEqual(expected, sig))
+      return true
+  }
 
-  // Use the event path without query string as the signing path
-  const path = (event.path || '').split('?')[0] || ''
-  const expected = signProxyUrl(path, query, secret)
-  return constantTimeEqual(expected, sig)
+  // Mode 2: page token
+  const rawToken = query[PAGE_TOKEN_PARAM]
+  const rawTs = query[PAGE_TOKEN_TS_PARAM]
+  const token = Array.isArray(rawToken) ? rawToken[0] : rawToken
+  const ts = Array.isArray(rawTs) ? rawTs[0] : rawTs
+  if (typeof token === 'string' && ts !== undefined) {
+    const timestamp = Number(ts)
+    if (!Number.isNaN(timestamp))
+      return verifyProxyToken(token, timestamp, secret, maxAge)
+  }
+
+  return false
 }
 
 /**

@@ -118,7 +118,6 @@ const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
 const PROXY_SECRET_ENV_KEY = 'NUXT_SCRIPTS_PROXY_SECRET'
 const PROXY_SECRET_ENV_LINE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=/m
 const PROXY_SECRET_ENV_VALUE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=(.+)$/m
-const WILDCARD_SUFFIX_RE = /\/\*\*$/
 
 export interface ResolvedProxySecret {
   secret: string
@@ -821,8 +820,6 @@ export default defineNuxtModule<ModuleOptions>({
     // Register server handlers for enabled registry scripts
     const scriptsPrefix = config.prefix || '/_scripts'
     const enabledEndpoints: Record<string, boolean> = {}
-    /** Signable routes that the `/_scripts/sign` endpoint is allowed to sign. */
-    const signableRoutes: string[] = []
     let anyHandlerRequiresSigning = false
     for (const script of scripts) {
       if (!script.serverHandlers?.length || !script.registryKey)
@@ -844,11 +841,8 @@ export default defineNuxtModule<ModuleOptions>({
           handler: handler.handler,
           middleware: handler.middleware,
         })
-        if (handler.requiresSigning) {
+        if (handler.requiresSigning)
           anyHandlerRequiresSigning = true
-          // Store the non-wildcard prefix so `/sign` can exact-match against it.
-          signableRoutes.push(resolvedRoute.replace(WILDCARD_SUFFIX_RE, ''))
-        }
       }
 
       // Script-specific runtimeConfig setup
@@ -883,23 +877,6 @@ export default defineNuxtModule<ModuleOptions>({
         + 'Generate one with: npx @nuxt/scripts generate-secret\n'
         + `Then set the env var: ${PROXY_SECRET_ENV_KEY}=<secret>`,
       )
-    }
-
-    // Publish the signable routes list to server runtime so `/sign` knows what
-    // paths it's allowed to sign on behalf of clients.
-    if (anyHandlerRequiresSigning) {
-      nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
-        { signableRoutes },
-        nuxt.options.runtimeConfig['nuxt-scripts'] as any,
-      ) as any
-
-      // Register the `/_scripts/sign` endpoint so reactive client-side URL
-      // changes (e.g. Google Static Maps size recomputed on mount) can get a
-      // fresh signature without exposing the secret.
-      addServerHandler({
-        route: `${scriptsPrefix}/sign`,
-        handler: await resolvePath('./runtime/server/sign-proxy'),
-      })
     }
   },
 })
