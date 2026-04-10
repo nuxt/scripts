@@ -135,7 +135,7 @@ export interface ResolvedProxySecret {
  * 1. `scripts.security.secret` in nuxt.config
  * 2. `NUXT_SCRIPTS_PROXY_SECRET` env var
  * 3. Dev-only auto-generation: write to `.env` (or keep in memory as last resort)
- * 4. Empty string (prod without secret — caller decides whether this is fatal)
+ * 4. Empty string (prod without secret; caller decides whether this is fatal)
  */
 export function resolveProxySecret(
   rootDir: string,
@@ -166,7 +166,7 @@ export function resolveProxySecret(
       // Safety: don't append if another process already wrote one between the read above
       // and this branch. The regex check is cheap and idempotent.
       if (PROXY_SECRET_ENV_LINE_RE.test(contents)) {
-        // Another instance already wrote it — re-read and return that value
+        // Another instance already wrote it. Re-read and return that value.
         const match = contents.match(PROXY_SECRET_ENV_VALUE_RE)
         if (match?.[1])
           return { secret: match[1].trim(), ephemeral: false, source: 'dotenv-generated' }
@@ -183,7 +183,7 @@ export function resolveProxySecret(
   }
   catch {
     // Writing .env failed (read-only FS, permission denied). Fall back to
-    // in-memory only — URLs signed this session won't verify after restart.
+    // in-memory only; URLs signed this session won't verify after restart.
     process.env[PROXY_SECRET_ENV_KEY] = secret
     return { secret, ephemeral: true, source: 'memory-generated' }
   }

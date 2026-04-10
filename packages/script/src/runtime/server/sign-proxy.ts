@@ -4,7 +4,7 @@
  * ## Why this exists
  *
  * Most proxy URLs are built server-side during SSR/prerender and embedded in
- * HTML with a signature already attached — the client just uses them verbatim.
+ * HTML with a signature already attached; the client just uses them verbatim.
  * But some components rebuild their URLs reactively on the client after mount
  * (e.g. `ScriptGoogleMapsStaticMap` recomputes `size` from measured element
  * dimensions). Those URLs need a fresh signature, and the client cannot sign
@@ -18,13 +18,13 @@
  * The endpoint is itself the new attack surface: anything the client can get
  * signed, an attacker can also get signed. Mitigations:
  *
- * 1. **Signable path allowlist** — only routes explicitly marked
+ * 1. **Signable path allowlist**: only routes explicitly marked
  *    `requiresSigning: true` in the registry can be signed. Arbitrary paths
  *    are rejected with 403.
- * 2. **Same-origin check** — the `Origin` header must match the request's
+ * 2. **Same-origin check**: the `Origin` header must match the request's
  *    `Host` header. This blocks naive cross-site abuse; it's defense-in-depth,
  *    not a complete CSRF solution.
- * 3. **Per-IP rate limiting** — a fixed-window counter in nitro storage caps
+ * 3. **Per-IP rate limiting**: a fixed-window counter in nitro storage caps
  *    sign requests per IP per minute. This effectively caps the rate at which
  *    any single attacker can burn downstream API quota.
  *

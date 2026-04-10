@@ -10,7 +10,7 @@
  *
  * Behavior:
  * - Reads `runtimeConfig.nuxt-scripts.proxySecret` (server-only).
- * - If no secret is configured: 500 — the module is misconfigured.
+ * - If no secret is configured: 500 (the module is misconfigured).
  * - If the request's `sig` param is missing, malformed, or doesn't match: 403.
  * - Otherwise, delegates to the wrapped handler.
  *

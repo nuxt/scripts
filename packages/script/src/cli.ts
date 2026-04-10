@@ -1,7 +1,7 @@
 /**
  * @nuxt/scripts CLI.
  *
- * Currently hosts a single command — `generate-secret` — which produces a
+ * Currently hosts a single command, `generate-secret`, which produces a
  * cryptographically random HMAC secret for `NUXT_SCRIPTS_PROXY_SECRET`. This
  * is an alternative to letting the module auto-write a secret into `.env`,
  * for users who want explicit control (e.g. teams that commit secrets to a
@@ -19,7 +19,7 @@ function generateSecret(): void {
   process.stdout.write(
     [
       '',
-      '  @nuxt/scripts — proxy signing secret',
+      '  @nuxt/scripts: proxy signing secret',
       '',
       `  Secret: ${secret}`,
       '',
