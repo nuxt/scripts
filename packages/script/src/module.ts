@@ -741,12 +741,12 @@ export default defineNuxtModule<ModuleOptions>({
         }
 
         // Warn for static presets
-        const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static', 'netlify-static', 'azure-static', 'firebase-static']
-        const preset = process.env.NITRO_PRESET || ''
-        if (staticPresets.includes(preset)) {
+        const proxyStaticPresets = ['static', 'github-pages', 'cloudflare-pages-static', 'netlify-static', 'azure-static', 'firebase-static']
+        const proxyPreset = process.env.NITRO_PRESET || ''
+        if (proxyStaticPresets.includes(proxyPreset)) {
           logger.warn(
-            `Proxy collection endpoints require a server runtime (detected: ${preset || 'static'}).\n`
-            + 'Scripts will be bundled, but collection requests will not be proxied.\n'
+            `Proxy collection endpoints require a server runtime (detected: ${proxyPreset || 'static'}).\n`
+            + 'Scripts will be bundled, but collection requests will not be proxied and URL signing will be unavailable.\n'
             + 'Options: configure platform rewrites, switch to server-rendered mode, or disable with proxy: false.',
           )
         }
@@ -851,10 +851,23 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
     ) as any
 
-    // Resolve the HMAC signing secret only when at least one handler needs it.
-    // This avoids writing NUXT_SCRIPTS_PROXY_SECRET to .env for users who only
-    // use client-side scripts (analytics, tracking) with no proxy endpoints.
-    if (anyHandlerRequiresSigning) {
+    // Signing requires a server runtime to verify HMACs. Skip setup entirely
+    // for SPA mode or static presets where no Nitro server exists at runtime.
+    const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static', 'netlify-static', 'azure-static', 'firebase-static']
+    const nitroPreset = process.env.NITRO_PRESET || ''
+    const isStaticTarget = staticPresets.includes(nitroPreset)
+    const isSpa = nuxt.options.ssr === false
+
+    if (anyHandlerRequiresSigning && (isSpa || isStaticTarget)) {
+      logger.warn(
+        `[security] URL signing requires a server runtime${isStaticTarget ? ` (detected preset: ${nitroPreset})` : ' (ssr: false)'}.\n`
+        + '  Proxy endpoints will work without signature verification.\n'
+        + '  To enable signing, deploy with a server-rendered target or configure platform-level rewrites.',
+      )
+    }
+    // Resolve the HMAC signing secret only when at least one handler needs it
+    // and a server runtime can actually verify signatures.
+    else if (anyHandlerRequiresSigning) {
       const proxySecretResolved = resolveProxySecret(
         nuxt.options.rootDir,
         !!nuxt.options.dev,
@@ -867,18 +880,11 @@ export default defineNuxtModule<ModuleOptions>({
         logger.warn(`[security] Generated an in-memory ${PROXY_SECRET_ENV_KEY} (could not write .env). Signed URLs will break across restarts.`)
 
       if (proxySecretResolved?.secret) {
-        nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
-          { proxySecret: proxySecretResolved.secret },
-          nuxt.options.runtimeConfig['nuxt-scripts'] as any,
-        ) as any
+        ;(nuxt.options.runtimeConfig['nuxt-scripts'] as any).proxySecret = proxySecretResolved.secret
       }
       else if (!nuxt.options.dev) {
-        // Warn (not throw) so that nuxt prepare, nuxt build, and CI work without
-        // the secret. withSigning passes through when no secret is configured, so
-        // endpoints remain functional but unsigned. Users opt in to enforcement by
-        // setting the env var.
         logger.warn(
-          `[security] ${PROXY_SECRET_ENV_KEY} is not set. Proxy endpoints are unprotected.\n`
+          `[security] ${PROXY_SECRET_ENV_KEY} is not set. Proxy endpoints will pass requests through without signature verification.\n`
           + '  Generate one with: npx @nuxt/scripts generate-secret\n'
           + `  Then set the env var: ${PROXY_SECRET_ENV_KEY}=<secret>`,
         )
