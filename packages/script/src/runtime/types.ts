@@ -304,6 +304,14 @@ export interface RegistryScriptServerHandler {
   route: string
   handler: string
   middleware?: boolean
+  /**
+   * Whether this handler verifies HMAC signatures via `withSigning()`.
+   *
+   * When any enabled script registers a handler with `requiresSigning: true`,
+   * the module enforces that `NUXT_SCRIPTS_PROXY_SECRET` is set in production,
+   * and the `/_scripts/sign` endpoint will accept this route as a signable path.
+   */
+  requiresSigning?: boolean
 }
 
 /**

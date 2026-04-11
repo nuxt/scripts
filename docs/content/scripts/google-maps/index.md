@@ -63,6 +63,10 @@ You must add this. It registers server proxy routes that keep your API key serve
 You can pass `api-key` directly on the `<ScriptGoogleMaps>`{lang="html"} component, but this approach is not recommended, as it exposes your key in client-side requests.
 ::
 
+::callout{type="info"}
+This script's proxy endpoints use [HMAC URL signing](/docs/guides/first-party#proxy-endpoint-security) when you configure a `NUXT_SCRIPTS_PROXY_SECRET`. See the [security guide](/docs/guides/first-party#proxy-endpoint-security) for setup instructions.
+::
+
 See [Billing & Permissions](/scripts/google-maps/guides/billing) for API costs and required permissions.
 
 ## Quick Start

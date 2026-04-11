@@ -20,6 +20,10 @@ links:
 ::script-docs
 ::
 
+::callout{type="info"}
+This script's proxy endpoints use [HMAC URL signing](/docs/guides/first-party#proxy-endpoint-security) when you configure a `NUXT_SCRIPTS_PROXY_SECRET`. See the [security guide](/docs/guides/first-party#proxy-endpoint-security) for setup instructions.
+::
+
 ## [`<ScriptGravatar>`{lang="html"}](/scripts/gravatar){lang="html"}
 
 The [`<ScriptGravatar>`{lang="html"}](/scripts/gravatar){lang="html"} component renders a Gravatar avatar for a given email address. All requests are proxied through your server - Gravatar never sees your user's IP address or headers.

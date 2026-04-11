@@ -45,7 +45,11 @@
       ]
     }
   },
+  "bin": {
+    "nuxt-scripts": "./bin/cli.mjs"
+  },
   "files": [
+    "bin",
     "dist"
   ],
   "scripts": {

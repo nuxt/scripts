@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { $fetch } from 'ofetch'
+import { withSigning } from './utils/withSigning'
 
 interface TweetData {
   id_str: string
@@ -45,7 +46,7 @@ interface TweetData {
 
 const TWEET_ID_RE = /^\d+$/
 
-export default defineEventHandler(async (event) => {
+export default withSigning(defineEventHandler(async (event) => {
   const query = getQuery(event)
   const tweetId = query.id as string
 
@@ -81,4 +82,4 @@ export default defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return tweetData
-})
+}))
