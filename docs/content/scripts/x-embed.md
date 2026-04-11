@@ -18,6 +18,10 @@ Nuxt Scripts provides a [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="
 ::script-docs{embed}
 ::
 
+::callout{type="info"}
+This script's proxy endpoints use [HMAC URL signing](/docs/guides/first-party#proxy-endpoint-security) when you configure a `NUXT_SCRIPTS_PROXY_SECRET`. See the [security guide](/docs/guides/first-party#proxy-endpoint-security) for setup instructions.
+::
+
 This registers the required server API routes (`/_scripts/embed/x` and `/_scripts/embed/x-image`) that handle fetching tweet data and proxying images.
 
 ## [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"}
