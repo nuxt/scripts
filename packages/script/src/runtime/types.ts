@@ -253,7 +253,7 @@ export type BuiltInRegistryScriptKey
  */
 export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
-type RegistryConfigInput<T> = [T] extends [true] ? Record<string, never> : T
+type RegistryConfigInput<T> = 0 extends 1 & T ? Record<string, any> : [T] extends [true] ? Record<string, never> : T
 
 export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'] | false, proxy?: boolean, bundle?: boolean, partytown?: boolean, privacy?: ProxyPrivacyInput })
 
