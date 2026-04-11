@@ -320,7 +320,7 @@ export interface ModuleOptions {
      * Falls back to `process.env.NUXT_SCRIPTS_PROXY_SECRET` if unset. In dev,
      * the module auto-generates a secret into your `.env` file when neither is
      * provided (disable via `autoGenerateSecret: false`). In production, a
-     * missing secret is a fatal error when any signed endpoint is registered.
+     * missing secret logs a warning; proxy endpoints remain functional but unprotected.
      *
      * Generate one with: `npx @nuxt/scripts generate-secret`
      */
