@@ -1,13 +1,7 @@
 import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
-import type {
-  NuxtConfigScriptRegistry,
-  NuxtUseScriptOptions,
-  RegistryScriptInput,
-  ScriptRegistry,
-  UseScriptContext,
-} from '../../packages/script/src/runtime/types'
+import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
 describe('module options registry', () => {
@@ -77,6 +71,17 @@ describe('module options registry', () => {
   it('registry allows unknown keys as catch-all', () => {
     // Unknown keys fall through to the index signature (any), so custom scripts work
     expectTypeOf<Registry['my-custom-script']>().toBeAny()
+  })
+
+  // Issue #700: NuxtConfigScriptRegistryEntry<any> must not collapse to Record<string, never>
+  // This happens when Nuxt's $production/$development wraps the config in DeepPartial,
+  // collapsing the interface's index signature priority and resolving all keys to `any`.
+  it('NuxtConfigScriptRegistryEntry<any> allows arbitrary properties', () => {
+    type Entry = Exclude<NuxtConfigScriptRegistryEntry<any>, boolean | 'mock'>
+    // Must not be never (would mean Record<string, never> killed the intersection)
+    expectTypeOf<Entry>().not.toBeNever()
+    // Arbitrary properties must be assignable, not `never`
+    expectTypeOf<{ matomoUrl: string, siteId: number }>().toMatchTypeOf<Entry>()
   })
 })
 
