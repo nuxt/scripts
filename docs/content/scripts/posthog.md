@@ -101,6 +101,41 @@ onLoaded(({ posthog }) => {
 })
 ```
 
+## Consent Mode
+
+PostHog exposes [`opt_in_capturing` / `opt_out_capturing`](https://posthog.com/docs/privacy/opting-out). Nuxt Scripts wires these to the `defaultConsent` option, applied BEFORE the first `capture()`{lang="ts"} call.
+
+| Value | Behaviour |
+|-------|-----------|
+| `'opt-in'` | Calls `posthog.opt_in_capturing()`{lang="ts"} immediately after init. |
+| `'opt-out'` | Calls `posthog.init(..., { opt_out_capturing_by_default: true })`{lang="ts"} so the SDK boots opted out. |
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      posthog: {
+        apiKey: 'YOUR_API_KEY',
+        defaultConsent: 'opt-out',
+      }
+    }
+  }
+})
+```
+
+### Granting or revoking consent at runtime
+
+```ts
+const { proxy } = useScriptPostHog()
+
+function onAccept() {
+  proxy.posthog.opt_in_capturing()
+}
+function onRevoke() {
+  proxy.posthog.opt_out_capturing()
+}
+```
+
 ## Disabling Session Recording
 
 ```ts

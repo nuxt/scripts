@@ -50,6 +50,33 @@ export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
+// -- Consent mode (GCM-style) --
+
+export type ConsentCategoryValue = 'granted' | 'denied'
+
+export interface ConsentState {
+  ad_storage?: ConsentCategoryValue
+  ad_user_data?: ConsentCategoryValue
+  ad_personalization?: ConsentCategoryValue
+  analytics_storage?: ConsentCategoryValue
+  functionality_storage?: ConsentCategoryValue
+  personalization_storage?: ConsentCategoryValue
+  security_storage?: ConsentCategoryValue
+}
+
+/**
+ * Shared adapter contract that unifies consent APIs across vendors.
+ * Consumers (and `useScriptTriggerConsent`) apply GCM-style state without
+ * caring whether the vendor exposes `gtag('consent', ...)`, `_paq.push`,
+ * `mixpanel.opt_in_tracking()`, etc.
+ */
+export interface ConsentAdapter<Proxy = any> {
+  /** Called once before the vendor init call. */
+  applyDefault: (state: ConsentState, proxy: Proxy) => void
+  /** Called whenever consent changes at runtime. */
+  applyUpdate: (state: ConsentState, proxy: Proxy) => void
+}
+
 export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
@@ -439,6 +466,12 @@ export interface RegistryScript {
    * - absent: not partytown-capable
    */
   partytown?: PartytownCapability
+  /**
+   * Consent adapter. Lets tooling (e.g. `useScriptTriggerConsent`) apply
+   * GCM-style consent state against the vendor's runtime proxy, without
+   * knowing vendor-specific APIs.
+   */
+  consentAdapter?: ConsentAdapter
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false

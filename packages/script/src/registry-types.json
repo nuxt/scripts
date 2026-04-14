@@ -585,7 +585,7 @@
       {
         "name": "MatomoAnalyticsOptions",
         "kind": "const",
-        "code": "export const MatomoAnalyticsOptions = object({\n  /**\n   * The URL of your self-hosted Matomo instance.\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'https://matomo.example.com'\n   * @see https://developer.matomo.org/guides/tracking-javascript-guide\n   */\n  matomoUrl: optional(string()),\n  /**\n   * Your Matomo site ID.\n   * @default '1'\n   */\n  siteId: optional(union([string(), number()])),\n  /**\n   * Your Matomo Cloud ID (the subdomain portion of your `*.matomo.cloud` URL).\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'mysite.matomo.cloud'\n   */\n  cloudId: optional(string()),\n  /**\n   * A custom tracker URL. Overrides the default tracker endpoint derived from `matomoUrl` or `cloudId`.\n   */\n  trackerUrl: optional(string()),\n  /**\n   * Whether to track the initial page view on load.\n   * @deprecated Use `watch: true` (default) for automatic page view tracking.\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Enable download and outlink tracking.\n   */\n  enableLinkTracking: optional(boolean()),\n  /**\n   * Disable all tracking cookies for cookieless analytics.\n   */\n  disableCookies: optional(boolean()),\n  /**\n   * Automatically track page views on route change.\n   * @default true\n   */\n  watch: optional(boolean()),\n})"
+        "code": "export const MatomoAnalyticsOptions = object({\n  /**\n   * The URL of your self-hosted Matomo instance.\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'https://matomo.example.com'\n   * @see https://developer.matomo.org/guides/tracking-javascript-guide\n   */\n  matomoUrl: optional(string()),\n  /**\n   * Your Matomo site ID.\n   * @default '1'\n   */\n  siteId: optional(union([string(), number()])),\n  /**\n   * Your Matomo Cloud ID (the subdomain portion of your `*.matomo.cloud` URL).\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'mysite.matomo.cloud'\n   */\n  cloudId: optional(string()),\n  /**\n   * A custom tracker URL. Overrides the default tracker endpoint derived from `matomoUrl` or `cloudId`.\n   */\n  trackerUrl: optional(string()),\n  /**\n   * Whether to track the initial page view on load.\n   * @deprecated Use `watch: true` (default) for automatic page view tracking.\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Enable download and outlink tracking.\n   */\n  enableLinkTracking: optional(boolean()),\n  /**\n   * Disable all tracking cookies for cookieless analytics.\n   */\n  disableCookies: optional(boolean()),\n  /**\n   * Automatically track page views on route change.\n   * @default true\n   */\n  watch: optional(boolean()),\n  /**\n   * Default tracking-consent state applied BEFORE the tracker is initialised.\n   * - `'required'` — call `requireConsent` without granting (user must opt in later).\n   * - `'given'` — call `requireConsent` then `setConsentGiven`.\n   * - `'not-required'` — no consent gating (default Matomo behaviour).\n   * @see https://developer.matomo.org/guides/tracking-consent\n   */\n  defaultConsent: optional(union([literal('required'), literal('given'), literal('not-required')])),\n})"
       },
       {
         "name": "MatomoAnalyticsApi",
@@ -634,7 +634,7 @@
       {
         "name": "MixpanelAnalyticsOptions",
         "kind": "const",
-        "code": "export const MixpanelAnalyticsOptions = object({\n  /**\n   * Your Mixpanel project token.\n   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library\n   */\n  token: string(),\n})"
+        "code": "export const MixpanelAnalyticsOptions = object({\n  /**\n   * Your Mixpanel project token.\n   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library\n   */\n  token: string(),\n  /**\n   * Default tracking-consent state applied BEFORE `mixpanel.init`.\n   * - `'opt-in'` — calls `mixpanel.opt_in_tracking()`.\n   * - `'opt-out'` — calls `mixpanel.opt_out_tracking()`.\n   * @see https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking\n   */\n  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),\n})"
       },
       {
         "name": "MixpanelAnalyticsApi",
@@ -722,7 +722,7 @@
       {
         "name": "PostHogOptions",
         "kind": "const",
-        "code": "export const PostHogOptions = object({\n  /**\n   * Your PostHog project API key.\n   * @see https://posthog.com/docs/libraries/js#usage\n   */\n  apiKey: string(),\n  /**\n   * Your PostHog data region.\n   * @default 'us'\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  region: optional(union([literal('us'), literal('eu')])),\n  /**\n   * Custom API host URL. Overrides the default derived from `region`.\n   * Useful for self-hosted instances or reverse proxies.\n   */\n  apiHost: optional(string()),\n  /**\n   * Enable autocapture of clicks, form submissions, and page views.\n   * @default true\n   */\n  autocapture: optional(boolean()),\n  /**\n   * Capture page views automatically. Set to `'history_change'` to only capture on history changes.\n   * @default true\n   */\n  capturePageview: optional(union([boolean(), literal('history_change')])),\n  /**\n   * Capture page leave events automatically.\n   * @default true\n   */\n  capturePageleave: optional(boolean()),\n  /**\n   * Disable session recording.\n   */\n  disableSessionRecording: optional(boolean()),\n  /**\n   * Additional PostHog configuration options passed directly to `posthog.init()`.\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  config: optional(record(string(), any())),\n})"
+        "code": "export const PostHogOptions = object({\n  /**\n   * Your PostHog project API key.\n   * @see https://posthog.com/docs/libraries/js#usage\n   */\n  apiKey: string(),\n  /**\n   * Your PostHog data region.\n   * @default 'us'\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  region: optional(union([literal('us'), literal('eu')])),\n  /**\n   * Custom API host URL. Overrides the default derived from `region`.\n   * Useful for self-hosted instances or reverse proxies.\n   */\n  apiHost: optional(string()),\n  /**\n   * Enable autocapture of clicks, form submissions, and page views.\n   * @default true\n   */\n  autocapture: optional(boolean()),\n  /**\n   * Capture page views automatically. Set to `'history_change'` to only capture on history changes.\n   * @default true\n   */\n  capturePageview: optional(union([boolean(), literal('history_change')])),\n  /**\n   * Capture page leave events automatically.\n   * @default true\n   */\n  capturePageleave: optional(boolean()),\n  /**\n   * Disable session recording.\n   */\n  disableSessionRecording: optional(boolean()),\n  /**\n   * Additional PostHog configuration options passed directly to `posthog.init()`.\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  config: optional(record(string(), any())),\n  /**\n   * Default capture-consent state applied BEFORE `posthog.init`.\n   * - `'opt-in'` — calls `posthog.opt_in_capturing()`.\n   * - `'opt-out'` — calls `posthog.opt_out_capturing()`.\n   * @see https://posthog.com/docs/privacy/opting-out\n   */\n  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),\n})"
       },
       {
         "name": "PostHogApi",
@@ -1715,6 +1715,12 @@
         "required": false,
         "description": "Automatically track page views on route change.",
         "defaultValue": "true"
+      },
+      {
+        "name": "defaultConsent",
+        "type": "'required' | 'given' | 'not-required'",
+        "required": false,
+        "description": "Default tracking-consent state applied BEFORE the tracker is initialised. - `'required'` — call `requireConsent` without granting (user must opt in later). - `'given'` — call `requireConsent` then `setConsentGiven`. - `'not-required'` — no consent gating (default Matomo behaviour)."
       }
     ],
     "MetaPixelOptions": [
@@ -1805,6 +1811,12 @@
         "type": "Record<string, any>",
         "required": false,
         "description": "Additional PostHog configuration options passed directly to `posthog.init()`."
+      },
+      {
+        "name": "defaultConsent",
+        "type": "'opt-in' | 'opt-out'",
+        "required": false,
+        "description": "Default capture-consent state applied BEFORE `posthog.init`. - `'opt-in'` — calls `posthog.opt_in_capturing()`. - `'opt-out'` — calls `posthog.opt_out_capturing()`."
       }
     ],
     "RedditPixelOptions": [
@@ -1903,6 +1915,12 @@
         "type": "string",
         "required": true,
         "description": "Your Mixpanel project token."
+      },
+      {
+        "name": "defaultConsent",
+        "type": "'opt-in' | 'opt-out'",
+        "required": false,
+        "description": "Default tracking-consent state applied BEFORE `mixpanel.init`. - `'opt-in'` — calls `mixpanel.opt_in_tracking()`. - `'opt-out'` — calls `mixpanel.opt_out_tracking()`."
       }
     ],
     "BingUetOptions": [

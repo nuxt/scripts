@@ -67,8 +67,18 @@ export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_opti
               }
             }
 
-            if (options?.token)
-              mp.init(options.token)
+            if (options?.token) {
+              // Mixpanel accepts `opt_out_tracking_by_default` on init() to start in the
+              // opted-out state. For explicit opt-in we still default out then flip in,
+              // so consent is resolved BEFORE the first track call.
+              const optOutByDefault = options?.defaultConsent !== undefined
+                && options.defaultConsent !== 'opt-in'
+              mp.init(options.token, optOutByDefault ? { opt_out_tracking_by_default: true } : undefined)
+              if (options?.defaultConsent === 'opt-in') {
+                // opt_in_tracking isn't part of the stub; push so the real SDK runs it on load.
+                mp.push(['opt_in_tracking'])
+              }
+            }
           },
     }
   }, _options)
