@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 import { defineConfig, defineProject } from 'vitest/config'
 
@@ -23,7 +24,7 @@ export default defineConfig({
       defineProject({
         resolve: {
           alias: {
-            'nitropack/runtime': new URL('./test/unit/__mocks__/nitropack-runtime.ts', import.meta.url).pathname,
+            'nitropack/runtime': fileURLToPath(new URL('./test/unit/__mocks__/nitropack-runtime.ts', import.meta.url)),
           },
         },
         test: {
