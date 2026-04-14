@@ -217,38 +217,6 @@ export interface ConsentScriptTriggerOptions {
   postConsentTrigger?: ExcludePromises<NuxtUseScriptOptions['trigger']> | (() => Promise<any>)
 }
 
-/**
- * Google Consent Mode v2 category value.
- */
-export type ConsentCategoryValue = 'granted' | 'denied'
-
-/**
- * Google Consent Mode v2 consent state.
- *
- * @see https://developers.google.com/tag-platform/security/guides/consent
- */
-export interface ConsentState {
-  ad_storage?: ConsentCategoryValue
-  ad_user_data?: ConsentCategoryValue
-  ad_personalization?: ConsentCategoryValue
-  analytics_storage?: ConsentCategoryValue
-  functionality_storage?: ConsentCategoryValue
-  personalization_storage?: ConsentCategoryValue
-  security_storage?: ConsentCategoryValue
-}
-
-/**
- * Adapter contract that individual registry scripts implement so a unified
- * consent composable can fan out default and update events.
- *
- * `applyDefault` runs once before the SDK initializes (e.g. `gtag('consent', 'default', ...)`),
- * `applyUpdate` runs whenever the user updates any category.
- */
-export interface ConsentAdapter<Proxy = any> {
-  applyDefault: (state: ConsentState, proxy: Proxy) => void
-  applyUpdate: (state: ConsentState, proxy: Proxy) => void
-}
-
 export interface UseScriptConsentOptions extends ConsentScriptTriggerOptions {
   /**
    * Initial consent state applied synchronously before any subscribed script loads.
