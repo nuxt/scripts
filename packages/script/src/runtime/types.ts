@@ -50,7 +50,7 @@ export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-// -- Consent adapter contract (Scope A / Scope B shared) --
+// -- Consent adapter contract --
 
 /**
  * GCMv2 consent category value.
@@ -60,7 +60,7 @@ export type ConsentCategoryValue = 'granted' | 'denied'
 
 /**
  * Canonical GCMv2 consent state shape shared across all scripts.
- * Non-GCM vendors (Meta, TikTok) project a subset of this via their adapters.
+ * Non-GCM vendors (Meta, TikTok, Matomo, Mixpanel, PostHog) project a subset via their adapters.
  */
 export interface ConsentState {
   ad_storage?: ConsentCategoryValue
@@ -74,10 +74,12 @@ export interface ConsentState {
 
 /**
  * Adapter that maps a canonical GCMv2 ConsentState to a vendor's consent API.
- * Consumed by the Scope B `useScriptConsent` composable.
+ * Consumed by the `useScriptConsent` composable so call sites apply GCM-style
+ * state without caring whether the vendor uses `gtag('consent', ...)`,
+ * `_paq.push`, `mixpanel.opt_in_tracking()`, etc.
  */
 export interface ConsentAdapter<Proxy = any> {
-  /** Called once to establish the default consent state before the script init. */
+  /** Called once before the vendor init call to establish default consent. */
   applyDefault: (state: ConsentState, proxy: Proxy) => void
   /** Called on every consent update after the script has loaded. */
   applyUpdate: (state: ConsentState, proxy: Proxy) => void

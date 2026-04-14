@@ -594,6 +594,14 @@ export const MatomoAnalyticsOptions = object({
    * @default true
    */
   watch: optional(boolean()),
+  /**
+   * Default tracking-consent state applied BEFORE the tracker is initialised.
+   * - `'required'` — call `requireConsent` without granting (user must opt in later).
+   * - `'given'` — call `requireConsent` then `setConsentGiven`.
+   * - `'not-required'` — no consent gating (default Matomo behaviour).
+   * @see https://developer.matomo.org/guides/tracking-consent
+   */
+  defaultConsent: optional(union([literal('required'), literal('given'), literal('not-required')])),
 })
 
 export const MetaPixelOptions = object({
@@ -704,6 +712,13 @@ export const PostHogOptions = object({
    * @see https://posthog.com/docs/libraries/js#config
    */
   config: optional(record(string(), any())),
+  /**
+   * Default capture-consent state applied BEFORE `posthog.init`.
+   * - `'opt-in'` — calls `posthog.opt_in_capturing()`.
+   * - `'opt-out'` — calls `posthog.opt_out_capturing()`.
+   * @see https://posthog.com/docs/privacy/opting-out
+   */
+  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),
 })
 
 export const RedditPixelOptions = object({
@@ -780,6 +795,13 @@ export const MixpanelAnalyticsOptions = object({
    * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library
    */
   token: string(),
+  /**
+   * Default tracking-consent state applied BEFORE `mixpanel.init`.
+   * - `'opt-in'` — calls `mixpanel.opt_in_tracking()`.
+   * - `'opt-out'` — calls `mixpanel.opt_out_tracking()`.
+   * @see https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking
+   */
+  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),
 })
 
 export const BingUetOptions = object({

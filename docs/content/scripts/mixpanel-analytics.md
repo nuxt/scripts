@@ -69,3 +69,35 @@ proxy.mixpanel.register({
 })
 </script>
 ```
+
+## Consent Mode
+
+Mixpanel exposes [`opt_in_tracking` / `opt_out_tracking`](https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking). Nuxt Scripts wires these to the `defaultConsent` option, which is resolved BEFORE the first event is tracked.
+
+| Value | Behaviour |
+|-------|-----------|
+| `'opt-in'` | Starts opted in. |
+| `'opt-out'` | Calls `mixpanel.init(..., { opt_out_tracking_by_default: true })`{lang="ts"} so the SDK boots opted out. |
+
+```ts
+useScriptMixpanelAnalytics({
+  token: 'YOUR_TOKEN',
+  defaultConsent: 'opt-out',
+})
+```
+
+### Granting or revoking consent at runtime
+
+```ts
+const { proxy } = useScriptMixpanelAnalytics({
+  token: 'YOUR_TOKEN',
+  defaultConsent: 'opt-out',
+})
+
+function onAccept() {
+  proxy.mixpanel.opt_in_tracking()
+}
+function onRevoke() {
+  proxy.mixpanel.opt_out_tracking()
+}
+```

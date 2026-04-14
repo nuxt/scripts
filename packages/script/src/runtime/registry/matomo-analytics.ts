@@ -49,6 +49,14 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
       clientInit: import.meta.server
         ? undefined
         : () => {
+            // Consent MUST be queued before any tracking call so Matomo honors it for the first page view.
+            if (options?.defaultConsent === 'required') {
+              _paq.push(['requireConsent'])
+            }
+            else if (options?.defaultConsent === 'given') {
+              _paq.push(['requireConsent'])
+              _paq.push(['setConsentGiven'])
+            }
             if (options?.enableLinkTracking) {
               _paq.push(['enableLinkTracking'])
             }

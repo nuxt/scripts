@@ -83,6 +83,41 @@ useScriptMatomoAnalytics({
 })
 ```
 
+## Consent Mode
+
+Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides/tracking-consent). Nuxt Scripts exposes it via the `defaultConsent` option, which is applied BEFORE the first tracker call.
+
+| Value | Behaviour |
+|-------|-----------|
+| `'required'` | Pushes `['requireConsent']`. Nothing is tracked until the user opts in. |
+| `'given'` | Pushes `['requireConsent']` then `['setConsentGiven']`. Tracking starts immediately. |
+| `'not-required'` | Default Matomo behaviour (no consent gating). |
+
+```ts
+useScriptMatomoAnalytics({
+  cloudId: 'YOUR_CLOUD_ID',
+  defaultConsent: 'required',
+})
+```
+
+### Granting or revoking consent at runtime
+
+Use the `proxy` to call Matomo's consent commands directly when the user updates their choice:
+
+```ts
+const { proxy } = useScriptMatomoAnalytics({
+  cloudId: 'YOUR_CLOUD_ID',
+  defaultConsent: 'required',
+})
+
+function onAccept() {
+  proxy._paq.push(['setConsentGiven'])
+}
+function onRevoke() {
+  proxy._paq.push(['forgetConsentGiven'])
+}
+```
+
 ### Using Matomo Whitelabel
 
 For Matomo Whitelabel, set `trackerUrl` and `scriptInput.src` to customize tracking.

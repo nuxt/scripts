@@ -334,6 +334,20 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           },
         },
       },
+      consentAdapter: {
+        applyDefault: (state, { posthog }) => {
+          if (state.analytics_storage === 'granted')
+            posthog?.opt_in_capturing?.()
+          else if (state.analytics_storage === 'denied')
+            posthog?.opt_out_capturing?.()
+        },
+        applyUpdate: (state, { posthog }) => {
+          if (state.analytics_storage === 'granted')
+            posthog?.opt_in_capturing?.()
+          else if (state.analytics_storage === 'denied')
+            posthog?.opt_out_capturing?.()
+        },
+      },
     }),
     def('fathomAnalytics', {
       schema: FathomAnalyticsOptions,
@@ -359,6 +373,20 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_IP_ONLY,
       },
       partytown: { forwards: ['_paq.push'] },
+      consentAdapter: {
+        applyDefault: (state, { _paq }) => {
+          if (state.analytics_storage === 'granted')
+            _paq?.push?.(['setConsentGiven'])
+          else if (state.analytics_storage === 'denied')
+            _paq?.push?.(['forgetConsentGiven'])
+        },
+        applyUpdate: (state, { _paq }) => {
+          if (state.analytics_storage === 'granted')
+            _paq?.push?.(['setConsentGiven'])
+          else if (state.analytics_storage === 'denied')
+            _paq?.push?.(['forgetConsentGiven'])
+        },
+      },
     }),
     def('rybbitAnalytics', {
       schema: RybbitAnalyticsOptions,
@@ -419,6 +447,20 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       partytown: { forwards: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register'] },
+      consentAdapter: {
+        applyDefault: (state, { mixpanel }) => {
+          if (state.analytics_storage === 'granted')
+            mixpanel?.opt_in_tracking?.()
+          else if (state.analytics_storage === 'denied')
+            mixpanel?.opt_out_tracking?.()
+        },
+        applyUpdate: (state, { mixpanel }) => {
+          if (state.analytics_storage === 'granted')
+            mixpanel?.opt_in_tracking?.()
+          else if (state.analytics_storage === 'denied')
+            mixpanel?.opt_out_tracking?.()
+        },
+      },
     }),
     // ad
     def('bingUet', {
@@ -719,6 +761,16 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
             gtm_env: options.envName,
             gtm_auth_referrer_policy: options.authReferrerPolicy,
           })
+        },
+      },
+      consentAdapter: {
+        // GTM lives on the same dataLayer as gtag. The gtag wrapper pushes its arguments
+        // object; we emulate it by pushing a plain array matching `['consent', 'default'|'update', state]`.
+        applyDefault: (state, { dataLayer }) => {
+          dataLayer?.push?.(['consent', 'default', state] as any)
+        },
+        applyUpdate: (state, { dataLayer }) => {
+          dataLayer?.push?.(['consent', 'update', state] as any)
         },
       },
     }),
