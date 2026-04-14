@@ -448,7 +448,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           return 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'
         },
       },
-      partytown: { forwards: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register'] },
+      partytown: { forwards: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register', 'mixpanel.opt_in_tracking', 'mixpanel.opt_out_tracking'] },
       consentAdapter: {
         applyDefault: (state, { mixpanel }) => {
           if (state.analytics_storage === 'granted')
@@ -519,7 +519,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         domains: ['analytics.tiktok.com', 'mon.tiktok.com', 'mcs.tiktok.com'],
         privacy: PRIVACY_FULL,
       },
-      partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify'] },
+      partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify', 'ttq.grantConsent', 'ttq.revokeConsent', 'ttq.holdConsent'] },
       consentAdapter: tiktokPixelConsentAdapter,
     }),
     def('snapchatPixel', {
@@ -622,7 +622,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         domains: ['www.clarity.ms', 'scripts.clarity.ms', 'd.clarity.ms', 'e.clarity.ms', 'k.clarity.ms', 'c.clarity.ms', 'a.clarity.ms', 'b.clarity.ms'],
         privacy: PRIVACY_HEATMAP,
       },
-      partytown: { forwards: [] },
+      partytown: { forwards: ['clarity'] },
       consentAdapter: clarityConsentAdapter,
     }),
     // payments

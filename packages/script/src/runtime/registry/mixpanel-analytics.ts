@@ -16,6 +16,10 @@ export interface MixpanelAnalyticsApi {
     }
     register: (properties: Record<string, any>) => void
     init: (token: string, config?: Record<string, any>) => void
+    /** Opt the user in to tracking. Available after the real SDK loads. */
+    opt_in_tracking?: () => void
+    /** Opt the user out of tracking. Available after the real SDK loads. */
+    opt_out_tracking?: () => void
   }
 }
 
@@ -68,11 +72,10 @@ export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_opti
             }
 
             if (options?.token) {
-              // Mixpanel accepts `opt_out_tracking_by_default` on init() to start in the
-              // opted-out state. For explicit opt-in we still default out then flip in,
-              // so consent is resolved BEFORE the first track call.
-              const optOutByDefault = options?.defaultConsent !== undefined
-                && options.defaultConsent !== 'opt-in'
+              // 'opt-out' is applied on init() via `opt_out_tracking_by_default`, so tracking
+              // is suppressed before the first call. 'opt-in' is queued on the `mp` stub with
+              // `opt_in_tracking`; the real SDK drains the queue on load and runs it early.
+              const optOutByDefault = options?.defaultConsent === 'opt-out'
               mp.init(options.token, optOutByDefault ? { opt_out_tracking_by_default: true } : undefined)
               if (options?.defaultConsent === 'opt-in') {
                 // opt_in_tracking isn't part of the stub; push so the real SDK runs it on load.

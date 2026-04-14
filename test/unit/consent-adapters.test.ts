@@ -8,10 +8,11 @@ import {
 } from '../../packages/script/src/runtime/registry/consent-adapters'
 
 describe('consent adapters — GCMv2 to vendor projection', () => {
-  it('tikTok: ad_storage maps to grantConsent / revokeConsent', () => {
+  it('tikTok: ad_storage maps to grantConsent / revokeConsent / holdConsent', () => {
     const grantConsent = vi.fn()
     const revokeConsent = vi.fn()
-    const proxy: any = { ttq: { grantConsent, revokeConsent } }
+    const holdConsent = vi.fn()
+    const proxy: any = { ttq: { grantConsent, revokeConsent, holdConsent } }
 
     tiktokPixelConsentAdapter.applyUpdate({ ad_storage: 'granted' }, proxy)
     expect(grantConsent).toHaveBeenCalledTimes(1)
@@ -19,9 +20,15 @@ describe('consent adapters — GCMv2 to vendor projection', () => {
     tiktokPixelConsentAdapter.applyUpdate({ ad_storage: 'denied' }, proxy)
     expect(revokeConsent).toHaveBeenCalledTimes(1)
 
-    tiktokPixelConsentAdapter.applyDefault({}, proxy)
+    // applyUpdate with undecided is a no-op -- preserves the prior decision.
+    tiktokPixelConsentAdapter.applyUpdate({}, proxy)
     expect(grantConsent).toHaveBeenCalledTimes(1)
     expect(revokeConsent).toHaveBeenCalledTimes(1)
+    expect(holdConsent).not.toHaveBeenCalled()
+
+    // applyDefault with undecided holds so tracking is deferred.
+    tiktokPixelConsentAdapter.applyDefault({}, proxy)
+    expect(holdConsent).toHaveBeenCalledTimes(1)
   })
 
   it('meta: ad_storage maps to fbq("consent", grant|revoke)', () => {

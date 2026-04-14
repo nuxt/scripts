@@ -9,22 +9,30 @@ import type { TikTokPixelApi } from './tiktok-pixel'
 // or top-level build code (registry.ts). No runtime imports, so pulling this in
 // does not drag `nuxt/app` or other runtime utilities into module evaluation.
 
-function applyTikTokConsent(state: { ad_storage?: 'granted' | 'denied' }, proxy: TikTokPixelApi) {
-  if (!state.ad_storage)
-    return
-  if (state.ad_storage === 'granted')
-    proxy.ttq.grantConsent()
-  else
-    proxy.ttq.revokeConsent()
-}
-
 /**
- * GCMv2 to TikTok consent adapter. TikTok only exposes a binary ad-storage toggle,
- * so we project lossy from `ad_storage`.
+ * GCMv2 to TikTok consent adapter. TikTok exposes three states:
+ * - `grantConsent()` / `revokeConsent()` for granted/denied.
+ * - `holdConsent()` to defer the decision (used as the default when `ad_storage`
+ *   is undecided, so tracking stays suspended until the user chooses).
+ *
+ * `applyUpdate` keeps the current state on an undecided transition to avoid
+ * silently holding after a prior grant/revoke.
  */
 export const tiktokPixelConsentAdapter: ConsentAdapter<TikTokPixelApi> = {
-  applyDefault: applyTikTokConsent,
-  applyUpdate: applyTikTokConsent,
+  applyDefault(state, proxy) {
+    if (state.ad_storage === 'granted')
+      proxy.ttq.grantConsent()
+    else if (state.ad_storage === 'denied')
+      proxy.ttq.revokeConsent()
+    else
+      proxy.ttq.holdConsent()
+  },
+  applyUpdate(state, proxy) {
+    if (state.ad_storage === 'granted')
+      proxy.ttq.grantConsent()
+    else if (state.ad_storage === 'denied')
+      proxy.ttq.revokeConsent()
+  },
 }
 
 function applyMetaConsent(state: { ad_storage?: 'granted' | 'denied' }, proxy: MetaPixelApi) {

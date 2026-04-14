@@ -713,9 +713,9 @@ export const PostHogOptions = object({
    */
   config: optional(record(string(), any())),
   /**
-   * Default capture-consent state applied BEFORE `posthog.init`.
-   * - `'opt-in'` — calls `posthog.opt_in_capturing()`.
-   * - `'opt-out'` — calls `posthog.opt_out_capturing()`.
+   * Default capture-consent state for PostHog.
+   * - `'opt-out'`: passed as `opt_out_capturing_by_default: true` to `posthog.init`, so capturing is suppressed from the first event.
+   * - `'opt-in'`: applied after `posthog.init` via `posthog.opt_in_capturing()` on the returned instance.
    * @see https://posthog.com/docs/privacy/opting-out
    */
   defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),
@@ -796,9 +796,9 @@ export const MixpanelAnalyticsOptions = object({
    */
   token: string(),
   /**
-   * Default tracking-consent state applied BEFORE `mixpanel.init`.
-   * - `'opt-in'` — calls `mixpanel.opt_in_tracking()`.
-   * - `'opt-out'` — calls `mixpanel.opt_out_tracking()`.
+   * Default tracking-consent state for Mixpanel.
+   * - `'opt-out'`: passed as `opt_out_tracking_by_default: true` to `mixpanel.init`, so tracking is suppressed from the first call.
+   * - `'opt-in'`: queued via `mixpanel.push(['opt_in_tracking'])` so the real SDK runs it immediately after load.
    * @see https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking
    */
   defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),
@@ -923,8 +923,8 @@ export const TikTokPixelOptions = object({
    */
   trackPageView: optional(boolean()),
   /**
-   * Default consent state. `'granted'` fires `ttq.consent.grant()`,
-   * `'denied'` fires `ttq.consent.revoke()`, both called before `ttq('init', id)`.
+   * Default consent state. `'granted'` fires `ttq.grantConsent()`,
+   * `'denied'` fires `ttq.revokeConsent()`, both called before `ttq('init', id)`.
    * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842
    */
   defaultConsent: optional(union([literal('granted'), literal('denied')])),

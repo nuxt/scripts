@@ -97,7 +97,13 @@ export function useScriptConsent(options?: UseScriptConsentOptions): UseScriptCo
       pendingFlush = false
       const snapshot = { ...state.value }
       for (const sub of subscriptions) {
-        sub.adapter.applyUpdate(snapshot, sub.proxy)
+        try {
+          sub.adapter.applyUpdate(snapshot, sub.proxy)
+        }
+        catch (error) {
+          if (import.meta.dev)
+            console.warn('[nuxt-scripts] consent adapter update failed', error)
+        }
       }
     })
   }
@@ -127,9 +133,16 @@ export function useScriptConsent(options?: UseScriptConsentOptions): UseScriptCo
 
   function register<Proxy = any>(adapter: ConsentAdapter<Proxy>, proxy: Proxy): () => void {
     const sub: Subscription = { adapter, proxy }
-    subscriptions.add(sub)
-    // fire default with the current state so the SDK sees defaults before init
-    adapter.applyDefault({ ...state.value }, proxy)
+    try {
+      // fire default with the current state so the SDK sees defaults before init
+      adapter.applyDefault({ ...state.value }, proxy)
+      subscriptions.add(sub)
+    }
+    catch (error) {
+      if (import.meta.dev)
+        console.warn('[nuxt-scripts] consent adapter default failed', error)
+      return () => {}
+    }
     return () => {
       subscriptions.delete(sub)
     }
@@ -170,8 +183,16 @@ export function useScriptConsent(options?: UseScriptConsentOptions): UseScriptCo
   }
 
   const promise = new Promise<void>((resolve) => {
-    watch(consented, (newValue, oldValue) => {
-      if (newValue && !oldValue) {
+    let triggered = false
+    // Box pattern: the watcher callback can fire synchronously via `immediate: true`,
+    // before the `watch()` return value is assigned. Wrapping in an object lets us
+    // read the handle lazily so we can self-cancel once triggered -- a later
+    // revoke()/accept() cycle would otherwise re-run non-idempotent trigger work.
+    const handle: { stop?: () => void } = {}
+    handle.stop = watch(consented, (newValue, oldValue) => {
+      if (newValue && !oldValue && !triggered) {
+        triggered = true
+        handle.stop?.()
         const runner = nuxtApp?.runWithContext || ((cb: () => void) => cb())
         if (options?.postConsentTrigger instanceof Promise) {
           options.postConsentTrigger.then(() => runner(resolve))
