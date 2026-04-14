@@ -123,7 +123,9 @@ describe('consent defaults — clientInit ordering', () => {
     const { useScriptMixpanelAnalytics } = await import('../../packages/script/src/runtime/registry/mixpanel-analytics')
 
     const seq: string[] = []
-    const initSpy = vi.fn(() => { seq.push('init') })
+    const initSpy = vi.fn(() => {
+      seq.push('init')
+    })
     const mp: any = []
     const origPush = Array.prototype.push.bind(mp)
     mp.push = (arg: any) => {
