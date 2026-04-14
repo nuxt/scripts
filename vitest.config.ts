@@ -3,7 +3,22 @@ import { defineConfig, defineProject } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    globals: true,
+    reporters: 'dot',
     projects: [
+      // type tests using vitest typecheck
+      defineProject({
+        test: {
+          name: 'typecheck',
+          include: [
+            './test/types/**/*.test-d.ts',
+          ],
+          typecheck: {
+            enabled: true,
+            include: ['./test/types/**/*.test-d.ts'],
+          },
+        },
+      }),
       // utils folders as *.test.ts in either test/unit or in src/**/*.test.ts
       defineProject({
         test: {
@@ -14,8 +29,10 @@ export default defineConfig({
           ],
           exclude: [
             './test/e2e/**/*.test.ts',
+            './test/e2e-dev/**/*.test.ts',
             '**/*.nuxt.test.ts',
             '**/node_modules/**',
+            '.claude/worktrees/**',
           ],
         },
       }),
@@ -43,7 +60,20 @@ export default defineConfig({
           exclude: [
             // exclude other tests
             './test/e2e/**/*.test.ts',
+            './test/e2e-dev/**/*.test.ts',
             './test/unit/**/*.test.ts',
+            '**/node_modules/**',
+          ],
+        },
+      }),
+      // e2e-dev: local-only e2e tests (excluded from CI)
+      defineProject({
+        test: {
+          name: 'e2e-dev',
+          include: [
+            './test/e2e-dev/**/*.test.ts',
+          ],
+          exclude: [
             '**/node_modules/**',
           ],
         },

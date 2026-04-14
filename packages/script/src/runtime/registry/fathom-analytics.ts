@@ -1,0 +1,50 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { FathomAnalyticsOptions } from './schemas'
+
+export { FathomAnalyticsOptions }
+
+export type FathomAnalyticsInput = RegistryScriptInput<typeof FathomAnalyticsOptions, false, false>
+
+export interface FathomAnalyticsApi {
+  beacon: (ctx: { url: string, referrer?: string }) => void
+  blockTrackingForMe: () => void
+  enableTrackingForMe: () => void
+  isTrackingEnabled: () => boolean
+  send: (type: string, data: unknown) => void
+  setSite: (siteId: string) => void
+  siteId: string
+  trackPageview: (ctx?: { url: string, referrer?: string }) => void
+  trackGoal: (goalId: string, cents: number) => void
+  trackEvent: (eventName: string, value?: { _value?: number, _site_id?: string }) => void
+}
+
+declare global {
+  interface Window {
+    fathom: FathomAnalyticsApi
+  }
+}
+
+export function useScriptFathomAnalytics<T extends FathomAnalyticsApi>(_options?: FathomAnalyticsInput) {
+  return useRegistryScript<T, typeof FathomAnalyticsOptions>('fathomAnalytics', options => ({
+    scriptInput: {
+      src: 'https://cdn.usefathom.com/script.js',
+      // append the data attr's
+      ...Object.entries(options)
+        .filter(([key]) => ['site', 'spa', 'auto', 'canonical', 'honorDnt'].includes(key))
+        .reduce((acc, [_key, value]) => {
+          // need to convert camel case to kebab case
+          const key = _key === 'honorDnt' ? 'honor-dnt' : _key
+          // @ts-expect-error untyped
+          acc[`data-${key}`] = value
+          return acc
+        }, {}),
+    },
+    schema: import.meta.dev ? FathomAnalyticsOptions : undefined,
+    scriptOptions: {
+      use() {
+        return window.fathom
+      },
+    },
+  }), _options)
+}

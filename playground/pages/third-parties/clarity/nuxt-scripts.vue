@@ -17,11 +17,11 @@ onMounted(() => {
 })
 
 function accept() {
-  window.clarity('consent', true)
+  proxy.clarity('consent', true)
 }
 
 function decline() {
-  window.clarity('consent', false)
+  proxy.clarity('consent', false)
 }
 </script>
 

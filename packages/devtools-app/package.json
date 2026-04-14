@@ -1,0 +1,25 @@
+{
+  "name": "@nuxt/scripts-devtools-app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate"
+  },
+  "devDependencies": {
+    "@nuxt/devtools-kit": "catalog:",
+    "@nuxt/fonts": "catalog:",
+    "@nuxt/scripts": "workspace:*",
+    "@nuxt/ui": "catalog:",
+    "@shikijs/langs": "catalog:",
+    "@shikijs/themes": "catalog:",
+    "@vueuse/nuxt": "catalog:",
+    "nuxt": "catalog:",
+    "ofetch": "catalog:",
+    "pathe": "catalog:",
+    "shiki": "catalog:",
+    "ufo": "catalog:",
+    "vue": "catalog:"
+  }
+}

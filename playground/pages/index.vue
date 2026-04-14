@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useHead } from '#imports'
-import { registry } from '../../src/registry'
+import { registry } from '../../packages/script/src/registry'
 
 useHead({
   title: 'Nuxt Scripts Playground',
@@ -20,6 +20,7 @@ function getPlaygroundPath(script: any): string | null {
     'cloudflare-web-analytics': '/third-parties/cloudflare-web-analytics/nuxt-scripts',
     'fathom-analytics': '/third-parties/fathom-analytics',
     'plausible-analytics': '/third-parties/plausible-analytics',
+    'posthog': '/third-parties/posthog/nuxt-scripts',
     'matomo-analytics': '/third-parties/matomo-analytics/nuxt-scripts',
     'rybbit-analytics': '/third-parties/rybbit-analytics',
     'databuddy-analytics': '/third-parties/databuddy-analytics',
@@ -29,6 +30,7 @@ function getPlaygroundPath(script: any): string | null {
     'x-pixel': '/third-parties/x-pixel/nuxt-scripts',
     'reddit-pixel': '/third-parties/reddit-pixel/nuxt-scripts',
     'snapchat-pixel': '/third-parties/snapchat/nuxt-scripts',
+    'tiktok-pixel': '/third-parties/tiktok-pixel/nuxt-scripts',
     'google-adsense': '/third-parties/google-adsense/nuxt-scripts',
     'carbon-ads': '/third-parties/carbon/nuxt-scripts',
     'clarity': '/third-parties/clarity/nuxt-scripts',
@@ -41,6 +43,7 @@ function getPlaygroundPath(script: any): string | null {
     'vimeo-player': '/third-parties/vimeo/nuxt-scripts',
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
+    'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
     'npm': '/npm/js-confetti',
   }
 
@@ -80,7 +83,7 @@ const analytics = registryScripts
   ])
 
 const pixels = registryScripts
-  .filter(s => s.category === 'tracking')
+  .filter(s => s.category === 'ad')
   .map(s => ({
     name: s.label,
     path: getPlaygroundPath(s),
@@ -90,7 +93,7 @@ const pixels = registryScripts
   .filter(s => s.path)
 
 const marketing = registryScripts
-  .filter(s => s.category === 'marketing' || s.label === 'Hotjar')
+  .filter(s => s.label === 'Hotjar' || s.label === 'Clarity')
   .map(s => ({
     name: s.label,
     path: getPlaygroundPath(s),
@@ -150,7 +153,7 @@ const payments = registryScripts
   ])
 
 const content = registryScripts
-  .filter(s => s.category === 'content')
+  .filter(s => s.category === 'content' || s.category === 'video')
   .map(s => ({
     name: s.label,
     path: getPlaygroundPath(s),
@@ -185,12 +188,6 @@ const content = registryScripts
       registryScript: null,
     },
     {
-      name: 'Google Maps (Styled)',
-      path: '/third-parties/google-maps/styled',
-      logo: registryScripts.find(s => s.label === 'Google Maps')?.logo,
-      registryScript: null,
-    },
-    {
       name: 'Google Maps (SFCs)',
       path: '/third-parties/google-maps/sfcs',
       logo: registryScripts.find(s => s.label === 'Google Maps')?.logo,
@@ -199,7 +196,7 @@ const content = registryScripts
   ])
 
 const npm = registryScripts
-  .filter(s => s.category === 'utility' && s.label === 'NPM')
+  .filter(s => s.category === 'cdn' && s.label === 'NPM')
   .map(s => ({
     name: 'js-confetti',
     path: getPlaygroundPath(s),

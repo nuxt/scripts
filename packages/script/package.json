@@ -1,0 +1,134 @@
+{
+  "name": "@nuxt/scripts",
+  "type": "module",
+  "version": "1.0.0-rc.8",
+  "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
+  "author": {
+    "name": "Harlan Wilton",
+    "email": "harlan@harlanzw.com",
+    "url": "https://harlanzw.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuxt/scripts.git",
+    "directory": "packages/script"
+  },
+  "bugs": {
+    "url": "https://github.com/nuxt/scripts/issues"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    },
+    "./registry": "./dist/registry.mjs",
+    "./stats": "./dist/stats.mjs",
+    "./types-source": "./dist/types-source.mjs"
+  },
+  "main": "./dist/module.mjs",
+  "types": "./dist/types.d.mts",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ],
+      "registry": [
+        "./dist/registry.d.mts"
+      ],
+      "stats": [
+        "./dist/stats.d.mts"
+      ],
+      "types-source": [
+        "./dist/types-source.d.mts"
+      ]
+    }
+  },
+  "bin": {
+    "nuxt-scripts": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "nuxt-module-build build",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare"
+  },
+  "build": {
+    "externals": [
+      "@unhead/vue",
+      "@unhead/schema",
+      "knitwork",
+      "#build/modules/nuxt-scripts-gtm",
+      "#build/modules/nuxt-scripts-ga",
+      "@vimeo/player",
+      "esbuild",
+      "unimport",
+      "#nuxt-scripts/types",
+      "posthog-js",
+      "@nuxt/devtools-kit",
+      "sirv"
+    ]
+  },
+  "peerDependencies": {
+    "@googlemaps/markerclusterer": "^2.6.2",
+    "@paypal/paypal-js": "^8.1.2 || ^9.0.0",
+    "@stripe/stripe-js": "^7.0.0 || ^8.0.0 || ^9.0.0",
+    "@types/google.maps": "^3.58.1",
+    "@types/vimeo__player": "^2.18.3",
+    "@types/youtube": "^0.1.0",
+    "@unhead/vue": "^2.0.3",
+    "posthog-js": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@googlemaps/markerclusterer": {
+      "optional": true
+    },
+    "@paypal/paypal-js": {
+      "optional": true
+    },
+    "@stripe/stripe-js": {
+      "optional": true
+    },
+    "@types/google.maps": {
+      "optional": true
+    },
+    "@types/vimeo__player": {
+      "optional": true
+    },
+    "@types/youtube": {
+      "optional": true
+    },
+    "posthog-js": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@nuxt/devtools-kit": "catalog:",
+    "@nuxt/kit": "catalog:",
+    "@vueuse/core": "catalog:",
+    "@vueuse/shared": "catalog:",
+    "consola": "catalog:",
+    "defu": "catalog:",
+    "h3": "catalog:",
+    "magic-string": "catalog:",
+    "ofetch": "catalog:",
+    "ohash": "catalog:",
+    "oxc-parser": "catalog:",
+    "oxc-walker": "catalog:",
+    "pathe": "catalog:",
+    "pkg-types": "catalog:",
+    "sirv": "catalog:",
+    "std-env": "catalog:",
+    "ufo": "catalog:",
+    "ultrahtml": "catalog:",
+    "unplugin": "catalog:",
+    "unstorage": "catalog:",
+    "valibot": "catalog:"
+  },
+  "devDependencies": {
+    "@nuxt/module-builder": "catalog:"
+  }
+}

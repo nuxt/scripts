@@ -1,7 +1,7 @@
-import { it, expect, describe } from 'vitest'
-import { renderSSRHead } from '@unhead/vue/server'
-import { createHeadCore } from '@unhead/vue'
 import { useScript } from '#imports'
+import { createHeadCore } from '@unhead/vue'
+import { renderSSRHead } from '@unhead/vue/server'
+import { describe, expect, it } from 'vitest'
 
 describe.skipIf(process.env.CI)('script warmup', () => {
   it('default', async () => {

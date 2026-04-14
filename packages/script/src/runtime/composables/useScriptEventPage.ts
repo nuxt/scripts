@@ -1,0 +1,49 @@
+import type { TrackedPage } from '#nuxt-scripts/types'
+import { injectHead, useNuxtApp, useRoute } from 'nuxt/app'
+import { onScopeDispose, ref } from 'vue'
+
+export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
+  const nuxt = useNuxtApp()
+  const route = useRoute()
+  const head = injectHead()
+  const payload = ref<TrackedPage>({
+    path: route.fullPath,
+    title: import.meta.client ? document.title : '',
+  })
+  // no know to know the title on the server until the page is rendered
+  if (import.meta.server)
+    return payload
+
+  let lastPayload: TrackedPage = { path: '', title: '' }
+  let stopDomWatcher = () => {}
+  // TODO make sure useAsyncData isn't running
+  const stopPageFinishHook = nuxt.hooks.hook('page:finish', () => {
+    Promise.race([
+      // possibly no head update is needed
+      new Promise(resolve => setTimeout(resolve, 100)),
+      new Promise<void>((resolve) => {
+        stopDomWatcher = head.hooks.hook('dom:rendered', () => resolve())
+      }),
+    ])
+      .finally(stopDomWatcher)
+      .then(() => {
+        payload.value = {
+          path: route.fullPath,
+          title: document.title,
+        }
+        if (lastPayload.path !== payload.value.path || lastPayload.title !== payload.value.title) {
+          if (onChange) {
+            onChange(payload.value)
+          }
+          lastPayload = payload.value
+        }
+      })
+  })
+
+  onScopeDispose(() => {
+    stopDomWatcher()
+    stopPageFinishHook()
+  })
+
+  return payload
+}

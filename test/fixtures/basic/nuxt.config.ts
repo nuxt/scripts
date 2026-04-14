@@ -4,6 +4,14 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/scripts',
   ],
+  scripts: {
+    registry: {
+      xEmbed: {},
+      instagramEmbed: {},
+      blueskyEmbed: {},
+      gravatar: {},
+    },
+  },
   devtools: {
     enabled: true,
   },

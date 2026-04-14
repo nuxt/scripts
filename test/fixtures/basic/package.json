@@ -1,0 +1,5 @@
+{
+	"devDependencies": {
+		"posthog-js": "^1.309.1"
+	}
+}

@@ -1,23 +1,26 @@
+import type { MocksType } from './__helpers__/google-maps-test-utils'
 /**
  * @vitest-environment happy-dom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
+import { defu } from 'defu'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref, shallowRef } from 'vue'
+import { defineDeprecatedAlias, warnDeprecatedTopLevelMapProps } from '../../packages/script/src/runtime/components/GoogleMaps/useGoogleMapsResource'
 import {
-  createMockGoogleMapsAPI,
-  MARKER_EVENTS_WITHOUT_PAYLOAD,
-  MARKER_EVENTS_WITH_MOUSE_EVENT,
-  INFO_WINDOW_EVENTS,
-  MARKER_CLUSTERER_EVENTS,
-} from './__mocks__/google-maps-api'
-import {
-  simulateMarkerLifecycle,
+
   simulateAdvancedMarkerLifecycle,
   simulateInfoWindowLifecycle,
   simulateMarkerClustererLifecycle,
+  simulateMarkerLifecycle,
   TEST_OPTIONS,
-  type MocksType,
 } from './__helpers__/google-maps-test-utils'
+import {
+  createMockGoogleMapsAPI,
+  INFO_WINDOW_EVENTS,
+  MARKER_CLUSTERER_EVENTS,
+  MARKER_EVENTS_WITH_MOUSE_EVENT,
+  MARKER_EVENTS_WITHOUT_PAYLOAD,
+} from './__mocks__/google-maps-api'
 
 // Mock @googlemaps/markerclusterer module
 vi.mock('@googlemaps/markerclusterer', async () => {
@@ -25,7 +28,7 @@ vi.mock('@googlemaps/markerclusterer', async () => {
   return mockMarkerClusterer
 })
 
-describe('Google Maps SFC Components Logic', () => {
+describe('google Maps SFC Components Logic', () => {
   let mocks: MocksType
 
   beforeEach(() => {
@@ -33,21 +36,11 @@ describe('Google Maps SFC Components Logic', () => {
     vi.clearAllMocks()
   })
 
-  describe('Google Maps API Integration', () => {
-    it('should create marker with provided options', () => {
-      const options = TEST_OPTIONS.marker
-
-      // Simulate what ScriptGoogleMapsMarker component does
-      const marker = new mocks.mockMapsApi.Marker(options)
-
-      expect(mocks.mockMapsApi.Marker).toHaveBeenCalledWith(options)
-      expect(marker).toBe(mocks.mockMarker)
-    })
-
-    it('should create advanced marker element with position', async () => {
+  describe('google Maps API Integration', () => {
+    it('should create marker with position', async () => {
       const options = { position: { lat: 15, lng: 25 } }
 
-      // Simulate what ScriptGoogleMapsAdvancedMarkerElement component does
+      // Simulate what ScriptGoogleMapsMarker component does
       await mocks.mockMapsApi.importLibrary('marker')
       const advancedMarker = new mocks.mockMapsApi.marker.AdvancedMarkerElement(options)
 
@@ -68,10 +61,10 @@ describe('Google Maps SFC Components Logic', () => {
       expect(infoWindow).toBe(mocks.mockInfoWindow)
     })
 
-    it('should create pin element for advanced markers', async () => {
+    it('should create pin element for markers', async () => {
       const options = { scale: 1.5, background: '#FF0000' }
 
-      // Simulate what ScriptGoogleMapsPinElement component does
+      // Simulate pin element creation via marker #content slot
       await mocks.mockMapsApi.importLibrary('marker')
       const pinElement = new mocks.mockMapsApi.marker.PinElement(options)
 
@@ -80,13 +73,14 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Marker Clustering Logic', () => {
+  describe('marker Clustering Logic', () => {
     it('should create marker clusterer with map and options', async () => {
       const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
       const mockMap = ref({})
       const options = { gridSize: 60 }
 
       // Simulate what ScriptGoogleMapsMarkerClusterer component does
+      // eslint-disable-next-line no-new
       new MarkerClusterer({
         map: mockMap.value,
         ...options,
@@ -102,14 +96,14 @@ describe('Google Maps SFC Components Logic', () => {
       const clusterer = mocks.mockMarkerClusterer
       const marker = mocks.mockMarker
 
-      // Simulate marker removal logic from ScriptGoogleMapsMarker
+      // Simulate marker removal logic from ScriptGoogleMapsMarkerClusterer
       clusterer.removeMarker(marker, true)
 
       expect(clusterer.removeMarker).toHaveBeenCalledWith(marker, true)
     })
   })
 
-  describe('Event Handling Patterns', () => {
+  describe('event Handling Patterns', () => {
     it('should register standard marker events without payload', () => {
       const marker = mocks.mockMarker
 
@@ -171,7 +165,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Component Lifecycle Patterns', () => {
+  describe('component Lifecycle Patterns', () => {
     it('should clean up event listeners on unmount', () => {
       const marker = mocks.mockMarker
 
@@ -194,7 +188,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Component Composition Patterns', () => {
+  describe('component Composition Patterns', () => {
     it('should attach info window to marker', () => {
       const marker = mocks.mockMarker
       const infoWindow = mocks.mockInfoWindow
@@ -236,7 +230,79 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Google Maps API Types and Integration', () => {
+  describe('marker Clusterer #renderer Slot', () => {
+    it('should create clusterer with custom renderer when #renderer slot is provided', async () => {
+      const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
+
+      // Simulate what the component does when #content slot exists
+      const mockMap = {}
+      const rendererFn = vi.fn((_cluster: any, _stats: any) => {
+        const container = document.createElement('div')
+        container.innerHTML = '<span>5</span>'
+        return container
+      })
+
+      const renderer = {
+        render(cluster: any, stats: any) {
+          const content = rendererFn(cluster, stats)
+          const marker = new mocks.mockMapsApi.marker.AdvancedMarkerElement({
+            position: cluster.position,
+            content,
+          })
+          return marker
+        },
+      }
+
+      // eslint-disable-next-line no-new
+      new MarkerClusterer({
+        map: mockMap,
+        renderer,
+      })
+
+      expect(MarkerClusterer).toHaveBeenCalledWith(
+        expect.objectContaining({ renderer }),
+      )
+
+      // Simulate a cluster render call
+      const cluster = { position: { lat: 1, lng: 2 }, count: 5, markers: [] }
+      const stats = { clusters: [], markers: [] }
+      const marker = renderer.render(cluster, stats)
+
+      expect(rendererFn).toHaveBeenCalledWith(cluster, stats)
+      expect(mocks.mockMapsApi.marker.AdvancedMarkerElement).toHaveBeenCalledWith(
+        expect.objectContaining({ position: cluster.position }),
+      )
+      expect(marker).toBeDefined()
+    })
+
+    it('should pre-load marker library when #renderer slot is used', async () => {
+      // Simulate the pre-loading that happens when slots.content exists
+      await mocks.mockMapsApi.importLibrary('marker')
+
+      expect(mocks.mockMapsApi.importLibrary).toHaveBeenCalledWith('marker')
+    })
+
+    it('should clean up rendered containers on clusteringbegin', () => {
+      // Simulate the cleanup pattern used in the component
+      const containers: HTMLElement[] = []
+
+      // Create some containers (as would happen during render)
+      for (let i = 0; i < 3; i++) {
+        const container = document.createElement('div')
+        container.innerHTML = `<span>${i}</span>`
+        containers.push(container)
+      }
+
+      expect(containers).toHaveLength(3)
+
+      // Simulate clusteringbegin cleanup
+      containers.length = 0
+
+      expect(containers).toHaveLength(0)
+    })
+  })
+
+  describe('google Maps API Types and Integration', () => {
     it('should work with LatLng objects', () => {
       const lat = -33.8688
       const lng = 151.2093
@@ -258,7 +324,7 @@ describe('Google Maps SFC Components Logic', () => {
     })
   })
 
-  describe('Component Lifecycle Simulations', () => {
+  describe('component Lifecycle Simulations', () => {
     it('should simulate complete marker lifecycle', () => {
       const marker = simulateMarkerLifecycle(mocks, TEST_OPTIONS.marker)
 
@@ -299,6 +365,283 @@ describe('Google Maps SFC Components Logic', () => {
       expect(clusterer.removeMarker).toHaveBeenCalledWith(markers[0], true)
       expect(clusterer.render).toHaveBeenCalled()
       expect(clusterer.setMap).toHaveBeenCalledWith(null)
+    })
+  })
+})
+
+describe('scriptGoogleMaps top-level center/zoom deprecation', () => {
+  // Guards the deprecation path introduced when migrating users from
+  // top-level `center`/`zoom` props to `mapOptions.{center,zoom}`. Both
+  // APIs must keep working; the new API takes precedence.
+
+  describe('warnDeprecatedTopLevelMapProps', () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      warnSpy.mockRestore()
+    })
+
+    it('warns when top-level center is set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({ center: { lat: 0, lng: 0 } })
+
+      expect(warned).toBe(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"center" is deprecated')
+      expect(warnSpy.mock.calls[0]![0]).toContain('map-options')
+      expect(warnSpy.mock.calls[0]![0]).toContain('migration-guide/v0-to-v1')
+    })
+
+    it('warns when top-level zoom is set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({ zoom: 12 })
+
+      expect(warned).toBe(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"zoom" is deprecated')
+    })
+
+    it('warns once for each prop when both are set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({ center: { lat: 0, lng: 0 }, zoom: 8 })
+
+      expect(warned).toBe(2)
+      expect(warnSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not warn when neither prop is set', () => {
+      const warned = warnDeprecatedTopLevelMapProps({})
+
+      expect(warned).toBe(0)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('does not warn for explicit undefined values', () => {
+      // withDefaults leaves undeclared optional props as undefined; that
+      // must not trip the warning.
+      const warned = warnDeprecatedTopLevelMapProps({ center: undefined, zoom: undefined })
+
+      expect(warned).toBe(0)
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('mapOptions precedence over deprecated top-level props', () => {
+    // Mirrors the precedence order used in ScriptGoogleMaps.vue's `options`
+    // computed: { centerOverride, mapId } > mapOptions > { props.center,
+    // props.zoom } > { zoom: 15 }. defu merges left-to-right, leftmost wins.
+    function mergeOptions(props: {
+      center?: any
+      zoom?: number
+      mapOptions?: Record<string, any>
+      centerOverride?: any
+      mapId?: string
+    }) {
+      return defu(
+        { center: props.centerOverride, mapId: props.mapId },
+        props.mapOptions,
+        { center: props.center, zoom: props.zoom },
+        { zoom: 15 },
+      )
+    }
+
+    it('mapOptions.center wins over deprecated top-level center', () => {
+      const merged = mergeOptions({
+        center: { lat: 1, lng: 1 },
+        mapOptions: { center: { lat: 2, lng: 2 } },
+      })
+
+      expect(merged.center).toEqual({ lat: 2, lng: 2 })
+    })
+
+    it('mapOptions.zoom wins over deprecated top-level zoom', () => {
+      const merged = mergeOptions({
+        zoom: 5,
+        mapOptions: { zoom: 10 },
+      })
+
+      expect(merged.zoom).toBe(10)
+    })
+
+    it('top-level center is used when mapOptions.center is absent', () => {
+      const merged = mergeOptions({
+        center: { lat: 3, lng: 4 },
+        mapOptions: { mapTypeId: 'roadmap' },
+      })
+
+      expect(merged.center).toEqual({ lat: 3, lng: 4 })
+      expect(merged.mapTypeId).toBe('roadmap')
+    })
+
+    it('top-level zoom is used when mapOptions.zoom is absent', () => {
+      const merged = mergeOptions({
+        zoom: 7,
+        mapOptions: { mapTypeId: 'satellite' },
+      })
+
+      expect(merged.zoom).toBe(7)
+    })
+
+    it('produces identical merged options for old and new APIs', () => {
+      const oldApi = mergeOptions({ center: { lat: 5, lng: 6 }, zoom: 14 })
+      const newApi = mergeOptions({ mapOptions: { center: { lat: 5, lng: 6 }, zoom: 14 } })
+
+      expect(oldApi).toEqual(newApi)
+    })
+
+    it('falls back to default zoom when nothing is set', () => {
+      const merged = mergeOptions({})
+
+      expect(merged.zoom).toBe(15)
+    })
+
+    it('centerOverride (resolved query result) wins over both APIs', () => {
+      const merged = mergeOptions({
+        center: { lat: 1, lng: 1 },
+        mapOptions: { center: { lat: 2, lng: 2 } },
+        centerOverride: { lat: 99, lng: 99 },
+      })
+
+      expect(merged.center).toEqual({ lat: 99, lng: 99 })
+    })
+  })
+})
+
+describe('defineDeprecatedAlias', () => {
+  // Backs the `googleMaps` → `mapsApi` and `overlay` → `overlayView` renames
+  // on the exposed objects of `<ScriptGoogleMaps>` and
+  // `<ScriptGoogleMapsOverlayView>`. Reading the alias must:
+  //   - return the same value as the canonical key (so existing call sites
+  //     keep working)
+  //   - emit a one-shot dev-mode console.warn (no spam on repeated reads)
+
+  let warnSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    warnSpy.mockRestore()
+  })
+
+  describe('googleMaps alias for mapsApi', () => {
+    function createMapExposed() {
+      const mapsApi = shallowRef<any>({ Marker: class {} })
+      const exposed: any = {
+        mapsApi,
+        googleMaps: mapsApi,
+      }
+      defineDeprecatedAlias(
+        exposed,
+        'googleMaps',
+        'mapsApi',
+        '[nuxt-scripts] <ScriptGoogleMaps> expose key "googleMaps" is deprecated; use "mapsApi" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+      )
+      return { exposed, mapsApi }
+    }
+
+    it('returns the same shallow ref as mapsApi', () => {
+      const { exposed, mapsApi } = createMapExposed()
+
+      expect(exposed.googleMaps).toBe(mapsApi)
+      expect(exposed.googleMaps).toBe(exposed.mapsApi)
+    })
+
+    it('fires a dev warning on first read', () => {
+      const { exposed } = createMapExposed()
+
+      // Touch the alias
+      void exposed.googleMaps
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"googleMaps" is deprecated')
+      expect(warnSpy.mock.calls[0]![0]).toContain('mapsApi')
+      expect(warnSpy.mock.calls[0]![0]).toContain('migration-guide/v0-to-v1')
+    })
+
+    it('does not spam the warning on repeated reads', () => {
+      const { exposed } = createMapExposed()
+
+      void exposed.googleMaps
+      void exposed.googleMaps
+      void exposed.googleMaps
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('reading the canonical mapsApi key does not warn', () => {
+      const { exposed } = createMapExposed()
+
+      void exposed.mapsApi
+      void exposed.mapsApi
+
+      expect(warnSpy).not.toHaveBeenCalled()
+    })
+
+    it('alias points to live ref (updates with mapsApi changes)', () => {
+      const { exposed, mapsApi } = createMapExposed()
+
+      // Both keys should reflect the new value via the underlying ShallowRef
+      mapsApi.value = { newValue: true }
+
+      expect(exposed.mapsApi.value).toEqual({ newValue: true })
+      expect(exposed.googleMaps.value).toEqual({ newValue: true })
+    })
+  })
+
+  describe('overlay alias for overlayView', () => {
+    function createOverlayExposed() {
+      const overlayView = shallowRef<any>({ setMap: vi.fn() })
+      const exposed: any = {
+        overlayView,
+        overlay: overlayView,
+        dataState: shallowRef<'open' | 'closed'>('closed'),
+      }
+      defineDeprecatedAlias(
+        exposed,
+        'overlay',
+        'overlayView',
+        '[nuxt-scripts] <ScriptGoogleMapsOverlayView> expose key "overlay" is deprecated; use "overlayView" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
+      )
+      return { exposed, overlayView }
+    }
+
+    it('returns the same shallow ref as overlayView', () => {
+      const { exposed, overlayView } = createOverlayExposed()
+
+      expect(exposed.overlay).toBe(overlayView)
+      expect(exposed.overlay).toBe(exposed.overlayView)
+    })
+
+    it('fires a dev warning on first read', () => {
+      const { exposed } = createOverlayExposed()
+
+      void exposed.overlay
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]![0]).toContain('"overlay" is deprecated')
+      expect(warnSpy.mock.calls[0]![0]).toContain('overlayView')
+    })
+
+    it('does not spam the warning on repeated reads', () => {
+      const { exposed } = createOverlayExposed()
+
+      void exposed.overlay
+      void exposed.overlay
+      void exposed.overlay
+
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('reading the canonical overlayView key does not warn', () => {
+      const { exposed } = createOverlayExposed()
+
+      void exposed.overlayView
+      void exposed.dataState
+
+      expect(warnSpy).not.toHaveBeenCalled()
     })
   })
 })

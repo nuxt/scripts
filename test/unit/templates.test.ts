@@ -1,5 +1,13 @@
-import { describe, it, expect } from 'vitest'
-import { templatePlugin, resolveTriggerForTemplate } from '../../src/templates'
+import { describe, expect, it } from 'vitest'
+import { normalizeRegistryConfig } from '../../packages/script/src/normalize'
+import { resolveTriggerForTemplate, templatePlugin } from '../../packages/script/src/templates'
+
+/** Normalize registry config before passing to templatePlugin (mirrors module.ts behavior) */
+function templatePluginNormalized(config: Parameters<typeof templatePlugin>[0], registry: Parameters<typeof templatePlugin>[1]) {
+  if (config.registry)
+    normalizeRegistryConfig(config.registry as Record<string, any>)
+  return templatePlugin(config, registry)
+}
 
 describe('template plugin file', () => {
   // global
@@ -17,7 +25,7 @@ describe('template plugin file', () => {
         env: { islands: false },
         parallel: true,
         setup() {
-          return { provide: { $scripts: {  } } }
+          return { provide: { scripts: {  } } }
         }
       })"
     `)
@@ -96,14 +104,14 @@ describe('template plugin file', () => {
           const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
           const stripe2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe2: window.stripe2 }) })
           const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
-          return { provide: { $scripts: { stripe1, stripe2, stripe3 } } }
+          return { provide: { scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
     `)
   })
   // registry
-  it('registry object', async () => {
-    const res = templatePlugin({
+  it('registry object without trigger (infrastructure only, no composable call)', async () => {
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         stripe: {
@@ -117,10 +125,28 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptStripe({"id":"test"})')
+    expect(res).not.toContain('useScriptStripe')
   })
-  it('registry array', async () => {
-    const res = templatePlugin({
+  it('registry object with trigger (auto-loads globally)', async () => {
+    const res = templatePluginNormalized({
+      globals: {},
+      registry: {
+        stripe: {
+          id: 'test',
+          trigger: 'onNuxtReady',
+        },
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptStripe',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
+  })
+  it('registry array with trigger', async () => {
+    const res = templatePluginNormalized({
       globals: {},
       registry: {
         stripe: [
@@ -139,7 +165,45 @@ describe('template plugin file', () => {
         },
       },
     ])
-    expect(res).toContain('useScriptStripe([{"id":"test"},{"trigger":"onNuxtReady"}])')
+    expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
+  })
+
+  it('registry with partytown but no trigger (no composable call)', async () => {
+    const res = templatePluginNormalized({
+      globals: {},
+      registry: {
+        googleAnalytics: [
+          { id: 'G-XXXXX' },
+          { partytown: true },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    expect(res).not.toContain('useScriptGoogleAnalytics')
+  })
+
+  it('registry with partytown and trigger', async () => {
+    const res = templatePluginNormalized({
+      globals: {},
+      registry: {
+        googleAnalytics: [
+          { id: 'G-XXXXX' },
+          { partytown: true, trigger: 'onNuxtReady' },
+        ],
+      },
+    }, [
+      {
+        import: {
+          name: 'useScriptGoogleAnalytics',
+        },
+      },
+    ])
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"G-XXXXX","scriptOptions":{"partytown":true,"trigger":"onNuxtReady"}})')
   })
 
   // Test idleTimeout trigger in globals
@@ -165,12 +229,12 @@ describe('template plugin file', () => {
       },
     }, [])
     expect(res).toContain('import { useScriptTriggerInteraction }')
-    expect(res).toContain('useScriptTriggerInteraction({ events: [\\"scroll\\",\\"click\\"] })')
+    expect(res).toContain('useScriptTriggerInteraction({ events: ["scroll","click"] })')
   })
 
   // Test registry with idleTimeout trigger
   it('registry with idleTimeout trigger', async () => {
-    const res = templatePlugin({
+    const res = templatePluginNormalized({
       registry: {
         googleAnalytics: [
           { id: 'GA_MEASUREMENT_ID' },
@@ -184,8 +248,9 @@ describe('template plugin file', () => {
         },
       },
     ])
-    // Registry scripts pass trigger objects directly, they don't resolve triggers in templates
-    expect(res).toContain('useScriptGoogleAnalytics([{"id":"GA_MEASUREMENT_ID"},{"trigger":{"idleTimeout":5000}}])')
+    // Registry scripts now properly resolve triggers in templates
+    expect(res).toContain('import { useScriptTriggerIdleTimeout }')
+    expect(res).toContain('useScriptGoogleAnalytics({"id":"GA_MEASUREMENT_ID","scriptOptions":{"trigger":useScriptTriggerIdleTimeout({ timeout: 5000 })}})')
   })
 
   // Test both triggers together (should import both)
@@ -202,6 +267,19 @@ describe('template plugin file', () => {
     }, [])
     expect(res).toContain('import { useScriptTriggerIdleTimeout }')
     expect(res).toContain('import { useScriptTriggerInteraction }')
+  })
+
+  // Test serviceWorker trigger in globals
+  it('global with serviceWorker trigger', async () => {
+    const res = templatePlugin({
+      globals: {
+        analytics: ['https://analytics.example.com/script.js', {
+          trigger: { serviceWorker: true },
+        }],
+      },
+    }, [])
+    expect(res).toContain('import { useScriptTriggerServiceWorker }')
+    expect(res).toContain('useScriptTriggerServiceWorker()')
   })
 })
 
@@ -221,6 +299,11 @@ describe('resolveTriggerForTemplate', () => {
   it('should handle interaction trigger', () => {
     const result = resolveTriggerForTemplate({ interaction: ['scroll', 'click'] })
     expect(result).toBe('useScriptTriggerInteraction({ events: ["scroll","click"] })')
+  })
+
+  it('should handle serviceWorker trigger', () => {
+    const result = resolveTriggerForTemplate({ serviceWorker: true })
+    expect(result).toBe('useScriptTriggerServiceWorker()')
   })
 
   it('should return null for unknown trigger types', () => {

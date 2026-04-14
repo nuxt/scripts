@@ -1,0 +1,41 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import { useRegistryScript } from '../utils'
+import { HotjarOptions } from './schemas'
+
+export { HotjarOptions }
+
+export interface HotjarApi {
+  hj: ((event: 'identify', userId: string, attributes?: Record<string, any>) => void) & ((event: 'stateChange', path: string) => void) & ((event: 'vPageView', path: string) => void) & ((event: 'event', eventName: string) => void) & ((event: (string & {}), ...args: any[]) => void) & {
+    q: any[]
+  }
+}
+
+declare global {
+  interface Window extends HotjarApi {
+    _hjSettings: { hjid: number, hjsv?: number }
+  }
+}
+
+export type HotjarInput = RegistryScriptInput<typeof HotjarOptions, true, false>
+
+export function useScriptHotjar<T extends HotjarApi>(_options?: HotjarInput) {
+  return useRegistryScript<T, typeof HotjarOptions>('hotjar', options => ({
+    scriptInput: {
+      src: `https://static.hotjar.com/c/hotjar-${options?.id}.js?sv=${options?.sv || 6}`,
+    },
+    schema: import.meta.dev ? HotjarOptions : undefined,
+    scriptOptions: {
+      use() {
+        return { hj: window.hj }
+      },
+    },
+    clientInit: import.meta.server
+      ? undefined
+      : () => {
+          window._hjSettings = window._hjSettings || { hjid: options?.id, hjsv: options?.sv || 6 }
+          window.hj = window.hj || function (...params: any[]) {
+            (window.hj.q = window.hj.q || []).push(params)
+          }
+        },
+  }), _options)
+}

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { LemonSqueezyEventPayload } from '../../../../src/runtime/registry/lemon-squeezy'
+import type { LemonSqueezyEventPayload } from '../../../../packages/script/src/runtime/registry/lemon-squeezy'
 import { ref } from '#imports'
 
 const ready = ref(false)

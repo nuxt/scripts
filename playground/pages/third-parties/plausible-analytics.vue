@@ -24,12 +24,12 @@ const { status, proxy } = useScriptPlausibleAnalytics({
 const clicks = ref(0)
 
 function trackPageView() {
-  proxy('404', { props: { path: '/404' } })
+  proxy.plausible('404', { props: { path: '/404' } })
 }
 
 async function clickHandler() {
   clicks.value++
-  proxy('test', { props: { clicks: clicks.value } })
+  proxy.plausible('test', { props: { clicks: clicks.value } })
 }
 </script>
 

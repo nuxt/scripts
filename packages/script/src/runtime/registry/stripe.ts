@@ -1,0 +1,33 @@
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { StripeConstructor } from '@stripe/stripe-js'
+import { withQuery } from 'ufo'
+import { useRegistryScript } from '../utils'
+import { StripeOptions } from './schemas'
+
+export { StripeOptions }
+
+export type StripeInput = RegistryScriptInput<typeof StripeOptions, false>
+
+export interface StripeApi {
+  Stripe: StripeConstructor
+}
+
+export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {
+  return useRegistryScript<T, typeof StripeOptions>('stripe', options => ({
+    scriptInput: {
+      src: withQuery(
+        `https://js.stripe.com/basil/stripe.js`,
+        (typeof options?.advancedFraudSignals === 'boolean' && !options?.advancedFraudSignals) ? { advancedFraudSignals: false } : {},
+      ),
+      // opt-out of privacy defaults
+      crossorigin: false,
+      referrerpolicy: false,
+    },
+    schema: import.meta.dev ? StripeOptions : undefined,
+    scriptOptions: {
+      use() {
+        return { Stripe: window.Stripe }
+      },
+    },
+  }), _options)
+}

@@ -1,19 +1,20 @@
 {
   "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "youtube", "google.maps"]
+  },
   "exclude": [
     "docs",
     "playground",
-    "client",
+    "packages/devtools-app",
     "scripts",
     "dist",
-    ".nuxt",
     ".output",
     "test/e2e",
     "test/fixtures",
     "test/unit",
-    "test/benchmark.skip.ts"
-  ],
-  "compilerOptions": {
-    "types": ["vitest/globals"]
-  }
+    "test/nuxt-runtime",
+    "test/benchmark.skip.ts",
+    "examples"
+  ]
 }

@@ -1,21 +1,23 @@
+import type { createMockGoogleMapsAPI } from '../__mocks__/google-maps-api'
 import { vi } from 'vitest'
 import { ref } from 'vue'
-import type { createMockGoogleMapsAPI } from '../__mocks__/google-maps-api'
 
 export type MocksType = ReturnType<typeof createMockGoogleMapsAPI>
 
 /**
  * Creates a mock map context that components would inject
  */
-export const createMockMapContext = (mocks: MocksType) => ({
-  map: ref({}),
-  mapsApi: ref(mocks.mockMapsApi),
-})
+export function createMockMapContext(mocks: MocksType) {
+  return {
+    map: ref({}),
+    mapsApi: ref(mocks.mockMapsApi),
+  }
+}
 
 /**
  * Simulates the component lifecycle for markers
  */
-export const simulateMarkerLifecycle = (mocks: MocksType, options: any) => {
+export function simulateMarkerLifecycle(mocks: MocksType, options: any) {
   // Creation
   const marker = new mocks.mockMapsApi.Marker(options)
 
@@ -40,7 +42,7 @@ export const simulateMarkerLifecycle = (mocks: MocksType, options: any) => {
 /**
  * Simulates the component lifecycle for advanced markers
  */
-export const simulateAdvancedMarkerLifecycle = async (mocks: MocksType, options: any) => {
+export async function simulateAdvancedMarkerLifecycle(mocks: MocksType, options: any) {
   // Library import (required for advanced markers)
   await mocks.mockMapsApi.importLibrary('marker')
 
@@ -68,7 +70,7 @@ export const simulateAdvancedMarkerLifecycle = async (mocks: MocksType, options:
 /**
  * Simulates info window lifecycle and attachment patterns
  */
-export const simulateInfoWindowLifecycle = (mocks: MocksType, options: any) => {
+export function simulateInfoWindowLifecycle(mocks: MocksType, options: any) {
   // Create DOM element for content
   const contentElement = document.createElement('div')
   contentElement.innerHTML = '<p>Test content</p>'
@@ -96,7 +98,7 @@ export const simulateInfoWindowLifecycle = (mocks: MocksType, options: any) => {
 /**
  * Simulates marker clusterer with multiple markers
  */
-export const simulateMarkerClustererLifecycle = async (mocks: MocksType, options: any = {}) => {
+export async function simulateMarkerClustererLifecycle(mocks: MocksType, options: any = {}) {
   const { MarkerClusterer } = await import('@googlemaps/markerclusterer')
 
   // Create clusterer
@@ -133,6 +135,37 @@ export const simulateMarkerClustererLifecycle = async (mocks: MocksType, options
 }
 
 /**
+ * Simulates the component lifecycle for GeoJson data layers
+ */
+export function simulateGeoJsonLifecycle(mocks: MocksType, geoJson: string | object, style?: any) {
+  // Creation
+  const dataLayer = new mocks.mockMapsApi.Data({ map: ref({}).value })
+
+  // Style setup
+  if (style) {
+    dataLayer.setStyle(style)
+  }
+
+  // GeoJson loading
+  if (typeof geoJson === 'string') {
+    dataLayer.loadGeoJson(geoJson)
+  }
+  else {
+    dataLayer.addGeoJson(geoJson)
+  }
+
+  // Event listener setup
+  dataLayer.addListener('click', vi.fn())
+  dataLayer.addListener('addfeature', vi.fn())
+
+  // Cleanup
+  mocks.mockMapsApi.event.clearInstanceListeners(dataLayer)
+  dataLayer.setMap(null)
+
+  return dataLayer
+}
+
+/**
  * Test options for various Google Maps objects
  */
 export const TEST_OPTIONS = {
@@ -156,5 +189,15 @@ export const TEST_OPTIONS = {
   pin: {
     scale: 1.5,
     background: '#FF0000',
+  },
+  geoJson: {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [151.2093, -33.8688] },
+        properties: { name: 'Sydney' },
+      },
+    ],
   },
 } as const

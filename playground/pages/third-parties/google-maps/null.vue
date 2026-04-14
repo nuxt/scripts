@@ -19,7 +19,6 @@ function changeQuery() {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
-        above-the-fold
         :center="center"
       />
     </div>

@@ -1,18 +1,29 @@
 import { describe, expect, it, vi } from 'vitest'
-import { useRegistryScript } from '../../src/runtime/utils'
+import { useRegistryScript } from '../../packages/script/src/runtime/utils'
 
 // Mock dependencies
 vi.mock('nuxt/app', () => ({
   useRuntimeConfig: () => ({ public: { scripts: {} } }),
 }))
 
-vi.mock('../../src/runtime/composables/useScript', () => ({
+vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
   useScript: vi.fn((input, options) => ({ input, options })),
 }))
 
-vi.mock('#nuxt-scripts-validator', () => ({
-  parse: vi.fn(),
-}))
+describe('useRegistryScript scriptOptions', () => {
+  it('should not mutate user-provided scriptOptions', () => {
+    const mockOptionsFunction = vi.fn((_opts, _ctx) => ({
+      scriptInput: { src: 'https://example.com/script.js' },
+      scriptOptions: { use: () => ({ test: true }) },
+    }))
+
+    const userScriptOptions = { trigger: 'onNuxtReady' as const }
+    const userOptions = { scriptOptions: userScriptOptions }
+    useRegistryScript('test', mockOptionsFunction, userOptions)
+
+    expect(userScriptOptions).not.toHaveProperty('use')
+  })
+})
 
 describe('useRegistryScript query param merging', () => {
   it('should merge query params when user provides custom src', () => {

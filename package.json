@@ -1,162 +1,55 @@
 {
-  "name": "@nuxt/scripts",
+  "name": "nuxt-scripts-monorepo",
   "type": "module",
-  "version": "0.13.2",
-  "packageManager": "pnpm@10.26.1",
+  "version": "1.0.0-rc.8",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
-  "author": {
-    "website": "https://harlanzw.com",
-    "name": "Harlan Wilton",
-    "url": "harlan@harlanzw.com"
-  },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuxt/scripts.git"
   },
-  "bugs": {
-    "url": "https://github.com/nuxt/scripts/issues"
-  },
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/types.d.mts",
-      "import": "./dist/module.mjs"
-    },
-    "./registry": "./dist/registry.mjs"
-  },
-  "main": "./dist/module.mjs",
-  "files": [
-    "dist"
-  ],
-  "typesVersions": {
-    "*": {
-      ".": [
-        "./dist/types.d.mts"
-      ],
-      "registry": [
-        "./dist/registry.d.mts"
-      ]
-    }
-  },
   "scripts": {
-    "build": "pnpm dev:prepare && pnpm prepack",
-    "client:build": "nuxi generate client",
-    "client:dev": "nuxi dev client --port 3300",
-    "prepack": "pnpm dev:prepare && nuxt-module-build build && npm run client:build",
-    "dev": "nuxi dev playground",
-    "dev:ssl": "nuxi dev playground --https",
-    "prepare:fixtures": "nuxi prepare test/fixtures/basic && nuxi prepare test/fixtures/cdn && nuxi prepare test/fixtures/extend-registry",
-    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground && pnpm run prepare:fixtures",
-    "typecheck": "vue-tsc --noEmit",
-    "bump": "bumpp package.json --commit --push --tag",
-    "release": "pnpm build && bumpp -x \"npx changelogen --output=CHANGELOG.md\"",
+    "build": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
+    "generate:types": "pnpm dlx tsx scripts/generate-registry-types.ts",
+    "prepack": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
+    "devtools": "nuxt dev packages/devtools-app --port 3030",
+    "devtools:build": "nuxt generate packages/devtools-app",
+    "dev": "nuxt dev playground",
+    "dev:ssl": "nuxt dev playground --https",
+    "dev:prepare": "pnpm -r dev:prepare && nuxt prepare && nuxt prepare playground && pnpm prepare:fixtures",
+    "prepare:fixtures": "nuxt prepare test/fixtures/basic && nuxt prepare test/fixtures/cdn && nuxt prepare test/fixtures/extend-registry && nuxt prepare test/fixtures/partytown && nuxt prepare test/fixtures/first-party",
+    "typecheck": "nuxt typecheck",
+    "release": "pnpm build && bumpp -r --output=CHANGELOG.md",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "pnpm dev:prepare && vitest --run",
-    "test:types": "echo 'broken due to type regeneration, use pnpm typecheck' && npx nuxi typecheck"
-  },
-  "build": {
-    "externals": [
-      "@unhead/vue",
-      "@unhead/schema",
-      "knitwork",
-      "estree-walker",
-      "#build/modules/nuxt-scripts-gtm",
-      "#build/modules/nuxt-scripts-ga",
-      "@vimeo/player",
-      "esbuild",
-      "unimport",
-      "#nuxt-scripts/types",
-      "#nuxt-scripts-validator"
-    ]
-  },
-  "peerDependencies": {
-    "@googlemaps/markerclusterer": "^2.6.2",
-    "@paypal/paypal-js": "^8.1.2 || ^9.0.0",
-    "@stripe/stripe-js": "^7.0.0 || ^8.0.0",
-    "@types/google.maps": "^3.58.1",
-    "@types/vimeo__player": "^2.18.3",
-    "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3"
-  },
-  "peerDependenciesMeta": {
-    "@googlemaps/markerclusterer": {
-      "optional": true
-    },
-    "@stripe/stripe-js": {
-      "optional": true
-    },
-    "@paypal/paypal-js": {
-      "optional": true
-    },
-    "@types/google.maps": {
-      "optional": true
-    },
-    "@types/vimeo__player": {
-      "optional": true
-    },
-    "@types/youtube": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@nuxt/kit": "^4.2.2",
-    "@vueuse/core": "^14.1.0",
-    "consola": "^3.4.2",
-    "defu": "^6.1.4",
-    "h3": "^1.15.4",
-    "magic-string": "^0.30.21",
-    "ofetch": "^1.5.1",
-    "ohash": "^2.0.11",
-    "pathe": "^2.0.3",
-    "pkg-types": "^2.3.0",
-    "sirv": "^3.0.2",
-    "std-env": "^3.10.0",
-    "ufo": "^1.6.1",
-    "unplugin": "^2.3.11",
-    "unstorage": "^1.17.3",
-    "valibot": "^1.2.0"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e-dev": "vitest run --project e2e-dev",
+    "test:types": "vitest run --project typecheck"
   },
   "devDependencies": {
-    "@nuxt/devtools-kit": "^3.1.1",
-    "@nuxt/devtools-ui-kit": "^3.1.1",
-    "@nuxt/eslint-config": "^1.12.1",
-    "@nuxt/module-builder": "^1.0.2",
+    "@antfu/eslint-config": "catalog:",
     "@nuxt/scripts": "workspace:*",
-    "@nuxt/test-utils": "3.19.2",
-    "@paypal/paypal-js": "^9.1.0",
-    "@types/semver": "^7.7.1",
-    "@typescript-eslint/typescript-estree": "^8.50.0",
-    "@vue/test-utils": "^2.4.6",
-    "acorn-loose": "^8.5.2",
-    "bumpp": "^10.3.2",
-    "changelogen": "^0.6.2",
-    "eslint": "^9.39.2",
-    "eslint-plugin-n": "^17.23.1",
-    "happy-dom": "^20.0.11",
-    "knitwork": "^1.3.0",
-    "nuxt": "^4.2.2",
-    "playwright-core": "^1.57.0",
-    "shiki": "^3.20.0",
-    "typescript": "5.9.3",
-    "vitest": "^4.0.16",
-    "vue": "^3.5.26",
-    "vue-router": "^4.6.4",
-    "vue-tsc": "^3.1.8"
-  },
-  "resolutions": {
-    "@nuxt/scripts": "workspace:*"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@tailwindcss/oxide",
-      "better-sqlite3",
-      "esbuild",
-      "sharp",
-      "unrs-resolver",
-      "vue-demi"
-    ]
+    "@nuxt/test-utils": "catalog:",
+    "@nuxtjs/partytown": "catalog:",
+    "@paypal/paypal-js": "catalog:",
+    "@types/google.maps": "catalog:",
+    "@types/jest-image-snapshot": "catalog:",
+    "@types/youtube": "catalog:",
+    "@vue/test-utils": "catalog:",
+    "bumpp": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-harlanzw": "catalog:",
+    "happy-dom": "catalog:",
+    "jest-image-snapshot": "catalog:",
+    "nuxt": "catalog:",
+    "playwright-core": "catalog:",
+    "posthog-js": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vue": "catalog:",
+    "vue-tsc": "catalog:"
   }
 }

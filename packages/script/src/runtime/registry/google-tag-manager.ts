@@ -1,0 +1,164 @@
+import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
+import type { GTag } from './google-analytics'
+import { useRegistryScript } from '#nuxt-scripts/utils'
+import { withQuery } from 'ufo'
+import { GoogleTagManagerOptions } from './schemas'
+
+/**
+ * Improved DataLayer type that better reflects GTM's capabilities
+ * Can contain either gtag event parameters or custom data objects
+ */
+export type DataLayerItem = Parameters<GTag> | Record<string, unknown>
+export type DataLayer = Array<DataLayerItem>
+
+/**
+ * DataLayer push function type
+ */
+export interface DataLayerPush {
+  (...args: Parameters<GTag>): void
+  (obj: Record<string, unknown> | any[]): void
+}
+
+/**
+ * Improved DataLayer API type with more precise methods
+ */
+export interface GoogleTagManagerDataLayerApi {
+  name: string
+  push: DataLayerPush
+  set: (config: Record<string, unknown>) => void
+  get: <T = unknown>(key: string) => T
+  reset: () => void
+  listeners: Array<() => void>
+}
+
+/**
+ * DataLayer status information
+ */
+export interface GoogleTagManagerDataLayerStatus {
+  dataLayer: {
+    gtmDom: boolean
+    gtmLoad: boolean
+    subscribers: number
+    [key: string]: unknown
+  }
+}
+
+/**
+ * Container instance type
+ */
+export interface GoogleTagManagerContainer {
+  callback: () => void
+  dataLayer: GoogleTagManagerDataLayerApi
+  state: Record<string, unknown>
+}
+
+/**
+ * Complete GTM instance object
+ */
+export interface GoogleTagManagerInstance extends GoogleTagManagerDataLayerStatus {
+  [containerId: string]: GoogleTagManagerContainer | any
+}
+
+/**
+ * Complete Google Tag Manager API accessible via window
+ */
+export interface GoogleTagManagerApi {
+  google_tag_manager: GoogleTagManagerInstance
+  dataLayer: DataLayer & {
+    push: DataLayerPush
+  }
+}
+
+/**
+ * Enhanced window type with GTM
+ */
+declare global {
+  interface Window extends GoogleTagManagerApi {}
+}
+
+export { GoogleTagManagerOptions }
+
+export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
+
+/**
+ * Hook to use Google Tag Manager in Nuxt applications
+ */
+export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
+  options?: GoogleTagManagerInput & {
+    /**
+     * Optional callback that runs before GTM starts
+     * Allows for custom initialization or configuration
+     */
+    onBeforeGtmStart?: (gtag: DataLayerPush) => void
+  },
+): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
+  const instance = useRegistryScript<T, typeof GoogleTagManagerOptions>(
+    options?.key || 'googleTagManager',
+    (opts) => {
+      const dataLayerName = opts?.l ?? opts?.dataLayer ?? 'dataLayer'
+
+      return {
+        scriptInput: {
+          src: withQuery('https://www.googletagmanager.com/gtm.js', {
+            id: opts.id,
+            l: opts.l,
+            gtm_auth: opts.auth,
+            gtm_preview: opts.preview,
+            gtm_cookies_win: opts.cookiesWin ? 'x' : undefined,
+            gtm_debug: opts.debug ? 'x' : undefined,
+            gtm_npa: opts.npa ? '1' : undefined,
+            gtm_data_layer: opts.dataLayer,
+            gtm_env: opts.envName,
+            gtm_auth_referrer_policy: opts.authReferrerPolicy,
+          }),
+        },
+        schema: import.meta.dev ? GoogleTagManagerOptions : undefined,
+        scriptOptions: {
+          use: () => {
+            return {
+              dataLayer: (window as any)[dataLayerName] as DataLayer & { push: DataLayerPush },
+              google_tag_manager: window.google_tag_manager,
+            }
+          },
+        },
+        clientInit: import.meta.server
+          ? undefined
+          : () => {
+              // Initialize dataLayer if it doesn't exist
+              (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
+
+              // Create gtag function
+              function gtag(...args: any[]) {
+                // Pushing arguments to dataLayer is necessary for GTM to process events
+                (window as any)[dataLayerName].push(args)
+              }
+
+              // Assign gtag to window for global access
+              (window as any).gtag = gtag
+
+              // Allow custom initialization
+              options?.onBeforeGtmStart?.(gtag)
+
+              if (opts.defaultConsent)
+                gtag('consent', 'default', opts.defaultConsent)
+
+              // Push the standard GTM initialization event
+              ;(window as any)[dataLayerName].push({
+                'gtm.start': Date.now(),
+                'event': 'gtm.js',
+              })
+            },
+      }
+    },
+    options,
+  )
+
+  // Handle callback for cached/pre-initialized scripts (e.g., when ID is in nuxt.config)
+  if (import.meta.client && options?.onBeforeGtmStart) {
+    const gtag = (window as any).gtag
+    if (gtag)
+      options.onBeforeGtmStart(gtag)
+  }
+
+  return instance
+}

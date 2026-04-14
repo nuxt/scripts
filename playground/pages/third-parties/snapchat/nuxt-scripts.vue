@@ -6,11 +6,10 @@ useHead({
 })
 
 // composables return the underlying api as a proxy object and the script state
-const { status, snaptr } = useScriptSnapchatPixel({ id: '2295cbcc-cb3f-4727-8c09-1133b742722c' })
-// this will be triggered once the script is ready async
+const { status, proxy } = useScriptSnapchatPixel({ id: '2295cbcc-cb3f-4727-8c09-1133b742722c' })
 
 function triggerEvent() {
-  snaptr('track', 'PAGE_VIEW')
+  proxy.snaptr('track', 'PAGE_VIEW')
 }
 </script>
 
