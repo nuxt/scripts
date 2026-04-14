@@ -7,6 +7,14 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+let posthogInitImpl: ((...args: any[]) => any) | undefined
+
+vi.mock('posthog-js', () => ({
+  default: {
+    init: (...args: any[]) => posthogInitImpl?.(...args),
+  },
+}))
+
 // Force useRegistryScript to a pass-through so we can call `clientInit` directly
 // instead of going through the real beforeInit wrapping (which requires the full
 // Nuxt + useScript plumbing).
@@ -154,8 +162,7 @@ describe('consent defaults — clientInit ordering', () => {
 
   it('posthog: opt-out sets opt_out_capturing_by_default on init config', async () => {
     const posthogInit = vi.fn(() => ({ opt_in_capturing: vi.fn() }))
-    vi.doMock('posthog-js', () => ({ default: { init: posthogInit } }))
-    vi.resetModules()
+    posthogInitImpl = posthogInit
 
     const { useScriptPostHog } = await import('../../packages/script/src/runtime/registry/posthog')
 
@@ -179,8 +186,7 @@ describe('consent defaults — clientInit ordering', () => {
       expect(optInSpy).not.toHaveBeenCalled()
       return instance
     })
-    vi.doMock('posthog-js', () => ({ default: { init: posthogInit } }))
-    vi.resetModules()
+    posthogInitImpl = posthogInit
 
     const { useScriptPostHog } = await import('../../packages/script/src/runtime/registry/posthog')
 
