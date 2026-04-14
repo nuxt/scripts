@@ -177,7 +177,7 @@ describe('defaultConsent - Clarity', () => {
 
 describe('consentAdapter - per-script projection', () => {
   it('tikTok adapter maps ad_storage to grantConsent/revokeConsent', async () => {
-    const { tiktokPixelConsentAdapter } = await import('../../packages/script/src/runtime/registry/tiktok-pixel')
+    const { tiktokPixelConsentAdapter } = await import('../../packages/script/src/runtime/registry/consent-adapters')
     const grant = vi.fn()
     const revoke = vi.fn()
     const proxy: any = { ttq: { grantConsent: grant, revokeConsent: revoke } }
@@ -190,7 +190,7 @@ describe('consentAdapter - per-script projection', () => {
   })
 
   it('meta adapter maps ad_storage to fbq("consent", grant|revoke)', async () => {
-    const { metaPixelConsentAdapter } = await import('../../packages/script/src/runtime/registry/meta-pixel')
+    const { metaPixelConsentAdapter } = await import('../../packages/script/src/runtime/registry/consent-adapters')
     const fbq = vi.fn()
     const proxy: any = { fbq }
 
@@ -202,7 +202,7 @@ describe('consentAdapter - per-script projection', () => {
   })
 
   it('gA adapter passes through full GCM state', async () => {
-    const { googleAnalyticsConsentAdapter } = await import('../../packages/script/src/runtime/registry/google-analytics')
+    const { googleAnalyticsConsentAdapter } = await import('../../packages/script/src/runtime/registry/consent-adapters')
     const gtag = vi.fn()
     const proxy: any = { gtag }
     const state = { ad_storage: 'granted' as const, analytics_storage: 'granted' as const }
@@ -215,7 +215,7 @@ describe('consentAdapter - per-script projection', () => {
   })
 
   it('bing UET adapter maps ad_storage only', async () => {
-    const { bingUetConsentAdapter } = await import('../../packages/script/src/runtime/registry/bing-uet')
+    const { bingUetConsentAdapter } = await import('../../packages/script/src/runtime/registry/consent-adapters')
     const push = vi.fn()
     const proxy: any = { uetq: { push } }
 
@@ -224,7 +224,7 @@ describe('consentAdapter - per-script projection', () => {
   })
 
   it('clarity adapter maps analytics_storage to boolean', async () => {
-    const { clarityConsentAdapter } = await import('../../packages/script/src/runtime/registry/clarity')
+    const { clarityConsentAdapter } = await import('../../packages/script/src/runtime/registry/consent-adapters')
     const clarity = vi.fn()
     const proxy: any = { clarity }
 

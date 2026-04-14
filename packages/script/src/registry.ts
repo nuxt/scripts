@@ -12,10 +12,13 @@ import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
 import { LOGOS } from './registry-logos'
-import { bingUetConsentAdapter } from './runtime/registry/bing-uet'
-import { clarityConsentAdapter } from './runtime/registry/clarity'
-import { googleAnalyticsConsentAdapter } from './runtime/registry/google-analytics'
-import { metaPixelConsentAdapter } from './runtime/registry/meta-pixel'
+import {
+  bingUetConsentAdapter,
+  clarityConsentAdapter,
+  googleAnalyticsConsentAdapter,
+  metaPixelConsentAdapter,
+  tiktokPixelConsentAdapter,
+} from './runtime/registry/consent-adapters'
 import {
   BingUetOptions,
   BlueskyEmbedOptions,
@@ -50,7 +53,6 @@ import {
   XEmbedOptions,
   XPixelOptions,
 } from './runtime/registry/schemas'
-import { tiktokPixelConsentAdapter } from './runtime/registry/tiktok-pixel'
 
 export type { ScriptCapabilities } from './runtime/types'
 

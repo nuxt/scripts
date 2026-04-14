@@ -1,4 +1,4 @@
-import type { ConsentAdapter, RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { BingUetOptions } from './schemas'
 
@@ -277,21 +277,4 @@ export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput &
           _options?.onBeforeUetStart?.(uetq as unknown as BingUetQueue)
         },
   }), _options)
-}
-
-/**
- * GCMv2 -> Bing UET consent adapter.
- * UET honours only `ad_storage`, so we project lossy from GCM state.
- */
-export const bingUetConsentAdapter: ConsentAdapter<BingUetApi> = {
-  applyDefault(state, proxy) {
-    if (!state.ad_storage)
-      return
-    proxy.uetq.push('consent', 'default', { ad_storage: state.ad_storage })
-  },
-  applyUpdate(state, proxy) {
-    if (!state.ad_storage)
-      return
-    proxy.uetq.push('consent', 'update', { ad_storage: state.ad_storage })
-  },
 }

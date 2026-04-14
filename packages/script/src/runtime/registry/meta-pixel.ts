@@ -1,4 +1,4 @@
-import type { ConsentAdapter, RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { MetaPixelOptions } from './schemas'
 
@@ -49,24 +49,6 @@ declare global {
 
 export { MetaPixelOptions }
 export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false>
-
-function applyMetaConsent(state: { ad_storage?: 'granted' | 'denied' }, proxy: MetaPixelApi) {
-  if (!state.ad_storage)
-    return
-  proxy.fbq('consent', state.ad_storage === 'granted' ? 'grant' : 'revoke')
-}
-
-/**
- * GCMv2 -> Meta Pixel consent adapter.
- * Meta only exposes a binary consent toggle, projected lossy from `ad_storage`:
- * - `ad_storage === 'granted'` -> `fbq('consent', 'grant')`
- * - `ad_storage === 'denied'`  -> `fbq('consent', 'revoke')`
- * - other GCM categories are ignored.
- */
-export const metaPixelConsentAdapter: ConsentAdapter<MetaPixelApi> = {
-  applyDefault: applyMetaConsent,
-  applyUpdate: applyMetaConsent,
-}
 
 export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
   return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
