@@ -41,7 +41,7 @@ export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
 
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
-  const userOptions = Object.assign(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
+  const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
   let finalScriptInput = options.scriptInput
@@ -70,7 +70,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   }
 
   const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
-  const scriptOptions = Object.assign(userOptions?.scriptOptions || {}, options.scriptOptions || {})
+  const scriptOptions = { ...userOptions?.scriptOptions, ...options.scriptOptions }
   if (import.meta.dev) {
     // Capture where the component was loaded from
     const error = new Error('Stack trace for component location')

@@ -126,3 +126,29 @@ describe('useRegistryScript query param merging', () => {
     expect(result.input.src).toBe('https://custom-domain.com/custom/path/script.js?version=2&custom=true&id=123')
   })
 })
+
+describe('useRegistryScript runtimeConfig isolation', () => {
+  it('should not mutate runtimeConfig.public.scripts when merging registry-defined scriptOptions', async () => {
+    const runtimeScriptConfig = {
+      token: 'abc',
+      scriptOptions: { trigger: 'client' as const },
+    }
+    vi.resetModules()
+    vi.doMock('nuxt/app', () => ({
+      useRuntimeConfig: () => ({ public: { scripts: { regTest: runtimeScriptConfig } } }),
+    }))
+    const { useRegistryScript: useRegistryScriptFresh } = await import('../../src/runtime/utils')
+
+    useRegistryScriptFresh('regTest', () => ({
+      scriptInput: { src: 'https://example.com/s.js' },
+      scriptOptions: {
+        use: () => ({ api: 'x' }),
+      } as any,
+    }))
+
+    // runtimeConfig entry should remain free of function properties.
+    expect(typeof (runtimeScriptConfig.scriptOptions as any).use).toBe('undefined')
+    expect(typeof (runtimeScriptConfig.scriptOptions as any).beforeInit).toBe('undefined')
+    expect(runtimeScriptConfig.scriptOptions.trigger).toBe('client')
+  })
+})
