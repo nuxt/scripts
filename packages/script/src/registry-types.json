@@ -7,9 +7,64 @@
         "code": "export const BingUetOptions = object({\n  /**\n   * Your Bing UET tag ID.\n   * @see https://help.ads.microsoft.com/#apex/ads/en/56682/2-500\n   */\n  id: string(),\n  /**\n   * Enable automatic SPA page tracking.\n   * @default true\n   */\n  enableAutoSpaTracking: optional(boolean()),\n})"
       },
       {
+        "name": "BingUetConsentStatus",
+        "kind": "type",
+        "code": "export type BingUetConsentStatus = 'granted' | 'denied'"
+      },
+      {
+        "name": "BingUetConsentOptions",
+        "kind": "interface",
+        "code": "export interface BingUetConsentOptions {\n  /**\n   * Controls storage of advertising identifiers. Currently the only field UET honors.\n   */\n  ad_storage?: BingUetConsentStatus\n}"
+      },
+      {
+        "name": "BingUetEventName",
+        "kind": "type",
+        "code": "export type BingUetEventName\n  = | 'page_view'\n    | 'screen_view'\n    | 'login'\n    | 'sign_up'\n    | 'subscribe'\n    | 'start_trial'\n    | 'lead'\n    | 'generate_lead'\n    | 'submit_lead_form'\n    | 'contact'\n    | 'search'\n    | 'view_search_results'\n    | 'select_content'\n    | 'share'\n    | 'exception'\n    | 'find_location'\n    | 'book_appointment'\n    | 'get_route'\n    | 'view_item'\n    | 'view_item_list'\n    | 'view_promotion'\n    | 'add_to_cart'\n    | 'remove_from_cart'\n    | 'add_to_wishlist'\n    | 'add_payment_info'\n    | 'begin_checkout'\n    | 'checkout_progress'\n    | 'set_checkout_option'\n    | 'purchase'\n    | 'refund'\n    | (string & {})"
+      },
+      {
+        "name": "BingUetItem",
+        "kind": "interface",
+        "code": "export interface BingUetItem {\n  id?: string\n  name?: string\n  brand?: string\n  category?: string\n  variant?: string\n  price?: number\n  quantity?: number\n  list_name?: string\n  list_position?: number\n  creative_name?: string\n  creative_slot?: string\n  location_id?: string\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetPromotion",
+        "kind": "interface",
+        "code": "export interface BingUetPromotion {\n  id?: string\n  name?: string\n  creative_name?: string\n  creative_slot?: string\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetEventParams",
+        "kind": "interface",
+        "code": "export interface BingUetEventParams {\n  /** Event category (beacon shortcut). */\n  ec?: string\n  /** Event action (beacon shortcut). */\n  ea?: string\n  /** Event label (beacon shortcut). */\n  el?: string\n  /** Event value, numeric (beacon shortcut). */\n  ev?: number\n  /** Goal category / goal completion. */\n  gc?: string\n  /** Goal value. */\n  gv?: number\n  /** Long-form alias for `ec`. */\n  event_category?: string\n  /** Long-form alias for `ea`. */\n  event_action?: string\n  /** Long-form alias for `el`. */\n  event_label?: string\n  /** Long-form alias for `ev`. */\n  event_value?: number\n  /** Unique event identifier (dedup). */\n  event_id?: string\n  /** Variable revenue amount. */\n  revenue_value?: number\n  /** ISO 4217 currency code (e.g. \"USD\"). */\n  currency?: string\n  /** Unique order/transaction ID (dedup). */\n  transaction_id?: string\n  /** Ecommerce items. */\n  items?: BingUetItem[]\n  /** Promotions associated with the event. */\n  promotions?: BingUetPromotion[]\n  /** Sign-up/login method (e.g. \"Google\"). */\n  method?: string\n  coupon?: string\n  tax?: number\n  shipping?: number\n  affiliation?: string\n  /** Search query. */\n  search_term?: string\n  content_type?: string\n  content_id?: string\n  checkout_step?: number\n  checkout_option?: string\n  description?: string\n  name?: string\n  screen_name?: string\n  /** Whether an exception is fatal. */\n  fatal?: boolean\n  /** Flags a new customer conversion. */\n  new_customer?: boolean | number\n  /** Retail vertical: product ID. */\n  ecomm_prodid?: string | string[]\n  /** Retail vertical: page type. */\n  ecomm_pagetype?: 'home' | 'searchresults' | 'category' | 'product' | 'cart' | 'purchase' | 'other' | (string & {})\n  ecomm_totalvalue?: number\n  ecomm_category?: string | string[]\n  ecomm_query?: string\n  /** Override page path. */\n  page_path?: string\n  /** Override page title. */\n  page_title?: string\n  /** Override full page URL. */\n  page_location?: string\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetEnhancedConversionsPid",
+        "kind": "interface",
+        "code": "export interface BingUetEnhancedConversionsPid {\n  /** SHA-256 hashed email (lowercase, trimmed). Alias: `email`. */\n  em?: string\n  /** SHA-256 hashed phone (E.164 digits only). Alias: `phone_number`. */\n  ph?: string\n  /** Long-form alias for `em`. */\n  email?: string\n  /** Long-form alias for `ph`. */\n  phone_number?: string\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetSetParams",
+        "kind": "interface",
+        "code": "export interface BingUetSetParams {\n  /** Partner identifiers for enhanced conversions. */\n  pid?: BingUetEnhancedConversionsPid\n  page_path?: string\n  page_title?: string\n  page_location?: string\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetTcfConfig",
+        "kind": "interface",
+        "code": "export interface BingUetTcfConfig {\n  /** Enable TCF v2.0 auto-consent handling (Microsoft vendorId 1126). */\n  enabled?: boolean\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetConstructorOptions",
+        "kind": "interface",
+        "code": "export interface BingUetConstructorOptions {\n  /** UET tag ID. */\n  ti: string\n  /** Alternate tag ID field (same effect as `ti`). */\n  tagId?: string\n  /** Auto-fire pageLoad on SPA route changes. */\n  enableAutoSpaTracking?: boolean\n  /** Enable TCF v2.0 auto-consent handling. */\n  enableAutoConsent?: boolean\n  /** Suppress automatic page_view on load. */\n  disableAutoPageView?: boolean\n  /** Disable the UET container entirely. */\n  disableContainer?: boolean\n  /** Disable writing the UET visitor ID cookie. */\n  disableUetVid?: boolean\n  /** Disable visibility (tab focus/blur) events. */\n  disableVisibilityEvents?: boolean\n  /** Defer loading the beacon. */\n  deferLoad?: boolean\n  /** Strip query strings from reported URLs. */\n  removeQueryFromUrls?: boolean\n  /** Store conversion tracking cookies. */\n  storeConvTrackCookies?: boolean\n  /** Cookie domain. */\n  cookieDomain?: string\n  /** Cookie flags (e.g. \"SameSite=None; Secure\"). */\n  cookieFlags?: string\n  /** Enable MS DNS cookie. */\n  msDnsCookie?: boolean\n  /** UID cookie name. */\n  uidCookie?: string\n  /** Error beacon verbosity level. */\n  errorBeaconLevel?: number\n  /** Microsoft Clarity project ID for integration. */\n  clarityProjectId?: string\n  /** When true, reads `window.enhanced_conversion_data` for gtag-style enhanced conversions. */\n  gtagPid?: boolean\n  /** Beacon protocol version. */\n  Ver?: 1 | 2\n  /** Associated advertiser ID. */\n  advertiserId?: string\n  /** Source tag for GTM integration. */\n  gtmTagSource?: string\n  /** Queue reference, typically `window.uetq`. */\n  q?: any[]\n  [key: string]: any\n}"
+      },
+      {
+        "name": "BingUetQueue",
+        "kind": "interface",
+        "code": "export interface BingUetQueue {\n  push: {\n    // Legacy custom event object form (beacon shortcuts).\n    (event: BingUetEventParams): void\n    // Manual page load (maps internally to `page_view`).\n    (command: 'pageLoad'): void\n    // Standard and custom events.\n    (command: 'event', eventName: BingUetEventName, eventParams?: BingUetEventParams): void\n    // Consent mode (default on init, update after user interaction).\n    (command: 'consent', action: 'default' | 'update', consentParams: BingUetConsentOptions): void\n    // Enhanced conversions / sticky page overrides.\n    (command: 'set', params: BingUetSetParams): void\n    // TCF v2.0 auto-consent configuration.\n    (command: 'config', target: 'tcf', params: BingUetTcfConfig): void\n  }\n}"
+      },
+      {
         "name": "BingUetApi",
         "kind": "interface",
-        "code": "export interface BingUetApi {\n  uetq: {\n    push: (event: string | Record<string, any>) => void\n  }\n}"
+        "code": "export interface BingUetApi {\n  uetq: BingUetQueue\n}"
       }
     ],
     "bluesky-embed": [
