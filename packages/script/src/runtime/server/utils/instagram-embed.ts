@@ -64,9 +64,15 @@ function processRules(css: string, scopeSelector: string): string {
         const atName = atRule.content.match(AT_RULE_NAME_RE)?.[1]?.toLowerCase()
         if (atName === 'media' || atName === 'supports' || atName === 'layer') {
           const braceStart = atRule.content.indexOf('{')
-          const innerCss = atRule.content.slice(braceStart + 1, -1)
-          const scopedInner = processRules(innerCss, scopeSelector)
-          output.push(`${atRule.content.slice(0, braceStart + 1) + scopedInner}}`)
+          // Statement-form (e.g. `@layer foo;`) has no block — preserve as-is.
+          if (braceStart === -1) {
+            output.push(atRule.content)
+          }
+          else {
+            const innerCss = atRule.content.slice(braceStart + 1, -1)
+            const scopedInner = processRules(innerCss, scopeSelector)
+            output.push(`${atRule.content.slice(0, braceStart + 1)}${scopedInner}}`)
+          }
         }
         else if (atName === 'keyframes' || atName === '-webkit-keyframes' || atName === 'font-face') {
           output.push(atRule.content)
@@ -90,7 +96,7 @@ function processRules(css: string, scopeSelector: string): string {
     if (!selector)
       continue
 
-    const selectors = selector.split(',').map(s => s.trim())
+    const selectors = splitTopLevel(selector, ',').map(s => s.trim())
     const filteredSelectors = selectors.filter((s) => {
       const normalized = s.replace(MULTI_SPACE_RE, ' ').trim().toLowerCase()
       return normalized !== ':root'
@@ -132,6 +138,48 @@ function extractAtRule(css: string, start: number): { content: string, end: numb
     content: css.slice(start, bracePos) + block.content,
     end: block.end,
   }
+}
+
+/**
+ * Split a string on `separator` only at top level, respecting parentheses,
+ * brackets, and quoted strings. This keeps nested commas inside `:is(.a, .b)`,
+ * `[attr="a,b"]`, etc. intact.
+ */
+function splitTopLevel(input: string, separator: string): string[] {
+  const parts: string[] = []
+  let depth = 0
+  let quote: string | null = null
+  let start = 0
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i]
+    if (quote) {
+      if (ch === '\\') {
+        i++
+        continue
+      }
+      if (ch === quote)
+        quote = null
+      continue
+    }
+    if (ch === '"' || ch === '\'') {
+      quote = ch
+      continue
+    }
+    if (ch === '(' || ch === '[') {
+      depth++
+      continue
+    }
+    if (ch === ')' || ch === ']') {
+      depth--
+      continue
+    }
+    if (ch === separator && depth === 0) {
+      parts.push(input.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(input.slice(start))
+  return parts
 }
 
 function extractBlock(css: string, openBrace: number): { content: string, end: number } | null {

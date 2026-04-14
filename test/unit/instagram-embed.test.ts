@@ -280,4 +280,25 @@ html, body { margin: 0; padding: 0; }
     // @keyframes preserved
     expect(result).toContain('@keyframes spin')
   })
+
+  it('preserves statement-form @layer declarations', () => {
+    const css = '@layer reset, components; .Embed { color: red; }'
+    const result = scopeCss(css, scope)
+    expect(result).toContain('@layer reset, components;')
+    expect(result).not.toMatch(/@layer[^;]*\}/)
+    expect(result).toContain(`${scope} .Embed`)
+  })
+
+  it('does not split commas inside :is() / :where() / :not() selectors', () => {
+    const css = ':is(.Embed, .EmbedMedia) > :not(span, em) { color: red; }'
+    const result = scopeCss(css, scope)
+    expect(result).toContain(`${scope} :is(.Embed, .EmbedMedia) > :not(span, em)`)
+    expect(result).not.toMatch(/\.EmbedMedia\) > :not\(span$/m)
+  })
+
+  it('does not split commas inside attribute selectors', () => {
+    const css = '[data-x="a,b"] .Embed { color: red; }'
+    const result = scopeCss(css, scope)
+    expect(result).toContain(`${scope} [data-x="a,b"] .Embed`)
+  })
 })
