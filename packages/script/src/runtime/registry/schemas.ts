@@ -1,5 +1,21 @@
 import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
 
+// Shared GCMv2 consent category value.
+const consentCategoryValue = union([literal('granted'), literal('denied')])
+
+// Shared GCMv2 consent state (+ GA-only control fields).
+const gcmConsentState = object({
+  ad_storage: optional(consentCategoryValue),
+  ad_user_data: optional(consentCategoryValue),
+  ad_personalization: optional(consentCategoryValue),
+  analytics_storage: optional(consentCategoryValue),
+  functionality_storage: optional(consentCategoryValue),
+  personalization_storage: optional(consentCategoryValue),
+  security_storage: optional(consentCategoryValue),
+  wait_for_update: optional(number()),
+  region: optional(array(string())),
+})
+
 export const BlueskyEmbedOptions = object({
   /**
    * The Bluesky post URL to embed.
@@ -24,6 +40,13 @@ export const ClarityOptions = object({
    * @see https://learn.microsoft.com/en-us/clarity/setup-clarity
    */
   id: pipe(string(), minLength(10)),
+  /**
+   * Default consent state applied before Clarity starts.
+   * - `boolean` - enable / disable cookies.
+   * - `Record<string, string>` - advanced consent vector (see Clarity docs).
+   * @see https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent
+   */
+  defaultConsent: optional(union([boolean(), record(string(), string())])),
 })
 
 export const CloudflareWebAnalyticsOptions = object({
@@ -282,6 +305,11 @@ export const GoogleAnalyticsOptions = object({
    * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer
    */
   l: optional(string()),
+  /**
+   * Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`.
+   * @see https://developers.google.com/tag-platform/security/guides/consent
+   */
+  defaultConsent: optional(gcmConsentState),
 })
 
 export const GoogleMapsOptions = object({
@@ -574,6 +602,12 @@ export const MetaPixelOptions = object({
    * @see https://developers.facebook.com/docs/meta-pixel/get-started
    */
   id: union([string(), number()]),
+  /**
+   * Default consent state. `'granted'` fires `fbq('consent', 'grant')`,
+   * `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`.
+   * @see https://www.facebook.com/business/help/1151321516677370
+   */
+  defaultConsent: optional(union([literal('granted'), literal('denied')])),
 })
 
 export const NpmOptions = object({
@@ -759,6 +793,13 @@ export const BingUetOptions = object({
    * @default true
    */
   enableAutoSpaTracking: optional(boolean()),
+  /**
+   * Default consent state fired as `uetq.push('consent', 'default', ...)` before UET init.
+   * @see https://help.ads.microsoft.com/#apex/ads/en/60119/1-500
+   */
+  defaultConsent: optional(object({
+    ad_storage: optional(consentCategoryValue),
+  })),
 })
 
 export const SegmentOptions = object({
@@ -859,6 +900,12 @@ export const TikTokPixelOptions = object({
    * @default true
    */
   trackPageView: optional(boolean()),
+  /**
+   * Default consent state. `'granted'` fires `ttq.consent.grant()`,
+   * `'denied'` fires `ttq.consent.revoke()`, both called before `ttq('init', id)`.
+   * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842
+   */
+  defaultConsent: optional(union([literal('granted'), literal('denied')])),
 })
 
 export const UmamiAnalyticsOptions = object({

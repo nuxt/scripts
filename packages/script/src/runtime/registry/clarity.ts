@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { ConsentAdapter, RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { ClarityOptions } from './schemas'
 
@@ -56,6 +56,28 @@ export function useScriptClarity<T extends ClarityApi>(
           window.clarity = window.clarity || function (...params: any[]) {
             (window.clarity.q = window.clarity.q || []).push(params)
           }
+          if (options?.defaultConsent !== undefined)
+            window.clarity('consent', options.defaultConsent)
         },
   }), _options)
+}
+
+/**
+ * GCMv2 -> Clarity consent adapter.
+ * Clarity accepts a boolean cookie toggle; we project lossy from `analytics_storage`:
+ * - `analytics_storage === 'granted'` -> `clarity('consent', true)`
+ * - `analytics_storage === 'denied'`  -> `clarity('consent', false)`
+ * - other GCM categories are ignored.
+ */
+export const clarityConsentAdapter: ConsentAdapter<ClarityApi> = {
+  applyDefault(state, proxy) {
+    if (!state.analytics_storage)
+      return
+    proxy.clarity('consent', state.analytics_storage === 'granted')
+  },
+  applyUpdate(state, proxy) {
+    if (!state.analytics_storage)
+      return
+    proxy.clarity('consent', state.analytics_storage === 'granted')
+  },
 }

@@ -50,6 +50,39 @@ export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
+// -- Consent adapter contract (Scope A / Scope B shared) --
+
+/**
+ * GCMv2 consent category value.
+ * @see https://developers.google.com/tag-platform/security/guides/consent
+ */
+export type ConsentCategoryValue = 'granted' | 'denied'
+
+/**
+ * Canonical GCMv2 consent state shape shared across all scripts.
+ * Non-GCM vendors (Meta, TikTok) project a subset of this via their adapters.
+ */
+export interface ConsentState {
+  ad_storage?: ConsentCategoryValue
+  ad_user_data?: ConsentCategoryValue
+  ad_personalization?: ConsentCategoryValue
+  analytics_storage?: ConsentCategoryValue
+  functionality_storage?: ConsentCategoryValue
+  personalization_storage?: ConsentCategoryValue
+  security_storage?: ConsentCategoryValue
+}
+
+/**
+ * Adapter that maps a canonical GCMv2 ConsentState to a vendor's consent API.
+ * Consumed by the Scope B `useScriptConsent` composable.
+ */
+export interface ConsentAdapter<Proxy = any> {
+  /** Called once to establish the default consent state before the script init. */
+  applyDefault: (state: ConsentState, proxy: Proxy) => void
+  /** Called on every consent update after the script has loaded. */
+  applyUpdate: (state: ConsentState, proxy: Proxy) => void
+}
+
 export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
@@ -439,6 +472,11 @@ export interface RegistryScript {
    * - absent: not partytown-capable
    */
   partytown?: PartytownCapability
+  /**
+   * Consent adapter that maps canonical GCMv2 state to the vendor's native
+   * consent API. Consumed by the `useScriptConsent` composable.
+   */
+  consentAdapter?: ConsentAdapter
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false

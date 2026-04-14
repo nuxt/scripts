@@ -12,6 +12,10 @@ import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
 import { LOGOS } from './registry-logos'
+import { bingUetConsentAdapter } from './runtime/registry/bing-uet'
+import { clarityConsentAdapter } from './runtime/registry/clarity'
+import { googleAnalyticsConsentAdapter } from './runtime/registry/google-analytics'
+import { metaPixelConsentAdapter } from './runtime/registry/meta-pixel'
 import {
   BingUetOptions,
   BlueskyEmbedOptions,
@@ -46,6 +50,7 @@ import {
   XEmbedOptions,
   XPixelOptions,
 } from './runtime/registry/schemas'
+import { tiktokPixelConsentAdapter } from './runtime/registry/tiktok-pixel'
 
 export type { ScriptCapabilities } from './runtime/types'
 
@@ -424,6 +429,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       envDefaults: { id: '' },
       bundle: true,
       partytown: { forwards: ['uetq.push'] },
+      consentAdapter: bingUetConsentAdapter,
     }),
     def('metaPixel', {
       schema: MetaPixelOptions,
@@ -437,6 +443,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['fbq'] },
+      consentAdapter: metaPixelConsentAdapter,
     }),
     def('xPixel', {
       schema: XPixelOptions,
@@ -469,6 +476,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify'] },
+      consentAdapter: tiktokPixelConsentAdapter,
     }),
     def('snapchatPixel', {
       schema: SnapTrPixelOptions,
@@ -571,6 +579,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: [] },
+      consentAdapter: clarityConsentAdapter,
     }),
     // payments
     def('stripe', {
@@ -730,6 +739,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['dataLayer.push', 'gtag'] },
+      consentAdapter: googleAnalyticsConsentAdapter,
     }),
     def('umamiAnalytics', {
       schema: UmamiAnalyticsOptions,

@@ -30,6 +30,42 @@ proxy.gtag('event', 'page_view')
 
 The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
 
+### Consent Mode
+
+Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Use `defaultConsent` to fire `gtag('consent', 'default', ...)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}:
+
+```ts
+useScriptGoogleAnalytics({
+  id: 'G-XXXXXXXX',
+  defaultConsent: {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    wait_for_update: 500,
+  },
+})
+```
+
+To update consent at runtime:
+
+```vue
+<script setup lang="ts">
+const { proxy } = useScriptGoogleAnalytics()
+
+function acceptAll() {
+  proxy.gtag('consent', 'update', {
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
+    analytics_storage: 'granted',
+  })
+}
+</script>
+```
+
+For anything beyond the consent default, `onBeforeGtagStart` remains available as a general escape hatch for pre-`gtag('js')`{lang="ts"} setup.
+
 ### Customer/Consumer ID Tracking
 
 For e-commerce or multi-tenant applications where you need to track customer-specific analytics alongside your main tracking:

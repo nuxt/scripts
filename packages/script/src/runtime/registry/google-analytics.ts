@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { ConsentAdapter, RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import { withQuery } from 'ufo'
 import { GoogleAnalyticsOptions } from './schemas'
@@ -111,6 +111,19 @@ export { GoogleAnalyticsOptions }
 
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
+/**
+ * GCMv2 -> Google Analytics consent adapter.
+ * GA consumes GCMv2 natively; this is a pass-through of the full state.
+ */
+export const googleAnalyticsConsentAdapter: ConsentAdapter<GoogleAnalyticsApi> = {
+  applyDefault(state, proxy) {
+    proxy.gtag('consent', 'default', state as ConsentOptions)
+  },
+  applyUpdate(state, proxy) {
+    proxy.gtag('consent', 'update', state as ConsentOptions)
+  },
+}
+
 export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput & { onBeforeGtagStart?: (gtag: GTag) => void }) {
   return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', (options) => {
     const dataLayerName = options?.l ?? 'dataLayer'
@@ -136,6 +149,8 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
               // eslint-disable-next-line prefer-rest-params
               w[dataLayerName].push(arguments)
             }
+            if (options?.defaultConsent)
+              w.gtag('consent', 'default', options.defaultConsent)
             // eslint-disable-next-line ts/ban-ts-comment
             // @ts-ignore
             _options?.onBeforeGtagStart?.(w.gtag)

@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { ConsentAdapter, RegistryScriptInput } from '#nuxt-scripts/types'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { TikTokPixelOptions } from './schemas'
@@ -48,7 +48,34 @@ export interface TikTokPixelApi {
     push: TtqFns
     loaded: boolean
     queue: any[]
+    /** Opt user in to tracking. Available after the script loads. */
+    grantConsent: () => void
+    /** Opt user out of tracking. Available after the script loads. */
+    revokeConsent: () => void
+    /** Defer consent until an explicit grant/revoke. Available after the script loads. */
+    holdConsent: () => void
   }
+}
+
+function applyTikTokConsent(state: { ad_storage?: 'granted' | 'denied' }, proxy: TikTokPixelApi) {
+  if (!state.ad_storage)
+    return
+  if (state.ad_storage === 'granted')
+    proxy.ttq.grantConsent()
+  else
+    proxy.ttq.revokeConsent()
+}
+
+/**
+ * GCMv2 -> TikTok consent adapter.
+ * TikTok only exposes a binary ad-storage toggle, so we project lossy:
+ * - `ad_storage === 'granted'` -> `ttq.grantConsent()`
+ * - `ad_storage === 'denied'`  -> `ttq.revokeConsent()`
+ * - other GCM categories are ignored.
+ */
+export const tiktokPixelConsentAdapter: ConsentAdapter<TikTokPixelApi> = {
+  applyDefault: applyTikTokConsent,
+  applyUpdate: applyTikTokConsent,
 }
 
 declare global {
@@ -93,6 +120,18 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
           ttq.push = ttq
           ttq.loaded = true
           ttq.queue = []
+          // Queue consent stubs so pre-load `ttq.grantConsent()` / `ttq.revokeConsent()` work.
+          // The real bat.js replaces these with live bindings once loaded.
+          const consentMethods = ['grantConsent', 'revokeConsent', 'holdConsent'] as const
+          for (const name of consentMethods) {
+            ;(ttq as any)[name] = function (...params: any[]) {
+              ttq.queue.push([name, ...params])
+            }
+          }
+          if (options?.defaultConsent === 'granted')
+            ttq.grantConsent()
+          else if (options?.defaultConsent === 'denied')
+            ttq.revokeConsent()
           if (options?.id) {
             ttq('init', options.id)
             if (options?.trackPageView !== false) {
