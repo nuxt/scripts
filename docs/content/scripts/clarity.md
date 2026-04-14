@@ -18,3 +18,37 @@ links:
 
 ::script-types
 ::
+
+## Consent Mode
+
+Clarity supports a cookie consent toggle (boolean) or an advanced consent vector (record). Use `defaultConsent` to set the state before Clarity starts:
+
+```ts
+useScriptClarity({
+  id: 'YOUR_PROJECT_ID',
+  defaultConsent: false, // disable cookies until user opts in
+})
+
+// or advanced vector
+useScriptClarity({
+  id: 'YOUR_PROJECT_ID',
+  defaultConsent: {
+    ad_storage: 'denied',
+    analytics_storage: 'granted',
+  },
+})
+```
+
+To update consent at runtime:
+
+```vue
+<script setup lang="ts">
+const { proxy } = useScriptClarity()
+
+function acceptAnalytics() {
+  proxy.clarity('consent', true)
+}
+</script>
+```
+
+See [Clarity cookie consent](https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent) for details.
