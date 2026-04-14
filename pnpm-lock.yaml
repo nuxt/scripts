@@ -112,8 +112,8 @@ catalogs:
       specifier: ^1.59.1
       version: 1.59.1
     posthog-js:
-      specifier: ^1.368.0
-      version: 1.368.0
+      specifier: ^1.368.1
+      version: 1.368.1
     shiki:
       specifier: ^4.0.2
       version: 4.0.2
@@ -209,7 +209,7 @@ importers:
         version: 1.59.1
       posthog-js:
         specifier: 'catalog:'
-        version: 1.368.0
+        version: 1.368.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -2030,8 +2030,8 @@ packages:
   '@posthog/types@1.367.0':
     resolution: {integrity: sha512-FUcTEAeKhuHKyCcTQPx/sTN3s8S+PusPsiP8T/LrG/T7pDkwMfNZG0/P630JX6fT6qiW0moVvVSsaXgZDJF7wg==}
 
-  '@posthog/types@1.368.0':
-    resolution: {integrity: sha512-ORuGmgEmEkwaf/bEI4mOlrzIdOSJJ44vuz+XHPFycmt5Y6swjTXH/1NmIKas5KdKi/SOaKGvSkHGqUv7hHcNaw==}
+  '@posthog/types@1.368.1':
+    resolution: {integrity: sha512-7mwrwDb6IxCPRYmF3GKwDC1JJxgTISCVknRdnCPH3jGw39qGbjSzC+OvUU72gUCj3E4bGh8XxIZwyTh+rt+DKA==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -5491,8 +5491,8 @@ packages:
   posthog-js@1.367.0:
     resolution: {integrity: sha512-jWNwB8XjlVUC9PbGaIlmsyohUDMBrwf7cvLuOY3lIOmWVO3L6VxTE3GZShjxpFKQtmWcPxFbf1hcbct1YCb6xg==}
 
-  posthog-js@1.368.0:
-    resolution: {integrity: sha512-Smh2Q49oIOzGph73A3dLXCjepze8Nk0ApPtbJvbARFXI8XQp0mD+ia0RFcYQ25m2+PA1ViE8pR+Ga8yG7awzsw==}
+  posthog-js@1.368.1:
+    resolution: {integrity: sha512-Tk2oxWyZXm8lURMeGmIkZtdgqKKPg9tO90xERw3kLT5gX/mHcInOov+4bETzTqY3ElxJj8PXPofENvKD1e9RUw==}
 
   powershell-utils@0.1.0:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
@@ -8372,7 +8372,7 @@ snapshots:
 
   '@posthog/types@1.367.0': {}
 
-  '@posthog/types@1.368.0': {}
+  '@posthog/types@1.368.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -12390,7 +12390,7 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
 
-  posthog-js@1.368.0:
+  posthog-js@1.368.1:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.208.0
@@ -12398,7 +12398,7 @@ snapshots:
       '@opentelemetry/resources': 2.6.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
       '@posthog/core': 1.25.2
-      '@posthog/types': 1.368.0
+      '@posthog/types': 1.368.1
       core-js: 3.49.0
       dompurify: 3.3.3
       fflate: 0.4.8
