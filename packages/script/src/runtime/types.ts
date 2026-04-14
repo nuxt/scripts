@@ -164,6 +164,30 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
     domains?: string[]
   }
   /**
+   * Unified consent control for this script.
+   *
+   * Pass a `useScriptConsent` instance to gate loading behind user consent and, when the script
+   * declares a `consentAdapter`, auto-subscribe it for granular Google Consent Mode v2 fan-out.
+   *
+   * Also accepts the legacy `useScriptTriggerConsent` return value for backwards compatibility,
+   * in which case only the binary load gate is used.
+   */
+  consent?: {
+    accept: () => void
+    revoke: () => void
+    consented: Ref<boolean>
+    state?: Ref<ConsentState>
+    update?: (partial: ConsentState) => void
+    register?: <P = any>(adapter: ConsentAdapter<P>, proxy: P) => () => void
+  } & Promise<void>
+  /**
+   * Consent adapter declared by the registry entry. Auto-populated by registry wrappers
+   * via `scriptOptions._consentAdapter`.
+   *
+   * @internal
+   */
+  _consentAdapter?: ConsentAdapter<any>
+  /**
    * @internal
    */
   _validate?: () => ValiError<any> | null | undefined
@@ -191,6 +215,48 @@ export interface ConsentScriptTriggerOptions {
    * have already been consented to be loaded.
    */
   postConsentTrigger?: ExcludePromises<NuxtUseScriptOptions['trigger']> | (() => Promise<any>)
+}
+
+/**
+ * Google Consent Mode v2 category value.
+ */
+export type ConsentCategoryValue = 'granted' | 'denied'
+
+/**
+ * Google Consent Mode v2 consent state.
+ *
+ * @see https://developers.google.com/tag-platform/security/guides/consent
+ */
+export interface ConsentState {
+  ad_storage?: ConsentCategoryValue
+  ad_user_data?: ConsentCategoryValue
+  ad_personalization?: ConsentCategoryValue
+  analytics_storage?: ConsentCategoryValue
+  functionality_storage?: ConsentCategoryValue
+  personalization_storage?: ConsentCategoryValue
+  security_storage?: ConsentCategoryValue
+}
+
+/**
+ * Adapter contract that individual registry scripts implement so a unified
+ * consent composable can fan out default and update events.
+ *
+ * `applyDefault` runs once before the SDK initializes (e.g. `gtag('consent', 'default', ...)`),
+ * `applyUpdate` runs whenever the user updates any category.
+ */
+export interface ConsentAdapter<Proxy = any> {
+  applyDefault: (state: ConsentState, proxy: Proxy) => void
+  applyUpdate: (state: ConsentState, proxy: Proxy) => void
+}
+
+export interface UseScriptConsentOptions extends ConsentScriptTriggerOptions {
+  /**
+   * Initial consent state applied synchronously before any subscribed script loads.
+   * Keys follow Google Consent Mode v2 categories.
+   *
+   * @example { ad_storage: 'denied', analytics_storage: 'denied' }
+   */
+  default?: ConsentState
 }
 
 export interface NuxtDevToolsNetworkRequest {
