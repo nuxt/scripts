@@ -10,7 +10,7 @@ overrides:
   '@nuxt/scripts': 'workspace:*'
   vitest-environment-nuxt: 1.0.1
 catalog:
-  '@antfu/eslint-config': ^8.1.1
+  '@antfu/eslint-config': ^8.2.0
   '@nuxt/devtools-kit': ^3.2.4
   '@nuxt/fonts': ^0.14.0
   '@nuxt/kit': ^4.4.2
@@ -34,18 +34,18 @@ catalog:
   eslint: ^10.2.0
   eslint-plugin-harlanzw: ^0.12.1
   h3: ^1.15.11
-  happy-dom: ^20.8.9
+  happy-dom: ^20.9.0
   jest-image-snapshot: ^6.5.2
   magic-string: ^0.30.21
   nuxt: ^4.4.2
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.124.0
+  oxc-parser: ^0.125.0
   oxc-walker: ^0.7.0
   pathe: ^2.0.3
   pkg-types: ^2.3.0
   playwright-core: ^1.59.1
-  posthog-js: ^1.367.0
+  posthog-js: ^1.368.0
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.0.0
