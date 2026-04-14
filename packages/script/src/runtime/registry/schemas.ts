@@ -923,11 +923,13 @@ export const TikTokPixelOptions = object({
    */
   trackPageView: optional(boolean()),
   /**
-   * Default consent state. `'granted'` fires `ttq.grantConsent()`,
-   * `'denied'` fires `ttq.revokeConsent()`, both called before `ttq('init', id)`.
+   * Default consent state, applied before `ttq('init', id)`.
+   * - `'granted'` fires `ttq.grantConsent()`
+   * - `'denied'` fires `ttq.revokeConsent()`
+   * - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update
    * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842
    */
-  defaultConsent: optional(union([literal('granted'), literal('denied')])),
+  defaultConsent: optional(union([literal('granted'), literal('denied'), literal('hold')])),
 })
 
 export const UmamiAnalyticsOptions = object({

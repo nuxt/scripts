@@ -111,9 +111,8 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
             ttq.grantConsent()
           else if (options?.defaultConsent === 'denied')
             ttq.revokeConsent()
-          // When neither is set, tracking runs as before. Users wanting hold mode
-          // pass `scriptOptions: { consent }` -- the adapter's applyDefault fires
-          // `holdConsent()` when `ad_storage` is undecided.
+          else if (options?.defaultConsent === 'hold')
+            ttq.holdConsent()
           if (options?.id) {
             ttq('init', options.id)
             if (options?.trackPageView !== false) {

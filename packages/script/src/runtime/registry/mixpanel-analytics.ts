@@ -29,7 +29,7 @@ declare global {
   }
 }
 
-const methods = ['track', 'identify', 'reset', 'register'] as const
+const methods = ['track', 'identify', 'reset', 'register', 'opt_in_tracking', 'opt_out_tracking'] as const
 const peopleMethods = ['set'] as const
 
 export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_options?: MixpanelAnalyticsInput) {
@@ -78,8 +78,9 @@ export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_opti
               const optOutByDefault = options?.defaultConsent === 'opt-out'
               mp.init(options.token, optOutByDefault ? { opt_out_tracking_by_default: true } : undefined)
               if (options?.defaultConsent === 'opt-in') {
-                // opt_in_tracking isn't part of the stub; push so the real SDK runs it on load.
-                mp.push(['opt_in_tracking'])
+                // After init, opt_in_tracking is wired on the stub (see methods array)
+                // so the real SDK drains it on load.
+                mp.opt_in_tracking?.()
               }
             }
           },
