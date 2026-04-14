@@ -513,6 +513,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     const composables = [
       'useScript',
+      'useScriptConsent',
       'useScriptEventPage',
       'useScriptTriggerConsent',
       'useScriptTriggerElement',
