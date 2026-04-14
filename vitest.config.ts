@@ -21,6 +21,11 @@ export default defineConfig({
       }),
       // utils folders as *.test.ts in either test/unit or in src/**/*.test.ts
       defineProject({
+        resolve: {
+          alias: {
+            'nitropack/runtime': new URL('./test/unit/__mocks__/nitropack-runtime.ts', import.meta.url).pathname,
+          },
+        },
         test: {
           name: 'unit',
           environment: 'node',

@@ -22,16 +22,13 @@
 
 import type { EventHandler, EventHandlerRequest, EventHandlerResponse } from 'h3'
 import { createError, defineEventHandler } from 'h3'
+import { useRuntimeConfig } from 'nitropack/runtime'
 import { verifyProxyRequest } from './sign'
 
 export function withSigning<Req extends EventHandlerRequest = EventHandlerRequest, Res extends EventHandlerResponse = EventHandlerResponse>(
   handler: EventHandler<Req, Res>,
 ): EventHandler<Req, Res> {
   return defineEventHandler<Req>(async (event) => {
-    // Lazy-resolve useRuntimeConfig to avoid pulling nitro's virtual modules
-    // into unit tests that import handler files for their exported utilities
-    // (e.g. instagram-embed.ts exports rewriteUrl / scopeCss alongside the handler).
-    const { useRuntimeConfig } = await import('#imports')
     const runtimeConfig = useRuntimeConfig(event)
     const secret = (runtimeConfig['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
 

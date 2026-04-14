@@ -1,5 +1,5 @@
-import { useRuntimeConfig } from '#imports'
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { useRuntimeConfig } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
 import { withSigning } from './utils/withSigning'
