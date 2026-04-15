@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { TikTokPixelOptions } from './schemas'
@@ -67,8 +67,17 @@ export { TikTokPixelOptions }
 
 export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, true, false>
 
-export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput) {
-  return useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({
+export interface TikTokPixelConsent {
+  /** Call `ttq.grantConsent()`. */
+  grant: () => void
+  /** Call `ttq.revokeConsent()`. */
+  revoke: () => void
+  /** Call `ttq.holdConsent()` to defer the decision. */
+  hold: () => void
+}
+
+export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput): UseScriptContext<T, TikTokPixelConsent> {
+  const instance = useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({
     scriptInput: {
       src: withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', {
         sdkid: options?.id,
@@ -120,5 +129,14 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
             }
           }
         },
-  }), _options)
+  }), _options) as UseScriptContext<T, TikTokPixelConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      grant: () => instance.proxy.ttq.grantConsent(),
+      revoke: () => instance.proxy.ttq.revokeConsent(),
+      hold: () => instance.proxy.ttq.holdConsent(),
+    }
+  }
+  return instance
 }

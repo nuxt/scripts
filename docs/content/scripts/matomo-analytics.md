@@ -85,7 +85,9 @@ useScriptMatomoAnalytics({
 
 ## Consent Mode
 
-Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides/tracking-consent). Nuxt Scripts exposes it via the `defaultConsent` option, which is applied BEFORE the first tracker call.
+Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides/tracking-consent) gated by `requireConsent`. Set `defaultConsent` to arm the gate at registration, then call `consent.give()`{lang="ts"} / `consent.forget()`{lang="ts"} at runtime.
+
+### `defaultConsent`
 
 | Value | Behaviour |
 |-------|-----------|
@@ -93,29 +95,26 @@ Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides
 | `'given'` | Pushes `['requireConsent']` then `['setConsentGiven']`. Tracking starts immediately. |
 | `'not-required'` | Default Matomo behaviour (no consent gating). |
 
-```ts
-useScriptMatomoAnalytics({
-  cloudId: 'YOUR_CLOUD_ID',
-  defaultConsent: 'required',
-})
-```
+::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
+`consent.give()`{lang="ts"} / `consent.forget()`{lang="ts"} are **no-ops unless `defaultConsent: 'required'` or `'given'` was set at registration** -- Matomo ignores `setConsentGiven` / `forgetConsentGiven` when `requireConsent` hasn't been pushed. A dev-only warning fires if you forget.
+::
 
-### Granting or revoking consent at runtime
+### Example
 
-Use the `proxy` to call Matomo's consent commands directly when the user updates their choice:
-
-```ts
-const { proxy } = useScriptMatomoAnalytics({
+```vue
+<script setup lang="ts">
+const { consent } = useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID',
   defaultConsent: 'required',
 })
 
 function onAccept() {
-  proxy._paq.push(['setConsentGiven'])
+  consent.give()
 }
 function onRevoke() {
-  proxy._paq.push(['forgetConsentGiven'])
+  consent.forget()
 }
+</script>
 ```
 
 ### Using Matomo Whitelabel

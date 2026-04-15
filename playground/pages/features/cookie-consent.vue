@@ -1,24 +1,44 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { useScriptTriggerConsent, useScriptGoogleTagManager } from '#imports'
+import { useScriptGoogleTagManager, useScriptTriggerConsent } from '#imports'
 
 const showCookieBanner = ref(true)
-const scriptConsent = useScriptTriggerConsent()
-function acceptCookies() {
-  scriptConsent.accept()
-  showCookieBanner.value = false
-}
-function revokeCookies() {
-  scriptConsent.revoke()
-  showCookieBanner.value = true
-}
-useScriptGoogleTagManager({
+const triggerConsent = useScriptTriggerConsent()
+
+const { consent } = useScriptGoogleTagManager({
   id: 'GTM-MWW974PF',
+  defaultConsent: {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+  },
   scriptOptions: {
-    trigger: scriptConsent,
+    trigger: triggerConsent,
     bundle: true,
   },
 })
+
+function acceptCookies() {
+  consent.update({
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
+    analytics_storage: 'granted',
+  })
+  triggerConsent.accept()
+  showCookieBanner.value = false
+}
+function revokeCookies() {
+  consent.update({
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+  })
+  triggerConsent.revoke()
+  showCookieBanner.value = true
+}
 </script>
 
 <template>
@@ -38,9 +58,9 @@ useScriptGoogleTagManager({
     </div>
     <div v-else class="p-5 bg-gray-100">
       <div class="font-bold mb-2">
-        Cookie Status: {{ scriptConsent.consented.value ? 'Accepted' : 'Declined' }}
+        Cookie Status: {{ triggerConsent.consented.value ? 'Accepted' : 'Declined' }}
       </div>
-      <UButton v-if="scriptConsent.consented.value" color="red" @click="revokeCookies">
+      <UButton v-if="triggerConsent.consented.value" color="red" @click="revokeCookies">
         Revoke Consent
       </UButton>
       <UButton v-else color="green" @click="acceptCookies">

@@ -281,21 +281,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     return reloaded.load()
   }
   nuxtApp.$scripts[id] = instance
-
-  // Wire unified consent: if a consent API is attached and the registry declared an adapter,
-  // subscribe so the adapter receives `applyDefault` with current state plus `applyUpdate`
-  // on each granular update. Scope A wires the adapter on individual registry entries.
-  if (import.meta.client && options.consent && options._consentAdapter && typeof options.consent.register === 'function') {
-    if (import.meta.dev && (options as any).defaultConsent) {
-      console.warn('[nuxt-scripts] Both `consent` (composable) and `defaultConsent` (per-script) are set. The composable takes precedence.')
-    }
-    const unregister = options.consent.register(options._consentAdapter, instance)
-    const _removeWithUnregister = instance.remove
-    instance.remove = () => {
-      unregister()
-      return _removeWithUnregister()
-    }
-  }
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     if (exists) {

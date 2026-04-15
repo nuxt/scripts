@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { ClarityOptions } from './schemas'
 
@@ -30,10 +30,15 @@ declare global {
 
 export type ClarityInput = RegistryScriptInput<typeof ClarityOptions>
 
+export interface ClarityConsent {
+  /** Call `clarity('consent', value)` with either a boolean (default) or Clarity's advanced vector. */
+  set: (value: boolean | Record<string, string>) => void
+}
+
 export function useScriptClarity<T extends ClarityApi>(
   _options?: ClarityInput,
-) {
-  return useRegistryScript<T, typeof ClarityOptions>('clarity', options => ({
+): UseScriptContext<T, ClarityConsent> {
+  const instance = useRegistryScript<T, typeof ClarityOptions>('clarity', options => ({
     scriptInput: {
       src: `https://www.clarity.ms/tag/${options.id}`,
     },
@@ -59,5 +64,14 @@ export function useScriptClarity<T extends ClarityApi>(
           if (options?.defaultConsent !== undefined)
             window.clarity('consent', options.defaultConsent)
         },
-  }), _options)
+  }), _options) as UseScriptContext<T, ClarityConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      set: (value: boolean | Record<string, string>) => {
+        instance.proxy.clarity('consent', value)
+      },
+    }
+  }
+  return instance
 }

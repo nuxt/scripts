@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { MetaPixelOptions } from './schemas'
 
@@ -50,8 +50,15 @@ declare global {
 export { MetaPixelOptions }
 export type MetaPixelInput = RegistryScriptInput<typeof MetaPixelOptions, true, false>
 
-export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput) {
-  return useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
+export interface MetaPixelConsent {
+  /** Call `fbq('consent','grant')`. */
+  grant: () => void
+  /** Call `fbq('consent','revoke')`. */
+  revoke: () => void
+}
+
+export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelInput): UseScriptContext<T, MetaPixelConsent> {
+  const instance = useRegistryScript<T, typeof MetaPixelOptions>('metaPixel', options => ({
     scriptInput: {
       src: 'https://connect.facebook.net/en_US/fbevents.js',
       crossorigin: false,
@@ -86,5 +93,13 @@ export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelI
           fbq('init', options?.id)
           fbq('track', 'PageView')
         },
-  }), _options)
+  }), _options) as UseScriptContext<T, MetaPixelConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      grant: () => instance.proxy.fbq('consent', 'grant'),
+      revoke: () => instance.proxy.fbq('consent', 'revoke'),
+    }
+  }
+  return instance
 }

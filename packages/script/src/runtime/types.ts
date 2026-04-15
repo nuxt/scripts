@@ -50,7 +50,7 @@ export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-// -- Consent adapter contract --
+// -- Consent types --
 
 /**
  * GCMv2 consent category value.
@@ -59,8 +59,8 @@ export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 export type ConsentCategoryValue = 'granted' | 'denied'
 
 /**
- * Canonical GCMv2 consent state shape shared across all scripts.
- * Non-GCM vendors (Meta, TikTok, Matomo, Mixpanel, PostHog) project a subset via their adapters.
+ * Canonical GCMv2 consent state shape used by vendors that natively consume
+ * Consent Mode v2 (Google Analytics, Google Tag Manager, Bing UET).
  */
 export interface ConsentState {
   ad_storage?: ConsentCategoryValue
@@ -72,25 +72,17 @@ export interface ConsentState {
   security_storage?: ConsentCategoryValue
 }
 
-/**
- * Adapter that maps a canonical GCMv2 ConsentState to a vendor's consent API.
- * Consumed by the `useScriptConsent` composable so call sites apply GCM-style
- * state without caring whether the vendor uses `gtag('consent', ...)`,
- * `_paq.push`, `mixpanel.opt_in_tracking()`, etc.
- */
-export interface ConsentAdapter<Proxy = any> {
-  /** Called once before the vendor init call to establish default consent. */
-  applyDefault: (state: ConsentState, proxy: Proxy) => void
-  /** Called on every consent update after the script has loaded. */
-  applyUpdate: (state: ConsentState, proxy: Proxy) => void
-}
-
-export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
+export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptInstance<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
    * after SPA navigation (e.g., DOM-scanning scripts like iubenda).
    */
   reload: () => Promise<T>
+  /**
+   * Vendor-native consent controls attached by registry scripts.
+   * Shape depends on the vendor (GCMv2 update, binary grant/revoke, three-state, etc.).
+   */
+  consent?: C
 }
 
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {
@@ -164,36 +156,12 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
     domains?: string[]
   }
   /**
-   * Unified consent control for this script.
-   *
-   * Pass a `useScriptConsent` instance to gate loading behind user consent and, when the script
-   * declares a `consentAdapter`, auto-subscribe it for granular Google Consent Mode v2 fan-out.
-   *
-   * Also accepts the legacy `useScriptTriggerConsent` return value for backwards compatibility,
-   * in which case only the binary load gate is used.
-   */
-  consent?: {
-    accept: () => void
-    revoke: () => void
-    consented: Ref<boolean>
-    state?: Ref<ConsentState>
-    update?: (partial: ConsentState) => void
-    register?: <P = any>(adapter: ConsentAdapter<P>, proxy: P) => () => void
-  } & Promise<void>
-  /**
-   * Consent adapter declared by the registry entry. Auto-populated by registry wrappers
-   * via `scriptOptions._consentAdapter`.
-   *
-   * @internal
-   */
-  _consentAdapter?: ConsentAdapter<any>
-  /**
    * @internal
    */
   _validate?: () => ValiError<any> | null | undefined
 }
 
-export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit' | 'consent' | '_consentAdapter'> & { trigger?: 'client' | 'server' | 'onNuxtReady' | { idleTimeout: number } | { interaction: string[] } | { serviceWorker: true } }
+export type NuxtUseScriptOptionsSerializable = Omit<NuxtUseScriptOptions, 'use' | 'skipValidation' | 'stub' | 'trigger' | 'eventContext' | 'beforeInit'> & { trigger?: 'client' | 'server' | 'onNuxtReady' | { idleTimeout: number } | { interaction: string[] } | { serviceWorker: true } }
 
 export type NuxtUseScriptInput = UseScriptInput
 
@@ -215,16 +183,6 @@ export interface ConsentScriptTriggerOptions {
    * have already been consented to be loaded.
    */
   postConsentTrigger?: ExcludePromises<NuxtUseScriptOptions['trigger']> | (() => Promise<any>)
-}
-
-export interface UseScriptConsentOptions extends ConsentScriptTriggerOptions {
-  /**
-   * Initial consent state applied synchronously before any subscribed script loads.
-   * Keys follow Google Consent Mode v2 categories.
-   *
-   * @example { ad_storage: 'denied', analytics_storage: 'denied' }
-   */
-  default?: ConsentState
 }
 
 export interface NuxtDevToolsNetworkRequest {
@@ -508,11 +466,6 @@ export interface RegistryScript {
    * - absent: not partytown-capable
    */
   partytown?: PartytownCapability
-  /**
-   * Consent adapter that maps canonical GCMv2 state to the vendor's native
-   * consent API. Consumed by the `useScriptConsent` composable.
-   */
-  consentAdapter?: ConsentAdapter
 }
 
 export type ElementScriptTrigger = 'immediate' | 'visible' | string | string[] | false

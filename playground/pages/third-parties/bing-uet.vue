@@ -5,13 +5,9 @@ useHead({
   title: 'Bing UET',
 })
 
-const { status, proxy } = useScriptBingUet({
+const { status, proxy, consent } = useScriptBingUet({
   id: '247021147',
-  onBeforeUetStart(uetq) {
-    uetq.push('consent', 'default', {
-      ad_storage: 'denied',
-    })
-  },
+  defaultConsent: { ad_storage: 'denied' },
 })
 
 function triggerEvent() {
@@ -22,9 +18,7 @@ function triggerEvent() {
 }
 
 function grantConsent() {
-  proxy.uetq.push('consent', 'update', {
-    ad_storage: 'granted',
-  })
+  consent.update({ ad_storage: 'granted' })
 }
 </script>
 

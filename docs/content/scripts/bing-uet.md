@@ -57,20 +57,18 @@ function trackSignup() {
 
 ### Consent Mode
 
-Bing UET supports [advanced consent mode](https://help.ads.microsoft.com/#apex/ads/en/60119/1-500). Use `defaultConsent` to set the default state before the script loads. If consent is denied, UET only sends anonymous data.
+Bing UET supports [advanced consent mode](https://help.ads.microsoft.com/#apex/ads/en/60119/1-500). Only `ad_storage` is honoured; set the initial state with `defaultConsent` and update at runtime via `consent.update()`{lang="ts"}:
 
 ```vue
 <script setup lang="ts">
-const { proxy } = useScriptBingUet({
+const { consent } = useScriptBingUet({
   defaultConsent: { ad_storage: 'denied' },
 })
 
 function grantConsent() {
-  proxy.uetq.push('consent', 'update', {
-    ad_storage: 'granted',
-  })
+  consent.update({ ad_storage: 'granted' })
 }
 </script>
 ```
 
-You can still use `onBeforeUetStart` for any other pre-load setup.
+`onBeforeUetStart` remains available for any other pre-load setup.

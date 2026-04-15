@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { withBase, withHttps, withoutProtocol, withoutTrailingSlash } from 'ufo'
 import { useScriptEventPage } from '../composables/useScriptEventPage'
 import { logger } from '../logger'
@@ -9,7 +9,7 @@ export { MatomoAnalyticsOptions }
 
 export type MatomoAnalyticsInput = RegistryScriptInput<typeof MatomoAnalyticsOptions, false, false>
 
-interface MatomoAnalyticsApi {
+export interface MatomoAnalyticsApi {
   _paq: unknown[]
 }
 
@@ -17,8 +17,15 @@ declare global {
   interface Window extends MatomoAnalyticsApi { }
 }
 
-export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput) {
-  return useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', (options) => {
+export interface MatomoConsent {
+  /** Push `setConsentGiven`. Requires `defaultConsent: 'required' | 'given'` at registration to have an effect. */
+  give: () => void
+  /** Push `forgetConsentGiven`. Requires `defaultConsent: 'required' | 'given'` at registration to have an effect. */
+  forget: () => void
+}
+
+export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?: MatomoAnalyticsInput): UseScriptContext<T, MatomoConsent> {
+  const instance = useRegistryScript<T, typeof MatomoAnalyticsOptions>('matomoAnalytics', (options) => {
     const normalizedCloudId = options?.cloudId ? withoutTrailingSlash(withoutProtocol(options.cloudId)) : undefined
     const origin = options?.matomoUrl ? options.matomoUrl : `https://cdn.matomo.cloud/${normalizedCloudId}/`
     const _paq = import.meta.client ? (window._paq = window._paq || []) : []
@@ -88,5 +95,27 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
             }
           },
     }
-  }, _options)
+  }, _options) as UseScriptContext<T, MatomoConsent>
+
+  if (import.meta.client && !instance.consent) {
+    const requiresConsent = _options?.defaultConsent === 'required' || _options?.defaultConsent === 'given'
+    const warnIfUnsafe = import.meta.dev
+      ? (method: string) => {
+          if (!requiresConsent) {
+            logger.warn(`matomo consent.${method}() is a no-op unless \`defaultConsent: 'required'\` or \`'given'\` is set at registration.`)
+          }
+        }
+      : () => {}
+    instance.consent = {
+      give: () => {
+        warnIfUnsafe('give')
+        instance.proxy._paq.push(['setConsentGiven'])
+      },
+      forget: () => {
+        warnIfUnsafe('forget')
+        instance.proxy._paq.push(['forgetConsentGiven'])
+      },
+    }
+  }
+  return instance
 }

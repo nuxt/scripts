@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { MixpanelAnalyticsOptions } from './schemas'
 
@@ -32,8 +32,15 @@ declare global {
 const methods = ['track', 'identify', 'reset', 'register', 'opt_in_tracking', 'opt_out_tracking'] as const
 const peopleMethods = ['set'] as const
 
-export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_options?: MixpanelAnalyticsInput) {
-  return useRegistryScript<T, typeof MixpanelAnalyticsOptions>('mixpanelAnalytics', (options) => {
+export interface MixpanelConsent {
+  /** Call `mixpanel.opt_in_tracking()`. */
+  optIn: () => void
+  /** Call `mixpanel.opt_out_tracking()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */
+  optOut: () => void
+}
+
+export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_options?: MixpanelAnalyticsInput): UseScriptContext<T, MixpanelConsent> {
+  const instance = useRegistryScript<T, typeof MixpanelAnalyticsOptions>('mixpanelAnalytics', (options) => {
     return {
       scriptInput: {
         src: 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js',
@@ -85,5 +92,13 @@ export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_opti
             }
           },
     }
-  }, _options)
+  }, _options) as UseScriptContext<T, MixpanelConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      optIn: () => instance.proxy.mixpanel.opt_in_tracking?.(),
+      optOut: () => instance.proxy.mixpanel.opt_out_tracking?.(),
+    }
+  }
+  return instance
 }

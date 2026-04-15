@@ -4,7 +4,7 @@
       {
         "name": "BingUetOptions",
         "kind": "const",
-        "code": "export const BingUetOptions = object({\n  /**\n   * Your Bing UET tag ID.\n   * @see https://help.ads.microsoft.com/#apex/ads/en/56682/2-500\n   */\n  id: string(),\n  /**\n   * Enable automatic SPA page tracking.\n   * @default true\n   */\n  enableAutoSpaTracking: optional(boolean()),\n})"
+        "code": "export const BingUetOptions = object({\n  /**\n   * Your Bing UET tag ID.\n   * @see https://help.ads.microsoft.com/#apex/ads/en/56682/2-500\n   */\n  id: string(),\n  /**\n   * Enable automatic SPA page tracking.\n   * @default true\n   */\n  enableAutoSpaTracking: optional(boolean()),\n  /**\n   * Default consent state fired as `uetq.push('consent', 'default', ...)` before UET init.\n   * @see https://help.ads.microsoft.com/#apex/ads/en/60119/1-500\n   */\n  defaultConsent: optional(object({\n    ad_storage: optional(consentCategoryValue),\n  })),\n})"
       },
       {
         "name": "BingUetConsentStatus",
@@ -65,6 +65,11 @@
         "name": "BingUetApi",
         "kind": "interface",
         "code": "export interface BingUetApi {\n  uetq: BingUetQueue\n}"
+      },
+      {
+        "name": "BingUetConsent",
+        "kind": "interface",
+        "code": "export interface BingUetConsent {\n  /** Push `['consent','update', state]` with the `ad_storage` signal. */\n  update: (state: BingUetConsentOptions) => void\n}"
       }
     ],
     "bluesky-embed": [
@@ -93,7 +98,7 @@
       {
         "name": "ClarityOptions",
         "kind": "const",
-        "code": "export const ClarityOptions = object({\n  /**\n   * The Clarity token.\n   * @see https://learn.microsoft.com/en-us/clarity/setup-clarity\n   */\n  id: pipe(string(), minLength(10)),\n})"
+        "code": "export const ClarityOptions = object({\n  /**\n   * The Clarity token.\n   * @see https://learn.microsoft.com/en-us/clarity/setup-clarity\n   */\n  id: pipe(string(), minLength(10)),\n  /**\n   * Default consent state applied before Clarity starts.\n   * - `boolean` - enable / disable cookies.\n   * - `Record<string, string>` - advanced consent vector (see Clarity docs).\n   * @see https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent\n   */\n  defaultConsent: optional(union([boolean(), record(string(), string())])),\n})"
       },
       {
         "name": "ClarityFunctions",
@@ -104,6 +109,11 @@
         "name": "ClarityApi",
         "kind": "interface",
         "code": "export interface ClarityApi {\n  clarity: ClarityFunctions & {\n    q: any[]\n    v: string\n  }\n}"
+      },
+      {
+        "name": "ClarityConsent",
+        "kind": "interface",
+        "code": "export interface ClarityConsent {\n  /** Call `clarity('consent', value)` with either a boolean (default) or Clarity's advanced vector. */\n  set: (value: boolean | Record<string, string>) => void\n}"
       }
     ],
     "cloudflare-web-analytics": [
@@ -250,7 +260,12 @@
       {
         "name": "GoogleAnalyticsOptions",
         "kind": "const",
-        "code": "export const GoogleAnalyticsOptions = object({\n  /**\n   * The GA4 measurement ID.\n   * @example 'G-XXXXXXXX'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs\n   */\n  id: optional(string()),\n  /**\n   * Global name for the dataLayer variable.\n   * @default 'dataLayer'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer\n   */\n  l: optional(string()),\n})"
+        "code": "export const GoogleAnalyticsOptions = object({\n  /**\n   * The GA4 measurement ID.\n   * @example 'G-XXXXXXXX'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs\n   */\n  id: optional(string()),\n  /**\n   * Global name for the dataLayer variable.\n   * @default 'dataLayer'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer\n   */\n  l: optional(string()),\n  /**\n   * Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`.\n   * @see https://developers.google.com/tag-platform/security/guides/consent\n   */\n  defaultConsent: optional(gcmConsentState),\n})"
+      },
+      {
+        "name": "GoogleAnalyticsConsent",
+        "kind": "interface",
+        "code": "export interface GoogleAnalyticsConsent {\n  /** Send `gtag('consent','update', state)` with GCMv2 partial state. */\n  update: (state: ConsentState) => void\n}"
       }
     ],
     "google-maps": [
@@ -484,6 +499,11 @@
         "name": "GoogleTagManagerOptions",
         "kind": "const",
         "code": "export const GoogleTagManagerOptions = object({\n  /**\n   * GTM container ID (format: GTM-XXXXXX)\n   * @see https://developers.google.com/tag-platform/tag-manager/web#install-the-container\n   */\n  id: string(),\n\n  /**\n   * Optional dataLayer variable name\n   * @default 'dataLayer'\n   * @see https://developers.google.com/tag-platform/tag-manager/web/datalayer#rename_the_data_layer\n   */\n  l: optional(string()),\n\n  /**\n   * Authentication token for environment-specific container versions\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  auth: optional(string()),\n\n  /**\n   * Preview environment name\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  preview: optional(string()),\n\n  /** Forces GTM cookies to take precedence when true */\n  cookiesWin: optional(union([boolean(), literal('x')])),\n\n  /**\n   * Enables debug mode when true\n   * @see https://support.google.com/tagmanager/answer/6107056\n   */\n  debug: optional(union([boolean(), literal('x')])),\n\n  /**\n   * No Personal Advertising - disables advertising features when true\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  npa: optional(union([boolean(), literal('1')])),\n\n  /** Custom dataLayer name (alternative to \"l\" property) */\n  dataLayer: optional(string()),\n\n  /**\n   * Environment name for environment-specific container\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  envName: optional(string()),\n\n  /** Referrer policy for analytics requests */\n  authReferrerPolicy: optional(string()),\n\n  /**\n   * Default consent settings for GTM\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  defaultConsent: optional(record(string(), union([string(), number()]))),\n})"
+      },
+      {
+        "name": "GoogleTagManagerConsent",
+        "kind": "interface",
+        "code": "export interface GoogleTagManagerConsent {\n  /** Push `['consent','update', state]` onto dataLayer with GCMv2 partial state. */\n  update: (state: ConsentState) => void\n}"
       }
     ],
     "gravatar": [
@@ -590,7 +610,12 @@
       {
         "name": "MatomoAnalyticsApi",
         "kind": "interface",
-        "code": "interface MatomoAnalyticsApi {\n  _paq: unknown[]\n}"
+        "code": "export interface MatomoAnalyticsApi {\n  _paq: unknown[]\n}"
+      },
+      {
+        "name": "MatomoConsent",
+        "kind": "interface",
+        "code": "export interface MatomoConsent {\n  /** Push `setConsentGiven`. Requires `defaultConsent: 'required' | 'given'` at registration to have an effect. */\n  give: () => void\n  /** Push `forgetConsentGiven`. Requires `defaultConsent: 'required' | 'given'` at registration to have an effect. */\n  forget: () => void\n}"
       }
     ],
     "meta-pixel": [
@@ -627,19 +652,29 @@
       {
         "name": "MetaPixelOptions",
         "kind": "const",
-        "code": "export const MetaPixelOptions = object({\n  /**\n   * Your Meta (Facebook) Pixel ID.\n   * @see https://developers.facebook.com/docs/meta-pixel/get-started\n   */\n  id: union([string(), number()]),\n})"
+        "code": "export const MetaPixelOptions = object({\n  /**\n   * Your Meta (Facebook) Pixel ID.\n   * @see https://developers.facebook.com/docs/meta-pixel/get-started\n   */\n  id: union([string(), number()]),\n  /**\n   * Default consent state. `'granted'` fires `fbq('consent', 'grant')`,\n   * `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`.\n   * @see https://www.facebook.com/business/help/1151321516677370\n   */\n  defaultConsent: optional(union([literal('granted'), literal('denied')])),\n})"
+      },
+      {
+        "name": "MetaPixelConsent",
+        "kind": "interface",
+        "code": "export interface MetaPixelConsent {\n  /** Call `fbq('consent','grant')`. */\n  grant: () => void\n  /** Call `fbq('consent','revoke')`. */\n  revoke: () => void\n}"
       }
     ],
     "mixpanel-analytics": [
       {
         "name": "MixpanelAnalyticsOptions",
         "kind": "const",
-        "code": "export const MixpanelAnalyticsOptions = object({\n  /**\n   * Your Mixpanel project token.\n   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library\n   */\n  token: string(),\n  /**\n   * Default tracking-consent state applied BEFORE `mixpanel.init`.\n   * - `'opt-in'` — calls `mixpanel.opt_in_tracking()`.\n   * - `'opt-out'` — calls `mixpanel.opt_out_tracking()`.\n   * @see https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking\n   */\n  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),\n})"
+        "code": "export const MixpanelAnalyticsOptions = object({\n  /**\n   * Your Mixpanel project token.\n   * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library\n   */\n  token: string(),\n  /**\n   * Default tracking-consent state for Mixpanel.\n   * - `'opt-out'`: passed as `opt_out_tracking_by_default: true` to `mixpanel.init`, so tracking is suppressed from the first call.\n   * - `'opt-in'`: queued via `mixpanel.push(['opt_in_tracking'])` so the real SDK runs it immediately after load.\n   * @see https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking\n   */\n  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),\n})"
       },
       {
         "name": "MixpanelAnalyticsApi",
         "kind": "interface",
-        "code": "export interface MixpanelAnalyticsApi {\n  mixpanel: {\n    track: (event: string, properties?: Record<string, any>) => void\n    identify: (distinctId: string) => void\n    reset: () => void\n    people: {\n      set: (properties: Record<string, any>) => void\n    }\n    register: (properties: Record<string, any>) => void\n    init: (token: string, config?: Record<string, any>) => void\n  }\n}"
+        "code": "export interface MixpanelAnalyticsApi {\n  mixpanel: {\n    track: (event: string, properties?: Record<string, any>) => void\n    identify: (distinctId: string) => void\n    reset: () => void\n    people: {\n      set: (properties: Record<string, any>) => void\n    }\n    register: (properties: Record<string, any>) => void\n    init: (token: string, config?: Record<string, any>) => void\n    /** Opt the user in to tracking. Available after the real SDK loads. */\n    opt_in_tracking?: () => void\n    /** Opt the user out of tracking. Available after the real SDK loads. */\n    opt_out_tracking?: () => void\n  }\n}"
+      },
+      {
+        "name": "MixpanelConsent",
+        "kind": "interface",
+        "code": "export interface MixpanelConsent {\n  /** Call `mixpanel.opt_in_tracking()`. */\n  optIn: () => void\n  /** Call `mixpanel.opt_out_tracking()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */\n  optOut: () => void\n}"
       }
     ],
     "npm": [
@@ -722,12 +757,17 @@
       {
         "name": "PostHogOptions",
         "kind": "const",
-        "code": "export const PostHogOptions = object({\n  /**\n   * Your PostHog project API key.\n   * @see https://posthog.com/docs/libraries/js#usage\n   */\n  apiKey: string(),\n  /**\n   * Your PostHog data region.\n   * @default 'us'\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  region: optional(union([literal('us'), literal('eu')])),\n  /**\n   * Custom API host URL. Overrides the default derived from `region`.\n   * Useful for self-hosted instances or reverse proxies.\n   */\n  apiHost: optional(string()),\n  /**\n   * Enable autocapture of clicks, form submissions, and page views.\n   * @default true\n   */\n  autocapture: optional(boolean()),\n  /**\n   * Capture page views automatically. Set to `'history_change'` to only capture on history changes.\n   * @default true\n   */\n  capturePageview: optional(union([boolean(), literal('history_change')])),\n  /**\n   * Capture page leave events automatically.\n   * @default true\n   */\n  capturePageleave: optional(boolean()),\n  /**\n   * Disable session recording.\n   */\n  disableSessionRecording: optional(boolean()),\n  /**\n   * Additional PostHog configuration options passed directly to `posthog.init()`.\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  config: optional(record(string(), any())),\n  /**\n   * Default capture-consent state applied BEFORE `posthog.init`.\n   * - `'opt-in'` — calls `posthog.opt_in_capturing()`.\n   * - `'opt-out'` — calls `posthog.opt_out_capturing()`.\n   * @see https://posthog.com/docs/privacy/opting-out\n   */\n  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),\n})"
+        "code": "export const PostHogOptions = object({\n  /**\n   * Your PostHog project API key.\n   * @see https://posthog.com/docs/libraries/js#usage\n   */\n  apiKey: string(),\n  /**\n   * Your PostHog data region.\n   * @default 'us'\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  region: optional(union([literal('us'), literal('eu')])),\n  /**\n   * Custom API host URL. Overrides the default derived from `region`.\n   * Useful for self-hosted instances or reverse proxies.\n   */\n  apiHost: optional(string()),\n  /**\n   * Enable autocapture of clicks, form submissions, and page views.\n   * @default true\n   */\n  autocapture: optional(boolean()),\n  /**\n   * Capture page views automatically. Set to `'history_change'` to only capture on history changes.\n   * @default true\n   */\n  capturePageview: optional(union([boolean(), literal('history_change')])),\n  /**\n   * Capture page leave events automatically.\n   * @default true\n   */\n  capturePageleave: optional(boolean()),\n  /**\n   * Disable session recording.\n   */\n  disableSessionRecording: optional(boolean()),\n  /**\n   * Additional PostHog configuration options passed directly to `posthog.init()`.\n   * @see https://posthog.com/docs/libraries/js#config\n   */\n  config: optional(record(string(), any())),\n  /**\n   * Default capture-consent state for PostHog.\n   * - `'opt-out'`: passed as `opt_out_capturing_by_default: true` to `posthog.init`, so capturing is suppressed from the first event.\n   * - `'opt-in'`: applied after `posthog.init` via `posthog.opt_in_capturing()` on the returned instance.\n   * @see https://posthog.com/docs/privacy/opting-out\n   */\n  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),\n})"
       },
       {
         "name": "PostHogApi",
         "kind": "interface",
         "code": "export interface PostHogApi {\n  posthog: PostHog\n}"
+      },
+      {
+        "name": "PostHogConsent",
+        "kind": "interface",
+        "code": "export interface PostHogConsent {\n  /** Call `posthog.opt_in_capturing()`. */\n  optIn: () => void\n  /** Call `posthog.opt_out_capturing()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */\n  optOut: () => void\n}"
       }
     ],
     "reddit-pixel": [
@@ -874,12 +914,17 @@
       {
         "name": "TikTokPixelApi",
         "kind": "interface",
-        "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n  }\n}"
+        "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n    /** Opt user in to tracking. Available after the script loads. */\n    grantConsent: () => void\n    /** Opt user out of tracking. Available after the script loads. */\n    revokeConsent: () => void\n    /** Defer consent until an explicit grant/revoke. Available after the script loads. */\n    holdConsent: () => void\n  }\n}"
       },
       {
         "name": "TikTokPixelOptions",
         "kind": "const",
-        "code": "export const TikTokPixelOptions = object({\n  /**\n   * Your TikTok Pixel ID.\n   * @see https://ads.tiktok.com/help/article/get-started-pixel\n   */\n  id: string(),\n  /**\n   * Whether to automatically track a page view on initialization.\n   * @default true\n   */\n  trackPageView: optional(boolean()),\n})"
+        "code": "export const TikTokPixelOptions = object({\n  /**\n   * Your TikTok Pixel ID.\n   * @see https://ads.tiktok.com/help/article/get-started-pixel\n   */\n  id: string(),\n  /**\n   * Whether to automatically track a page view on initialization.\n   * @default true\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Default consent state, applied before `ttq('init', id)`.\n   * - `'granted'` fires `ttq.grantConsent()`\n   * - `'denied'` fires `ttq.revokeConsent()`\n   * - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update\n   * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842\n   */\n  defaultConsent: optional(union([literal('granted'), literal('denied'), literal('hold')])),\n})"
+      },
+      {
+        "name": "TikTokPixelConsent",
+        "kind": "interface",
+        "code": "export interface TikTokPixelConsent {\n  /** Call `ttq.grantConsent()`. */\n  grant: () => void\n  /** Call `ttq.revokeConsent()`. */\n  revoke: () => void\n  /** Call `ttq.holdConsent()` to defer the decision. */\n  hold: () => void\n}"
       }
     ],
     "umami-analytics": [
@@ -1066,6 +1111,12 @@
         "type": "string",
         "required": true,
         "description": "The Clarity token."
+      },
+      {
+        "name": "defaultConsent",
+        "type": "boolean | Record<string, string>",
+        "required": false,
+        "description": "Default consent state applied before Clarity starts. - `boolean` - enable / disable cookies. - `Record<string, string>` - advanced consent vector (see Clarity docs)."
       }
     ],
     "CloudflareWebAnalyticsOptions": [
@@ -1384,6 +1435,12 @@
         "required": false,
         "description": "Global name for the dataLayer variable.",
         "defaultValue": "'dataLayer'"
+      },
+      {
+        "name": "defaultConsent",
+        "type": "unknown",
+        "required": false,
+        "description": "Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`."
       }
     ],
     "GoogleMapsOptions": [
@@ -1729,6 +1786,12 @@
         "type": "string | number",
         "required": true,
         "description": "Your Meta (Facebook) Pixel ID."
+      },
+      {
+        "name": "defaultConsent",
+        "type": "'granted' | 'denied'",
+        "required": false,
+        "description": "Default consent state. `'granted'` fires `fbq('consent', 'grant')`, `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`."
       }
     ],
     "NpmOptions": [
@@ -1816,7 +1879,7 @@
         "name": "defaultConsent",
         "type": "'opt-in' | 'opt-out'",
         "required": false,
-        "description": "Default capture-consent state applied BEFORE `posthog.init`. - `'opt-in'` — calls `posthog.opt_in_capturing()`. - `'opt-out'` — calls `posthog.opt_out_capturing()`."
+        "description": "Default capture-consent state for PostHog. - `'opt-out'`: passed as `opt_out_capturing_by_default: true` to `posthog.init`, so capturing is suppressed from the first event. - `'opt-in'`: applied after `posthog.init` via `posthog.opt_in_capturing()` on the returned instance."
       }
     ],
     "RedditPixelOptions": [
@@ -1920,7 +1983,7 @@
         "name": "defaultConsent",
         "type": "'opt-in' | 'opt-out'",
         "required": false,
-        "description": "Default tracking-consent state applied BEFORE `mixpanel.init`. - `'opt-in'` — calls `mixpanel.opt_in_tracking()`. - `'opt-out'` — calls `mixpanel.opt_out_tracking()`."
+        "description": "Default tracking-consent state for Mixpanel. - `'opt-out'`: passed as `opt_out_tracking_by_default: true` to `mixpanel.init`, so tracking is suppressed from the first call. - `'opt-in'`: queued via `mixpanel.push(['opt_in_tracking'])` so the real SDK runs it immediately after load."
       }
     ],
     "BingUetOptions": [
@@ -1936,6 +1999,12 @@
         "required": false,
         "description": "Enable automatic SPA page tracking.",
         "defaultValue": "true"
+      },
+      {
+        "name": "defaultConsent",
+        "type": "object",
+        "required": false,
+        "description": "Default consent state fired as `uetq.push('consent', 'default', ...)` before UET init."
       }
     ],
     "SegmentOptions": [
@@ -2063,6 +2132,12 @@
         "required": false,
         "description": "Whether to automatically track a page view on initialization.",
         "defaultValue": "true"
+      },
+      {
+        "name": "defaultConsent",
+        "type": "'granted' | 'denied' | 'hold'",
+        "required": false,
+        "description": "Default consent state, applied before `ttq('init', id)`. - `'granted'` fires `ttq.grantConsent()` - `'denied'` fires `ttq.revokeConsent()` - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update"
       }
     ],
     "UmamiAnalyticsOptions": [

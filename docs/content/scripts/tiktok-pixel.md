@@ -50,27 +50,20 @@ export default defineNuxtConfig({
 
 ## Consent Mode
 
-TikTok Pixel exposes a binary consent toggle. Use `defaultConsent` to set the state before init:
-
-```ts
-useScriptTikTokPixel({
-  id: 'YOUR_PIXEL_ID',
-  defaultConsent: 'denied', // 'granted' | 'denied'
-})
-```
-
-To grant or revoke at runtime:
+TikTok Pixel exposes a three-state consent API: grant, revoke, or hold (defer the decision). Set the initial state with `defaultConsent` and call `consent.grant()`{lang="ts"} / `consent.revoke()`{lang="ts"} / `consent.hold()`{lang="ts"} at runtime:
 
 ```vue
 <script setup lang="ts">
-const { proxy } = useScriptTikTokPixel()
+const { consent } = useScriptTikTokPixel({
+  id: 'YOUR_PIXEL_ID',
+  defaultConsent: 'hold', // 'granted' | 'denied' | 'hold'
+})
 
 function acceptAds() {
-  proxy.ttq.grantConsent()
+  consent.grant()
 }
-
 function rejectAds() {
-  proxy.ttq.revokeConsent()
+  consent.revoke()
 }
 </script>
 ```

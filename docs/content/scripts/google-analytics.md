@@ -32,39 +32,41 @@ The proxy exposes the `gtag` and `dataLayer` properties, and you should use them
 
 ### Consent Mode
 
-Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Use `defaultConsent` to fire `gtag('consent', 'default', ...)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}:
+Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', ...)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime:
 
-```ts
-useScriptGoogleAnalytics({
+```vue
+<script setup lang="ts">
+const { consent } = useScriptGoogleAnalytics({
   id: 'G-XXXXXXXX',
   defaultConsent: {
     ad_storage: 'denied',
     ad_user_data: 'denied',
     ad_personalization: 'denied',
     analytics_storage: 'denied',
-    wait_for_update: 500,
   },
 })
-```
-
-To update consent at runtime:
-
-```vue
-<script setup lang="ts">
-const { proxy } = useScriptGoogleAnalytics()
 
 function acceptAll() {
-  proxy.gtag('consent', 'update', {
+  consent.update({
     ad_storage: 'granted',
     ad_user_data: 'granted',
     ad_personalization: 'granted',
     analytics_storage: 'granted',
   })
 }
+
+function savePreferences(choices: { analytics: boolean, marketing: boolean }) {
+  consent.update({
+    analytics_storage: choices.analytics ? 'granted' : 'denied',
+    ad_storage: choices.marketing ? 'granted' : 'denied',
+    ad_user_data: choices.marketing ? 'granted' : 'denied',
+    ad_personalization: choices.marketing ? 'granted' : 'denied',
+  })
+}
 </script>
 ```
 
-For anything beyond the consent default, `onBeforeGtagStart` remains available as a general escape hatch for pre-`gtag('js')`{lang="ts"} setup.
+`consent.update()`{lang="ts"} accepts any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
 
 ### Customer/Consumer ID Tracking
 

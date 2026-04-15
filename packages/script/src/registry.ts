@@ -13,13 +13,6 @@ import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, Reg
 import { joinURL, withBase, withQuery } from 'ufo'
 import { LOGOS } from './registry-logos'
 import {
-  bingUetConsentAdapter,
-  clarityConsentAdapter,
-  googleAnalyticsConsentAdapter,
-  metaPixelConsentAdapter,
-  tiktokPixelConsentAdapter,
-} from './runtime/registry/consent-adapters'
-import {
   BingUetOptions,
   BlueskyEmbedOptions,
   ClarityOptions,
@@ -336,20 +329,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           },
         },
       },
-      consentAdapter: {
-        applyDefault: (state, { posthog }) => {
-          if (state.analytics_storage === 'granted')
-            posthog?.opt_in_capturing?.()
-          else if (state.analytics_storage === 'denied')
-            posthog?.opt_out_capturing?.()
-        },
-        applyUpdate: (state, { posthog }) => {
-          if (state.analytics_storage === 'granted')
-            posthog?.opt_in_capturing?.()
-          else if (state.analytics_storage === 'denied')
-            posthog?.opt_out_capturing?.()
-        },
-      },
     }),
     def('fathomAnalytics', {
       schema: FathomAnalyticsOptions,
@@ -375,20 +354,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_IP_ONLY,
       },
       partytown: { forwards: ['_paq.push'] },
-      consentAdapter: {
-        applyDefault: (state, { _paq }) => {
-          if (state.analytics_storage === 'granted')
-            _paq?.push?.(['setConsentGiven'])
-          else if (state.analytics_storage === 'denied')
-            _paq?.push?.(['forgetConsentGiven'])
-        },
-        applyUpdate: (state, { _paq }) => {
-          if (state.analytics_storage === 'granted')
-            _paq?.push?.(['setConsentGiven'])
-          else if (state.analytics_storage === 'denied')
-            _paq?.push?.(['forgetConsentGiven'])
-        },
-      },
     }),
     def('rybbitAnalytics', {
       schema: RybbitAnalyticsOptions,
@@ -449,20 +414,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       partytown: { forwards: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register', 'mixpanel.opt_in_tracking', 'mixpanel.opt_out_tracking'] },
-      consentAdapter: {
-        applyDefault: (state, { mixpanel }) => {
-          if (state.analytics_storage === 'granted')
-            mixpanel?.opt_in_tracking?.()
-          else if (state.analytics_storage === 'denied')
-            mixpanel?.opt_out_tracking?.()
-        },
-        applyUpdate: (state, { mixpanel }) => {
-          if (state.analytics_storage === 'granted')
-            mixpanel?.opt_in_tracking?.()
-          else if (state.analytics_storage === 'denied')
-            mixpanel?.opt_out_tracking?.()
-        },
-      },
     }),
     // ad
     def('bingUet', {
@@ -473,7 +424,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       envDefaults: { id: '' },
       bundle: true,
       partytown: { forwards: ['uetq.push'] },
-      consentAdapter: bingUetConsentAdapter,
     }),
     def('metaPixel', {
       schema: MetaPixelOptions,
@@ -487,7 +437,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['fbq'] },
-      consentAdapter: metaPixelConsentAdapter,
     }),
     def('xPixel', {
       schema: XPixelOptions,
@@ -520,7 +469,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify', 'ttq.grantConsent', 'ttq.revokeConsent', 'ttq.holdConsent'] },
-      consentAdapter: tiktokPixelConsentAdapter,
     }),
     def('snapchatPixel', {
       schema: SnapTrPixelOptions,
@@ -623,7 +571,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['clarity'] },
-      consentAdapter: clarityConsentAdapter,
     }),
     // payments
     def('stripe', {
@@ -765,16 +712,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           })
         },
       },
-      consentAdapter: {
-        // GTM lives on the same dataLayer as gtag. The gtag wrapper pushes its arguments
-        // object; we emulate it by pushing a plain array matching `['consent', 'default'|'update', state]`.
-        applyDefault: (state, { dataLayer }) => {
-          dataLayer?.push?.(['consent', 'default', state] as any)
-        },
-        applyUpdate: (state, { dataLayer }) => {
-          dataLayer?.push?.(['consent', 'update', state] as any)
-        },
-      },
     }),
     def('googleAnalytics', {
       schema: GoogleAnalyticsOptions,
@@ -793,7 +730,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['dataLayer.push', 'gtag'] },
-      consentAdapter: googleAnalyticsConsentAdapter,
     }),
     def('umamiAnalytics', {
       schema: UmamiAnalyticsOptions,

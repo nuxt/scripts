@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import type { PostHog, PostHogConfig } from 'posthog-js'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
@@ -26,8 +26,15 @@ declare global {
   }
 }
 
-export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) {
-  return useRegistryScript<T, typeof PostHogOptions>('posthog', (options) => {
+export interface PostHogConsent {
+  /** Call `posthog.opt_in_capturing()`. */
+  optIn: () => void
+  /** Call `posthog.opt_out_capturing()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */
+  optOut: () => void
+}
+
+export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput): UseScriptContext<T, PostHogConsent> {
+  const instance = useRegistryScript<T, typeof PostHogOptions>('posthog', (options) => {
     return {
       scriptMode: 'npm', // Use NPM mode - no external script tag
       schema: import.meta.dev ? PostHogOptions : undefined,
@@ -126,5 +133,13 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
           return window.__posthogInitPromise
         },
     }
-  }, _options as RegistryScriptInput<typeof PostHogOptions>)
+  }, _options as RegistryScriptInput<typeof PostHogOptions>) as UseScriptContext<T, PostHogConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      optIn: () => instance.proxy.posthog?.opt_in_capturing?.(),
+      optOut: () => instance.proxy.posthog?.opt_out_capturing?.(),
+    }
+  }
+  return instance
 }

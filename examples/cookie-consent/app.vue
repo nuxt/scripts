@@ -1,35 +1,27 @@
 <script lang="ts" setup>
 const showBanner = ref(true)
-const consent = useScriptTriggerConsent()
 
-// Google Tag Manager with Consent Mode v2
-// GTM loads after consent, but we set default denied state first
-useScriptGoogleTagManager({
+const cookiesConsent = useScriptTriggerConsent()
+
+const { consent } = useScriptGoogleTagManager({
   id: 'GTM-DEMO123',
-  scriptOptions: {
-    trigger: consent,
+  defaultConsent: {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
   },
-  // Set default consent state BEFORE GTM loads
-  onBeforeGtmStart: (gtag) => {
-    gtag('consent', 'default', {
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      analytics_storage: 'denied',
-      wait_for_update: 500,
-    })
-  },
+  scriptOptions: { trigger: cookiesConsent },
 })
 
 function accept() {
-  // Update consent state when user accepts
-  window.gtag?.('consent', 'update', {
+  consent.update({
     ad_storage: 'granted',
     ad_user_data: 'granted',
     ad_personalization: 'granted',
     analytics_storage: 'granted',
   })
-  consent.accept()
+  cookiesConsent.accept()
   showBanner.value = false
 }
 
@@ -46,7 +38,7 @@ function decline() {
           Cookie Consent Example
         </h1>
         <p class="text-gray-600 dark:text-gray-400 mb-8">
-          This example shows how to use <code>useScriptTriggerConsent()</code> to defer loading scripts until the user accepts cookies.
+          Gate GTM behind <code>useScriptTriggerConsent()</code>, set a denied default via <code>defaultConsent</code>, and flip categories with the script's own <code>consent.update()</code>.
         </p>
 
         <UCard>
@@ -56,10 +48,10 @@ function decline() {
             </h2>
           </template>
           <ul class="list-disc list-inside space-y-2 text-sm">
-            <li>Uses Google Consent Mode v2 with default denied state</li>
-            <li>GTM loads after consent with <code>onBeforeGtmStart</code> callback</li>
-            <li>Consent state updates via <code>gtag('consent', 'update', ...)</code></li>
-            <li>Open DevTools Network tab to see script load after accepting</li>
+            <li><code>defaultConsent</code> pushes the GCMv2 default into the dataLayer before GTM loads</li>
+            <li><code>useScriptTriggerConsent()</code> blocks the script until the user accepts</li>
+            <li><code>consent.update()</code> pushes a typed GCMv2 update at runtime</li>
+            <li>Open DevTools Network tab to see the script load after accepting</li>
           </ul>
         </UCard>
       </div>

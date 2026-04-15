@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { BingUetOptions } from './schemas'
 
@@ -244,8 +244,13 @@ declare global {
   }
 }
 
-export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput & { onBeforeUetStart?: (uetq: BingUetQueue) => void }) {
-  return useRegistryScript<T, typeof BingUetOptions>('bingUet', options => ({
+export interface BingUetConsent {
+  /** Push `['consent','update', state]` with the `ad_storage` signal. */
+  update: (state: BingUetConsentOptions) => void
+}
+
+export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput & { onBeforeUetStart?: (uetq: BingUetQueue) => void }): UseScriptContext<T, BingUetConsent> {
+  const instance = useRegistryScript<T, typeof BingUetOptions>('bingUet', options => ({
     scriptInput: {
       src: 'https://bat.bing.com/bat.js',
       crossorigin: false,
@@ -276,5 +281,14 @@ export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput &
           }
           _options?.onBeforeUetStart?.(uetq as unknown as BingUetQueue)
         },
-  }), _options)
+  }), _options) as UseScriptContext<T, BingUetConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      update: (state: BingUetConsentOptions) => {
+        instance.proxy.uetq.push('consent', 'update', state)
+      },
+    }
+  }
+  return instance
 }

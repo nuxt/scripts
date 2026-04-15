@@ -72,32 +72,33 @@ proxy.mixpanel.register({
 
 ## Consent Mode
 
-Mixpanel exposes [`opt_in_tracking` / `opt_out_tracking`](https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking). Nuxt Scripts wires these to the `defaultConsent` option, which is resolved BEFORE the first event is tracked.
+Mixpanel exposes [`opt_in_tracking` / `opt_out_tracking`](https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking). Set the boot-time default with `defaultConsent` and call `consent.optIn()`{lang="ts"} / `consent.optOut()`{lang="ts"} at runtime.
+
+### `defaultConsent`
 
 | Value | Behaviour |
 |-------|-----------|
 | `'opt-in'` | Starts opted in. |
 | `'opt-out'` | Calls `mixpanel.init(..., { opt_out_tracking_by_default: true })`{lang="ts"} so the SDK boots opted out. |
 
-```ts
-useScriptMixpanelAnalytics({
-  token: 'YOUR_TOKEN',
-  defaultConsent: 'opt-out',
-})
-```
+::callout{icon="i-heroicons-information-circle"}
+Use `defaultConsent: 'opt-out'` when you need the SDK to boot opted out. The runtime `consent.optOut()`{lang="ts"} calls `opt_out_tracking()`{lang="ts"} **after** init, which is weaker than the boot-time flag; any events captured between init and the opt-out call are still sent.
+::
 
-### Granting or revoking consent at runtime
+### Example
 
-```ts
-const { proxy } = useScriptMixpanelAnalytics({
+```vue
+<script setup lang="ts">
+const { consent } = useScriptMixpanelAnalytics({
   token: 'YOUR_TOKEN',
   defaultConsent: 'opt-out',
 })
 
 function onAccept() {
-  proxy.mixpanel.opt_in_tracking()
+  consent.optIn()
 }
 function onRevoke() {
-  proxy.mixpanel.opt_out_tracking()
+  consent.optOut()
 }
+</script>
 ```

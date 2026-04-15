@@ -42,29 +42,15 @@ useScriptEventPage(({ title, path }) => {
 })
 ```
 
-## Configuring GTM before it starts
+## Consent Mode
 
-[`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"} initializes Google Tag Manager by itself. This means it pushes the `js`, `config` and the `gtm.start` events for you.
-
-If you need to configure GTM before it starts, for example [setting the consent mode](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic), you have two options:
-
-### Option 1: Using `defaultConsent` in nuxt.config (Recommended)
-
-If you're configuring GTM in `nuxt.config`, use the `defaultConsent` option. See the [Default consent mode](#loading-globally) example above.
-
-### Option 2: Using `onBeforeGtmStart` callback
-
-If you're calling [`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"} with the ID directly in a component (not in nuxt.config), use the `onBeforeGtmStart` hook which runs right before the `gtm.start` event is pushed.
-
-::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
-`onBeforeGtmStart` only works when the GTM ID is passed directly to [`useScriptGoogleTagManager()`{lang="ts"}](/scripts/google-tag-manager){lang="ts"}, not when configured globally in nuxt.config. For global config, use the `defaultConsent` option instead.
-::
+Google Tag Manager natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). Set the default with `defaultConsent` (pushes `['consent','default', state]` onto the dataLayer before the `gtm.js` event) and call `consent.update()`{lang="ts"} at runtime.
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
 Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) or [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) on [StackBlitz](https://stackblitz.com).
 ::
 
-#### Consent Mode v2 Signals
+### Consent Mode v2 Signals
 
 | Signal | Purpose |
 |--------|---------|
@@ -73,60 +59,45 @@ Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts
 | `ad_personalization` | Personalized ads (remarketing) |
 | `analytics_storage` | Cookies for analytics |
 
-#### Updating Consent
+### Example
 
-When the user accepts, call `gtag('consent', 'update', ...)`{lang="ts"}:
+```vue
+<script setup lang="ts">
+const { proxy, consent } = useScriptGoogleTagManager({
+  id: 'GTM-XXXXXX',
+  defaultConsent: {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+  },
+})
 
-```ts
-function acceptCookies() {
-  window.gtag?.('consent', 'update', {
+function acceptAll() {
+  consent.update({
     ad_storage: 'granted',
     ad_user_data: 'granted',
     ad_personalization: 'granted',
     analytics_storage: 'granted',
   })
 }
-```
 
-To block GTM until consent, combine with [`useScriptTriggerConsent()`{lang="ts"}](/docs/guides/consent){lang="ts"}.
-
-```vue
-<script setup lang="ts">
-const consent = useState('consent', () => 'denied')
-
-const { proxy } = useScriptGoogleTagManager({
-  onBeforeGtmStart: (gtag) => {
-    // set default consent state to denied
-    gtag('consent', 'default', {
-      ad_user_data: 'denied',
-      ad_personalization: 'denied',
-      ad_storage: 'denied',
-      analytics_storage: 'denied',
-      wait_for_update: 500,
-    })
-
-    // if consent was already given, update gtag accordingly
-    if (consent.value === 'granted') {
-      gtag('consent', 'update', {
-        ad_user_data: consent.value,
-        ad_personalization: consent.value,
-        ad_storage: consent.value,
-        analytics_storage: consent.value
-      })
-    }
-  }
-})
-
-// push pageview events to dataLayer
-useScriptEventPage(({ title, path }) => {
-  proxy.dataLayer.push({
-    event: 'pageview',
-    title,
-    path
+function savePreferences(choices: { analytics: boolean, marketing: boolean }) {
+  consent.update({
+    analytics_storage: choices.analytics ? 'granted' : 'denied',
+    ad_storage: choices.marketing ? 'granted' : 'denied',
+    ad_user_data: choices.marketing ? 'granted' : 'denied',
+    ad_personalization: choices.marketing ? 'granted' : 'denied',
   })
+}
+
+useScriptEventPage(({ title, path }) => {
+  proxy.dataLayer.push({ event: 'pageview', title, path })
 })
 </script>
 ```
+
+`onBeforeGtmStart` remains available as a general escape hatch for any other pre-`gtm.start` setup (only when the GTM ID is passed directly to the composable, not via `nuxt.config`).
 
 ::script-types
 ::
