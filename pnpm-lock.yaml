@@ -40,8 +40,8 @@ catalogs:
       specifier: ^4.0.2
       version: 4.0.2
     '@types/google.maps':
-      specifier: ^3.58.1
-      version: 3.58.1
+      specifier: ^3.64.0
+      version: 3.64.0
     '@types/jest-image-snapshot':
       specifier: ^6.4.1
       version: 6.4.1
@@ -112,8 +112,8 @@ catalogs:
       specifier: ^1.59.1
       version: 1.59.1
     posthog-js:
-      specifier: ^1.368.2
-      version: 1.368.2
+      specifier: ^1.369.0
+      version: 1.369.0
     shiki:
       specifier: ^4.0.2
       version: 4.0.2
@@ -121,8 +121,8 @@ catalogs:
       specifier: ^3.0.2
       version: 3.0.2
     std-env:
-      specifier: ^4.0.0
-      version: 4.0.0
+      specifier: ^4.1.0
+      version: 4.1.0
     typescript:
       specifier: ^6.0.2
       version: 6.0.2
@@ -176,7 +176,7 @@ importers:
         version: 9.6.0
       '@types/google.maps':
         specifier: 'catalog:'
-        version: 3.58.1
+        version: 3.64.0
       '@types/jest-image-snapshot':
         specifier: 'catalog:'
         version: 6.4.1
@@ -209,7 +209,7 @@ importers:
         version: 1.59.1
       posthog-js:
         specifier: 'catalog:'
-        version: 1.368.2
+        version: 1.369.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -338,7 +338,7 @@ importers:
         version: 3.0.2
       std-env:
         specifier: 'catalog:'
-        version: 4.0.0
+        version: 4.1.0
       ufo:
         specifier: 'catalog:'
         version: 1.6.3
@@ -2030,8 +2030,8 @@ packages:
   '@posthog/types@1.367.0':
     resolution: {integrity: sha512-FUcTEAeKhuHKyCcTQPx/sTN3s8S+PusPsiP8T/LrG/T7pDkwMfNZG0/P630JX6fT6qiW0moVvVSsaXgZDJF7wg==}
 
-  '@posthog/types@1.368.2':
-    resolution: {integrity: sha512-QOukv/OCFdiOJmsr8GQ/Y/20vpkcS4JuGd5Hsh8/qP6mhWwUMtEKAiGEgfyLZKeuFm7zc6rqZpCXTJYL9AW1tQ==}
+  '@posthog/types@1.369.0':
+    resolution: {integrity: sha512-iFkLrg/+QRQHc8KSjO9parN6H3rftM2ld2sCJ/GeBRRO9MJYCdc6jXSFRgF7aGJPzb79syqksz+CrnBzdZnBKg==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -2728,6 +2728,9 @@ packages:
 
   '@types/google.maps@3.58.1':
     resolution: {integrity: sha512-X9QTSvGJ0nCfMzYOnaVs/k6/4L+7F5uCS+4iUmkLEls6J9S/Phv+m/i3mDeyc49ZBgwab3EFO1HEoBY7k98EGQ==}
+
+  '@types/google.maps@3.64.0':
+    resolution: {integrity: sha512-dN0H6tB4lgLQLovcbPXFYYOEV41TpyyJghzb5jrzjB96FZmjeOghevVdC+BMGd6YqyCqXaggyEtqRXLRjzCBZA==}
 
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
@@ -5491,8 +5494,8 @@ packages:
   posthog-js@1.367.0:
     resolution: {integrity: sha512-jWNwB8XjlVUC9PbGaIlmsyohUDMBrwf7cvLuOY3lIOmWVO3L6VxTE3GZShjxpFKQtmWcPxFbf1hcbct1YCb6xg==}
 
-  posthog-js@1.368.2:
-    resolution: {integrity: sha512-0gfMmZWA9Z2IGtgc2b9uRGap6+9ib5iNhyjtq4qRqtVKF6JKlhqEaml3p+c+cOIWi1Ym/gJ55VngKil9TGYJhQ==}
+  posthog-js@1.369.0:
+    resolution: {integrity: sha512-fOJzwpCb/TWxJBsUNKJ5PhHNl0+X7zRrVTuUrIH+EfsIfxJGSkOa0lWPJJGr3xzg810JHCUpuhn5sFBBxfHqIQ==}
 
   powershell-utils@0.1.0:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
@@ -5885,6 +5888,9 @@ packages:
 
   std-env@4.0.0:
     resolution: {integrity: sha512-zUMPtQ/HBY3/50VbpkupYHbRroTRZJPRLvreamgErJVys0ceuzMkD44J/QjqhHjOzK42GQ3QZIeFG1OYfOtKqQ==}
+
+  std-env@4.1.0:
+    resolution: {integrity: sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==}
 
   streamx@2.25.0:
     resolution: {integrity: sha512-0nQuG6jf1w+wddNEEXCF4nTg3LtufWINB5eFEN+5TNZW7KWJp6x87+JFL43vaAUPyCfH1wID+mNVyW6OHtFamg==}
@@ -8372,7 +8378,7 @@ snapshots:
 
   '@posthog/types@1.367.0': {}
 
-  '@posthog/types@1.368.2': {}
+  '@posthog/types@1.369.0': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -8976,6 +8982,8 @@ snapshots:
   '@types/geojson@7946.0.16': {}
 
   '@types/google.maps@3.58.1': {}
+
+  '@types/google.maps@3.64.0': {}
 
   '@types/hast@3.0.4':
     dependencies:
@@ -12390,7 +12398,7 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
 
-  posthog-js@1.368.2:
+  posthog-js@1.369.0:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.208.0
@@ -12398,7 +12406,7 @@ snapshots:
       '@opentelemetry/resources': 2.6.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
       '@posthog/core': 1.25.2
-      '@posthog/types': 1.368.2
+      '@posthog/types': 1.369.0
       core-js: 3.49.0
       dompurify: 3.3.3
       fflate: 0.4.8
@@ -12856,6 +12864,8 @@ snapshots:
   std-env@3.10.0: {}
 
   std-env@4.0.0: {}
+
+  std-env@4.1.0: {}
 
   streamx@2.25.0:
     dependencies:
