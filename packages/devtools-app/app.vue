@@ -19,7 +19,7 @@ const currentTab = computed(() => {
 })
 
 const navItems = [
-  { value: 'scripts', to: '/', icon: 'carbon:script', label: 'Scripts', devOnly: false },
+  { value: 'scripts', to: '/', icon: 'carbon:script', label: 'Active Scripts', devOnly: false },
   { value: 'first-party', to: '/first-party', icon: 'carbon:security', label: 'First-Party Mode', devOnly: true },
   { value: 'registry', to: '/registry', icon: 'carbon:catalog', label: 'Registry', devOnly: true },
   { value: 'docs', to: '/docs', icon: 'carbon:book', label: 'Docs', devOnly: false },

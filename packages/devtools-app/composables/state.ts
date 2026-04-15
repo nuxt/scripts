@@ -83,8 +83,12 @@ export const scriptTabs = reactive<Record<string, string>>({})
 export const version = ref<string | null>(null)
 export const firstPartyData = ref<FirstPartyDevtoolsData | null>(null)
 
+let _lastSyncedScripts: any[] | null = null
+
 export async function initRegistry() {
   scriptRegistry.value = await _registryPromise
+  if (_lastSyncedScripts)
+    syncScripts(_lastSyncedScripts)
 }
 
 const WORD_SEPARATOR_RE = /([\s_-])+/g
@@ -101,9 +105,11 @@ function titleToCamelCase(s: string) {
 
 export function syncScripts(_scripts: any[]) {
   if (!_scripts || typeof _scripts !== 'object') {
+    _lastSyncedScripts = null
     scripts.value = {}
     return
   }
+  _lastSyncedScripts = _scripts
   scripts.value = Object.fromEntries(
     Object.entries({ ..._scripts })
       .map(([key, script]: [string, any]) => {

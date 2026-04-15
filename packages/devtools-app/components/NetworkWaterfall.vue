@@ -102,10 +102,10 @@ function phaseWidth(req: NetworkRequest, phase: typeof phases[number]) {
 function shortUrl(url: string) {
   try {
     const u = new URL(url)
-    const path = u.pathname + u.search
-    return path.length > 50 ? `${path.slice(0, 47)}...` : path
+    const path = (u.pathname + u.search).replace('/_scripts', '')
+    return path.length > 100 ? `${path.slice(0, 97)}...` : path
   }
-  catch { return url.length > 50 ? `${url.slice(0, 47)}...` : url }
+  catch { return url.length > 100 ? `${url.slice(0, 97)}...` : url }
 }
 
 function initiatorLabel(type: string) {
@@ -466,7 +466,7 @@ function statusCode(req: NetworkRequest) {
 
 .waterfall-url {
   flex-shrink: 0;
-  width: 11rem;
+  width: 15rem;
   font-family: var(--font-mono);
   font-size: 0.625rem;
   color: var(--color-text-muted);

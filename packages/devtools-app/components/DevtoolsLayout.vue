@@ -103,7 +103,7 @@ function disconnectStandalone() {
               aria-label="Nuxt Scripts"
               class="flex items-center opacity-90 hover:opacity-100 transition-opacity"
             >
-              <NuxtSeoLogo class="h-6 sm:h-7" />
+              <Logo class="h-6 sm:h-7" />
             </a>
 
             <div class="devtools-divider" />
