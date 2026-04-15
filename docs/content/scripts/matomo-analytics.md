@@ -91,7 +91,7 @@ Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides
 
 | Value | Behaviour |
 |-------|-----------|
-| `'required'` | Pushes `['requireConsent']`. Nothing is tracked until the user opts in. |
+| `'required'` | Pushes `['requireConsent']`. Matomo tracks nothing until the user opts in. |
 | `'given'` | Pushes `['requireConsent']` then `['setConsentGiven']`. Tracking starts immediately. |
 | `'not-required'` | Default Matomo behaviour (no consent gating). |
 
