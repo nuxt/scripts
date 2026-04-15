@@ -156,7 +156,7 @@ function statusCode(req: NetworkRequest) {
 
       <template v-if="isFirstParty && proxiedCount > 0">
         <span class="waterfall-sep" />
-        <UTooltip>
+        <UiTooltip>
           <span class="waterfall-proxied-badge">
             <UIcon name="i-carbon-security" class="text-[10px]" />
             <span class="waterfall-stat-value">{{ proxiedCount }}/{{ requests.length }}</span>
@@ -176,14 +176,14 @@ function statusCode(req: NetworkRequest) {
               </div>
             </div>
           </template>
-        </UTooltip>
+        </UiTooltip>
       </template>
 
       <!-- Domain pills -->
       <template v-if="domainBreakdown.length > 1">
         <span class="waterfall-sep" />
         <div class="flex items-center gap-1">
-          <UTooltip v-for="d in domainBreakdown" :key="d.domain">
+          <UiTooltip v-for="d in domainBreakdown" :key="d.domain">
             <span class="domain-pill" :class="d.proxied ? 'domain-pill-proxied' : ''">
               <UIcon v-if="d.proxied" name="i-carbon-security" class="text-[8px]" />
               {{ d.domain }}
@@ -204,7 +204,7 @@ function statusCode(req: NetworkRequest) {
                 </div>
               </div>
             </template>
-          </UTooltip>
+          </UiTooltip>
         </div>
       </template>
     </div>
@@ -221,7 +221,7 @@ function statusCode(req: NetworkRequest) {
 
       <!-- Rows -->
       <div class="waterfall-rows">
-        <UTooltip v-for="(req, i) in sorted" :key="i">
+        <UiTooltip v-for="(req, i) in sorted" :key="i">
           <div class="waterfall-row" :class="req.isProxied ? 'waterfall-row-proxied' : ''">
             <div
               class="waterfall-status"
@@ -284,7 +284,7 @@ function statusCode(req: NetworkRequest) {
               </div>
             </div>
           </template>
-        </UTooltip>
+        </UiTooltip>
       </div>
     </div>
   </div>
