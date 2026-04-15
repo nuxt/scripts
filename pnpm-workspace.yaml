@@ -8,7 +8,7 @@ packages:
 
 overrides:
   '@nuxt/scripts': 'workspace:*'
-  vitest-environment-nuxt: 1.0.1
+  vitest-environment-nuxt: 2.0.0
 catalog:
   '@antfu/eslint-config': ^8.2.0
   '@nuxt/devtools-kit': ^3.2.4
