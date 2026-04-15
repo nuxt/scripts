@@ -169,7 +169,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
   if (import.meta.client && !typed.consent) {
     typed.consent = {
       update: (state: ConsentState) => {
-        typed.proxy.dataLayer.push(['consent', 'update', state] as any)
+        ;((typed.proxy as unknown as GoogleTagManagerApi).dataLayer as any).push(['consent', 'update', state])
       },
     }
   }

@@ -157,7 +157,7 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
   if (import.meta.client && !instance.consent) {
     instance.consent = {
       update: (state: ConsentState) => {
-        instance.proxy.gtag('consent', 'update', state as ConsentOptions)
+        ;(instance.proxy as unknown as GoogleAnalyticsApi).gtag('consent', 'update', state as ConsentOptions)
       },
     }
   }

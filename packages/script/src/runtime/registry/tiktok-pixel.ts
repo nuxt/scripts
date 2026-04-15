@@ -133,9 +133,9 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
 
   if (import.meta.client && !instance.consent) {
     instance.consent = {
-      grant: () => instance.proxy.ttq.grantConsent(),
-      revoke: () => instance.proxy.ttq.revokeConsent(),
-      hold: () => instance.proxy.ttq.holdConsent(),
+      grant: () => (instance.proxy as unknown as TikTokPixelApi).ttq.grantConsent(),
+      revoke: () => (instance.proxy as unknown as TikTokPixelApi).ttq.revokeConsent(),
+      hold: () => (instance.proxy as unknown as TikTokPixelApi).ttq.holdConsent(),
     }
   }
   return instance

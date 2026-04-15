@@ -102,7 +102,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     }
   }
 
-  const scriptInput = defu(finalScriptInput, userOptions.scriptInput, { key: registryKey }) as any as UseScriptInput
+  const scriptInput = defu(finalScriptInput as any, userOptions.scriptInput as any, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = { ...userOptions?.scriptOptions, ...options.scriptOptions }
   if (import.meta.dev) {
     // Capture where the component was loaded from
@@ -142,7 +142,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     // Extract known domains for this script from devtools runtime config
     const devtoolsConfig = useRuntimeConfig().public['nuxt-scripts-devtools'] as any
     const registryDomains = devtoolsConfig?.scripts?.find((s: any) => s.registryKey === registryKey)?.domains as string[] | undefined
-    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom, domains: registryDomains })
+    scriptOptions.devtools = defu(scriptOptions.devtools, { registryKey, loadedFrom, domains: registryDomains }) as NonNullable<NuxtUseScriptOptions['devtools']>
     if (options.schema && 'entries' in options.schema) {
       const registryMeta: Record<string, string> = {}
       for (const k in options.schema.entries) {
@@ -150,7 +150,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
           registryMeta[k] = String(userOptions[k as any as keyof typeof userOptions])
         }
       }
-      scriptOptions.devtools.registryMeta = registryMeta
+      scriptOptions.devtools!.registryMeta = registryMeta
     }
   }
   const init = scriptOptions.beforeInit

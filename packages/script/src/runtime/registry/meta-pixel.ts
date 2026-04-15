@@ -97,8 +97,8 @@ export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelI
 
   if (import.meta.client && !instance.consent) {
     instance.consent = {
-      grant: () => instance.proxy.fbq('consent', 'grant'),
-      revoke: () => instance.proxy.fbq('consent', 'revoke'),
+      grant: () => (instance.proxy as unknown as MetaPixelApi).fbq('consent', 'grant'),
+      revoke: () => (instance.proxy as unknown as MetaPixelApi).fbq('consent', 'revoke'),
     }
   }
   return instance

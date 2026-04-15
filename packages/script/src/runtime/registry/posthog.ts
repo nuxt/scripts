@@ -137,8 +137,8 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput):
 
   if (import.meta.client && !instance.consent) {
     instance.consent = {
-      optIn: () => instance.proxy.posthog?.opt_in_capturing?.(),
-      optOut: () => instance.proxy.posthog?.opt_out_capturing?.(),
+      optIn: () => (instance.proxy as unknown as PostHogApi).posthog?.opt_in_capturing?.(),
+      optOut: () => (instance.proxy as unknown as PostHogApi).posthog?.opt_out_capturing?.(),
     }
   }
   return instance

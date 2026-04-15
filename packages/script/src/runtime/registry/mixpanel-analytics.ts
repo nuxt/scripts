@@ -96,8 +96,8 @@ export function useScriptMixpanelAnalytics<T extends MixpanelAnalyticsApi>(_opti
 
   if (import.meta.client && !instance.consent) {
     instance.consent = {
-      optIn: () => instance.proxy.mixpanel.opt_in_tracking?.(),
-      optOut: () => instance.proxy.mixpanel.opt_out_tracking?.(),
+      optIn: () => (instance.proxy as unknown as MixpanelAnalyticsApi).mixpanel.opt_in_tracking?.(),
+      optOut: () => (instance.proxy as unknown as MixpanelAnalyticsApi).mixpanel.opt_out_tracking?.(),
     }
   }
   return instance

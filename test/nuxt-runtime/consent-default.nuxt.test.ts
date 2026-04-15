@@ -264,8 +264,11 @@ describe('per-script consent object', () => {
 
   it('clarity: consent.set(bool) calls clarity consent with the value', async () => {
     const calls: any[] = []
-    ;(window as any).clarity = (...args: any[]) => { calls.push(args) }
-    ;(window as any).clarity.q = []
+    const clarityFn = (...args: any[]) => {
+      calls.push(args)
+    }
+    clarityFn.q = []
+    ;(window as any).clarity = clarityFn
     const { useScriptClarity } = await import('../../packages/script/src/runtime/registry/clarity')
     const result: any = useScriptClarity({ id: 'p-123' })
     result._opts.clientInit()

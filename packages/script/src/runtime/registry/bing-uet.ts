@@ -286,7 +286,7 @@ export function useScriptBingUet<T extends BingUetApi>(_options?: BingUetInput &
   if (import.meta.client && !instance.consent) {
     instance.consent = {
       update: (state: BingUetConsentOptions) => {
-        instance.proxy.uetq.push('consent', 'update', state)
+        ;((instance.proxy as unknown as BingUetApi).uetq as any).push('consent', 'update', state)
       },
     }
   }

@@ -69,7 +69,7 @@ export function useScriptClarity<T extends ClarityApi>(
   if (import.meta.client && !instance.consent) {
     instance.consent = {
       set: (value: boolean | Record<string, string>) => {
-        instance.proxy.clarity('consent', value)
+        ;(instance.proxy as unknown as ClarityApi).clarity('consent', value)
       },
     }
   }

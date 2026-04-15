@@ -109,11 +109,11 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
     instance.consent = {
       give: () => {
         warnIfUnsafe('give')
-        instance.proxy._paq.push(['setConsentGiven'])
+        ;((instance.proxy as unknown as MatomoAnalyticsApi)._paq as any).push(['setConsentGiven'])
       },
       forget: () => {
         warnIfUnsafe('forget')
-        instance.proxy._paq.push(['forgetConsentGiven'])
+        ;((instance.proxy as unknown as MatomoAnalyticsApi)._paq as any).push(['forgetConsentGiven'])
       },
     }
   }
