@@ -30,7 +30,8 @@ export function withSigning<Req extends EventHandlerRequest = EventHandlerReques
 ): EventHandler<Req, Res> {
   return defineEventHandler<Req>(async (event) => {
     const runtimeConfig = useRuntimeConfig(event)
-    const secret = (runtimeConfig['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
+    const scriptsConfig = runtimeConfig['nuxt-scripts'] as { proxySecret?: string, pageTokenMaxAge?: number } | undefined
+    const secret = scriptsConfig?.proxySecret
 
     // No secret configured: pass through without verification. This lets the
     // handler wiring ship before components emit signed URLs. Users opt in to
@@ -38,7 +39,7 @@ export function withSigning<Req extends EventHandlerRequest = EventHandlerReques
     if (!secret)
       return handler(event) as Res
 
-    if (!verifyProxyRequest(event, secret)) {
+    if (!verifyProxyRequest(event, secret, scriptsConfig?.pageTokenMaxAge)) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Invalid signature',

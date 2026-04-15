@@ -2,6 +2,7 @@
 import type { HTMLAttributes } from 'vue'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
+import { useScriptProxyUrl } from '../composables/useScriptProxyUrl'
 import { extractInstagramShortcode } from '../registry/instagram-embed'
 import { requireRegistryEndpoint, scriptsPrefix } from '../utils'
 
@@ -41,11 +42,12 @@ const apiEndpoint = computed(() => props.apiEndpoint || `${prefix}/embed/instagr
 if (!props.apiEndpoint)
   requireRegistryEndpoint('ScriptInstagramEmbed', 'instagramEmbed')
 
+const proxyUrl = useScriptProxyUrl()
 const shortcode = computed(() => extractInstagramShortcode(props.postUrl))
 
 const { data: html, status, error } = useAsyncData<string>(
   `instagram-embed-${props.postUrl}`,
-  () => $fetch(`${apiEndpoint.value}?url=${encodeURIComponent(props.postUrl)}&captions=${props.captions}`),
+  () => $fetch(proxyUrl(apiEndpoint.value, { url: props.postUrl, captions: props.captions })),
   { watch: [() => props.postUrl, () => props.captions] },
 )
 

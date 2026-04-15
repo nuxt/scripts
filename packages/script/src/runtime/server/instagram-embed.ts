@@ -1,13 +1,30 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { $fetch } from 'ofetch'
+import { useRuntimeConfig } from 'nitropack/runtime'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
-import { rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
+import { createCachedJsonFetch } from './utils/cached-upstream'
+import { proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
 import { withSigning } from './utils/withSigning'
 
 export { proxyAssetUrl, proxyImageUrl, rewriteUrl, rewriteUrlsInText, scopeCss } from './utils/instagram-embed'
 
 const EMBED_INSTAGRAM_SUFFIX_RE = /\/embed\/instagram$/
 const SRCSET_SPLIT_RE = /\s+/
+
+// Instagram embed HTML is semi-fresh (likes, captions may update); 10min
+// matches the outbound Cache-Control header and dedupes per post+captions.
+const cachedEmbedFetch = createCachedJsonFetch<string>(
+  'nuxt-scripts-instagram-embed',
+  600,
+  url => url,
+)
+
+// Static CSS from Instagram's CDN is versioned; 24h cache is safe because the
+// URL itself changes when content does.
+const cachedCssFetch = createCachedJsonFetch<string>(
+  'nuxt-scripts-instagram-css',
+  86400,
+  url => url,
+)
 
 /**
  * Remove a node from the AST by converting it to an empty text node.
@@ -26,6 +43,7 @@ export default withSigning(defineEventHandler(async (event) => {
   // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_INSTAGRAM_SUFFIX_RE, '') || '/_scripts'
+  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
 
   const query = getQuery(event)
   const postUrl = query.url as string
@@ -60,7 +78,7 @@ export default withSigning(defineEventHandler(async (event) => {
   const cleanUrl = parsedUrl.origin + pathname
   const embedUrl = `${cleanUrl}embed/${captions ? 'captioned/' : ''}`
 
-  const html = await $fetch<string>(embedUrl, {
+  const html = await cachedEmbedFetch(embedUrl, {
     headers: {
       'Accept': 'text/html',
       'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
@@ -94,7 +112,7 @@ export default withSigning(defineEventHandler(async (event) => {
 
     for (const attr of ['src', 'poster']) {
       if (node.attributes[attr])
-        node.attributes[attr] = rewriteUrl(node.attributes[attr], prefix)
+        node.attributes[attr] = rewriteUrl(node.attributes[attr], prefix, secret)
     }
 
     if (node.attributes.srcset) {
@@ -104,18 +122,18 @@ export default withSigning(defineEventHandler(async (event) => {
           const parts = entry.trim().split(SRCSET_SPLIT_RE)
           const url = parts[0]
           const descriptor = parts.slice(1).join(' ')
-          return url ? `${rewriteUrl(url, prefix)}${descriptor ? ` ${descriptor}` : ''}` : entry
+          return url ? `${rewriteUrl(url, prefix, secret)}${descriptor ? ` ${descriptor}` : ''}` : entry
         })
         .join(', ')
     }
 
     if (node.attributes.style)
-      node.attributes.style = rewriteUrlsInText(node.attributes.style, prefix)
+      node.attributes.style = rewriteUrlsInText(node.attributes.style, prefix, secret)
   })
 
   walkSync(ast, (node) => {
     if (node.type === TEXT_NODE && node.value)
-      node.value = rewriteUrlsInText(node.value, prefix)
+      node.value = rewriteUrlsInText(node.value, prefix, secret)
   })
 
   let bodyNode: any = null
@@ -130,7 +148,7 @@ export default withSigning(defineEventHandler(async (event) => {
 
   const cssContents = await Promise.all(
     cssUrls.map(url =>
-      $fetch<string>(url, {
+      cachedCssFetch(url, {
         headers: { Accept: 'text/css' },
       }).catch(() => ''),
     ),
@@ -139,9 +157,9 @@ export default withSigning(defineEventHandler(async (event) => {
   let combinedCss = cssContents.join('\n')
   combinedCss = combinedCss.replace(
     RSRC_RE,
-    (_m, path) => `url(${prefix}/embed/instagram-asset?url=${encodeURIComponent(`https://static.cdninstagram.com/rsrc.php${path}`)})`,
+    (_m, path) => `url(${proxyAssetUrl(`https://static.cdninstagram.com/rsrc.php${path}`, prefix, secret)})`,
   )
-  combinedCss = rewriteUrlsInText(combinedCss, prefix)
+  combinedCss = rewriteUrlsInText(combinedCss, prefix, secret)
   combinedCss = scopeCss(combinedCss, '.instagram-embed-root')
 
   const baseStyles = `

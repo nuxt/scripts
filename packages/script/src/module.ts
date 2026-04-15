@@ -19,6 +19,7 @@ import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
+  addPlugin,
   addPluginTemplate,
   addServerHandler,
   addTemplate,
@@ -332,6 +333,21 @@ export interface ModuleOptions {
      * @default true
      */
     autoGenerateSecret?: boolean
+    /**
+     * How long (in seconds) a page token issued during SSR remains valid on the
+     * client. Client-driven proxy requests (dynamic fetches, runtime image
+     * helpers) attach this token so `withSigning` accepts them without each URL
+     * being HMAC-signed up front.
+     *
+     * The default of 1 hour is safe for SSR; for SSG or prerendered routes,
+     * deployed HTML carries the build-time token, so bump this (e.g. `2592000`
+     * for 30 days) to keep client-side proxy calls working after the build.
+     * Longer TTLs widen the replay window if a token is scraped, so prefer the
+     * shortest value that covers your cache horizon.
+     *
+     * @default 3600
+     */
+    pageTokenMaxAge?: number
   }
   /**
    * Google Static Maps proxy configuration.
@@ -514,6 +530,8 @@ export default defineNuxtModule<ModuleOptions>({
     const composables = [
       'useScript',
       'useScriptEventPage',
+      'useScriptProxyToken',
+      'useScriptProxyUrl',
       'useScriptTriggerConsent',
       'useScriptTriggerElement',
       'useScriptTriggerIdleTimeout',
@@ -902,7 +920,17 @@ export default defineNuxtModule<ModuleOptions>({
         logger.warn(`[security] Generated an in-memory ${PROXY_SECRET_ENV_KEY} (could not write .env). Signed URLs will break across restarts.`)
 
       if (proxySecretResolved?.secret) {
-        ;(nuxt.options.runtimeConfig['nuxt-scripts'] as any).proxySecret = proxySecretResolved.secret
+        const scriptsRuntime = nuxt.options.runtimeConfig['nuxt-scripts'] as Record<string, unknown>
+        scriptsRuntime.proxySecret = proxySecretResolved.secret
+        if (config.security?.pageTokenMaxAge !== undefined)
+          scriptsRuntime.pageTokenMaxAge = config.security.pageTokenMaxAge
+        // Emit a per-request page token during SSR so client-driven proxy
+        // calls (reactive fetches, dynamic image helpers) authenticate via
+        // `_pt` + `_ts` without needing each URL to be HMAC-signed up front.
+        addPlugin({
+          src: await resolvePath('./runtime/plugins/proxy-token.server'),
+          mode: 'server',
+        })
       }
       else if (!nuxt.options.dev) {
         logger.warn(

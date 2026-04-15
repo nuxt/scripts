@@ -3,7 +3,8 @@ import type { HTMLAttributes } from 'vue'
 import type { XEmbedTweetData } from '../registry/x-embed'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
-import { formatCount, formatTweetDate, proxyXImageUrl } from '../registry/x-embed'
+import { useScriptProxyUrl } from '../composables/useScriptProxyUrl'
+import { formatCount, formatTweetDate } from '../registry/x-embed'
 import { requireRegistryEndpoint, scriptsPrefix } from '../utils'
 
 const props = withDefaults(defineProps<{
@@ -41,11 +42,13 @@ const resolvedImageProxyEndpoint = computed((): string => props.imageProxyEndpoi
 if (!props.apiEndpoint)
   requireRegistryEndpoint('ScriptXEmbed', 'xEmbed')
 
+const proxyUrl = useScriptProxyUrl()
+
 const cacheKey = computed(() => `x-embed-${props.tweetId}`)
 
 const { data: tweet, status, error } = useAsyncData<XEmbedTweetData>(
   cacheKey,
-  () => $fetch(`${apiEndpoint.value}?id=${props.tweetId}`),
+  () => $fetch(proxyUrl(apiEndpoint.value, { id: props.tweetId })),
 )
 
 const slotProps = computed(() => {
@@ -53,14 +56,15 @@ const slotProps = computed(() => {
     return null
 
   const t = tweet.value
+  // Image URLs arrive from `/embed/x` already pointed at the proxy endpoint.
+  // When signing is enabled they include `&sig=...`; otherwise plain `?url=...`.
   return {
     // Raw data
     tweet: t,
     // User info
     userName: t.user.name,
     userHandle: t.user.screen_name,
-    userAvatar: proxyXImageUrl(t.user.profile_image_url_https, resolvedImageProxyEndpoint.value),
-    userAvatarOriginal: t.user.profile_image_url_https,
+    userAvatar: t.user.profile_image_url_https,
     isVerified: t.user.verified || t.user.is_blue_verified,
     // Tweet content
     text: t.text,
@@ -71,15 +75,15 @@ const slotProps = computed(() => {
     likesFormatted: formatCount(t.favorite_count),
     replies: t.conversation_count,
     repliesFormatted: formatCount(t.conversation_count),
-    // Media
+    // Media (already proxied)
     photos: t.photos?.map(p => ({
       ...p,
-      proxiedUrl: proxyXImageUrl(p.url, resolvedImageProxyEndpoint.value),
+      proxiedUrl: p.url,
     })),
     video: t.video
       ? {
           ...t.video,
-          posterProxied: proxyXImageUrl(t.video.poster, resolvedImageProxyEndpoint.value),
+          posterProxied: t.video.poster,
         }
       : null,
     // Links
@@ -90,8 +94,9 @@ const slotProps = computed(() => {
     // Reply context
     isReply: !!t.parent,
     replyToUser: t.parent?.user.screen_name,
-    // Helpers
-    proxyImage: (url: string) => proxyXImageUrl(url, resolvedImageProxyEndpoint.value),
+    // Helpers — proxy an arbitrary URL through the image endpoint at runtime.
+    // Uses the page token emitted during SSR so client-generated URLs validate.
+    proxyImage: (url: string) => proxyUrl(resolvedImageProxyEndpoint.value, { url }),
   }
 })
 

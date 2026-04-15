@@ -1,5 +1,6 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { scriptsPrefix, useRegistryScript } from '#nuxt-scripts/utils'
+import { useScriptProxyUrl } from '../composables/useScriptProxyUrl'
 import { GravatarOptions } from './schemas'
 
 export { GravatarOptions } from './schemas'
@@ -26,13 +27,11 @@ export function useScriptGravatar<T extends GravatarApi>(_options?: GravatarInpu
     const defaultImg = options?.default ?? 'mp'
     const rating = options?.rating ?? 'g'
 
-    const buildQuery = (overrides?: { size?: number, default?: string, rating?: string }) => {
-      const params = new URLSearchParams()
-      params.set('s', String(overrides?.size ?? size))
-      params.set('d', overrides?.default ?? defaultImg)
-      params.set('r', overrides?.rating ?? rating)
-      return params.toString()
-    }
+    const buildQuery = (overrides?: { size?: number, default?: string, rating?: string }) => ({
+      s: overrides?.size ?? size,
+      d: overrides?.default ?? defaultImg,
+      r: overrides?.rating ?? rating,
+    })
 
     return {
       scriptInput: {
@@ -42,13 +41,13 @@ export function useScriptGravatar<T extends GravatarApi>(_options?: GravatarInpu
       scriptOptions: {
         use: () => {
           const prefix = scriptsPrefix()
+          const proxyUrl = useScriptProxyUrl()
+          const path = `${prefix}/proxy/gravatar`
           return {
-            getAvatarUrl: (hash: string, overrides?: { size?: number, default?: string, rating?: string }) => {
-              return `${prefix}/proxy/gravatar?hash=${encodeURIComponent(hash)}&${buildQuery(overrides)}`
-            },
-            getAvatarUrlFromEmail: (email: string, overrides?: { size?: number, default?: string, rating?: string }) => {
-              return `${prefix}/proxy/gravatar?email=${encodeURIComponent(email)}&${buildQuery(overrides)}`
-            },
+            getAvatarUrl: (hash: string, overrides?: { size?: number, default?: string, rating?: string }) =>
+              proxyUrl(path, { hash, ...buildQuery(overrides) }),
+            getAvatarUrlFromEmail: (email: string, overrides?: { size?: number, default?: string, rating?: string }) =>
+              proxyUrl(path, { email, ...buildQuery(overrides) }),
           }
         },
       },

@@ -914,7 +914,7 @@
       {
         "name": "TikTokPixelApi",
         "kind": "interface",
-        "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n    /** Opt user in to tracking. Available after the script loads. */\n    grantConsent: () => void\n    /** Opt user out of tracking. Available after the script loads. */\n    revokeConsent: () => void\n    /** Defer consent until an explicit grant/revoke. Available after the script loads. */\n    holdConsent: () => void\n  }\n}"
+        "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n    /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */\n    grantConsent: () => void\n    /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */\n    revokeConsent: () => void\n    /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */\n    holdConsent: () => void\n  }\n}"
       },
       {
         "name": "TikTokPixelOptions",

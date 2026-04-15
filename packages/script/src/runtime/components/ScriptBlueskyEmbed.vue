@@ -3,7 +3,8 @@ import type { HTMLAttributes } from 'vue'
 import type { BlueskyEmbedPostData } from '../registry/bluesky-embed'
 import { useAsyncData } from 'nuxt/app'
 import { computed } from 'vue'
-import { extractBlueskyPostId, facetsToHtml, formatBlueskyDate, formatCount, proxyBlueskyImageUrl } from '../registry/bluesky-embed'
+import { useScriptProxyUrl } from '../composables/useScriptProxyUrl'
+import { extractBlueskyPostId, facetsToHtml, formatBlueskyDate, formatCount } from '../registry/bluesky-embed'
 import { requireRegistryEndpoint, scriptsPrefix } from '../utils'
 
 const props = withDefaults(defineProps<{
@@ -42,12 +43,14 @@ const resolvedImageProxyEndpoint = computed((): string => props.imageProxyEndpoi
 if (!props.apiEndpoint)
   requireRegistryEndpoint('ScriptBlueskyEmbed', 'blueskyEmbed')
 
+const proxyUrl = useScriptProxyUrl()
+
 const postId = computed(() => extractBlueskyPostId(props.postUrl))
 const cacheKey = computed(() => `bluesky-embed-${postId.value?.actor}-${postId.value?.rkey}`)
 
 const { data: post, status, error } = useAsyncData<BlueskyEmbedPostData>(
   cacheKey,
-  () => $fetch(`${resolvedApiEndpoint.value}?url=${encodeURIComponent(props.postUrl)}`),
+  () => $fetch(proxyUrl(resolvedApiEndpoint.value, { url: props.postUrl })),
 )
 
 const slotProps = computed(() => {
@@ -55,14 +58,14 @@ const slotProps = computed(() => {
     return null
 
   const p = post.value
+  // Image URLs arrive from `/embed/bluesky` already pointed at the proxy endpoint.
   return {
     // Raw data
     post: p,
     // Author info
     displayName: p.author.displayName,
     handle: p.author.handle,
-    avatar: proxyBlueskyImageUrl(p.author.avatar, resolvedImageProxyEndpoint.value),
-    avatarOriginal: p.author.avatar,
+    avatar: p.author.avatar,
     isVerified: p.author.verification?.verifiedStatus === 'valid',
     // Post content
     text: p.record.text,
@@ -79,10 +82,10 @@ const slotProps = computed(() => {
     repliesFormatted: formatCount(p.replyCount),
     quotes: p.quoteCount,
     quotesFormatted: formatCount(p.quoteCount),
-    // Media
+    // Media (already proxied)
     images: p.embed?.images?.map(img => ({
-      thumb: proxyBlueskyImageUrl(img.thumb, resolvedImageProxyEndpoint.value),
-      fullsize: proxyBlueskyImageUrl(img.fullsize, resolvedImageProxyEndpoint.value),
+      thumb: img.thumb,
+      fullsize: img.fullsize,
       alt: img.alt,
       aspectRatio: img.aspectRatio,
     })),
@@ -91,16 +94,15 @@ const slotProps = computed(() => {
           uri: p.embed.external.uri,
           title: p.embed.external.title,
           description: p.embed.external.description,
-          thumb: p.embed.external.thumb
-            ? proxyBlueskyImageUrl(p.embed.external.thumb, resolvedImageProxyEndpoint.value)
-            : undefined,
+          thumb: p.embed.external.thumb,
         }
       : undefined,
     // Links
     postUrl: props.postUrl,
     authorUrl: `https://bsky.app/profile/${p.author.handle}`,
-    // Helpers
-    proxyImage: (url: string) => proxyBlueskyImageUrl(url, resolvedImageProxyEndpoint.value),
+    // Helpers — proxy an arbitrary URL through the image endpoint at runtime.
+    // Uses the page token emitted during SSR so client-generated URLs validate.
+    proxyImage: (url: string) => proxyUrl(resolvedImageProxyEndpoint.value, { url }),
   }
 })
 

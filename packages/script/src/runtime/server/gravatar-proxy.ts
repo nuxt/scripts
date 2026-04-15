@@ -1,8 +1,13 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
-import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { createCachedBinaryFetch } from './utils/cached-upstream'
 import { withSigning } from './utils/withSigning'
+
+// Gravatar avatars keyed on `hash + sizing/default/rating` are essentially
+// immutable for the hour timescale; a 1-hour cache balances freshness (users
+// rotating avatars) against origin-shielding upstream traffic.
+const cachedGravatarFetch = createCachedBinaryFetch('nuxt-scripts-gravatar', 3600)
 
 export default withSigning(defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
@@ -39,10 +44,8 @@ export default withSigning(defineEventHandler(async (event) => {
     r: rating,
   })
 
-  const response = await $fetch.raw(gravatarUrl, {
-    headers: {
-      'User-Agent': 'Nuxt Scripts Gravatar Proxy',
-    },
+  const result = await cachedGravatarFetch(gravatarUrl, {
+    headers: { 'User-Agent': 'Nuxt Scripts Gravatar Proxy' },
   }).catch((error: any) => {
     throw createError({
       statusCode: error.statusCode || 500,
@@ -51,9 +54,9 @@ export default withSigning(defineEventHandler(async (event) => {
   })
 
   const cacheMaxAge = proxyConfig?.cacheMaxAge ?? 3600
-  setHeader(event, 'Content-Type', response.headers.get('content-type') || 'image/jpeg')
+  setHeader(event, 'Content-Type', result.contentType || 'image/jpeg')
   setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
   setHeader(event, 'Vary', 'Accept-Encoding')
 
-  return response._data
+  return result.body
 }))

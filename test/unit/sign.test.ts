@@ -230,6 +230,19 @@ describe('verifyProxyToken', () => {
   it('rejects a token verified with the wrong secret', () => {
     expect(verifyProxyToken(token, ts, 'wrong-secret')).toBe(false)
   })
+
+  it('rejects an empty token', () => {
+    expect(verifyProxyToken('', ts, SECRET)).toBe(false)
+  })
+
+  it('rejects a non-numeric timestamp (NaN)', () => {
+    expect(verifyProxyToken(token, Number.NaN, SECRET)).toBe(false)
+  })
+
+  it('rejects a timestamp that is not a number type', () => {
+    // Guards against string ts leaking through at the boundary
+    expect(verifyProxyToken(token, 'not-a-number' as unknown as number, SECRET)).toBe(false)
+  })
 })
 
 describe('verifyProxyRequest', () => {
@@ -286,5 +299,44 @@ describe('verifyProxyRequest', () => {
     const signedUrl = buildSignedProxyUrl('/_scripts/proxy/x', { center: 'Sydney' }, SECRET)
     const event = mockEvent(`${signedUrl}&${PAGE_TOKEN_PARAM}=${pageToken}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
     expect(verifyProxyRequest(event, SECRET)).toBe(true)
+  })
+
+  it('rejects a URL signature built with the wrong secret', () => {
+    // Valid structure/length but signed under a different secret
+    const badUrl = buildSignedProxyUrl('/_scripts/proxy/x', { center: 'Sydney' }, 'other-secret')
+    const event = mockEvent(badUrl)
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('rejects a signature valid for a different path (cross-endpoint replay defense)', () => {
+    // Sign for path A, then present the same sig on path B with identical query
+    const query = { center: 'Sydney' }
+    const sigForA = signProxyUrl('/_scripts/proxy/a', query, SECRET)
+    const event = mockEvent(`/_scripts/proxy/b?center=Sydney&${SIG_PARAM}=${sigForA}`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('rejects a page token that does not match the given timestamp', () => {
+    const ts = Math.floor(Date.now() / 1000)
+    const tokenForOtherTs = generateProxyToken(SECRET, ts - 500)
+    const event = mockEvent(`/_scripts/proxy/x?${PAGE_TOKEN_PARAM}=${tokenForOtherTs}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('rejects a page token with a non-numeric timestamp', () => {
+    const ts = Math.floor(Date.now() / 1000)
+    const token = generateProxyToken(SECRET, ts)
+    const event = mockEvent(`/_scripts/proxy/x?${PAGE_TOKEN_PARAM}=${token}&${PAGE_TOKEN_TS_PARAM}=not-a-number`)
+    expect(verifyProxyRequest(event, SECRET)).toBe(false)
+  })
+
+  it('respects a custom maxAge override (tighter than the default)', () => {
+    // Token is 10 seconds old; default PAGE_TOKEN_MAX_AGE (3600) would accept it,
+    // but a 5-second maxAge must reject it.
+    const ts = Math.floor(Date.now() / 1000) - 10
+    const token = generateProxyToken(SECRET, ts)
+    const event = mockEvent(`/_scripts/proxy/x?${PAGE_TOKEN_PARAM}=${token}&${PAGE_TOKEN_TS_PARAM}=${ts}`)
+    expect(verifyProxyRequest(event, SECRET, 3600)).toBe(true)
+    expect(verifyProxyRequest(event, SECRET, 5)).toBe(false)
   })
 })

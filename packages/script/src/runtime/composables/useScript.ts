@@ -43,11 +43,22 @@ function toNetworkRequest(entry: PerformanceResourceTiming, proxyPrefix: string)
   }
 }
 
-function createDomainMatcher(domains: Set<string>, proxyPrefix: string) {
+function createDomainMatcher(domains: Set<string>, proxyPrefix: string, scriptSrc: string | undefined) {
   const localHostname = window.location.hostname
+  const scriptUrl = (() => {
+    if (!scriptSrc)
+      return ''
+    try {
+      return new URL(scriptSrc, window.location.origin).href
+    }
+    catch { return '' }
+  })()
   return function matchesScript(entry: PerformanceResourceTiming): boolean {
     try {
       const entryUrl = new URL(entry.name, window.location.origin)
+      // Always match the script's own request, regardless of origin
+      if (scriptUrl && entryUrl.href === scriptUrl)
+        return true
       // Skip same-origin hostname matching to avoid capturing unrelated
       // same-origin requests (API calls, images, HMR, etc.)
       if (entryUrl.hostname !== localHostname && domains.has(entryUrl.hostname))
@@ -71,12 +82,13 @@ function observeNetworkRequests(
   payload: NuxtDevToolsScriptInstance,
   domains: Set<string>,
   onUpdate: () => void,
+  scriptSrc?: string,
 ): () => void {
   if (typeof PerformanceObserver === 'undefined')
     return () => {}
 
   const proxyPrefix = resolveProxyPrefix()
-  const matchesScript = createDomainMatcher(domains, proxyPrefix)
+  const matchesScript = createDomainMatcher(domains, proxyPrefix, scriptSrc)
   const seen = new Set<string>()
 
   function entryKey(entry: PerformanceResourceTiming): string {
@@ -198,7 +210,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
       }
 
-      disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+      disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, src)
       syncScripts()
     }
 
@@ -348,7 +360,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         ...(scriptHostname ? [scriptHostname] : []),
         ...(options.devtools?.domains || []),
       ])
-      let disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+      let disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, input.src)
       // Clean up observer when script is removed, but keep it alive across reload()
       const _origRemove = instance.remove
       const _origReload = instance.reload
@@ -360,7 +372,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         // Disconnect before reload, reconnect after so new network entries are tracked
         disconnectObserver()
         const result = await _origReload()
-        disconnectObserver = observeNetworkRequests(payload, domains, syncScripts)
+        disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, input.src)
         return result
       }
 

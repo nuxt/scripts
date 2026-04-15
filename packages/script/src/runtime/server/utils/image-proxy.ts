@@ -1,5 +1,5 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { $fetch } from 'ofetch'
+import { createCachedBinaryFetch } from './cached-upstream'
 import { withSigning } from './withSigning'
 
 const AMP_RE = /&amp;/g
@@ -14,6 +14,8 @@ export interface ImageProxyConfig {
   followRedirects?: boolean
   /** Decode &amp; in URL query parameter */
   decodeAmpersands?: boolean
+  /** Unique name for the nitro cache group (defaults to derived from allowedDomains). */
+  cacheName?: string
 }
 
 export function createImageProxyHandler(config: ImageProxyConfig) {
@@ -24,7 +26,12 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     contentType = 'image/jpeg',
     followRedirects = true,
     decodeAmpersands = false,
+    cacheName = Array.isArray(config.allowedDomains)
+      ? `nuxt-scripts-img:${config.allowedDomains[0] || 'default'}`
+      : 'nuxt-scripts-img:custom',
   } = config
+
+  const cachedFetch = createCachedBinaryFetch(cacheName, cacheMaxAge)
 
   return withSigning(defineEventHandler(async (event) => {
     const query = getQuery(event)
@@ -73,7 +80,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     if (userAgent)
       headers['User-Agent'] = userAgent
 
-    const response = await $fetch.raw(url, {
+    const result = await cachedFetch(url, {
       timeout: 5000,
       redirect: followRedirects ? 'follow' : 'manual',
       ignoreResponseError: !followRedirects,
@@ -85,16 +92,16 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
       })
     })
 
-    if (!followRedirects && response.status >= 300 && response.status < 400) {
+    if (!followRedirects && result.status >= 300 && result.status < 400) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Redirects not allowed',
       })
     }
 
-    setHeader(event, 'Content-Type', response.headers.get('content-type') || contentType)
+    setHeader(event, 'Content-Type', result.contentType || contentType)
     setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
 
-    return response._data
+    return result.body
   }))
 }

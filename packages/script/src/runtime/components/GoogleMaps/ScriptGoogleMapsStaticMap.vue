@@ -7,6 +7,7 @@ import { defu } from 'defu'
 import { useHead, useRuntimeConfig } from 'nuxt/app'
 import { withQuery } from 'ufo'
 import { computed, onMounted, ref } from 'vue'
+import { useScriptProxyUrl } from '../../composables/useScriptProxyUrl'
 </script>
 
 <script lang="ts" setup>
@@ -115,6 +116,7 @@ const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticM
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
 // Only use the proxy when no explicit API key is provided and the proxy is enabled
 const useProxy = !props.apiKey && proxyConfig?.enabled
+const proxyUrl = useScriptProxyUrl()
 
 if (import.meta.dev) {
   if (!apiKey && !useProxy)
@@ -219,11 +221,12 @@ const src = computed(() => {
       delete query[key]
   }
 
-  const baseUrl = useProxy
-    ? '/_scripts/proxy/google-static-maps'
-    : 'https://maps.googleapis.com/maps/api/staticmap'
-
-  return withQuery(baseUrl, query as QueryObject)
+  if (useProxy) {
+    // Route through the module's signed proxy. Client-generated URLs attach a
+    // page token from the SSR payload so `withSigning` lets them through.
+    return proxyUrl('/_scripts/proxy/google-static-maps', query)
+  }
+  return withQuery('https://maps.googleapis.com/maps/api/staticmap', query as QueryObject)
 })
 
 const imgAttributes = computed(() => {

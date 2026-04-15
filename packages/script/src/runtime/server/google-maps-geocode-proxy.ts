@@ -1,8 +1,17 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
-import { $fetch } from 'ofetch'
 import { withQuery } from 'ufo'
+import { createCachedJsonFetch } from './utils/cached-upstream'
 import { withSigning } from './utils/withSigning'
+
+// Addresses rarely change; a 30-day cache avoids billable geocode lookups for
+// the same address on every page render. Keyed on the upstream URL (the API
+// key is server-injected, so identical across requests).
+const cachedGeocodeFetch = createCachedJsonFetch<any>(
+  'nuxt-scripts-geocode',
+  2592000,
+  url => url,
+)
 
 export default withSigning(defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
@@ -24,10 +33,8 @@ export default withSigning(defineEventHandler(async (event) => {
     key: apiKey,
   })
 
-  const data = await $fetch(geocodeUrl, {
-    headers: {
-      'User-Agent': 'Nuxt Scripts Google Geocode Proxy',
-    },
+  const data = await cachedGeocodeFetch(geocodeUrl, {
+    headers: { 'User-Agent': 'Nuxt Scripts Google Geocode Proxy' },
   }).catch((error: any) => {
     throw createError({
       statusCode: error.statusCode || 500,

@@ -25,12 +25,15 @@
 import type { H3Event } from 'h3'
 import { createHmac } from 'node:crypto'
 import { getQuery } from 'h3'
+import {
+  PAGE_TOKEN_MAX_AGE,
+  PAGE_TOKEN_PARAM,
+  PAGE_TOKEN_TS_PARAM,
+  SIG_LENGTH,
+  SIG_PARAM,
+} from './sign-constants'
 
-/** Query param name for the signature. Chosen to be unlikely to collide with upstream APIs. */
-export const SIG_PARAM = 'sig'
-
-/** Length of the hex signature (16 chars = 64 bits). */
-export const SIG_LENGTH = 16
+export { PAGE_TOKEN_MAX_AGE, PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, SIG_LENGTH, SIG_PARAM }
 
 /**
  * Canonicalize a query object into a deterministic string suitable for HMAC input.
@@ -112,15 +115,6 @@ export function buildSignedProxyUrl(path: string, query: Record<string, unknown>
 // ---------------------------------------------------------------------------
 // Page tokens: stateless, short-lived access tokens for client-side proxy use
 // ---------------------------------------------------------------------------
-
-/** Query param name for the page token. */
-export const PAGE_TOKEN_PARAM = '_pt'
-
-/** Query param name for the page token timestamp. */
-export const PAGE_TOKEN_TS_PARAM = '_ts'
-
-/** Default max age for page tokens in seconds (1 hour). */
-export const PAGE_TOKEN_MAX_AGE = 3600
 
 /**
  * Generate a page token that authorizes client-side proxy requests.

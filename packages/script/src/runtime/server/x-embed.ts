@@ -1,5 +1,7 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { $fetch } from 'ofetch'
+import { useRuntimeConfig } from 'nitropack/runtime'
+import { createCachedJsonFetch } from './utils/cached-upstream'
+import { rewriteTweetImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'
 
 interface TweetData {
@@ -45,6 +47,22 @@ interface TweetData {
 }
 
 const TWEET_ID_RE = /^\d+$/
+const EMBED_X_SUFFIX_RE = /\/embed\/x$/
+const TWEET_ID_FROM_URL_RE = /[?&]id=(\d+)/
+
+// Tweet data is semi-fresh; 10 minutes matches the Cache-Control already sent
+// to CDNs and dedupes the syndication CDN hit when the same tweet is embedded
+// on multiple pages.
+const cachedTweetFetch = createCachedJsonFetch<TweetData>(
+  'nuxt-scripts-x-tweet',
+  600,
+  (url) => {
+    // Syndication URL includes a random anti-cache token per request; key on
+    // the tweet ID only so renders dedupe.
+    const match = url.match(TWEET_ID_FROM_URL_RE)
+    return match?.[1] || url
+  },
+)
 
 export default withSigning(defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -62,7 +80,7 @@ export default withSigning(defineEventHandler(async (event) => {
     .join('')
 
   const params = new URLSearchParams({ id: tweetId, token: randomToken })
-  const tweetData = await $fetch<TweetData>(
+  const tweetRaw = await cachedTweetFetch(
     `https://cdn.syndication.twimg.com/tweet-result?${params.toString()}`,
     {
       headers: {
@@ -76,6 +94,18 @@ export default withSigning(defineEventHandler(async (event) => {
       statusMessage: error.statusMessage || 'Failed to fetch tweet',
     })
   })
+
+  // Rewrite raw CDN image URLs to proxied (and, when signing is enabled,
+  // HMAC-signed) URLs so the client can load them through the site origin
+  // without triggering the `withSigning` 403. Clone first — the cached tweet
+  // is a shared reference under the memory driver and mutation would corrupt
+  // subsequent cache hits.
+  const tweetData = structuredClone(tweetRaw) as TweetData
+  const handlerPath = event.path?.split('?')[0] || ''
+  const prefix = handlerPath.replace(EMBED_X_SUFFIX_RE, '') || '/_scripts'
+  const imagePath = `${prefix}/embed/x-image`
+  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
+  rewriteTweetImages(tweetData, imagePath, secret)
 
   // Cache for 10 minutes
   setHeader(event, 'Content-Type', 'application/json')
