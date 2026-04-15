@@ -569,10 +569,32 @@ export default defineNuxtModule<ModuleOptions>({
         const script = scripts.find(s => s.registryKey === key)
         if (!script?.schema)
           continue
-        const requiredFields = extractRequiredFields(script.schema)
-        const missing = requiredFields.filter(f => !input[f])
-        if (missing.length) {
-          logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
+        // Component-only scripts (e.g. xEmbed, instagramEmbed, blueskyEmbed) have
+        // required fields that are per-instance props on the <Script*> component.
+        // Global registry config is still valid for shared defaults (proxy endpoints
+        // etc.), but `trigger` has no effect since the component manages its own
+        // lifecycle, and required fields cannot be satisfied from nuxt.config.
+        const isComponentOnly = !script.import
+        if (isComponentOnly) {
+          if (scriptOptions && 'trigger' in scriptOptions && scriptOptions.trigger !== false) {
+            const pascal = key.charAt(0).toUpperCase() + key.slice(1)
+            logger.warn(
+              `[nuxt-scripts] registry.${key}: \`trigger\` has no effect on component-only scripts. `
+              + `Render <Script${pascal}> in your template to load the embed.`,
+            )
+          }
+          continue
+        }
+        // Required-field validation only applies when the script will auto-load.
+        // Without a trigger the user supplies fields later via the composable call,
+        // so a missing `id` etc. in nuxt.config isn't a problem.
+        const willAutoLoad = scriptOptions && 'trigger' in scriptOptions && scriptOptions.trigger !== false
+        if (willAutoLoad) {
+          const requiredFields = extractRequiredFields(script.schema)
+          const missing = requiredFields.filter(f => !input[f])
+          if (missing.length) {
+            logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
+          }
         }
         // Warn when a user provides input config but no explicit trigger.
         // In v0 all configured scripts auto-loaded; in v1 a trigger is required.
