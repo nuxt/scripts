@@ -454,8 +454,9 @@ export default defineNuxtModule<ModuleOptions>({
     // Normalize registry entries to [input, scriptOptions?] tuple form
     // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
     if (config.registry) {
+      const componentOnlyKeys = new Set(scripts.filter(s => !s.import).map(s => s.registryKey!))
       migrateDeprecatedRegistryKeys(config.registry as Record<string, any>, msg => logger.warn(msg))
-      normalizeRegistryConfig(config.registry as Record<string, any>, msg => logger.warn(msg))
+      normalizeRegistryConfig(config.registry as Record<string, any>, msg => logger.warn(msg), componentOnlyKeys)
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
       // Auto-populate env var defaults for enabled registry scripts so that

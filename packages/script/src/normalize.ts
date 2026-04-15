@@ -84,6 +84,7 @@ export function migrateDeprecatedRegistryKeys(
 export function normalizeRegistryConfig(
   registry: Record<string, unknown>,
   warn?: (msg: string) => void,
+  componentOnlyKeys?: Set<string>,
 ): void {
   for (const key of Object.keys(registry)) {
     const entry = registry[key]
@@ -92,6 +93,12 @@ export function normalizeRegistryConfig(
       continue
     }
     if (entry === true) {
+      // Component-only scripts (embeds) have no composable; `true` means
+      // "enable infrastructure" (server endpoints) with no trigger semantics.
+      if (componentOnlyKeys?.has(key)) {
+        registry[key] = [{}] satisfies NormalizedRegistryEntry
+        continue
+      }
       warn?.(`[nuxt-scripts] registry.${key}: \`true\` shorthand is deprecated. Use \`{ trigger: 'onNuxtReady' }\` instead.`)
       registry[key] = [{}, { trigger: 'onNuxtReady' }] satisfies NormalizedRegistryEntry
       continue

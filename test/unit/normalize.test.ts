@@ -17,6 +17,14 @@ describe('normalizeRegistryConfig', () => {
     expect(warn.mock.calls[0][0]).toContain('deprecated')
   })
 
+  it('normalizes true for component-only scripts to [{}] with no warning', () => {
+    const warn = vi.fn()
+    const registry: Record<string, any> = { xEmbed: true }
+    normalizeRegistryConfig(registry, warn, new Set(['xEmbed']))
+    expect(registry.xEmbed).toEqual([{}])
+    expect(warn).not.toHaveBeenCalled()
+  })
+
   it('throws on "proxy-only" with migration message', () => {
     const registry: Record<string, any> = { ga: 'proxy-only' }
     expect(() => normalizeRegistryConfig(registry)).toThrowError(/proxy-only.*no longer supported/)
