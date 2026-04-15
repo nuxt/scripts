@@ -48,11 +48,11 @@ export interface TikTokPixelApi {
     push: TtqFns
     loaded: boolean
     queue: any[]
-    /** Opt user in to tracking. Available after the script loads. */
+    /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */
     grantConsent: () => void
-    /** Opt user out of tracking. Available after the script loads. */
+    /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */
     revokeConsent: () => void
-    /** Defer consent until an explicit grant/revoke. Available after the script loads. */
+    /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */
     holdConsent: () => void
   }
 }
@@ -109,7 +109,7 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
           ttq.loaded = true
           ttq.queue = []
           // Queue consent stubs so pre-load `ttq.grantConsent()` / `ttq.revokeConsent()` work.
-          // The real bat.js replaces these with live bindings once loaded.
+          // The real events.js replaces these with live bindings once loaded.
           const consentMethods = ['grantConsent', 'revokeConsent', 'holdConsent'] as const
           for (const name of consentMethods) {
             ;(ttq as any)[name] = function (...params: any[]) {
