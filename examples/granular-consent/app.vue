@@ -2,46 +2,49 @@
 const showBanner = ref(true)
 const showPreferences = ref(false)
 
-// Separate consent triggers for each category
 const analyticsConsent = useScriptTriggerConsent()
 const marketingConsent = useScriptTriggerConsent()
 const functionalConsent = useScriptTriggerConsent()
 
-// Track user preferences
 const preferences = reactive({
   analytics: false,
   marketing: false,
   functional: false,
 })
 
-// Analytics: Google Analytics
-useScriptGoogleAnalytics({
+const ga = useScriptGoogleAnalytics({
   id: 'G-DEMO123456',
-  scriptOptions: {
-    trigger: analyticsConsent,
+  defaultConsent: {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
   },
+  scriptOptions: { trigger: analyticsConsent },
 })
 
-// Marketing: Meta Pixel
-useScriptMetaPixel({
+const meta = useScriptMetaPixel({
   id: '1234567890',
-  scriptOptions: {
-    trigger: marketingConsent,
-  },
+  defaultConsent: 'denied',
+  scriptOptions: { trigger: marketingConsent },
 })
 
-// Functional: Crisp Chat
 useScriptCrisp({
   id: 'demo-crisp-id',
-  scriptOptions: {
-    trigger: functionalConsent,
-  },
+  scriptOptions: { trigger: functionalConsent },
 })
 
 function acceptAll() {
   preferences.analytics = true
   preferences.marketing = true
   preferences.functional = true
+  ga.consent.update({
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
+    analytics_storage: 'granted',
+  })
+  meta.consent.grant()
   analyticsConsent.accept()
   marketingConsent.accept()
   functionalConsent.accept()
@@ -53,6 +56,16 @@ function declineAll() {
 }
 
 function savePreferences() {
+  ga.consent.update({
+    analytics_storage: preferences.analytics ? 'granted' : 'denied',
+    ad_storage: preferences.marketing ? 'granted' : 'denied',
+    ad_user_data: preferences.marketing ? 'granted' : 'denied',
+    ad_personalization: preferences.marketing ? 'granted' : 'denied',
+  })
+  if (preferences.marketing)
+    meta.consent.grant()
+  else
+    meta.consent.revoke()
   if (preferences.analytics)
     analyticsConsent.accept()
   if (preferences.marketing)
@@ -72,7 +85,7 @@ function savePreferences() {
           Granular Consent Example
         </h1>
         <p class="text-gray-600 dark:text-gray-400 mb-8">
-          This example shows per-category consent with separate triggers for analytics, marketing, and functional scripts.
+          Per-category consent wired explicitly: each script has its own trigger gate and its own vendor-native <code>consent</code> API for runtime updates.
         </p>
 
         <div class="space-y-4">
@@ -108,7 +121,7 @@ function savePreferences() {
               </div>
             </template>
             <p class="text-sm text-gray-600 dark:text-gray-400">
-              Status: {{ preferences.functional ? 'Consented' : 'Pending consent' }}
+              Status: {{ functionalConsent.consented.value ? 'Consented' : 'Pending consent' }}
             </p>
           </UCard>
         </div>

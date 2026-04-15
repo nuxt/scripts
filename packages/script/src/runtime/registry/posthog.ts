@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import type { PostHog, PostHogConfig } from 'posthog-js'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
@@ -26,8 +26,15 @@ declare global {
   }
 }
 
-export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) {
-  return useRegistryScript<T, typeof PostHogOptions>('posthog', (options) => {
+export interface PostHogConsent {
+  /** Call `posthog.opt_in_capturing()`. */
+  optIn: () => void
+  /** Call `posthog.opt_out_capturing()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */
+  optOut: () => void
+}
+
+export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput): UseScriptContext<T, PostHogConsent> {
+  const instance = useRegistryScript<T, typeof PostHogOptions>('posthog', (options) => {
     return {
       scriptMode: 'npm', // Use NPM mode - no external script tag
       schema: import.meta.dev ? PostHogOptions : undefined,
@@ -93,6 +100,10 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
                 config.capture_pageleave = options.capturePageleave
               if (typeof options?.disableSessionRecording === 'boolean')
                 config.disable_session_recording = options.disableSessionRecording
+              // Start opted-out if consent is denied, so init doesn't capture anything
+              // until the user grants consent.
+              if (options?.defaultConsent === 'opt-out')
+                config.opt_out_capturing_by_default = true
 
               const instance = posthog.init(options.apiKey, config)
               if (!instance) {
@@ -102,6 +113,9 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
               }
 
               window.posthog = instance
+              // Apply explicit opt-in AFTER init (opt-out is handled by init config above).
+              if (options?.defaultConsent === 'opt-in')
+                instance.opt_in_capturing?.()
               // Flush queued calls now that PostHog is ready
               if (window._posthogQueue && window._posthogQueue.length > 0) {
                 window._posthogQueue.forEach(q => (window.posthog as any)[q.prop]?.(...q.args))
@@ -119,5 +133,13 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput) 
           return window.__posthogInitPromise
         },
     }
-  }, _options as RegistryScriptInput<typeof PostHogOptions>)
+  }, _options as RegistryScriptInput<typeof PostHogOptions>) as UseScriptContext<T, PostHogConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      optIn: () => (instance.proxy as unknown as PostHogApi).posthog?.opt_in_capturing?.(),
+      optOut: () => (instance.proxy as unknown as PostHogApi).posthog?.opt_out_capturing?.(),
+    }
+  }
+  return instance
 }

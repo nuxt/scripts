@@ -50,12 +50,39 @@ export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
-export type UseScriptContext<T extends Record<symbol | string, any>> = VueScriptInstance<T> & {
+// -- Consent types --
+
+/**
+ * GCMv2 consent category value.
+ * @see https://developers.google.com/tag-platform/security/guides/consent
+ */
+export type ConsentCategoryValue = 'granted' | 'denied'
+
+/**
+ * Canonical GCMv2 consent state shape used by vendors that natively consume
+ * Consent Mode v2 (Google Analytics, Google Tag Manager, Bing UET).
+ */
+export interface ConsentState {
+  ad_storage?: ConsentCategoryValue
+  ad_user_data?: ConsentCategoryValue
+  ad_personalization?: ConsentCategoryValue
+  analytics_storage?: ConsentCategoryValue
+  functionality_storage?: ConsentCategoryValue
+  personalization_storage?: ConsentCategoryValue
+  security_storage?: ConsentCategoryValue
+}
+
+export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptInstance<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
    * after SPA navigation (e.g., DOM-scanning scripts like iubenda).
    */
   reload: () => Promise<T>
+  /**
+   * Vendor-native consent controls attached by registry scripts.
+   * Shape depends on the vendor (GCMv2 update, binary grant/revoke, three-state, etc.).
+   */
+  consent?: C
 }
 
 export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = Omit<UseScriptOptions<T>, 'trigger'> & {

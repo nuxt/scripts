@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { TikTokPixelOptions } from './schemas'
@@ -48,6 +48,12 @@ export interface TikTokPixelApi {
     push: TtqFns
     loaded: boolean
     queue: any[]
+    /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */
+    grantConsent: () => void
+    /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */
+    revokeConsent: () => void
+    /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */
+    holdConsent: () => void
   }
 }
 
@@ -61,8 +67,17 @@ export { TikTokPixelOptions }
 
 export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, true, false>
 
-export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput) {
-  return useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({
+export interface TikTokPixelConsent {
+  /** Call `ttq.grantConsent()`. */
+  grant: () => void
+  /** Call `ttq.revokeConsent()`. */
+  revoke: () => void
+  /** Call `ttq.holdConsent()` to defer the decision. */
+  hold: () => void
+}
+
+export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput): UseScriptContext<T, TikTokPixelConsent> {
+  const instance = useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({
     scriptInput: {
       src: withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', {
         sdkid: options?.id,
@@ -93,6 +108,20 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
           ttq.push = ttq
           ttq.loaded = true
           ttq.queue = []
+          // Queue consent stubs so pre-load `ttq.grantConsent()` / `ttq.revokeConsent()` work.
+          // The real events.js replaces these with live bindings once loaded.
+          const consentMethods = ['grantConsent', 'revokeConsent', 'holdConsent'] as const
+          for (const name of consentMethods) {
+            ;(ttq as any)[name] = function (...params: any[]) {
+              ttq.queue.push([name, ...params])
+            }
+          }
+          if (options?.defaultConsent === 'granted')
+            ttq.grantConsent()
+          else if (options?.defaultConsent === 'denied')
+            ttq.revokeConsent()
+          else if (options?.defaultConsent === 'hold')
+            ttq.holdConsent()
           if (options?.id) {
             ttq('init', options.id)
             if (options?.trackPageView !== false) {
@@ -100,5 +129,14 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
             }
           }
         },
-  }), _options)
+  }), _options) as UseScriptContext<T, TikTokPixelConsent>
+
+  if (import.meta.client && !instance.consent) {
+    instance.consent = {
+      grant: () => (instance.proxy as unknown as TikTokPixelApi).ttq.grantConsent(),
+      revoke: () => (instance.proxy as unknown as TikTokPixelApi).ttq.revokeConsent(),
+      hold: () => (instance.proxy as unknown as TikTokPixelApi).ttq.holdConsent(),
+    }
+  }
+  return instance
 }

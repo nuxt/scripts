@@ -20,3 +20,25 @@ Nuxt Scripts provides a registry script composable [`useScriptMetaPixel()`{lang=
 
 ::script-types
 ::
+
+## Consent Mode
+
+Meta Pixel exposes a binary consent toggle. Set the initial state with `defaultConsent` (fires `fbq('consent', 'grant'|'revoke')`{lang="ts"} before `fbq('init', id)`{lang="ts"}) and call `consent.grant()`{lang="ts"} / `consent.revoke()`{lang="ts"} at runtime:
+
+```vue
+<script setup lang="ts">
+const { consent } = useScriptMetaPixel({
+  id: 'YOUR_PIXEL_ID',
+  defaultConsent: 'denied',
+})
+
+function acceptAds() {
+  consent.grant()
+}
+function rejectAds() {
+  consent.revoke()
+}
+</script>
+```
+
+See [Meta's consent docs](https://www.facebook.com/business/help/1151321516677370) for details.

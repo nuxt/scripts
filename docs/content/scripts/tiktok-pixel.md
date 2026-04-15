@@ -48,5 +48,27 @@ export default defineNuxtConfig({
 })
 ```
 
+## Consent Mode
+
+TikTok Pixel exposes a three-state consent API: grant, revoke, or hold (defer the decision). Set the initial state with `defaultConsent` and call `consent.grant()`{lang="ts"} / `consent.revoke()`{lang="ts"} / `consent.hold()`{lang="ts"} at runtime:
+
+```vue
+<script setup lang="ts">
+const { consent } = useScriptTikTokPixel({
+  id: 'YOUR_PIXEL_ID',
+  defaultConsent: 'hold', // 'granted' | 'denied' | 'hold'
+})
+
+function acceptAds() {
+  consent.grant()
+}
+function rejectAds() {
+  consent.revoke()
+}
+</script>
+```
+
+See the [TikTok cookie consent docs](https://business-api.tiktok.com/portal/docs?id=1739585600931842) for the full behaviour.
+
 ::script-types
 ::

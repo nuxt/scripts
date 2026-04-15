@@ -1,4 +1,4 @@
-import type { NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
+import type { ConsentState, NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
 import type { GTag } from './google-analytics'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import { withQuery } from 'ufo'
@@ -80,6 +80,11 @@ export { GoogleTagManagerOptions }
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
+export interface GoogleTagManagerConsent {
+  /** Push `['consent','update', state]` onto dataLayer with GCMv2 partial state. */
+  update: (state: ConsentState) => void
+}
+
 /**
  * Hook to use Google Tag Manager in Nuxt applications
  */
@@ -91,7 +96,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
      */
     onBeforeGtmStart?: (gtag: DataLayerPush) => void
   },
-): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
+): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GoogleTagManagerConsent> {
   const instance = useRegistryScript<T, typeof GoogleTagManagerOptions>(
     options?.key || 'googleTagManager',
     (opts) => {
@@ -160,5 +165,13 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
       options.onBeforeGtmStart(gtag)
   }
 
-  return instance
+  const typed = instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GoogleTagManagerConsent>
+  if (import.meta.client && !typed.consent) {
+    typed.consent = {
+      update: (state: ConsentState) => {
+        ;((typed.proxy as unknown as GoogleTagManagerApi).dataLayer as any).push(['consent', 'update', state])
+      },
+    }
+  }
+  return typed
 }

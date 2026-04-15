@@ -30,6 +30,44 @@ proxy.gtag('event', 'page_view')
 
 The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
 
+### Consent Mode
+
+Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', ...)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime:
+
+```vue
+<script setup lang="ts">
+const { consent } = useScriptGoogleAnalytics({
+  id: 'G-XXXXXXXX',
+  defaultConsent: {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+  },
+})
+
+function acceptAll() {
+  consent.update({
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted',
+    analytics_storage: 'granted',
+  })
+}
+
+function savePreferences(choices: { analytics: boolean, marketing: boolean }) {
+  consent.update({
+    analytics_storage: choices.analytics ? 'granted' : 'denied',
+    ad_storage: choices.marketing ? 'granted' : 'denied',
+    ad_user_data: choices.marketing ? 'granted' : 'denied',
+    ad_personalization: choices.marketing ? 'granted' : 'denied',
+  })
+}
+</script>
+```
+
+`consent.update()`{lang="ts"} accepts any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
+
 ### Customer/Consumer ID Tracking
 
 For e-commerce or multi-tenant applications where you need to track customer-specific analytics alongside your main tracking:

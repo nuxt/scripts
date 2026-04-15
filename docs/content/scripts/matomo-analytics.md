@@ -83,6 +83,40 @@ useScriptMatomoAnalytics({
 })
 ```
 
+## Consent Mode
+
+Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides/tracking-consent) gated by `requireConsent`. Set `defaultConsent` to arm the gate at registration, then call `consent.give()`{lang="ts"} / `consent.forget()`{lang="ts"} at runtime.
+
+### `defaultConsent`
+
+| Value | Behaviour |
+|-------|-----------|
+| `'required'` | Pushes `['requireConsent']`. Nothing is tracked until the user opts in. |
+| `'given'` | Pushes `['requireConsent']` then `['setConsentGiven']`. Tracking starts immediately. |
+| `'not-required'` | Default Matomo behaviour (no consent gating). |
+
+::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
+`consent.give()`{lang="ts"} / `consent.forget()`{lang="ts"} are **no-ops unless `defaultConsent: 'required'` or `'given'` was set at registration** -- Matomo ignores `setConsentGiven` / `forgetConsentGiven` when `requireConsent` hasn't been pushed. A dev-only warning fires if you forget.
+::
+
+### Example
+
+```vue
+<script setup lang="ts">
+const { consent } = useScriptMatomoAnalytics({
+  cloudId: 'YOUR_CLOUD_ID',
+  defaultConsent: 'required',
+})
+
+function onAccept() {
+  consent.give()
+}
+function onRevoke() {
+  consent.forget()
+}
+</script>
+```
+
 ### Using Matomo Whitelabel
 
 For Matomo Whitelabel, set `trackerUrl` and `scriptInput.src` to customize tracking.

@@ -1,5 +1,21 @@
 import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
 
+// Shared GCMv2 consent category value.
+const consentCategoryValue = union([literal('granted'), literal('denied')])
+
+// Shared GCMv2 consent state (+ GA-only control fields).
+const gcmConsentState = object({
+  ad_storage: optional(consentCategoryValue),
+  ad_user_data: optional(consentCategoryValue),
+  ad_personalization: optional(consentCategoryValue),
+  analytics_storage: optional(consentCategoryValue),
+  functionality_storage: optional(consentCategoryValue),
+  personalization_storage: optional(consentCategoryValue),
+  security_storage: optional(consentCategoryValue),
+  wait_for_update: optional(number()),
+  region: optional(array(string())),
+})
+
 export const BlueskyEmbedOptions = object({
   /**
    * The Bluesky post URL to embed.
@@ -24,6 +40,13 @@ export const ClarityOptions = object({
    * @see https://learn.microsoft.com/en-us/clarity/setup-clarity
    */
   id: pipe(string(), minLength(10)),
+  /**
+   * Default consent state applied before Clarity starts.
+   * - `boolean` - enable / disable cookies.
+   * - `Record<string, string>` - advanced consent vector (see Clarity docs).
+   * @see https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent
+   */
+  defaultConsent: optional(union([boolean(), record(string(), string())])),
 })
 
 export const CloudflareWebAnalyticsOptions = object({
@@ -282,6 +305,11 @@ export const GoogleAnalyticsOptions = object({
    * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer
    */
   l: optional(string()),
+  /**
+   * Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`.
+   * @see https://developers.google.com/tag-platform/security/guides/consent
+   */
+  defaultConsent: optional(gcmConsentState),
 })
 
 export const GoogleMapsOptions = object({
@@ -566,6 +594,14 @@ export const MatomoAnalyticsOptions = object({
    * @default true
    */
   watch: optional(boolean()),
+  /**
+   * Default tracking-consent state applied BEFORE the tracker is initialised.
+   * - `'required'` — call `requireConsent` without granting (user must opt in later).
+   * - `'given'` — call `requireConsent` then `setConsentGiven`.
+   * - `'not-required'` — no consent gating (default Matomo behaviour).
+   * @see https://developer.matomo.org/guides/tracking-consent
+   */
+  defaultConsent: optional(union([literal('required'), literal('given'), literal('not-required')])),
 })
 
 export const MetaPixelOptions = object({
@@ -574,6 +610,12 @@ export const MetaPixelOptions = object({
    * @see https://developers.facebook.com/docs/meta-pixel/get-started
    */
   id: union([string(), number()]),
+  /**
+   * Default consent state. `'granted'` fires `fbq('consent', 'grant')`,
+   * `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`.
+   * @see https://www.facebook.com/business/help/1151321516677370
+   */
+  defaultConsent: optional(union([literal('granted'), literal('denied')])),
 })
 
 export const NpmOptions = object({
@@ -670,6 +712,13 @@ export const PostHogOptions = object({
    * @see https://posthog.com/docs/libraries/js#config
    */
   config: optional(record(string(), any())),
+  /**
+   * Default capture-consent state for PostHog.
+   * - `'opt-out'`: passed as `opt_out_capturing_by_default: true` to `posthog.init`, so capturing is suppressed from the first event.
+   * - `'opt-in'`: applied after `posthog.init` via `posthog.opt_in_capturing()` on the returned instance.
+   * @see https://posthog.com/docs/privacy/opting-out
+   */
+  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),
 })
 
 export const RedditPixelOptions = object({
@@ -746,6 +795,13 @@ export const MixpanelAnalyticsOptions = object({
    * @see https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#1-initialize-the-library
    */
   token: string(),
+  /**
+   * Default tracking-consent state for Mixpanel.
+   * - `'opt-out'`: passed as `opt_out_tracking_by_default: true` to `mixpanel.init`, so tracking is suppressed from the first call.
+   * - `'opt-in'`: queued via `mixpanel.push(['opt_in_tracking'])` so the real SDK runs it immediately after load.
+   * @see https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking
+   */
+  defaultConsent: optional(union([literal('opt-in'), literal('opt-out')])),
 })
 
 export const BingUetOptions = object({
@@ -759,6 +815,13 @@ export const BingUetOptions = object({
    * @default true
    */
   enableAutoSpaTracking: optional(boolean()),
+  /**
+   * Default consent state fired as `uetq.push('consent', 'default', ...)` before UET init.
+   * @see https://help.ads.microsoft.com/#apex/ads/en/60119/1-500
+   */
+  defaultConsent: optional(object({
+    ad_storage: optional(consentCategoryValue),
+  })),
 })
 
 export const SegmentOptions = object({
@@ -859,6 +922,14 @@ export const TikTokPixelOptions = object({
    * @default true
    */
   trackPageView: optional(boolean()),
+  /**
+   * Default consent state, applied before `ttq('init', id)`.
+   * - `'granted'` fires `ttq.grantConsent()`
+   * - `'denied'` fires `ttq.revokeConsent()`
+   * - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update
+   * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842
+   */
+  defaultConsent: optional(union([literal('granted'), literal('denied'), literal('hold')])),
 })
 
 export const UmamiAnalyticsOptions = object({

@@ -101,6 +101,54 @@ onLoaded(({ posthog }) => {
 })
 ```
 
+## Consent Mode
+
+PostHog exposes [`opt_in_capturing` / `opt_out_capturing`](https://posthog.com/docs/privacy/opting-out). Set the boot-time default with `defaultConsent` and call `consent.optIn()`{lang="ts"} / `consent.optOut()`{lang="ts"} at runtime.
+
+### `defaultConsent`
+
+| Value | Behaviour |
+|-------|-----------|
+| `'opt-in'` | Calls `posthog.opt_in_capturing()`{lang="ts"} immediately after init. |
+| `'opt-out'` | Calls `posthog.init(..., { opt_out_capturing_by_default: true })`{lang="ts"} so the SDK boots opted out. |
+
+::callout{icon="i-heroicons-information-circle"}
+Use `defaultConsent: 'opt-out'` when you need the SDK to boot opted out. The runtime `consent.optOut()`{lang="ts"} calls `opt_out_capturing()`{lang="ts"} **after** init, which is weaker than the boot-time flag; any events captured between init and the opt-out call are still sent.
+::
+
+### Example
+
+```vue
+<script setup lang="ts">
+const { consent } = useScriptPostHog({
+  apiKey: 'YOUR_API_KEY',
+  defaultConsent: 'opt-out',
+})
+
+function onAccept() {
+  consent.optIn()
+}
+function onRevoke() {
+  consent.optOut()
+}
+</script>
+```
+
+Configuring PostHog globally in `nuxt.config`:
+
+```ts
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      posthog: {
+        apiKey: 'YOUR_API_KEY',
+        defaultConsent: 'opt-out',
+      }
+    }
+  }
+})
+```
+
 ## Disabling Session Recording
 
 ```ts
