@@ -79,7 +79,7 @@
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3",
+    "@unhead/vue": "^3.0.4",
     "posthog-js": "^1.0.0"
   },
   "peerDependenciesMeta": {
