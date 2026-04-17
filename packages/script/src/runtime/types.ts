@@ -395,6 +395,8 @@ export interface ProxyCapability {
   privacy: import('../runtime/server/utils/privacy').ProxyPrivacyInput
   /** Auto-inject proxy endpoint into the script's SDK config. */
   autoInject?: ProxyAutoInject
+  /** Config fields that may contain custom external hosts or endpoints. */
+  configDomainFields?: string[]
   /** AST-level SDK patches applied during URL rewriting. */
   sdkPatches?: SdkPatch[]
 }
@@ -540,6 +542,8 @@ export interface ProxyConfig {
   privacy: ProxyPrivacyInput
   /** Auto-inject proxy endpoint config into the script's SDK options (resolved form) */
   autoInject?: ResolvedProxyAutoInject
+  /** Config fields that may contain custom external hosts or endpoints. */
+  configDomainFields?: string[]
   /** AST-level SDK patches applied during URL rewriting. */
   sdkPatches?: SdkPatch[]
 }

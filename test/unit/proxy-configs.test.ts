@@ -340,6 +340,13 @@ describe('proxy configs', () => {
       expect(config?.domains).toContain('plausible.io')
     })
 
+    it('returns config domain fields for providers with custom hosts', async () => {
+      const configs = await getProxyConfigs()
+      expect(configs.matomoAnalytics?.configDomainFields).toEqual(['matomoUrl', 'trackerUrl'])
+      expect(configs.vercelAnalytics?.configDomainFields).toEqual(['endpoint'])
+      expect(configs.databuddyAnalytics?.configDomainFields).toEqual(['scriptUrl'])
+    })
+
     it('returns proxy config for cloudflareWebAnalytics', async () => {
       const config = (await getProxyConfigs()).cloudflareWebAnalytics
       expect(config).toBeDefined()
