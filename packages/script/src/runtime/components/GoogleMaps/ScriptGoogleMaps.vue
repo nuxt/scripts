@@ -223,12 +223,9 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
 })
 
 const options = computed(() => {
-  const mapId = props.mapOptions?.styles ? undefined : (currentMapId.value || 'map')
-  // Precedence (defu merges left-to-right, leftmost wins):
-  // 1. centerOverride: resolved query result, always wins for center
-  // 2. mapOptions: preferred public API
-  // 3. deprecated top-level: legacy fallback for center/zoom
-  // 4. defaults: { zoom: 15 } when nothing else is set
+  // v1 markers use AdvancedMarkerElement which requires a mapId, so we always pass one.
+  // Google will ignore JSON `styles` when `mapId` is set — we warn below in dev.
+  const mapId = currentMapId.value || 'map'
   return defu(
     { center: centerOverride.value, mapId },
     props.mapOptions,
@@ -236,6 +233,14 @@ const options = computed(() => {
     { zoom: 15 },
   )
 })
+
+if (import.meta.dev) {
+  watch(() => props.mapOptions?.styles, (styles) => {
+    if (styles) {
+      console.warn('[nuxt-scripts] <ScriptGoogleMaps> `mapOptions.styles` (JSON styles) is incompatible with `ScriptGoogleMapsMarker` in v1, which requires a `mapId` for `AdvancedMarkerElement`. Google Maps will ignore `styles` when `mapId` is set. Use cloud-based map styling instead: https://scripts.nuxt.com/scripts/google-maps/guides/map-styling')
+    }
+  }, { immediate: true })
+}
 const isMapReady = ref(false)
 
 const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
