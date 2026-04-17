@@ -18,15 +18,16 @@ links:
 
 ### Self-hosted Umami
 
-If you use a self-hosted version of Umami, provide an explicit src for the script so that the browser sends API events to the correct endpoint.
+If you use a self-hosted version of Umami, set `hostUrl` to your Umami origin. This is the provider-specific way to tell Umami where to send events.
 
 ```ts
 useScriptUmamiAnalytics({
-  scriptInput: {
-    src: 'https://my-self-hosted/script.js'
-  }
+  websiteId: 'YOUR_WEBSITE_ID',
+  hostUrl: 'https://my-self-hosted'
 })
 ```
+
+Use `scriptInput.src` only if you also need to override the script URL itself.
 
 ## Advanced Features
 

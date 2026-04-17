@@ -235,6 +235,51 @@ export function applyAutoInject(
     rtEntry[autoInject.configField] = value
 }
 
+const ABSOLUTE_URL_RE = /^[a-z][a-z\d+.-]*:\/\//i
+
+function resolveConfiguredProxyDomain(value: unknown): string | undefined {
+  if (typeof value !== 'string')
+    return
+
+  const trimmed = value.trim()
+  if (!trimmed || (!ABSOLUTE_URL_RE.test(trimmed) && !trimmed.startsWith('//')))
+    return
+
+  try {
+    return new URL(trimmed, 'https://nuxt-scripts.local').hostname || undefined
+  }
+  catch {
+
+  }
+}
+
+export function resolveConfiguredProxyDomains(
+  config: Record<string, any> | undefined,
+  proxyConfig?: Pick<ProxyConfig, 'autoInject' | 'configDomainFields'>,
+): string[] {
+  if (!config || typeof config !== 'object')
+    return []
+
+  const domains = new Set<string>()
+  const scriptSrc = resolveConfiguredProxyDomain(config.scriptInput?.src)
+  if (scriptSrc)
+    domains.add(scriptSrc)
+
+  if (proxyConfig?.autoInject?.configField) {
+    const endpointDomain = resolveConfiguredProxyDomain(config[proxyConfig.autoInject.configField])
+    if (endpointDomain)
+      domains.add(endpointDomain)
+  }
+
+  for (const field of proxyConfig?.configDomainFields || []) {
+    const domain = resolveConfiguredProxyDomain(config[field])
+    if (domain)
+      domains.add(domain)
+  }
+
+  return [...domains].sort()
+}
+
 export interface ModuleOptions {
   /**
    * Base path prefix for all script endpoints (proxy and bundled assets).
@@ -714,6 +759,7 @@ export default defineNuxtModule<ModuleOptions>({
         const unmatchedScripts: string[] = []
         let totalDomains = 0
         const devtoolsScripts: ProxyDevtoolsScript[] = []
+        const publicScripts = nuxt.options.runtimeConfig.public?.scripts as Record<string, any> | undefined
 
         for (const key of registryKeys) {
           const script = scriptByKey.get(key)
@@ -736,10 +782,20 @@ export default defineNuxtModule<ModuleOptions>({
           // Per-script privacy override from user config (stays on input after normalization)
           const entry = (config.registry as Record<string, any>)?.[key]
           const inputPrivacy = entry?.[0]?.privacy
+          const runtimeEntry = publicScripts?.[key] && typeof publicScripts[key] === 'object'
+            ? publicScripts[key]
+            : undefined
 
           for (const domain of proxyConfig.domains) {
             domainPrivacy[domain] = inputPrivacy ?? proxyConfig.privacy
             totalDomains++
+          }
+
+          for (const source of [entry?.[0], runtimeEntry]) {
+            for (const domain of resolveConfiguredProxyDomains(source, proxyConfig)) {
+              domainPrivacy[domain] = inputPrivacy ?? proxyConfig.privacy
+              totalDomains++
+            }
           }
 
           if (proxyConfig.autoInject && config.registry)

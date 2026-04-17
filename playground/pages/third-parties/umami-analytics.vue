@@ -8,7 +8,7 @@ useHead({
 // Umami Analytics with custom configuration
 const { proxy, status } = useScriptUmamiAnalytics({
   websiteId: 'demo-website-id-123',
-  hostUrl: 'https://analytics.example.com', // Optional: custom Umami instance
+  hostUrl: 'https://analytics.example.com', // Self-hosted Umami origin
   autoTrack: true,
   domains: ['localhost', 'example.com'],
   tag: 'playground',
@@ -149,7 +149,7 @@ function trackUserFlow() {
             <li>Auto-tracking enabled for page views</li>
             <li>Domain filtering: localhost, example.com</li>
             <li>Tagged as: playground</li>
-            <li>Custom host URL configured</li>
+            <li>Self-hosted Umami origin configured via <code>hostUrl</code></li>
             <li>Privacy-focused (no cookies, no personal data)</li>
           </ul>
         </div>
@@ -276,7 +276,7 @@ function trackUserFlow() {
           </h3>
           <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto"><code>const { proxy, status } = useScriptUmamiAnalytics({
   websiteId: 'your-website-id',
-  hostUrl: 'https://your-umami-instance.com', // optional
+  hostUrl: 'https://your-umami-instance.com', // self-hosted origin
   autoTrack: true,
   domains: ['yourdomain.com'],
   tag: 'environment-tag',
@@ -313,7 +313,7 @@ proxy.identify({ user_id: '123', subscription: 'premium' })</code></pre>
             <li>No personal data collection</li>
             <li>GDPR compliant by design</li>
             <li>Lightweight script (&lt; 2KB)</li>
-            <li>Self-hosted option available</li>
+            <li>Self-hosted instances configured with <code>hostUrl</code></li>
           </ul>
         </div>
       </div>

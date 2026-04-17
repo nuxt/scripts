@@ -1,6 +1,6 @@
 import type { NuxtConfigScriptRegistry } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { applyAutoInject } from '../../packages/script/src/module'
+import { applyAutoInject, resolveConfiguredProxyDomains } from '../../packages/script/src/module'
 
 describe('applyAutoInject', () => {
   const posthogAutoInject = {
@@ -87,5 +87,65 @@ describe('applyAutoInject', () => {
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_analytics', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBe('/_analytics/us.i.posthog.com')
+  })
+})
+
+describe('resolveConfiguredProxyDomains', () => {
+  const umamiProxyConfig = {
+    autoInject: {
+      configField: 'hostUrl',
+      computeValue: (proxyPrefix: string) => `${proxyPrefix}/cloud.umami.is`,
+    },
+  }
+
+  it('includes the hostname from a custom scriptInput src', () => {
+    expect(resolveConfiguredProxyDomains({
+      scriptInput: {
+        src: 'https://analytics.example.com/script.js',
+      },
+    }, umamiProxyConfig)).toEqual(['analytics.example.com'])
+  })
+
+  it('includes the hostname from an explicit endpoint field', () => {
+    expect(resolveConfiguredProxyDomains({
+      hostUrl: 'https://analytics.example.com',
+    }, umamiProxyConfig)).toEqual(['analytics.example.com'])
+  })
+
+  it('ignores relative proxy paths injected by the module', () => {
+    expect(resolveConfiguredProxyDomains({
+      hostUrl: '/_scripts/p/cloud.umami.is',
+    }, umamiProxyConfig)).toEqual([])
+  })
+
+  it('deduplicates equivalent domains', () => {
+    expect(resolveConfiguredProxyDomains({
+      hostUrl: 'https://analytics.example.com',
+      scriptInput: {
+        src: 'https://analytics.example.com/script.js',
+      },
+    }, umamiProxyConfig)).toEqual(['analytics.example.com'])
+  })
+
+  it('includes additional registry-declared config domain fields', () => {
+    expect(resolveConfiguredProxyDomains({
+      trackerUrl: 'https://analytics.example.com/matomo.php',
+      matomoUrl: 'https://analytics.example.com',
+    }, {
+      configDomainFields: ['matomoUrl', 'trackerUrl'],
+    })).toEqual(['analytics.example.com'])
+  })
+
+  it('handles multiple custom hosts across script and endpoint fields', () => {
+    expect(resolveConfiguredProxyDomains({
+      scriptUrl: 'https://cdn.analytics.example.com/databuddy.js',
+      apiUrl: 'https://events.analytics.example.com',
+    }, {
+      autoInject: {
+        configField: 'apiUrl',
+        computeValue: (proxyPrefix: string) => `${proxyPrefix}/basket.databuddy.cc`,
+      },
+      configDomainFields: ['scriptUrl'],
+    })).toEqual(['cdn.analytics.example.com', 'events.analytics.example.com'])
   })
 })
