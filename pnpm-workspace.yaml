@@ -40,16 +40,16 @@ catalog:
   nuxt: ^4.4.2
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.125.0
+  oxc-parser: ^0.126.0
   oxc-walker: ^0.7.0
   pathe: ^2.0.3
   pkg-types: ^2.3.0
   playwright-core: ^1.59.1
-  posthog-js: ^1.369.0
+  posthog-js: ^1.369.2
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.1.0
-  typescript: ^6.0.2
+  typescript: ^6.0.3
   ufo: ^1.6.3
   ultrahtml: ^1.6.0
   unplugin: ^3.0.0
