@@ -223,9 +223,11 @@ const { load, status, onLoaded } = useScriptGoogleMaps({
 })
 
 const options = computed(() => {
-  // v1 markers use AdvancedMarkerElement which requires a mapId, so we always pass one.
-  // Google will ignore JSON `styles` when `mapId` is set — we warn below in dev.
-  const mapId = currentMapId.value || 'map'
+  // JSON `styles` and `mapId` are mutually exclusive in Google Maps. When the user
+  // sets `styles`, we drop `mapId` so styles apply. Otherwise fall back to a map ID
+  // so `AdvancedMarkerElement` can function. The marker component warns if markers
+  // are mounted against a styled (mapId-less) map.
+  const mapId = props.mapOptions?.styles ? undefined : (currentMapId.value || 'map')
   return defu(
     { center: centerOverride.value, mapId },
     props.mapOptions,
@@ -233,14 +235,6 @@ const options = computed(() => {
     { zoom: 15 },
   )
 })
-
-if (import.meta.dev) {
-  watch(() => props.mapOptions?.styles, (styles) => {
-    if (styles) {
-      console.warn('[nuxt-scripts] <ScriptGoogleMaps> `mapOptions.styles` (JSON styles) is incompatible with `ScriptGoogleMapsMarker` in v1, which requires a `mapId` for `AdvancedMarkerElement`. Google Maps will ignore `styles` when `mapId` is set. Use cloud-based map styling instead: https://scripts.nuxt.com/scripts/google-maps/guides/map-styling')
-    }
-  }, { immediate: true })
-}
 const isMapReady = ref(false)
 
 const map: ShallowRef<google.maps.Map | undefined> = shallowRef()

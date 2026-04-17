@@ -57,6 +57,9 @@ let gmpClickHandler: ((e: any) => void) | undefined
 const advancedMarkerElement = useGoogleMapsResource<google.maps.marker.AdvancedMarkerElement>({
   ready: () => !slots.content || !!markerContent.value,
   async create({ mapsApi, map }) {
+    if (import.meta.dev && !map.get('mapId')) {
+      console.warn('[nuxt-scripts] <ScriptGoogleMapsMarker> requires the parent <ScriptGoogleMaps> to have a `mapId` set, but none was found. This usually happens when `mapOptions.styles` (JSON styles) is set, since Google Maps treats `styles` and `mapId` as mutually exclusive. Use cloud-based map styling instead: https://scripts.nuxt.com/scripts/google-maps/guides/map-styling')
+    }
     await mapsApi.importLibrary('marker')
     const marker = new mapsApi.marker.AdvancedMarkerElement({
       ...props.options,
