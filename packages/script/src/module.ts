@@ -573,6 +573,16 @@ export default defineNuxtModule<ModuleOptions>({
     const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
     addServerHandler({ route: `${proxyPrefix}/**`, handler: proxyHandlerPath })
 
+    // In dev, sink Vercel Analytics insight POSTs to `/_vercel/insights/*` so
+    // they don't 404. Vercel's edge serves this path in production; locally
+    // there's no upstream, so we return 204 to keep the script happy.
+    if (nuxt.options.dev && config.registry?.vercelAnalytics) {
+      addServerHandler({
+        route: '/_vercel/insights/**',
+        handler: await resolvePath('./runtime/server/vercel-insights-sink'),
+      })
+    }
+
     const composables = [
       'useScript',
       'useScriptEventPage',
