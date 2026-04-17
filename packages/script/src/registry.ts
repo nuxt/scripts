@@ -308,6 +308,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       proxy: {
         domains: ['va.vercel-scripts.com', 'vitals.vercel-insights.com'],
         privacy: PRIVACY_IP_ONLY,
+        configDomainFields: ['endpoint'],
       },
     }),
     def('posthog', {
@@ -352,6 +353,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       proxy: {
         domains: ['cdn.matomo.cloud'],
         privacy: PRIVACY_IP_ONLY,
+        configDomainFields: ['matomoUrl', 'trackerUrl'],
       },
       partytown: { forwards: ['_paq.push'] },
     }),
@@ -387,6 +389,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         domains: ['cdn.databuddy.cc', 'basket.databuddy.cc'],
         privacy: PRIVACY_IP_ONLY,
         autoInject: { field: 'apiUrl', target: 'basket.databuddy.cc' },
+        configDomainFields: ['scriptUrl'],
       },
     }),
     def('segment', {
@@ -860,6 +863,7 @@ export function buildProxyConfigsFromRegistry(
       domains: proxyDef.domains.map(d => typeof d === 'string' ? d : d.domain),
       privacy: proxyDef.privacy || { ip: false, userAgent: false, language: false, screen: false, timezone: false, hardware: false },
       autoInject: proxyDef.autoInject ? resolveAutoInject(proxyDef.autoInject) : undefined,
+      configDomainFields: proxyDef.configDomainFields,
       sdkPatches: proxyDef.sdkPatches,
     }
   }

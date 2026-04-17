@@ -478,9 +478,11 @@ onBeforeUnmount(() => {
   // so anything after an `await` runs as a detached microtask.
   // Note: do NOT null mapsApi here — children unmount AFTER onBeforeUnmount
   // and need mapsApi.value for clearInstanceListeners in their cleanup.
+  // Note: do NOT remove map DOM here — during page transitions the leave
+  // animation is still playing, and tearing out the iframe leaves blank
+  // space. Vue removes the parent element on actual unmount.
   map.value?.unbindAll()
   map.value = undefined
-  mapEl.value?.firstChild?.remove()
   libraries.clear()
   queryToLatLngCache.clear()
 })

@@ -1,5 +1,6 @@
 import type { RegistryScript } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
+import { resolveConfiguredProxyDomains } from '../../packages/script/src/module'
 import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
 import {
   anonymizeIP,
@@ -164,6 +165,38 @@ describe('first-party mode', () => {
       expect(configs.googleAnalytics.autoInject).toBeUndefined()
       expect(configs.metaPixel.autoInject).toBeUndefined()
       expect(configs.clarity.autoInject).toBeUndefined()
+    })
+
+    it('derives extra allowlist domains for self-hosted Umami', async () => {
+      const configs = await getProxyConfigs()
+      expect(resolveConfiguredProxyDomains({
+        scriptInput: {
+          src: 'https://analytics.example.com/script.js',
+        },
+      }, configs.umamiAnalytics)).toEqual(['analytics.example.com'])
+    })
+
+    it('derives extra allowlist domains for custom Matomo hosts', async () => {
+      const configs = await getProxyConfigs()
+      expect(resolveConfiguredProxyDomains({
+        matomoUrl: 'https://analytics.example.com',
+        trackerUrl: 'https://analytics.example.com/matomo.php',
+      }, configs.matomoAnalytics)).toEqual(['analytics.example.com'])
+    })
+
+    it('derives extra allowlist domains for self-hosted Vercel Analytics', async () => {
+      const configs = await getProxyConfigs()
+      expect(resolveConfiguredProxyDomains({
+        endpoint: 'https://analytics.example.com/v1/vitals',
+      }, configs.vercelAnalytics)).toEqual(['analytics.example.com'])
+    })
+
+    it('derives extra allowlist domains for custom Databuddy script hosts', async () => {
+      const configs = await getProxyConfigs()
+      expect(resolveConfiguredProxyDomains({
+        scriptUrl: 'https://cdn.analytics.example.com/databuddy.js',
+        apiUrl: 'https://events.analytics.example.com',
+      }, configs.databuddyAnalytics)).toEqual(['cdn.analytics.example.com', 'events.analytics.example.com'])
     })
   })
 
