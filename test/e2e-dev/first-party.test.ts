@@ -647,8 +647,8 @@ describe('first-party privacy stripping', () => {
       'redditPixel', // rdt('track', ...) triggers pixel fires
       'plausibleAnalytics', // plausible() triggers fetch POST
       'umamiAnalytics', // umami.track() triggers fetch POST
-      'fathomAnalytics', // fathom.trackGoal() triggers beacon
       // cloudflareWebAnalytics — auto-engagement only, no CTA buttons
+      // fathomAnalytics — bundle/proxy disabled (Fathom bot-detection flags self-hosted/proxied traffic, see #720)
     ])
 
     /**
@@ -673,7 +673,6 @@ describe('first-party privacy stripping', () => {
       'googleAnalytics', // scope-resolved AST rewrite for sendBeacon/fetch/XHR/Image
       'snapchatPixel', // scope-resolved AST rewrite for sendBeacon/XHR
       // googleTagManager — uses createElement('script') injection, not interceptable via XHR/fetch/sendBeacon
-      'fathomAnalytics', // bundled + self-hosted detection neutralized, sendBeacon/Image interception
       'plausibleAnalytics', // bundled + auto-inject endpoint, sendBeacon interception (needs extension: 'local' + __plausible flag for headless)
       'tiktokPixel', // AST rewrite for analytics.tiktok.com, sendBeacon/fetch interception
       // databuddyAnalytics — SDK doesn't fire events with demo clientId in test window
@@ -910,13 +909,7 @@ describe('first-party privacy stripping', () => {
       }, { pre: preClickProxyCount, post: postClickProxyCount })
     }, 30000)
 
-    it('fathomAnalytics', async () => {
-      const { captures, rawCaptures, proxyRequests, externalRequests, preClickProxyCount, postClickProxyCount } = await testProvider('fathomAnalytics', '/fathom')
-      await assertCaptures('fathomAnalytics', captures, rawCaptures, proxyRequests, externalRequests, {
-        proxyPrefix: '/_scripts/p/fathom',
-        domains: ['usefathom.com'],
-      }, { pre: preClickProxyCount, post: postClickProxyCount })
-    }, 30000)
+    // fathomAnalytics — bundle/proxy disabled in registry (see #720), script loads directly from CDN
 
     it('intercom', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests, preClickProxyCount, postClickProxyCount } = await testProvider('intercom', '/intercom-test')

@@ -380,6 +380,13 @@ export interface ScriptDomain {
 export interface BundleCapability {
   /** Custom URL resolution. If omitted, the script's `src` is used. */
   resolve?: (options?: any) => string | false
+  /**
+   * AST-level SDK patches applied during bundling, independent of proxy.
+   * Use for scripts that need self-hosted detection neutralization but should
+   * still send beacons directly to the origin (e.g. Fathom, where proxying
+   * triggers bot detection but bundling is otherwise safe).
+   */
+  sdkPatches?: SdkPatch[]
 }
 
 /**
@@ -408,11 +415,11 @@ export interface ProxyCapability {
 export type SdkPatch
   /**
    * Neutralize self-hosted detection checks like `.indexOf("cdn.example.com") < 0`.
-   * When a script is proxied, its src no longer contains the original CDN domain,
-   * causing these checks to incorrectly detect "self-hosted" mode.
+   * When a script is bundled or proxied, its src no longer contains the original
+   * CDN domain, causing these checks to incorrectly detect "self-hosted" mode.
    * This patch makes such comparisons always evaluate to false.
    */
-  = | { type: 'neutralize-domain-check' }
+  = | { type: 'neutralize-domain-check', domain: string }
   /**
    * Replace `<expr>.split("<separator>")[0]` patterns used by SDKs that derive
    * their API host from `document.currentScript.src`. When bundled, the script src

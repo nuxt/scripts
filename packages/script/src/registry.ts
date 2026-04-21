@@ -116,7 +116,12 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('plausibleAnalytics', 'Plausible Analytics', 'analytics', 'useScriptPlausibleAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('cloudflareWebAnalytics', 'Cloudflare Web Analytics', 'analytics', 'useScriptCloudflareWebAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('posthog', 'PostHog', 'analytics', 'useScriptPostHog', { proxy: true }, PRIVACY_IP_ONLY),
-  m('fathomAnalytics', 'Fathom Analytics', 'analytics', 'useScriptFathomAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  // proxy intentionally off: proxied beacons reach Fathom from the server's IP
+  // (datacenter) and Fathom's bot detection ignores X-Forwarded-For, flagging
+  // every visitor as a bot. Bundle is supported via neutralize-domain-check —
+  // the script is served from the user's origin but beacons still go directly
+  // to cdn.usefathom.com so Fathom sees real client IPs. See nuxt/scripts#720.
+  m('fathomAnalytics', 'Fathom Analytics', 'analytics', 'useScriptFathomAnalytics', { bundle: true, partytown: true }, null),
   m('matomoAnalytics', 'Matomo Analytics', 'analytics', 'useScriptMatomoAnalytics', { proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('rybbitAnalytics', 'Rybbit Analytics', 'analytics', 'useScriptRybbitAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('databuddyAnalytics', 'Databuddy Analytics', 'analytics', 'useScriptDatabuddyAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
@@ -337,11 +342,12 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: 'https://cdn.usefathom.com/script.js',
       category: 'analytics',
       envDefaults: { site: '' },
-      bundle: true,
-      proxy: {
-        domains: ['cdn.usefathom.com', 'usefathom.com'],
-        privacy: PRIVACY_IP_ONLY,
-        sdkPatches: [{ type: 'neutralize-domain-check' }],
+      // Bundle without proxy: serve the script from the user's origin (faster
+      // load, ad-blocker resistant for domain-based blocking) but keep beacons
+      // pointed at cdn.usefathom.com via the neutralize-domain-check patch so
+      // Fathom sees real client IPs. Proxying is unsupported (see #720).
+      bundle: {
+        sdkPatches: [{ type: 'neutralize-domain-check', domain: 'cdn.usefathom.com' }],
       },
       partytown: { forwards: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'] },
     }),

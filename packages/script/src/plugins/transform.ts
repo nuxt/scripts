@@ -466,8 +466,16 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       from: domain,
                       to: `${options.proxyPrefix}/${domain}`,
                     }))
-                    const sdkPatches = proxyConfig?.sdkPatches
+                    // Bundle-only SDK patches (independent of proxy). Used when bundling
+                    // a script that needs neutralize-domain-check etc. but should keep
+                    // sending requests directly to its origin (e.g. Fathom).
+                    const bundleConfig = typeof script?.bundle === 'object' ? script.bundle : undefined
+                    const sdkPatches = proxyConfig?.sdkPatches ?? bundleConfig?.sdkPatches
+                    // Skip API rewrites (sendBeacon/fetch/XHR/Image → __nuxtScripts.*) when:
+                    // 1. Partytown is active (uses resolveUrl instead), OR
+                    // 2. No proxy is active (no intercept plugin loaded — calls would crash)
                     const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
+                      || !proxyConfig
                     // Gate canvas fingerprinting neutralization on the script's hardware privacy flag
                     const neutralizeCanvas = proxyConfig?.privacy !== undefined
                       && typeof proxyConfig.privacy === 'object'

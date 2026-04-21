@@ -358,7 +358,9 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
 
       // SDK patch: neutralize-domain-check
       // Matches `.indexOf("...domain...") < 0` and rewrites `< 0` to `< -1`
-      if (sdkPatches?.some(p => p.type === 'neutralize-domain-check')
+      const neutralizePatches = sdkPatches?.filter((p): p is { type: 'neutralize-domain-check', domain: string } =>
+        p.type === 'neutralize-domain-check')
+      if (neutralizePatches?.length
         && node.type === 'BinaryExpression'
         && (node as any).operator === '<') {
         const left = (node as any).left
@@ -372,7 +374,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
           if (prop === 'indexOf' && left.arguments?.length === 1) {
             const arg = left.arguments[0]
             if (arg?.type === 'Literal' && typeof arg.value === 'string'
-              && rewrites.some(r => arg.value.includes(r.from))) {
+              && neutralizePatches.some(p => arg.value.includes(p.domain))) {
               s.overwrite(right.start, right.end, '-1')
             }
           }

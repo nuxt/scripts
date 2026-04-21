@@ -373,10 +373,9 @@ describe('proxy configs', () => {
       expect(config?.domains).toContain('basket.databuddy.cc')
     })
 
-    it('returns proxy config for fathomAnalytics', async () => {
+    it('does not return proxy config for fathomAnalytics (removed: see #720, bot-detection flags proxied traffic)', async () => {
       const config = (await getProxyConfigs()).fathomAnalytics
-      expect(config).toBeDefined()
-      expect(config?.domains).toContain('cdn.usefathom.com')
+      expect(config).toBeUndefined()
     })
 
     it('returns proxy config for intercom', async () => {
@@ -407,7 +406,7 @@ describe('proxy configs', () => {
   })
 
   describe('getProxyConfigs', () => {
-    it('returns all proxy configs (excluding removed: GTM, Segment, Crisp)', async () => {
+    it('returns all proxy configs (excluding removed: GTM, Segment, Crisp, Fathom)', async () => {
       const configs = await getProxyConfigs()
       expect(configs).toHaveProperty('googleAnalytics')
       expect(configs).not.toHaveProperty('googleTagManager')
@@ -425,7 +424,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('rybbitAnalytics')
       expect(configs).toHaveProperty('umamiAnalytics')
       expect(configs).toHaveProperty('databuddyAnalytics')
-      expect(configs).toHaveProperty('fathomAnalytics')
+      expect(configs).not.toHaveProperty('fathomAnalytics')
       expect(configs).toHaveProperty('intercom')
       expect(configs).not.toHaveProperty('crisp')
       expect(configs).toHaveProperty('vercelAnalytics')

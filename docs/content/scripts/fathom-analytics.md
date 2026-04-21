@@ -16,6 +16,16 @@ links:
 ::script-docs
 ::
 
+## Proxying is not supported
+
+Unlike most analytics integrations in Nuxt Scripts, Fathom **cannot** be proxied (`proxy: true`).
+
+Fathom's bot detection uses the connecting source IP address. When beacons are proxied, they reach Fathom from your server's IP (typically a datacenter), and Fathom's bot detection ignores `X-Forwarded-For` from arbitrary servers, so every visitor gets flagged as a bot.
+
+Fathom previously offered an official Custom Domain feature (CNAME to their infrastructure) for first-party hosting, but they [deprecated it in May 2023](https://usefathom.com/changelog/mar2023-firewall-settings) and there is no replacement.
+
+Bundling (`bundle: true`) **is** supported: the script is served from your origin, but beacons still go directly to `cdn.usefathom.com` from the browser so real client IPs reach Fathom's bot detection correctly.
+
 ## Defaults
 
 - **Trigger**: Script will load when Nuxt is hydrated.

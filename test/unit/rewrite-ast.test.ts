@@ -242,34 +242,27 @@ describe('rewriteScriptUrlsAST', () => {
   })
 
   describe('fathom SDK self-hosted detection patching', () => {
-    async function getFathomConfig() {
-      const configs = await getProxyConfigs()
-      return configs.fathomAnalytics
-    }
+    // Fathom is bundle-only (no proxy capability) — sdkPatches come from
+    // BundleCapability.sdkPatches and are self-contained with their own domain.
+    const fathomPatches = [{ type: 'neutralize-domain-check' as const, domain: 'cdn.usefathom.com' }]
 
-    it('neutralizes .indexOf("cdn.usefathom.com") < 0', async () => {
-      const fathomConfig = await getFathomConfig()
-      const fathomRewrites = deriveRewrites(fathomConfig.domains, '/_scripts/p')
+    it('neutralizes .indexOf("cdn.usefathom.com") < 0', () => {
       const code = 'if(e.src.indexOf("cdn.usefathom.com")<0){t="custom"}'
-      const result = rewriteScriptUrlsAST(code, 'fathom.js', fathomRewrites, fathomConfig.sdkPatches)
+      const result = rewriteScriptUrlsAST(code, 'fathom.js', [], fathomPatches)
       expect(result).toContain('<-1')
       expect(result).not.toContain('<0')
     })
 
-    it('neutralizes with whitespace around operator', async () => {
-      const fathomConfig = await getFathomConfig()
-      const fathomRewrites = deriveRewrites(fathomConfig.domains, '/_scripts/p')
+    it('neutralizes with whitespace around operator', () => {
       const code = 'if(e.src.indexOf("cdn.usefathom.com") < 0){t="custom"}'
-      const result = rewriteScriptUrlsAST(code, 'fathom.js', fathomRewrites, fathomConfig.sdkPatches)
+      const result = rewriteScriptUrlsAST(code, 'fathom.js', [], fathomPatches)
       expect(result).toContain('< -1')
       expect(result).not.toContain('< 0')
     })
 
-    it('does not neutralize indexOf for non-rewrite domains', async () => {
-      const fathomConfig = await getFathomConfig()
-      const fathomRewrites = deriveRewrites(fathomConfig.domains, '/_scripts/p')
+    it('does not neutralize indexOf for non-matching domains', () => {
       const code = 'if(e.indexOf("other.com")<0){}'
-      const result = rewriteScriptUrlsAST(code, 'fathom.js', fathomRewrites, fathomConfig.sdkPatches)
+      const result = rewriteScriptUrlsAST(code, 'fathom.js', [], fathomPatches)
       expect(result).toContain('<0')
     })
 
