@@ -6,7 +6,6 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/fonts',
     '@nuxt/ui',
-    '@vueuse/nuxt',
   ],
 
   scripts: false,
