@@ -121,7 +121,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // every visitor as a bot. Bundle is supported via neutralize-domain-check —
   // the script is served from the user's origin but beacons still go directly
   // to cdn.usefathom.com so Fathom sees real client IPs. See nuxt/scripts#720.
-  m('fathomAnalytics', 'Fathom Analytics', 'analytics', 'useScriptFathomAnalytics', { bundle: true, partytown: true }, null),
+  m('fathomAnalytics', 'Fathom Analytics', 'analytics', 'useScriptFathomAnalytics', { bundle: true }, null),
   m('matomoAnalytics', 'Matomo Analytics', 'analytics', 'useScriptMatomoAnalytics', { proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('rybbitAnalytics', 'Rybbit Analytics', 'analytics', 'useScriptRybbitAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('databuddyAnalytics', 'Databuddy Analytics', 'analytics', 'useScriptDatabuddyAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
@@ -349,7 +349,6 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       bundle: {
         sdkPatches: [{ type: 'neutralize-domain-check', domain: 'cdn.usefathom.com' }],
       },
-      partytown: { forwards: ['fathom', 'fathom.trackEvent', 'fathom.trackPageview'] },
     }),
     def('matomoAnalytics', {
       schema: MatomoAnalyticsOptions,
