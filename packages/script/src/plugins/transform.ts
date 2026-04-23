@@ -136,11 +136,12 @@ async function downloadScript(opts: {
   let size = 0
   let fetched = false
 
-  // Use storage to cache the font data between builds
-  // Include proxy in cache key to differentiate proxied vs non-proxied versions
-  // Also include a hash of proxyRewrites content to handle different proxyPrefix values
-  const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
-  const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename.replace('.js', `${proxyRewritesHash}.js`)}` : `bundle:${filename}`
+  // Cache patched bundles under a separate prefix so they don't collide with
+  // raw bundles. Hash the rewrite/patch inputs so changes to either (different
+  // proxyPrefix, new sdkPatches domain, etc.) invalidate the cache.
+  const hasRewrites = !!(proxyRewrites?.length || sdkPatches?.length)
+  const rewriteHash = hasRewrites ? `-${ohash({ proxyRewrites, sdkPatches })}` : ''
+  const cacheKey = hasRewrites ? `bundle-patched:${filename.replace('.js', `${rewriteHash}.js`)}` : `bundle:${filename}`
   const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
   if (shouldUseCache) {
@@ -160,12 +161,14 @@ async function downloadScript(opts: {
     fetched = true
 
     await storage.setItemRaw(`bundle:${filename}`, res)
-    // Apply URL rewrites for proxy mode (AST-based at build time)
-    if (proxyRewrites?.length && res) {
+    // Apply AST rewrites at build time. Runs when either proxy rewrites are
+    // present (proxy mode) or bundle-only sdkPatches are configured (e.g.
+    // Fathom's neutralize-domain-check).
+    if (hasRewrites && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites, sdkPatches, { skipApiRewrites, neutralizeCanvas })
+      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites ?? [], sdkPatches, { skipApiRewrites, neutralizeCanvas })
       res = Buffer.from(rewritten, 'utf-8')
-      logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
+      logger.debug(`Rewrote ${proxyRewrites?.length ?? 0} URL patterns + ${sdkPatches?.length ?? 0} sdk patches in ${filename}`)
     }
 
     await storage.setItemRaw(cacheKey, res)
@@ -466,8 +469,18 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       from: domain,
                       to: `${options.proxyPrefix}/${domain}`,
                     }))
-                    const sdkPatches = proxyConfig?.sdkPatches
+                    // Bundle-only SDK patches (independent of proxy). Used when bundling
+                    // a script that needs neutralize-domain-check etc. but should keep
+                    // sending requests directly to its origin (e.g. Fathom).
+                    // When both are defined, proxyConfig.sdkPatches wins — proxy patches
+                    // are typically tuned for the rewritten URL set and should take precedence.
+                    const bundleConfig = typeof script?.bundle === 'object' ? script.bundle : undefined
+                    const sdkPatches = proxyConfig?.sdkPatches ?? bundleConfig?.sdkPatches
+                    // Skip API rewrites (sendBeacon/fetch/XHR/Image → __nuxtScripts.*) when:
+                    // 1. Partytown is active (uses resolveUrl instead), OR
+                    // 2. No proxy is active (no intercept plugin loaded — calls would crash)
                     const skipApiRewrites = !!(registryKey && options.partytownScripts?.has(registryKey))
+                      || !proxyConfig
                     // Gate canvas fingerprinting neutralization on the script's hardware privacy flag
                     const neutralizeCanvas = proxyConfig?.privacy !== undefined
                       && typeof proxyConfig.privacy === 'object'
