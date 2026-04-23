@@ -115,7 +115,7 @@ describe('nuxtScriptTransformer', () => {
     })`,
 
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
   })
 
   it('options arg', async () => {
@@ -126,7 +126,7 @@ describe('nuxtScriptTransformer', () => {
     })`,
 
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript({ defer: true, src: '/_scripts/assets/beacon.min.js' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript({ defer: true, src: '/_scripts/assets/e3b0c44298fc1c14.js' }, )"`)
   })
 
   it('dynamic src is not transformed', async () => {
@@ -164,7 +164,7 @@ describe('nuxtScriptTransformer', () => {
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ src: '/_scripts/assets/custom.js.js' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ src: '/_scripts/assets/e3b0c44298fc1c14.js' }, )"`)
   })
 
   it('registry script with scriptOptions.bundle - correct usage', async () => {
@@ -193,7 +193,7 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/analytics.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' }, 
               id: 'GA_MEASUREMENT_ID',
               scriptOptions: {
                 bundle: true
@@ -227,7 +227,7 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/gtag/js.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' }, 
               id: 'GA_MEASUREMENT_ID'
             }, )"
     `)
@@ -252,7 +252,7 @@ describe('nuxtScriptTransformer', () => {
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ scriptInput: { src: '/_scripts/assets/script.js.js' },  site: '123' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptFathomAnalytics({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' },  site: '123' }, )"`)
   })
 
   it('static src integration is transformed - opt-out', async () => {
@@ -300,7 +300,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' },  app_id: '123' })"`)
   })
 
   it('dynamic src integration can be opted-out explicit', async () => {
@@ -347,7 +347,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' }, )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' },  app_id: '123' }, )"`)
   })
 
   it('can re-use opt-in once it\'s loaded', async () => {
@@ -370,8 +370,8 @@ describe('nuxtScriptTransformer', () => {
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget/123.js' },  app_id: '123' }, )
-      const instance2 = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/widget.js' } })"
+      "const instance = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' },  app_id: '123' }, )
+      const instance2 = useScriptIntercom({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' } })"
     `)
   })
 
@@ -396,7 +396,7 @@ describe('nuxtScriptTransformer', () => {
 
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/assets/jKysJQD_rnWtMaRpo62kJcIJ4PsW_O2f1NXNqksJbMk.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptNpm({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' },  packageName: 'jsconfetti', version: '1.0.0', file: 'dist/index.js' })"`)
   })
 
   it('useScript broken #1', async () => {
@@ -425,7 +425,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
   }
 });`,
     )
-    expect(code.includes('useScript(\'/_scripts/assets/vFJ41_fzYQOTRPr3v6G1PkI0hc5tMy0HGrgFjhaJhOI.js\', {')).toBeTruthy()
+    expect(code).toMatch(/useScript\('\/_scripts\/assets\/[a-f0-9]{16}\.js', \{/)
   })
 
   it('uses baseURL without cdnURL', async () => {
@@ -441,7 +441,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     )
 
     // Without cdnURL configured, it should use baseURL
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
   })
 
   it('bundle: "force" works the same as bundle: true', async () => {
@@ -452,7 +452,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     })`,
 
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
   })
 
   it('registry script with scriptOptions.bundle: "force"', async () => {
@@ -481,7 +481,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/analytics.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' }, 
               id: 'GA_MEASUREMENT_ID',
               scriptOptions: {
                 bundle: 'force'
@@ -515,7 +515,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       },
     )
     expect(code).toMatchInlineSnapshot(`
-      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/gtag/js.js' }, 
+      "const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/e3b0c44298fc1c14.js' }, 
               id: 'GA_MEASUREMENT_ID'
             }, )"
     `)
@@ -535,7 +535,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     )
 
     // Verify transformation still works with custom cache duration
-    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
   })
 
   describe('cache invalidation', () => {
@@ -639,7 +639,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
 
       // Verify the script was fetched (not just cached)
       expect(fetch).toHaveBeenCalled()
-      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
     })
 
     it('should store bundle metadata with timestamp on download', async () => {
@@ -666,7 +666,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
 
-      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
 
       // Verify metadata was stored
       const metadataCall = mockBundleStorage.setItem.mock.calls.find(call =>
@@ -702,7 +702,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
 
-      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/beacon.min.js', )"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/951c324253eef4b3.js', )"`)
 
       // Verify fetch was not called (used cache)
       expect(fetch).not.toHaveBeenCalled()
@@ -712,9 +712,8 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       expect(mockBundleStorage.getItem).toHaveBeenCalledWith('bundle-meta:beacon.min.js')
       expect(mockBundleStorage.getItemRaw).toHaveBeenCalledWith('bundle:beacon.min.js')
 
-      // Verify the cached content was used (check both possible keys)
-      const scriptEntry = renderedScript.get('https://static.cloudflareinsights.com/beacon.min.js')
-        || renderedScript.get('/_scripts/assets/beacon.min.js')
+      // renderedScript is keyed by the content-addressed public URL, so locate the entry by source.
+      const scriptEntry = [...renderedScript.values()].find(e => !(e instanceof Error) && e.src === 'https://static.cloudflareinsights.com/beacon.min.js')
       expect(scriptEntry).toBeDefined()
       expect(scriptEntry?.content).toBe(cachedContent)
       expect(scriptEntry?.size).toBe(cachedContent.length / 1024)
@@ -749,7 +748,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' } })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' } })"`)
   })
 
   describe('configuration merging', () => {
@@ -788,7 +787,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' } })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' } })"`)
     })
 
     it('merges multiple properties from registry config', async () => {
@@ -830,7 +829,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' } })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' } })"`)
     })
 
     it('function arguments override merged registry config', async () => {
@@ -872,7 +871,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
       // Function args take precedence: id from function, debug and l from registry
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' },  id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' },  id: 'GTM-FUNCTION-OVERRIDE', customParam: 'test' })"`)
     })
 
     it('works with empty registry config', async () => {
@@ -967,7 +966,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           ],
         },
       )
-      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/gtag/js.js' } })"`)
+      expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleAnalytics({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' } })"`)
     })
   })
 
@@ -1005,7 +1004,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         ],
       },
     )
-    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/gtm.js.js' },  id: 'GTM-FUNCTION-ARG' })"`)
+    expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' },  id: 'GTM-FUNCTION-ARG' })"`)
   })
 
   describe('integrity', () => {
@@ -1188,16 +1187,14 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       expect(code).not.toContain('crossorigin:')
     })
 
-    it('loads cached integrity hash', async () => {
+    it('computes integrity from cached content', async () => {
       vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
 
       const cachedContent = Buffer.from('cached script content')
-      const cachedIntegrity = 'sha384-cachedHashValue'
 
       mockBundleStorage.hasItem.mockResolvedValue(true)
       mockBundleStorage.getItem.mockResolvedValue({
         timestamp: Date.now(),
-        integrity: cachedIntegrity,
       })
       mockBundleStorage.getItemRaw.mockResolvedValue(cachedContent)
 
@@ -1211,10 +1208,11 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
 
-      expect(code).toContain(cachedIntegrity)
+      // Integrity is computed fresh from cached content, yielding a deterministic SRI hash.
+      expect(code).toMatch(/integrity: 'sha384-[A-Za-z0-9+/=]+'/)
     })
 
-    it('stores integrity hash in metadata', async () => {
+    it('uses content-addressed public filename', async () => {
       vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
       mockBundleStorage.hasItem.mockResolvedValue(false)
 
@@ -1226,7 +1224,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         _data: scriptContent,
       } as any)
 
-      await transform(
+      const code = await transform(
         `const instance = useScript('https://static.cloudflareinsights.com/beacon.min.js', {
           bundle: true,
         })`,
@@ -1236,12 +1234,10 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
       )
 
-      const metadataCall = mockBundleStorage.setItem.mock.calls.find(call =>
-        call[0].startsWith('bundle-meta:'),
-      )
-      expect(metadataCall).toBeDefined()
-      expect(metadataCall[1].integrity).toBeDefined()
-      expect(metadataCall[1].integrity).toMatch(/^sha384-/)
+      // Public URL should not be derived from the source URL hash ('beacon.min');
+      // it must be a content hash so changed content yields a changed filename.
+      expect(code).not.toContain('/_scripts/assets/beacon.min.js')
+      expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
     })
   })
 

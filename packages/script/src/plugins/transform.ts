@@ -92,19 +92,25 @@ export interface AssetBundlerTransformerOptions {
   partytownScripts?: Set<string>
 }
 
+function safeFilename(h: string): string {
+  // Prefix hashes starting with '-' — Nitro's publicAssets handler cannot serve
+  // files whose names begin with a dash (they get omitted from the asset manifest).
+  return `${h.startsWith('-') ? `_${h.slice(1)}` : h}.js`
+}
+
+function buildAssetUrl(filename: string, assetsBaseURL: string = '/_scripts/assets'): string {
+  const nuxt = tryUseNuxt()
+  const cdnURL = nuxt?.options.runtimeConfig?.app?.cdnURL || nuxt?.options.app?.cdnURL || ''
+  const baseURL = cdnURL || nuxt?.options.app.baseURL || ''
+  return joinURL(joinURL(baseURL, assetsBaseURL), filename)
+}
+
 function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts/assets'): { url: string, filename?: string } {
   if (hasProtocol(src, { acceptRelative: true })) {
     src = src.replace(PROTOCOL_RELATIVE_RE, 'https://')
     const url = parseURL(src)
-    const h = ohash(url)
-    // Prefix hashes starting with '-' — Nitro's publicAssets handler cannot serve
-    // files whose names begin with a dash (they get omitted from the asset manifest).
-    const file = `${h.startsWith('-') ? `_${h.slice(1)}` : h}.js`
-    const nuxt = tryUseNuxt()
-    // Use cdnURL if available, otherwise fall back to baseURL
-    const cdnURL = nuxt?.options.runtimeConfig?.app?.cdnURL || nuxt?.options.app?.cdnURL || ''
-    const baseURL = cdnURL || nuxt?.options.app.baseURL || ''
-    return { url: joinURL(joinURL(baseURL, assetsBaseURL), file), filename: file }
+    const file = safeFilename(ohash(url))
+    return { url: buildAssetUrl(file, assetsBaseURL), filename: file }
   }
   return { url: src }
 }
@@ -118,37 +124,30 @@ async function downloadScript(opts: {
   integrity?: boolean | IntegrityAlgorithm
   skipApiRewrites?: boolean
   neutralizeCanvas?: boolean
-}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number) {
-  const { src, url, filename, forceDownload, integrity, proxyRewrites, sdkPatches, skipApiRewrites, neutralizeCanvas } = opts
+  assetsBaseURL?: string
+}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
+  const { src, url, filename, forceDownload, integrity, proxyRewrites, sdkPatches, skipApiRewrites, neutralizeCanvas, assetsBaseURL } = opts
   if (src === url || !filename) {
     return
   }
   const storage = bundleStorage()
-  const scriptContent = renderedScript.get(src)
-  let res: Buffer | undefined = scriptContent instanceof Error ? undefined : scriptContent?.content
-  if (!res) {
-    // Use storage to cache the font data between builds
-    // Include proxy in cache key to differentiate proxied vs non-proxied versions
-    // Also include a hash of proxyRewrites content to handle different proxyPrefix values
-    const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
-    const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename.replace('.js', `${proxyRewritesHash}.js`)}` : `bundle:${filename}`
-    const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
+  let res: Buffer | undefined
+  let encoding: string | null | undefined
+  let size = 0
+  let fetched = false
 
-    if (shouldUseCache) {
-      const cachedContent = await storage.getItemRaw<Buffer>(cacheKey)
-      const meta = await storage.getItem(`bundle-meta:${filename}`) as { integrity?: string } | null
-      renderedScript.set(url, {
-        content: cachedContent!,
-        size: cachedContent!.length / 1024,
-        encoding: 'utf-8',
-        src,
-        filename,
-        integrity: meta?.integrity,
-      })
-      return
-    }
-    let encoding
-    let size = 0
+  // Use storage to cache the font data between builds
+  // Include proxy in cache key to differentiate proxied vs non-proxied versions
+  // Also include a hash of proxyRewrites content to handle different proxyPrefix values
+  const proxyRewritesHash = proxyRewrites?.length ? `-${ohash(proxyRewrites)}` : ''
+  const cacheKey = proxyRewrites?.length ? `bundle-proxy:${filename.replace('.js', `${proxyRewritesHash}.js`)}` : `bundle:${filename}`
+  const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
+
+  if (shouldUseCache) {
+    res = await storage.getItemRaw<Buffer>(cacheKey) as Buffer
+    encoding = 'utf-8'
+  }
+  else {
     res = await $fetch.raw(src, { ...fetchOptions, responseType: 'arrayBuffer' }).then(async (r) => {
       if (!r.ok) {
         throw new Error(`Failed to fetch ${src} (HTTP ${r.status})`)
@@ -158,40 +157,54 @@ async function downloadScript(opts: {
       size = contentLength ? Number(contentLength) / 1024 : 0
       return Buffer.from(r._data || await r.arrayBuffer())
     })
+    fetched = true
 
     await storage.setItemRaw(`bundle:${filename}`, res)
     // Apply URL rewrites for proxy mode (AST-based at build time)
     if (proxyRewrites?.length && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename || 'script.js', proxyRewrites, sdkPatches, { skipApiRewrites, neutralizeCanvas })
+      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites, sdkPatches, { skipApiRewrites, neutralizeCanvas })
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites.length} URL patterns in ${filename}`)
     }
 
-    // Calculate integrity hash after rewrites so the hash matches the served content
-    const integrityHash = integrity && res
-      ? calculateIntegrity(res, integrity === true ? 'sha384' : integrity)
-      : undefined
-
     await storage.setItemRaw(cacheKey, res)
-    // Save metadata with timestamp for cache expiration
     await storage.setItem(`bundle-meta:${filename}`, {
       timestamp: Date.now(),
       src,
       filename,
-      integrity: integrityHash,
-    })
-    size = size || res!.length / 1024
-    logger.info(`Downloading script ${colors.gray(`${src} → ${filename} (${size.toFixed(2)} kB ${encoding})${integrityHash ? ` [${integrityHash.slice(0, 15)}...]` : ''}`)}`)
-    renderedScript.set(url, {
-      content: res!,
-      size,
-      encoding,
-      src,
-      filename,
-      integrity: integrityHash,
     })
   }
+
+  if (!res) {
+    return
+  }
+
+  // Content-address the public filename so when the upstream script or proxy
+  // rewrites change between deployments, the URL changes too. Without this,
+  // long-cached JS at an unchanged URL ends up served against a new integrity
+  // hash in fresh HTML, breaking SRI on the second deploy.
+  const contentHash = createHash('sha256').update(res).digest('hex').slice(0, 16)
+  const publicFilename = safeFilename(contentHash)
+  const publicUrl = buildAssetUrl(publicFilename, assetsBaseURL)
+
+  const integrityHash = integrity
+    ? calculateIntegrity(res, integrity === true ? 'sha384' : integrity)
+    : undefined
+
+  size = size || res.length / 1024
+  if (fetched) {
+    logger.info(`Downloading script ${colors.gray(`${src} → ${publicFilename} (${size.toFixed(2)} kB ${encoding})${integrityHash ? ` [${integrityHash.slice(0, 15)}...]` : ''}`)}`)
+  }
+  renderedScript.set(publicUrl, {
+    content: res,
+    size,
+    encoding: encoding || undefined,
+    src,
+    filename: publicFilename,
+    integrity: integrityHash,
+  })
+  return { url: publicUrl, filename: publicFilename }
 }
 
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
@@ -465,7 +478,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     deferredOps.push(async () => {
                       let url = _url
                       try {
-                        await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, sdkPatches, integrity: options.integrity, skipApiRewrites, neutralizeCanvas }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                        const result = await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, sdkPatches, integrity: options.integrity, skipApiRewrites, neutralizeCanvas, assetsBaseURL: options.assetsBaseURL }, renderedScript, options.fetchOptions, options.cacheMaxAge)
+                        if (result) {
+                          url = result.url
+                        }
                       }
                       catch (e: any) {
                         if (options.fallbackOnSrcOnBundleFail) {
