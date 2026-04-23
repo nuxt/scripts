@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.1",
   "private": true,
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.33.1",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "license": "MIT",
   "repository": {
