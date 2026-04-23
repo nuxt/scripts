@@ -136,12 +136,12 @@ async function downloadScript(opts: {
   let size = 0
   let fetched = false
 
-  // Use storage to cache the font data between builds
-  // Include proxy in cache key to differentiate proxied vs non-proxied versions
-  // Also include a hash of proxyRewrites and sdkPatches content to handle different proxyPrefix values and bundle-only patches
+  // Cache patched bundles under a separate prefix so they don't collide with
+  // raw bundles. Hash the rewrite/patch inputs so changes to either (different
+  // proxyPrefix, new sdkPatches domain, etc.) invalidate the cache.
   const hasRewrites = !!(proxyRewrites?.length || sdkPatches?.length)
   const rewriteHash = hasRewrites ? `-${ohash({ proxyRewrites, sdkPatches })}` : ''
-  const cacheKey = hasRewrites ? `bundle-proxy:${filename.replace('.js', `${rewriteHash}.js`)}` : `bundle:${filename}`
+  const cacheKey = hasRewrites ? `bundle-patched:${filename.replace('.js', `${rewriteHash}.js`)}` : `bundle:${filename}`
   const shouldUseCache = !forceDownload && await storage.hasItem(cacheKey) && !(await isCacheExpired(storage, filename, cacheMaxAge))
 
   if (shouldUseCache) {
@@ -472,6 +472,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // Bundle-only SDK patches (independent of proxy). Used when bundling
                     // a script that needs neutralize-domain-check etc. but should keep
                     // sending requests directly to its origin (e.g. Fathom).
+                    // When both are defined, proxyConfig.sdkPatches wins — proxy patches
+                    // are typically tuned for the rewritten URL set and should take precedence.
                     const bundleConfig = typeof script?.bundle === 'object' ? script.bundle : undefined
                     const sdkPatches = proxyConfig?.sdkPatches ?? bundleConfig?.sdkPatches
                     // Skip API rewrites (sendBeacon/fetch/XHR/Image → __nuxtScripts.*) when:
