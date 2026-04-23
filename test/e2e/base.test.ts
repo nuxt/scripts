@@ -20,6 +20,6 @@ describe('base', async () => {
     await page.waitForTimeout(500)
     // get content of #script-src
     const text = await page.$eval('#script-src', el => el.textContent)
-    expect(text).toMatchInlineSnapshot(`"/foo/_scripts/assets/6bEy8slcRmYcRT4E2QbQZ1CMyWw9PpHA7L87BtvSs2U.js"`)
+    expect(text).toMatchInlineSnapshot(`"/foo/_scripts/assets/ff1523fb7389539c.js"`)
   })
 })
