@@ -2,6 +2,7 @@
 // Same source URL, different content between deployments must yield different public URLs,
 // otherwise a long-cached asset serves stale bytes against a fresh SRI hash.
 import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
+import { createHash } from 'node:crypto'
 import { hash } from 'ohash'
 import { hasProtocol } from 'ufo'
 import { describe, expect, it, vi } from 'vitest'
@@ -100,13 +101,15 @@ describe('two-deploy bundle repro (#724)', () => {
   })
 
   it('integrity hash matches the final served bytes', async () => {
-    mockUpstreamBody(Buffer.from('/* adsbygoogle v1 */'))
+    const body = Buffer.from('/* adsbygoogle v1 */')
+    mockUpstreamBody(body)
     const code = await runTransform(src, { integrity: true })
     const url = extractPublicUrl(code)
     const integrityMatch = code.match(/integrity: '(sha384-[^']+)'/)
 
+    const expectedIntegrity = `sha384-${createHash('sha384').update(body).digest('base64')}`
     expect(url).toMatch(/[a-f0-9]{16}\.js$/)
-    expect(integrityMatch).toBeTruthy()
+    expect(integrityMatch?.[1]).toBe(expectedIntegrity)
     // Filename and integrity both derive from the same post-rewrite bytes,
     // so they cannot drift apart across deployments.
   })
