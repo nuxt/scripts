@@ -24,8 +24,8 @@
     "release": "pnpm build && bumpp -r --output=CHANGELOG.md",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest",
-    "test:run": "vitest run",
+    "test": "vitest --project typecheck --project unit --project e2e --project nuxt-runtime",
+    "test:run": "vitest run --project typecheck --project unit --project e2e --project nuxt-runtime",
     "test:e2e-dev": "vitest run --project e2e-dev",
     "test:types": "vitest run --project typecheck"
   },
