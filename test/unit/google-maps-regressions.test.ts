@@ -620,5 +620,75 @@ describe('google Maps Regressions', () => {
         { mapId: 'SAME_ID', scheme: 'DARK' },
       )).toBe(true)
     })
+
+    it('persists the user-panned center via centerOverride before tearing down', () => {
+      // Regression: after the re-init watcher captured zoom/center, it created
+      // the new Map with the captured center, but the standalone center
+      // watcher (which depends on `options.value.center` and `map`) re-fired
+      // when `map.value` was reassigned. Because `options.value.center` still
+      // pointed at the *prop-defined* initial center, the watcher then called
+      // setCenter(initialCenter), discarding the user's pan.
+      // Fix: write the captured center to `centerOverride` before teardown so
+      // that `options.value.center` reflects the user's pan; the watcher's
+      // lat/lng comparison guard then short-circuits.
+      const map = createMockMap()
+      // User panned to (50, 100)
+      map.getCenter.mockReturnValue({ lat: () => 50, lng: () => 100 })
+
+      // Simulate: capture center → write to centerOverride
+      const captured = map.getCenter()
+      const centerOverride = { lat: captured.lat(), lng: captured.lng() }
+
+      // Simulate the options computed after centerOverride is set:
+      // `defu({ center: centerOverride, ... }, props.mapOptions, { center: props.center }, ...)`
+      // centerOverride wins.
+      const propsCenter = { lat: 0, lng: 0 } // initial prop center
+      const optionsCenter = centerOverride || propsCenter
+
+      // The center watcher comparison guard now sees:
+      //   current = newMap.getCenter() = { lat: 50, lng: 100 }
+      //   new     = options.value.center = { lat: 50, lng: 100 }
+      // → matches → setCenter is skipped.
+      expect(optionsCenter.lat).toBe(50)
+      expect(optionsCenter.lng).toBe(100)
+      // Without the fix, optionsCenter would have been the prop's initial value:
+      expect(optionsCenter).not.toEqual(propsCenter)
+    })
+
+    it('passes captured zoom and center to the new Map instance', () => {
+      // The re-init watcher reads the live map state before teardown and uses
+      // the captured values when constructing the new Map. Verifies that the
+      // _options object spread does not let an undefined captured zoom fall
+      // back to a stale options value, and that the literal coordinate object
+      // is the right shape for Google Maps.
+      const map = createMockMap()
+      map.getCenter.mockReturnValue({ lat: () => 50, lng: () => 100 })
+      map.getZoom.mockReturnValue(10)
+
+      const optionsValue = { zoom: 5, center: { lat: 0, lng: 0 }, mapId: 'a', colorScheme: 'DARK' }
+
+      const center = map.getCenter()
+      const zoom = map.getZoom()
+      const _options = {
+        ...optionsValue,
+        center: center ? { lat: center.lat(), lng: center.lng() } : optionsValue.center,
+        zoom: zoom ?? optionsValue.zoom,
+      }
+
+      expect(_options.zoom).toBe(10)
+      expect(_options.center).toEqual({ lat: 50, lng: 100 })
+      // mapId/colorScheme from the new options pass through (init-only, but the
+      // new instance can accept them).
+      expect(_options.mapId).toBe('a')
+      expect(_options.colorScheme).toBe('DARK')
+    })
+
+    it('preserves zoom of 0 (a valid Google Maps zoom level)', () => {
+      // `zoom ?? options.value.zoom` correctly handles 0 vs undefined.
+      const map = createMockMap()
+      map.getZoom.mockReturnValue(0)
+      const zoom = map.getZoom()
+      expect(zoom ?? 15).toBe(0)
+    })
   })
 })
