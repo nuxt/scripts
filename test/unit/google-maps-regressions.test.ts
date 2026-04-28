@@ -502,4 +502,118 @@ describe('google Maps Regressions', () => {
       expect(iw.close).not.toHaveBeenCalled()
     })
   })
+
+  describe('color-mode reactivity for cloud-based map IDs (#726)', () => {
+    // Regression: toggling color mode with `mapIds` set (or with cloud-based
+    // styling on a single mapId) did not update the map. The old code passed
+    // the resolved mapId via `setOptions`, which Google Maps refuses
+    // ("A Map's mapId property cannot be changed after initial Map render").
+    // Both `mapId` and `colorScheme` are init-only; the fix excludes them
+    // from the generic setOptions call and re-initialises the Map instance
+    // when either changes.
+
+    function resolveMapId(props: {
+      mapIds?: { light?: string, dark?: string }
+      mapOptions?: { mapId?: string }
+    }, colorMode: 'light' | 'dark') {
+      if (!props.mapIds)
+        return props.mapOptions?.mapId
+      return props.mapIds[colorMode] || props.mapIds.light || props.mapOptions?.mapId
+    }
+
+    function resolveColorScheme(props: {
+      mapIds?: { light?: string, dark?: string }
+      colorMode?: 'light' | 'dark'
+      hasNuxtColorMode?: boolean
+    }, currentColorMode: 'light' | 'dark') {
+      if (!props.mapIds && !props.colorMode && !props.hasNuxtColorMode)
+        return undefined
+      return currentColorMode === 'dark' ? 'DARK' : 'LIGHT'
+    }
+
+    function applyOptionsFixed(map: ReturnType<typeof createMockMap>, options: Record<string, any>) {
+      const { center: _, zoom: __, mapId: ___, colorScheme: ____, ...rest } = options
+      map.setOptions(rest)
+    }
+
+    it('strips mapId and colorScheme from setOptions to avoid the init-only warning', () => {
+      const map = createMockMap()
+      const options = {
+        center: { lat: 40, lng: -74 },
+        zoom: 12,
+        mapId: 'abc',
+        colorScheme: 'DARK',
+        disableDefaultUI: true,
+      }
+
+      applyOptionsFixed(map, options)
+
+      expect(map.setOptions).toHaveBeenCalledWith({ disableDefaultUI: true })
+      expect(map.setOptions).not.toHaveBeenCalledWith(
+        expect.objectContaining({ mapId: expect.anything() }),
+      )
+      expect(map.setOptions).not.toHaveBeenCalledWith(
+        expect.objectContaining({ colorScheme: expect.anything() }),
+      )
+    })
+
+    it('resolves a different mapId per color mode when both light and dark are provided', () => {
+      const props = { mapIds: { light: 'LIGHT_ID', dark: 'DARK_ID' } }
+
+      expect(resolveMapId(props, 'light')).toBe('LIGHT_ID')
+      expect(resolveMapId(props, 'dark')).toBe('DARK_ID')
+    })
+
+    it('emits a colorScheme so a single mapId with cloud-based light/dark styling can re-init', () => {
+      // User configured one mapId in Cloud Console with both Light and Dark
+      // schemes. mapIds resolves to the same id in both modes, so the only
+      // signal that triggers re-init is the colorScheme value.
+      const props = { mapIds: { light: 'SAME_ID', dark: 'SAME_ID' } }
+
+      expect(resolveMapId(props, 'light')).toBe('SAME_ID')
+      expect(resolveMapId(props, 'dark')).toBe('SAME_ID')
+
+      expect(resolveColorScheme(props, 'light')).toBe('LIGHT')
+      expect(resolveColorScheme(props, 'dark')).toBe('DARK')
+    })
+
+    it('does not emit a colorScheme when no color-mode props or @nuxtjs/color-mode are present', () => {
+      // Avoid forcing a LIGHT scheme on existing maps that never opted in to
+      // color-mode reactivity — would otherwise needlessly re-init on first
+      // mount or accidentally override mapOptions.colorScheme.
+      expect(resolveColorScheme({}, 'light')).toBeUndefined()
+    })
+
+    it('emits a colorScheme when @nuxtjs/color-mode is detected even without explicit mapIds', () => {
+      expect(resolveColorScheme({ hasNuxtColorMode: true }, 'dark')).toBe('DARK')
+    })
+
+    it('triggers re-init only when the resolved mapId or colorScheme actually changes', () => {
+      // Mirrors the dedup guard in the recreate watcher.
+      function shouldReinit(
+        prev: { mapId: string | undefined, scheme: string | undefined },
+        next: { mapId: string | undefined, scheme: string | undefined },
+      ) {
+        return prev.mapId !== next.mapId || prev.scheme !== next.scheme
+      }
+
+      // Identical → no re-init (covers e.g. unrelated re-renders that re-evaluate the options computed).
+      expect(shouldReinit(
+        { mapId: 'abc', scheme: 'LIGHT' },
+        { mapId: 'abc', scheme: 'LIGHT' },
+      )).toBe(false)
+
+      // mapId changes (two-id light/dark setup).
+      expect(shouldReinit(
+        { mapId: 'LIGHT_ID', scheme: 'LIGHT' },
+        { mapId: 'DARK_ID', scheme: 'DARK' },
+      )).toBe(true)
+
+      // Single mapId, only colorScheme changes (cloud styling on one id).
+      expect(shouldReinit(
+        { mapId: 'SAME_ID', scheme: 'LIGHT' },
+        { mapId: 'SAME_ID', scheme: 'DARK' },
+      )).toBe(true)
+    })
+  })
 })
