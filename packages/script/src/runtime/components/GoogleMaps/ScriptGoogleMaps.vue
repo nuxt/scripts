@@ -446,6 +446,12 @@ onMounted(() => {
     if (map.value && zoom != null)
       map.value.setZoom(zoom)
   })
+  // Clear centerOverride when the controlled center prop changes so external
+  // updates take effect (otherwise centerOverride, written from the user's
+  // pan during re-init, would permanently win over future prop updates).
+  watch([() => props.center, () => props.mapOptions?.center], () => {
+    centerOverride.value = undefined
+  })
   watch([() => options.value.center, isMapReady, map], async (next) => {
     if (!map.value) {
       return

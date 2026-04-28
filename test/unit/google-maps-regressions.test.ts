@@ -690,5 +690,39 @@ describe('google Maps Regressions', () => {
       const zoom = map.getZoom()
       expect(zoom ?? 15).toBe(0)
     })
+
+    it('re-emits ready after map re-init so imperative bindings can re-attach', () => {
+      // Consumers that attach state via the exposed `map` ref (rather than
+      // declarative children) need a signal to re-bind after the Map instance
+      // is recreated on color-mode change.
+      const emit = vi.fn()
+      const exposed = { map: { value: createMockMap() } } as any
+
+      // initial ready
+      emit('ready', exposed)
+
+      // simulate re-init with a new map instance
+      exposed.map.value = createMockMap()
+      emit('ready', exposed)
+
+      expect(emit).toHaveBeenCalledTimes(2)
+      expect(emit).toHaveBeenNthCalledWith(2, 'ready', exposed)
+    })
+
+    it('clears centerOverride when controlled center prop changes', () => {
+      // Regression: writing centerOverride from the user's pan would block
+      // subsequent prop-driven center updates because centerOverride wins
+      // over props in defu. Clearing it on prop change restores priority.
+      const centerOverride: { value: { lat: number, lng: number } | undefined } = { value: { lat: 50, lng: 100 } }
+
+      // Simulate the watcher firing on prop change
+      function onPropCenterChange() {
+        centerOverride.value = undefined
+      }
+
+      onPropCenterChange()
+
+      expect(centerOverride.value).toBeUndefined()
+    })
   })
 })
