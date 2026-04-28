@@ -29,6 +29,16 @@ describe('matchDomain', () => {
     expect(matchDomain('www.googleX.com', 'www.google.*')).toBe(false)
   })
 
+  // Security: the wildcard must not match attacker-controlled subdomains.
+  // Without a TLD shape constraint, `*` would match `attacker.com` here.
+  it('wildcard rejects attacker-controlled suffixes', () => {
+    expect(matchDomain('www.google.attacker.com', 'www.google.*')).toBe(false)
+    expect(matchDomain('www.google.com.attacker.com', 'www.google.*')).toBe(false)
+    expect(matchDomain('www.google.evil-domain.com', 'www.google.*')).toBe(false)
+    // Three or more labels in the suffix → not a valid ccTLD shape
+    expect(matchDomain('www.google.a.b.c', 'www.google.*')).toBe(false)
+  })
+
   it('escapes regex metachars in the pattern', () => {
     expect(matchDomain('foo.bar.com', 'foo+bar.com')).toBe(false)
     expect(matchDomain('foo+bar.com', 'foo+bar.com')).toBe(true)
