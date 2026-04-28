@@ -329,9 +329,11 @@ describe('google Maps Regressions', () => {
       map.setOptions(options)
     }
 
-    // Simulate the fixed watcher: strips center and zoom before calling setOptions
+    // Simulate the fixed watcher: strips center, zoom, mapId, and colorScheme
+    // before calling setOptions. mapId/colorScheme are init-only in Google Maps
+    // and are handled by a dedicated re-init watcher (see #726 regression suite).
     function applyOptionsFixed(map: ReturnType<typeof createMockMap>, options: Record<string, any>) {
-      const { center: _, zoom: __, ...rest } = options
+      const { center: _, zoom: __, mapId: ___, colorScheme: ____, ...rest } = options
       map.setOptions(rest)
     }
 
@@ -348,18 +350,21 @@ describe('google Maps Regressions', () => {
       )
     })
 
-    it('fixed behavior: setOptions excludes zoom and center', () => {
+    it('fixed behavior: setOptions excludes zoom, center, mapId, and colorScheme', () => {
       const map = createMockMap()
-      const options = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc' }
+      const options = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc', disableDefaultUI: true }
 
       applyOptionsFixed(map, options)
 
-      expect(map.setOptions).toHaveBeenCalledWith({ mapId: 'abc' })
+      expect(map.setOptions).toHaveBeenCalledWith({ disableDefaultUI: true })
       expect(map.setOptions).not.toHaveBeenCalledWith(
         expect.objectContaining({ center: expect.anything() }),
       )
       expect(map.setOptions).not.toHaveBeenCalledWith(
         expect.objectContaining({ zoom: expect.anything() }),
+      )
+      expect(map.setOptions).not.toHaveBeenCalledWith(
+        expect.objectContaining({ mapId: expect.anything() }),
       )
     })
 
