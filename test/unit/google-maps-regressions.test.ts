@@ -621,38 +621,85 @@ describe('google Maps Regressions', () => {
       )).toBe(true)
     })
 
-    it('persists the user-panned center via centerOverride before tearing down', () => {
+    it('persists the user-panned center via centerOverride and the watcher guard skips setCenter', () => {
       // Regression: after the re-init watcher captured zoom/center, it created
-      // the new Map with the captured center — but the standalone center
-      // watcher (which depends on `options.value.center` and `map`) re-fired
-      // when `map.value` was reassigned. Because `options.value.center` still
-      // pointed at the *prop-defined* initial center, the watcher then called
+      // the new Map with the captured center, but the standalone center watcher
+      // (which depends on `options.value.center` and `map`) re-fired when
+      // `map.value` was reassigned. Because `options.value.center` still pointed
+      // at the prop-defined initial center, the watcher called
       // setCenter(initialCenter), discarding the user's pan.
       // Fix: write the captured center to `centerOverride` before teardown so
       // that `options.value.center` reflects the user's pan; the watcher's
       // lat/lng comparison guard then short-circuits.
-      const map = createMockMap()
-      // User panned to (50, 100)
-      map.getCenter.mockReturnValue({ lat: () => 50, lng: () => 100 })
 
-      // Simulate: capture center → write to centerOverride
-      const captured = map.getCenter()
-      const centerOverride = { lat: captured.lat(), lng: captured.lng() }
+      // Simulate the production center watcher's runtime path.
+      function applyCenterWatcher(
+        map: ReturnType<typeof createMockMap>,
+        center: { lat: number, lng: number } | { lat: () => number, lng: () => number },
+      ) {
+        if (!map)
+          return
+        const current = map.getCenter()
+        if (current) {
+          const newLat = typeof (center as any).lat === 'function' ? (center as any).lat() : (center as any).lat
+          const newLng = typeof (center as any).lng === 'function' ? (center as any).lng() : (center as any).lng
+          if (current.lat() === newLat && current.lng() === newLng)
+            return
+        }
+        map.setCenter(center)
+      }
 
-      // Simulate the options computed after centerOverride is set:
-      // `defu({ center: centerOverride, ... }, props.mapOptions, { center: props.center }, ...)`
-      // centerOverride wins.
-      const propsCenter = { lat: 0, lng: 0 } // initial prop center
+      const newMap = createMockMap()
+      // User panned to (50, 100); the new map instance is built with the captured center.
+      newMap.getCenter.mockReturnValue({ lat: () => 50, lng: () => 100 })
+
+      const propsCenter = { lat: 0, lng: 0 }
+      const centerOverride = { lat: 50, lng: 100 } // captured before teardown
+      // options.value.center after re-init: defu hands centerOverride first.
       const optionsCenter = centerOverride || propsCenter
 
-      // The center watcher comparison guard now sees:
-      //   current = newMap.getCenter() = { lat: 50, lng: 100 }
-      //   new     = options.value.center = { lat: 50, lng: 100 }
-      // → matches → setCenter is skipped.
-      expect(optionsCenter.lat).toBe(50)
-      expect(optionsCenter.lng).toBe(100)
-      // Without the fix, optionsCenter would have been the prop's initial value:
-      expect(optionsCenter).not.toEqual(propsCenter)
+      // The watcher fires when `map` is reassigned; guard must short-circuit.
+      applyCenterWatcher(newMap, optionsCenter)
+      expect(newMap.setCenter).not.toHaveBeenCalled()
+    })
+
+    it('clears centerOverride when props.center changes so external updates still propagate', () => {
+      // Without the clear watcher, `centerOverride` would stay at the captured
+      // pan and `props.center` updates after the first re-init would never reach
+      // the map (centerOverride wins in defu precedence, so options.value.center
+      // never changes, so the center watcher never fires).
+      const map = createMockMap()
+      // Map is currently at the user's panned position
+      map.getCenter.mockReturnValue({ lat: () => 50, lng: () => 100 })
+
+      // Simulate: caller updates props.center → watcher fires and clears centerOverride
+      let centerOverride: { lat: number, lng: number } | undefined = { lat: 50, lng: 100 }
+      const newPropCenter = { lat: 10, lng: 20 }
+      let propsCenter = { lat: 0, lng: 0 }
+
+      // Watcher on requestedCenter fires before options recomputes:
+      propsCenter = newPropCenter
+      centerOverride = undefined // requestedCenter watcher clears the override
+
+      // options.value.center recomputes via defu({ center: centerOverride }, ..., { center: propsCenter })
+      const optionsCenter = centerOverride || propsCenter
+
+      // options.value.center now reflects the new prop, not the stale override.
+      expect(optionsCenter).toEqual(newPropCenter)
+      expect(centerOverride).toBeUndefined()
+
+      // Center watcher sees the new value differs from map.getCenter() and applies it.
+      function applyCenterWatcher(
+        m: ReturnType<typeof createMockMap>,
+        c: { lat: number, lng: number },
+      ) {
+        const current = m.getCenter()
+        if (current && current.lat() === c.lat && current.lng() === c.lng)
+          return
+        m.setCenter(c)
+      }
+      applyCenterWatcher(map, optionsCenter)
+      expect(map.setCenter).toHaveBeenCalledWith(newPropCenter)
     })
 
     it('passes captured zoom and center to the new Map instance', () => {

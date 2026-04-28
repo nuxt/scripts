@@ -219,7 +219,17 @@ if (import.meta.dev) {
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
 const mapEl = useTemplateRef<HTMLElement>('mapEl')
 
+// Holds a runtime-derived center that wins over props in `defu`. Set when:
+//   1. A location query (e.g. "lat,lng" string) is asynchronously resolved to LatLng
+//   2. The map is re-initialised on color-mode change (preserves user pan)
+// Cleared whenever the caller updates `props.center` or `props.mapOptions.center`,
+// so external center updates always propagate after the first re-init.
 const centerOverride = ref()
+// Track requested center so we can detect external changes and clear the override.
+const requestedCenter = computed(() => props.mapOptions?.center ?? props.center)
+watch(requestedCenter, () => {
+  centerOverride.value = undefined
+})
 
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const { load, status, onLoaded } = useScriptGoogleMaps({
