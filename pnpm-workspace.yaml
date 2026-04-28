@@ -18,7 +18,7 @@ catalog:
   '@nuxt/test-utils': ^4.0.3
   '@nuxt/ui': ^4.7.0
   '@nuxtjs/partytown': ^2.0.0
-  '@paypal/paypal-js': ^9.6.0
+  '@paypal/paypal-js': ^9.7.0
   '@shikijs/langs': ^4.0.2
   '@shikijs/themes': ^4.0.2
   '@types/google.maps': ^3.64.0
@@ -44,7 +44,7 @@ catalog:
   pathe: ^2.0.3
   pkg-types: ^2.3.1
   playwright-core: ^1.59.1
-  posthog-js: ^1.372.2
+  posthog-js: ^1.372.3
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.1.0
