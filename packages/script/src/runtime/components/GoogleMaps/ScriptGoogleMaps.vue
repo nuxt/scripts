@@ -155,7 +155,7 @@ import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 
@@ -184,6 +184,16 @@ const currentMapId = computed(() => {
   if (!props.mapIds)
     return props.mapOptions?.mapId
   return props.mapIds[currentColorMode.value] || props.mapIds.light || props.mapOptions?.mapId
+})
+
+// `colorScheme` is a Google Maps init-only option that drives Cloud-based
+// styling for a single mapId. We always derive it so that toggling color mode
+// triggers a re-init even when the resolved mapId is unchanged (e.g. a single
+// mapId hosting both Light/Dark cloud themes).
+const currentColorScheme = computed<google.maps.ColorScheme | undefined>(() => {
+  if (!props.mapIds && !props.colorMode && !nuxtColorMode.value)
+    return undefined
+  return currentColorMode.value === 'dark' ? 'DARK' as google.maps.ColorScheme : 'LIGHT' as google.maps.ColorScheme
 })
 
 const mapsApi = shallowRef<typeof google.maps | undefined>()
@@ -229,13 +239,19 @@ const options = computed(() => {
   // are mounted against a styled (mapId-less) map.
   const mapId = props.mapOptions?.styles ? undefined : (currentMapId.value || 'DEMO_MAP_ID')
   return defu(
-    { center: centerOverride.value, mapId },
+    { center: centerOverride.value, mapId, colorScheme: currentColorScheme.value },
     props.mapOptions,
     { center: props.center, zoom: props.zoom },
     { zoom: 15 },
   )
 })
 const isMapReady = ref(false)
+// Drives default-slot mounting. Starts true so children mount immediately
+// (preserving v0/v1 behavior where children wait for map readiness via
+// `useGoogleMapsResource`). Toggled false→true when the map is re-initialized
+// (mapId or colorScheme change) so child components remount and re-run their
+// `whenever({ once: true })` create callbacks against the new map instance.
+const slotMounted = ref(true)
 
 const map: ShallowRef<google.maps.Map | undefined> = shallowRef()
 
@@ -375,8 +391,43 @@ onMounted(() => {
       return
     // Exclude center and zoom — they have dedicated watchers that avoid
     // resetting user interactions (pan/zoom) on unrelated re-renders.
-    const { center: _, zoom: __, ...rest } = options.value
+    // Exclude mapId and colorScheme — Google Maps treats these as init-only;
+    // changes are handled by the dedicated re-init watcher below.
+    const { center: _, zoom: __, mapId: ___, colorScheme: ____, ...rest } = options.value
     map.value.setOptions(rest)
+  })
+  // Re-init map when mapId or colorScheme changes (e.g. user toggles color mode
+  // with `mapIds` set or with cloud-based styling on a single mapId). Both are
+  // init-only in Google Maps; setOptions is a no-op + dev warning. We tear
+  // down and recreate the map preserving the user's pan/zoom state, and
+  // toggle `slotMounted` so child components remount and re-bind to the new
+  // map instance via their `whenever({ once: true })` create callbacks.
+  watch([currentMapId, currentColorScheme], async ([newMapId, newScheme], [oldMapId, oldScheme]) => {
+    if (!map.value || !mapsApi.value || !mapEl.value)
+      return
+    if (newMapId === oldMapId && newScheme === oldScheme)
+      return
+    const center = map.value.getCenter()
+    const zoom = map.value.getZoom()
+    map.value.unbindAll()
+    map.value = undefined
+    slotMounted.value = false
+    // Clear any DOM children left by the previous Map instance — Google Maps
+    // expects to render into an empty container.
+    if (mapEl.value)
+      mapEl.value.innerHTML = ''
+    await nextTick()
+    // Component may have unmounted (or refs been torn down) during nextTick;
+    // bail out so we don't spin up a Map against a detached container.
+    if (!mapEl.value || !mapsApi.value)
+      return
+    const _options: google.maps.MapOptions = {
+      ...options.value,
+      center: center ? { lat: center.lat(), lng: center.lng() } : options.value.center,
+      zoom: zoom ?? options.value.zoom,
+    }
+    map.value = new mapsApi.value.Map(mapEl.value, _options)
+    slotMounted.value = true
   })
   watch(() => options.value.zoom, (zoom) => {
     if (map.value && zoom != null)
@@ -497,6 +548,6 @@ onBeforeUnmount(() => {
     </slot>
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot v-else-if="status === 'error'" name="error" />
-    <slot />
+    <slot v-if="slotMounted" />
   </div>
 </template>
