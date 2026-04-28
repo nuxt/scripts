@@ -1,7 +1,7 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
-import { createApp, defineEventHandler, getHeader, getHeaders, readBody, readRawBody, toNodeListener } from 'h3'
+import { createApp, defineEventHandler, getHeaders, readBody, readRawBody, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 /**
@@ -19,15 +19,12 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
   let proxyPort: number
   let capturedUpstreamBody: Buffer | null = null
 
-  let capturedUpstreamContentType: string | undefined
-
   beforeAll(async () => {
     // Mock upstream: captures raw request bytes exactly as received
     const upstreamApp = createApp()
     upstreamApp.use('/', defineEventHandler(async (event) => {
       const raw = await readRawBody(event, false)
       capturedUpstreamBody = raw ? Buffer.from(raw) : Buffer.alloc(0)
-      capturedUpstreamContentType = getHeader(event, 'content-type')
       return { status: 1 }
     }))
 
@@ -86,7 +83,6 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
 
   beforeEach(() => {
     capturedUpstreamBody = null
-    capturedUpstreamContentType = undefined
   })
 
   afterAll(() => {

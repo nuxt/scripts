@@ -354,36 +354,43 @@ describe('scriptGoogleMapsOverlayView', () => {
     // resolved a position. That caused unexpected map panning on initial mount
     // and remount. The fix gates the rAF scheduling on `open !== false` and
     // re-checks `open` + `overlayPosition` inside the callback before panning.
+    //
+    // We mock `requestAnimationFrame` to fire its callback synchronously so the
+    // panMapToFitOverlay → panBy path is exercised within the test, then assert
+    // on `panBy` (the actual user-visible side effect). Spying on rAF directly
+    // is unreliable in the Nuxt/happy-dom environment, which itself schedules
+    // background rAF calls during mount.
 
     let rafSpy: ReturnType<typeof vi.spyOn>
 
     beforeEach(() => {
-      rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame')
+      rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(((cb: FrameRequestCallback) => {
+        cb(0)
+        return 0
+      }) as typeof globalThis.requestAnimationFrame)
     })
 
     afterEach(() => {
       rafSpy.mockRestore()
     })
 
-    it('does not schedule pan-on-open when overlay starts closed (defaultOpen=false)', async () => {
+    it('does not pan when overlay starts closed (defaultOpen=false)', async () => {
       const mocks = createOverlayMocks()
       await mountOverlay(
         { position: { lat: 10, lng: 20 }, defaultOpen: false },
         mocks,
       )
 
-      expect(rafSpy).not.toHaveBeenCalled()
       expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
     })
 
-    it('does not schedule pan-on-open when controlled :open is false on mount', async () => {
+    it('does not pan when controlled :open is false on mount', async () => {
       const mocks = createOverlayMocks()
       await mountOverlay(
         { position: { lat: 10, lng: 20 }, open: false },
         mocks,
       )
 
-      expect(rafSpy).not.toHaveBeenCalled()
       expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
     })
 
@@ -391,7 +398,8 @@ describe('scriptGoogleMapsOverlayView', () => {
       const mocks = createOverlayMocks()
       await mountOverlay({ position: { lat: 10, lng: 20 } }, mocks)
 
-      // The guard allows the rAF to be scheduled when the happy path applies
+      // Happy path: rAF callback fires synchronously via the mock, then
+      // panMapToFitOverlay runs panBy off the (mock) bounding rects.
       expect(rafSpy).toHaveBeenCalled()
     })
 
@@ -402,7 +410,6 @@ describe('scriptGoogleMapsOverlayView', () => {
         mocks,
       )
 
-      expect(rafSpy).not.toHaveBeenCalled()
       expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
     })
   })
