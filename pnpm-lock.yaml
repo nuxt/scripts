@@ -31,8 +31,8 @@ catalogs:
       specifier: ^2.0.0
       version: 2.0.0
     '@paypal/paypal-js':
-      specifier: ^9.6.0
-      version: 9.6.0
+      specifier: ^9.7.0
+      version: 9.7.0
     '@shikijs/langs':
       specifier: ^4.0.2
       version: 4.0.2
@@ -109,8 +109,8 @@ catalogs:
       specifier: ^1.59.1
       version: 1.59.1
     posthog-js:
-      specifier: ^1.372.2
-      version: 1.372.2
+      specifier: ^1.372.3
+      version: 1.372.3
     shiki:
       specifier: ^4.0.2
       version: 4.0.2
@@ -170,7 +170,7 @@ importers:
         version: 2.0.0(magicast@0.5.2)
       '@paypal/paypal-js':
         specifier: 'catalog:'
-        version: 9.6.0
+        version: 9.7.0
       '@types/google.maps':
         specifier: 'catalog:'
         version: 3.64.0
@@ -206,7 +206,7 @@ importers:
         version: 1.59.1
       posthog-js:
         specifier: 'catalog:'
-        version: 1.372.2
+        version: 1.372.3
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -2007,6 +2007,9 @@ packages:
   '@paypal/paypal-js@9.6.0':
     resolution: {integrity: sha512-XVUC/2iUFcnz4cOgzTRPB0AltF2VHbALToClefCS7ehnINSx7UWKpShQbs3IIdALCaqtUDciQI8iFaBw12wM0g==}
 
+  '@paypal/paypal-js@9.7.0':
+    resolution: {integrity: sha512-eUQVZWTEhXhaPsYDmfUaOeV5zfeLUn7kCE7/BXm6uAtMhUoK0S7uPtUzosqfH1vZgjfUSyTzghDJtYxXyRRZig==}
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -2030,14 +2033,14 @@ packages:
   '@posthog/core@1.25.2':
     resolution: {integrity: sha512-h2FO7ut/BbfwpAXWpwdDHTzQgUo9ibDFEs6ZO+3cI3KPWQt5XwczK1OLAuPprcjm8T/jl0SH8jSFo5XdU4RbTg==}
 
-  '@posthog/core@1.27.6':
-    resolution: {integrity: sha512-FjvgPdORywAjgjtgkZJ2/x9ED52jtOJym/RVldY4Oa7wzmlY49rxZm8gvOlocEnjP90bSbj3ko7qVjXNhftFvA==}
+  '@posthog/core@1.27.7':
+    resolution: {integrity: sha512-6rzOZajUkhuezgPeF+ReMMly0D9oiwIZtMQrsJtZcS/mwi5OtvuYgxeaohgP9PKOhkK1c7cvGskX0Y2YUtBYCw==}
 
   '@posthog/types@1.369.0':
     resolution: {integrity: sha512-iFkLrg/+QRQHc8KSjO9parN6H3rftM2ld2sCJ/GeBRRO9MJYCdc6jXSFRgF7aGJPzb79syqksz+CrnBzdZnBKg==}
 
-  '@posthog/types@1.372.2':
-    resolution: {integrity: sha512-dx+WImdDg2NDqaDowTmW+BMNalUfPKngR+g1Iom8ULSav+fGacxexv6fSOl0uSVBwYZsDFe7qNUu0NB/rwGjEw==}
+  '@posthog/types@1.372.3':
+    resolution: {integrity: sha512-4mkXC9AhsquJnvogWtWsCi+ReODj/jbK0d3fkwCNLLTOpaiAF125FJ6OJyRFax2u+dEKXAPA/dCTGx1S2WF0nw==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -5512,8 +5515,8 @@ packages:
   posthog-js@1.369.0:
     resolution: {integrity: sha512-fOJzwpCb/TWxJBsUNKJ5PhHNl0+X7zRrVTuUrIH+EfsIfxJGSkOa0lWPJJGr3xzg810JHCUpuhn5sFBBxfHqIQ==}
 
-  posthog-js@1.372.2:
-    resolution: {integrity: sha512-FS+vKDXB1vghrVch3EDi3IRcoH5OnLQYxchHWi+8U4D4PzWQZnZLo5vyMRL1+ZUHNEZ2v599uX3UKhRZv2z6Cg==}
+  posthog-js@1.372.3:
+    resolution: {integrity: sha512-CpKWMt6RkgY4lPpyvYzKcilKKB5VhL2gmS8HgibxmXZkEk/2rUxrEtRMScH8xi4n5WDaNSluCo87dh9yo9zArQ==}
 
   powershell-utils@0.1.0:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
@@ -8344,6 +8347,10 @@ snapshots:
     dependencies:
       promise-polyfill: 8.3.0
 
+  '@paypal/paypal-js@9.7.0':
+    dependencies:
+      promise-polyfill: 8.3.0
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
@@ -8365,13 +8372,13 @@ snapshots:
 
   '@posthog/core@1.25.2': {}
 
-  '@posthog/core@1.27.6':
+  '@posthog/core@1.27.7':
     dependencies:
-      '@posthog/types': 1.372.2
+      '@posthog/types': 1.372.3
 
   '@posthog/types@1.369.0': {}
 
-  '@posthog/types@1.372.2': {}
+  '@posthog/types@1.372.3': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -12408,15 +12415,15 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
 
-  posthog-js@1.372.2:
+  posthog-js@1.372.3:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.208.0
       '@opentelemetry/exporter-logs-otlp-http': 0.208.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources': 2.6.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
-      '@posthog/core': 1.27.6
-      '@posthog/types': 1.372.2
+      '@posthog/core': 1.27.7
+      '@posthog/types': 1.372.3
       core-js: 3.49.0
       dompurify: 3.3.3
       fflate: 0.4.8
