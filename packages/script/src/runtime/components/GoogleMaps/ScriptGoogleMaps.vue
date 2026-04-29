@@ -409,6 +409,15 @@ onMounted(() => {
       return
     const center = map.value.getCenter()
     const zoom = map.value.getZoom()
+    // Persist the user's panned position into `centerOverride` *before* tearing
+    // down. Without this, `options.value.center` recomputes (defu returns a new
+    // object even when values are unchanged) and the center watcher fires when
+    // `map.value` is reassigned, calling `setCenter(propsInitialCenter)` and
+    // discarding the user's pan. centerOverride wins over props in `defu`, so
+    // the recomputed center matches the new map's actual center: the comparison
+    // guard skips the redundant setCenter.
+    if (center)
+      centerOverride.value = { lat: center.lat(), lng: center.lng() }
     map.value.unbindAll()
     map.value = undefined
     slotMounted.value = false
@@ -428,10 +437,20 @@ onMounted(() => {
     }
     map.value = new mapsApi.value.Map(mapEl.value, _options)
     slotMounted.value = true
+    // Re-emit `ready` so consumers can re-attach imperative state (e.g. pins
+    // created via `map` ref outside of declarative children, which don't
+    // automatically remount).
+    emits('ready', exposed)
   })
   watch(() => options.value.zoom, (zoom) => {
     if (map.value && zoom != null)
       map.value.setZoom(zoom)
+  })
+  // Clear centerOverride when the controlled center prop changes so external
+  // updates take effect (otherwise centerOverride, written from the user's
+  // pan during re-init, would permanently win over future prop updates).
+  watch([() => props.center, () => props.mapOptions?.center], () => {
+    centerOverride.value = undefined
   })
   watch([() => options.value.center, isMapReady, map], async (next) => {
     if (!map.value) {
