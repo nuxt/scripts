@@ -334,6 +334,10 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
             return `${proxyPrefix}/${host}`
           },
         },
+        // PostHog supports `apiHost` for self-hosted instances and custom
+        // reverse proxies. Without this, custom-host users are 403'd through
+        // the proxy because only the SaaS US/EU hosts are allowlisted.
+        configDomainFields: ['apiHost'],
       },
     }),
     def('fathomAnalytics', {
@@ -575,7 +579,13 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       proxy: {
-        domains: ['www.clarity.ms', 'scripts.clarity.ms', 'd.clarity.ms', 'e.clarity.ms', 'k.clarity.ms', 'c.clarity.ms', 'a.clarity.ms', 'b.clarity.ms'],
+        // Clarity buckets visitors across letter/hash-prefixed shards (a/b/c/d/e/k/...).
+        // Microsoft adds shards over time, so an enumerated list silently 403s
+        // through the proxy when an unlisted letter is rolled out (#728-class bug).
+        // `*.clarity.ms` covers the full surface at runtime; `www.clarity.ms` is
+        // kept literal so the build-time URL rewrite (which filters wildcards)
+        // can still rewrite `https://www.clarity.ms/tag/<id>` in bundled SDKs.
+        domains: ['www.clarity.ms', '*.clarity.ms'],
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['clarity'] },

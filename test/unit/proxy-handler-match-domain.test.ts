@@ -46,4 +46,25 @@ describe('matchDomain', () => {
     expect(matchDomain('foo.bar.com', 'foo+bar.com')).toBe(false)
     expect(matchDomain('foo+bar.com', 'foo+bar.com')).toBe(true)
   })
+
+  // Microsoft Clarity buckets visitors across letter-prefixed shards
+  // (a/b/c/d/e/k/scripts/www/...); enumerating them silently 403s through
+  // the proxy when a new shard is rolled out.
+  it('matches single-label subdomain via leading wildcard', () => {
+    expect(matchDomain('a.clarity.ms', '*.clarity.ms')).toBe(true)
+    expect(matchDomain('z.clarity.ms', '*.clarity.ms')).toBe(true)
+    expect(matchDomain('whatever.clarity.ms', '*.clarity.ms')).toBe(true)
+    expect(matchDomain('www.clarity.ms', '*.clarity.ms')).toBe(true)
+    expect(matchDomain('scripts.clarity.ms', '*.clarity.ms')).toBe(true)
+  })
+
+  it('leading wildcard requires exactly one non-dot label', () => {
+    // bare suffix has no prefix label
+    expect(matchDomain('clarity.ms', '*.clarity.ms')).toBe(false)
+    // multi-label prefix would be too permissive (attacker.clarity.ms.evil.com)
+    expect(matchDomain('a.b.clarity.ms', '*.clarity.ms')).toBe(false)
+    // different host root must not match
+    expect(matchDomain('a.evil.ms', '*.clarity.ms')).toBe(false)
+    expect(matchDomain('clarity.ms.attacker.com', '*.clarity.ms')).toBe(false)
+  })
 })
