@@ -465,7 +465,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       ? options.proxyConfigs?.[proxyConfigKey]
                       : undefined
                     // Derive rewrites from domains: { from: domain, to: proxyPrefix/domain }
-                    const proxyRewrites = proxyConfig?.domains?.map(domain => ({
+                    // Skip wildcard patterns — those exist only for runtime allowlist matching of
+                    // dynamically-constructed URLs (e.g. ga-audiences geo-localized cctlds) and have
+                    // no literal form to rewrite at build time.
+                    const proxyRewrites = proxyConfig?.domains?.filter(domain => !domain.includes('*')).map(domain => ({
                       from: domain,
                       to: `${options.proxyPrefix}/${domain}`,
                     }))

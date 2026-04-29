@@ -734,7 +734,10 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       proxy: {
-        domains: ['www.google-analytics.com', 'analytics.google.com', 'stats.g.doubleclick.net', 'pagead2.googlesyndication.com', 'www.googleadservices.com', 'googleads.g.doubleclick.net', 'www.google.com', 'www.googletagmanager.com'],
+        // `www.google.com` covers static URLs (www.google.com/g/collect) rewritten at build time;
+        // `www.google.*` covers the geo-localized ga-audiences beacon, which gtag.js dynamically
+        // fires to the visitor's local Google cctld (www.google.com.tw, www.google.co.jp, ...).
+        domains: ['www.google-analytics.com', 'analytics.google.com', 'stats.g.doubleclick.net', 'pagead2.googlesyndication.com', 'www.googleadservices.com', 'googleads.g.doubleclick.net', 'www.google.com', 'www.google.*', 'www.googletagmanager.com'],
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['dataLayer.push', 'gtag'] },
