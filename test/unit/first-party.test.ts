@@ -198,6 +198,13 @@ describe('first-party mode', () => {
         apiUrl: 'https://events.analytics.example.com',
       }, configs.databuddyAnalytics)).toEqual(['cdn.analytics.example.com', 'events.analytics.example.com'])
     })
+
+    it('derives extra allowlist domains for self-hosted PostHog apiHost', async () => {
+      const configs = await getProxyConfigs()
+      expect(resolveConfiguredProxyDomains({
+        apiHost: 'https://posthog.example.com',
+      }, configs.posthog)).toEqual(['posthog.example.com'])
+    })
   })
 
   describe('full chain: capabilities → proxy config → domains', () => {
