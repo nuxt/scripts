@@ -37,6 +37,9 @@ describe('matchDomain', () => {
     expect(matchDomain('www.google.evil-domain.com', 'www.google.*')).toBe(false)
     // Three or more labels in the suffix → not a valid ccTLD shape
     expect(matchDomain('www.google.a.b.c', 'www.google.*')).toBe(false)
+    // Two arbitrary 3-letter labels are not a real ccTLD shape; only com.<cc> / co.<cc> allowed
+    expect(matchDomain('www.google.foo.bar', 'www.google.*')).toBe(false)
+    expect(matchDomain('www.google.abc.xyz', 'www.google.*')).toBe(false)
   })
 
   it('escapes regex metachars in the pattern', () => {

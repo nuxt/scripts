@@ -2,19 +2,21 @@
  * Match a hostname against an allowlist pattern.
  *
  * Patterns may include `*` as a TLD wildcard that matches a top-level domain
- * suffix shaped like a ccTLD: either a single 2-3 letter label (`com`, `tw`,
- * `jp`, `de`) or two such labels separated by a dot (`co.jp`, `com.tw`,
- * `com.hk`). Used for geo-localized Google ccTLDs:
+ * suffix shaped like a real ccTLD or gTLD:
+ *   - `com` (the canonical gTLD we care about)
+ *   - any 2-letter ccTLD (`tw`, `jp`, `de`, ...)
+ *   - regional `com.<cc>` or `co.<cc>` (e.g. `com.tw`, `co.jp`, `com.hk`)
+ *
+ * Used for geo-localized Google ccTLDs:
  *   `www.google.*` matches `www.google.com`, `www.google.com.tw`, `www.google.co.jp`.
  *
- * Crucially, the wildcard does NOT match arbitrary attacker-controlled
- * subdomains: `www.google.attacker.com` is rejected because `attacker` is
- * longer than 3 characters (the cap that excludes generic SLDs like
- * `attacker`, `evil-domain`, etc).
+ * The pattern is intentionally narrow: it rejects attacker-controlled suffixes
+ * like `www.google.foo.bar` (two arbitrary 3-letter labels) or
+ * `www.google.attacker.com` (long second-level label).
  *
  * Bare patterns also match subdomains, e.g. `google.com` matches `mail.google.com`.
  */
-const TLD_WILDCARD_RE = /^[a-z]{2,3}(?:\.[a-z]{2,3})?$/i
+const TLD_WILDCARD_RE = /^(?:com|[a-z]{2}|(?:com|co)\.[a-z]{2})$/i
 
 export function matchDomain(domain: string, pattern: string): boolean {
   if (!pattern.includes('*'))
