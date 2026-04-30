@@ -183,8 +183,13 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
     // `initialize`, so a missing `callback` would silently break popup/One Tap).
     runtimeConfig: Partial<IdConfiguration>
   }
-  const getState = (): GsiState => {
-    const w = (import.meta.client ? window : globalThis) as any
+  // State lives on `window` (per page lifecycle, shared across remounts of
+  // the same `key`). On the server we return null so no request-scoped data
+  // ever leaks onto a shared global, and the helpers no-op there.
+  const getState = (): GsiState | null => {
+    if (!import.meta.client)
+      return null
+    const w = window as any
     w.__nuxtScriptsGsi = w.__nuxtScriptsGsi || {}
     w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || {
       initialized: false,
@@ -194,9 +199,9 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
     return w.__nuxtScriptsGsi[key] as GsiState
   }
   const ensureInit = (extra?: Partial<IdConfiguration>): boolean => {
-    if (!import.meta.client)
-      return false
     const state = getState()
+    if (!state)
+      return false
     // Google logs a warning if `initialize()` runs more than once. We always
     // call it at most once per page lifecycle; to update config you must
     // reload the page (or use a unique `key`).
@@ -220,9 +225,12 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
 
   instance.initialize = (config?: Partial<IdConfiguration>) => {
     // Stash runtime config eagerly so a renderButton/prompt that runs after
-    // this point still picks up the callback once the script loads.
+    // this point still picks up the callback once the script loads. Skipped
+    // on the server because `onLoaded` only fires on the client anyway.
+    if (!import.meta.client)
+      return
     if (config)
-      Object.assign(getState().runtimeConfig, config)
+      Object.assign(getState()!.runtimeConfig, config)
     instance.onLoaded(() => {
       ensureInit()
     })
