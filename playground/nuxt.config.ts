@@ -49,6 +49,14 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    // GSI popup delivers the credential via window.postMessage; default COOP
+    // would block it. `same-origin-allow-popups` lets the popup talk back.
+    '/third-parties/google-sign-in/**': {
+      headers: { 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups' },
+    },
+  },
+
   hooks: {
     'scripts:registry': function (registry) {
       registry.push({
