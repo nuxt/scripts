@@ -1,4 +1,4 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import { GoogleSignInOptions } from './schemas'
 
@@ -107,8 +107,34 @@ export { GoogleSignInOptions }
 
 export type GoogleSignInInput = RegistryScriptInput<typeof GoogleSignInOptions>
 
-export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: GoogleSignInInput) {
-  return useRegistryScript<T, typeof GoogleSignInOptions>(_options?.key || 'googleSignIn', () => {
+/**
+ * Helpers attached to the `useScriptGoogleSignIn()` instance.
+ *
+ * They merge schema options (passed to `useScriptGoogleSignIn(...)`) with the
+ * arguments below, ensure `accounts.id.initialize()` is called at most once
+ * across the page lifecycle (avoids the error Google emits on re-init after a
+ * button is rendered), and wait for the script to load.
+ */
+export interface GoogleSignInHelpers {
+  /**
+   * Initialize Google Identity Services. Schema options are used as defaults;
+   * pass a callback (and any other non-serializable config) here. Subsequent
+   * calls are a no-op so this is safe to invoke from a remounting component.
+   */
+  initialize: (config?: Partial<IdConfiguration>) => void
+  /**
+   * Render a personalized Google Sign-In button. Auto-initializes if needed.
+   * Safe to re-render on navigation or locale change.
+   */
+  renderButton: (parent: HTMLElement, config?: GsiButtonConfiguration) => void
+  /**
+   * Show the One Tap prompt. Auto-initializes if needed.
+   */
+  prompt: (listener?: (notification: MomentNotification) => void) => void
+}
+
+export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: GoogleSignInInput): UseScriptContext<T> & GoogleSignInHelpers {
+  const instance = useRegistryScript<T, typeof GoogleSignInOptions>(_options?.key || 'googleSignIn', (options) => {
     return {
       scriptInput: {
         src: 'https://accounts.google.com/gsi/client',
@@ -135,7 +161,86 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
             w.google = w.google || {}
             w.google.accounts = w.google.accounts || {}
             w.google.accounts.id = w.google.accounts.id || {}
+            // Stash schema-derived config so the helpers can find it after HMR / remount
+            const key = _options?.key || 'googleSignIn'
+            w.__nuxtScriptsGsi = w.__nuxtScriptsGsi || {}
+            w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || { initialized: false }
+            w.__nuxtScriptsGsi[key].schemaConfig = mapSchemaToIdConfig(options as GoogleSignInInput)
           },
     }
-  }, _options)
+  }, _options) as UseScriptContext<T> & GoogleSignInHelpers
+
+  // Helpers must be attached on both server and client — destructuring in
+  // <script setup> runs during SSR, so the methods need to exist even though
+  // the work only happens on the client (onLoaded only fires there).
+  const key = _options?.key || 'googleSignIn'
+  const getState = () => {
+    const w = (import.meta.client ? window : globalThis) as any
+    w.__nuxtScriptsGsi = w.__nuxtScriptsGsi || {}
+    w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || { initialized: false, schemaConfig: mapSchemaToIdConfig(_options) }
+    return w.__nuxtScriptsGsi[key] as { initialized: boolean, schemaConfig: Partial<IdConfiguration> }
+  }
+  const ensureInit = (extra?: Partial<IdConfiguration>) => {
+    if (!import.meta.client)
+      return
+    const state = getState()
+    // Google logs a warning if `initialize()` runs more than once. We always
+    // call it at most once per page lifecycle — to update config you must
+    // reload the page (or use a unique `key`).
+    if (state.initialized)
+      return
+    const merged = { ...state.schemaConfig, ...extra } as IdConfiguration
+    if (!merged.client_id)
+      return
+    const gid = (window as any).google?.accounts?.id
+    if (!gid)
+      return
+    gid.initialize(merged)
+    state.initialized = true
+  }
+
+  instance.initialize = (config?: Partial<IdConfiguration>) => {
+    instance.onLoaded(() => ensureInit(config))
+  }
+  instance.renderButton = (parent: HTMLElement, config: GsiButtonConfiguration = {}) => {
+    instance.onLoaded(({ accounts }) => {
+      ensureInit()
+      accounts.id.renderButton(parent, config)
+    })
+  }
+  instance.prompt = (listener?: (notification: MomentNotification) => void) => {
+    instance.onLoaded(({ accounts }) => {
+      ensureInit()
+      accounts.id.prompt(listener)
+    })
+  }
+
+  return instance
+}
+
+function mapSchemaToIdConfig(options?: GoogleSignInInput): Partial<IdConfiguration> {
+  if (!options)
+    return {}
+  const cfg: Partial<IdConfiguration> = {}
+  if (options.clientId)
+    cfg.client_id = options.clientId
+  if (options.autoSelect != null)
+    cfg.auto_select = options.autoSelect
+  if (options.context)
+    cfg.context = options.context
+  if (options.useFedcmForPrompt != null)
+    cfg.use_fedcm_for_prompt = options.useFedcmForPrompt
+  if (options.cancelOnTapOutside != null)
+    cfg.cancel_on_tap_outside = options.cancelOnTapOutside
+  if (options.uxMode)
+    cfg.ux_mode = options.uxMode
+  if (options.loginUri)
+    cfg.login_uri = options.loginUri
+  if (options.itpSupport != null)
+    cfg.itp_support = options.itpSupport
+  if (options.allowedParentOrigin)
+    cfg.allowed_parent_origin = options.allowedParentOrigin
+  if (options.hd)
+    cfg.hd = options.hd
+  return cfg
 }

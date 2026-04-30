@@ -27,6 +27,95 @@ Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`{la
 ::google-sign-in-demo
 ::
 
+## Composable API
+
+`useScriptGoogleSignIn()`{lang="ts"} returns the standard script context (`status`, `proxy`, `onLoaded`, …) plus three helpers that wrap the most common flows. Schema options passed to the composable are merged into every call so you don't have to repeat `clientId`, `loginUri`, `uxMode` etc.
+
+```ts
+const { initialize, renderButton, prompt, status, onLoaded, proxy } = useScriptGoogleSignIn({
+  clientId: 'YOUR_CLIENT_ID',
+  context: 'signin',
+  useFedcmForPrompt: true,
+})
+```
+
+### `initialize(config?)`{lang="ts"}
+
+Calls `google.accounts.id.initialize()`{lang="ts"} with schema options merged with `config`. Internally guarded so multiple calls (e.g. across navigations and component remounts) are safe; Google's API logs an error if `initialize()`{lang="ts"} runs again after a button has been rendered, so the helper only forwards the first call.
+
+```ts
+initialize({
+  callback: (response) => {
+    // verify response.credential server-side
+  }
+})
+```
+
+### `renderButton(parent, config?)`{lang="ts"}
+
+Renders the personalized button. Auto-initializes if needed and is safe to re-render on locale change or navigation.
+
+```vue
+<script setup lang="ts">
+const { initialize, renderButton } = useScriptGoogleSignIn()
+const buttonRef = useTemplateRef<HTMLDivElement>('buttonRef')
+
+initialize({ callback: handleCredential })
+
+watch(buttonRef, (el) => {
+  if (el)
+    renderButton(el, { text: 'continue_with', use_fedcm: true })
+}, { immediate: true })
+</script>
+
+<template>
+  <div ref="buttonRef" />
+</template>
+```
+
+### `prompt(listener?)`{lang="ts"}
+
+Shows the One Tap prompt. Auto-initializes if needed.
+
+```ts
+prompt((notification) => {
+  if (notification.isNotDisplayed())
+    console.log('Not shown:', notification.getNotDisplayedReason())
+})
+```
+
+### Switching locales
+
+The button locale is a `renderButton` option, not an `initialize` one. To change the language, clear the container and re-render:
+
+```ts
+watch([locale, buttonRef], ([newLocale, el]) => {
+  if (!el)
+    return
+  el.innerHTML = ''
+  renderButton(el, { locale: newLocale, use_fedcm: true })
+}, { immediate: true })
+```
+
+::note
+Google may still fall back to the user's Google account language regardless of this option. This is a Google-side behavior and not configurable.
+::
+
+### Redirect UX mode
+
+With `uxMode: 'redirect'`, Google **POSTs** the credential to your `loginUri` server endpoint as `application/x-www-form-urlencoded` (fields: `credential`, `g_csrf_token`, `select_by`, …). The credential does **not** appear as a URL fragment after the redirect; it travels in the POST body, which your server then handles before redirecting the browser.
+
+If you need the credential client-side (e.g. SPA with a separate API), use `uxMode: 'popup'` with a `callback` instead.
+
+```ts
+const { initialize, renderButton } = useScriptGoogleSignIn({
+  uxMode: 'redirect',
+  loginUri: 'https://your-server.com/auth/google',
+})
+
+initialize() // no callback needed in redirect mode
+```
+
 ## Moment Notifications
 
 Track the One Tap display state:
@@ -85,6 +174,24 @@ export default defineEventHandler(async (event) => {
   return { user }
 })
 ```
+
+## Cross-Origin-Opener-Policy
+
+In `popup` UX mode (the default), Google opens a popup that delivers the credential back to your page via `window.postMessage`. If your page sends a strict `Cross-Origin-Opener-Policy` header, the browser will block that message and the sign-in will appear to do nothing: the popup closes but no callback fires.
+
+If you set COOP at all, use `same-origin-allow-popups`:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  routeRules: {
+    '/login/**': {
+      headers: { 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups' },
+    },
+  },
+})
+```
+
+Pages without an explicit COOP header work by default. Redirect mode (`uxMode: 'redirect'`) and FedCM-only flows are unaffected.
 
 ## FedCM API Support
 
@@ -204,30 +311,20 @@ The One Tap prompt provides a simplified sign-in experience:
 
 ```vue
 <script setup lang="ts">
-const { onLoaded } = useScriptGoogleSignIn()
+const { initialize, prompt } = useScriptGoogleSignIn({
+  context: 'signin',
+  useFedcmForPrompt: true,
+})
 
 async function handleCredentialResponse(response: CredentialResponse) {
-  // Send the credential to your backend for verification
   await $fetch('/api/auth/google', {
     method: 'POST',
     body: { credential: response.credential }
   })
 }
 
-onMounted(() => {
-  onLoaded(({ accounts }) => {
-    accounts.id.initialize({
-      client_id: 'YOUR_CLIENT_ID',
-      callback: handleCredentialResponse,
-      context: 'signin',
-      ux_mode: 'popup',
-      use_fedcm_for_prompt: true // Use Privacy Sandbox FedCM API
-    })
-
-    // Show One Tap
-    accounts.id.prompt()
-  })
-})
+initialize({ callback: handleCredentialResponse })
+onMounted(() => prompt())
 </script>
 ```
 
@@ -237,35 +334,30 @@ Render Google's personalized Sign in with Google button:
 
 ```vue
 <script setup lang="ts">
-const { onLoaded } = useScriptGoogleSignIn()
+const { initialize, renderButton } = useScriptGoogleSignIn()
+const buttonRef = useTemplateRef<HTMLDivElement>('buttonRef')
 
 function handleCredentialResponse(response: CredentialResponse) {
   console.log('Signed in!', response.credential)
 }
 
-onMounted(() => {
-  onLoaded(({ accounts }) => {
-    accounts.id.initialize({
-      client_id: 'YOUR_CLIENT_ID',
-      callback: handleCredentialResponse
-    })
+initialize({ callback: handleCredentialResponse })
 
-    const buttonDiv = document.getElementById('g-signin-button')
-    if (buttonDiv) {
-      accounts.id.renderButton(buttonDiv, {
-        type: 'standard',
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        shape: 'rectangular',
-        logo_alignment: 'left'
-      })
-    }
-  })
-})
+watch(buttonRef, (el) => {
+  if (el) {
+    renderButton(el, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      text: 'signin_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+    })
+  }
+}, { immediate: true })
 </script>
 
 <template>
-  <div id="g-signin-button" />
+  <div ref="buttonRef" />
 </template>
 ```
