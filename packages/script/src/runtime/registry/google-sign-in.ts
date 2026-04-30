@@ -180,37 +180,44 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
     w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || { initialized: false, schemaConfig: mapSchemaToIdConfig(_options) }
     return w.__nuxtScriptsGsi[key] as { initialized: boolean, schemaConfig: Partial<IdConfiguration> }
   }
-  const ensureInit = (extra?: Partial<IdConfiguration>) => {
+  const ensureInit = (extra?: Partial<IdConfiguration>): boolean => {
     if (!import.meta.client)
-      return
+      return false
     const state = getState()
     // Google logs a warning if `initialize()` runs more than once. We always
-    // call it at most once per page lifecycle — to update config you must
+    // call it at most once per page lifecycle; to update config you must
     // reload the page (or use a unique `key`).
     if (state.initialized)
-      return
+      return true
     const merged = { ...state.schemaConfig, ...extra } as IdConfiguration
     if (!merged.client_id)
-      return
+      return false
     const gid = (window as any).google?.accounts?.id
     if (!gid)
-      return
+      return false
     gid.initialize(merged)
     state.initialized = true
+    return true
   }
 
   instance.initialize = (config?: Partial<IdConfiguration>) => {
-    instance.onLoaded(() => ensureInit(config))
+    instance.onLoaded(() => {
+      ensureInit(config)
+    })
   }
   instance.renderButton = (parent: HTMLElement, config: GsiButtonConfiguration = {}) => {
     instance.onLoaded(({ accounts }) => {
-      ensureInit()
+      // Skip if init failed (e.g. missing client_id) so we don't trigger the
+      // GSI "Failed to render button before calling initialize" error.
+      if (!ensureInit())
+        return
       accounts.id.renderButton(parent, config)
     })
   }
   instance.prompt = (listener?: (notification: MomentNotification) => void) => {
     instance.onLoaded(({ accounts }) => {
-      ensureInit()
+      if (!ensureInit())
+        return
       accounts.id.prompt(listener)
     })
   }
