@@ -13,7 +13,7 @@ catalog:
   '@antfu/eslint-config': ^8.2.0
   '@nuxt/devtools-kit': ^3.2.4
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.4.2
+  '@nuxt/kit': ^4.4.4
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
   '@nuxt/ui': ^4.7.1
@@ -36,7 +36,7 @@ catalog:
   happy-dom: ^20.9.0
   jest-image-snapshot: ^6.5.2
   magic-string: ^0.30.21
-  nuxt: ^4.4.2
+  nuxt: ^4.4.4
   ofetch: ^1.5.1
   ohash: ^2.0.11
   oxc-parser: ^0.128.0
