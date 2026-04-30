@@ -174,11 +174,24 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
   // <script setup> runs during SSR, so the methods need to exist even though
   // the work only happens on the client (onLoaded only fires there).
   const key = _options?.key || 'googleSignIn'
-  const getState = () => {
+  interface GsiState {
+    initialized: boolean
+    schemaConfig: Partial<IdConfiguration>
+    // Runtime config supplied via `initialize()` is stashed separately so that
+    // a `renderButton()`/`prompt()` call which beats the user's `initialize()`
+    // call doesn't lock in a callback-less config (GIS only honors the first
+    // `initialize`, so a missing `callback` would silently break popup/One Tap).
+    runtimeConfig: Partial<IdConfiguration>
+  }
+  const getState = (): GsiState => {
     const w = (import.meta.client ? window : globalThis) as any
     w.__nuxtScriptsGsi = w.__nuxtScriptsGsi || {}
-    w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || { initialized: false, schemaConfig: mapSchemaToIdConfig(_options) }
-    return w.__nuxtScriptsGsi[key] as { initialized: boolean, schemaConfig: Partial<IdConfiguration> }
+    w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || {
+      initialized: false,
+      schemaConfig: mapSchemaToIdConfig(_options),
+      runtimeConfig: {},
+    }
+    return w.__nuxtScriptsGsi[key] as GsiState
   }
   const ensureInit = (extra?: Partial<IdConfiguration>): boolean => {
     if (!import.meta.client)
@@ -189,8 +202,13 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
     // reload the page (or use a unique `key`).
     if (state.initialized)
       return true
-    const merged = { ...state.schemaConfig, ...extra } as IdConfiguration
+    const merged = { ...state.schemaConfig, ...state.runtimeConfig, ...extra } as IdConfiguration
     if (!merged.client_id)
+      return false
+    // Popup (default) and One Tap require a JS callback to deliver the
+    // credential. Defer initialization until one is provided so we don't burn
+    // the single allowed `initialize()` on a config that can never sign in.
+    if (merged.ux_mode !== 'redirect' && typeof merged.callback !== 'function')
       return false
     const gid = (window as any).google?.accounts?.id
     if (!gid)
@@ -201,14 +219,18 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
   }
 
   instance.initialize = (config?: Partial<IdConfiguration>) => {
+    // Stash runtime config eagerly so a renderButton/prompt that runs after
+    // this point still picks up the callback once the script loads.
+    if (config)
+      Object.assign(getState().runtimeConfig, config)
     instance.onLoaded(() => {
-      ensureInit(config)
+      ensureInit()
     })
   }
   instance.renderButton = (parent: HTMLElement, config: GsiButtonConfiguration = {}) => {
     instance.onLoaded(({ accounts }) => {
-      // Skip if init failed (e.g. missing client_id) so we don't trigger the
-      // GSI "Failed to render button before calling initialize" error.
+      // Skip if init couldn't run yet (missing client_id or callback) so we
+      // don't trigger GSI's "Failed to render button before calling initialize".
       if (!ensureInit())
         return
       accounts.id.renderButton(parent, config)
