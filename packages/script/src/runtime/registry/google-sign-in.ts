@@ -182,6 +182,11 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
     // call doesn't lock in a callback-less config (GIS only honors the first
     // `initialize`, so a missing `callback` would silently break popup/One Tap).
     runtimeConfig: Partial<IdConfiguration>
+    // Stable proxy that GIS sees. When components remount and re-call
+    // `initialize({ callback })`, we update `runtimeConfig.callback` and the
+    // proxy forwards to whichever callback is current — without re-invoking
+    // `gid.initialize()` (which is only honored once).
+    callbackProxy?: (response: CredentialResponse) => void
   }
   // State lives on `window` (per page lifecycle, shared across remounts of
   // the same `key`). On the server we return null so no request-scoped data
@@ -218,6 +223,15 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
     const gid = (window as any).google?.accounts?.id
     if (!gid)
       return false
+    // Register a stable proxy callback so remounted components can update
+    // their handler via `runtimeConfig.callback` without re-running `initialize`.
+    if (merged.ux_mode !== 'redirect') {
+      state.callbackProxy ||= (response) => {
+        const current = getState()?.runtimeConfig.callback
+        current?.(response)
+      }
+      merged.callback = state.callbackProxy
+    }
     gid.initialize(merged)
     state.initialized = true
     return true
