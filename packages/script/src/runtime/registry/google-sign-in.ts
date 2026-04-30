@@ -164,8 +164,9 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
             // Stash schema-derived config so the helpers can find it after HMR / remount
             const key = _options?.key || 'googleSignIn'
             w.__nuxtScriptsGsi = w.__nuxtScriptsGsi || {}
-            w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || { initialized: false }
-            w.__nuxtScriptsGsi[key].schemaConfig = mapSchemaToIdConfig(options as GoogleSignInInput)
+            const cached = w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || { initialized: false }
+            cached.schemaConfig = mapSchemaToIdConfig(options as GoogleSignInInput)
+            cached.runtimeConfig ||= {}
           },
     }
   }, _options) as UseScriptContext<T> & GoogleSignInHelpers
@@ -196,12 +197,15 @@ export function useScriptGoogleSignIn<T extends GoogleSignInApi>(_options?: Goog
       return null
     const w = window as any
     w.__nuxtScriptsGsi = w.__nuxtScriptsGsi || {}
-    w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || {
+    const state = w.__nuxtScriptsGsi[key] = w.__nuxtScriptsGsi[key] || {
       initialized: false,
       schemaConfig: mapSchemaToIdConfig(_options),
       runtimeConfig: {},
     }
-    return w.__nuxtScriptsGsi[key] as GsiState
+    // Backfill defaults — `clientInit` may have seeded a partial entry.
+    state.schemaConfig ||= mapSchemaToIdConfig(_options)
+    state.runtimeConfig ||= {}
+    return state as GsiState
   }
   const ensureInit = (extra?: Partial<IdConfiguration>): boolean => {
     const state = getState()
