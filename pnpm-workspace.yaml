@@ -13,7 +13,7 @@ catalog:
   '@antfu/eslint-config': ^8.2.0
   '@nuxt/devtools-kit': ^3.2.4
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.4.2
+  '@nuxt/kit': ^4.4.4
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
   '@nuxt/ui': ^4.7.1
@@ -24,7 +24,7 @@ catalog:
   '@types/google.maps': ^3.64.0
   '@types/jest-image-snapshot': ^6.4.1
   '@types/youtube': ^0.2.0
-  '@vue/test-utils': ^2.4.9
+  '@vue/test-utils': ^2.4.10
   '@vueuse/core': ^14.2.1
   '@vueuse/shared': ^14.2.1
   bumpp: ^11.0.1
@@ -36,7 +36,7 @@ catalog:
   happy-dom: ^20.9.0
   jest-image-snapshot: ^6.5.2
   magic-string: ^0.30.21
-  nuxt: ^4.4.2
+  nuxt: ^4.4.4
   ofetch: ^1.5.1
   ohash: ^2.0.11
   oxc-parser: ^0.128.0
@@ -44,12 +44,12 @@ catalog:
   pathe: ^2.0.3
   pkg-types: ^2.3.1
   playwright-core: ^1.59.1
-  posthog-js: ^1.372.3
+  posthog-js: ^1.372.5
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.1.0
   typescript: ^6.0.3
-  ufo: ^1.6.3
+  ufo: ^1.6.4
   ultrahtml: ^1.6.0
   unplugin: ^3.0.0
   unstorage: ^1.17.5
