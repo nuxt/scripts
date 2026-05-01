@@ -413,4 +413,52 @@ describe('scriptGoogleMapsOverlayView', () => {
       expect(mocks.mockMap.panBy).not.toHaveBeenCalled()
     })
   })
+
+  describe('unmount cleanup', () => {
+    // Regression: https://github.com/nuxt/scripts/issues/735
+    // `<ScriptGoogleMapsOverlayView v-if="x">` did not detach its overlay
+    // element from the Google Maps pane on unmount, leaving a stale node
+    // visible on the map. Cause: `onRemove()` read the anchor via
+    // `useTemplateRef`, which Vue nulls during component unmount before
+    // `onUnmounted` fires (and thus before `setMap(null)` triggers
+    // `onRemove`). The fix captures the element at `onAdd` time.
+    it('detaches the anchor element from its pane when v-if toggles false', async () => {
+      const mocks = createOverlayMocks()
+      const Provider = createMapProvider(mocks)
+      const show = shallowRef(true)
+
+      const wrapper = await mountSuspended(Provider, {
+        slots: {
+          default: () => (show.value
+            ? h(
+                ScriptGoogleMapsOverlayView,
+                { position: { lat: 10, lng: 20 } },
+                () => h('div', { class: 'overlay-content' }),
+              )
+            : null),
+        },
+      })
+
+      await nextTick()
+      await nextTick()
+      await nextTick()
+
+      const overlayWrapper = wrapper.findComponent(ScriptGoogleMapsOverlayView)
+      const anchor = (overlayWrapper.vm as any).$refs['overlay-anchor'] as HTMLElement
+      expect(anchor).toBeTruthy()
+      // After onAdd, the anchor is reparented into a Google Maps pane, so it
+      // has a parentNode that is not the component's hidden wrapper.
+      expect(anchor.parentNode).toBeTruthy()
+      const paneBeforeUnmount = anchor.parentNode!
+
+      // Unmount the component via v-if. The cleanup must remove the anchor
+      // from the pane so it does not linger on the map.
+      show.value = false
+      await wrapper.setProps({})
+      await nextTick()
+      await nextTick()
+
+      expect(paneBeforeUnmount.contains(anchor)).toBe(false)
+    })
+  })
 })
