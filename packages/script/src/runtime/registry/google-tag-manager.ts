@@ -144,8 +144,13 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               // Allow custom initialization
               options?.onBeforeGtmStart?.(gtag)
 
-              if (opts.defaultConsent)
-                gtag('consent', 'default', opts.defaultConsent)
+              if (opts.defaultConsent) {
+                const entries = Array.isArray(opts.defaultConsent)
+                  ? opts.defaultConsent
+                  : [opts.defaultConsent]
+                for (const entry of entries)
+                  gtag('consent', 'default', entry)
+              }
 
               // Push the standard GTM initialization event
               ;(window as any)[dataLayerName].push({

@@ -81,6 +81,65 @@ describe('consent defaults — clientInit ordering', () => {
     expect(dl[consentIdx][2]).toMatchObject({ analytics_storage: 'denied', ad_storage: 'denied' })
   })
 
+  it('gtm: array form fires multiple ["consent","default",…] entries in input order, all before gtm.js', async () => {
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({
+      id: 'GTM-XXXX',
+      defaultConsent: [
+        { analytics_storage: 'denied', region: ['ES', 'US-AK'], wait_for_update: 500 },
+        { ad_storage: 'denied' },
+      ],
+    })
+
+    result._opts.clientInit()
+
+    const dl = (window as any).dataLayer as any[]
+    expect(Array.isArray(dl)).toBe(true)
+
+    const consentEntries = dl
+      .map((e, i) => ({ e, i }))
+      .filter(({ e }) => Array.isArray(e) && e[0] === 'consent' && e[1] === 'default')
+    const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
+
+    expect(consentEntries).toHaveLength(2)
+    expect(startIdx).toBeGreaterThanOrEqual(0)
+    for (const { i } of consentEntries) expect(i).toBeLessThan(startIdx)
+    expect(consentEntries[0].e[2]).toMatchObject({ analytics_storage: 'denied', region: ['ES', 'US-AK'], wait_for_update: 500 })
+    expect(consentEntries[1].e[2]).toMatchObject({ ad_storage: 'denied' })
+  })
+
+  it('gtm: single-entry array is observationally equivalent to a bare object', async () => {
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+
+    const runWith = (defaultConsent: any) => {
+      delete (window as any).dataLayer
+      const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX', defaultConsent })
+      result._opts.clientInit()
+      const dl = (window as any).dataLayer as any[]
+      const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
+      return dl.slice(0, startIdx + 1)
+    }
+
+    const fromObject = runWith({ ad_storage: 'denied' })
+    const fromArray = runWith([{ ad_storage: 'denied' }])
+
+    expect(fromArray).toEqual(fromObject)
+  })
+
+  it('gtm: empty defaultConsent array is a no-op (no consent default entries)', async () => {
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX', defaultConsent: [] })
+
+    result._opts.clientInit()
+
+    const dl = (window as any).dataLayer as any[]
+    const consentEntries = dl.filter(e => Array.isArray(e) && e[0] === 'consent' && e[1] === 'default')
+    const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
+
+    expect(consentEntries).toHaveLength(0)
+    expect(startIdx).toBeGreaterThanOrEqual(0)
+  })
+
   it('matomo: "required" pushes requireConsent before setSiteId', async () => {
     ;(window as any)._paq = []
     const { useScriptMatomoAnalytics } = await import('../../packages/script/src/runtime/registry/matomo-analytics')

@@ -70,6 +70,10 @@ export interface ConsentState {
   functionality_storage?: ConsentCategoryValue
   personalization_storage?: ConsentCategoryValue
   security_storage?: ConsentCategoryValue
+  /** Region/subdivision codes (ISO 3166-1 alpha-2 or `XX-YY`) this default applies to. */
+  region?: string[]
+  /** Milliseconds to wait for `consent.update()` before firing queued tags. */
+  wait_for_update?: number
 }
 
 export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptInstance<T> & {

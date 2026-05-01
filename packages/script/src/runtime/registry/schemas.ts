@@ -476,10 +476,13 @@ export const GoogleTagManagerOptions = object({
   authReferrerPolicy: optional(string()),
 
   /**
-   * Default consent settings for GTM
+   * Default GCMv2 consent state(s) fired as `['consent','default', state]` onto the dataLayer
+   * before the `gtm.js` event. Pass an array to fire multiple defaults — for example,
+   * different defaults per `region`. See:
    * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis
+   * @see https://developers.google.com/tag-platform/security/guides/consent#regional-behavior
    */
-  defaultConsent: optional(record(string(), union([string(), number()]))),
+  defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),
 })
 
 export const HotjarOptions = object({
