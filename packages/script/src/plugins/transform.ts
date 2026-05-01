@@ -1,7 +1,7 @@
-import type { RegistryScript } from '#nuxt-scripts/types'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
 import type { InferInput } from 'valibot'
+import type { RegistryScript } from '#nuxt-scripts/types'
 import type { ProxyConfig, ProxyRewrite } from '../runtime/types'
 import { createHash } from 'node:crypto'
 import fsp from 'node:fs/promises'

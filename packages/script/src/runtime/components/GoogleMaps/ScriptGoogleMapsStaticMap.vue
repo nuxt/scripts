@@ -2,11 +2,11 @@
 /// <reference types="google.maps" />
 import type { QueryObject } from 'ufo'
 import type { ImgHTMLAttributes, ReservedProps } from 'vue'
-import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { useHead, useRuntimeConfig } from 'nuxt/app'
 import { withQuery } from 'ufo'
 import { computed, onMounted, ref } from 'vue'
+import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import { useScriptProxyUrl } from '../../composables/useScriptProxyUrl'
 </script>
 

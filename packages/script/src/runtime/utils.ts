@@ -1,3 +1,5 @@
+import type { UseScriptInput } from '@unhead/vue'
+import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import type {
   EmptyOptionsSchema,
   InferIfSchema,
@@ -7,8 +9,6 @@ import type {
   UseFunctionType,
   UseScriptContext,
 } from '#nuxt-scripts/types'
-import type { UseScriptInput } from '@unhead/vue'
-import type { GenericSchema, InferInput, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import { defu } from 'defu'
 import { createError, useRuntimeConfig } from 'nuxt/app'
 import { parseQuery, parseURL, withQuery } from 'ufo'

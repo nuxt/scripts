@@ -1,5 +1,5 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { UseScriptInput } from '@unhead/vue'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { XPixelOptions } from './schemas'
 

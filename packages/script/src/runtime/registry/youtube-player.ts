@@ -1,5 +1,5 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { UseScriptContext } from '@unhead/vue'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { MaybePromise } from '../utils'
 import { useHead } from '@unhead/vue'
 /// <reference types="youtube" />

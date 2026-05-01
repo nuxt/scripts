@@ -1,6 +1,6 @@
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import { withQuery } from 'ufo'
+import { useRegistryScript } from '#nuxt-scripts/utils'
 import { GoogleRecaptchaOptions } from './schemas'
 
 export { GoogleRecaptchaOptions }

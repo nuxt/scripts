@@ -1,6 +1,6 @@
 import type { ConsentState, RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import { withQuery } from 'ufo'
+import { useRegistryScript } from '#nuxt-scripts/utils'
 import { GoogleAnalyticsOptions } from './schemas'
 
 export type GtagCustomParams = Record<string, any>

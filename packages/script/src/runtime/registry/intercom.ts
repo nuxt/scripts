@@ -1,5 +1,5 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { InferInput } from 'valibot'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { joinURL } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { IntercomOptions } from './schemas'

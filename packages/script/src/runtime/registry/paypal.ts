@@ -1,5 +1,5 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { PayPalV6Namespace } from '@paypal/paypal-js/sdk-v6'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { useRegistryScript } from '../utils'
 import { PayPalOptions } from './schemas'
 

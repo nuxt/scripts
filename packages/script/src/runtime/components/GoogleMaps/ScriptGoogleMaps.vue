@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { HTMLAttributes, ReservedProps, ShallowRef } from 'vue'
 /// <reference types="google.maps" />
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import type { HTMLAttributes, ReservedProps, ShallowRef } from 'vue'
 
 export { MAP_INJECTION_KEY } from './useGoogleMapsResource'
 
@@ -150,12 +150,12 @@ export interface ScriptGoogleMapsSlots {
 </script>
 
 <script lang="ts" setup>
-import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
-import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
-import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
+import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
+import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
+import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 

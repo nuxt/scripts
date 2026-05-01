@@ -1,7 +1,7 @@
 import type { ConsentState, NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
 import type { GTag } from './google-analytics'
-import { useRegistryScript } from '#nuxt-scripts/utils'
 import { withQuery } from 'ufo'
+import { useRegistryScript } from '#nuxt-scripts/utils'
 import { GoogleTagManagerOptions } from './schemas'
 
 /**

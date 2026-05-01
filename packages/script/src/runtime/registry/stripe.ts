@@ -1,5 +1,5 @@
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import type { StripeConstructor } from '@stripe/stripe-js'
+import type { RegistryScriptInput } from '#nuxt-scripts/types'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '../utils'
 import { StripeOptions } from './schemas'

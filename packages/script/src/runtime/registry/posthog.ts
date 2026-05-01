@@ -1,5 +1,5 @@
-import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import type { PostHog, PostHogConfig } from 'posthog-js'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
 import { PostHogOptions } from './schemas'

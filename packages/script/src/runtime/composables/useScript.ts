@@ -1,11 +1,11 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import type { NuxtDevToolsNetworkRequest, NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
-// @ts-expect-error virtual template
-import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { markRaw, ref } from 'vue'
+// @ts-expect-error virtual template
+import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { logger } from '../logger'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {

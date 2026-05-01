@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type {
   Components,
   CreateInstanceOptions,
@@ -8,6 +7,7 @@ import type {
   SdkInstance,
 } from '@paypal/paypal-js/sdk-v6'
 import type { HTMLAttributes, ReservedProps } from 'vue'
+import type { ElementScriptTrigger } from '#nuxt-scripts/types'
 import type { PayPalInput } from '../registry/paypal'
 import { defu } from 'defu'
 import { computed, onBeforeUnmount, onMounted, ref, resolveComponent, shallowRef } from 'vue'
