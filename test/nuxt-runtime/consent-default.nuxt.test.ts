@@ -223,6 +223,68 @@ describe('consent defaults — clientInit ordering', () => {
   // reliably resolve inside happy-dom's module-mocked environment. We verify the
   // behaviour end-to-end in the playground instead; unit coverage for posthog
   // stays on the per-script consent object below.
+
+  it('ga: array form fires multiple gtag("consent","default",…) calls before gtag("js",…)', async () => {
+    const { useScriptGoogleAnalytics } = await import('../../packages/script/src/runtime/registry/google-analytics')
+    const result: any = useScriptGoogleAnalytics({
+      id: 'G-XXXXXXXX',
+      defaultConsent: [
+        { analytics_storage: 'denied', region: ['ES', 'US-AK'], wait_for_update: 500 },
+        { ad_storage: 'denied' },
+      ],
+    })
+
+    result._opts.clientInit()
+
+    // gtag pushes its `arguments` object onto window.dataLayer.
+    // Convert each pushed `arguments` to a real array for inspection.
+    const dl = ((window as any).dataLayer as any[]).map(e => Array.from(e))
+
+    const consentEntries = dl
+      .map((e, i) => ({ e, i }))
+      .filter(({ e }) => e[0] === 'consent' && e[1] === 'default')
+    const jsIdx = dl.findIndex(e => e[0] === 'js')
+
+    expect(consentEntries).toHaveLength(2)
+    expect(jsIdx).toBeGreaterThanOrEqual(0)
+    for (const { i } of consentEntries) expect(i).toBeLessThan(jsIdx)
+    expect(consentEntries[0].e[2]).toMatchObject({ analytics_storage: 'denied', region: ['ES', 'US-AK'], wait_for_update: 500 })
+    expect(consentEntries[1].e[2]).toMatchObject({ ad_storage: 'denied' })
+  })
+
+  it('ga: single-entry array is observationally equivalent to a bare object', async () => {
+    const { useScriptGoogleAnalytics } = await import('../../packages/script/src/runtime/registry/google-analytics')
+
+    const runWith = (defaultConsent: any) => {
+      delete (window as any).dataLayer
+      delete (window as any).gtag
+      const result: any = useScriptGoogleAnalytics({ id: 'G-XXXXXXXX', defaultConsent })
+      result._opts.clientInit()
+      const dl = ((window as any).dataLayer as any[]).map(e => Array.from(e))
+      const jsIdx = dl.findIndex(e => e[0] === 'js')
+      // Slice up to and including the `js` call — anything after is ordering-irrelevant.
+      return dl.slice(0, jsIdx + 1)
+    }
+
+    const fromObject = runWith({ ad_storage: 'denied' })
+    const fromArray = runWith([{ ad_storage: 'denied' }])
+
+    expect(fromArray).toEqual(fromObject)
+  })
+
+  it('ga: empty defaultConsent array is a no-op (no consent default calls)', async () => {
+    const { useScriptGoogleAnalytics } = await import('../../packages/script/src/runtime/registry/google-analytics')
+    const result: any = useScriptGoogleAnalytics({ id: 'G-XXXXXXXX', defaultConsent: [] })
+
+    result._opts.clientInit()
+
+    const dl = ((window as any).dataLayer as any[]).map(e => Array.from(e))
+    const consentEntries = dl.filter(e => e[0] === 'consent' && e[1] === 'default')
+    const jsIdx = dl.findIndex(e => e[0] === 'js')
+
+    expect(consentEntries).toHaveLength(0)
+    expect(jsIdx).toBeGreaterThanOrEqual(0) // gtag('js', …) still fires
+  })
 })
 
 describe('per-script consent object', () => {

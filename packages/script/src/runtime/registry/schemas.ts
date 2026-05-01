@@ -306,10 +306,12 @@ export const GoogleAnalyticsOptions = object({
    */
   l: optional(string()),
   /**
-   * Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`.
-   * @see https://developers.google.com/tag-platform/security/guides/consent
+   * Default GCMv2 consent state(s) fired as `gtag('consent', 'default', state)` before
+   * `gtag('js', ...)`. Pass an array to fire multiple defaults — for example, different
+   * defaults per `region` (more specific regions override broader ones at runtime).
+   * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior
    */
-  defaultConsent: optional(gcmConsentState),
+  defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),
 })
 
 export const GoogleMapsOptions = object({
@@ -480,7 +482,7 @@ export const GoogleTagManagerOptions = object({
    * before the `gtm.js` event. Pass an array to fire multiple defaults — for example,
    * different defaults per `region`. See:
    * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis
-   * @see https://developers.google.com/tag-platform/security/guides/consent#regional-behavior
+   * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior
    */
   defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),
 })
