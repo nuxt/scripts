@@ -225,11 +225,18 @@ function panMapToFitOverlay(el: HTMLElement, map: google.maps.Map, padding: numb
 // available after the script loads, so this stays a function rather than
 // a top-level class declaration.
 function makeOverlayClass(mapsApi: typeof google.maps, map: google.maps.Map) {
+  // Capture the anchor element at onAdd time so onRemove can detach it even
+  // after Vue has nulled the template ref during component unmount. Without
+  // this, `v-if="false"` leaves the reparented element in the Google Maps
+  // pane because `overlayAnchor.value` is already null when setMap(null)
+  // triggers onRemove.
+  let attachedEl: HTMLElement | null = null
   return class CustomOverlay extends mapsApi.OverlayView {
     override onAdd() {
       const panes = this.getPanes()
       const el = overlayAnchor.value
       if (panes && el) {
+        attachedEl = el
         panes[pane].appendChild(el)
         if (blockMapInteraction)
           mapsApi.OverlayView.preventMapHitsAndGesturesFrom(el)
@@ -274,8 +281,8 @@ function makeOverlayClass(mapsApi: typeof google.maps, map: google.maps.Map) {
     }
 
     override onRemove() {
-      const el = overlayAnchor.value
-      el?.parentNode?.removeChild(el)
+      attachedEl?.parentNode?.removeChild(attachedEl)
+      attachedEl = null
     }
   }
 }
