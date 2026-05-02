@@ -606,6 +606,33 @@
         "code": "interface ScriptLemonSqueezySlots {\n  default?: () => any\n}"
       }
     ],
+    "linkedin-insight": [
+      {
+        "name": "LinkedInInsightOptions",
+        "kind": "const",
+        "code": "export const LinkedInInsightOptions = object({\n  /**\n   * Your LinkedIn Insight Tag Partner ID, or an array of Partner IDs to push\n   * onto window._linkedin_data_partner_ids. The first ID is used as the\n   * primary _linkedin_partner_id global.\n   * @example '541681'\n   * @example ['541681', '987654']\n   * @see https://www.linkedin.com/help/lms/answer/a417869/access-your-linkedin-partner-id\n   */\n  id: union([pipe(string(), minLength(1)), array(pipe(string(), minLength(1)))]),\n  /**\n   * Optional page-load event ID for Conversions API deduplication. Assigned\n   * to window._linkedin_event_id BEFORE the Insight Tag base code runs. Must\n   * match the eventId sent with the corresponding server-side Conversions\n   * API event.\n   *\n   * Per-event conversion deduplication uses the per-call event_id passed to\n   * lintrk('track', { conversion_id, event_id }) instead.\n   * @see https://learn.microsoft.com/en-us/linkedin/marketing/conversions/deduplication\n   */\n  eventId: optional(string()),\n  /**\n   * Auto-fire lintrk('track') on Vue Router route changes (SPA virtual page\n   * views). When true, suppresses the script's built-in auto-page-view via\n   * window._wait_for_lintrk and tracks every navigation including the\n   * initial page through Nuxt's page:finish hook. When false, the script\n   * fires its own page-view exactly once on load and SPA navigations are\n   * not tracked unless lintrk('track') is called manually.\n   * @default false\n   */\n  enableAutoSpaTracking: optional(boolean()),\n})"
+      },
+      {
+        "name": "LintrkTrackParams",
+        "kind": "interface",
+        "code": "interface LintrkTrackParams {\n  /** Conversion ID from Campaign Manager. Omit for plain page-view. */\n  conversion_id?: number\n  /** Per-event dedup ID matching the server-side Conversions API event. */\n  event_id?: string\n  /** Optional callback fired after the beacon completes. */\n  commandCallback?: () => void\n  [key: string]: any\n}"
+      },
+      {
+        "name": "LintrkUserData",
+        "kind": "interface",
+        "code": "interface LintrkUserData {\n  /** Plain email; the script SHA-256 hashes it before sending. */\n  email: string\n}"
+      },
+      {
+        "name": "LintrkFns",
+        "kind": "type",
+        "code": "type LintrkFns\n  = & ((cmd: 'track', params?: LintrkTrackParams) => void)\n    & ((cmd: 'setUserData', data: LintrkUserData) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
+      },
+      {
+        "name": "LinkedInInsightApi",
+        "kind": "interface",
+        "code": "export interface LinkedInInsightApi {\n  lintrk: LintrkFns & { q?: unknown[] }\n}"
+      }
+    ],
     "matomo-analytics": [
       {
         "name": "MatomoAnalyticsOptions",
@@ -2010,6 +2037,27 @@
         "type": "object",
         "required": false,
         "description": "Default consent state fired as `uetq.push('consent', 'default', ...)` before UET init."
+      }
+    ],
+    "LinkedInInsightOptions": [
+      {
+        "name": "id",
+        "type": "string | string[]",
+        "required": true,
+        "description": "Your LinkedIn Insight Tag Partner ID, or an array of Partner IDs to push onto window._linkedin_data_partner_ids. The first ID is used as the primary _linkedin_partner_id global."
+      },
+      {
+        "name": "eventId",
+        "type": "string",
+        "required": false,
+        "description": "Optional page-load event ID for Conversions API deduplication. Assigned to window._linkedin_event_id BEFORE the Insight Tag base code runs. Must match the eventId sent with the corresponding server-side Conversions API event. Per-event conversion deduplication uses the per-call event_id passed to lintrk('track', { conversion_id, event_id }) instead."
+      },
+      {
+        "name": "enableAutoSpaTracking",
+        "type": "boolean",
+        "required": false,
+        "description": "Auto-fire lintrk('track') on Vue Router route changes (SPA virtual page views). When true, suppresses the script's built-in auto-page-view via window._wait_for_lintrk and tracks every navigation including the initial page through Nuxt's page:finish hook. When false, the script fires its own page-view exactly once on load and SPA navigations are not tracked unless lintrk('track') is called manually.",
+        "defaultValue": "false"
       }
     ],
     "SegmentOptions": [
