@@ -99,6 +99,11 @@ export const scriptMeta = {
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
     testId: 'a2_ilz4u0kbdr3v',
   },
+  linkedinInsight: {
+    urls: ['https://snap.licdn.com/li.lms-analytics/insight.min.js'],
+    trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
+    testId: '541681',
+  },
   googleAdsense: {
     urls: ['https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'],
     trackedData: ['page-views', 'retargeting', 'audiences'],
