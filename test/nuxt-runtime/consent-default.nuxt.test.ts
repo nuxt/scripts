@@ -117,7 +117,9 @@ describe('consent defaults — clientInit ordering', () => {
       result._opts.clientInit()
       const dl = (window as any).dataLayer as any[]
       const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
-      return dl.slice(0, startIdx + 1)
+      // Slice up to (but not including) gtm.js — the entry carries a Date.now() timestamp
+      // that differs between calls. Ordering relative to gtm.js is locked by the sibling test.
+      return dl.slice(0, startIdx)
     }
 
     const fromObject = runWith({ ad_storage: 'denied' })
@@ -262,8 +264,9 @@ describe('consent defaults — clientInit ordering', () => {
       result._opts.clientInit()
       const dl = ((window as any).dataLayer as any[]).map(e => Array.from(e))
       const jsIdx = dl.findIndex(e => e[0] === 'js')
-      // Slice up to and including the `js` call — anything after is ordering-irrelevant.
-      return dl.slice(0, jsIdx + 1)
+      // Slice up to (but not including) gtag('js', new Date()) — the Date differs between
+      // calls. Ordering relative to gtag('js', …) is locked by the sibling test.
+      return dl.slice(0, jsIdx)
     }
 
     const fromObject = runWith({ ad_storage: 'denied' })

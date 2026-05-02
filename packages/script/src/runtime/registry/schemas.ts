@@ -480,7 +480,7 @@ export const GoogleTagManagerOptions = object({
   /**
    * Default GCMv2 consent state(s) fired as `['consent','default', state]` onto the dataLayer
    * before the `gtm.js` event. Pass an array to fire multiple defaults — for example,
-   * different defaults per `region`. See:
+   * different defaults per `region` (more specific regions override broader ones at runtime).
    * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis
    * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior
    */

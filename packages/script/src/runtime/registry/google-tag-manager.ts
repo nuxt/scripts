@@ -141,9 +141,8 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               // Assign gtag to window for global access
               (window as any).gtag = gtag
 
-              // Allow custom initialization
-              options?.onBeforeGtmStart?.(gtag)
-
+              // Set consent defaults before any user-callback gtag/dataLayer pushes,
+              // so custom events in onBeforeGtmStart honor the configured consent state.
               if (opts.defaultConsent) {
                 const entries = Array.isArray(opts.defaultConsent)
                   ? opts.defaultConsent
@@ -151,6 +150,9 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
                 for (const entry of entries)
                   gtag('consent', 'default', entry)
               }
+
+              // Allow custom initialization
+              options?.onBeforeGtmStart?.(gtag)
 
               // Push the standard GTM initialization event
               ;(window as any)[dataLayerName].push({
