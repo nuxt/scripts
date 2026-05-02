@@ -32,8 +32,7 @@ export interface LinkedInInsightApi {
 }
 
 declare global {
-  interface Window {
-    lintrk: LinkedInInsightApi['lintrk']
+  interface Window extends LinkedInInsightApi {
     _linkedin_partner_id?: string
     _linkedin_data_partner_ids?: string[]
     _linkedin_event_id?: string
@@ -86,16 +85,16 @@ export function useScriptLinkedInInsight<T extends LinkedInInsightApi>(
             ;(lintrk as any).q = []
             window.lintrk = lintrk
           }
+
+          // 5. Wire SPA route tracking. Same primitive as
+          // runtime/registry/matomo-analytics.ts:90.
+          if (options.enableAutoSpaTracking) {
+            useScriptEventPage(() => {
+              window.lintrk('track')
+            })
+          }
         },
   }), _options)
-
-  // 5. Wire SPA route tracking after the registry script is set up.
-  // Same primitive as runtime/registry/matomo-analytics.ts:90.
-  if (import.meta.client && _options?.enableAutoSpaTracking) {
-    useScriptEventPage(() => {
-      window.lintrk('track')
-    })
-  }
 
   return instance
 }
