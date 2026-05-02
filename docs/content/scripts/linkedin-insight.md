@@ -39,7 +39,7 @@ function trackPurchase() {
 
 ### Per-event deduplication with the Conversions API
 
-When you also send conversions through LinkedIn's server-side Conversions API, pass the same `event_id` to both — LinkedIn discards the server-side duplicate and counts the Insight Tag event. See [LinkedIn deduplication](https://learn.microsoft.com/en-us/linkedin/marketing/conversions/deduplication?view=li-lms-2026-01).
+When you also send conversions through LinkedIn's server-side Conversions API, pass the same `event_id` to both. LinkedIn discards the server-side duplicate and counts the Insight Tag event. See [LinkedIn deduplication](https://learn.microsoft.com/en-us/linkedin/marketing/conversions/deduplication?view=li-lms-2026-01).
 
 ```vue
 <script setup lang="ts">
@@ -70,7 +70,7 @@ const { proxy } = useScriptLinkedInInsight({
 
 ### Enhanced matching with `setUserData`
 
-Pass plain email — the Insight Tag SHA-256 hashes it before sending. See [LinkedIn enhanced matching](https://www.linkedin.com/help/lms/answer/a6246095).
+Pass plain email; the Insight Tag SHA-256 hashes it before sending. See [LinkedIn enhanced matching](https://www.linkedin.com/help/lms/answer/a6246095).
 
 ```vue
 <script setup lang="ts">
@@ -97,11 +97,11 @@ useScriptLinkedInInsight({
 </script>
 ```
 
-When enabled, the composable suppresses the script's built-in auto-page-view (via `window._wait_for_lintrk = true`) and fires `lintrk('track')` on Nuxt's `page:finish` hook — once per route, including the initial SSR page.
+When enabled, the composable suppresses the script's built-in auto-page-view (via `window._wait_for_lintrk = true`) and fires `lintrk('track')`{lang="ts"} on Nuxt's `page:finish` hook once per route, including the initial SSR page.
 
 ### Multiple Partner IDs
 
-If you need to push more than one Partner ID onto `window._linkedin_data_partner_ids`, pass an array. The first ID is used as the primary `_linkedin_partner_id` global.
+If you need to push more than one Partner ID onto `window._linkedin_data_partner_ids`, pass an array. The composable promotes the first ID to the primary `_linkedin_partner_id` global.
 
 ```vue
 <script setup lang="ts">
