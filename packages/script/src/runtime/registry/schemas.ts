@@ -824,6 +824,39 @@ export const BingUetOptions = object({
   })),
 })
 
+export const LinkedInInsightOptions = object({
+  /**
+   * Your LinkedIn Insight Tag Partner ID, or an array of Partner IDs to push
+   * onto window._linkedin_data_partner_ids. The first ID is used as the
+   * primary _linkedin_partner_id global.
+   * @example '541681'
+   * @example ['541681', '987654']
+   * @see https://www.linkedin.com/help/lms/answer/a417869/access-your-linkedin-partner-id
+   */
+  id: union([pipe(string(), minLength(1)), array(pipe(string(), minLength(1)))]),
+  /**
+   * Optional page-load event ID for Conversions API deduplication. Assigned
+   * to window._linkedin_event_id BEFORE the Insight Tag base code runs. Must
+   * match the eventId sent with the corresponding server-side Conversions
+   * API event.
+   *
+   * Per-event conversion deduplication uses the per-call event_id passed to
+   * lintrk('track', { conversion_id, event_id }) instead.
+   * @see https://learn.microsoft.com/en-us/linkedin/marketing/conversions/deduplication
+   */
+  eventId: optional(string()),
+  /**
+   * Auto-fire lintrk('track') on Vue Router route changes (SPA virtual page
+   * views). When true, suppresses the script's built-in auto-page-view via
+   * window._wait_for_lintrk and tracks every navigation including the
+   * initial page through Nuxt's page:finish hook. When false, the script
+   * fires its own page-view exactly once on load and SPA navigations are
+   * not tracked unless lintrk('track') is called manually.
+   * @default false
+   */
+  enableAutoSpaTracking: optional(boolean()),
+})
+
 export const SegmentOptions = object({
   /**
    * Your Segment write key.
