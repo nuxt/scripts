@@ -31,6 +31,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['googleTagManager']>().not.toBeAny()
     expectTypeOf<Registry['hotjar']>().not.toBeAny()
     expectTypeOf<Registry['intercom']>().not.toBeAny()
+    expectTypeOf<Registry['linkedinInsight']>().not.toBeAny()
     expectTypeOf<Registry['paypal']>().not.toBeAny()
     expectTypeOf<Registry['posthog']>().not.toBeAny()
     expectTypeOf<Registry['matomoAnalytics']>().not.toBeAny()
