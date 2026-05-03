@@ -1,48 +1,58 @@
 <script lang="ts" setup>
-import { useHead, useScriptLinkedInInsight } from '#imports'
+// Overrides the parent layer's pages/linkedin.vue with `bundle: false` so
+// the script loads from snap.licdn.com instead of /_scripts/assets/.
+import { navigateTo, useHead, useScriptLinkedInInsight } from '#imports'
 
-useHead({
-  title: 'LinkedIn Insight Tag - First Party',
-})
+useHead({ title: 'LinkedIn Insight Tag' })
 
 const { status } = useScriptLinkedInInsight({
-  id: '541681',
+  scriptOptions: { bundle: false },
 })
 
 function trackPageView() {
   ;(window as any).lintrk('track')
-  // Mirror the proxy-fetch pattern used by reddit.vue: ensure the proxy counter
-  // observes a request to the px domain on user action.
-  ;(window as any).__nuxtScripts.fetch(`https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=541681&time=${Date.now()}`).catch(() => {})
 }
 
 function trackConversion() {
   ;(window as any).lintrk('track', { conversion_id: 20529377 })
-  ;(window as any).__nuxtScripts.fetch(`https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=541681&conversionId=20529377&time=${Date.now()}`).catch(() => {})
+}
+
+function trackConversionWithEventId() {
+  ;(window as any).lintrk('track', { conversion_id: 20529377, event_id: 'per-event-id-test' })
 }
 
 function setUserData() {
   ;(window as any).lintrk('setUserData', { email: 'test@example.com' })
 }
+
+function navigateSpa() {
+  navigateTo('/linkedin-spa')
+}
 </script>
 
 <template>
   <div>
-    <h1>LinkedIn Insight Tag First-Party Test</h1>
+    <h1>LinkedIn Insight Tag</h1>
     <ClientOnly>
       <div id="status">
         status: {{ status }}
       </div>
     </ClientOnly>
-    <div style="margin-top: 20px;">
+    <div>
       <button id="trigger-pageview" @click="trackPageView">
         Track PageView
       </button>
       <button id="trigger-conversion" @click="trackConversion">
         Track Conversion
       </button>
+      <button id="trigger-conversion-eventid" @click="trackConversionWithEventId">
+        Track Conversion (with event_id)
+      </button>
       <button id="trigger-userdata" @click="setUserData">
         Set User Data
+      </button>
+      <button id="trigger-spa-nav" @click="navigateSpa">
+        Navigate (SPA)
       </button>
     </div>
   </div>
