@@ -141,8 +141,13 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
               // eslint-disable-next-line prefer-rest-params
               w[dataLayerName].push(arguments)
             }
-            if (options?.defaultConsent)
-              w.gtag('consent', 'default', options.defaultConsent)
+            if (options?.defaultConsent) {
+              const entries = Array.isArray(options.defaultConsent)
+                ? options.defaultConsent
+                : [options.defaultConsent]
+              for (const entry of entries)
+                w.gtag('consent', 'default', entry)
+            }
             // eslint-disable-next-line ts/ban-ts-comment
             // @ts-ignore
             _options?.onBeforeGtagStart?.(w.gtag)

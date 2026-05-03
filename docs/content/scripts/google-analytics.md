@@ -30,9 +30,13 @@ proxy.gtag('event', 'page_view')
 
 The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
 
-### Consent Mode
+## Consent Mode
 
-Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', ...)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime:
+Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', state)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime to flip categories.
+
+::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent" target="_blank"}
+Try the live [Regional Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) on [StackBlitz](https://stackblitz.com).
+::
 
 ```vue
 <script setup lang="ts">
@@ -68,7 +72,39 @@ function savePreferences(choices: { analytics: boolean, marketing: boolean }) {
 
 `consent.update()`{lang="ts"} accepts any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
 
-### Customer/Consumer ID Tracking
+### Per-region defaults
+
+Pass an array to `defaultConsent` to fire one `gtag('consent','default', state)`{lang="ts"} per entry. This matches Google's [region-specific consent pattern](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior): more specific regions (e.g. `US-CA`) override broader ones (`US`); an entry with no `region` is the unscoped global fallback.
+
+```vue
+<script setup lang="ts">
+useScriptGoogleAnalytics({
+  id: 'G-XXXXXXXX',
+  defaultConsent: [
+    {
+      // EEA + UK + Switzerland — start denied, wait 500ms for the user's choice
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      region: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB', 'IS', 'LI', 'NO', 'CH'],
+      wait_for_update: 500,
+    },
+    {
+      // Everywhere else — granted by default
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'granted',
+    },
+  ],
+})
+</script>
+```
+
+The module forwards each entry verbatim, in input order. Precedence between region-scoped and unscoped defaults is enforced by gtag at runtime, not by ordering.
+
+## Customer/Consumer ID Tracking
 
 For e-commerce or multi-tenant applications where you need to track customer-specific analytics alongside your main tracking:
 

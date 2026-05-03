@@ -260,7 +260,7 @@
       {
         "name": "GoogleAnalyticsOptions",
         "kind": "const",
-        "code": "export const GoogleAnalyticsOptions = object({\n  /**\n   * The GA4 measurement ID.\n   * @example 'G-XXXXXXXX'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs\n   */\n  id: optional(string()),\n  /**\n   * Global name for the dataLayer variable.\n   * @default 'dataLayer'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer\n   */\n  l: optional(string()),\n  /**\n   * Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`.\n   * @see https://developers.google.com/tag-platform/security/guides/consent\n   */\n  defaultConsent: optional(gcmConsentState),\n})"
+        "code": "export const GoogleAnalyticsOptions = object({\n  /**\n   * The GA4 measurement ID.\n   * @example 'G-XXXXXXXX'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs\n   */\n  id: optional(string()),\n  /**\n   * Global name for the dataLayer variable.\n   * @default 'dataLayer'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer\n   */\n  l: optional(string()),\n  /**\n   * Default GCMv2 consent state(s) fired as `gtag('consent', 'default', state)` before\n   * `gtag('js', ...)`. Pass an array to fire multiple defaults — for example, different\n   * defaults per `region` (more specific regions override broader ones at runtime).\n   * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior\n   */\n  defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),\n})"
       },
       {
         "name": "GoogleAnalyticsConsent",
@@ -503,7 +503,7 @@
       {
         "name": "GoogleTagManagerOptions",
         "kind": "const",
-        "code": "export const GoogleTagManagerOptions = object({\n  /**\n   * GTM container ID (format: GTM-XXXXXX)\n   * @see https://developers.google.com/tag-platform/tag-manager/web#install-the-container\n   */\n  id: string(),\n\n  /**\n   * Optional dataLayer variable name\n   * @default 'dataLayer'\n   * @see https://developers.google.com/tag-platform/tag-manager/web/datalayer#rename_the_data_layer\n   */\n  l: optional(string()),\n\n  /**\n   * Authentication token for environment-specific container versions\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  auth: optional(string()),\n\n  /**\n   * Preview environment name\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  preview: optional(string()),\n\n  /** Forces GTM cookies to take precedence when true */\n  cookiesWin: optional(union([boolean(), literal('x')])),\n\n  /**\n   * Enables debug mode when true\n   * @see https://support.google.com/tagmanager/answer/6107056\n   */\n  debug: optional(union([boolean(), literal('x')])),\n\n  /**\n   * No Personal Advertising - disables advertising features when true\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  npa: optional(union([boolean(), literal('1')])),\n\n  /** Custom dataLayer name (alternative to \"l\" property) */\n  dataLayer: optional(string()),\n\n  /**\n   * Environment name for environment-specific container\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  envName: optional(string()),\n\n  /** Referrer policy for analytics requests */\n  authReferrerPolicy: optional(string()),\n\n  /**\n   * Default consent settings for GTM\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  defaultConsent: optional(record(string(), union([string(), number()]))),\n})"
+        "code": "export const GoogleTagManagerOptions = object({\n  /**\n   * GTM container ID (format: GTM-XXXXXX)\n   * @see https://developers.google.com/tag-platform/tag-manager/web#install-the-container\n   */\n  id: string(),\n\n  /**\n   * Optional dataLayer variable name\n   * @default 'dataLayer'\n   * @see https://developers.google.com/tag-platform/tag-manager/web/datalayer#rename_the_data_layer\n   */\n  l: optional(string()),\n\n  /**\n   * Authentication token for environment-specific container versions\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  auth: optional(string()),\n\n  /**\n   * Preview environment name\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  preview: optional(string()),\n\n  /** Forces GTM cookies to take precedence when true */\n  cookiesWin: optional(union([boolean(), literal('x')])),\n\n  /**\n   * Enables debug mode when true\n   * @see https://support.google.com/tagmanager/answer/6107056\n   */\n  debug: optional(union([boolean(), literal('x')])),\n\n  /**\n   * No Personal Advertising - disables advertising features when true\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  npa: optional(union([boolean(), literal('1')])),\n\n  /** Custom dataLayer name (alternative to \"l\" property) */\n  dataLayer: optional(string()),\n\n  /**\n   * Environment name for environment-specific container\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  envName: optional(string()),\n\n  /** Referrer policy for analytics requests */\n  authReferrerPolicy: optional(string()),\n\n  /**\n   * Default GCMv2 consent state(s) fired as `['consent','default', state]` onto the dataLayer\n   * before the `gtm.js` event. Pass an array to fire multiple defaults — for example,\n   * different defaults per `region` (more specific regions override broader ones at runtime).\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior\n   */\n  defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),\n})"
       },
       {
         "name": "GoogleTagManagerConsent",
@@ -1443,9 +1443,9 @@
       },
       {
         "name": "defaultConsent",
-        "type": "unknown",
+        "type": "unknown | unknown[]",
         "required": false,
-        "description": "Default GCMv2 consent state fired as `gtag('consent', 'default', ...)` before `gtag('js', ...)`."
+        "description": "Default GCMv2 consent state(s) fired as `gtag('consent', 'default', state)` before `gtag('js', ...)`. Pass an array to fire multiple defaults — for example, different defaults per `region` (more specific regions override broader ones at runtime)."
       }
     ],
     "GoogleMapsOptions": [
@@ -1632,9 +1632,9 @@
       },
       {
         "name": "defaultConsent",
-        "type": "Record<string, string | number>",
+        "type": "unknown | unknown[]",
         "required": false,
-        "description": "Default consent settings for GTM"
+        "description": "Default GCMv2 consent state(s) fired as `['consent','default', state]` onto the dataLayer before the `gtm.js` event. Pass an array to fire multiple defaults — for example, different defaults per `region` (more specific regions override broader ones at runtime)."
       }
     ],
     "HotjarOptions": [
