@@ -46,6 +46,45 @@ async function newCapturePage() {
   return { page, requests }
 }
 
+// Poll a predicate until it's true, instead of fixed sleeps. Resolves quickly
+// on healthy runs and surfaces the actual condition that timed out.
+async function waitFor(
+  predicate: () => boolean,
+  { timeoutMs = 10000, intervalMs = 50, message = 'condition' }: { timeoutMs?: number, intervalMs?: number, message?: string } = {},
+) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (predicate())
+      return
+    await new Promise(r => setTimeout(r, intervalMs))
+  }
+  throw new Error(`Timed out after ${timeoutMs}ms waiting for ${message}`)
+}
+
+// Wait until `count()` stops changing for `stableMs`. Used by the regression
+// guard (must give a potential double-fire time to happen) and the negative
+// SPA-tracking assertion (must give the page time to NOT fire).
+async function waitForStable(
+  count: () => number,
+  { stableMs = 1500, timeoutMs = 10000, intervalMs = 100 }: { stableMs?: number, timeoutMs?: number, intervalMs?: number } = {},
+): Promise<number> {
+  const deadline = Date.now() + timeoutMs
+  let last = count()
+  let stableSince = Date.now()
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, intervalMs))
+    const c = count()
+    if (c !== last) {
+      last = c
+      stableSince = Date.now()
+    }
+    else if (Date.now() - stableSince >= stableMs) {
+      return c
+    }
+  }
+  return count()
+}
+
 // LinkedIn's payload formatter (`Pt` in insight.min.js) picks the first
 // supported of: `g` = gzip(JSON) → base64; `b` = base64(JSON); `a` = JSON.
 // All three are sent as text/plain; `g` and `b` are base64 strings on the
@@ -136,12 +175,12 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      const before = requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      const collectCount = () => requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      const before = collectCount()
       await page.click('#trigger-spa-nav')
       await page.waitForURL('**/linkedin-spa', { timeout: 5000 })
-      await page.waitForTimeout(2000)
-      const after = requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
-      expect(after).toBeGreaterThan(before)
+      await waitFor(() => collectCount() > before, { message: 'SPA /collect beacon' })
+      expect(collectCount()).toBeGreaterThan(before)
     }
     finally {
       await page.close()
@@ -163,13 +202,17 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      await page.waitForTimeout(2000)
-      const canonicalCollects = requests.filter(r =>
+      const canonicalCollects = () => requests.filter(r =>
         r.url.includes('px.ads.linkedin.com/collect')
         && !r.url.includes('cookiesTest=true')
         && !r.url.includes('liSync=true'),
       )
-      expect(canonicalCollects.length, `expected exactly 1 canonical /collect on initial load, got ${canonicalCollects.length}: ${canonicalCollects.map(r => r.url.slice(0, 120)).join(' | ')}`).toBe(1)
+      // Wait for at least one canonical /collect, then for the count to stop
+      // changing — a potential double-fire would arrive within this window.
+      await waitFor(() => canonicalCollects().length >= 1, { message: 'first canonical /collect' })
+      await waitForStable(() => canonicalCollects().length)
+      const found = canonicalCollects()
+      expect(found.length, `expected exactly 1 canonical /collect on initial load, got ${found.length}: ${found.map(r => r.url.slice(0, 120)).join(' | ')}`).toBe(1)
     }
     finally {
       await page.close()
@@ -187,13 +230,16 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     try {
       await page.goto(url('/linkedin-no-spa'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      const before = requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      const collectCount = () => requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      const before = collectCount()
       await page.click('#trigger-spa-nav')
       await page.waitForURL('**/', { timeout: 5000 })
-      await page.waitForTimeout(2000)
-      const after = requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      // Negative assertion: wait for the count to stop changing, then verify
+      // it didn't change. Stability window catches a beacon that might fire
+      // late, which is the failure mode we're guarding against.
+      await waitForStable(collectCount)
       expect(before).toBeGreaterThan(0)
-      expect(after).toBe(before)
+      expect(collectCount()).toBe(before)
     }
     finally {
       await page.close()
@@ -208,11 +254,12 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
       const before = requests.length
+      const newCollectReqs = () => requests.slice(before).filter(r => r.url.includes('px.ads.linkedin.com/collect'))
       await page.click('#trigger-conversion')
-      await page.waitForTimeout(2000)
-      const newCollectReqs = requests.slice(before).filter(r => r.url.includes('px.ads.linkedin.com/collect'))
-      expect(newCollectReqs.length).toBeGreaterThan(0)
-      expect(newCollectReqs.some(r => r.url.includes('conversionId=1111111177'))).toBe(true)
+      await waitFor(() => newCollectReqs().some(r => r.url.includes('conversionId=1111111177')), { message: '/collect with conversionId' })
+      const found = newCollectReqs()
+      expect(found.length).toBeGreaterThan(0)
+      expect(found.some(r => r.url.includes('conversionId=1111111177'))).toBe(true)
     }
     finally {
       await page.close()
@@ -241,13 +288,13 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       const reloadStart = requests.length
       await page.reload({ waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      await page.waitForTimeout(3000)
-      const newRequests = requests.slice(reloadStart)
+      const newWaPosts = () => requests.slice(reloadStart).filter(r => r.method === 'POST' && /\/wa\/?(?:\?|$)/.test(new URL(r.url).pathname))
+      await waitFor(() => newWaPosts().length > 0, { timeoutMs: 15000, message: '/wa/ POST after reload' })
 
       expect(await page.evaluate(() => window.localStorage.getItem('li_hem'))).toBe(EXPECTED_HASHED_EMAIL)
 
-      const waPosts = newRequests.filter(r => r.method === 'POST' && /\/wa\/?(?:\?|$)/.test(new URL(r.url).pathname))
-      expect(waPosts.length, `expected a /wa/ POST after reload (got: ${JSON.stringify(newRequests.map(r => r.url))})`).toBeGreaterThan(0)
+      const waPosts = newWaPosts()
+      expect(waPosts.length, `expected a /wa/ POST after reload (got: ${JSON.stringify(requests.slice(reloadStart).map(r => r.url))})`).toBeGreaterThan(0)
 
       const decoded = waPosts.map(decodeWaBody)
       const hits = decoded.filter(body => body.includes(EXPECTED_HASHED_EMAIL))
