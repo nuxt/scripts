@@ -70,7 +70,7 @@ const { proxy } = useScriptLinkedInInsight({
 
 ### Enhanced matching with `setUserData`
 
-Pass plain email; the Insight Tag SHA-256 hashes it before sending. See [LinkedIn enhanced matching](https://www.linkedin.com/help/lms/answer/a6246095).
+Pass plain email; the Insight Tag SHA-256 hashes it on-device. See [LinkedIn enhanced matching](https://www.linkedin.com/help/lms/answer/a6246095).
 
 ```vue
 <script setup lang="ts">
@@ -83,6 +83,8 @@ function onSignupSuccess(email: string) {
 }
 </script>
 ```
+
+The Insight Tag stores the hashed email in `localStorage["li_hem"]` and transmits it on the next page-view via a separate POST to `https://px.ads.linkedin.com/wa/...` (the WebsiteActions gateway). The `/collect` URL of the page-view immediately following `setUserData` does not carry it; LinkedIn picks it up on the next full page load when the bootstrap reads it back from `localStorage`.
 
 ### SPA virtual page views
 
@@ -97,7 +99,7 @@ useScriptLinkedInInsight({
 </script>
 ```
 
-When enabled, the composable suppresses the script's built-in auto-page-view (via `window._wait_for_lintrk = true`) and fires `lintrk('track')`{lang="ts"} on Nuxt's `page:finish` hook once per route, including the initial SSR page.
+When enabled, the composable suppresses the script's built-in auto-page-view (via `window._wait_for_lintrk = true`) and fires `lintrk('track')`{lang="ts"} on Nuxt's `page:finish` hook instead, so each route (including the initial page) produces exactly one `/collect` beacon.
 
 ### Multiple Partner IDs
 
