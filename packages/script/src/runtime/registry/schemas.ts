@@ -833,7 +833,7 @@ export const LinkedInInsightOptions = object({
    * @example ['541681', '987654']
    * @see https://www.linkedin.com/help/lms/answer/a417869/access-your-linkedin-partner-id
    */
-  id: union([pipe(string(), minLength(1)), array(pipe(string(), minLength(1)))]),
+  id: union([pipe(string(), minLength(1)), pipe(array(pipe(string(), minLength(1))), minLength(1))]),
   /**
    * Optional page-load event ID for Conversions API deduplication. Assigned
    * to window._linkedin_event_id BEFORE the Insight Tag base code runs. Must
