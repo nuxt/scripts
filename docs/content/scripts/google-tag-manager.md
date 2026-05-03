@@ -44,10 +44,10 @@ useScriptEventPage(({ title, path }) => {
 
 ## Consent Mode
 
-Google Tag Manager natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). Set the default with `defaultConsent` (pushes `['consent','default', state]` onto the dataLayer before the `gtm.js` event) and call `consent.update()`{lang="ts"} at runtime.
+Google Tag Manager natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). Set the default with `defaultConsent` (pushes `['consent','default', state]` onto the dataLayer before the `gtm.js` event) and call `consent.update()`{lang="ts"} at runtime. Pass an **array** to `defaultConsent` to fire multiple defaults, for example [region-specific defaults](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior) where each entry targets different countries via `region`.
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
-Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent) or [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent) on [StackBlitz](https://stackblitz.com).
+Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent), [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent), or [Regional Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) on [StackBlitz](https://stackblitz.com).
 ::
 
 ### Consent Mode v2 Signals
@@ -97,7 +97,39 @@ useScriptEventPage(({ title, path }) => {
 </script>
 ```
 
-`onBeforeGtmStart` remains available as a general escape hatch for any other pre-`gtm.start` setup (only when the GTM ID is passed directly to the composable, not via `nuxt.config`).
+### Per-region defaults
+
+Pass an array to `defaultConsent` to fire one `['consent','default', state]` push per entry, in order. This matches Google's [region-specific consent pattern](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior): more specific regions (e.g. `US-CA`) override broader ones (`US`); an entry with no `region` is the unscoped global fallback.
+
+```vue
+<script setup lang="ts">
+useScriptGoogleTagManager({
+  id: 'GTM-XXXXXX',
+  defaultConsent: [
+    {
+      // EEA + UK + Switzerland — start denied, wait 500ms for the user's choice
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      region: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB', 'IS', 'LI', 'NO', 'CH'],
+      wait_for_update: 500,
+    },
+    {
+      // Everywhere else — granted by default
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'granted',
+    },
+  ],
+})
+</script>
+```
+
+The module forwards each entry verbatim, in input order. Precedence between region-scoped and unscoped defaults is enforced by gtag at runtime, not by ordering.
+
+`consent.update()`{lang="ts"} accepts any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. `onBeforeGtmStart` remains available as a general escape hatch for any other pre-`gtm.start` setup (only when the GTM ID is passed directly to the composable, not via `nuxt.config`).
 
 ::script-types
 ::

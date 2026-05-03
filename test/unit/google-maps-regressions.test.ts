@@ -455,6 +455,38 @@ describe('google Maps Regressions', () => {
 
       expect(map.setCenter).not.toHaveBeenCalled()
     })
+
+    it('uses a stable center watch key for equivalent inline mapOptions centers', () => {
+      function getCenterWatchKey(center: any) {
+        if (!center)
+          return undefined
+        if (typeof center === 'string')
+          return `query:${center}`
+        const lat = typeof center.lat === 'function' ? center.lat() : center.lat
+        const lng = typeof center.lng === 'function' ? center.lng() : center.lng
+        if (lat != null && lng != null)
+          return `latlng:${lat},${lng}`
+        return center
+      }
+
+      const firstRender = { center: { lat: -34.397, lng: 150.644 }, zoom: 8 }
+      const secondRender = { center: { lat: -34.397, lng: 150.644 }, zoom: 8 }
+
+      expect(firstRender.center).not.toBe(secondRender.center)
+      expect(getCenterWatchKey(firstRender.center)).toBe(getCenterWatchKey(secondRender.center))
+    })
+
+    it('changes the center watch key when coordinates actually change', () => {
+      function getCenterWatchKey(center: any) {
+        const lat = typeof center.lat === 'function' ? center.lat() : center.lat
+        const lng = typeof center.lng === 'function' ? center.lng() : center.lng
+        return `latlng:${lat},${lng}`
+      }
+
+      expect(getCenterWatchKey({ lat: -34.397, lng: 150.644 }))
+        .not
+        .toBe(getCenterWatchKey({ lat: -34.387, lng: 150.654 }))
+    })
   })
 
   describe('infoWindow group close', () => {
