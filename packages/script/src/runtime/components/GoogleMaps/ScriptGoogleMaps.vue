@@ -259,6 +259,21 @@ function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
 }
 
+type ScriptGoogleMapsCenter = ScriptGoogleMapsProps['center'] | google.maps.MapOptions['center']
+
+function getCenterWatchKey(center: ScriptGoogleMapsCenter): string | undefined {
+  const raw = toRaw(center)
+  if (!raw)
+    return undefined
+  if (typeof raw === 'string')
+    return `query:${raw}`
+  const lat = typeof (raw as any).lat === 'function' ? (raw as any).lat() : (raw as any).lat
+  const lng = typeof (raw as any).lng === 'function' ? (raw as any).lng() : (raw as any).lng
+  if (lat != null && lng != null)
+    return `latlng:${lat},${lng}`
+  return undefined
+}
+
 const queryToLatLngCache = new Map<string, google.maps.LatLng | google.maps.LatLngLiteral>()
 
 async function resolveQueryToLatLng(query: string) {
@@ -449,14 +464,14 @@ onMounted(() => {
   // Clear centerOverride when the controlled center prop changes so external
   // updates take effect (otherwise centerOverride, written from the user's
   // pan during re-init, would permanently win over future prop updates).
-  watch([() => props.center, () => props.mapOptions?.center], () => {
+  watch([() => getCenterWatchKey(props.center), () => getCenterWatchKey(props.mapOptions?.center)], () => {
     centerOverride.value = undefined
   })
-  watch([() => options.value.center, isMapReady, map], async (next) => {
+  watch([() => getCenterWatchKey(options.value.center), isMapReady, map], async () => {
     if (!map.value) {
       return
     }
-    let center = toRaw(next[0])
+    let center = toRaw(options.value.center)
     if (center) {
       if (isLocationQuery(center) && isMapReady.value) {
         center = await resolveQueryToLatLng(center as string)
