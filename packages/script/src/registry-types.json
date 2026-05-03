@@ -615,7 +615,7 @@
       {
         "name": "LintrkTrackParams",
         "kind": "interface",
-        "code": "interface LintrkTrackParams {\n  /** Conversion ID from Campaign Manager. Omit for plain page-view. */\n  conversion_id?: number\n  /** Per-event dedup ID matching the server-side Conversions API event. */\n  event_id?: string\n  /** Optional callback fired after the beacon completes. */\n  commandCallback?: () => void\n  [key: string]: any\n}"
+        "code": "interface LintrkTrackParams {\n  conversion_id?: number\n  event_id?: string\n  commandCallback?: () => void\n  [key: string]: any\n}"
       },
       {
         "name": "LintrkUserData",
