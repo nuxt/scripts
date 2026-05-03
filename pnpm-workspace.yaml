@@ -25,12 +25,12 @@ catalog:
   '@types/jest-image-snapshot': ^6.4.1
   '@types/youtube': ^0.2.0
   '@vue/test-utils': ^2.4.10
-  '@vueuse/core': ^14.2.1
-  '@vueuse/shared': ^14.2.1
+  '@vueuse/core': ^14.3.0
+  '@vueuse/shared': ^14.3.0
   bumpp: ^11.0.1
   consola: ^3.4.2
   defu: ^6.1.7
-  eslint: ^10.2.1
+  eslint: ^10.3.0
   eslint-plugin-harlanzw: ^0.12.1
   h3: ^1.15.11
   happy-dom: ^20.9.0
@@ -44,7 +44,7 @@ catalog:
   pathe: ^2.0.3
   pkg-types: ^2.3.1
   playwright-core: ^1.59.1
-  posthog-js: ^1.372.5
+  posthog-js: ^1.372.6
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.1.0
