@@ -1,9 +1,28 @@
 import { gunzipSync } from 'node:zlib'
 import { getBrowser, url } from '@nuxt/test-utils/e2e'
-import { expect, it } from 'vitest'
+import { beforeAll, expect, it } from 'vitest'
 
 // SHA-256 hex of 'test@example.com' (the email passed by setUserData below).
 const EXPECTED_HASHED_EMAIL = '973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b'
+
+// Tests fall into two groups by network requirement:
+//   - "wiring" tests (script tag in DOM, partner globals set by clientInit)
+//     run offline — both happen before the LinkedIn script executes.
+//   - "behavior" tests need the LinkedIn script to actually run, which means
+//     loading from snap.licdn.com (CDN mode) and reaching px.ads.linkedin.com
+//     for the bootstrap cookie-test before the canonical /collect fires.
+// We probe once; behavior tests skip when egress is unavailable.
+const NETWORK_PROBE_TIMEOUT_MS = 5000
+async function probeLinkedInEgress(): Promise<boolean> {
+  const probe = (u: string) =>
+    fetch(u, { method: 'HEAD', signal: AbortSignal.timeout(NETWORK_PROBE_TIMEOUT_MS) })
+      .then(() => true, () => false)
+  const results = await Promise.all([
+    probe('https://snap.licdn.com/li.lms-analytics/insight.min.js'),
+    probe('https://px.ads.linkedin.com/collect'),
+  ])
+  return results.every(Boolean)
+}
 
 interface CapturedRequest {
   method: string
@@ -11,9 +30,6 @@ interface CapturedRequest {
   postData: Buffer | null
 }
 
-// Tests make real outbound HTTPS to snap.licdn.com and px.ads.linkedin.com.
-// In sandboxed environments without that egress, the script never loads and
-// these assertions all fail with "expected 0 to be greater than 0".
 async function newCapturePage() {
   const browser = await getBrowser()
   const page = await browser.newPage()
@@ -59,11 +75,21 @@ interface SuiteOptions {
 }
 
 export function defineLinkedInInsightSuite(opts: SuiteOptions) {
+  let networkAvailable = false
+  beforeAll(async () => {
+    networkAvailable = await probeLinkedInEgress()
+  })
+
   it('script tag points at the expected origin', async () => {
+    // Asserts on the rendered <script src> only — the tag is in DOM regardless
+    // of whether the script actually loads, so this runs offline in both modes.
     const { page } = await newCapturePage()
     try {
-      await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
+      await page.goto(url('/linkedin'), { waitUntil: 'domcontentloaded', timeout: 30000 })
+      const scriptSelector = opts.bundled
+        ? 'script[src*="/_scripts/assets/"]'
+        : 'script[src*="snap.licdn.com/li.lms-analytics/insight.min.js"]'
+      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: 15000 })
       const scriptSrcs = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLScriptElement>('script[src]')).map(s => s.src),
       )
@@ -80,10 +106,13 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
   }, 60000)
 
   it('writes partner ID globals before the script loads', async () => {
+    // Globals are written by clientInit before the <script> is fetched, so this
+    // runs offline. Wait on the global directly (not on #status) — clientInit
+    // fires after hydration, racing against the #status element appearing.
     const { page } = await newCapturePage()
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'domcontentloaded', timeout: 30000 })
-      await page.waitForSelector('#status', { timeout: 15000 })
+      await page.waitForFunction(() => (window as any)._linkedin_partner_id !== undefined, undefined, { timeout: 15000 })
       const globals = await page.evaluate(() => ({
         partnerId: (window as any)._linkedin_partner_id,
         partnerIds: (window as any)._linkedin_data_partner_ids,
@@ -100,7 +129,9 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     }
   }, 60000)
 
-  it('SPA navigation fires a track beacon (auto-page-view enabled)', async () => {
+  it('SPA navigation fires a track beacon (auto-page-view enabled)', async (ctx) => {
+    if (!networkAvailable)
+      ctx.skip()
     const { page, requests } = await newCapturePage()
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
@@ -117,7 +148,9 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     }
   }, 60000)
 
-  it('initial page load fires exactly one canonical /collect beacon (no double-fire)', async () => {
+  it('initial page load fires exactly one canonical /collect beacon (no double-fire)', async (ctx) => {
+    if (!networkAvailable)
+      ctx.skip()
     // Regression guard: if we let the script's built-in auto-page-view fire
     // alongside useScriptEventPage's hook, every initial page would log two
     // page-views in LinkedIn analytics. The composable sets _wait_for_lintrk
@@ -143,7 +176,9 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     }
   }, 60000)
 
-  it('SPA navigation fires NO track beacon when enableAutoSpaTracking: false', async () => {
+  it('SPA navigation fires NO track beacon when enableAutoSpaTracking: false', async (ctx) => {
+    if (!networkAvailable)
+      ctx.skip()
     // Navigates to / (an index page that doesn't call the composable) so we
     // can observe a pure no-op route change. /collect is the page-view
     // endpoint; /attribution_trigger and /wa/ may fire as bootstrap side
@@ -165,7 +200,9 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     }
   }, 60000)
 
-  it('lintrk(\'track\', { conversion_id }) fires a /collect with conversionId param', async () => {
+  it('lintrk(\'track\', { conversion_id }) fires a /collect with conversionId param', async (ctx) => {
+    if (!networkAvailable)
+      ctx.skip()
     const { page, requests } = await newCapturePage()
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
@@ -182,7 +219,9 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     }
   }, 60000)
 
-  it('setUserData populates localStorage[li_hem] and the next page load transmits it via /wa/', async () => {
+  it('setUserData populates localStorage[li_hem] and the next page load transmits it via /wa/', async (ctx) => {
+    if (!networkAvailable)
+      ctx.skip()
     // setUserData hashes the email and stores it in localStorage["li_hem"].
     // The hash is transmitted in the /wa/ POST body on the *next* page load
     // (the script reads localStorage at bootstrap and includes `hem` via
