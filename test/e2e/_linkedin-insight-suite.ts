@@ -119,8 +119,8 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
         eventId: (window as any)._linkedin_event_id,
         lintrkType: typeof (window as any).lintrk,
       }))
-      expect(globals.partnerId).toBe('541681')
-      expect(globals.partnerIds).toEqual(['541681', '987654'])
+      expect(globals.partnerId).toBe('111143')
+      expect(globals.partnerIds).toEqual(['111143', '111154'])
       expect(globals.eventId).toBe('page-load-event-id-test')
       expect(globals.lintrkType).toBe('function')
     }
@@ -212,7 +212,7 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       await page.waitForTimeout(2000)
       const newCollectReqs = requests.slice(before).filter(r => r.url.includes('px.ads.linkedin.com/collect'))
       expect(newCollectReqs.length).toBeGreaterThan(0)
-      expect(newCollectReqs.some(r => r.url.includes('conversionId=20529377'))).toBe(true)
+      expect(newCollectReqs.some(r => r.url.includes('conversionId=1111111177'))).toBe(true)
     }
     finally {
       await page.close()

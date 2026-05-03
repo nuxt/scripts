@@ -10,7 +10,7 @@ useHead({
 // hook fires automatically on page:finish — buttons trigger the
 // remaining commands manually.
 const { status, proxy } = useScriptLinkedInInsight({
-  id: '541681',
+  id: '111143',
   enableAutoSpaTracking: true,
 })
 
@@ -19,7 +19,7 @@ function trackPageView() {
 }
 
 function trackConversion() {
-  proxy.lintrk('track', { conversion_id: 20529377, event_id: crypto.randomUUID() })
+  proxy.lintrk('track', { conversion_id: 1111111177, event_id: crypto.randomUUID() })
 }
 
 function setUserData() {

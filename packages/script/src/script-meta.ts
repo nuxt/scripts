@@ -102,7 +102,7 @@ export const scriptMeta = {
   linkedinInsight: {
     urls: ['https://snap.licdn.com/li.lms-analytics/insight.min.js'],
     trackedData: ['page-views', 'conversions', 'retargeting', 'audiences'],
-    testId: '541681',
+    testId: '111143',
   },
   googleAdsense: {
     urls: ['https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'],

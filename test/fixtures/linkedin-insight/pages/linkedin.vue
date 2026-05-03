@@ -6,11 +6,11 @@ useHead({ title: 'LinkedIn Insight Tag' })
 const { status } = useScriptLinkedInInsight()
 
 function trackConversion() {
-  ;(window as any).lintrk('track', { conversion_id: 20529377 })
+  ;(window as any).lintrk('track', { conversion_id: 1111111177 })
 }
 
 function trackConversionWithEventId() {
-  ;(window as any).lintrk('track', { conversion_id: 20529377, event_id: 'per-event-id-test' })
+  ;(window as any).lintrk('track', { conversion_id: 1111111177, event_id: 'per-event-id-test' })
 }
 
 function setUserData() {

@@ -28,11 +28,11 @@ Nuxt Scripts provides a registry script composable [`useScriptLinkedInInsight()`
 ```vue
 <script setup lang="ts">
 const { proxy } = useScriptLinkedInInsight({
-  id: '541681',
+  id: '111143',
 })
 
 function trackPurchase() {
-  proxy.lintrk('track', { conversion_id: 20529377 })
+  proxy.lintrk('track', { conversion_id: 1111111177 })
 }
 </script>
 ```
@@ -44,12 +44,12 @@ When you also send conversions through LinkedIn's server-side Conversions API, p
 ```vue
 <script setup lang="ts">
 const { proxy } = useScriptLinkedInInsight({
-  id: '541681',
+  id: '111143',
 })
 
 function trackSignup() {
   const eventId = crypto.randomUUID()
-  proxy.lintrk('track', { conversion_id: 20529377, event_id: eventId })
+  proxy.lintrk('track', { conversion_id: 1111111177, event_id: eventId })
   // Send the same eventId to your server-side Conversions API call.
 }
 </script>
@@ -62,7 +62,7 @@ For dedup on the auto-fired page-view, set `eventId` at registration. The compos
 ```vue
 <script setup lang="ts">
 const { proxy } = useScriptLinkedInInsight({
-  id: '541681',
+  id: '111143',
   eventId: 'page-load-event-id-123',
 })
 </script>
@@ -75,7 +75,7 @@ Pass plain email; the Insight Tag SHA-256 hashes it on-device. See [LinkedIn enh
 ```vue
 <script setup lang="ts">
 const { proxy } = useScriptLinkedInInsight({
-  id: '541681',
+  id: '111143',
 })
 
 function onSignupSuccess(email: string) {
@@ -93,7 +93,7 @@ By default, the Insight Tag fires a page-view exactly once when the script loads
 ```vue
 <script setup lang="ts">
 useScriptLinkedInInsight({
-  id: '541681',
+  id: '111143',
   enableAutoSpaTracking: true,
 })
 </script>
@@ -108,7 +108,7 @@ If you need to push more than one Partner ID onto `window._linkedin_data_partner
 ```vue
 <script setup lang="ts">
 useScriptLinkedInInsight({
-  id: ['541681', '987654'],
+  id: ['111143', '111154'],
 })
 </script>
 ```

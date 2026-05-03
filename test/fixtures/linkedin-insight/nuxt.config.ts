@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   scripts: {
     defaultScriptOptions: { trigger: 'onNuxtReady' },
     registry: {
-      linkedinInsight: { id: ['541681', '987654'], eventId: 'page-load-event-id-test', enableAutoSpaTracking: true },
+      linkedinInsight: { id: ['111143', '111154'], eventId: 'page-load-event-id-test', enableAutoSpaTracking: true },
     },
   },
   compatibilityDate: '2024-07-05',

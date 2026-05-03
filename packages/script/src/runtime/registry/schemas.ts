@@ -834,8 +834,8 @@ export const LinkedInInsightOptions = object({
    * Your LinkedIn Insight Tag Partner ID, or an array of Partner IDs to push
    * onto window._linkedin_data_partner_ids. The first ID is used as the
    * primary _linkedin_partner_id global.
-   * @example '541681'
-   * @example ['541681', '987654']
+   * @example '111143'
+   * @example ['111143', '111154']
    * @see https://www.linkedin.com/help/lms/answer/a417869/access-your-linkedin-partner-id
    */
   id: union([pipe(string(), minLength(1)), pipe(array(pipe(string(), minLength(1))), minLength(1))]),
