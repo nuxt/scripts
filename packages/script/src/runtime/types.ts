@@ -23,6 +23,7 @@ import type { HotjarInput } from './registry/hotjar'
 import type { InstagramEmbedInput } from './registry/instagram-embed'
 import type { IntercomInput } from './registry/intercom'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
+import type { LinkedInInsightInput } from './registry/linkedin-insight'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
 import type { MixpanelAnalyticsInput } from './registry/mixpanel-analytics'
@@ -243,6 +244,7 @@ export interface ScriptRegistry {
   googleTagManager?: GoogleTagManagerInput
   hotjar?: HotjarInput
   intercom?: IntercomInput
+  linkedinInsight?: LinkedInInsightInput
   paypal?: PayPalInput
   posthog?: PostHogInput
   matomoAnalytics?: MatomoAnalyticsInput
@@ -273,7 +275,7 @@ export type BuiltInRegistryScriptKey
     | 'databuddyAnalytics' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
-    | 'hotjar' | 'intercom' | 'paypal' | 'posthog' | 'matomoAnalytics'
+    | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'matomoAnalytics'
     | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'gravatar' | 'npm'
