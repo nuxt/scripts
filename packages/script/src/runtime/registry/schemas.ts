@@ -862,6 +862,33 @@ export const LinkedInInsightOptions = object({
   enableAutoSpaTracking: optional(boolean()),
 })
 
+export const UsercentricsOptions = object({
+  /**
+   * Your Usercentrics settings ID.
+   * @see https://docs.usercentrics.com/cmp_in_app_sdk/latest/getting_started/web/
+   */
+  settingsId: pipe(string(), minLength(1)),
+  /**
+   * Loader version segment used in the script src.
+   * @default 'latest'
+   */
+  version: optional(string()),
+  /**
+   * Enable IAB TCF v2 mode. When set, Usercentrics serves the TCF-aware loader.
+   * @see https://docs.usercentrics.com/cmp_in_app_sdk/latest/iab_tcf/web/
+   */
+  tcfEnabled: optional(boolean()),
+  /**
+   * Override the language displayed by the CMP UI (BCP-47 code, e.g. `'en'`, `'de'`).
+   * @see https://docs.usercentrics.com/cmp_in_app_sdk/latest/configuration/language/
+   */
+  language: optional(string()),
+  /**
+   * Loader variant. `'gdpr'` is the default; `'tcf'` selects the TCF v2 loader.
+   */
+  embeddingType: optional(union([literal('tcf'), literal('gdpr')])),
+})
+
 export const SegmentOptions = object({
   /**
    * Your Segment write key.

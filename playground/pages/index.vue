@@ -45,6 +45,7 @@ function getPlaygroundPath(script: any): string | null {
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
     'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
+    'usercentrics': '/third-parties/usercentrics/nuxt-scripts',
     'npm': '/npm/js-confetti',
   }
 
@@ -271,6 +272,10 @@ const benchmark = [
   {
     name: 'LinkedIn Insight (Default)',
     path: '/third-parties/linkedin-insight/default',
+  },
+  {
+    name: 'Usercentrics (Default)',
+    path: '/third-parties/usercentrics/default',
   },
   {
     name: 'Snapchat (Default)',

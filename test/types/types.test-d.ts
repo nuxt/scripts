@@ -48,6 +48,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['vercelAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['vimeoPlayer']>().not.toBeAny()
     expectTypeOf<Registry['umamiAnalytics']>().not.toBeAny()
+    expectTypeOf<Registry['usercentrics']>().not.toBeAny()
     expectTypeOf<Registry['gravatar']>().not.toBeAny()
     expectTypeOf<Registry['npm']>().not.toBeAny()
   })

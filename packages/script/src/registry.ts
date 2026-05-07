@@ -43,6 +43,7 @@ import {
   StripeOptions,
   TikTokPixelOptions,
   UmamiAnalyticsOptions,
+  UsercentricsOptions,
   VercelAnalyticsOptions,
   XEmbedOptions,
   XPixelOptions,
@@ -165,6 +166,9 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('googleRecaptcha', 'Google reCAPTCHA', 'utility', 'useScriptGoogleRecaptcha', {}, null),
   m('googleSignIn', 'Google Sign-In', 'utility', 'useScriptGoogleSignIn', {}, null),
   m('gravatar', 'Gravatar', 'utility', 'useScriptGravatar', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  // Usercentrics is the consent layer itself: must hit the vendor origin so
+  // signature/policy lookups succeed. Bundle/proxy are intentionally absent.
+  m('usercentrics', 'Usercentrics', 'utility', 'useScriptUsercentrics', {}, null),
 ]
 
 export const REGISTRY_CATEGORIES = [
@@ -783,6 +787,19 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         autoInject: { field: 'hostUrl', target: 'cloud.umami.is' },
       },
       partytown: { forwards: ['umami', 'umami.track'] },
+    }),
+    def('usercentrics', {
+      composableName: 'useScriptUsercentrics',
+      schema: UsercentricsOptions,
+      label: 'Usercentrics',
+      // Source declared here for devtools/listing only; the runtime composable
+      // builds the actual src so it can include `version` and the required
+      // `data-settings-id` attribute. No bundle/proxy: the CMP must hit the
+      // vendor origin (it IS the consent surface, and is exempt from consent
+      // gating) so policies/signatures resolve correctly.
+      src: 'https://app.usercentrics.eu/browser-ui/latest/loader.js',
+      category: 'utility',
+      envDefaults: { settingsId: '' },
     }),
     def('gravatar', {
       schema: GravatarOptions,

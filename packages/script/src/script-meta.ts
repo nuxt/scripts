@@ -203,6 +203,12 @@ export const scriptMeta = {
     trackedData: [],
   },
 
+  // CMP / Consent
+  usercentrics: {
+    urls: ['https://app.usercentrics.eu/browser-ui/latest/loader.js'],
+    trackedData: [],
+  },
+
   // Identity
   gravatar: {
     urls: ['https://secure.gravatar.com/js/gprofiles.js'],
