@@ -33,7 +33,7 @@ interface CalendlyPageSettings {
 
 export interface CalendlyInlineWidgetOptions {
   url: string
-  parentElement: HTMLElement | string
+  parentElement: HTMLElement
   prefill?: CalendlyPrefill
   utm?: CalendlyUtm
   pageSettings?: CalendlyPageSettings

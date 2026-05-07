@@ -118,7 +118,7 @@
       {
         "name": "CalendlyInlineWidgetOptions",
         "kind": "interface",
-        "code": "export interface CalendlyInlineWidgetOptions {\n  url: string\n  parentElement: HTMLElement | string\n  prefill?: CalendlyPrefill\n  utm?: CalendlyUtm\n  pageSettings?: CalendlyPageSettings\n}"
+        "code": "export interface CalendlyInlineWidgetOptions {\n  url: string\n  parentElement: HTMLElement\n  prefill?: CalendlyPrefill\n  utm?: CalendlyUtm\n  pageSettings?: CalendlyPageSettings\n}"
       },
       {
         "name": "CalendlyPopupWidgetOptions",

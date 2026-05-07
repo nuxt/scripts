@@ -10,9 +10,12 @@ const { status, proxy } = useScriptCalendly({
 })
 
 function queueInitInline() {
+  const parentElement = document.querySelector<HTMLElement>('#calendly-host')
+  if (!parentElement)
+    return
   proxy.Calendly.initInlineWidget({
     url: 'https://calendly.com/example/30min',
-    parentElement: '#calendly-host',
+    parentElement,
   })
 }
 </script>

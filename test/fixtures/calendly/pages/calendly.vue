@@ -6,11 +6,14 @@ useHead({ title: 'Calendly' })
 const { status, proxy } = useScriptCalendly()
 
 function queueInitInline() {
+  const parentElement = document.querySelector<HTMLElement>('#calendly-host')
+  if (!parentElement)
+    return
   // Pre-load call: must land on the stub queue, then replay against the real
   // Calendly object once the script finishes loading.
   proxy.Calendly.initInlineWidget({
     url: 'https://calendly.com/example/30min',
-    parentElement: '#calendly-host',
+    parentElement,
   })
 }
 </script>
