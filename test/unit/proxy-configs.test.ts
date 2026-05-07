@@ -418,6 +418,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('xPixel')
       expect(configs).toHaveProperty('snapchatPixel')
       expect(configs).toHaveProperty('redditPixel')
+      expect(configs).toHaveProperty('linkedinInsight')
       expect(configs).toHaveProperty('posthog')
       expect(configs).toHaveProperty('plausibleAnalytics')
       expect(configs).toHaveProperty('cloudflareWebAnalytics')
@@ -433,7 +434,7 @@ describe('proxy configs', () => {
 
     it('all configs have valid structure', async () => {
       const configs = await getProxyConfigs()
-      const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel']
+      const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel', 'linkedinInsight']
       const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have domains`).toHaveProperty('domains')
