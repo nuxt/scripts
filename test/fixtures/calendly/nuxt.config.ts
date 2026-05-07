@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   scripts: {
     defaultScriptOptions: { trigger: 'onNuxtReady' },
     registry: {
-      calendly: true,
+      calendly: { trigger: 'onNuxtReady' },
     },
   },
   compatibilityDate: '2024-07-05',

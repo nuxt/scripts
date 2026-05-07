@@ -7,5 +7,8 @@ export default defineNuxtConfig({
   extends: ['../calendly'],
   scripts: {
     defaultScriptOptions: { bundle: false },
+    registry: {
+      calendly: { scriptOptions: { bundle: false } },
+    },
   },
 })

@@ -1,31 +1,15 @@
 <script lang="ts" setup>
-import { useHead, useScriptCalendly } from '#imports'
+// Empty by design — keeps the index page off the calendly composable
+// so Vite doesn't try to parse `#imports` before Nuxt prepare has run.
+import { useHead } from '#imports'
 
-useHead({ title: 'Calendly' })
-
-const { status, proxy } = useScriptCalendly()
-
-function queueInitInline() {
-  // Pre-load call: must land on the stub queue, then replay against the real
-  // Calendly object once the script finishes loading.
-  proxy.Calendly.initInlineWidget({
-    url: 'https://calendly.com/example/30min',
-    parentElement: '#calendly-host',
-  })
-}
+useHead({ title: 'Empty Index' })
 </script>
 
 <template>
   <div>
-    <h1>Calendly</h1>
-    <ClientOnly>
-      <div id="status">
-        status: {{ status }}
-      </div>
-    </ClientOnly>
-    <button id="trigger-queue" @click="queueInitInline">
-      Queue init
-    </button>
-    <div id="calendly-host" style="min-width: 320px; height: 600px" />
+    <p id="index-marker">
+      Empty index (no Calendly composable).
+    </p>
   </div>
 </template>
