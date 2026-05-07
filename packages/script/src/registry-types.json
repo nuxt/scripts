@@ -94,6 +94,48 @@
         "code": "interface ScriptBlueskyEmbedSlots {\n  default?: (props: object) => any\n  loading?: () => any\n  error?: (props: object) => any\n}"
       }
     ],
+    "calendly": [
+      {
+        "name": "CalendlyOptions",
+        "kind": "const",
+        "code": "export const CalendlyOptions = object({\n  /**\n   * The Calendly event URL to embed.\n   * Required for inline, popup, and badge widgets when called via the composable.\n   * @example 'https://calendly.com/your-name/30min'\n   * @see https://help.calendly.com/hc/en-us/articles/223147027\n   */\n  url: optional(string()),\n  /**\n   * Pre-fill invitee fields on the booking form.\n   * @see https://help.calendly.com/hc/en-us/articles/360020052833\n   */\n  prefill: optional(object({\n    name: optional(string()),\n    email: optional(string()),\n    firstName: optional(string()),\n    lastName: optional(string()),\n    /** Custom answers keyed by `a1`, `a2`, ... matching custom question order. */\n    customAnswers: optional(record(string(), string())),\n  })),\n  /**\n   * UTM parameters appended to the booking URL for marketing attribution.\n   * @see https://help.calendly.com/hc/en-us/articles/360020052833\n   */\n  utm: optional(object({\n    utmCampaign: optional(string()),\n    utmSource: optional(string()),\n    utmMedium: optional(string()),\n    utmContent: optional(string()),\n    utmTerm: optional(string()),\n  })),\n  /**\n   * Theme and layout overrides applied to the booking page.\n   * @see https://help.calendly.com/hc/en-us/articles/360020052833\n   */\n  pageSettings: optional(object({\n    backgroundColor: optional(string()),\n    hideEventTypeDetails: optional(boolean()),\n    hideLandingPageDetails: optional(boolean()),\n    primaryColor: optional(string()),\n    textColor: optional(string()),\n  })),\n  /**\n   * CSS selector for the element that hosts the inline widget.\n   * Required when the widget is initialised inline; the element should have a\n   * minimum height of around 700px so the booking iframe is fully visible.\n   */\n  parentElement: optional(string()),\n})"
+      },
+      {
+        "name": "CalendlyPrefill",
+        "kind": "interface",
+        "code": "interface CalendlyPrefill {\n  name?: string\n  email?: string\n  firstName?: string\n  lastName?: string\n  customAnswers?: Record<string, string>\n}"
+      },
+      {
+        "name": "CalendlyUtm",
+        "kind": "interface",
+        "code": "interface CalendlyUtm {\n  utmCampaign?: string\n  utmSource?: string\n  utmMedium?: string\n  utmContent?: string\n  utmTerm?: string\n}"
+      },
+      {
+        "name": "CalendlyPageSettings",
+        "kind": "interface",
+        "code": "interface CalendlyPageSettings {\n  backgroundColor?: string\n  hideEventTypeDetails?: boolean\n  hideLandingPageDetails?: boolean\n  primaryColor?: string\n  textColor?: string\n}"
+      },
+      {
+        "name": "CalendlyInlineWidgetOptions",
+        "kind": "interface",
+        "code": "export interface CalendlyInlineWidgetOptions {\n  url: string\n  parentElement: HTMLElement | string\n  prefill?: CalendlyPrefill\n  utm?: CalendlyUtm\n  pageSettings?: CalendlyPageSettings\n}"
+      },
+      {
+        "name": "CalendlyPopupWidgetOptions",
+        "kind": "interface",
+        "code": "export interface CalendlyPopupWidgetOptions {\n  url: string\n  rootElement?: HTMLElement\n  text?: string\n  color?: string\n  textColor?: string\n  branding?: boolean\n  prefill?: CalendlyPrefill\n  utm?: CalendlyUtm\n  pageSettings?: CalendlyPageSettings\n}"
+      },
+      {
+        "name": "CalendlyBadgeWidgetOptions",
+        "kind": "interface",
+        "code": "export interface CalendlyBadgeWidgetOptions {\n  url: string\n  text?: string\n  color?: string\n  textColor?: string\n  branding?: boolean\n  prefill?: CalendlyPrefill\n  utm?: CalendlyUtm\n  pageSettings?: CalendlyPageSettings\n}"
+      },
+      {
+        "name": "CalendlyApi",
+        "kind": "interface",
+        "code": "export interface CalendlyApi {\n  Calendly: {\n    initInlineWidget: (options: CalendlyInlineWidgetOptions) => void\n    initPopupWidget: (options: CalendlyPopupWidgetOptions) => void\n    initBadgeWidget: (options: CalendlyBadgeWidgetOptions) => void\n    showPopupWidget: (url: string) => void\n    closePopupWidget: () => void\n    initPopupWidgetWithText: (options: CalendlyPopupWidgetOptions) => void\n    q?: unknown[]\n  }\n}"
+      }
+    ],
     "clarity": [
       {
         "name": "ClarityOptions",
@@ -2058,6 +2100,38 @@
         "required": false,
         "description": "Auto-fire lintrk('track') on Vue Router route changes (SPA virtual page views). When true, suppresses the script's built-in auto-page-view via window._wait_for_lintrk and tracks every navigation including the initial page through Nuxt's page:finish hook. When false, the script fires its own page-view exactly once on load and SPA navigations are not tracked unless lintrk('track') is called manually.",
         "defaultValue": "false"
+      }
+    ],
+    "CalendlyOptions": [
+      {
+        "name": "url",
+        "type": "string",
+        "required": false,
+        "description": "The Calendly event URL to embed. Required for inline, popup, and badge widgets when called via the composable."
+      },
+      {
+        "name": "prefill",
+        "type": "object",
+        "required": false,
+        "description": "Pre-fill invitee fields on the booking form."
+      },
+      {
+        "name": "utm",
+        "type": "object",
+        "required": false,
+        "description": "UTM parameters appended to the booking URL for marketing attribution."
+      },
+      {
+        "name": "pageSettings",
+        "type": "object",
+        "required": false,
+        "description": "Theme and layout overrides applied to the booking page."
+      },
+      {
+        "name": "parentElement",
+        "type": "string",
+        "required": false,
+        "description": "CSS selector for the element that hosts the inline widget. Required when the widget is initialised inline; the element should have a minimum height of around 700px so the booking iframe is fully visible."
       }
     ],
     "SegmentOptions": [

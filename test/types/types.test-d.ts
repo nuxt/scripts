@@ -13,6 +13,7 @@ describe('module options registry', () => {
     // properties inherited via `extends` always take priority over the index signature.
     expectTypeOf<Registry['bingUet']>().not.toBeAny()
     expectTypeOf<Registry['blueskyEmbed']>().not.toBeAny()
+    expectTypeOf<Registry['calendly']>().not.toBeAny()
     expectTypeOf<Registry['carbonAds']>().not.toBeAny()
     expectTypeOf<Registry['crisp']>().not.toBeAny()
     expectTypeOf<Registry['clarity']>().not.toBeAny()

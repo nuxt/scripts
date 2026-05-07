@@ -393,6 +393,13 @@ describe('proxy configs', () => {
       expect(config).toBeUndefined()
     })
 
+    it('returns proxy config for calendly', async () => {
+      const config = (await getProxyConfigs()).calendly
+      expect(config).toBeDefined()
+      expect(config?.domains).toContain('assets.calendly.com')
+      expect(config?.privacy.ip).toBe(true)
+    })
+
     it('returns proxy config for vercelAnalytics', async () => {
       const config = (await getProxyConfigs()).vercelAnalytics
       expect(config).toBeDefined()
@@ -430,12 +437,13 @@ describe('proxy configs', () => {
       expect(configs).not.toHaveProperty('crisp')
       expect(configs).toHaveProperty('vercelAnalytics')
       expect(configs).toHaveProperty('gravatar')
+      expect(configs).toHaveProperty('calendly')
     })
 
     it('all configs have valid structure', async () => {
       const configs = await getProxyConfigs()
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel', 'linkedinInsight']
-      const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar']
+      const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar', 'calendly']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have domains`).toHaveProperty('domains')
         expect(Array.isArray(config.domains), `${key}.domains should be an array`).toBe(true)

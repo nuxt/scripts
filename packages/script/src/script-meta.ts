@@ -180,6 +180,10 @@ export const scriptMeta = {
   },
 
   // Utility
+  calendly: {
+    urls: ['https://assets.calendly.com/assets/external/widget.js'],
+    trackedData: [],
+  },
   googleRecaptcha: {
     urls: ['https://www.google.com/recaptcha/api.js'],
     trackedData: [],

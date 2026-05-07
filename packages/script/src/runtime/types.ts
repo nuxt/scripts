@@ -7,6 +7,7 @@ import type { InferInput, ObjectEntries, ObjectSchema, UnionSchema, ValiError } 
 import type { ComputedRef, Ref } from 'vue'
 import type { BingUetInput } from './registry/bing-uet'
 import type { BlueskyEmbedInput } from './registry/bluesky-embed'
+import type { CalendlyInput } from './registry/calendly'
 import type { ClarityInput } from './registry/clarity'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
 import type { CrispInput } from './registry/crisp'
@@ -227,6 +228,7 @@ export interface ScriptRegistry {
   bingUet?: BingUetInput
   blueskyEmbed?: BlueskyEmbedInput
   carbonAds?: true
+  calendly?: CalendlyInput
   crisp?: CrispInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
@@ -271,7 +273,7 @@ export interface ScriptRegistry {
  * Use this to type-check records that must enumerate all built-in scripts (logos, meta, etc.).
  */
 export type BuiltInRegistryScriptKey
-  = | 'bingUet' | 'blueskyEmbed' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
+  = | 'bingUet' | 'blueskyEmbed' | 'calendly' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
     | 'databuddyAnalytics' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'

@@ -862,6 +862,56 @@ export const LinkedInInsightOptions = object({
   enableAutoSpaTracking: optional(boolean()),
 })
 
+export const CalendlyOptions = object({
+  /**
+   * The Calendly event URL to embed.
+   * Required for inline, popup, and badge widgets when called via the composable.
+   * @example 'https://calendly.com/your-name/30min'
+   * @see https://help.calendly.com/hc/en-us/articles/223147027
+   */
+  url: optional(string()),
+  /**
+   * Pre-fill invitee fields on the booking form.
+   * @see https://help.calendly.com/hc/en-us/articles/360020052833
+   */
+  prefill: optional(object({
+    name: optional(string()),
+    email: optional(string()),
+    firstName: optional(string()),
+    lastName: optional(string()),
+    /** Custom answers keyed by `a1`, `a2`, ... matching custom question order. */
+    customAnswers: optional(record(string(), string())),
+  })),
+  /**
+   * UTM parameters appended to the booking URL for marketing attribution.
+   * @see https://help.calendly.com/hc/en-us/articles/360020052833
+   */
+  utm: optional(object({
+    utmCampaign: optional(string()),
+    utmSource: optional(string()),
+    utmMedium: optional(string()),
+    utmContent: optional(string()),
+    utmTerm: optional(string()),
+  })),
+  /**
+   * Theme and layout overrides applied to the booking page.
+   * @see https://help.calendly.com/hc/en-us/articles/360020052833
+   */
+  pageSettings: optional(object({
+    backgroundColor: optional(string()),
+    hideEventTypeDetails: optional(boolean()),
+    hideLandingPageDetails: optional(boolean()),
+    primaryColor: optional(string()),
+    textColor: optional(string()),
+  })),
+  /**
+   * CSS selector for the element that hosts the inline widget.
+   * Required when the widget is initialised inline; the element should have a
+   * minimum height of around 700px so the booking iframe is fully visible.
+   */
+  parentElement: optional(string()),
+})
+
 export const SegmentOptions = object({
   /**
    * Your Segment write key.
