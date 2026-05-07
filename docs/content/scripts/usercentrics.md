@@ -132,7 +132,7 @@ useScriptUsercentrics({
 
 ## Partytown
 
-Usercentrics is not supported under Partytown. The `UC_UI` API is method-heavy and not safe to forward across the worker boundary; the CMP also needs main-thread DOM access to render its UI overlays.
+Usercentrics is not supported under Partytown. The `UC_UI` API is method-heavy and not safe to forward across the worker boundary, and the CMP needs main-thread DOM access to render its UI overlays.
 
 ::script-types
 ::
