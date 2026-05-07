@@ -84,7 +84,7 @@ export function useScriptUsercentrics<T extends UsercentricsApi>(
         // required for the loader to bootstrap.
         'src': `https://app.usercentrics.eu/browser-ui/${version}/loader.js`,
         'id': 'usercentrics-cmp',
-        'data-settings-id': options.settingsId || '',
+        'data-settings-id': options.settingsId,
         'data-tcf-enabled': options.tcfEnabled ? 'true' : undefined,
         'data-language': options.language,
         'data-embedding-type': options.embeddingType,

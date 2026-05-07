@@ -20,7 +20,7 @@ if (import.meta.client) {
     services.value = (window.UC_UI?.getServicesBaseInfo?.() || []).map(s => ({
       id: s.id,
       name: s.name,
-      granted: !!s.consent.status,
+      granted: !!s.consent?.status,
     }))
   })
   onScopeDispose(off)
