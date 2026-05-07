@@ -5,6 +5,7 @@ import type {
 import type { Import } from 'unimport'
 import type { InferInput, ObjectEntries, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import type { ComputedRef, Ref } from 'vue'
+import type { AhrefsAnalyticsInput } from './registry/ahrefs-analytics'
 import type { BingUetInput } from './registry/bing-uet'
 import type { BlueskyEmbedInput } from './registry/bluesky-embed'
 import type { ClarityInput } from './registry/clarity'
@@ -224,6 +225,7 @@ export interface NuxtDevToolsScriptInstance {
 }
 
 export interface ScriptRegistry {
+  ahrefsAnalytics?: AhrefsAnalyticsInput
   bingUet?: BingUetInput
   blueskyEmbed?: BlueskyEmbedInput
   carbonAds?: true
@@ -271,7 +273,7 @@ export interface ScriptRegistry {
  * Use this to type-check records that must enumerate all built-in scripts (logos, meta, etc.).
  */
 export type BuiltInRegistryScriptKey
-  = | 'bingUet' | 'blueskyEmbed' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
+  = | 'ahrefsAnalytics' | 'bingUet' | 'blueskyEmbed' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
     | 'databuddyAnalytics' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'

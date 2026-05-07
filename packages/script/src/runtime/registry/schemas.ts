@@ -16,6 +16,15 @@ const gcmConsentState = object({
   region: optional(array(string())),
 })
 
+export const AhrefsAnalyticsOptions = object({
+  /**
+   * Your Ahrefs Web Analytics project key. Set as the `data-key` attribute
+   * on the loaded `analytics.js` script tag.
+   * @see https://ahrefs.com/web-analytics
+   */
+  key: pipe(string(), minLength(1)),
+})
+
 export const BlueskyEmbedOptions = object({
   /**
    * The Bluesky post URL to embed.
