@@ -53,6 +53,7 @@ describe('calendly stub queue', () => {
   it('preserves multiple positional args (showPopupWidget(url, ...))', () => {
     const stub = createStub()
     stub.showPopupWidget('https://calendly.com/example/30min', { foo: 'bar' }, 42)
+    expect(stub.q).toHaveLength(1)
     expect(stub.q[0]).toEqual([
       'showPopupWidget',
       'https://calendly.com/example/30min',
