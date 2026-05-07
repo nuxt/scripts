@@ -1,16 +1,11 @@
 import { getBrowser, url } from '@nuxt/test-utils/e2e'
-import { beforeAll, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
 
-// Probe Ahrefs egress; behavior tests skip when network is unavailable so
-// CI doesn't fail in offline sandboxes. Wiring tests (script tag in DOM,
+// Behavior tests require a real Ahrefs key registered to the test origin so
+// /api/event accepts the beacon. Without it the script silently drops events,
+// so CI gates these on AHREFS_TEST_KEY. Wiring tests (script tag in DOM,
 // data-key set) run regardless.
-const NETWORK_PROBE_TIMEOUT_MS = 5000
-async function probeAhrefsEgress(): Promise<boolean> {
-  return fetch('https://analytics.ahrefs.com/analytics.js', {
-    method: 'HEAD',
-    signal: AbortSignal.timeout(NETWORK_PROBE_TIMEOUT_MS),
-  }).then(() => true, () => false)
-}
+const hasRealKey = Boolean(process.env.AHREFS_TEST_KEY)
 
 interface CapturedRequest {
   method: string
@@ -46,11 +41,6 @@ interface SuiteOptions {
 }
 
 export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
-  let networkAvailable = false
-  beforeAll(async () => {
-    networkAvailable = await probeAhrefsEgress()
-  })
-
   it('script tag points at the expected origin with data-key set', async () => {
     // Wiring assertion: the <script> is in DOM regardless of whether the
     // remote script actually executes, so this runs offline in both modes.
@@ -78,7 +68,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
   }, 60000)
 
   it('initial page load fires a /api/event beacon', async (ctx) => {
-    if (!networkAvailable)
+    if (!hasRealKey)
       ctx.skip()
     const { page, requests } = await newCapturePage()
     try {
@@ -99,7 +89,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
   }, 60000)
 
   it('SPA navigation fires a /api/event beacon (auto-tracked by the script)', async (ctx) => {
-    if (!networkAvailable)
+    if (!hasRealKey)
       ctx.skip()
     // Ahrefs's analytics.js patches history.pushState natively so SPA
     // navigations fire /api/event without any composable-side hook. This
