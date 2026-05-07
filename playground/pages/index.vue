@@ -29,6 +29,7 @@ function getPlaygroundPath(script: any): string | null {
     'meta-pixel': '/third-parties/meta-pixel',
     'x-pixel': '/third-parties/x-pixel/nuxt-scripts',
     'reddit-pixel': '/third-parties/reddit-pixel/nuxt-scripts',
+    'linkedin-insight': '/third-parties/linkedin-insight/nuxt-scripts',
     'snapchat-pixel': '/third-parties/snapchat/nuxt-scripts',
     'tiktok-pixel': '/third-parties/tiktok-pixel/nuxt-scripts',
     'google-adsense': '/third-parties/google-adsense/nuxt-scripts',
@@ -266,6 +267,10 @@ const benchmark = [
   {
     name: 'Reddit Pixel (Default)',
     path: '/third-parties/reddit-pixel/default',
+  },
+  {
+    name: 'LinkedIn Insight (Default)',
+    path: '/third-parties/linkedin-insight/default',
   },
   {
     name: 'Snapchat (Default)',

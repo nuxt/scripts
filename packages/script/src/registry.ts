@@ -30,6 +30,7 @@ import {
   HotjarOptions,
   InstagramEmbedOptions,
   IntercomOptions,
+  LinkedInInsightOptions,
   MatomoAnalyticsOptions,
   MetaPixelOptions,
   MixpanelAnalyticsOptions,
@@ -138,6 +139,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('tiktokPixel', 'TikTok Pixel', 'ad', 'useScriptTikTokPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('snapchatPixel', 'Snapchat Pixel', 'ad', 'useScriptSnapchatPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('redditPixel', 'Reddit Pixel', 'ad', 'useScriptRedditPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('linkedinInsight', 'LinkedIn Insight Tag', 'ad', 'useScriptLinkedInInsight', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('googleAdsense', 'Google Adsense', 'ad', 'useScriptGoogleAdsense', { bundle: true, proxy: true }, PRIVACY_HEATMAP),
   m('carbonAds', 'Carbon Ads', 'ad', false, { proxy: true }, PRIVACY_IP_ONLY),
   // tag-manager
@@ -507,6 +509,21 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['rdt'] },
+    }),
+    def('linkedinInsight', {
+      // explicit override: auto-derived would be `useScriptLinkedinInsight` (lowercase i)
+      composableName: 'useScriptLinkedInInsight',
+      schema: LinkedInInsightOptions,
+      label: 'LinkedIn Insight Tag',
+      src: 'https://snap.licdn.com/li.lms-analytics/insight.min.js',
+      category: 'ad',
+      envDefaults: { id: '' },
+      bundle: true,
+      proxy: {
+        domains: ['snap.licdn.com', 'px.ads.linkedin.com'],
+        privacy: PRIVACY_FULL,
+      },
+      partytown: { forwards: ['lintrk'] },
     }),
     def('googleAdsense', {
       schema: GoogleAdsenseOptions,
