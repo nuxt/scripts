@@ -274,6 +274,47 @@ function getCenterWatchKey(center: ScriptGoogleMapsCenter): string | undefined {
   return undefined
 }
 
+const controlledCenterKey = computed(() => {
+  return getCenterWatchKey(centerOverride.value)
+    || getCenterWatchKey(props.mapOptions?.center)
+    || getCenterWatchKey(props.center)
+})
+
+function getReactiveMapOptions(options: google.maps.MapOptions): google.maps.MapOptions {
+  // Exclude center and zoom — they have dedicated watchers that avoid
+  // resetting user interactions (pan/zoom) on unrelated re-renders.
+  // Exclude mapId and colorScheme — Google Maps treats these as init-only;
+  // changes are handled by the dedicated re-init watcher below.
+  const { center: _, zoom: __, mapId: ___, colorScheme: ____, ...rest } = options
+  return rest
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== 'object')
+    return false
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
+}
+
+function isSameOptionValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b))
+    return true
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((value, index) => isSameOptionValue(value, b[index]))
+  }
+  if (isPlainObject(a) && isPlainObject(b)) {
+    const aKeys = Object.keys(a)
+    const bKeys = Object.keys(b)
+    return aKeys.length === bKeys.length
+      && aKeys.every(key => Object.hasOwn(b, key) && isSameOptionValue(a[key], b[key]))
+  }
+  return false
+}
+
+function isSameMapOptions(a: google.maps.MapOptions, b: google.maps.MapOptions): boolean {
+  return isSameOptionValue(toRaw(a), toRaw(b))
+}
+
 const queryToLatLngCache = new Map<string, google.maps.LatLng | google.maps.LatLngLiteral>()
 
 async function resolveQueryToLatLng(query: string) {
@@ -401,15 +442,12 @@ onMounted(() => {
       emits('error')
     }
   })
-  watch(options, () => {
+  watch(() => getReactiveMapOptions(options.value), (nextOptions, previousOptions) => {
     if (!map.value)
       return
-    // Exclude center and zoom — they have dedicated watchers that avoid
-    // resetting user interactions (pan/zoom) on unrelated re-renders.
-    // Exclude mapId and colorScheme — Google Maps treats these as init-only;
-    // changes are handled by the dedicated re-init watcher below.
-    const { center: _, zoom: __, mapId: ___, colorScheme: ____, ...rest } = options.value
-    map.value.setOptions(rest)
+    if (isSameMapOptions(nextOptions, previousOptions))
+      return
+    map.value.setOptions(nextOptions)
   })
   // Re-init map when mapId or colorScheme changes (e.g. user toggles color mode
   // with `mapIds` set or with cloud-based styling on a single mapId). Both are
@@ -458,8 +496,9 @@ onMounted(() => {
     emits('ready', exposed)
   })
   watch(() => options.value.zoom, (zoom) => {
-    if (map.value && zoom != null)
+    if (map.value && zoom != null) {
       map.value.setZoom(zoom)
+    }
   })
   // Clear centerOverride when the controlled center prop changes so external
   // updates take effect (otherwise centerOverride, written from the user's
@@ -467,7 +506,7 @@ onMounted(() => {
   watch([() => getCenterWatchKey(props.center), () => getCenterWatchKey(props.mapOptions?.center)], () => {
     centerOverride.value = undefined
   })
-  watch([() => getCenterWatchKey(options.value.center), isMapReady, map], async () => {
+  watch([controlledCenterKey, isMapReady, map], async () => {
     if (!map.value) {
       return
     }

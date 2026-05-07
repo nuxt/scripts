@@ -92,9 +92,9 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
       api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
       :width="1280"
       :height="720"
-      :zoom="zoom"
       :map-options="{
         center: { lat: -34.397, lng: 150.644 },
+        zoom,
         mapId: 'DEMO_MAP_ID',
       }"
     >

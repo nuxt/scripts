@@ -337,6 +337,39 @@ describe('google Maps Regressions', () => {
       map.setOptions(rest)
     }
 
+    function isPlainObject(value: unknown): value is Record<string, unknown> {
+      if (!value || typeof value !== 'object')
+        return false
+      const proto = Object.getPrototypeOf(value)
+      return proto === Object.prototype || proto === null
+    }
+
+    function isSameOptionValue(a: unknown, b: unknown): boolean {
+      if (Object.is(a, b))
+        return true
+      if (Array.isArray(a) && Array.isArray(b))
+        return a.length === b.length && a.every((value, index) => isSameOptionValue(value, b[index]))
+      if (isPlainObject(a) && isPlainObject(b)) {
+        const aKeys = Object.keys(a)
+        const bKeys = Object.keys(b)
+        return aKeys.length === bKeys.length
+          && aKeys.every(key => Object.hasOwn(b, key) && isSameOptionValue(a[key], b[key]))
+      }
+      return false
+    }
+
+    function applyOptionsWithStableGuard(
+      map: ReturnType<typeof createMockMap>,
+      options: Record<string, any>,
+      previousOptions: Record<string, any>,
+    ) {
+      const { center: _, zoom: __, mapId: ___, colorScheme: ____, ...next } = options
+      const { center: _previousCenter, zoom: _previousZoom, mapId: _previousMapId, colorScheme: _previousColorScheme, ...previous } = previousOptions
+      if (isSameOptionValue(next, previous))
+        return
+      map.setOptions(next)
+    }
+
     it('old behavior: setOptions resets zoom and center on unrelated re-render', () => {
       const map = createMockMap()
       const options = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc' }
@@ -401,6 +434,35 @@ describe('google Maps Regressions', () => {
       }
       expect(map.setCenter).not.toHaveBeenCalled()
       expect(map.setZoom).not.toHaveBeenCalled()
+    })
+
+    it('fixed behavior: identical inline options do not call setOptions on unrelated re-renders', () => {
+      const map = createMockMap()
+      const baseOptions = {
+        center: { lat: 40, lng: -74 },
+        zoom: 12,
+        mapId: 'abc',
+        disableDefaultUI: true,
+        restriction: { strictBounds: false },
+      }
+
+      for (let i = 0; i < 3; i++) {
+        applyOptionsWithStableGuard(map, { ...baseOptions, restriction: { strictBounds: false } }, baseOptions)
+      }
+
+      expect(map.setOptions).not.toHaveBeenCalled()
+      expect(map.setCenter).not.toHaveBeenCalled()
+      expect(map.setZoom).not.toHaveBeenCalled()
+    })
+
+    it('fixed behavior: real non-position option changes still call setOptions', () => {
+      const map = createMockMap()
+      const previousOptions = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc', disableDefaultUI: true }
+      const nextOptions = { center: { lat: 40, lng: -74 }, zoom: 12, mapId: 'abc', disableDefaultUI: false }
+
+      applyOptionsWithStableGuard(map, nextOptions, previousOptions)
+
+      expect(map.setOptions).toHaveBeenCalledWith({ disableDefaultUI: false })
     })
   })
 
@@ -474,6 +536,40 @@ describe('google Maps Regressions', () => {
 
       expect(firstRender.center).not.toBe(secondRender.center)
       expect(getCenterWatchKey(firstRender.center)).toBe(getCenterWatchKey(secondRender.center))
+    })
+
+    it('keeps the controlled center watch key stable across unrelated inline option re-renders', () => {
+      function getCenterWatchKey(center: any) {
+        if (!center)
+          return undefined
+        const lat = typeof center.lat === 'function' ? center.lat() : center.lat
+        const lng = typeof center.lng === 'function' ? center.lng() : center.lng
+        return `latlng:${lat},${lng}`
+      }
+
+      function getControlledCenterKey(props: { center?: any, mapOptions?: { center?: any } }, centerOverride?: any) {
+        return getCenterWatchKey(centerOverride)
+          || getCenterWatchKey(props.mapOptions?.center)
+          || getCenterWatchKey(props.center)
+      }
+
+      const firstRender = {
+        mapOptions: {
+          center: { lat: -34.397, lng: 150.644 },
+          zoom: 8,
+        },
+      }
+      const secondRenderAfterRectangleToggle = {
+        mapOptions: {
+          center: { lat: -34.397, lng: 150.644 },
+          zoom: 8,
+        },
+      }
+
+      expect(firstRender.mapOptions).not.toBe(secondRenderAfterRectangleToggle.mapOptions)
+      expect(firstRender.mapOptions.center).not.toBe(secondRenderAfterRectangleToggle.mapOptions.center)
+      expect(getControlledCenterKey(firstRender))
+        .toBe(getControlledCenterKey(secondRenderAfterRectangleToggle))
     })
 
     it('changes the center watch key when coordinates actually change', () => {
