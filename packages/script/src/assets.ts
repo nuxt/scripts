@@ -1,6 +1,6 @@
 import type { NitroConfig } from 'nitropack'
 import { addDevServerHandler, extendRouteRules, tryUseNuxt, useNuxt } from '@nuxt/kit'
-import { createError, eventHandler, lazyEventHandler } from 'h3'
+import { createError, eventHandler, lazyEventHandler, setHeader } from 'h3'
 import { fetch } from 'ofetch'
 import { join, resolve } from 'pathe'
 import { joinURL } from 'ufo'
@@ -57,6 +57,8 @@ export function setupPublicAssetStrategy(assetsBaseURL: string) {
 
         if (!scriptDescriptor || scriptDescriptor instanceof Error)
           throw createError({ statusCode: 404 })
+
+        setHeader(event, 'content-type', 'application/javascript; charset=utf-8')
 
         // Use pre-rendered content which includes proxy rewrites for first-party mode
         if (scriptDescriptor.content) {
