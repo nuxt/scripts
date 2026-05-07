@@ -19,11 +19,13 @@ const places = [
       Click a marker to show a fully custom popup. Click again or press × to close. Uses v-if for multiple markers.
     </p>
     <ScriptGoogleMaps
-      :center="{ lat: -33.8688, lng: 151.2093 }"
-      :zoom="12"
       :width="800"
       :height="500"
-      :map-options="{ mapId: 'DEMO_MAP_ID' }"
+      :map-options="{
+        mapId: 'DEMO_MAP_ID',
+        center: { lat: -33.8688, lng: 151.2093 },
+        zoom: 12
+      }"
     >
       <ScriptGoogleMapsMarker
         v-for="place in places"
