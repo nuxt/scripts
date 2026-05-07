@@ -76,7 +76,7 @@ See [Billing & Permissions](/scripts/google-maps/guides/billing) for API costs a
   <ScriptGoogleMaps
     :map-options="{
       center: { lat: -33.8688, lng: 151.2093 },
-      zoom: 12
+      zoom: 12,
     }"
   />
 </template>
