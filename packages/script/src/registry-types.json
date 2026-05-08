@@ -993,6 +993,33 @@
         "code": "export interface UmamiAnalyticsApi {\n  track: ((payload?: Record<string, any>) => void) & ((event_name: string, event_data: Record<string, any>) => void)\n  identify: (session_data?: Record<string, any> | string) => void\n}"
       }
     ],
+    "usercentrics": [
+      {
+        "name": "UsercentricsOptions",
+        "kind": "const",
+        "code": "export const UsercentricsOptions = object({\n  /**\n   * Your Usercentrics CMP v3 ruleset ID. Find it in the admin under\n   * Implementation; the snippet's `data-ruleset-id` value.\n   */\n  rulesetId: pipe(string(), minLength(1)),\n  /**\n   * Inject the Usercentrics autoblocker (`autoblocker.js`) ahead of the loader.\n   * Enable when your ruleset relies on Auto Blocking (vs. Manual Blocking) to\n   * gate third-party scripts before consent is granted.\n   * @default false\n   */\n  autoblocker: optional(boolean()),\n  /**\n   * Override the language displayed by the CMP UI (BCP-47 code, e.g. `'en'`, `'de'`).\n   */\n  language: optional(string()),\n})"
+      },
+      {
+        "name": "UsercentricsCmpEventDetail",
+        "kind": "interface",
+        "code": "export interface UsercentricsCmpEventDetail {\n  type: string\n  source?: string\n  [key: string]: any\n}"
+      },
+      {
+        "name": "UsercentricsCmp",
+        "kind": "interface",
+        "code": "export interface UsercentricsCmp {\n  isInitialized: () => Promise<boolean>\n  isConsentRequired: () => Promise<boolean>\n  showFirstLayer: () => Promise<void>\n  showSecondLayer: () => Promise<void>\n  showServiceDetails: (id: string) => Promise<void>\n  showAutoblockerMoreInfoView: () => Promise<void>\n  closeCmp: () => Promise<void>\n  acceptAllConsents: () => Promise<void>\n  denyAllConsents: () => Promise<void>\n  saveConsents: () => Promise<void>\n  updateCategoriesConsents: (consents: Array<{ categorySlug: string, consent: boolean }>) => Promise<void>\n  updateServicesConsents: (consents: Array<{ templateId: string, consent: boolean }>) => Promise<void>\n  updateTcfConsents: (...args: unknown[]) => Promise<void>\n  refreshScripts: () => Promise<void>\n  clearUserSession: () => Promise<void>\n  getConsentDetails: () => Promise<Record<string, any>>\n  getCmpConfig: () => Promise<Record<string, any>>\n  getActiveLanguage: () => Promise<string>\n  getControllerId: () => Promise<string>\n  changeLanguage: (lang: string) => Promise<void>\n  [key: string]: any\n}"
+      },
+      {
+        "name": "UsercentricsApi",
+        "kind": "interface",
+        "code": "export interface UsercentricsApi {\n  ucCmp: UsercentricsCmp\n}"
+      },
+      {
+        "name": "UsercentricsConsent",
+        "kind": "interface",
+        "code": "export interface UsercentricsConsent {\n  /**\n   * Resolves once the CMP API is ready (`UC_CMP_API_READY`) or immediately if\n   * it already is. Resolves with `window.__ucCmp` so callers can query\n   * consent state without polling.\n   */\n  whenReady: () => Promise<UsercentricsCmp>\n  /**\n   * Subscribe to `UC_UI_CMP_EVENT` browser events (the v3 consent change\n   * event). Returns a teardown function. The callback receives the event\n   * detail, e.g. `{ type: 'ACCEPT_ALL' | 'DENY_ALL' | 'SAVE', ... }`.\n   */\n  onConsentChange: (cb: (detail: UsercentricsCmpEventDetail, event: Event) => void) => () => void\n  /** Open the privacy settings (first layer banner). */\n  showFirstLayer: () => Promise<void> | void\n  /** Open the detailed settings (second layer modal). */\n  showSecondLayer: () => Promise<void> | void\n  /** Accept all consents. */\n  acceptAll: () => Promise<void> | void\n  /** Reject all consents. */\n  denyAll: () => Promise<void> | void\n}"
+      }
+    ],
     "vercel-analytics": [
       {
         "name": "VercelAnalyticsOptions",
@@ -2088,6 +2115,27 @@
         "required": false,
         "description": "Auto-fire lintrk('track') on Vue Router route changes (SPA virtual page views). When true, suppresses the script's built-in auto-page-view via window._wait_for_lintrk and tracks every navigation including the initial page through Nuxt's page:finish hook. When false, the script fires its own page-view exactly once on load and SPA navigations are not tracked unless lintrk('track') is called manually.",
         "defaultValue": "false"
+      }
+    ],
+    "UsercentricsOptions": [
+      {
+        "name": "rulesetId",
+        "type": "string",
+        "required": true,
+        "description": "Your Usercentrics CMP v3 ruleset ID. Find it in the admin under Implementation; the snippet's `data-ruleset-id` value."
+      },
+      {
+        "name": "autoblocker",
+        "type": "boolean",
+        "required": false,
+        "description": "Inject the Usercentrics autoblocker (`autoblocker.js`) ahead of the loader. Enable when your ruleset relies on Auto Blocking (vs. Manual Blocking) to gate third-party scripts before consent is granted.",
+        "defaultValue": "false"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false,
+        "description": "Override the language displayed by the CMP UI (BCP-47 code, e.g. `'en'`, `'de'`)."
       }
     ],
     "SegmentOptions": [

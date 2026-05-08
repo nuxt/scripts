@@ -871,6 +871,25 @@ export const LinkedInInsightOptions = object({
   enableAutoSpaTracking: optional(boolean()),
 })
 
+export const UsercentricsOptions = object({
+  /**
+   * Your Usercentrics CMP v3 ruleset ID. Find it in the admin under
+   * Implementation; the snippet's `data-ruleset-id` value.
+   */
+  rulesetId: pipe(string(), minLength(1)),
+  /**
+   * Inject the Usercentrics autoblocker (`autoblocker.js`) ahead of the loader.
+   * Enable when your ruleset relies on Auto Blocking (vs. Manual Blocking) to
+   * gate third-party scripts before consent is granted.
+   * @default false
+   */
+  autoblocker: optional(boolean()),
+  /**
+   * Override the language displayed by the CMP UI (BCP-47 code, e.g. `'en'`, `'de'`).
+   */
+  language: optional(string()),
+})
+
 export const SegmentOptions = object({
   /**
    * Your Segment write key.

@@ -39,6 +39,7 @@ import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { StripeInput } from './registry/stripe'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
+import type { UsercentricsInput } from './registry/usercentrics'
 import type { VercelAnalyticsInput } from './registry/vercel-analytics'
 import type { VimeoPlayerInput } from './registry/vimeo-player'
 import type { XEmbedInput } from './registry/x-embed'
@@ -263,6 +264,7 @@ export interface ScriptRegistry {
   vercelAnalytics?: VercelAnalyticsInput
   vimeoPlayer?: VimeoPlayerInput
   umamiAnalytics?: UmamiAnalyticsInput
+  usercentrics?: UsercentricsInput
   gravatar?: GravatarInput
   npm?: NpmInput
   [key: `${string}-npm`]: NpmInput
@@ -280,7 +282,7 @@ export type BuiltInRegistryScriptKey
     | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'matomoAnalytics'
     | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'youtubePlayer' | 'vercelAnalytics'
-    | 'vimeoPlayer' | 'umamiAnalytics' | 'gravatar' | 'npm'
+    | 'vimeoPlayer' | 'umamiAnalytics' | 'usercentrics' | 'gravatar' | 'npm'
 
 /**
  * Union of all explicit registry script keys (excludes npm pattern).
