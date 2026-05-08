@@ -355,7 +355,11 @@ export default defineEventHandler(async (event) => {
   log('[proxy] Fetching:', targetUrl)
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout
+  let timedOut = false
+  const timeoutId = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, 15000) // 15s timeout
 
   // Resolve the fetch body: passthrough streams the raw request, otherwise serialize
   let fetchBody: BodyInit | undefined
@@ -381,9 +385,14 @@ export default defineEventHandler(async (event) => {
   catch (err) {
     log('[proxy] Upstream error:', err)
     throw createError({
-      statusCode: 502,
-      statusMessage: 'Bad Gateway',
+      statusCode: timedOut ? 504 : 502,
+      statusMessage: timedOut ? 'Gateway Timeout' : 'Bad Gateway',
       message: `Proxy upstream request failed: ${targetUrl}`,
+      cause: err,
+      data: {
+        errorName: (err as Error)?.name,
+        errorCode: timedOut ? 'TIMEOUT' : (err as { code?: string })?.code,
+      },
     })
   }
   finally {

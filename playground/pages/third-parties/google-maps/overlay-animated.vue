@@ -32,11 +32,13 @@ function close(id: number) {
       Click a marker to open/close. Uses data-state attribute for CSS enter/leave animations.
     </p>
     <ScriptGoogleMaps
-      :center="{ lat: -33.8688, lng: 151.2093 }"
-      :zoom="12"
       :width="800"
       :height="500"
-      :map-options="{ mapId: 'DEMO_MAP_ID' }"
+      :map-options="{
+        mapId: 'DEMO_MAP_ID',
+        center: { lat: -33.8688, lng: 151.2093 },
+        zoom: 12
+      }"
     >
       <ScriptGoogleMapsMarker
         v-for="place in places"

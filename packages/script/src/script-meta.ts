@@ -18,6 +18,11 @@ export interface ScriptMeta {
 
 export const scriptMeta = {
   // Analytics
+  ahrefsAnalytics: {
+    urls: ['https://analytics.ahrefs.com/analytics.js'],
+    trackedData: ['page-views', 'events'],
+    testId: 'test-ahrefs-key',
+  },
   plausibleAnalytics: {
     urls: ['https://plausible.io/js/script.js'],
     trackedData: ['page-views', 'events', 'conversions'],

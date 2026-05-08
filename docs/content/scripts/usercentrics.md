@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Usercentrics](https://usercentrics.com) is a Consent Management Platform (CMP) used to collect, store, and signal end user consent for third-party scripts under GDPR, CCPA, and the IAB TCF v2 framework.
+[Usercentrics](https://usercentrics.com) is a Consent Management Platform (CMP) used to collect, store, and signal end-user consent for third-party scripts under GDPR, CCPA, and the IAB TCF v2 framework.
 
 Nuxt Scripts ships [`useScriptUsercentrics()`{lang="ts"}](/scripts/usercentrics) so you can boot the CMP v3 ("Web CMP") loader, expose typed access to the `window.__ucCmp` programmatic API, and wire other registry scripts' consent triggers directly to Usercentrics' `UC_UI_CMP_EVENT` browser event.
 

@@ -13,6 +13,7 @@ import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, Reg
 import { joinURL, withBase, withQuery } from 'ufo'
 import { LOGOS } from './registry-logos'
 import {
+  AhrefsAnalyticsOptions,
   BingUetOptions,
   BlueskyEmbedOptions,
   ClarityOptions,
@@ -133,6 +134,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('clarity', 'Clarity', 'analytics', 'useScriptClarity', { bundle: true, proxy: true, partytown: true }, PRIVACY_HEATMAP),
   m('vercelAnalytics', 'Vercel Analytics', 'analytics', 'useScriptVercelAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('mixpanelAnalytics', 'Mixpanel', 'analytics', 'useScriptMixpanelAnalytics', { bundle: true, partytown: true }, null),
+  m('ahrefsAnalytics', 'Ahrefs Web Analytics', 'analytics', 'useScriptAhrefsAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -278,6 +280,19 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
 
   return Promise.all([
     // analytics
+    def('ahrefsAnalytics', {
+      schema: AhrefsAnalyticsOptions,
+      label: 'Ahrefs Web Analytics',
+      src: 'https://analytics.ahrefs.com/analytics.js',
+      category: 'analytics',
+      envDefaults: { key: '' },
+      bundle: true,
+      proxy: {
+        domains: ['analytics.ahrefs.com'],
+        privacy: PRIVACY_IP_ONLY,
+        sdkPatches: [{ type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' }],
+      },
+    }),
     def('plausibleAnalytics', {
       label: 'Plausible Analytics',
       category: 'analytics',
@@ -768,7 +783,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         // `www.google.com` covers static URLs (www.google.com/g/collect) rewritten at build time;
         // `www.google.*` covers the geo-localized ga-audiences beacon, which gtag.js dynamically
         // fires to the visitor's local Google cctld (www.google.com.tw, www.google.co.jp, ...).
-        domains: ['www.google-analytics.com', 'analytics.google.com', 'stats.g.doubleclick.net', 'pagead2.googlesyndication.com', 'www.googleadservices.com', 'googleads.g.doubleclick.net', 'www.google.com', 'www.google.*', 'www.googletagmanager.com'],
+        domains: ['www.google-analytics.com', 'region1.google-analytics.com', 'analytics.google.com', 'stats.g.doubleclick.net', 'pagead2.googlesyndication.com', 'www.googleadservices.com', 'googleads.g.doubleclick.net', 'www.google.com', 'www.google.*', 'www.googletagmanager.com'],
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['dataLayer.push', 'gtag'] },

@@ -22,6 +22,7 @@ function getPlaygroundPath(script: any): string | null {
     'plausible-analytics': '/third-parties/plausible-analytics',
     'posthog': '/third-parties/posthog/nuxt-scripts',
     'matomo-analytics': '/third-parties/matomo-analytics/nuxt-scripts',
+    'ahrefs-analytics': '/third-parties/ahrefs-analytics/nuxt-scripts',
     'rybbit-analytics': '/third-parties/rybbit-analytics',
     'databuddy-analytics': '/third-parties/databuddy-analytics',
     'umami-analytics': '/third-parties/umami-analytics',
@@ -272,6 +273,10 @@ const benchmark = [
   {
     name: 'LinkedIn Insight (Default)',
     path: '/third-parties/linkedin-insight/default',
+  },
+  {
+    name: 'Ahrefs Analytics (Default)',
+    path: '/third-parties/ahrefs-analytics/default',
   },
   {
     name: 'Usercentrics (Default)',
