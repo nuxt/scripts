@@ -63,7 +63,16 @@ export function defineCalendlySuite(opts: SuiteOptions) {
       await page.waitForSelector('#status', { timeout: 15000 })
       const stylesheetState = await page.evaluate(() => {
         const leaks = Array.from(document.querySelectorAll<HTMLLinkElement>('link[href]'))
-          .filter(l => (l.rel === 'stylesheet' || l.as === 'style') && l.href.includes('assets.calendly.com'))
+          .filter((l) => {
+            if (l.rel !== 'stylesheet' && l.as !== 'style')
+              return false
+            try {
+              return new URL(l.href).hostname === 'assets.calendly.com'
+            }
+            catch {
+              return false
+            }
+          })
           .map(l => l.href)
         const inlineStyle = Array.from(document.querySelectorAll('style'))
           .find(s => (s.textContent || '').includes('calendly-spinner') && (s.textContent || '').includes('calendly-overlay'))
