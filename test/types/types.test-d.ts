@@ -11,6 +11,7 @@ describe('module options registry', () => {
     // Every built-in registry key must resolve to its specific type, not `any`.
     // NuxtConfigScriptRegistry is an interface (not an intersection), so explicit
     // properties inherited via `extends` always take priority over the index signature.
+    expectTypeOf<Registry['ahrefsAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['bingUet']>().not.toBeAny()
     expectTypeOf<Registry['blueskyEmbed']>().not.toBeAny()
     expectTypeOf<Registry['carbonAds']>().not.toBeAny()

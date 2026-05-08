@@ -264,6 +264,7 @@ describe('first-party mode', () => {
         'snapchatPixel',
         'redditPixel',
         'linkedinInsight',
+        'ahrefsAnalytics',
         'clarity',
         'hotjar',
       ]

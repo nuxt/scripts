@@ -113,7 +113,7 @@ Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 | `PRIVACY_NONE` | all false | (not currently assigned to any script) |
 | `PRIVACY_FULL` | all true | Meta, TikTok, X, Snap, Reddit, LinkedIn |
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
-| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo |
+| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo |
 
 Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capability), so no privacy transforms are applied.
 
@@ -128,6 +128,7 @@ Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capa
 | `snapchatPixel` | snapchatPixel | `PRIVACY_FULL` | Path A |
 | `redditPixel` | redditPixel | `PRIVACY_FULL` | Path A |
 | `linkedinInsight` | linkedinInsight | `PRIVACY_FULL` | Path A |
+| `ahrefsAnalytics` | ahrefsAnalytics | `PRIVACY_IP_ONLY` | Path A |
 | `clarity` | clarity | `PRIVACY_HEATMAP` | Path A |
 | `hotjar` | hotjar | `PRIVACY_HEATMAP` | Path A |
 | `posthog` | posthog | `PRIVACY_IP_ONLY` | **Path B** (npm-only) + autoInject |

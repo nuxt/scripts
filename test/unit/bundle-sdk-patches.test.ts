@@ -64,6 +64,15 @@ describe('bundle-only sdkPatches integration', () => {
     `(function(){var e=document.currentScript;if(e.src.indexOf("cdn.usefathom.com")<0){t="custom"}})();`,
   )
 
+  // Mirrors the Ahrefs analytics.js endpoint derivation: it computes its
+  // `/api/event` host as `new URL(currentScript.src).origin`. When the script
+  // is bundled, that origin becomes the local Nuxt origin and beacons land on
+  // a 404. The replace-new-url-origin patch redirects the derivation through
+  // the script's proxy path.
+  const ahrefsLike = Buffer.from(
+    `(function(){var s=document.currentScript;var E=s.getAttribute("data-api")||new URL(s.src).origin+"/api/event";var _=s.getAttribute("data-error")||new URL(s.src).origin+"/api/error";})();`,
+  )
+
   it('applies neutralize-domain-check to bundle-only scripts (no proxy)', async () => {
     mockUpstream(fathomLike)
     const renderedScript = new Map()
@@ -91,6 +100,45 @@ describe('bundle-only sdkPatches integration', () => {
     // preserving the original whitespace (minified `<0` stays minified).
     expect(content).toMatch(/indexOf\("cdn\.usefathom\.com"\)\s*<\s*-1/)
     expect(content).not.toMatch(/indexOf\("cdn\.usefathom\.com"\)\s*<\s*0\b/)
+  })
+
+  it('applies replace-new-url-origin to bundled scripts that derive endpoints from currentScript.src', async () => {
+    mockUpstream(ahrefsLike)
+    vi.mocked(hash).mockImplementationOnce(() => 'ahrefs-script')
+    const renderedScript = new Map()
+
+    await runTransform(
+      `const instance = useScriptAhrefsAnalytics({ key: 'k' }, { bundle: true })`,
+      {
+        renderedScript,
+        scripts: [
+          {
+            registryKey: 'ahrefsAnalytics',
+            bundle: { resolve: () => 'https://analytics.ahrefs.com/analytics.js' },
+            proxy: 'ahrefsAnalytics',
+            import: { name: 'useScriptAhrefsAnalytics', from: '' },
+          },
+        ] as any,
+        proxyConfigs: {
+          ahrefsAnalytics: {
+            domains: ['analytics.ahrefs.com'],
+            sdkPatches: [{ type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' }],
+          } as any,
+        },
+        proxyPrefix: '/_scripts/p',
+      },
+    )
+
+    const stored = [...renderedScript.values()][0]
+    expect(stored, 'bundle was not stored').toBeDefined()
+    const content = (stored.content as Buffer).toString('utf-8')
+    // Both /api/event and /api/error endpoints get redirected through the proxy.
+    // The patch wraps the rewritten origin in parens to preserve operator precedence
+    // when the original `new URL(...).origin` was concatenated with a path literal.
+    expect(content).toMatch(/\(self\.location\.origin\+"\/_scripts\/p\/analytics\.ahrefs\.com"\)\+"\/api\/event"/)
+    expect(content).toMatch(/\(self\.location\.origin\+"\/_scripts\/p\/analytics\.ahrefs\.com"\)\+"\/api\/error"/)
+    // Original derivation is gone — no remaining `new URL(s.src).origin`.
+    expect(content).not.toMatch(/new URL\(s\.src\)\.origin/)
   })
 
   it('leaves bundles untouched when no patches are configured', async () => {
