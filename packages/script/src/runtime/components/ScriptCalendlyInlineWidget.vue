@@ -92,7 +92,7 @@ onMounted(() => {
   watch(status, (s) => {
     if (s === 'error')
       emit('error')
-  })
+  }, { immediate: true })
 })
 
 const computedRootAttrs = computed<HTMLAttributes>(() => ({
