@@ -1,5 +1,27 @@
 {
   "types": {
+    "ahrefs-analytics": [
+      {
+        "name": "AhrefsAnalyticsOptions",
+        "kind": "const",
+        "code": "export const AhrefsAnalyticsOptions = object({\n  /**\n   * Your Ahrefs Web Analytics project key. Set as the `data-key` attribute\n   * on the loaded `analytics.js` script tag.\n   * @see https://ahrefs.com/web-analytics\n   */\n  key: pipe(string(), minLength(1)),\n})"
+      },
+      {
+        "name": "AhrefsAnalyticsSendEventOptions",
+        "kind": "interface",
+        "code": "export interface AhrefsAnalyticsSendEventOptions {\n  /** Custom dimensions sent under `props`. */\n  props?: Record<string, string>\n  /** Arbitrary metadata sent under `meta`. */\n  meta?: Record<string, unknown>\n  /** Optional callback invoked once the beacon request completes. */\n  callback?: (result?: { status?: number }) => void\n}"
+      },
+      {
+        "name": "AhrefsAnalyticsInstance",
+        "kind": "interface",
+        "code": "export interface AhrefsAnalyticsInstance {\n  /**\n   * Manually send an event to Ahrefs Analytics. The script auto-fires\n   * page-view events on initial load and on `history.pushState`/`popstate`,\n   * so SPA navigations are tracked without calling this.\n   */\n  sendEvent: (name: string, options?: AhrefsAnalyticsSendEventOptions) => void\n}"
+      },
+      {
+        "name": "AhrefsAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface AhrefsAnalyticsApi {\n  AhrefsAnalytics: AhrefsAnalyticsInstance\n}"
+      }
+    ],
     "bing-uet": [
       {
         "name": "BingUetOptions",
@@ -1115,6 +1137,14 @@
     ]
   },
   "schemaFields": {
+    "AhrefsAnalyticsOptions": [
+      {
+        "name": "key",
+        "type": "string",
+        "required": true,
+        "description": "Your Ahrefs Web Analytics project key. Set as the `data-key` attribute on the loaded `analytics.js` script tag."
+      }
+    ],
     "BlueskyEmbedOptions": [
       {
         "name": "postUrl",

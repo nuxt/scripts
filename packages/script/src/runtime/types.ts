@@ -5,6 +5,7 @@ import type {
 import type { Import } from 'unimport'
 import type { InferInput, ObjectEntries, ObjectSchema, UnionSchema, ValiError } from 'valibot'
 import type { ComputedRef, Ref } from 'vue'
+import type { AhrefsAnalyticsInput } from './registry/ahrefs-analytics'
 import type { BingUetInput } from './registry/bing-uet'
 import type { BlueskyEmbedInput } from './registry/bluesky-embed'
 import type { ClarityInput } from './registry/clarity'
@@ -224,6 +225,7 @@ export interface NuxtDevToolsScriptInstance {
 }
 
 export interface ScriptRegistry {
+  ahrefsAnalytics?: AhrefsAnalyticsInput
   bingUet?: BingUetInput
   blueskyEmbed?: BlueskyEmbedInput
   carbonAds?: true
@@ -271,7 +273,7 @@ export interface ScriptRegistry {
  * Use this to type-check records that must enumerate all built-in scripts (logos, meta, etc.).
  */
 export type BuiltInRegistryScriptKey
-  = | 'bingUet' | 'blueskyEmbed' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
+  = | 'ahrefsAnalytics' | 'bingUet' | 'blueskyEmbed' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
     | 'databuddyAnalytics' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
@@ -433,6 +435,13 @@ export type SdkPatch
    * the correct proxy path.
    */
     | { type: 'replace-src-split', separator: string, fromDomain: string, appendPath?: string }
+  /**
+   * Replace `new URL(<expr>).origin` with `self.location.origin + "<proxyPath>"`.
+   * Used by SDKs that derive their API host as `new URL(currentScript.src).origin + "/api/..."`.
+   * When bundled, the script src origin is the Nuxt origin, so the derived endpoint
+   * lands on a 404 instead of the proxy. This patch redirects it through the proxy.
+   */
+    | { type: 'replace-new-url-origin', fromDomain: string }
 
 /**
  * Partytown capability config. When present, the script can run in a
