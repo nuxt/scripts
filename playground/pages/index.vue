@@ -46,6 +46,7 @@ function getPlaygroundPath(script: any): string | null {
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
     'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
+    'calendly': '/third-parties/calendly/nuxt-scripts',
     'usercentrics': '/third-parties/usercentrics/nuxt-scripts',
     'npm': '/npm/js-confetti',
   }
@@ -273,6 +274,10 @@ const benchmark = [
   {
     name: 'LinkedIn Insight (Default)',
     path: '/third-parties/linkedin-insight/default',
+  },
+  {
+    name: 'Calendly (Default)',
+    path: '/third-parties/calendly/default',
   },
   {
     name: 'Ahrefs Analytics (Default)',

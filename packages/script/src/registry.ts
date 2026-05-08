@@ -16,6 +16,7 @@ import {
   AhrefsAnalyticsOptions,
   BingUetOptions,
   BlueskyEmbedOptions,
+  CalendlyOptions,
   ClarityOptions,
   CloudflareWebAnalyticsOptions,
   CrispOptions,
@@ -165,6 +166,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // cdn
   m('npm', 'NPM', 'cdn', 'useScriptNpm', { bundle: true }, null),
   // utility
+  m('calendly', 'Calendly', 'utility', 'useScriptCalendly', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('googleRecaptcha', 'Google reCAPTCHA', 'utility', 'useScriptGoogleRecaptcha', {}, null),
   m('googleSignIn', 'Google Sign-In', 'utility', 'useScriptGoogleSignIn', {}, null),
   m('gravatar', 'Gravatar', 'utility', 'useScriptGravatar', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
@@ -730,6 +732,20 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       },
     }),
     // utility
+    def('calendly', {
+      schema: CalendlyOptions,
+      label: 'Calendly',
+      src: 'https://assets.calendly.com/assets/external/widget.js',
+      category: 'utility',
+      bundle: true,
+      proxy: {
+        // Booking iframes load from calendly.com directly (vendor-hosted) and
+        // are intentionally not proxied. Only the widget script + assets are.
+        domains: ['assets.calendly.com'],
+        privacy: PRIVACY_IP_ONLY,
+      },
+      partytown: { forwards: ['Calendly.initInlineWidget', 'Calendly.initPopupWidget', 'Calendly.initBadgeWidget'] },
+    }),
     def('googleRecaptcha', {
       schema: GoogleRecaptchaOptions,
       label: 'Google reCAPTCHA',

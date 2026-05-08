@@ -113,7 +113,7 @@ Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 | `PRIVACY_NONE` | all false | (not currently assigned to any script) |
 | `PRIVACY_FULL` | all true | Meta, TikTok, X, Snap, Reddit, LinkedIn |
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
-| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo |
+| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo, Calendly |
 
 Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capability), so no privacy transforms are applied.
 
@@ -146,6 +146,7 @@ Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capa
 | `vimeoPlayer` | vimeoPlayer | `PRIVACY_IP_ONLY` | Path A |
 | `intercom` | intercom | `PRIVACY_IP_ONLY` | Path A |
 | `gravatar` | gravatar | `PRIVACY_IP_ONLY` | Path A |
+| `calendly` | calendly | `PRIVACY_IP_ONLY` | Path A |
 | `googleTagManager` | googleTagManager | n/a | Bundle only |
 | `segment` | segment | n/a | Bundle only |
 | `crisp` | crisp | n/a | Bundle only |
