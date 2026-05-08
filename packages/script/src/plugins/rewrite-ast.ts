@@ -411,6 +411,29 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
         }
       }
 
+      // SDK patch: replace-new-url-origin
+      // Matches `new URL(<expr>).origin` and replaces with `self.location.origin + "<proxyPath>"`
+      if (sdkPatches?.some(p => p.type === 'replace-new-url-origin')
+        && node.type === 'MemberExpression'
+        && !(node as any).computed) {
+        const obj = (node as any).object
+        const prop = (node as any).property
+        if (prop?.type === 'Identifier' && prop.name === 'origin'
+          && obj?.type === 'NewExpression'
+          && obj.callee?.type === 'Identifier' && obj.callee.name === 'URL'
+          && obj.arguments?.length >= 1) {
+          for (const patch of sdkPatches) {
+            if (patch.type !== 'replace-new-url-origin')
+              continue
+            const rewrite = rewrites.find(r => r.from === patch.fromDomain)
+            if (!rewrite)
+              continue
+            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}(self.location.origin+"${rewrite.to}")`)
+            break
+          }
+        }
+      }
+
       // new XMLHttpRequest / new Image / new x.XMLHttpRequest / new x.Image
       if (node.type === 'NewExpression' && !options?.skipApiRewrites) {
         const callee = (node as any).callee

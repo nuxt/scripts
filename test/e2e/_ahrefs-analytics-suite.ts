@@ -8,17 +8,24 @@ interface CapturedRequest {
   contentType: string | null
 }
 
-// Stand-in for Ahrefs's analytics.js, used in both CDN and bundled modes.
-// The real script bails out on `localhost` before sending /api/event, which
-// makes deterministic assertions impossible on CI. This stub mirrors the
-// integration shape we care about (initial pageview POST + history.pushState
-// patch) and posts to whatever origin it was loaded from, so our /api/event
-// route handler captures the beacons for both CDN and proxied paths.
-const STUB_ANALYTICS_JS = `
+// Stand-in for Ahrefs's analytics.js. The real script bails out on
+// `localhost` and on `navigator.webdriver`, which makes deterministic
+// assertions impossible under Playwright + the test fixture. The stubs below
+// mirror the integration shape we care about (initial pageview POST +
+// history.pushState patch) and post to the *exact* endpoint each mode
+// resolves to in production:
+//   CDN mode      -> https://analytics.ahrefs.com/api/event
+//   bundled mode  -> /_scripts/p/analytics.ahrefs.com/api/event (the path
+//                    the replace-new-url-origin sdkPatch produces from the
+//                    real `new URL(currentScript.src).origin + "/api/event"`)
+// Splitting the two stubs (rather than reusing currentScript.src origin)
+// guarantees the bundled-mode test breaks if the AST patch ever stops being
+// applied to the bundle output, which is the contract this suite guards.
+function buildStubAnalyticsJs(endpoint: string): string {
+  return `
 ;(function(){
   var s = document.currentScript;
-  var origin = s ? new URL(s.src).origin : window.location.origin;
-  var endpoint = origin + '/api/event';
+  var endpoint = ${JSON.stringify(endpoint)};
   var key = s ? s.getAttribute('data-key') : null;
   function send(name) {
     try {
@@ -43,22 +50,29 @@ const STUB_ANALYTICS_JS = `
   window.addEventListener('popstate', function() { send('pageview'); });
 })();
 `
+}
+
+const CDN_STUB = buildStubAnalyticsJs('https://analytics.ahrefs.com/api/event')
+const BUNDLED_PROXY_PATH = '/_scripts/p/analytics.ahrefs.com/api/event'
 
 // Stub /api/event so beacon assertions are deterministic on CI. The real
 // script ties the data-key to a registered domain and silently drops beacons
-// from unregistered origins (e.g. localhost). We also stub analytics.js
-// itself with a minimal pageview-firing implementation, used in both modes:
+// from unregistered origins (e.g. localhost) and from headless/webdriver
+// contexts. We also stub analytics.js itself with a minimal pageview-firing
+// implementation, used in both modes:
 //   CDN mode      -> intercept https://analytics.ahrefs.com/analytics.js
 //   bundled mode  -> intercept /_scripts/assets/* (script body is rewritten
 //                    at build time but still served as a local asset)
 // Beacons land at:
 //   CDN mode      -> https://analytics.ahrefs.com/api/event
-//   bundled mode  -> /_scripts/p/analytics.ahrefs.com/api/event (proxy)
-async function newCapturePage() {
+//   bundled mode  -> /_scripts/p/analytics.ahrefs.com/api/event (proxy path
+//                    produced by the replace-new-url-origin sdkPatch)
+async function newCapturePage(opts: { bundled: boolean }) {
   const browser = await getBrowser()
   const page = await browser.newPage()
   const requests: CapturedRequest[] = []
-  await page.route('**/api/event', async (route) => {
+  // Match either endpoint shape so both modes flow through the same capture.
+  await page.route(/\/api\/event(?:\?|$)/, async (route) => {
     const req = route.request()
     requests.push({
       method: req.method(),
@@ -70,17 +84,19 @@ async function newCapturePage() {
   })
   // CDN mode: replace analytics.js with our stub before it reaches the page.
   await page.route('**/analytics.ahrefs.com/analytics.js', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/javascript', body: STUB_ANALYTICS_JS })
+    await route.fulfill({ status: 200, contentType: 'application/javascript', body: CDN_STUB })
   })
   // Bundled mode: the rewritten script is served from /_scripts/assets/*.js.
-  // We don't know the hashed filename, but the script tag sets data-key and
-  // points at the local origin, so any /_scripts/assets/*.js request matching
-  // our integration is the one to swap. Restrict to the asset path to avoid
-  // catching unrelated asset requests; the suite only loads one bundled SDK
-  // per fixture so this is unambiguous.
-  await page.route('**/_scripts/assets/*.js', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/javascript', body: STUB_ANALYTICS_JS })
-  })
+  // We don't know the hashed filename, but the suite only loads one bundled
+  // SDK per fixture so any /_scripts/assets/*.js request is unambiguous. The
+  // stub posts to the proxy path the real AST-rewritten script would resolve
+  // to. We compute it relative to the page origin so the test stays portable.
+  if (opts.bundled) {
+    const bundledStub = buildStubAnalyticsJs(`${new URL(url('/')).origin}${BUNDLED_PROXY_PATH}`)
+    await page.route('**/_scripts/assets/*.js', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/javascript', body: bundledStub })
+    })
+  }
   return { page, requests }
 }
 
@@ -103,17 +119,17 @@ interface SuiteOptions {
 
 function isExpectedUrl(reqUrl: string, bundled: boolean): boolean {
   const u = new URL(reqUrl)
-  if (u.pathname !== '/api/event')
-    return false
   if (bundled) {
-    // Bundled SDKs derive their endpoint from `new URL(currentScript.src).origin`,
-    // which resolves to the local Nuxt origin (the script is served from
-    // /_scripts/assets/). Beacons therefore land on the local origin.
+    // Bundled mode contract: the replace-new-url-origin sdkPatch rewrites
+    // `new URL(currentScript.src).origin + "/api/event"` to the proxy path.
+    // Beacons must land on the local origin AND on the proxy pathname — if
+    // either part regresses, the integration silently drops user data.
     return u.origin === new URL(url('/')).origin
+      && u.pathname === BUNDLED_PROXY_PATH
   }
   // CDN mode: the script is loaded from analytics.ahrefs.com so beacons go
   // directly to that host.
-  return u.host === 'analytics.ahrefs.com'
+  return u.host === 'analytics.ahrefs.com' && u.pathname === '/api/event'
 }
 
 function assertBeaconShape(req: CapturedRequest, bundled: boolean) {
@@ -131,7 +147,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
   it('script tag points at the expected origin with data-key set', async () => {
     // Wiring assertion: the <script> is in DOM regardless of whether the
     // remote script actually executes, so this runs offline in both modes.
-    const { page } = await newCapturePage()
+    const { page } = await newCapturePage(opts)
     try {
       await page.goto(url('/ahrefs'), { waitUntil: 'domcontentloaded', timeout: 30000 })
       const scriptSelector = opts.bundled
@@ -155,7 +171,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
   }, 60000)
 
   it('initial page load fires a /api/event beacon', async () => {
-    const { page, requests } = await newCapturePage()
+    const { page, requests } = await newCapturePage(opts)
     try {
       await page.goto(url('/ahrefs'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
@@ -173,7 +189,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
     // The script patches history.pushState natively so SPA navigations fire
     // /api/event without any composable-side hook. This guards the contract:
     // bundling/proxying must not break the patch.
-    const { page, requests } = await newCapturePage()
+    const { page, requests } = await newCapturePage(opts)
     try {
       await page.goto(url('/ahrefs'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
@@ -191,4 +207,28 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
       await page.close()
     }
   }, 60000)
+
+  if (opts.bundled) {
+    // Fetch the *real* bundled asset (no stub) and assert the AST-rewritten
+    // body. The runtime stubs above replace this asset's body before it
+    // reaches the page, so without this check the suite would still pass even
+    // if the replace-new-url-origin sdkPatch silently regressed. Node-side
+    // fetch bypasses page.route and inspects the bundle output the build
+    // actually produced.
+    it('bundled asset rewrites the Ahrefs endpoint derivation through the proxy', async () => {
+      const html = await fetch(url('/ahrefs')).then(r => r.text())
+      const match = html.match(/\/_scripts\/assets\/[a-f0-9]+\.js/)
+      expect(match, 'expected a bundled /_scripts/assets/*.js reference in the page HTML').toBeTruthy()
+      const assetBody = await fetch(url(match![0])).then(r => r.text())
+      // The patch turns `new URL(s.src).origin + "/api/event"` into
+      // `(self.location.origin + "/_scripts/p/analytics.ahrefs.com") + "/api/event"`.
+      // Both endpoints (event + error) must be rewritten; otherwise beacons
+      // for one of them would silently 404 against the local origin.
+      expect(assetBody).toMatch(/\(self\.location\.origin\+"\/_scripts\/p\/analytics\.ahrefs\.com"\)\+"\/api\/event"/)
+      expect(assetBody).toMatch(/\(self\.location\.origin\+"\/_scripts\/p\/analytics\.ahrefs\.com"\)\+"\/api\/error"/)
+      expect(assetBody, 'unrewritten origin derivation must not survive in the bundle')
+        .not
+        .toMatch(/new URL\([^)]*\)\.origin\s*\+\s*"\/api\/(event|error)"/)
+    }, 60000)
+  }
 }

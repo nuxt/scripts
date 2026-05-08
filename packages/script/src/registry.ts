@@ -286,6 +286,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       proxy: {
         domains: ['analytics.ahrefs.com'],
         privacy: PRIVACY_IP_ONLY,
+        sdkPatches: [{ type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' }],
       },
     }),
     def('plausibleAnalytics', {

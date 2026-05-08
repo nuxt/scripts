@@ -435,6 +435,13 @@ export type SdkPatch
    * the correct proxy path.
    */
     | { type: 'replace-src-split', separator: string, fromDomain: string, appendPath?: string }
+  /**
+   * Replace `new URL(<expr>).origin` with `self.location.origin + "<proxyPath>"`.
+   * Used by SDKs that derive their API host as `new URL(currentScript.src).origin + "/api/..."`.
+   * When bundled, the script src origin is the Nuxt origin, so the derived endpoint
+   * lands on a 404 instead of the proxy. This patch redirects it through the proxy.
+   */
+    | { type: 'replace-new-url-origin', fromDomain: string }
 
 /**
  * Partytown capability config. When present, the script can run in a
