@@ -26,6 +26,15 @@ onMounted(() => {
 function openPopup() {
   proxy.Calendly.initPopupWidget({ url: CALENDLY_URL })
 }
+
+function openBadge() {
+  proxy.Calendly.initBadgeWidget({
+    url: CALENDLY_URL,
+    text: 'Schedule time with me',
+    color: '#0069ff',
+    textColor: '#ffffff',
+  })
+}
 </script>
 
 <template>
@@ -38,8 +47,25 @@ function openPopup() {
         <UButton @click="openPopup">
           Open popup
         </UButton>
+        <UButton @click="openBadge">
+          Show badge
+        </UButton>
       </div>
     </ClientOnly>
-    <div ref="inlineRoot" class="mt-4" style="min-width: 320px; height: 700px" />
+
+    <h2 class="mt-6 text-lg font-semibold">
+      Composable (manual initInlineWidget)
+    </h2>
+    <div ref="inlineRoot" class="mt-2" style="min-width: 320px; height: 700px" />
+
+    <h2 class="mt-6 text-lg font-semibold">
+      Component (&lt;ScriptCalendlyInlineWidget&gt;)
+    </h2>
+    <ScriptCalendlyInlineWidget
+      :url="CALENDLY_URL"
+      class="mt-2"
+      above-the-fold
+      :page-settings="{ hideEventTypeDetails: false, hideGdprBanner: true }"
+    />
   </div>
 </template>

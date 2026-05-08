@@ -2,15 +2,19 @@
 title: Calendly
 description: Embed Calendly bookings in your Nuxt app with inline, popup, and badge widgets.
 links:
-- label: Source
-  icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/calendly.ts
-  size: xs
+  - label: useScriptCalendly
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/calendly.ts
+    size: xs
+  - label: "<ScriptCalendlyInlineWidget>"
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/components/ScriptCalendlyInlineWidget.vue
+    size: xs
 ---
 
 [Calendly](https://calendly.com) is a scheduling tool that lets visitors book time on your calendar without back-and-forth emails. The Calendly embed widget renders the booking flow inline, in a popup, or behind a floating badge button.
 
-Nuxt Scripts provides a registry script composable [`useScriptCalendly()`{lang="ts"}](/scripts/calendly) to integrate it in your Nuxt app.
+Nuxt Scripts provides a registry script composable [`useScriptCalendly()`{lang="ts"}](/scripts/calendly) and a headless [`<ScriptCalendlyInlineWidget>`{lang="html"}](/scripts/calendly){lang="html"} component to integrate it in your Nuxt app.
 
 ::script-stats
 ::
@@ -18,66 +22,98 @@ Nuxt Scripts provides a registry script composable [`useScriptCalendly()`{lang="
 ::script-docs
 ::
 
-::script-types
-::
+The composable comes with the following defaults:
+- **Trigger: Client** Script will load when Nuxt is hydrating.
+- **Stylesheet: Inline** The widget stylesheet (and its close-icon SVG) is inlined on first use, so no IP leak to `assets.calendly.com` on render.
 
-## Loading Calendly
+You can access the `Calendly` global as a proxy directly or await `onLoaded` to use it. Recommended to use the proxy for void calls; `onLoaded` is convenient when you need a stable DOM reference.
 
-`useScriptCalendly()`{lang="ts"} loads the official Calendly widget script and stylesheet, then exposes the `Calendly` global through a typed proxy. Method calls made before the real SDK is ready are queued, then replayed once the script finishes loading.
+::code-group
 
-## Examples
+```ts [Proxy]
+const { proxy } = useScriptCalendly()
+function openBooking() {
+  proxy.Calendly.initPopupWidget({
+    url: 'https://calendly.com/your-name/30min',
+  })
+}
+```
 
-### Inline widget
-
-The inline widget mounts inside an element you control. The host element needs an explicit height (Calendly recommends at least 700px) so the iframe is fully visible.
-
-```vue
-<script setup lang="ts">
+```ts [onLoaded]
 const { onLoaded } = useScriptCalendly()
-
 onLoaded(({ Calendly }) => {
   Calendly.initInlineWidget({
     url: 'https://calendly.com/your-name/30min',
     parentElement: document.getElementById('calendly-inline')!,
   })
 })
-</script>
-
-<template>
-  <div id="calendly-inline" style="min-width: 320px; height: 700px" />
-</template>
 ```
 
-### Popup widget
+::
 
-The popup widget overlays the booking flow on top of your page when triggered by a user action.
+## [`<ScriptCalendlyInlineWidget>`{lang="html"}](/scripts/calendly){lang="html"}
+
+The [`<ScriptCalendlyInlineWidget>`{lang="html"}](/scripts/calendly){lang="html"} component wraps [`useScriptCalendly()`{lang="ts"}](/scripts/calendly){lang="ts"} for the most common embed shape: an inline booking flow mounted into a host element you control.
+
+It's optimized for performance by using [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Calendly widget script once the host element comes into view. By default the trigger is `'visible'`.
 
 ```vue
 <script setup lang="ts">
-const { proxy } = useScriptCalendly()
+const ready = ref(false)
+</script>
 
-function openBooking() {
+<template>
+  <ScriptCalendlyInlineWidget
+    url="https://calendly.com/your-name/30min"
+    @ready="ready = true"
+  />
+</template>
+```
+
+### Above-the-fold loading
+
+If the widget is above the fold and you want it to start loading on hydration rather than on visibility, set `above-the-fold` (adds a preconnect to `calendly.com`) and override the trigger.
+
+```vue
+<ScriptCalendlyInlineWidget
+  url="https://calendly.com/your-name/30min"
+  above-the-fold
+  trigger="onNuxtReady"
+/>
+```
+
+### Prefill, UTM, and page settings
+
+```vue
+<ScriptCalendlyInlineWidget
+  url="https://calendly.com/your-name/30min"
+  :prefill="{ name: 'Ada Lovelace', email: 'ada@example.com' }"
+  :utm="{ utmSource: 'website', utmMedium: 'cta', utmCampaign: 'launch' }"
+  :page-settings="{ hideEventTypeDetails: true, hideGdprBanner: true }"
+/>
+```
+
+### Slots
+
+The component exposes `loading`, `awaitingLoad`, and `error` slots for placeholder UX while the script trigger waits or the script load fails. The default `loading` slot renders an accessible spinner.
+
+## Popup and badge widgets
+
+Popup and badge modes have no host element, so they're driven from the composable directly:
+
+::code-group
+
+```ts [Popup]
+const { proxy } = useScriptCalendly()
+function open() {
   proxy.Calendly.initPopupWidget({
     url: 'https://calendly.com/your-name/30min',
   })
 }
-</script>
-
-<template>
-  <UButton @click="openBooking">
-    Schedule a call
-  </UButton>
-</template>
 ```
 
-### Badge widget
-
-The badge widget pins a floating "Schedule time with me" button to the corner of the page.
-
-```vue
-<script setup lang="ts">
+```ts [Badge]
 const { onLoaded } = useScriptCalendly()
-
 onLoaded(({ Calendly }) => {
   Calendly.initBadgeWidget({
     url: 'https://calendly.com/your-name/30min',
@@ -86,12 +122,13 @@ onLoaded(({ Calendly }) => {
     textColor: '#ffffff',
   })
 })
-</script>
 ```
 
-### Prefilling invitee details and UTM parameters
+::
 
-All four widget initialisers accept `prefill` and `utm` options to pre-populate the booking form and tag the booking with marketing attribution.
+## Prefilling invitee details and UTM parameters
+
+All four widget initialisers (`initInlineWidget`, `initPopupWidget`, `initBadgeWidget`, `initPopupWidgetWithText`) accept `prefill` and `utm` options to pre-populate the booking form and tag the booking with marketing attribution.
 
 ```vue
 <script setup lang="ts">
@@ -111,5 +148,22 @@ function bookFromCampaign(user: { name: string, email: string }) {
     },
   })
 }
+</script>
+```
+
+::script-types
+::
+
+## Example
+
+Loading Calendly through `app.vue` when Nuxt is ready, with the inline widget rendered on a booking page.
+
+```vue [app.vue]
+<script setup lang="ts">
+useScriptCalendly({
+  scriptOptions: {
+    trigger: 'onNuxtReady',
+  },
+})
 </script>
 ```
