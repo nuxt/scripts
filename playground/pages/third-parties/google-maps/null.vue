@@ -19,7 +19,7 @@ function changeQuery() {
         api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
         :width="1200"
         :height="600"
-        :center="center"
+        :map-options="{ center }"
       />
     </div>
     <div class="button-container">

@@ -18,6 +18,11 @@ export interface ScriptMeta {
 
 export const scriptMeta = {
   // Analytics
+  ahrefsAnalytics: {
+    urls: ['https://analytics.ahrefs.com/analytics.js'],
+    trackedData: ['page-views', 'events'],
+    testId: 'test-ahrefs-key',
+  },
   plausibleAnalytics: {
     urls: ['https://plausible.io/js/script.js'],
     trackedData: ['page-views', 'events', 'conversions'],
@@ -204,6 +209,12 @@ export const scriptMeta = {
   },
   xEmbed: {
     urls: ['https://platform.twitter.com/widgets.js'],
+    trackedData: [],
+  },
+
+  // CMP / Consent
+  usercentrics: {
+    urls: ['https://web.cmp.usercentrics.eu/ui/loader.js', 'https://web.cmp.usercentrics.eu/modules/autoblocker.js'],
     trackedData: [],
   },
 

@@ -16,6 +16,15 @@ const gcmConsentState = object({
   region: optional(array(string())),
 })
 
+export const AhrefsAnalyticsOptions = object({
+  /**
+   * Your Ahrefs Web Analytics project key. Set as the `data-key` attribute
+   * on the loaded `analytics.js` script tag.
+   * @see https://ahrefs.com/web-analytics
+   */
+  key: pipe(string(), minLength(1)),
+})
+
 export const BlueskyEmbedOptions = object({
   /**
    * The Bluesky post URL to embed.
@@ -860,6 +869,25 @@ export const LinkedInInsightOptions = object({
    * @default false
    */
   enableAutoSpaTracking: optional(boolean()),
+})
+
+export const UsercentricsOptions = object({
+  /**
+   * Your Usercentrics CMP v3 ruleset ID. Find it in the admin under
+   * Implementation; the snippet's `data-ruleset-id` value.
+   */
+  rulesetId: pipe(string(), minLength(1)),
+  /**
+   * Inject the Usercentrics autoblocker (`autoblocker.js`) ahead of the loader.
+   * Enable when your ruleset relies on Auto Blocking (vs. Manual Blocking) to
+   * gate third-party scripts before consent is granted.
+   * @default false
+   */
+  autoblocker: optional(boolean()),
+  /**
+   * Override the language displayed by the CMP UI (BCP-47 code, e.g. `'en'`, `'de'`).
+   */
+  language: optional(string()),
 })
 
 export const CalendlyOptions = object({
