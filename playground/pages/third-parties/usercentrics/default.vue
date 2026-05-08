@@ -9,8 +9,8 @@ useHead({
   script: [
     {
       'id': 'usercentrics-cmp',
-      'src': 'https://app.usercentrics.eu/browser-ui/latest/loader.js',
-      'data-settings-id': 'PLACEHOLDER_SETTINGS_ID',
+      'src': 'https://web.cmp.usercentrics.eu/ui/loader.js',
+      'data-ruleset-id': 'PLACEHOLDER_RULESET_ID',
       'async': true,
     },
   ],

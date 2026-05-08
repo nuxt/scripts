@@ -5,7 +5,7 @@ import { defineUsercentricsSuite } from './_usercentrics-suite'
 
 const { resolve } = createResolver(import.meta.url)
 
-describe('usercentrics (CMP loader served from app.usercentrics.eu)', async () => {
+describe('usercentrics (CMP v3 loader served from web.cmp.usercentrics.eu)', async () => {
   await setup({
     rootDir: resolve('../fixtures/usercentrics'),
     browser: true,

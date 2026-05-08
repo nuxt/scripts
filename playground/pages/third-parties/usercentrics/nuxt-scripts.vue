@@ -4,24 +4,20 @@ import { useHead, useScriptUsercentrics } from '#imports'
 
 useHead({ title: 'Usercentrics CMP' })
 
-// Replace with your Usercentrics settingsId. The bundled placeholder will not
+// Replace with your Usercentrics rulesetId. The bundled placeholder will not
 // boot a real CMP, so the helpers below stay no-ops until you provide one
 // (either here or via nuxt.config -> scripts.registry.usercentrics).
 const { status, consent } = useScriptUsercentrics({
-  settingsId: 'PLACEHOLDER_SETTINGS_ID',
+  rulesetId: 'PLACEHOLDER_RULESET_ID',
 })
 
 const lastEventAt = ref<string | null>(null)
-const services = ref<{ id: string, name: string, granted: boolean }[]>([])
+const lastEventType = ref<string | null>(null)
 
 if (import.meta.client) {
-  const off = consent.onConsentChange(() => {
+  const off = consent.onConsentChange((detail) => {
     lastEventAt.value = new Date().toISOString()
-    services.value = (window.UC_UI?.getServicesBaseInfo?.() || []).map(s => ({
-      id: s.id,
-      name: s.name,
-      granted: !!s.consent?.status,
-    }))
+    lastEventType.value = detail?.type ?? null
   })
   onScopeDispose(off)
 }
@@ -32,7 +28,7 @@ if (import.meta.client) {
     <h1>Usercentrics</h1>
     <ClientOnly>
       <div>status: {{ status }}</div>
-      <div>last UC_CONSENT: {{ lastEventAt ?? '(none yet)' }}</div>
+      <div>last UC_UI_CMP_EVENT: {{ lastEventAt ?? '(none yet)' }} type: {{ lastEventType ?? '(none)' }}</div>
       <div class="space-x-2 mt-2">
         <UButton @click="consent.showFirstLayer()">
           Show banner
@@ -46,15 +42,6 @@ if (import.meta.client) {
         <UButton @click="consent.denyAll()">
           Reject all
         </UButton>
-      </div>
-      <div v-if="services.length" class="mt-4">
-        <h2>Services</h2>
-        <ul>
-          <li v-for="s in services" :key="s.id">
-            <code>{{ s.id }}</code> &mdash; {{ s.name }} &mdash;
-            <strong>{{ s.granted ? 'granted' : 'denied' }}</strong>
-          </li>
-        </ul>
       </div>
     </ClientOnly>
   </div>

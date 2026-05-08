@@ -205,7 +205,7 @@ export const scriptMeta = {
 
   // CMP / Consent
   usercentrics: {
-    urls: ['https://app.usercentrics.eu/browser-ui/latest/loader.js'],
+    urls: ['https://web.cmp.usercentrics.eu/ui/loader.js', 'https://web.cmp.usercentrics.eu/modules/autoblocker.js'],
     trackedData: [],
   },
 

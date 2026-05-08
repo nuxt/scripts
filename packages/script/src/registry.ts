@@ -792,14 +792,13 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       composableName: 'useScriptUsercentrics',
       schema: UsercentricsOptions,
       label: 'Usercentrics',
-      // Source declared here for devtools/listing only; the runtime composable
-      // builds the actual src so it can include `version` and the required
-      // `data-settings-id` attribute. No bundle/proxy: the CMP must hit the
-      // vendor origin (it IS the consent surface, and is exempt from consent
-      // gating) so policies/signatures resolve correctly.
-      src: 'https://app.usercentrics.eu/browser-ui/latest/loader.js',
+      // The runtime composable builds the actual script tag so it can include
+      // the required `data-ruleset-id` attribute. No bundle/proxy: the CMP
+      // must hit the vendor origin (it IS the consent surface, and is exempt
+      // from consent gating) so policies/signatures resolve correctly.
+      src: 'https://web.cmp.usercentrics.eu/ui/loader.js',
       category: 'utility',
-      envDefaults: { settingsId: '' },
+      envDefaults: { rulesetId: '' },
     }),
     def('gravatar', {
       schema: GravatarOptions,

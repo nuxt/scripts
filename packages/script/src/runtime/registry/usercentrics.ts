@@ -1,4 +1,5 @@
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
+import { useHead } from '@unhead/vue'
 import { useRegistryScript } from '../utils'
 import { UsercentricsOptions } from './schemas'
 
@@ -6,37 +7,47 @@ export { UsercentricsOptions }
 
 export type UsercentricsInput = RegistryScriptInput<typeof UsercentricsOptions, false, false>
 
-export interface UsercentricsService {
-  id: string
-  name: string
-  consent: { status: boolean }
-  [key: string]: any
-}
-
 export interface UsercentricsCmpEventDetail {
   type: string
   source?: string
   [key: string]: any
 }
 
-export interface UsercentricsUI {
-  isInitialized: () => boolean
-  showFirstLayer: () => void
-  showSecondLayer: () => void
+/**
+ * The Usercentrics CMP v3 programmatic API exposed on `window.__ucCmp`.
+ * Each method returns a Promise resolved once the CMP is ready.
+ */
+export interface UsercentricsCmp {
+  isInitialized: () => Promise<boolean>
+  isConsentRequired: () => Promise<boolean>
+  showFirstLayer: () => Promise<void>
+  showSecondLayer: () => Promise<void>
+  showServiceDetails: (id: string) => Promise<void>
+  showAutoblockerMoreInfoView: () => Promise<void>
+  closeCmp: () => Promise<void>
   acceptAllConsents: () => Promise<void>
   denyAllConsents: () => Promise<void>
-  getServicesBaseInfo: () => UsercentricsService[]
-  getCMPData: () => Record<string, any>
+  saveConsents: () => Promise<void>
+  updateCategoriesConsents: (consents: Array<{ categorySlug: string, consent: boolean }>) => Promise<void>
+  updateServicesConsents: (consents: Array<{ templateId: string, consent: boolean }>) => Promise<void>
+  updateTcfConsents: (...args: unknown[]) => Promise<void>
+  refreshScripts: () => Promise<void>
+  clearUserSession: () => Promise<void>
+  getConsentDetails: () => Promise<Record<string, any>>
+  getCmpConfig: () => Promise<Record<string, any>>
+  getActiveLanguage: () => Promise<string>
+  getControllerId: () => Promise<string>
+  changeLanguage: (lang: string) => Promise<void>
   [key: string]: any
 }
 
 export interface UsercentricsApi {
-  UC_UI: UsercentricsUI
+  ucCmp: UsercentricsCmp
 }
 
 declare global {
   interface Window {
-    UC_UI?: UsercentricsUI
+    __ucCmp?: UsercentricsCmp
   }
 }
 
@@ -46,20 +57,21 @@ declare global {
  */
 export interface UsercentricsConsent {
   /**
-   * Resolves once the CMP has fired `UC_UI_INITIALIZED` (or immediately if it
-   * already initialised). Resolves with the `UC_UI` global so callers can
-   * query consent state without polling.
+   * Resolves once the CMP API is ready (`UC_CMP_API_READY`) or immediately if
+   * it already is. Resolves with `window.__ucCmp` so callers can query
+   * consent state without polling.
    */
-  whenReady: () => Promise<UsercentricsUI>
+  whenReady: () => Promise<UsercentricsCmp>
   /**
-   * Subscribe to `UC_CONSENT` browser events. Returns a teardown function.
-   * The callback receives the raw event detail emitted by Usercentrics.
+   * Subscribe to `UC_UI_CMP_EVENT` browser events (the v3 consent change
+   * event). Returns a teardown function. The callback receives the event
+   * detail, e.g. `{ type: 'ACCEPT_ALL' | 'DENY_ALL' | 'SAVE', ... }`.
    */
-  onConsentChange: (cb: (detail: any, event: Event) => void) => () => void
+  onConsentChange: (cb: (detail: UsercentricsCmpEventDetail, event: Event) => void) => () => void
   /** Open the privacy settings (first layer banner). */
-  showFirstLayer: () => void
+  showFirstLayer: () => Promise<void> | void
   /** Open the detailed settings (second layer modal). */
-  showSecondLayer: () => void
+  showSecondLayer: () => Promise<void> | void
   /** Accept all consents. */
   acceptAll: () => Promise<void> | void
   /** Reject all consents. */
@@ -67,60 +79,66 @@ export interface UsercentricsConsent {
 }
 
 /**
- * Load the Usercentrics CMP loader and expose typed access to the `UC_UI`
- * global plus a `consent` helper with `onConsentChange` for wiring consent
- * triggers (`useScript({ trigger: ... })`) to Usercentrics events.
+ * Load the Usercentrics CMP v3 ("Web CMP") loader and expose typed access to
+ * the `window.__ucCmp` programmatic API plus a `consent` helper with
+ * `onConsentChange` for wiring consent triggers (`useScript({ trigger: ... })`)
+ * to Usercentrics events.
  *
- * @see https://docs.usercentrics.com/cmp_in_app_sdk/latest/getting_started/web/
+ * @see https://usercentrics.com/knowledge-hub/usercentrics-cmp-v3-migrations/
  */
 export function useScriptUsercentrics<T extends UsercentricsApi>(
   _options?: UsercentricsInput,
 ): UseScriptContext<T, UsercentricsConsent> {
   const instance = useRegistryScript<T, typeof UsercentricsOptions>('usercentrics', (options) => {
-    const version = options.version || 'latest'
+    if (import.meta.client && options.autoblocker) {
+      useHead({
+        script: [{
+          src: 'https://web.cmp.usercentrics.eu/modules/autoblocker.js',
+          tagPosition: 'head',
+          tagPriority: 'high',
+        }],
+      })
+    }
     return {
       scriptInput: {
-        // The CMP loader is identified by id + data-settings-id; both are
-        // required for the loader to bootstrap.
-        'src': `https://app.usercentrics.eu/browser-ui/${version}/loader.js`,
+        'src': 'https://web.cmp.usercentrics.eu/ui/loader.js',
         'id': 'usercentrics-cmp',
-        'data-settings-id': options.settingsId,
-        'data-tcf-enabled': options.tcfEnabled ? 'true' : undefined,
+        'data-ruleset-id': options.rulesetId,
         'data-language': options.language,
-        'data-embedding-type': options.embeddingType,
         'crossorigin': false,
       },
       schema: import.meta.dev ? UsercentricsOptions : undefined,
       scriptOptions: {
         use() {
-          return { UC_UI: window.UC_UI } as unknown as T
+          return { ucCmp: window.__ucCmp } as unknown as T
         },
       },
     }
   }, _options) as UseScriptContext<T, UsercentricsConsent>
 
   if (import.meta.client && !instance.consent) {
-    const whenReady = (): Promise<UsercentricsUI> => new Promise((resolve) => {
-      if (window.UC_UI?.isInitialized?.())
-        return resolve(window.UC_UI)
-      const onInit = () => {
-        window.removeEventListener('UC_UI_INITIALIZED', onInit)
-        resolve(window.UC_UI as UsercentricsUI)
+    const whenReady = (): Promise<UsercentricsCmp> => new Promise((resolve) => {
+      // __ucCmp is present from loader bootstrap, but methods aren't callable
+      // until UC_CMP_API_READY fires. Resolve on that event (or now if it
+      // already fired and __ucCmp is bound).
+      const onReady = () => {
+        window.removeEventListener('UC_CMP_API_READY', onReady)
+        resolve(window.__ucCmp as UsercentricsCmp)
       }
-      window.addEventListener('UC_UI_INITIALIZED', onInit)
+      window.addEventListener('UC_CMP_API_READY', onReady)
     })
 
     instance.consent = {
       whenReady,
       onConsentChange(cb) {
         const handler = (e: Event) => cb((e as CustomEvent).detail, e)
-        window.addEventListener('UC_CONSENT', handler)
-        return () => window.removeEventListener('UC_CONSENT', handler)
+        window.addEventListener('UC_UI_CMP_EVENT', handler)
+        return () => window.removeEventListener('UC_UI_CMP_EVENT', handler)
       },
-      showFirstLayer: () => window.UC_UI?.showFirstLayer?.(),
-      showSecondLayer: () => window.UC_UI?.showSecondLayer?.(),
-      acceptAll: () => window.UC_UI?.acceptAllConsents?.(),
-      denyAll: () => window.UC_UI?.denyAllConsents?.(),
+      showFirstLayer: () => window.__ucCmp?.showFirstLayer?.(),
+      showSecondLayer: () => window.__ucCmp?.showSecondLayer?.(),
+      acceptAll: () => window.__ucCmp?.acceptAllConsents?.(),
+      denyAll: () => window.__ucCmp?.denyAllConsents?.(),
     }
   }
 
