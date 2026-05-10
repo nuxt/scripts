@@ -665,7 +665,20 @@ export default defineNuxtModule<ModuleOptions>({
         const willAutoLoad = scriptOptions && 'trigger' in scriptOptions && scriptOptions.trigger !== false
         if (willAutoLoad) {
           const requiredFields = extractRequiredFields(script.schema)
-          const missing = requiredFields.filter(f => !input[f])
+
+          const publicScripts = (nuxt.options.runtimeConfig.public?.scripts ?? {}) as Record<string, Record<string, unknown>>
+          const publicScriptEntry = publicScripts[key]
+          const effectiveInput: Record<string, unknown>
+            = publicScriptEntry
+              && typeof publicScriptEntry === 'object'
+              && !Array.isArray(publicScriptEntry)
+              ? Object.fromEntries(
+                  Object.entries(publicScriptEntry).filter(([prop]) => prop !== 'scriptOptions'),
+                )
+              : input
+
+          const missing = requiredFields.filter(f => !effectiveInput[f])
+
           if (missing.length) {
             logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
           }
