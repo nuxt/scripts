@@ -132,10 +132,13 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               // Initialize dataLayer if it doesn't exist
               (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
 
-              // Create gtag function
-              function gtag(...args: any[]) {
-                // Pushing arguments to dataLayer is necessary for GTM to process events
-                (window as any)[dataLayerName].push(args)
+              // Create gtag function (must push the real `arguments` object —
+              // not a spread array — so GTM processes consent and
+              // other commands like the official snippet)
+              function gtag(..._args: any[]) {
+                // Rest params satisfy TypeScript call sites; gtag.js expects `arguments` on the queue.
+                // eslint-disable-next-line prefer-rest-params
+                (window as any)[dataLayerName].push(arguments)
               }
 
               // Assign gtag to window for global access

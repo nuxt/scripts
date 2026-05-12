@@ -52,6 +52,18 @@ vi.mock('../../packages/script/src/runtime/composables/useScriptEventPage', () =
 }))
 
 describe('consent defaults — clientInit ordering', () => {
+  /** `gtag()` queues the Arguments object; `dataLayer.push([...])` uses a real Array. */
+  function gtmConsentCommandParts(e: any): [string, string, any?] | null {
+    if (e == null || typeof e !== 'object')
+      return null
+    if (!Array.isArray(e) && !('length' in e && typeof (e as any).length === 'number'))
+      return null
+    const row = Array.isArray(e) ? e : Array.from(e as ArrayLike<any>)
+    if (row[0] !== 'consent')
+      return null
+    return [row[0] as string, row[1] as string, row[2]]
+  }
+
   beforeEach(() => {
     delete (window as any).dataLayer
     delete (window as any)._paq
@@ -72,13 +84,14 @@ describe('consent defaults — clientInit ordering', () => {
     const dl = (window as any).dataLayer as any[]
     expect(Array.isArray(dl)).toBe(true)
 
-    const consentIdx = dl.findIndex(e => Array.isArray(e) && e[0] === 'consent' && e[1] === 'default')
+    const consentIdx = dl.findIndex(e => gtmConsentCommandParts(e)?.[1] === 'default')
     const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
 
     expect(consentIdx).toBeGreaterThanOrEqual(0)
     expect(startIdx).toBeGreaterThanOrEqual(0)
     expect(consentIdx).toBeLessThan(startIdx)
-    expect(dl[consentIdx][2]).toMatchObject({ analytics_storage: 'denied', ad_storage: 'denied' })
+    const consentRow = gtmConsentCommandParts(dl[consentIdx])
+    expect(consentRow?.[2]).toMatchObject({ analytics_storage: 'denied', ad_storage: 'denied' })
   })
 
   it('gtm: array form fires multiple ["consent","default",…] entries in input order, all before gtm.js', async () => {
@@ -98,14 +111,14 @@ describe('consent defaults — clientInit ordering', () => {
 
     const consentEntries = dl
       .map((e, i) => ({ e, i }))
-      .filter(({ e }) => Array.isArray(e) && e[0] === 'consent' && e[1] === 'default')
+      .filter(({ e }) => gtmConsentCommandParts(e)?.[1] === 'default')
     const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
 
     expect(consentEntries).toHaveLength(2)
     expect(startIdx).toBeGreaterThanOrEqual(0)
     for (const { i } of consentEntries) expect(i).toBeLessThan(startIdx)
-    expect(consentEntries[0].e[2]).toMatchObject({ analytics_storage: 'denied', region: ['ES', 'US-AK'], wait_for_update: 500 })
-    expect(consentEntries[1].e[2]).toMatchObject({ ad_storage: 'denied' })
+    expect(gtmConsentCommandParts(consentEntries[0].e)?.[2]).toMatchObject({ analytics_storage: 'denied', region: ['ES', 'US-AK'], wait_for_update: 500 })
+    expect(gtmConsentCommandParts(consentEntries[1].e)?.[2]).toMatchObject({ ad_storage: 'denied' })
   })
 
   it('gtm: single-entry array is observationally equivalent to a bare object', async () => {
@@ -120,6 +133,14 @@ describe('consent defaults — clientInit ordering', () => {
       // Slice up to (but not including) gtm.js — the entry carries a Date.now() timestamp
       // that differs between calls. Ordering relative to gtm.js is locked by the sibling test.
       return dl.slice(0, startIdx)
+        // `gtag()` pushes the Arguments object onto dataLayer, so each run yields distinct exotic
+        // objects. Normalize array-like rows to real arrays so `toEqual` compares values only,
+        // not Arguments identity or matcher quirks across two separate `clientInit` runs.
+        .map(e =>
+          e != null && typeof e === 'object' && !Array.isArray(e) && 'length' in e && typeof (e as any).length === 'number'
+            ? Array.from(e as ArrayLike<any>)
+            : e,
+        )
     }
 
     const fromObject = runWith({ ad_storage: 'denied' })
@@ -135,11 +156,30 @@ describe('consent defaults — clientInit ordering', () => {
     result._opts.clientInit()
 
     const dl = (window as any).dataLayer as any[]
-    const consentEntries = dl.filter(e => Array.isArray(e) && e[0] === 'consent' && e[1] === 'default')
+    const consentEntries = dl.filter(e => gtmConsentCommandParts(e)?.[1] === 'default')
     const startIdx = dl.findIndex(e => e && typeof e === 'object' && !Array.isArray(e) && e.event === 'gtm.js')
 
     expect(consentEntries).toHaveLength(0)
     expect(startIdx).toBeGreaterThanOrEqual(0)
+  })
+
+  it('gtm: defaultConsent via gtag queues Arguments, not a plain Array (gtag.js contract)', async () => {
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({
+      id: 'GTM-XXXX',
+      defaultConsent: { analytics_storage: 'denied' },
+    })
+
+    result._opts.clientInit()
+
+    const dl = (window as any).dataLayer as any[]
+    const entry = dl.find(e => gtmConsentCommandParts(e)?.[1] === 'default')
+    expect(entry).toBeDefined()
+    expect(Array.isArray(entry)).toBe(false)
+    const parts = Array.from(entry as ArrayLike<any>)
+    expect(parts[0]).toBe('consent')
+    expect(parts[1]).toBe('default')
+    expect(parts[2]).toMatchObject({ analytics_storage: 'denied' })
   })
 
   it('matomo: "required" pushes requireConsent before setSiteId', async () => {
