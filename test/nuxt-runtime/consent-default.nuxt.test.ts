@@ -51,19 +51,19 @@ vi.mock('../../packages/script/src/runtime/composables/useScriptEventPage', () =
   useScriptEventPage: vi.fn(),
 }))
 
-describe('consent defaults — clientInit ordering', () => {
-  /** `gtag()` queues the Arguments object; `dataLayer.push([...])` uses a real Array. */
-  function gtmConsentCommandParts(e: any): [string, string, any?] | null {
-    if (e == null || typeof e !== 'object')
-      return null
-    if (!Array.isArray(e) && !('length' in e && typeof (e as any).length === 'number'))
-      return null
-    const row = Array.isArray(e) ? e : Array.from(e as ArrayLike<any>)
-    if (row[0] !== 'consent')
-      return null
-    return [row[0] as string, row[1] as string, row[2]]
-  }
+/** `gtag()` queues the Arguments object; `dataLayer.push([...])` uses a real Array. */
+function gtmConsentCommandParts(e: any): [string, string, any?] | null {
+  if (e == null || typeof e !== 'object')
+    return null
+  if (!Array.isArray(e) && !('length' in e && typeof (e as any).length === 'number'))
+    return null
+  const row = Array.isArray(e) ? e : Array.from(e as ArrayLike<any>)
+  if (row[0] !== 'consent')
+    return null
+  return [row[0] as string, row[1] as string, row[2]]
+}
 
+describe('consent defaults — clientInit ordering', () => {
   beforeEach(() => {
     delete (window as any).dataLayer
     delete (window as any)._paq
@@ -386,17 +386,10 @@ describe('per-script consent object', () => {
     result._opts.clientInit()
     result.consent.update({ analytics_storage: 'granted' })
     const dl = (window as any).dataLayer as any[]
-    const entry = dl.find((e) => {
-      const row = Array.isArray(e)
-        ? e
-        : (e != null && typeof e === 'object' && 'length' in e
-            ? Array.from(e as ArrayLike<any>)
-            : [])
-      return row[0] === 'consent' && row[1] === 'update'
-    })
+    const entry = dl.find(e => gtmConsentCommandParts(e)?.[1] === 'update')
     expect(entry).toBeDefined()
     expect(Array.isArray(entry)).toBe(false)
-    expect(Array.from(entry as ArrayLike<any>)).toEqual(['consent', 'update', { analytics_storage: 'granted' }])
+    expect(gtmConsentCommandParts(entry)).toEqual(['consent', 'update', { analytics_storage: 'granted' }])
   })
 
   it('meta: consent.grant()/revoke() queue fbq(\'consent\', ...) calls', async () => {
