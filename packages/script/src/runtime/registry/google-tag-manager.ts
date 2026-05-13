@@ -81,7 +81,7 @@ export { GoogleTagManagerOptions }
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
 export interface GoogleTagManagerConsent {
-  /** Push `['consent','update', state]` onto dataLayer with GCMv2 partial state. */
+  /** Send `gtag('consent','update', state)` so the dataLayer receives consent command (GCMv2 partial state). */
   update: (state: ConsentState) => void
 }
 
@@ -97,6 +97,8 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
     onBeforeGtmStart?: (gtag: DataLayerPush) => void
   },
 ): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GoogleTagManagerConsent> {
+  const consentDataLayerName = options?.l ?? options?.dataLayer ?? 'dataLayer'
+
   const instance = useRegistryScript<T, typeof GoogleTagManagerOptions>(
     options?.key || 'googleTagManager',
     (opts) => {
@@ -136,7 +138,7 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
               // not a spread array — so GTM processes consent and
               // other commands like the official snippet)
               function gtag(..._args: any[]) {
-                // Rest params satisfy TypeScript call sites; gtag.js expects `arguments` on the queue.
+                // Rest params satisfy TypeScript call sites; gtm expects `arguments` on the queue.
                 // eslint-disable-next-line prefer-rest-params
                 (window as any)[dataLayerName].push(arguments)
               }
@@ -179,7 +181,15 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
   if (import.meta.client && !typed.consent) {
     typed.consent = {
       update: (state: ConsentState) => {
-        ;((typed.proxy as unknown as GoogleTagManagerApi).dataLayer as any).push(['consent', 'update', state])
+        const dl = (window as any)[consentDataLayerName] = (window as any)[consentDataLayerName] || []
+        // Must push the real `arguments` object — not a
+        // spread array — so GTM processes consent and
+        // other commands like the official snippet
+        ;(function (..._args: any[]) {
+          // Rest params satisfy TypeScript call sites; gtm expects `arguments` on the queue.
+          // eslint-disable-next-line prefer-rest-params
+          dl.push(arguments)
+        })('consent', 'update', state)
       },
     }
   }

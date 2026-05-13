@@ -379,14 +379,24 @@ describe('per-script consent object', () => {
     expect(updateArgs?.[2]).toEqual({ ad_storage: 'granted' })
   })
 
-  it('gtm: consent.update() pushes ["consent","update", state] onto dataLayer', async () => {
+  it('gtm: consent.update() queues Arguments(consent, update, state) to dataLayer', async () => {
     ;(window as any).dataLayer = []
     const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
     const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX' })
     result._opts.clientInit()
     result.consent.update({ analytics_storage: 'granted' })
     const dl = (window as any).dataLayer as any[]
-    expect(dl).toContainEqual(['consent', 'update', { analytics_storage: 'granted' }])
+    const entry = dl.find((e) => {
+      const row = Array.isArray(e)
+        ? e
+        : (e != null && typeof e === 'object' && 'length' in e
+            ? Array.from(e as ArrayLike<any>)
+            : [])
+      return row[0] === 'consent' && row[1] === 'update'
+    })
+    expect(entry).toBeDefined()
+    expect(Array.isArray(entry)).toBe(false)
+    expect(Array.from(entry as ArrayLike<any>)).toEqual(['consent', 'update', { analytics_storage: 'granted' }])
   })
 
   it('meta: consent.grant()/revoke() queue fbq(\'consent\', ...) calls', async () => {
