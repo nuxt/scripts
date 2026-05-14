@@ -1,9 +1,14 @@
 import type { ConsentState, GcmConsentApi, UseScriptContext } from '../types'
-import { safeParse } from 'valibot'
+import { safeParse, strictObject } from 'valibot'
 import { logger } from '../logger'
 import { gcmConsentState } from './schemas'
 
 export type { GcmConsentApi }
+
+// Strict variant rebuilt from the lenient schema's entries — same shape, but
+// unknown keys produce issues so we can warn on typos without breaking the
+// lenient `defaultConsent` schema parse used at build time.
+const gcmConsentStateStrict = strictObject(gcmConsentState.entries)
 
 /**
  * GCMv2 consent contract returned by registry scripts (GA, GTM, future Google Ads, …).
@@ -16,7 +21,7 @@ export interface GcmConsentContract {
 
 /** Validate a partial GCMv2 consent state. Logs each issue via the registry-scoped logger. */
 export function validateConsentState(log: typeof logger, state: ConsentState, source: string) {
-  const result = safeParse(gcmConsentState, state)
+  const result = safeParse(gcmConsentStateStrict, state)
   if (result.success)
     return
   for (const issue of result.issues)

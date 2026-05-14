@@ -1,11 +1,13 @@
-import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, strictObject, string, union } from 'valibot'
+import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
 
 // Shared GCMv2 consent category value.
 const consentCategoryValue = union([literal('granted'), literal('denied')])
 
-// Shared GCMv2 consent state (+ GA-only control fields). `strictObject` rejects
-// unknown keys so typos like `analytic_storage` are caught at parse time.
-export const gcmConsentState = strictObject({
+// Shared GCMv2 consent state (+ GA-only control fields). Lenient at schema-parse
+// time (extra keys pass through); the runtime `consent.*` API rebuilds a strict
+// variant from these entries so typos surface as a `consola` warning without
+// breaking the dev schema check.
+export const gcmConsentState = object({
   ad_storage: optional(consentCategoryValue),
   ad_user_data: optional(consentCategoryValue),
   ad_personalization: optional(consentCategoryValue),
