@@ -304,8 +304,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           // Self-hosted Plausible: when a custom `scriptInput.src` is provided,
           // bundle from that origin instead of the default plausible.io CDN.
           const userSrc = (options as any)?.scriptInput?.src
-          if (typeof userSrc === 'string' && userSrc.length > 0)
-            return userSrc
+          if (typeof userSrc === 'string' && userSrc.trim().length > 0)
+            return userSrc.trim()
           if (options?.scriptId)
             return `https://plausible.io/js/pa-${options.scriptId}.js`
           const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
