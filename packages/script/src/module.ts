@@ -280,6 +280,20 @@ export function resolveConfiguredProxyDomains(
   return [...domains].sort()
 }
 
+/**
+ * Compute missing required fields for a registry entry, using the merged
+ * runtimeConfig as source of truth so that env vars and runtimeConfig.public.scripts
+ * count toward satisfying the schema.
+ */
+export function findMissingRequiredFields(
+  requiredFields: string[],
+  rawInput: Record<string, any> | undefined,
+  mergedPublicScript: Record<string, any> | undefined,
+): string[] {
+  const { scriptOptions: _, ...effectiveInput } = mergedPublicScript ?? rawInput ?? {}
+  return requiredFields.filter(f => !effectiveInput[f])
+}
+
 export interface ModuleOptions {
   /**
    * Base path prefix for all script endpoints (proxy and bundled assets).
@@ -673,7 +687,10 @@ export default defineNuxtModule<ModuleOptions>({
         const willAutoLoad = scriptOptions && 'trigger' in scriptOptions && scriptOptions.trigger !== false
         if (willAutoLoad) {
           const requiredFields = extractRequiredFields(script.schema)
-          const missing = requiredFields.filter(f => !input[f])
+          // Check the merged runtimeConfig (input + env defaults + NUXT_PUBLIC_SCRIPTS_*),
+          // not just the raw registry input — required fields may be supplied via env.
+          const publicScripts = (nuxt.options.runtimeConfig.public?.scripts ?? {}) as Record<string, Record<string, any>>
+          const missing = findMissingRequiredFields(requiredFields, input, publicScripts[key])
           if (missing.length) {
             logger.warn(`[nuxt-scripts] registry.${key}: missing required field${missing.length > 1 ? 's' : ''} ${missing.map(f => `'${f}'`).join(', ')}. The script infrastructure is registered but will not function without ${missing.length > 1 ? 'them' : 'it'}.`)
           }
