@@ -1,4 +1,4 @@
-import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
+import type { ConsentState, RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import type { GcmConsentApi } from './_gcm-consent'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '#nuxt-scripts/utils'
@@ -133,7 +133,7 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
         },
       },
       gcmConsent: {
-        push: (proxy: any, action: 'default' | 'update', state: ConsentOptions) => (proxy as GoogleAnalyticsApi).gtag('consent', action, state),
+        push: (proxy: any, action: 'default' | 'update', state: ConsentState) => (proxy as GoogleAnalyticsApi).gtag('consent', action, state as ConsentOptions),
       },
       clientInit: import.meta.server
         ? undefined
