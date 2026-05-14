@@ -169,6 +169,13 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
      */
     registryMeta?: Record<string, string>
     /**
+     * Source location (file:line:col) the script was registered from, captured
+     * via dev-only stack-trace parsing in `useRegistryScript`. Surfaced in
+     * debug logs and Nuxt DevTools.
+     * @internal
+     */
+    loadedFrom?: string
+    /**
      * Known third-party domains this script communicates with.
      * @internal
      */
