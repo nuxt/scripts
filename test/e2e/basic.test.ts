@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
 import { getBrowser, setup, url, waitForHydration } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
@@ -240,7 +241,7 @@ describe('gravatar', () => {
     expect.extend({ toMatchImageSnapshot })
     ;(expect(buffer) as any).toMatchImageSnapshot({
       customSnapshotIdentifier: id,
-      customSnapshotsDir: `${import.meta.dirname}/__image_snapshots__`,
+      customSnapshotsDir: join(import.meta.dirname, '__image_snapshots__'),
     })
   }
 

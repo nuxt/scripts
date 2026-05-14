@@ -10,10 +10,10 @@ overrides:
   '@nuxt/scripts': 'workspace:*'
   vitest-environment-nuxt: 2.0.0
 catalog:
-  '@antfu/eslint-config': ^8.2.0
+  '@antfu/eslint-config': ^9.0.0
   '@nuxt/devtools-kit': ^3.2.4
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.4.4
+  '@nuxt/kit': ^4.4.5
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
   '@nuxt/ui': ^4.7.1
@@ -21,43 +21,53 @@ catalog:
   '@paypal/paypal-js': ^9.7.0
   '@shikijs/langs': ^4.0.2
   '@shikijs/themes': ^4.0.2
-  '@types/google.maps': ^3.64.0
+  '@types/google.maps': ^3.64.1
   '@types/jest-image-snapshot': ^6.4.1
   '@types/youtube': ^0.2.0
   '@vue/test-utils': ^2.4.10
   '@vueuse/core': ^14.3.0
   '@vueuse/shared': ^14.3.0
-  bumpp: ^11.0.1
+  bumpp: ^11.1.0
   consola: ^3.4.2
   defu: ^6.1.7
   eslint: ^10.3.0
-  eslint-plugin-harlanzw: ^0.12.1
+  eslint-plugin-harlanzw: ^0.14.3
   h3: ^1.15.11
   happy-dom: ^20.9.0
   jest-image-snapshot: ^6.5.2
   magic-string: ^0.30.21
-  nuxt: ^4.4.4
+  nuxt: ^4.4.5
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.129.0
-  oxc-walker: ^0.7.0
+  oxc-parser: ^0.130.0
+  oxc-walker: ^1.0.0
   pathe: ^2.0.3
   pkg-types: ^2.3.1
-  playwright-core: ^1.59.1
-  posthog-js: ^1.372.9
+  playwright-core: ^1.60.0
+  posthog-js: ^1.373.4
+  rollup: ^4.60.3
   shiki: ^4.0.2
   sirv: ^3.0.2
   std-env: ^4.1.0
   typescript: ^6.0.3
   ufo: ^1.6.4
   ultrahtml: ^1.6.0
+  unbuild: ^3.6.1
+  unimport: ^6.2.0
   unplugin: ^3.0.0
   unstorage: ^1.17.5
   valibot: ^1.4.0
-  vitest: ^4.1.5
+  vitest: ^4.1.6
   vue: ^3.5.34
-  vue-tsc: ^3.2.8
+  vue-tsc: ^3.2.9
 trustPolicyIgnoreAfter: 262800
 
 ignoredBuiltDependencies:
   - esbuild
+
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: true
+  esbuild: true
+  protobufjs: true
+  vue-demi: true

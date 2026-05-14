@@ -12,6 +12,16 @@ const captureDir = join(fixtureDir, '.captures')
 // Set env var for capture plugin
 process.env.NUXT_SCRIPTS_CAPTURE_DIR = captureDir
 
+async function tolerateBrowserRace<T>(operation: Promise<T>): Promise<T | undefined> {
+  try {
+    return await operation
+  }
+  catch {
+    // These e2e checks keep going when third-party SDK timing races navigation, selectors, or clicks.
+    return undefined
+  }
+}
+
 await setup({
   rootDir: fixtureDir,
   browser: true,
@@ -541,7 +551,7 @@ describe('first-party privacy stripping', () => {
         }
       })
 
-      await page.goto(url('/ga'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+      await tolerateBrowserRace(page.goto(url('/ga'), { waitUntil: 'domcontentloaded', timeout: 15000 }))
 
       // Wait for script to load
       await page.waitForTimeout(5000)
@@ -601,8 +611,8 @@ describe('first-party privacy stripping', () => {
         }
       })
 
-      await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }).catch(() => {})
+      await tolerateBrowserRace(page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }))
+      await tolerateBrowserRace(page.waitForSelector('#status:has-text("loaded")', { timeout: 5000 }))
 
       // Wait for initial SDK requests (pageview, config, etc.)
       await page.waitForTimeout(1500)
@@ -610,14 +620,14 @@ describe('first-party privacy stripping', () => {
 
       if (opts?.clickSelectors) {
         for (const sel of opts.clickSelectors) {
-          await page.click(sel).catch(() => {})
+          await tolerateBrowserRace(page.click(sel))
         }
       }
       else {
         // Click all buttons on the page to trigger events
         const buttons = await page.$$('button')
         for (const btn of buttons) {
-          await btn.click().catch(() => {})
+          await tolerateBrowserRace(btn.click())
         }
       }
 
@@ -866,8 +876,8 @@ describe('first-party privacy stripping', () => {
       const page = await browser.newPage()
       page.setDefaultTimeout(5000)
 
-      await page.goto(url('/vercel-analytics'), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
-      await page.waitForSelector('#status', { timeout: 5000 }).catch(() => {})
+      await tolerateBrowserRace(page.goto(url('/vercel-analytics'), { waitUntil: 'domcontentloaded', timeout: 15000 }))
+      await tolerateBrowserRace(page.waitForSelector('#status', { timeout: 5000 }))
       await page.waitForTimeout(2000)
 
       const hasQueue = await page.evaluate(() => typeof window.va === 'function')
@@ -1052,7 +1062,7 @@ describe('first-party privacy stripping', () => {
         }
       })
 
-      await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+      await tolerateBrowserRace(page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }))
 
       const pageRendered = await page.waitForSelector('#status', { timeout: 8000 })
         .then(() => true)
@@ -1068,7 +1078,7 @@ describe('first-party privacy stripping', () => {
       // Click all buttons to trigger SDK interactions (track events, open widgets, etc.)
       const buttons = await page.$$('button')
       for (const btn of buttons) {
-        await btn.click().catch(() => {})
+        await tolerateBrowserRace(btn.click())
       }
 
       await page.waitForTimeout(2000)
@@ -1194,7 +1204,7 @@ describe('first-party privacy stripping', () => {
           proxyRequests.push({ url: pathname, status })
       })
 
-      await page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+      await tolerateBrowserRace(page.goto(url(pagePath), { waitUntil: 'domcontentloaded', timeout: 15000 }))
       const loaded = await page.waitForSelector('#status:has-text("loaded")', { timeout: 8000 })
         .then(() => true)
         .catch(() => false)
@@ -1203,7 +1213,7 @@ describe('first-party privacy stripping', () => {
       // Click all buttons to trigger SDK interactions and generate proxy requests
       const buttons = await page.$$('button')
       for (const btn of buttons) {
-        await btn.click().catch(() => {})
+        await tolerateBrowserRace(btn.click())
       }
 
       await page.waitForTimeout(2000)

@@ -120,7 +120,7 @@ async function logConsent() {
 
 ## Auto Blocking
 
-If your Usercentrics ruleset is configured for **Auto Blocking** (rather than Manual Blocking), set `autoblocker: true` to inject the autoblocker module ahead of the loader:
+If your Usercentrics ruleset uses **Auto Blocking** (rather than Manual Blocking), set `autoblocker: true` to inject the autoblocker module ahead of the loader:
 
 ```ts
 useScriptUsercentrics({
@@ -149,4 +149,4 @@ useScriptUsercentrics({
 
 ## Partytown
 
-Usercentrics is not supported under Partytown. The `__ucCmp` API is method-heavy and not safe to forward across the worker boundary, and the CMP needs main-thread DOM access to render its UI overlays.
+Do not run Usercentrics under Partytown. The `__ucCmp` API is method-heavy and unsafe to forward across the worker boundary, and the CMP needs main-thread DOM access to render its UI overlays.

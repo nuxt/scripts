@@ -250,7 +250,7 @@ function resolveConfiguredProxyDomain(value: unknown): string | undefined {
     return new URL(trimmed, 'https://nuxt-scripts.local').hostname || undefined
   }
   catch {
-
+    // Invalid user-provided proxy domains cannot be normalized.
   }
 }
 

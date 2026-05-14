@@ -29,7 +29,7 @@ Nuxt Scripts provides a registry script composable [`useScriptGoogleSignIn()`{la
 
 ## Composable API
 
-`useScriptGoogleSignIn()`{lang="ts"} returns the standard script context (`status`, `proxy`, `onLoaded`, …) plus three helpers that wrap the most common flows. Schema options passed to the composable are merged into every call so you don't have to repeat `clientId`, `loginUri`, `uxMode` etc.
+`useScriptGoogleSignIn()`{lang="ts"} returns the standard script context (`status`, `proxy`, `onLoaded`, …) plus three helpers that wrap the most common flows. Every helper call merges schema options passed to the composable, so you don't have to repeat `clientId`, `loginUri`, `uxMode` etc.
 
 ```ts
 const { initialize, renderButton, prompt, status, onLoaded, proxy } = useScriptGoogleSignIn({
@@ -41,7 +41,7 @@ const { initialize, renderButton, prompt, status, onLoaded, proxy } = useScriptG
 
 ### `initialize(config?)`{lang="ts"}
 
-Calls `google.accounts.id.initialize()`{lang="ts"} with schema options merged with `config`. Internally guarded so multiple calls (e.g. across navigations and component remounts) are safe; Google's API logs an error if `initialize()`{lang="ts"} runs again after a button has been rendered, so the helper only forwards the first call.
+Calls `google.accounts.id.initialize()`{lang="ts"} with schema options merged with `config`. Internally guarded so multiple calls (e.g. across navigations and component remounts) are safe; Google's API logs an error if `initialize()`{lang="ts"} runs again after the page renders a button, so the helper only forwards the first call.
 
 ```ts
 initialize({

@@ -720,7 +720,9 @@ async function fetchSecondaryScripts(key: string, existingBodies: string[], alre
       })
       console.log(`  📦 Secondary: ${url} (${round(transferBytes)}KB transfer, ${round(decodedBytes)}KB decoded)`)
     }
-    catch {}
+    catch (error) {
+      console.warn(`  ⚠️  Failed to fetch secondary script ${url}:`, error)
+    }
   }
   return { bodies, scripts }
 }
@@ -955,7 +957,9 @@ async function main() {
         try {
           externalDomains.add(new URL(url).hostname)
         }
-        catch {}
+        catch {
+          // Invalid request URLs are not useful for domain aggregation.
+        }
         // Track outbound payload size (POST body, beacon data)
         if (event.request.postData)
           outboundBytes += Buffer.byteLength(event.request.postData, 'utf8')
@@ -1015,7 +1019,11 @@ async function main() {
     // Force-trigger lazy SDK loads (chat widgets, etc.) before waiting for waterfall
     const trigger = POST_LOAD_TRIGGERS[key]
     if (trigger) {
-      await page.evaluate(trigger).catch(() => {})
+      const triggered = await page.evaluate(trigger)
+        .then(() => true)
+        .catch(() => false)
+      if (!triggered)
+        console.warn(`  ⚠️  Post-load trigger failed`)
       console.log(`  🔄 Triggered post-load init`)
     }
 
@@ -1091,7 +1099,9 @@ async function main() {
       try {
         knownDomains.add(new URL(url).hostname)
       }
-      catch {}
+      catch {
+        // Invalid configured URLs are skipped from domain aggregation.
+      }
     }
     // Add domains from extractors (these scripts may not fully execute in headless)
     const extractor = SECONDARY_URL_EXTRACTORS[key]
@@ -1100,7 +1110,9 @@ async function main() {
         try {
           knownDomains.add(new URL(url).hostname)
         }
-        catch {}
+        catch {
+          // Invalid extracted URLs are skipped from domain aggregation.
+        }
       }
     }
     const secondary = await fetchSecondaryScripts(key, scriptBodies, alreadyLoadedUrls, knownDomains)

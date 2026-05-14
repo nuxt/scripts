@@ -30,7 +30,9 @@ export function rewriteUrl(url: string, prefix = '/_scripts', secret?: string): 
     if (INSTAGRAM_IMAGE_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith(`.cdninstagram.com`)))
       return proxyImageUrl(url, prefix, secret)
   }
-  catch {}
+  catch {
+    // Non-URL values are left unchanged by design.
+  }
   return url
 }
 

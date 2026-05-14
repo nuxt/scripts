@@ -74,7 +74,9 @@ function createDomainMatcher(domains: Set<string>, proxyPrefix: string, scriptSr
           return true
       }
     }
-    catch {} // malformed URLs are expected, safe to ignore
+    catch {
+      // Malformed PerformanceResourceTiming URLs cannot match this script.
+    }
     return false
   }
 }

@@ -30,8 +30,9 @@ export default defineNuxtPlugin(() => {
         firstPartyData,
         route: route ? { path: route.path, fullPath: route.fullPath, query: route.query } : null,
       }),
-    }).catch(() => {
-      // Silently ignore, the standalone API may not be accessible
+    }).catch((error) => {
+      if (import.meta.dev)
+        console.warn('[nuxt-scripts] Failed to sync standalone devtools state:', error)
     })
   }
 

@@ -17,7 +17,7 @@ implement within your Nuxt app. If you're using GTM for Google Analytics, you ca
 ::
 
 ::callout{icon="i-heroicons-information-circle"}
-Nuxt Scripts only loads the GTM **container**. It does not auto-track page views, clicks, scrolls, or form submits on its own. What gets tracked is determined by the **tags and triggers configured inside your GTM workspace** (tagmanager.google.com), or by `dataLayer.push` calls you make from your app (see [Sending Page Events](#guide-sending-page-events)). For automatic page/click/scroll/video tracking, enable [GA4 Enhanced Measurement](https://support.google.com/analytics/answer/9216061) on your GA4 tag inside GTM.
+Nuxt Scripts only loads the GTM **container**. It does not auto-track page views, clicks, scrolls, or form submits on its own. The **tags and triggers configured inside your GTM workspace** (tagmanager.google.com), or `dataLayer.push` calls you make from your app, determine what gets tracked (see [Sending Page Events](#guide-sending-page-events)). For automatic page/click/scroll/video tracking, enable [GA4 Enhanced Measurement](https://support.google.com/analytics/answer/9216061) on your GA4 tag inside GTM.
 ::
 
 ::script-stats

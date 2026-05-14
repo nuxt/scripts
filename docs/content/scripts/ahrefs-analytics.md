@@ -49,7 +49,7 @@ onLoaded(({ AhrefsAnalytics }) => {
 
 ## SPA navigation
 
-Ahrefs Analytics tracks single-page-app navigations natively: the loaded `analytics.js` patches `history.pushState` and listens for `popstate`, firing a fresh page-view whenever the URL changes. No extra configuration is needed for Nuxt route changes.
+Ahrefs Analytics tracks single-page-app navigations natively: the loaded `analytics.js` patches `history.pushState` and listens for `popstate`, firing a fresh page-view whenever the URL changes. Nuxt route changes need no extra configuration.
 
 ::script-types
 ::
