@@ -1,7 +1,7 @@
 import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
-import type { TikTokPixelApi } from '../../packages/script/src/runtime/registry/tiktok-pixel'
+import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
@@ -173,5 +173,11 @@ describe('tiktok pixel ttq', () => {
 
   it('track still accepts arbitrary custom event names', () => {
     expectTypeOf<Ttq>().toBeCallableWith('track', 'CustomEvent')
+  })
+
+  it('proxy.ttq preserves the track overload with event_id', () => {
+    type ProxyTtq = ReturnType<typeof useScriptTikTokPixel>['proxy']['ttq']
+    expectTypeOf<ProxyTtq>().toBeCallableWith('track', 'Purchase', { value: 10 }, { event_id: 'abc' })
+    expectTypeOf<ProxyTtq>().toBeCallableWith('track', 'StartTrial')
   })
 })

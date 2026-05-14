@@ -1049,6 +1049,12 @@ export const TikTokPixelOptions = object({
    * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842
    */
   defaultConsent: optional(union([literal('granted'), literal('denied'), literal('hold')])),
+  /**
+   * Data residency region for the Pixel SDK.
+   * - `'global'` (default) -> `analytics.tiktok.com`
+   * - `'us'` -> `analytics.us.tiktok.com` (US enterprise data residency)
+   */
+  region: optional(union([literal('global'), literal('us')])),
 })
 
 export const UmamiAnalyticsOptions = object({

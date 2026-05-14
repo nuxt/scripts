@@ -496,11 +496,12 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         resolve(options?: TikTokPixelInput) {
           if (!options?.id)
             return false
-          return withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', { sdkid: options.id, lib: 'ttq' })
+          const host = options.region === 'us' ? 'analytics.us.tiktok.com' : 'analytics.tiktok.com'
+          return withQuery(`https://${host}/i18n/pixel/events.js`, { sdkid: options.id, lib: 'ttq' })
         },
       },
       proxy: {
-        domains: ['analytics.tiktok.com', 'mon.tiktok.com', 'mcs.tiktok.com'],
+        domains: ['analytics.tiktok.com', 'analytics.us.tiktok.com', 'mon.tiktok.com', 'mcs.tiktok.com'],
         privacy: PRIVACY_FULL,
       },
       partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify', 'ttq.grantConsent', 'ttq.revokeConsent', 'ttq.holdConsent'] },
