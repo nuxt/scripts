@@ -563,6 +563,7 @@ export default defineNuxtModule<ModuleOptions>({
       scripts,
       new Set(Object.keys(config.registry || {}).filter(k => (config.registry as any)?.[k] !== false)),
       logger,
+      Object.keys(config.globals || {}),
     )
 
     // Setup runtimeConfig for proxies and devtools.
@@ -718,6 +719,35 @@ export default defineNuxtModule<ModuleOptions>({
           )
         }
       }
+    }
+
+    // Expose globals input via runtimeConfig so it can be overridden per
+    // deployment via NUXT_PUBLIC_SCRIPTS_GLOBALS_<KEY>_<FIELD> env vars
+    // without rebuilding. The codegen reads + Object.assigns these on plugin setup.
+    // Must run in the main setup body — runtimeConfig is locked in before modules:done.
+    if (Object.keys(config.globals || {}).length) {
+      const globalsRuntime: Record<string, Record<string, any>> = {}
+      for (const [k, c] of Object.entries(config.globals || {})) {
+        let input: Record<string, any>
+        if (typeof c === 'string')
+          input = { src: c }
+        else if (Array.isArray(c) && c.length === 2)
+          input = typeof c[0] === 'string' ? { src: c[0] } : { ...c[0] }
+        else if (typeof c === 'object' && c !== null)
+          input = { ...(c as Record<string, any>) }
+        else
+          continue
+        // scriptOptions / object-triggers are build-time only — they can't
+        // round-trip through env vars and stay baked into the generated plugin.
+        delete input.trigger
+        globalsRuntime[k] = input
+      }
+      // Top-level `scriptsGlobals` (camelCase, no hyphen) so Nuxt's standard
+      // env-var override resolves cleanly: NUXT_PUBLIC_SCRIPTS_GLOBALS_<KEY>_<FIELD>.
+      nuxt.options.runtimeConfig.public.scriptsGlobals = defu(
+        globalsRuntime,
+        nuxt.options.runtimeConfig.public.scriptsGlobals as any,
+      ) as any
     }
 
     nuxt.hooks.hook('modules:done', async () => {

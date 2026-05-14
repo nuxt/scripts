@@ -36,7 +36,7 @@ describe('template plugin file', () => {
         stripe: 'https://js.stripe.com/v3/',
       },
     }, [])
-    expect(res).toContain('const stripe = useScript({"src":"https://js.stripe.com/v3/","key":"stripe"}, { use: () => ({ stripe: window.stripe }) })')
+    expect(res).toContain('const stripe = useScript(Object.assign({ key: "stripe" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe"] || {}), { use: () => ({ stripe: window.stripe }) })')
   })
   it('object global', async () => {
     const res = templatePlugin({
@@ -50,7 +50,7 @@ describe('template plugin file', () => {
         },
       },
     }, [])
-    expect(res).toContain('const stripe = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe: window.stripe }) })')
+    expect(res).toContain('const stripe = useScript(Object.assign({ key: "stripe" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe"] || {}), { use: () => ({ stripe: window.stripe }) })')
   })
   it('array global', async () => {
     const res = templatePlugin({
@@ -70,7 +70,7 @@ describe('template plugin file', () => {
         ],
       },
     }, [])
-    expect(res).toContain(' const stripe = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe: window.stripe }) })')
+    expect(res).toContain('const stripe = useScript(Object.assign({ key: "stripe" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe"] || {}), { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe: window.stripe }) })')
   })
   it('mixing global', async () => {
     const res = templatePlugin({
@@ -94,16 +94,17 @@ describe('template plugin file', () => {
     }, [])
     expect(res).toMatchInlineSnapshot(`
       "import { useScript } from '#nuxt-scripts/composables/useScript'
-      import { defineNuxtPlugin } from 'nuxt/app'
+      import { defineNuxtPlugin, useRuntimeConfig } from 'nuxt/app'
 
       export default defineNuxtPlugin({
         name: "scripts:init",
         env: { islands: false },
         parallel: true,
         setup() {
-          const stripe1 = useScript({"src":"https://js.stripe.com/v3/","key":"stripe1"}, { use: () => ({ stripe1: window.stripe1 }) })
-          const stripe2 = useScript({"key":"stripe","async":true,"src":"https://js.stripe.com/v3/","defer":true,"referrerpolicy":"no-referrer"}, { use: () => ({ stripe2: window.stripe2 }) })
-          const stripe3 = useScript({"key":"stripe3","src":"https://js.stripe.com/v3/"}, { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
+          const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}
+          const stripe1 = useScript(Object.assign({ key: "stripe1" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe1"] || {}), { use: () => ({ stripe1: window.stripe1 }) })
+          const stripe2 = useScript(Object.assign({ key: "stripe2" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe2"] || {}), { use: () => ({ stripe2: window.stripe2 }) })
+          const stripe3 = useScript(Object.assign({ key: "stripe3" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe3"] || {}), { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
           return { provide: { scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
@@ -267,6 +268,25 @@ describe('template plugin file', () => {
     }, [])
     expect(res).toContain('import { useScriptTriggerIdleTimeout }')
     expect(res).toContain('import { useScriptTriggerInteraction }')
+  })
+
+  // Env-override merge: runtimeConfig globals[key] is the last arg to Object.assign,
+  // so any field set via NUXT_PUBLIC_NUXT_SCRIPTS_GLOBALS_<KEY>_<FIELD> wins over
+  // the build-time default. This is what makes single-build / multi-deploy work
+  // (see https://github.com/nuxt/scripts/issues/759).
+  it('global input is wrapped so runtimeConfig override wins', async () => {
+    const res = templatePlugin({
+      globals: {
+        trustedShops: {
+          src: 'https://widgets.trustedshops.com/build-time.js',
+        },
+      },
+    }, [])
+    // useRuntimeConfig is imported and resolved once.
+    expect(res).toContain('import { defineNuxtPlugin, useRuntimeConfig } from \'nuxt/app\'')
+    expect(res).toContain('const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}')
+    // Override slot is last → wins over the build-time JSON.
+    expect(res).toContain('Object.assign({ key: "trustedShops" }, {"src":"https://widgets.trustedshops.com/build-time.js"}, __scriptsGlobals["trustedShops"] || {})')
   })
 
   // Test serviceWorker trigger in globals

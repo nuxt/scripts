@@ -5,6 +5,7 @@ const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
 
 const ENV_PREFIX = 'NUXT_PUBLIC_SCRIPTS_'
+const GLOBALS_ENV_PREFIX = 'NUXT_PUBLIC_SCRIPTS_GLOBALS_'
 
 function levenshtein(a: string, b: string): number {
   if (a === b)
@@ -39,7 +40,14 @@ export function validateScriptsEnvVars(
   scripts: RegistryScript[],
   enabledRegistryKeys: Set<string>,
   logger: ConsolaInstance,
+  globalsKeys: string[] = [],
 ): void {
+  // Configured `scripts.globals` keys — env vars NUXT_PUBLIC_SCRIPTS_GLOBALS_<KEY>_*
+  // are validated against these (typo detection, suggestions). Globals are
+  // schemaless so we can't validate the trailing field name.
+  const validGlobalsByScreaming = new Map<string, string>()
+  for (const k of globalsKeys)
+    validGlobalsByScreaming.set(toScreamingSnake(k), k)
   // Build a map from screaming-snake registry key to its envDefaults fields
   const validByKey = new Map<string, { camel: string, fields: Set<string> }>()
   for (const s of scripts) {
@@ -62,6 +70,41 @@ export function validateScriptsEnvVars(
   for (const envKey of Object.keys(process.env)) {
     if (!envKey.startsWith(ENV_PREFIX))
       continue
+    // Globals env vars (NUXT_PUBLIC_SCRIPTS_GLOBALS_*) target user-defined keys in
+    // `scripts.globals`. Validate against the configured globals keys with typo
+    // suggestions; fields can't be checked (globals are schemaless).
+    if (envKey.startsWith(GLOBALS_ENV_PREFIX)) {
+      if (!validGlobalsByScreaming.size)
+        continue
+      const segment = envKey.slice(GLOBALS_ENV_PREFIX.length)
+      const segmentParts = segment.split('_')
+      let matched = false
+      for (const [screaming] of validGlobalsByScreaming) {
+        const keyParts = screaming.split('_')
+        if (segmentParts.length > keyParts.length
+          && keyParts.every((p, i) => segmentParts[i] === p)) {
+          matched = true
+          break
+        }
+      }
+      if (matched)
+        continue
+      // No exact prefix match — suggest the closest configured globals key.
+      let best: { screaming: string, camel: string, dist: number } | undefined
+      for (const [screaming, camel] of validGlobalsByScreaming) {
+        const head = segmentParts.slice(0, screaming.split('_').length).join('_')
+        const d = levenshtein(head, screaming)
+        if (!best || d < best.dist)
+          best = { screaming, camel, dist: d }
+      }
+      const suggestion = best && best.dist <= Math.max(2, Math.floor(best.screaming.length / 2))
+        ? ` Did you mean globals key \`${best.camel}\` (\`${GLOBALS_ENV_PREFIX}${best.screaming}_*\`)?`
+        : ` Configured globals: ${[...validGlobalsByScreaming.values()].map(k => `\`${k}\``).join(', ')}.`
+      logger.warn(
+        `[scripts] env var \`${envKey}\` does not map to any configured \`scripts.globals\` key.${suggestion}`,
+      )
+      continue
+    }
     if (allValidEnvKeys.includes(envKey))
       continue
 
