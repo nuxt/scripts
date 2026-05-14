@@ -32,7 +32,7 @@ The proxy exposes the `gtag` and `dataLayer` properties, and you should use them
 
 ## Consent Mode
 
-Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', state)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime to flip categories.
+Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', state)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime to flip categories. For runtime-derived defaults (waiting for region/CMS to resolve before firing), call `consent.default()`{lang="ts"} from the client.
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent" target="_blank"}
 Try the live [Regional Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) on [StackBlitz](https://stackblitz.com).
@@ -70,7 +70,7 @@ function savePreferences(choices: { analytics: boolean, marketing: boolean }) {
 </script>
 ```
 
-`consent.update()`{lang="ts"} accepts any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
+`consent.update()`{lang="ts"} and `consent.default()`{lang="ts"} both accept any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. Unknown GCMv2 keys and non-`granted`/`denied` values are validated against the canonical GCMv2 schema and warned via `consola`. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
 
 ### Per-region defaults
 

@@ -80,6 +80,17 @@ export interface ConsentState {
   wait_for_update?: number
 }
 
+/**
+ * Auto-attached `consent` API on scripts that adhere to the GCMv2 Consent Mode
+ * contract (Google Analytics, Google Tag Manager, …).
+ */
+export interface GcmConsentApi {
+  /** Push `['consent','default', state]` (or equivalent gtag call) with GCMv2 partial state. */
+  default: (state: ConsentState) => void
+  /** Push `['consent','update', state]` (or equivalent gtag call) with GCMv2 partial state. */
+  update: (state: ConsentState) => void
+}
+
 export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptInstance<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
