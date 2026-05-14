@@ -1,5 +1,6 @@
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { withQuery } from 'ufo'
+import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
 import { TikTokPixelOptions } from './schemas'
 
@@ -115,7 +116,7 @@ function warnUnhashedIdentify(props: Record<string, unknown>): void {
     return typeof v === 'string' && v.length > 0 && !SHA256_HEX.test(v)
   })
   if (offenders.length) {
-    console.warn(`[nuxt-scripts:tiktokPixel] identify() received unhashed value(s) for ${offenders.join(', ')}. TikTok requires SHA-256 hashing for advanced matching; raw values will be ignored. See https://business-api.tiktok.com/portal/docs?id=1739585702922241`)
+    logger.withTag('tiktokPixel').warn(`identify() received unhashed value(s) for ${offenders.join(', ')}. TikTok requires SHA-256 hashing for advanced matching; raw values will be ignored. See https://business-api.tiktok.com/portal/docs?id=1739585702922241`)
   }
 }
 

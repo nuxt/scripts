@@ -114,7 +114,7 @@ proxy.ttq('track', 'Purchase', { value: 99 }, { test_event_code: 'TEST12345' })
 
 ## Advanced Matching
 
-TikTok requires identify fields (`email`, `phone_number`, `external_id`, `first_name`, `last_name`, `city`, `state`, `country`, `zip_code`) to be SHA-256-hashed lowercase. Raw values are silently ignored by TikTok; in development, Nuxt Scripts logs a warning when an unhashed value is detected:
+TikTok requires identify fields (`email`, `phone_number`, `external_id`, `first_name`, `last_name`, `city`, `state`, `country`, `zip_code`) to be SHA-256-hashed lowercase. TikTok silently drops raw values; in development, Nuxt Scripts logs a warning if it spots an unhashed value:
 
 ```ts
 import { sha256 } from 'ohash'
