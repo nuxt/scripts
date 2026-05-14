@@ -1,4 +1,5 @@
 import type { ConsentState, RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
+import type { GcmConsentApi } from './_gcm-consent'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '#nuxt-scripts/utils'
 import { GoogleAnalyticsOptions } from './schemas'
@@ -111,13 +112,11 @@ export { GoogleAnalyticsOptions }
 
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
-export interface GoogleAnalyticsConsent {
-  /** Send `gtag('consent','update', state)` with GCMv2 partial state. */
-  update: (state: ConsentState) => void
-}
+/** @deprecated Use {@link GcmConsentApi} from `#nuxt-scripts/types` instead. */
+export type GoogleAnalyticsConsent = GcmConsentApi
 
-export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput & { onBeforeGtagStart?: (gtag: GTag) => void }): UseScriptContext<T, GoogleAnalyticsConsent> {
-  const instance = useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', (options) => {
+export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput & { onBeforeGtagStart?: (gtag: GTag) => void }): UseScriptContext<T, GcmConsentApi> {
+  return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', (options) => {
     const dataLayerName = options?.l ?? 'dataLayer'
     const w = import.meta.client ? window as any : {}
     return {
@@ -132,6 +131,9 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             gtag: w.gtag as DataLayer,
           }
         },
+      },
+      gcmConsent: {
+        push: (proxy: any, action: 'default' | 'update', state: ConsentState) => (proxy as GoogleAnalyticsApi).gtag('consent', action, state as ConsentOptions),
       },
       clientInit: import.meta.server
         ? undefined
@@ -157,14 +159,5 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             }
           },
     }
-  }, _options) as UseScriptContext<T, GoogleAnalyticsConsent>
-
-  if (import.meta.client && !instance.consent) {
-    instance.consent = {
-      update: (state: ConsentState) => {
-        ;(instance.proxy as unknown as GoogleAnalyticsApi).gtag('consent', 'update', state as ConsentOptions)
-      },
-    }
-  }
-  return instance
+  }, _options) as UseScriptContext<T, GcmConsentApi>
 }

@@ -18,30 +18,27 @@ vi.mock('posthog-js', () => ({
 // Force useRegistryScript to a pass-through so we can call `clientInit` directly
 // instead of going through the real beforeInit wrapping (which requires the full
 // Nuxt + useScript plumbing).
-vi.mock('#nuxt-scripts/utils', () => ({
-  useRegistryScript: (_key: string, optionsFn: any, userOptions?: any) => {
+async function buildMockUseRegistryScript() {
+  const { attachGcmConsent } = await import('../../packages/script/src/runtime/registry/_gcm-consent')
+  return (key: string, optionsFn: any, userOptions?: any) => {
     const opts = optionsFn(userOptions || {}, { scriptInput: userOptions?.scriptInput })
     const instance: any = { _opts: opts }
-    // Lazy proxy so `use()` runs AFTER clientInit populates window.fbq/ttq/etc.
     Object.defineProperty(instance, 'proxy', {
       configurable: true,
       get() { return opts.scriptOptions?.use?.() },
     })
+    if (opts.gcmConsent)
+      attachGcmConsent(instance, opts.gcmConsent, key)
     return instance
-  },
+  }
+}
+
+vi.mock('#nuxt-scripts/utils', async () => ({
+  useRegistryScript: await buildMockUseRegistryScript(),
 }))
 
-vi.mock('../../packages/script/src/runtime/utils', () => ({
-  useRegistryScript: (_key: string, optionsFn: any, userOptions?: any) => {
-    const opts = optionsFn(userOptions || {}, { scriptInput: userOptions?.scriptInput })
-    const instance: any = { _opts: opts }
-    // Lazy proxy so `use()` runs AFTER clientInit populates window.fbq/ttq/etc.
-    Object.defineProperty(instance, 'proxy', {
-      configurable: true,
-      get() { return opts.scriptOptions?.use?.() },
-    })
-    return instance
-  },
+vi.mock('../../packages/script/src/runtime/utils', async () => ({
+  useRegistryScript: await buildMockUseRegistryScript(),
   scriptRuntimeConfig: () => ({}),
   scriptsPrefix: () => '/_scripts',
   requireRegistryEndpoint: () => {},
@@ -62,6 +59,19 @@ function gtmConsentCommandParts(e: any): [string, string, any?] | null {
     return null
   return [row[0] as string, row[1] as string, row[2]]
 }
+
+// Stub the runtime logger so consent debug/warn calls land on plain spies
+// (consola's `withTag` returns a new instance, so we keep `withTag` returning self).
+vi.mock('../../packages/script/src/runtime/logger', () => {
+  const log: any = {
+    warn: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    withTag: () => log,
+  }
+  return { logger: log }
+})
 
 describe('consent defaults — clientInit ordering', () => {
   beforeEach(() => {
@@ -390,6 +400,66 @@ describe('per-script consent object', () => {
     expect(entry).toBeDefined()
     expect(Array.isArray(entry)).toBe(false)
     expect(gtmConsentCommandParts(entry)).toEqual(['consent', 'update', { analytics_storage: 'granted' }])
+  })
+
+  it('gtm: consent.default() queues Arguments(consent, default, state) to dataLayer', async () => {
+    ;(window as any).dataLayer = []
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX' })
+    result._opts.clientInit()
+    result.consent.default({ analytics_storage: 'denied' })
+    const dl = (window as any).dataLayer as any[]
+    const entry = dl.find(e => gtmConsentCommandParts(e)?.[1] === 'default')
+    expect(entry).toBeDefined()
+    expect(Array.isArray(entry)).toBe(false)
+    expect(gtmConsentCommandParts(entry)).toEqual(['consent', 'default', { analytics_storage: 'denied' }])
+  })
+
+  it('ga: consent.default() pushes gtag consent default via dataLayer', async () => {
+    ;(window as any).dataLayer = []
+    const { useScriptGoogleAnalytics } = await import('../../packages/script/src/runtime/registry/google-analytics')
+    const result: any = useScriptGoogleAnalytics({ id: 'G-XXXX' })
+    result._opts.clientInit()
+    result.consent.default({ ad_storage: 'denied' })
+    const dl = (window as any).dataLayer as any[]
+    const defaultArgs = dl.find(e => e[0] === 'consent' && e[1] === 'default' && e[2]?.ad_storage)
+    expect(defaultArgs?.[2]).toEqual({ ad_storage: 'denied' })
+  })
+
+  it('gtm: validateConsentState warns on unknown GCMv2 keys in consent.default()', async () => {
+    ;(window as any).dataLayer = []
+    const { logger } = await import('../../packages/script/src/runtime/logger') as any
+    logger.warn.mockClear()
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX' })
+    result._opts.clientInit()
+    result.consent.default({ analytics_storages: 'denied' } as any)
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('analytics_storages'))
+  })
+
+  it('gtm: validateConsentState warns on unknown GCMv2 keys in consent.update()', async () => {
+    ;(window as any).dataLayer = []
+    const { logger } = await import('../../packages/script/src/runtime/logger') as any
+    logger.warn.mockClear()
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({
+      id: 'GTM-XXXX',
+      defaultConsent: { analytics_storage: 'denied' },
+    })
+    result._opts.clientInit()
+    result.consent.update({ ad_storag: 'granted' } as any)
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ad_storag'))
+  })
+
+  it('gtm: validateConsentState warns on bad consent values (e.g. "allow") in consent.update()', async () => {
+    ;(window as any).dataLayer = []
+    const { logger } = await import('../../packages/script/src/runtime/logger') as any
+    logger.warn.mockClear()
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX' })
+    result._opts.clientInit()
+    result.consent.update({ ad_storage: 'allow' } as any)
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ad_storage'))
   })
 
   it('meta: consent.grant()/revoke() queue fbq(\'consent\', ...) calls', async () => {
