@@ -402,6 +402,30 @@ describe('per-script consent object', () => {
     expect(gtmConsentCommandParts(entry)).toEqual(['consent', 'update', { analytics_storage: 'granted' }])
   })
 
+  it('gtm: consent.default() queues Arguments(consent, default, state) to dataLayer', async () => {
+    ;(window as any).dataLayer = []
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX' })
+    result._opts.clientInit()
+    result.consent.default({ analytics_storage: 'denied' })
+    const dl = (window as any).dataLayer as any[]
+    const entry = dl.find(e => gtmConsentCommandParts(e)?.[1] === 'default')
+    expect(entry).toBeDefined()
+    expect(Array.isArray(entry)).toBe(false)
+    expect(gtmConsentCommandParts(entry)).toEqual(['consent', 'default', { analytics_storage: 'denied' }])
+  })
+
+  it('ga: consent.default() pushes gtag consent default via dataLayer', async () => {
+    ;(window as any).dataLayer = []
+    const { useScriptGoogleAnalytics } = await import('../../packages/script/src/runtime/registry/google-analytics')
+    const result: any = useScriptGoogleAnalytics({ id: 'G-XXXX' })
+    result._opts.clientInit()
+    result.consent.default({ ad_storage: 'denied' })
+    const dl = (window as any).dataLayer as any[]
+    const defaultArgs = dl.find(e => e[0] === 'consent' && e[1] === 'default' && e[2]?.ad_storage)
+    expect(defaultArgs?.[2]).toEqual({ ad_storage: 'denied' })
+  })
+
   it('gtm: validateConsentState warns on unknown GCMv2 keys in consent.default()', async () => {
     ;(window as any).dataLayer = []
     const { logger } = await import('../../packages/script/src/runtime/logger') as any
@@ -425,6 +449,17 @@ describe('per-script consent object', () => {
     result._opts.clientInit()
     result.consent.update({ ad_storag: 'granted' } as any)
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ad_storag'))
+  })
+
+  it('gtm: validateConsentState warns on bad consent values (e.g. "allow") in consent.update()', async () => {
+    ;(window as any).dataLayer = []
+    const { logger } = await import('../../packages/script/src/runtime/logger') as any
+    logger.warn.mockClear()
+    const { useScriptGoogleTagManager } = await import('../../packages/script/src/runtime/registry/google-tag-manager')
+    const result: any = useScriptGoogleTagManager({ id: 'GTM-XXXX' })
+    result._opts.clientInit()
+    result.consent.update({ ad_storage: 'allow' } as any)
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ad_storage'))
   })
 
   it('meta: consent.grant()/revoke() queue fbq(\'consent\', ...) calls', async () => {
