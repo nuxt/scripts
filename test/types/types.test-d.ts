@@ -1,6 +1,7 @@
 import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
+import type { TikTokPixelApi } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
@@ -155,5 +156,22 @@ describe('#nuxt-scripts/types exports', () => {
     expectTypeOf<ScriptRegistry>().toHaveProperty('googleAnalytics')
     expectTypeOf<ScriptRegistry>().toHaveProperty('googleTagManager')
     expectTypeOf<ScriptRegistry>().toHaveProperty('clarity')
+  })
+})
+
+describe('tiktok pixel ttq', () => {
+  type Ttq = TikTokPixelApi['ttq']
+
+  it('track accepts the 4th options arg with event_id', () => {
+    expectTypeOf<Ttq>().toBeCallableWith('track', 'Purchase', { value: 10 }, { event_id: 'abc' })
+  })
+
+  it('track accepts standard events including Purchase and StartTrial', () => {
+    expectTypeOf<Ttq>().toBeCallableWith('track', 'Purchase')
+    expectTypeOf<Ttq>().toBeCallableWith('track', 'StartTrial')
+  })
+
+  it('track still accepts arbitrary custom event names', () => {
+    expectTypeOf<Ttq>().toBeCallableWith('track', 'CustomEvent')
   })
 })

@@ -13,11 +13,13 @@ type StandardEvents
     | 'AddPaymentInfo'
     | 'CompletePayment'
     | 'PlaceAnOrder'
+    | 'Purchase'
     | 'Contact'
     | 'Download'
     | 'SubmitForm'
     | 'CompleteRegistration'
     | 'Subscribe'
+    | 'StartTrial'
 
 interface EventProperties {
   content_id?: string
@@ -37,8 +39,14 @@ interface IdentifyProperties {
   external_id?: string
 }
 
+interface TrackOptions {
+  /** Used to deduplicate events sent from both the browser Pixel and the server-side Events API. */
+  event_id?: string
+  [key: string]: any
+}
+
 type TtqFns
-  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties) => void)
+  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)
     & ((cmd: 'page') => void)
     & ((cmd: 'identify', properties: IdentifyProperties) => void)
     & ((cmd: (string & {}), ...args: any[]) => void)
