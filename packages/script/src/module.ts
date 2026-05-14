@@ -40,6 +40,7 @@ import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
+import { validateScriptsEnvVars } from './validate-env'
 
 export type { FirstPartyPrivacy }
 
@@ -555,6 +556,14 @@ export default defineNuxtModule<ModuleOptions>({
         registryWithDefaults,
       )
     }
+
+    // Surface env vars under `NUXT_PUBLIC_SCRIPTS_*` that won't be consumed:
+    // wrong key (typo / marketing name), wrong field, or script not registered.
+    validateScriptsEnvVars(
+      scripts,
+      new Set(Object.keys(config.registry || {}).filter(k => (config.registry as any)?.[k] !== false)),
+      logger,
+    )
 
     // Setup runtimeConfig for proxies and devtools.
     // Must run AFTER env var resolution above so the API key is populated.
