@@ -7,10 +7,6 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Enable the build-time debug constant in tests; in real builds this is replaced
-// inline by Vite/Nitro via `define` injected from the module setup.
-Object.assign(globalThis, { __NUXT_SCRIPTS_DEBUG__: true })
-
 let posthogInitImpl: ((...args: any[]) => any) | undefined
 
 vi.mock('posthog-js', () => ({
