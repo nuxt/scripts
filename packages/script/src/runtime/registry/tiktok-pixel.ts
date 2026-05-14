@@ -35,18 +35,37 @@ interface EventProperties {
   value?: number
   description?: string
   query?: string
+  /** Order/transaction identifier; complements `event_id` for transaction-level dedup. */
+  order_id?: string
   [key: string]: any
 }
 
+/**
+ * Advanced matching parameters. TikTok requires SHA-256-hashed values for `email`,
+ * `phone_number`, `external_id`, and the name/address fields to enable matching.
+ * Passing raw values disables matching silently; a dev-mode warning is logged.
+ * @see https://business-api.tiktok.com/portal/docs?id=1739585702922241
+ */
 interface IdentifyProperties {
   email?: string
   phone_number?: string
   external_id?: string
+  first_name?: string
+  last_name?: string
+  city?: string
+  state?: string
+  country?: string
+  zip_code?: string
 }
 
 interface TrackOptions {
   /** Used to deduplicate events sent from both the browser Pixel and the server-side Events API. */
   event_id?: string
+  /**
+   * Sandbox test-event identifier. When set, events route to TikTok's Test Events panel
+   * without affecting production reporting.
+   */
+  test_event_code?: string
   [key: string]: any
 }
 
@@ -80,6 +99,26 @@ export { TikTokPixelOptions }
 
 export type TikTokPixelInput = RegistryScriptInput<typeof TikTokPixelOptions, true, false>
 
+/** Resolve the Pixel SDK URL for a given data-residency region. */
+export function tiktokPixelSrc(region?: 'global' | 'us'): string {
+  return region === 'us'
+    ? 'https://analytics.us.tiktok.com/i18n/pixel/events.js'
+    : 'https://analytics.tiktok.com/i18n/pixel/events.js'
+}
+
+const SHA256_HEX = /^[a-f0-9]{64}$/i
+
+function warnUnhashedIdentify(props: Record<string, unknown>): void {
+  const hashFields = ['email', 'phone_number', 'external_id', 'first_name', 'last_name', 'city', 'state', 'country', 'zip_code']
+  const offenders = hashFields.filter((f) => {
+    const v = props[f]
+    return typeof v === 'string' && v.length > 0 && !SHA256_HEX.test(v)
+  })
+  if (offenders.length) {
+    console.warn(`[nuxt-scripts:tiktokPixel] identify() received unhashed value(s) for ${offenders.join(', ')}. TikTok requires SHA-256 hashing for advanced matching; raw values will be ignored. See https://business-api.tiktok.com/portal/docs?id=1739585702922241`)
+  }
+}
+
 export interface TikTokPixelConsent {
   /** Call `ttq.grantConsent()`. */
   grant: () => void
@@ -92,7 +131,7 @@ export interface TikTokPixelConsent {
 export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTokPixelInput): UseScriptContext<T, TikTokPixelConsent> {
   const instance = useRegistryScript<T, typeof TikTokPixelOptions>('tiktokPixel', options => ({
     scriptInput: {
-      src: withQuery('https://analytics.tiktok.com/i18n/pixel/events.js', {
+      src: withQuery(tiktokPixelSrc(options?.region), {
         sdkid: options?.id,
         lib: 'ttq',
       }),
@@ -109,6 +148,8 @@ export function useScriptTikTokPixel<T extends TikTokPixelApi>(_options?: TikTok
       : () => {
           window.TiktokAnalyticsObject = 'ttq'
           const ttq: TikTokPixelApi['ttq'] = window.ttq = function (...params: any[]) {
+            if (import.meta.dev && params[0] === 'identify' && params[1])
+              warnUnhashedIdentify(params[1])
             // @ts-expect-error untyped
             if (ttq.callMethod) {
               // @ts-expect-error untyped
