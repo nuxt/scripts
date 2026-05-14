@@ -70,7 +70,7 @@ function savePreferences(choices: { analytics: boolean, marketing: boolean }) {
 </script>
 ```
 
-`consent.update()`{lang="ts"} and `consent.default()`{lang="ts"} both accept any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. Unknown GCMv2 keys and non-`granted`/`denied` values are validated against the canonical GCMv2 schema and warned via `consola`. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
+`consent.update()`{lang="ts"} and `consent.default()`{lang="ts"} both accept any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. Both methods validate input against the canonical GCMv2 schema and warn via `consola` on unknown keys or non-`granted`/`denied` values. For pre-`gtag('js')`{lang="ts"} setup beyond consent defaults, `onBeforeGtagStart` remains available as a general escape hatch.
 
 ### Per-region defaults
 

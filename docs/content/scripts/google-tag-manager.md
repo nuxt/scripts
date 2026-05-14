@@ -133,7 +133,7 @@ useScriptGoogleTagManager({
 
 The module forwards each entry verbatim, in input order. Precedence between region-scoped and unscoped defaults is enforced by gtag at runtime, not by ordering.
 
-`consent.update()`{lang="ts"} and `consent.default()`{lang="ts"} both accept any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. Unknown GCMv2 keys and non-`granted`/`denied` values are validated against the canonical GCMv2 schema and warned via `consola`. `onBeforeGtmStart` remains available as a general escape hatch for any other pre-`gtm.start` setup (only when the GTM ID is passed directly to the composable, not via `nuxt.config`).
+`consent.update()`{lang="ts"} and `consent.default()`{lang="ts"} both accept any `Partial<ConsentState>`{lang="ts"}; missing categories stay at their current value. Both methods validate input against the canonical GCMv2 schema and warn via `consola` on unknown keys or non-`granted`/`denied` values. `onBeforeGtmStart` remains available as a general escape hatch for any other pre-`gtm.start` setup (only when the GTM ID is passed directly to the composable, not via `nuxt.config`).
 
 ::script-types
 ::
