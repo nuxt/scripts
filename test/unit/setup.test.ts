@@ -1,6 +1,6 @@
 import type { NuxtConfigScriptRegistry } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
-import { applyAutoInject, resolveConfiguredProxyDomains } from '../../packages/script/src/module'
+import { applyAutoInject, findMissingRequiredFields, resolveConfiguredProxyDomains } from '../../packages/script/src/module'
 
 describe('applyAutoInject', () => {
   const posthogAutoInject = {
@@ -147,5 +147,33 @@ describe('resolveConfiguredProxyDomains', () => {
       },
       configDomainFields: ['scriptUrl'],
     })).toEqual(['cdn.analytics.example.com', 'events.analytics.example.com'])
+  })
+})
+
+describe('findMissingRequiredFields', () => {
+  it('flags fields missing from both raw input and merged runtimeConfig', () => {
+    expect(findMissingRequiredFields(['id'], {}, undefined)).toEqual(['id'])
+  })
+
+  it('treats fields satisfied via raw input as present', () => {
+    expect(findMissingRequiredFields(['id'], { id: 'G-123' }, undefined)).toEqual([])
+  })
+
+  it('treats fields supplied only via merged runtimeConfig.public.scripts as present', () => {
+    // Reproduces #761: id arrives via NUXT_PUBLIC_SCRIPTS_* / runtimeConfig and is
+    // merged into runtimeConfig.public.scripts before validation runs.
+    expect(findMissingRequiredFields(['id'], {}, { id: 'G-123' })).toEqual([])
+  })
+
+  it('ignores `scriptOptions` carried on the merged entry', () => {
+    expect(findMissingRequiredFields(['id'], {}, { scriptOptions: { bundle: true } })).toEqual(['id'])
+  })
+
+  it('returns only the still-missing subset', () => {
+    expect(findMissingRequiredFields(['id', 'apiKey'], {}, { id: 'G-123' })).toEqual(['apiKey'])
+  })
+
+  it('falls back to raw input when merged entry is absent', () => {
+    expect(findMissingRequiredFields(['id'], { id: 'G-123' }, undefined)).toEqual([])
   })
 })
