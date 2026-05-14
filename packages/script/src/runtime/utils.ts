@@ -5,6 +5,7 @@ import type {
   InferIfSchema,
   NuxtUseScriptOptions,
   RegistryScriptInput,
+  RegistryScriptKey,
   ScriptRegistry,
   UseFunctionType,
   UseScriptContext,
@@ -51,7 +52,7 @@ type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptIn
   gcmConsent?: GcmConsentContract
 })
 
-export function scriptRuntimeConfig<T extends keyof ScriptRegistry>(key: T) {
+export function scriptRuntimeConfig<T extends RegistryScriptKey>(key: T): ScriptRegistry[T] {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
@@ -70,7 +71,7 @@ export function requireRegistryEndpoint(componentName: string, registryKey: stri
 }
 
 export function useRegistryScript<T extends Record<string | symbol, any>, O = EmptyOptionsSchema>(registryKey: keyof ScriptRegistry | string, optionsFn: OptionsFn<O>, _userOptions?: RegistryScriptInput<O>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
-  const scriptConfig = scriptRuntimeConfig(registryKey as keyof ScriptRegistry)
+  const scriptConfig = scriptRuntimeConfig(registryKey as RegistryScriptKey)
   const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 

@@ -1,5 +1,12 @@
 {
   "types": {
+    "_gcm-consent": [
+      {
+        "name": "GcmConsentContract",
+        "kind": "interface",
+        "code": "export interface GcmConsentContract {\n  /** Forward a `consent`,`<action>`, `<state>` call to the script's transport (dataLayer or gtag). */\n  push: (proxy: any, action: 'default' | 'update', state: ConsentState) => void\n}"
+      }
+    ],
     "ahrefs-analytics": [
       {
         "name": "AhrefsAnalyticsOptions",
@@ -135,7 +142,7 @@
       {
         "name": "CalendlyPageSettings",
         "kind": "interface",
-        "code": "interface CalendlyPageSettings {\n  backgroundColor?: string\n  hideEventTypeDetails?: boolean\n  hideLandingPageDetails?: boolean\n  primaryColor?: string\n  textColor?: string\n}"
+        "code": "interface CalendlyPageSettings {\n  backgroundColor?: string\n  hideEventTypeDetails?: boolean\n  hideLandingPageDetails?: boolean\n  hideGdprBanner?: boolean\n  primaryColor?: string\n  textColor?: string\n}"
       },
       {
         "name": "CalendlyInlineWidgetOptions",
@@ -328,8 +335,8 @@
       },
       {
         "name": "GoogleAnalyticsConsent",
-        "kind": "interface",
-        "code": "export interface GoogleAnalyticsConsent {\n  /** Send `gtag('consent','update', state)` with GCMv2 partial state. */\n  update: (state: ConsentState) => void\n}"
+        "kind": "type",
+        "code": "export type GoogleAnalyticsConsent = GcmConsentApi"
       }
     ],
     "google-maps": [
@@ -571,8 +578,8 @@
       },
       {
         "name": "GoogleTagManagerConsent",
-        "kind": "interface",
-        "code": "export interface GoogleTagManagerConsent {\n  /** Push `['consent','update', state]` onto dataLayer with GCMv2 partial state. */\n  update: (state: ConsentState) => void\n}"
+        "kind": "type",
+        "code": "export type GoogleTagManagerConsent = GcmConsentApi"
       }
     ],
     "gravatar": [
@@ -990,22 +997,27 @@
       {
         "name": "StandardEvents",
         "kind": "type",
-        "code": "type StandardEvents\n  = 'ViewContent'\n    | 'ClickButton'\n    | 'Search'\n    | 'AddToWishlist'\n    | 'AddToCart'\n    | 'InitiateCheckout'\n    | 'AddPaymentInfo'\n    | 'CompletePayment'\n    | 'PlaceAnOrder'\n    | 'Contact'\n    | 'Download'\n    | 'SubmitForm'\n    | 'CompleteRegistration'\n    | 'Subscribe'"
+        "code": "type StandardEvents\n  = 'ViewContent'\n    | 'ClickButton'\n    | 'Search'\n    | 'AddToWishlist'\n    | 'AddToCart'\n    | 'InitiateCheckout'\n    | 'AddPaymentInfo'\n    | 'CompletePayment'\n    | 'PlaceAnOrder'\n    | 'Purchase'\n    | 'Contact'\n    | 'Download'\n    | 'SubmitForm'\n    | 'CompleteRegistration'\n    | 'Subscribe'\n    | 'StartTrial'\n    | 'ApplicationApproval'\n    | 'CustomizeProduct'\n    | 'FindLocation'\n    | 'Schedule'\n    | 'SubmitApplication'"
       },
       {
         "name": "EventProperties",
         "kind": "interface",
-        "code": "interface EventProperties {\n  content_id?: string\n  content_type?: string\n  content_name?: string\n  contents?: Array<{ content_id: string, content_type?: string, content_name?: string, price?: number, quantity?: number }>\n  currency?: string\n  value?: number\n  description?: string\n  query?: string\n  [key: string]: any\n}"
+        "code": "interface EventProperties {\n  content_id?: string\n  content_type?: string\n  content_name?: string\n  contents?: Array<{ content_id: string, content_type?: string, content_name?: string, price?: number, quantity?: number }>\n  currency?: string\n  value?: number\n  description?: string\n  query?: string\n  /** Order/transaction identifier; complements `event_id` for transaction-level dedup. */\n  order_id?: string\n  [key: string]: any\n}"
       },
       {
         "name": "IdentifyProperties",
         "kind": "interface",
-        "code": "interface IdentifyProperties {\n  email?: string\n  phone_number?: string\n  external_id?: string\n}"
+        "code": "interface IdentifyProperties {\n  email?: string\n  phone_number?: string\n  external_id?: string\n  first_name?: string\n  last_name?: string\n  city?: string\n  state?: string\n  country?: string\n  zip_code?: string\n}"
+      },
+      {
+        "name": "TrackOptions",
+        "kind": "interface",
+        "code": "interface TrackOptions {\n  /** Used to deduplicate events sent from both the browser Pixel and the server-side Events API. */\n  event_id?: string\n  /**\n   * Sandbox test-event identifier. When set, events route to TikTok's Test Events panel\n   * without affecting production reporting.\n   */\n  test_event_code?: string\n  [key: string]: any\n}"
       },
       {
         "name": "TtqFns",
         "kind": "type",
-        "code": "type TtqFns\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
+        "code": "type TtqFns\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
       },
       {
         "name": "TikTokPixelApi",
@@ -1015,7 +1027,7 @@
       {
         "name": "TikTokPixelOptions",
         "kind": "const",
-        "code": "export const TikTokPixelOptions = object({\n  /**\n   * Your TikTok Pixel ID.\n   * @see https://ads.tiktok.com/help/article/get-started-pixel\n   */\n  id: string(),\n  /**\n   * Whether to automatically track a page view on initialization.\n   * @default true\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Default consent state, applied before `ttq('init', id)`.\n   * - `'granted'` fires `ttq.grantConsent()`\n   * - `'denied'` fires `ttq.revokeConsent()`\n   * - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update\n   * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842\n   */\n  defaultConsent: optional(union([literal('granted'), literal('denied'), literal('hold')])),\n})"
+        "code": "export const TikTokPixelOptions = object({\n  /**\n   * Your TikTok Pixel ID.\n   * @see https://ads.tiktok.com/help/article/get-started-pixel\n   */\n  id: string(),\n  /**\n   * Whether to automatically track a page view on initialization.\n   * @default true\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Default consent state, applied before `ttq('init', id)`.\n   * - `'granted'` fires `ttq.grantConsent()`\n   * - `'denied'` fires `ttq.revokeConsent()`\n   * - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update\n   * @see https://business-api.tiktok.com/portal/docs?id=1739585600931842\n   */\n  defaultConsent: optional(union([literal('granted'), literal('denied'), literal('hold')])),\n  /**\n   * Data residency region for the Pixel SDK.\n   * - `'global'` (default) -> `analytics.tiktok.com`\n   * - `'us'` -> `analytics.us.tiktok.com` (US enterprise data residency)\n   */\n  region: optional(union([literal('global'), literal('us')])),\n})"
       },
       {
         "name": "TikTokPixelConsent",
@@ -1206,6 +1218,53 @@
     ]
   },
   "schemaFields": {
+    "gcmConsentState": [
+      {
+        "name": "ad_storage",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "ad_user_data",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "ad_personalization",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "analytics_storage",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "functionality_storage",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "personalization_storage",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "security_storage",
+        "type": "unknown",
+        "required": false
+      },
+      {
+        "name": "wait_for_update",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "region",
+        "type": "string[]",
+        "required": false
+      }
+    ],
     "AhrefsAnalyticsOptions": [
       {
         "name": "key",
@@ -2343,6 +2402,12 @@
         "type": "'granted' | 'denied' | 'hold'",
         "required": false,
         "description": "Default consent state, applied before `ttq('init', id)`. - `'granted'` fires `ttq.grantConsent()` - `'denied'` fires `ttq.revokeConsent()` - `'hold'` fires `ttq.holdConsent()` to defer until an explicit update"
+      },
+      {
+        "name": "region",
+        "type": "'global' | 'us'",
+        "required": false,
+        "description": "Data residency region for the Pixel SDK. - `'global'` (default) -> `analytics.tiktok.com` - `'us'` -> `analytics.us.tiktok.com` (US enterprise data residency)"
       }
     ],
     "UmamiAnalyticsOptions": [

@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
-    "generate:types": "pnpm dlx tsx scripts/generate-registry-types.ts",
+    "generate:types": "node scripts/generate-registry-types.ts",
     "prepack": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
     "devtools": "nuxt dev packages/devtools-app --port 3030",
     "devtools:build": "nuxt generate packages/devtools-app",
@@ -29,14 +29,9 @@
     "test:e2e-dev": "vitest run --project e2e-dev",
     "test:types": "vitest run --project typecheck"
   },
-  "dependencies": {
-    "@nuxt/kit": "catalog:",
-    "rollup": "catalog:",
-    "unbuild": "catalog:",
-    "unimport": "catalog:"
-  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
+    "@nuxt/kit": "catalog:",
     "@nuxt/scripts": "workspace:*",
     "@nuxt/test-utils": "catalog:",
     "@nuxtjs/partytown": "catalog:",
@@ -51,6 +46,8 @@
     "happy-dom": "catalog:",
     "jest-image-snapshot": "catalog:",
     "nuxt": "catalog:",
+    "oxc-parser": "catalog:",
+    "oxc-walker": "catalog:",
     "playwright-core": "catalog:",
     "posthog-js": "catalog:",
     "typescript": "catalog:",
