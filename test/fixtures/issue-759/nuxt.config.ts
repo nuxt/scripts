@@ -1,7 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
 // Single build, multi-deployment: src is overridable via
-// NUXT_PUBLIC_SCRIPTS_GLOBALS_TRUSTEDSHOPS_SRC at server start.
+// NUXT_PUBLIC_SCRIPTS_GLOBALS_TRUSTED_SHOPS_SRC at server start.
 // https://github.com/nuxt/scripts/issues/759
 export default defineNuxtConfig({
   modules: ['@nuxt/scripts'],

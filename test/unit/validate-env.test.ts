@@ -124,5 +124,16 @@ describe('validateScriptsEnvVars', () => {
       validateScriptsEnvVars(scripts, new Set(), logger, [])
       expect(logger.warn).not.toHaveBeenCalled()
     })
+
+    it('validates globals env vars even when no registry envDefaults exist', () => {
+      // Regression: early-return on empty `validByKey` must not skip globals validation.
+      process.env.NUXT_PUBLIC_SCRIPTS_GLOBALS_TYPO_SRC = 'x'
+      removeKeys.push('NUXT_PUBLIC_SCRIPTS_GLOBALS_TYPO_SRC')
+      const logger = makeLogger()
+      validateScriptsEnvVars([], new Set(), logger, ['trustedShops'])
+      expect(logger.warn).toHaveBeenCalledTimes(1)
+      const msg = (logger.warn as any).mock.calls[0][0] as string
+      expect(msg).toContain('NUXT_PUBLIC_SCRIPTS_GLOBALS_TYPO_SRC')
+    })
   })
 })

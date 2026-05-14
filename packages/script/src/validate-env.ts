@@ -58,7 +58,7 @@ export function validateScriptsEnvVars(
     validByKey.set(screaming, { camel: s.registryKey, fields })
   }
 
-  if (!validByKey.size)
+  if (!validByKey.size && !validGlobalsByScreaming.size)
     return
 
   const allValidEnvKeys: string[] = []
