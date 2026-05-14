@@ -54,3 +54,25 @@ consent.set({
 ```
 
 See [Clarity cookie consent](https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent) for details.
+
+## With Environment Variables
+
+You can supply your Clarity project id with an environment variable. The env var name follows the registry key (`clarity`), not the marketing name:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      clarity: { trigger: 'onNuxtReady' },
+    },
+  },
+})
+```
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_CLARITY_ID=<YOUR_PROJECT_ID>
+```
+
+::warning
+The env var key must match the registry key. For Clarity that is `NUXT_PUBLIC_SCRIPTS_CLARITY_ID`, not `NUXT_PUBLIC_SCRIPTS_MICROSOFT_CLARITY_ID`.
+::
