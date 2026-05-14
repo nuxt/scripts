@@ -577,6 +577,14 @@ export default defineNuxtModule<ModuleOptions>({
         : undefined,
     } as any
 
+    // Build-time constant: `__NUXT_SCRIPTS_DEBUG__` is replaced inline by the
+    // bundler, so debug branches DCE away in production when `debug: false`.
+    const debugConst = JSON.stringify(!!config.debug)
+    nuxt.options.vite ||= {}
+    nuxt.options.vite.define = { ...nuxt.options.vite.define, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.nitro ||= {}
+    nuxt.options.nitro.replace = { ...nuxt.options.nitro.replace, __NUXT_SCRIPTS_DEBUG__: debugConst }
+
     // Register proxy handler unconditionally. The handler rejects unknown domains
     // at runtime, so it's safe to register even when no scripts use proxy.
     const scriptsBase = config.prefix || '/_scripts'

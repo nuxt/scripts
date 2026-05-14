@@ -80,6 +80,17 @@ export interface ConsentState {
   wait_for_update?: number
 }
 
+/**
+ * Auto-attached `consent` API on scripts that adhere to the GCMv2 Consent Mode
+ * contract (Google Analytics, Google Tag Manager, …).
+ */
+export interface GcmConsentApi {
+  /** Push `['consent','default', state]` (or equivalent gtag call) with GCMv2 partial state. */
+  default: (state: ConsentState) => void
+  /** Push `['consent','update', state]` (or equivalent gtag call) with GCMv2 partial state. */
+  update: (state: ConsentState) => void
+}
+
 export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptInstance<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
@@ -157,6 +168,13 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
      * @internal
      */
     registryMeta?: Record<string, string>
+    /**
+     * Source location (file:line:col) the script was registered from, captured
+     * via dev-only stack-trace parsing in `useRegistryScript`. Surfaced in
+     * debug logs and Nuxt DevTools.
+     * @internal
+     */
+    loadedFrom?: string
     /**
      * Known third-party domains this script communicates with.
      * @internal

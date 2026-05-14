@@ -1,4 +1,5 @@
 import type { ConsentState, NuxtUseScriptOptions, RegistryScriptInput, UseFunctionType, UseScriptContext } from '#nuxt-scripts/types'
+import type { GcmConsentApi } from './_gcm-consent'
 import type { GTag } from './google-analytics'
 import { withQuery } from 'ufo'
 import { useRegistryScript } from '#nuxt-scripts/utils'
@@ -80,10 +81,8 @@ export { GoogleTagManagerOptions }
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
-export interface GoogleTagManagerConsent {
-  /** Push `['consent','update', state]` onto dataLayer with GCMv2 partial state. */
-  update: (state: ConsentState) => void
-}
+/** @deprecated Use {@link GcmConsentApi} from `#nuxt-scripts/types` instead. */
+export type GoogleTagManagerConsent = GcmConsentApi
 
 /**
  * Hook to use Google Tag Manager in Nuxt applications
@@ -96,8 +95,8 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
      */
     onBeforeGtmStart?: (gtag: DataLayerPush) => void
   },
-): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GoogleTagManagerConsent> {
-  const instance = useRegistryScript<T, typeof GoogleTagManagerOptions>(
+): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GcmConsentApi> {
+  return useRegistryScript<T, typeof GoogleTagManagerOptions>(
     options?.key || 'googleTagManager',
     (opts) => {
       const dataLayerName = opts?.l ?? opts?.dataLayer ?? 'dataLayer'
@@ -126,16 +125,30 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
             }
           },
         },
+        gcmConsent: {
+          // Match the gtag.js contract: enqueue an `Arguments` object, not a plain Array,
+          // so GTM/Tag Assistant/Analytics Debugger recognise the consent command. See #770/#771.
+          push: (_proxy: any, action: 'default' | 'update', state: ConsentState) => {
+            const dl = (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
+            ;(function (..._args: any[]) {
+              // eslint-disable-next-line prefer-rest-params
+              dl.push(arguments)
+            })('consent', action, state)
+          },
+        },
         clientInit: import.meta.server
           ? undefined
           : () => {
               // Initialize dataLayer if it doesn't exist
               (window as any)[dataLayerName] = (window as any)[dataLayerName] || []
 
-              // Create gtag function
-              function gtag(...args: any[]) {
-                // Pushing arguments to dataLayer is necessary for GTM to process events
-                (window as any)[dataLayerName].push(args)
+              // Create gtag function (must push the real `arguments` object —
+              // not a spread array — so GTM processes consent and
+              // other commands like the official snippet)
+              function gtag(..._args: any[]) {
+                // Rest params satisfy TypeScript call sites; gtm expects `arguments` on the queue.
+                // eslint-disable-next-line prefer-rest-params
+                (window as any)[dataLayerName].push(arguments)
               }
 
               // Assign gtag to window for global access
@@ -163,22 +176,5 @@ export function useScriptGoogleTagManager<T extends GoogleTagManagerApi>(
       }
     },
     options,
-  )
-
-  // Handle callback for cached/pre-initialized scripts (e.g., when ID is in nuxt.config)
-  if (import.meta.client && options?.onBeforeGtmStart) {
-    const gtag = (window as any).gtag
-    if (gtag)
-      options.onBeforeGtmStart(gtag)
-  }
-
-  const typed = instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GoogleTagManagerConsent>
-  if (import.meta.client && !typed.consent) {
-    typed.consent = {
-      update: (state: ConsentState) => {
-        ;((typed.proxy as unknown as GoogleTagManagerApi).dataLayer as any).push(['consent', 'update', state])
-      },
-    }
-  }
-  return typed
+  ) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>, GcmConsentApi>
 }

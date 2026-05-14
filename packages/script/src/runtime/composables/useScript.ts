@@ -6,6 +6,7 @@ import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from '
 import { markRaw, ref } from 'vue'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
+import { debugEnabled } from '../debug'
 import { logger } from '../logger'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
@@ -293,6 +294,58 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     return reloaded.load()
   }
   nuxtApp.$scripts[id] = instance
+
+  // Debug logging: emit a structured log per script lifecycle event when debug
+  // is enabled at build-time (or in dev). Tagged with registryKey when present
+  // (e.g. `googleTagManager`), else the script id (src/key).
+  if (import.meta.client && debugEnabled) {
+    const registryKey = options?.devtools?.registryKey as string | undefined
+    const src = (input as any)?.src
+    const trigger = options?.trigger
+    const loadedFrom = options?.devtools?.loadedFrom as string | undefined
+    const ctx = {
+      id: instance.id,
+      ...(registryKey ? { registryKey } : {}),
+      ...(src ? { src } : {}),
+      ...(loadedFrom ? { loadedFrom } : {}),
+    }
+    const log = logger.withTag(registryKey || instance.id)
+    const t0 = performance.now()
+    let tLoadStart = 0
+    log.debug('registered', {
+      ...ctx,
+      trigger: typeof trigger === 'object' ? (trigger instanceof Promise ? 'promise' : JSON.stringify(trigger)) : trigger,
+    })
+    options.head.hooks.hook('script:updated', (entry) => {
+      if (entry.script.id !== instance.id)
+        return
+      const status = entry.script.status
+      const elapsed = Math.round(performance.now() - t0)
+      if (status === 'loading')
+        tLoadStart = performance.now()
+      const payload: Record<string, any> = { ...ctx, status, elapsedMs: elapsed }
+      if (status === 'loaded' && tLoadStart)
+        payload.loadMs = Math.round(performance.now() - tLoadStart)
+      const fn = status === 'error' ? log.warn : log.debug
+      fn(`status: ${status}`, payload)
+    })
+    const _origLoad = instance.load
+    instance.load = () => {
+      log.debug('load() called', ctx)
+      return _origLoad()
+    }
+    const _origRemove = instance.remove
+    instance.remove = () => {
+      log.debug('remove() called', ctx)
+      return _origRemove()
+    }
+    const _origReload = instance.reload
+    instance.reload = async () => {
+      log.debug('reload() called', ctx)
+      return _origReload()
+    }
+  }
+
   // used for devtools integration
   if (import.meta.dev && import.meta.client) {
     if (exists) {
