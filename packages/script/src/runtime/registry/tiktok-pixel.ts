@@ -20,6 +20,11 @@ type StandardEvents
     | 'CompleteRegistration'
     | 'Subscribe'
     | 'StartTrial'
+    | 'ApplicationApproval'
+    | 'CustomizeProduct'
+    | 'FindLocation'
+    | 'Schedule'
+    | 'SubmitApplication'
 
 interface EventProperties {
   content_id?: string
