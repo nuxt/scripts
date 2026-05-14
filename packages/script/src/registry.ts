@@ -50,7 +50,6 @@ import {
   XEmbedOptions,
   XPixelOptions,
 } from './runtime/registry/schemas'
-import { tiktokPixelSrc } from './runtime/registry/tiktok-pixel'
 
 export type { ScriptCapabilities } from './runtime/types'
 
@@ -497,7 +496,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         resolve(options?: TikTokPixelInput) {
           if (!options?.id)
             return false
-          return withQuery(tiktokPixelSrc(options.region), { sdkid: options.id, lib: 'ttq' })
+          const host = options.region === 'us' ? 'analytics.us.tiktok.com' : 'analytics.tiktok.com'
+          return withQuery(`https://${host}/i18n/pixel/events.js`, { sdkid: options.id, lib: 'ttq' })
         },
       },
       proxy: {
