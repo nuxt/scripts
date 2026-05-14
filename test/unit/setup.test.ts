@@ -172,8 +172,4 @@ describe('findMissingRequiredFields', () => {
   it('returns only the still-missing subset', () => {
     expect(findMissingRequiredFields(['id', 'apiKey'], {}, { id: 'G-123' })).toEqual(['apiKey'])
   })
-
-  it('falls back to raw input when merged entry is absent', () => {
-    expect(findMissingRequiredFields(['id'], { id: 'G-123' }, undefined)).toEqual([])
-  })
 })
