@@ -1,0 +1,107 @@
+---
+title: SpeedCurve LUX
+description: Use SpeedCurve LUX Real User Monitoring in your Nuxt app to measure performance experienced by real users, with automatic SPA navigation tracking.
+links:
+  - label: Source
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/speedcurve.ts
+    size: xs
+---
+
+[SpeedCurve LUX](https://speedcurve.com/features/lux/) is a Real User Monitoring (RUM) tool that measures the performance your users actually experience. It tracks Core Web Vitals, custom timing marks, and JavaScript errors.
+
+::script-stats
+::
+
+::script-docs
+::
+
+The composable comes with the following defaults:
+- **Trigger: Client** The LUX primer is injected into `<head>` immediately; `lux.js` loads when Nuxt hydrates.
+
+You can access the `LUX` object as a proxy directly, or await `$script` to get the loaded instance.
+
+::code-group
+
+```ts [Proxy]
+const { proxy } = useScriptSpeedCurve({ id: 'YOUR_ID' })
+proxy.LUX.label = 'my-page'
+```
+
+```ts [onLoaded]
+const { onLoaded } = useScriptSpeedCurve({ id: 'YOUR_ID' })
+onLoaded(({ LUX }) => {
+  LUX.label = 'my-page'
+})
+```
+
+::
+
+## SPA navigation
+
+Set `spaMode: true` to enable SpeedCurve's SPA tracking mode. The composable wires Vue Router automatically:
+
+- `router.beforeEach` calls `LUX.startSoftNavigation()` (closes the previous beacon, starts a new one)
+- `nuxt.hook('page:finish')` calls `LUX.markLoadTime()` after the next paint (sets the END mark)
+- Cancelled navigations seal the phantom beacon with `addData('luxNavFailed', '1')` for easy filtering
+
+```ts [app.vue]
+useScriptSpeedCurve({
+  id: 'YOUR_ID',
+  spaMode: true,
+  autoTrackSpaNavigations: true, // default when spaMode is true
+})
+```
+
+To disable auto-wiring and instrument manually:
+
+```ts
+useScriptSpeedCurve({
+  id: 'YOUR_ID',
+  spaMode: true,
+  autoTrackSpaNavigations: false,
+})
+// Then call LUX.startSoftNavigation() and LUX.markLoadTime() yourself
+```
+
+## Custom page labels
+
+By default the composable uses `String(to.name ?? to.path)` as the page label for each navigation. Override with `labelFor`:
+
+```ts
+useScriptSpeedCurve({
+  id: 'YOUR_ID',
+  spaMode: true,
+  labelFor: to => to.meta.title as string ?? to.path,
+})
+```
+
+Set `labelFor: false` to disable labeling entirely.
+
+## CSP
+
+Add these directives to your Content Security Policy:
+
+```
+script-src  cdn.speedcurve.com;
+img-src     lux.speedcurve.com;
+connect-src lux.speedcurve.com beacon.speedcurve.com;
+```
+
+Reference: https://support.speedcurve.com/docs/add-rum-to-your-csp
+
+::script-types
+::
+
+## Example
+
+Loading SpeedCurve LUX through `app.vue` with SPA tracking enabled.
+
+```vue [app.vue]
+<script setup lang="ts">
+useScriptSpeedCurve({
+  id: 'YOUR_SPEEDCURVE_ID',
+  spaMode: true,
+})
+</script>
+```
