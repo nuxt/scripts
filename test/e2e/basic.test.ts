@@ -35,6 +35,8 @@ async function createPage(path: string, options?: any) {
     await waitForHydration(page, url2, waitUntil)
     return res
   }
+  if (options?.setup)
+    await options.setup(page)
   if (path) {
     // @ts-expect-error untyped
     await page.goto(url(path), options?.javaScriptEnabled === false ? {} : { waitUntil: 'hydration' })
@@ -637,6 +639,13 @@ describe.skip('social-embeds', () => {
 })
 
 describe('speedcurve', { timeout: 15000 }, () => {
+  // Block the real CDN so window.LUX spy set up in fixtures is never overwritten
+  async function scPage(path: string) {
+    return createPage(path, {
+      setup: (p: any) => p.route('**/cdn.speedcurve.com/**', (r: any) => r.abort()),
+    })
+  }
+
   // Helper: read captured LUX calls from the page's spy
   async function getLuxCalls(page: any) {
     return page.evaluate(() => (window as any)._luxCalls as Array<{ method: string, args: unknown[] }>)
@@ -652,7 +661,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
   }
 
   it('primer: injects LUX into <head> with correct snippetVersion', async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
 
     const snippetVersion = await page.evaluate(
       () => (window as any).LUX?.snippetVersion,
@@ -663,7 +672,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
 
   // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: calls startSoftNavigation when navigating to a new route', async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
 
     // Navigate via NuxtLink (SPA navigation, no full reload)
     await page.click('#nav-destination')
@@ -677,7 +686,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
 
   // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: calls markLoadTime after page:finish + paint', async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -691,7 +700,11 @@ describe('speedcurve', { timeout: 15000 }, () => {
 
   // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: timing order is startSoftNavigation before markLoadTime', async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
+    // Wait for the initial page:finish markLoadTime (fired via rAF) to land,
+    // then clear so only the next navigation's calls are in the array.
+    await waitForLuxCall(page, 'markLoadTime', 3000)
+    await page.evaluate(() => { (window as any)._luxCalls = [] })
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -706,7 +719,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
 
   // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto default label: uses Nuxt-generated route name as label', async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -723,7 +736,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
   it('SPA auto: back navigation triggers second startSoftNavigation', {
     timeout: 20000,
   }, async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -739,7 +752,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
   })
 
   it('canceled navigation: seals phantom beacon with luxNavFailed tag', async () => {
-    const { page } = await createPage('/tpc/speedcurve')
+    const { page } = await scPage('/tpc/speedcurve')
 
     // A guard in the fixture blocks navigation to /blocked and returns false
     await page.click('#nav-blocked')
@@ -764,7 +777,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
 
   // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA off: no startSoftNavigation call when spaMode is false', async () => {
-    const { page } = await createPage('/tpc/speedcurve-no-spa')
+    const { page } = await scPage('/tpc/speedcurve-no-spa')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -776,7 +789,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
   })
 
   it('custom labelFor: applies the user-provided label function', async () => {
-    const { page } = await createPage('/tpc/speedcurve-custom-label')
+    const { page } = await scPage('/tpc/speedcurve-custom-label')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -787,7 +800,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
   })
 
   it('labelFor false: leaves window.LUX.label unchanged after navigation', async () => {
-    const { page } = await createPage('/tpc/speedcurve-label-off')
+    const { page } = await scPage('/tpc/speedcurve-label-off')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')
@@ -800,7 +813,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
   })
 
   it('autoTrackSpaNavigations false: no startSoftNavigation calls on navigation', { timeout: 20000 }, async () => {
-    const { page } = await createPage('/tpc/speedcurve-manual')
+    const { page } = await scPage('/tpc/speedcurve-manual')
 
     await page.click('#nav-destination')
     await page.waitForSelector('#page')

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Install LUX spy BEFORE composable runs.
 // The primer does `window.LUX = window.LUX || {}` — pre-existing object is preserved.
-if (import.meta.client) {
+if (import.meta.client && !window._luxCalls) {
   window._luxCalls = []
   const record = (method: string) => (...args: unknown[]) => {
     window._luxCalls!.push({ method, args })

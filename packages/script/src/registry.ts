@@ -859,6 +859,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: false,
       category: 'utility',
       envDefaults: { id: '' },
+      composableName: 'useScriptSpeedCurve',
     }),
   ])
 }
