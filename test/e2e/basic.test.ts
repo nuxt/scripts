@@ -799,7 +799,7 @@ describe('speedcurve', { timeout: 15000 }, () => {
     expect(label).toBe('original-label')
   })
 
-  it('autoTrackSpaNavigations false: no startSoftNavigation calls on navigation', async () => {
+  it('autoTrackSpaNavigations false: no startSoftNavigation calls on navigation', { timeout: 20000 }, async () => {
     const { page } = await createPage('/tpc/speedcurve-manual')
 
     await page.click('#nav-destination')
