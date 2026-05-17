@@ -223,4 +223,10 @@ export const scriptMeta = {
     urls: ['https://secure.gravatar.com/js/gprofiles.js'],
     trackedData: [],
   },
+
+  // Performance monitoring
+  speedcurve: {
+    urls: ['https://cdn.speedcurve.com/js/lux.js'],
+    trackedData: [],
+  },
 } satisfies Record<BuiltInRegistryScriptKey, ScriptMeta>
