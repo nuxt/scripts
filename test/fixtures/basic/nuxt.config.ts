@@ -10,6 +10,7 @@ export default defineNuxtConfig({
       instagramEmbed: {},
       blueskyEmbed: {},
       gravatar: {},
+      speedcurve: {},
     },
   },
   devtools: {
