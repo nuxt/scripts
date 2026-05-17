@@ -42,6 +42,7 @@ import {
   RybbitAnalyticsOptions,
   SegmentOptions,
   SnapTrPixelOptions,
+  SpeedCurveOptions,
   StripeOptions,
   TikTokPixelOptions,
   UmamiAnalyticsOptions,
@@ -173,6 +174,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // Usercentrics is the consent layer itself: must hit the vendor origin so
   // signature/policy lookups succeed. Bundle/proxy are intentionally absent.
   m('usercentrics', 'Usercentrics', 'utility', 'useScriptUsercentrics', {}, null),
+  m('speedcurve', 'SpeedCurve LUX', 'utility', 'useScriptSpeedCurve', {}, null),
 ]
 
 export const REGISTRY_CATEGORIES = [
@@ -850,6 +852,13 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       serverHandlers: [
         { route: '/_scripts/proxy/gravatar', handler: './runtime/server/gravatar-proxy', requiresSigning: true },
       ],
+    }),
+    def('speedcurve', {
+      schema: SpeedCurveOptions,
+      label: 'SpeedCurve LUX',
+      src: false,
+      category: 'utility',
+      envDefaults: { id: '' },
     }),
   ])
 }
