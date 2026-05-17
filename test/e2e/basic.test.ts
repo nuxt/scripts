@@ -663,6 +663,7 @@ describe('speedcurve', () => {
     expect(String(snippetVersion)).toMatch(/^\d+\.\d+/)
   })
 
+  // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: calls startSoftNavigation when navigating to a new route', {
     timeout: 15000,
   }, async () => {
@@ -678,6 +679,7 @@ describe('speedcurve', () => {
     expect(softNavCalls).toHaveLength(1)
   })
 
+  // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: calls markLoadTime after page:finish + paint', {
     timeout: 15000,
   }, async () => {
@@ -693,6 +695,7 @@ describe('speedcurve', () => {
     expect(loadTimeCalls.length).toBeGreaterThanOrEqual(1)
   })
 
+  // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: timing order is startSoftNavigation before markLoadTime', {
     timeout: 15000,
   }, async () => {
@@ -709,6 +712,7 @@ describe('speedcurve', () => {
     expect(markLoadIdx).toBeGreaterThan(softNavIdx)
   })
 
+  // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto default label: uses Nuxt-generated route name as label', {
     timeout: 15000,
   }, async () => {
@@ -725,6 +729,7 @@ describe('speedcurve', () => {
     expect(label).toMatch(/speedcurve.*destination/)
   })
 
+  // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA auto: back navigation triggers second startSoftNavigation', {
     timeout: 20000,
   }, async () => {
@@ -769,6 +774,7 @@ describe('speedcurve', () => {
     expect(page.url()).not.toContain('/blocked')
   })
 
+  // eslint-disable-next-line test/prefer-lowercase-title
   it('SPA off: no startSoftNavigation call when spaMode is false', {
     timeout: 15000,
   }, async () => {

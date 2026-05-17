@@ -134,8 +134,8 @@
   },
   "devDependencies": {
     "@nuxt/kit": "catalog:",
-    "@speedcurve/lux": "catalog:",
     "@nuxt/module-builder": "catalog:",
+    "@speedcurve/lux": "catalog:",
     "rollup": "catalog:",
     "unbuild": "catalog:",
     "unimport": "catalog:"

@@ -7,7 +7,7 @@ vi.mock('nuxt/app', () => ({
   useHead: vi.fn(),
   useRouter: () => ({ beforeEach: vi.fn(), afterEach: vi.fn() }),
   useNuxtApp: () => ({ hook: vi.fn(), payload: { serverRendered: true } }),
-  useRuntimeConfig: () => ({ public: { scripts: {}, 'nuxt-scripts': {} } }),
+  useRuntimeConfig: () => ({ public: { 'scripts': {}, 'nuxt-scripts': {} } }),
   createError: (e: any) => new Error(e.message),
   injectHead: vi.fn(),
   onNuxtReady: vi.fn(),

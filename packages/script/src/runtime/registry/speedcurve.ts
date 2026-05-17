@@ -1,8 +1,8 @@
 import type { LuxGlobal, UserConfig } from '@speedcurve/lux'
-import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import type { RouteLocationNormalized } from 'vue-router'
-import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import luxSnippetSource from '@speedcurve/lux/dist/lux-snippet.js?raw'
+import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
 import { useRegistryScript } from '../utils'
 import { afterNextPaint } from '../utils/after-next-paint'
 import { SpeedCurveOptions } from './schemas'
@@ -49,7 +49,7 @@ const LUX_USER_CONFIG_KEYS: (keyof UserConfig)[] = [
 ]
 
 export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCurveInput): UseScriptContext<T> {
-  return useRegistryScript<T, typeof SpeedCurveOptions>('speedcurve', (options) => ({
+  return useRegistryScript<T, typeof SpeedCurveOptions>('speedcurve', options => ({
     scriptInput: {
       src: `https://cdn.speedcurve.com/js/lux.js?id=${options.id}`,
       crossorigin: 'anonymous',
@@ -81,7 +81,8 @@ export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCur
 
 export function applyConfig(options: SpeedCurveInput): void {
   const lux = window.LUX as Record<string, unknown> | undefined
-  if (!lux) return
+  if (!lux)
+    return
   for (const k of LUX_USER_CONFIG_KEYS) {
     const v = (options as Record<string, unknown>)[k as string]
     if (v !== undefined)
@@ -90,7 +91,8 @@ export function applyConfig(options: SpeedCurveInput): void {
 }
 
 export function installAutoTracker(options?: SpeedCurveInput): void {
-  if (window.__speedcurveLuxWired) return
+  if (window.__speedcurveLuxWired)
+    return
   window.__speedcurveLuxWired = true
 
   const router = useRouter()
@@ -106,21 +108,26 @@ export function installAutoTracker(options?: SpeedCurveInput): void {
 
   router.beforeEach((to) => {
     const lux = window.LUX
-    if (!lux) return
+    if (!lux)
+      return
     if (pendingInitial) {
       pendingInitial = false
-      if (labelFor) lux.label = labelFor(to)
+      if (labelFor)
+        lux.label = labelFor(to)
       return
     }
     lux.startSoftNavigation()
-    if (labelFor) lux.label = labelFor(to)
+    if (labelFor)
+      lux.label = labelFor(to)
   })
 
   // If a guard cancels navigation, seal the phantom beacon with a filterable tag.
   router.afterEach((_to, _from, failure) => {
-    if (!failure) return
+    if (!failure)
+      return
     const lux = window.LUX
-    if (!lux) return
+    if (!lux)
+      return
     lux.markLoadTime()
     lux.addData('luxNavFailed', '1')
   })

@@ -11,7 +11,7 @@ vi.mock('nuxt/app', () => ({
   useHead: vi.fn(),
   useRouter: () => ({ beforeEach: mockBeforeEach, afterEach: mockAfterEach }),
   useNuxtApp: () => ({ hook: mockHook, payload: { serverRendered: true } }),
-  useRuntimeConfig: () => ({ public: { scripts: {}, 'nuxt-scripts': {} } }),
+  useRuntimeConfig: () => ({ public: { 'scripts': {}, 'nuxt-scripts': {} } }),
   createError: (e: any) => new Error(e.message),
   injectHead: vi.fn(),
   onNuxtReady: vi.fn(),
@@ -80,7 +80,7 @@ describe('installAutoTracker', () => {
       useHead: vi.fn(),
       useRouter: () => ({ beforeEach: mockBeforeEach, afterEach: mockAfterEach }),
       useNuxtApp: () => ({ hook: mockHook, payload: { serverRendered: false } }),
-      useRuntimeConfig: () => ({ public: { scripts: {}, 'nuxt-scripts': {} } }),
+      useRuntimeConfig: () => ({ public: { 'scripts': {}, 'nuxt-scripts': {} } }),
       createError: (e: any) => new Error(e.message),
       injectHead: vi.fn(),
       onNuxtReady: vi.fn(),
@@ -115,7 +115,7 @@ describe('installAutoTracker', () => {
       useHead: vi.fn(),
       useRouter: () => ({ beforeEach: mockBeforeEach, afterEach: mockAfterEach }),
       useNuxtApp: () => ({ hook: mockHook, payload: { serverRendered: true } }),
-      useRuntimeConfig: () => ({ public: { scripts: {}, 'nuxt-scripts': {} } }),
+      useRuntimeConfig: () => ({ public: { 'scripts': {}, 'nuxt-scripts': {} } }),
       createError: (e: any) => new Error(e.message),
       injectHead: vi.fn(),
       onNuxtReady: vi.fn(),
@@ -191,7 +191,10 @@ describe('installAutoTracker', () => {
     Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
 
     // Make rAF synchronous so we can test without real paint cycles
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => { cb(0); return 0 })
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0)
+      return 0
+    })
 
     const { installAutoTracker } = await import('../../packages/script/src/runtime/registry/speedcurve')
     installAutoTracker({ id: '123' })

@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[SpeedCurve LUX](https://speedcurve.com/features/lux/) is a Real User Monitoring (RUM) tool that measures the performance your users actually experience. It tracks Core Web Vitals, custom timing marks, and JavaScript errors.
+[SpeedCurve LUX](https://speedcurve.com/features/lux/) is a Real User Monitoring (RUM) tool that measures the performance your users experience. It tracks Core Web Vitals, custom timing marks, and JavaScript errors.
 
 ::script-stats
 ::
@@ -17,7 +17,8 @@ links:
 ::
 
 The composable comes with the following defaults:
-- **Trigger: Client** The LUX primer is injected into `<head>` immediately; `lux.js` loads when Nuxt hydrates.
+<!-- eslint-disable-next-line harlanzw/ai-deslop-passive-voice -->
+- **Trigger: Client** The LUX primer is injected into `<head>`{lang="html"} immediately; `lux.js` loads when Nuxt hydrates.
 
 You can access the `LUX` object as a proxy directly, or await `$script` to get the loaded instance.
 
@@ -41,9 +42,9 @@ onLoaded(({ LUX }) => {
 
 Set `spaMode: true` to enable SpeedCurve's SPA tracking mode. The composable wires Vue Router automatically:
 
-- `router.beforeEach` calls `LUX.startSoftNavigation()` (closes the previous beacon, starts a new one)
-- `nuxt.hook('page:finish')` calls `LUX.markLoadTime()` after the next paint (sets the END mark)
-- Cancelled navigations seal the phantom beacon with `addData('luxNavFailed', '1')` for easy filtering
+- `router.beforeEach` calls `LUX.startSoftNavigation()`{lang="ts"} (closes the previous beacon, starts a new one)
+- `nuxt.hook('page:finish')`{lang="ts"} calls `LUX.markLoadTime()`{lang="ts"} after the next paint (sets the END mark)
+- Cancelled navigations seal the phantom beacon with `addData('luxNavFailed', '1')`{lang="ts"} for easy filtering
 
 ```ts [app.vue]
 useScriptSpeedCurve({
@@ -66,7 +67,8 @@ useScriptSpeedCurve({
 
 ## Custom page labels
 
-By default the composable uses `String(to.name ?? to.path)` as the page label for each navigation. Override with `labelFor`:
+By default the composable uses `String(to.name ?? to.path)`{lang="ts"} as the page label for each navigation. Override with `labelFor`:
+
 
 ```ts
 useScriptSpeedCurve({

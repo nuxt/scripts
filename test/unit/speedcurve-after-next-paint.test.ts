@@ -6,7 +6,10 @@ import { afterNextPaint } from '../../packages/script/src/runtime/utils/after-ne
 
 describe('afterNextPaint', () => {
   beforeEach(() => {
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => { cb(0); return 0 })
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0)
+      return 0
+    })
   })
 
   afterEach(() => {
@@ -34,7 +37,10 @@ describe('afterNextPaint', () => {
   it('does NOT call the callback after only one rAF', () => {
     let outerCb: FrameRequestCallback | undefined
     vi.mocked(window.requestAnimationFrame)
-      .mockImplementationOnce((cb) => { outerCb = cb; return 0 }) // capture outer rAF
+      .mockImplementationOnce((cb) => {
+        outerCb = cb
+        return 0
+      }) // capture outer rAF
       .mockImplementation(() => 0) // inner rAF: don't fire
 
     const cb = vi.fn()
