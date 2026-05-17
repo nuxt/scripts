@@ -46,6 +46,8 @@ catalog:
   pkg-types: ^2.3.1
   playwright-core: ^1.60.0
   posthog-js: ^1.374.2
+  # Pin to ^4.4.x: snippet protocol 2.0.0. Treat major bumps as breaking — verify primer compatibility before upgrading.
+  '@speedcurve/lux': ^4.4.3
   rollup: ^4.60.4
   shiki: ^4.1.0
   sirv: ^3.0.2

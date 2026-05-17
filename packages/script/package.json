@@ -68,6 +68,7 @@
       "unimport",
       "#nuxt-scripts/types",
       "posthog-js",
+      "@speedcurve/lux",
       "@nuxt/devtools-kit",
       "sirv"
     ]
@@ -129,6 +130,7 @@
   },
   "devDependencies": {
     "@nuxt/kit": "catalog:",
+    "@speedcurve/lux": "catalog:",
     "@nuxt/module-builder": "catalog:",
     "rollup": "catalog:",
     "unbuild": "catalog:",
