@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-export type SpeedCurveInput = RegistryScriptInput<typeof SpeedCurveOptions> & {
+export type SpeedCurveInput = RegistryScriptInput<typeof SpeedCurveOptions> & UserConfig & {
   /**
    * Derive a page label for each SPA navigation.
    * Defaults to `String(to.name ?? to.path)`.
@@ -32,21 +32,10 @@ export type SpeedCurveInput = RegistryScriptInput<typeof SpeedCurveOptions> & {
   labelFor?: ((to: RouteLocationNormalized) => string) | false
 }
 
-// LUX UserConfig keys that map 1:1 to our schema (autoTrackSpaNavigations is composable-only).
-const LUX_USER_CONFIG_KEYS: (keyof UserConfig)[] = [
-  'spaMode',
-  'auto',
-  'label',
-  'samplerate',
-  'sendBeaconOnPageHidden',
-  'trackErrors',
-  'maxErrors',
-  'minMeasureTime',
-  'maxMeasureTime',
-  'newBeaconOnPageShow',
-  'trackHiddenPages',
-  'cookieDomain',
-]
+// Derived from the schema: all schema keys except the composable-only ones.
+const LUX_USER_CONFIG_KEYS = Object.keys(SpeedCurveOptions.entries).filter(
+  k => k !== 'id' && k !== 'autoTrackSpaNavigations',
+) as (keyof UserConfig)[]
 
 export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCurveInput): UseScriptContext<T> {
   return useRegistryScript<T, typeof SpeedCurveOptions>('speedcurve', options => ({
