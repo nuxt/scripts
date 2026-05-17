@@ -301,7 +301,7 @@ export type BuiltInRegistryScriptKey
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
     | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'matomoAnalytics'
     | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
-    | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'youtubePlayer' | 'vercelAnalytics'
+    | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'speedcurve' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'usercentrics' | 'gravatar' | 'npm'
 
 /**
