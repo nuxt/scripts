@@ -37,6 +37,7 @@ import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
 import type { SegmentInput } from './registry/segment'
 import type { SnapTrPixelInput } from './registry/snapchat-pixel'
+import type { SpeedCurveInput } from './registry/speedcurve'
 import type { StripeInput } from './registry/stripe'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
@@ -275,6 +276,7 @@ export interface ScriptRegistry {
   rybbitAnalytics?: RybbitAnalyticsInput
   redditPixel?: RedditPixelInput
   segment?: SegmentInput
+  speedcurve?: SpeedCurveInput
   stripe?: StripeInput
   tiktokPixel?: TikTokPixelInput
   xEmbed?: XEmbedInput
