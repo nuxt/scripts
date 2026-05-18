@@ -18,7 +18,7 @@ const { status } = useScriptSpeedCurve({
   id: '123456789',
   spaMode: true,
   autoTrackSpaNavigations: true,
-  labelFor: false,
+  label: false,
 })
 </script>
 
