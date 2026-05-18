@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useHead, useScriptSpeedCurve } from '#imports'
+import { onMounted, ref, useHead, useScriptSpeedCurve } from '#imports'
 
 useHead({ title: 'SpeedCurve SPA Auto — Page A' })
 

@@ -180,6 +180,19 @@ describe('installAutoTracker', () => {
     expect(lux.label).toBe('original')
   })
 
+  it('does not set label when label function returns false', async () => {
+    const lux = { startSoftNavigation: vi.fn(), markLoadTime: vi.fn(), addData: vi.fn(), label: 'keep-me' }
+    Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
+
+    const { installAutoTracker } = await import('../../packages/script/src/runtime/registry/speedcurve')
+    installAutoTracker({ id: '123', label: () => false })
+
+    const handler = mockBeforeEach.mock.calls[0][0] as (to: any) => void
+    handler({ name: 'about', path: '/about' })
+
+    expect(lux.label).toBe('keep-me')
+  })
+
   it('seals phantom beacon with luxNavFailed tag on failed navigation', async () => {
     const lux = { startSoftNavigation: vi.fn(), markLoadTime: vi.fn(), addData: vi.fn(), label: '' }
     Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
