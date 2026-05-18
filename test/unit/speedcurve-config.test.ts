@@ -75,4 +75,34 @@ describe('applyConfig', () => {
 
     expect(lux.id).toBeUndefined()
   })
+
+  it('sets label when a static string is provided', async () => {
+    const lux: Record<string, unknown> = {}
+    Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
+
+    const { applyConfig } = await import('../../packages/script/src/runtime/registry/speedcurve')
+    applyConfig({ id: '123', label: 'my-page' })
+
+    expect(lux.label).toBe('my-page')
+  })
+
+  it('does not forward label to window.LUX when label is a function', async () => {
+    const lux: Record<string, unknown> = {}
+    Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
+
+    const { applyConfig } = await import('../../packages/script/src/runtime/registry/speedcurve')
+    applyConfig({ id: '123', label: to => to.path })
+
+    expect(lux.label).toBeUndefined()
+  })
+
+  it('does not forward label to window.LUX when label is false', async () => {
+    const lux: Record<string, unknown> = {}
+    Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
+
+    const { applyConfig } = await import('../../packages/script/src/runtime/registry/speedcurve')
+    applyConfig({ id: '123', label: false })
+
+    expect(lux.label).toBeUndefined()
+  })
 })

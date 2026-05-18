@@ -140,12 +140,26 @@ describe('installAutoTracker', () => {
     expect(lux.label).toBe('about')
   })
 
-  it('uses labelFor function when provided', async () => {
+  it('uses default route-name labeling when label is a static string (string is applied by applyConfig, not router hook)', async () => {
     const lux = { startSoftNavigation: vi.fn(), markLoadTime: vi.fn(), addData: vi.fn(), label: '' }
     Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
 
     const { installAutoTracker } = await import('../../packages/script/src/runtime/registry/speedcurve')
-    installAutoTracker({ id: '123', labelFor: to => `custom:${to.path}` })
+    installAutoTracker({ id: '123', label: 'static-page' })
+
+    const handler = mockBeforeEach.mock.calls[0][0] as (to: any) => void
+    handler({ name: 'about', path: '/about' })
+
+    // The router hook uses the default (route name), not the static string
+    expect(lux.label).toBe('about')
+  })
+
+  it('uses label function when provided', async () => {
+    const lux = { startSoftNavigation: vi.fn(), markLoadTime: vi.fn(), addData: vi.fn(), label: '' }
+    Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
+
+    const { installAutoTracker } = await import('../../packages/script/src/runtime/registry/speedcurve')
+    installAutoTracker({ id: '123', label: to => `custom:${to.path}` })
 
     const handler = mockBeforeEach.mock.calls[0][0] as (to: any) => void
     handler({ name: 'about', path: '/about' })
@@ -153,12 +167,12 @@ describe('installAutoTracker', () => {
     expect(lux.label).toBe('custom:/about')
   })
 
-  it('does not set label when labelFor is false', async () => {
+  it('does not set label when label is false', async () => {
     const lux = { startSoftNavigation: vi.fn(), markLoadTime: vi.fn(), addData: vi.fn(), label: 'original' }
     Object.defineProperty(window, 'LUX', { value: lux, writable: true, configurable: true })
 
     const { installAutoTracker } = await import('../../packages/script/src/runtime/registry/speedcurve')
-    installAutoTracker({ id: '123', labelFor: false })
+    installAutoTracker({ id: '123', label: false })
 
     const handler = mockBeforeEach.mock.calls[0][0] as (to: any) => void
     handler({ name: 'about', path: '/about' })

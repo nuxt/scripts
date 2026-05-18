@@ -21,13 +21,8 @@ declare global {
   }
 }
 
-export type SpeedCurveInput = RegistryScriptInput<typeof SpeedCurveOptions> & UserConfig & {
-  /**
-   * Derive a page label for each SPA navigation.
-   * Defaults to `String(to.name ?? to.path)`.
-   * Set to `false` to disable labeling.
-   */
-  labelFor?: ((to: RouteLocationNormalized) => string) | false
+export type SpeedCurveInput = Omit<RegistryScriptInput<typeof SpeedCurveOptions>, 'label'> & Omit<UserConfig, 'label'> & {
+  label?: string | ((to: RouteLocationNormalized) => string) | false
 }
 
 // Derived from the schema: all schema keys except the composable-only ones.
@@ -61,11 +56,12 @@ export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCur
     clientInit: import.meta.server
       ? undefined
       : () => {
-          applyConfig(options)
+          const input = options as unknown as SpeedCurveInput
+          applyConfig(input)
           if (options.spaMode && options.autoTrackSpaNavigations !== false)
-            installAutoTracker(options)
+            installAutoTracker(input)
         },
-  }), _options) as UseScriptContext<T>
+  }), _options as unknown as RegistryScriptInput<typeof SpeedCurveOptions>) as UseScriptContext<T>
 }
 
 export function applyConfig(options: SpeedCurveInput): void {
@@ -74,8 +70,12 @@ export function applyConfig(options: SpeedCurveInput): void {
     return
   for (const k of LUX_USER_CONFIG_KEYS) {
     const v = (options as Record<string, unknown>)[k as string]
-    if (v !== undefined)
-      lux[k as string] = v
+    if (v === undefined)
+      continue
+    // label may be a function or false (handled by installAutoTracker); only pass strings to LUX directly
+    if (k === 'label' && typeof v !== 'string')
+      continue
+    lux[k as string] = v
   }
 }
 
@@ -91,9 +91,11 @@ export function installAutoTracker(options?: SpeedCurveInput): void {
   // client-side render — not a user navigation. Skip startSoftNavigation.
   let pendingInitial = nuxt.payload?.serverRendered === false
 
-  const labelFor = options?.labelFor === false
+  const label = options?.label === false
     ? null
-    : (options?.labelFor ?? ((to: RouteLocationNormalized) => String(to.name ?? to.path)))
+    : typeof options?.label === 'function'
+      ? options.label
+      : (to: RouteLocationNormalized) => String(to.name ?? to.path)
 
   router.beforeEach((to) => {
     const lux = window.LUX
@@ -101,13 +103,13 @@ export function installAutoTracker(options?: SpeedCurveInput): void {
       return
     if (pendingInitial) {
       pendingInitial = false
-      if (labelFor)
-        lux.label = labelFor(to)
+      if (label)
+        lux.label = label(to)
       return
     }
     lux.startSoftNavigation()
-    if (labelFor)
-      lux.label = labelFor(to)
+    if (label)
+      lux.label = label(to)
   })
 
   // If a guard cancels navigation, seal the phantom beacon with a filterable tag.

@@ -67,18 +67,17 @@ useScriptSpeedCurve({
 
 ## Custom page labels
 
-By default the composable uses `String(to.name ?? to.path)`{lang="ts"} as the page label for each navigation. Override with `labelFor`:
-
+By default the composable uses `String(to.name ?? to.path)`{lang="ts"} as the page label for each navigation. Pass a function to `label` to override it:
 
 ```ts
 useScriptSpeedCurve({
   id: 'YOUR_ID',
   spaMode: true,
-  labelFor: to => to.meta.title as string ?? to.path,
+  label: to => to.meta.title as string ?? to.path,
 })
 ```
 
-Set `labelFor: false` to disable labeling entirely.
+Set `label: false` to disable labeling entirely. Pass a plain string to set a static label (only meaningful without `spaMode`, since the router hook overwrites it on every navigation).
 
 ## CSP
 

@@ -1,4 +1,4 @@
-import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
+import { any, array, boolean, custom, function_, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
 
 // Shared GCMv2 consent category value.
 const consentCategoryValue = union([literal('granted'), literal('denied')])
@@ -1026,14 +1026,12 @@ export const SpeedCurveOptions = object({
    */
   autoTrackSpaNavigations: optional(boolean()),
   /**
-   * Automatically send a LUX beacon when the page loads.
-   * @default true
-   */
-  auto: optional(boolean()),
-  /**
    * Page label shown in the SpeedCurve dashboard.
+   * Accepts a static string, a function `(to) => string` for per-navigation labels,
+   * or `false` to disable labeling entirely.
+   * @default String(to.name ?? to.path)
    */
-  label: optional(string()),
+  label: optional(union([string(), function_(), literal(false)])),
   /**
    * Sampling rate (0–100). Percentage of sessions that send beacons.
    * Upstream spelling is lowercase — matches LUX UserConfig.
