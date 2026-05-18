@@ -15,8 +15,7 @@ await setup({
 async function createPage(path: string, options?: any) {
   const logs: { text: string, location: string }[] = []
   const browser = await getBrowser()
-  const { setup: setupPage, ...pageOptions } = options ?? {}
-  const page = await browser.newPage(pageOptions)
+  const page = await browser.newPage(options)
   page.addListener('console', (msg) => {
     const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
     if (!location.startsWith('/_nuxt')) {
@@ -36,8 +35,6 @@ async function createPage(path: string, options?: any) {
     await waitForHydration(page, url2, waitUntil)
     return res
   }
-  if (setupPage)
-    await setupPage(page)
   if (path) {
     // @ts-expect-error untyped
     await page.goto(url(path), options?.javaScriptEnabled === false ? {} : { waitUntil: 'hydration' })
