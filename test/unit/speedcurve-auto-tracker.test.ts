@@ -28,7 +28,7 @@ vi.mock('@speedcurve/lux/dist/lux-snippet.js?raw', () => ({
 describe('installAutoTracker', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    delete (window as any).__speedcurveLuxWired
+    vi.resetModules()
     Object.defineProperty(window, 'LUX', { value: undefined, writable: true, configurable: true })
   })
 
@@ -92,7 +92,6 @@ describe('installAutoTracker', () => {
       useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
     }))
 
-    delete (window as any).__speedcurveLuxWired
     vi.clearAllMocks()
 
     const { installAutoTracker } = await import('../../packages/script/src/runtime/registry/speedcurve')

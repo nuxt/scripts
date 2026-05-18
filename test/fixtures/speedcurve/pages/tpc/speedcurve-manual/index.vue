@@ -1,8 +1,8 @@
 <script setup lang="ts">
 if (import.meta.client) {
-  window._luxCalls = []
+  ;(window as any)._luxCalls = []
   const record = (method: string) => (...args: unknown[]) => {
-    window._luxCalls!.push({ method, args })
+    ;(window as any)._luxCalls.push({ method, args })
   }
   window.LUX = {
     snippetVersion: '2.0.0',

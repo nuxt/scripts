@@ -174,7 +174,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // Usercentrics is the consent layer itself: must hit the vendor origin so
   // signature/policy lookups succeed. Bundle/proxy are intentionally absent.
   m('usercentrics', 'Usercentrics', 'utility', 'useScriptUsercentrics', {}, null),
-  m('speedcurve', 'SpeedCurve LUX', 'utility', 'useScriptSpeedCurve', {}, null),
+  m('speedcurve', 'SpeedCurve LUX', 'analytics', 'useScriptSpeedCurve', {}, null),
 ]
 
 export const REGISTRY_CATEGORIES = [
@@ -857,7 +857,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       schema: SpeedCurveOptions,
       label: 'SpeedCurve LUX',
       src: false,
-      category: 'utility',
+      category: 'analytics',
       envDefaults: { id: '' },
       composableName: 'useScriptSpeedCurve',
     }),

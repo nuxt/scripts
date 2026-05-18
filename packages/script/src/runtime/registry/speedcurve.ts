@@ -18,8 +18,6 @@ declare global {
     LUX?: LuxGlobal
     LUX_ae?: ErrorEvent[]
     LUX_al?: PerformanceEntry[]
-    __speedcurveLuxWired?: boolean
-    _luxCalls?: Array<{ method: string, args: unknown[] }>
   }
 }
 
@@ -34,8 +32,10 @@ export type SpeedCurveInput = RegistryScriptInput<typeof SpeedCurveOptions> & Us
 
 // Derived from the schema: all schema keys except the composable-only ones.
 const LUX_USER_CONFIG_KEYS = Object.keys(SpeedCurveOptions.entries).filter(
-  k => k !== 'id' && k !== 'autoTrackSpaNavigations',
+  k => k !== 'id' && k !== 'autoTrackSpaNavigations' && k !== 'spaMode',
 ) as (keyof UserConfig)[]
+
+let luxWired = false
 
 export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCurveInput): UseScriptContext<T> {
   return useRegistryScript<T, typeof SpeedCurveOptions>('speedcurve', options => ({
@@ -63,7 +63,7 @@ export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCur
       : () => {
           applyConfig(options)
           if (options.spaMode && options.autoTrackSpaNavigations !== false)
-            installAutoTracker(_options)
+            installAutoTracker(options)
         },
   }), _options) as UseScriptContext<T>
 }
@@ -80,9 +80,9 @@ export function applyConfig(options: SpeedCurveInput): void {
 }
 
 export function installAutoTracker(options?: SpeedCurveInput): void {
-  if (window.__speedcurveLuxWired)
+  if (luxWired)
     return
-  window.__speedcurveLuxWired = true
+  luxWired = true
 
   const router = useRouter()
   const nuxt = useNuxtApp()

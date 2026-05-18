@@ -5,7 +5,7 @@ export type TrackedDataType
     | 'session-replay' | 'heatmaps' | 'clicks' | 'scrolls'
     | 'retargeting' | 'audiences' | 'form-submissions'
     | 'video-engagement' | 'transactions' | 'errors'
-    | 'tag-injection' | 'ab-testing'
+    | 'tag-injection' | 'ab-testing' | 'performance-timings'
 
 export interface ScriptMeta {
   /** Canonical script URL(s) to fetch for size measurement */
@@ -227,6 +227,6 @@ export const scriptMeta = {
   // Performance monitoring
   speedcurve: {
     urls: ['https://cdn.speedcurve.com/js/lux.js'],
-    trackedData: [],
+    trackedData: ['page-views', 'performance-timings', 'errors'],
   },
 } satisfies Record<BuiltInRegistryScriptKey, ScriptMeta>
