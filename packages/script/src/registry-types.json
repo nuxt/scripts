@@ -970,7 +970,7 @@
       {
         "name": "SpeedCurveOptions",
         "kind": "const",
-        "code": "export const SpeedCurveOptions = object({\n  /**\n   * Your SpeedCurve customer ID.\n   * @see https://support.speedcurve.com/docs/add-rum-to-your-site\n   */\n  id: pipe(string(), minLength(1)),\n  /**\n   * Enable SPA (single-page application) mode.\n   * When true, lux.js tracks soft navigations instead of full page loads.\n   * @see https://support.speedcurve.com/docs/single-page-applications\n   */\n  spaMode: optional(boolean()),\n  /**\n   * Automatically wire Vue Router hooks for SPA tracking when spaMode is true.\n   * Set to false to instrument navigations manually.\n   * @default true (when spaMode is true)\n   */\n  autoTrackSpaNavigations: optional(boolean()),\n  /**\n   * Automatically send a LUX beacon when the page loads.\n   * @default true\n   */\n  auto: optional(boolean()),\n  /**\n   * Page label shown in the SpeedCurve dashboard.\n   */\n  label: optional(string()),\n  /**\n   * Sampling rate (0–100). Percentage of sessions that send beacons.\n   * Upstream spelling is lowercase — matches LUX UserConfig.\n   */\n  samplerate: optional(number()),\n  /**\n   * Send the beacon when the page is hidden (pagehide event).\n   * @default true\n   */\n  sendBeaconOnPageHidden: optional(boolean()),\n  /**\n   * Track JavaScript errors.\n   * @default true\n   */\n  trackErrors: optional(boolean()),\n  /**\n   * Maximum number of errors to track per page view.\n   * @default 5\n   */\n  maxErrors: optional(number()),\n  /**\n   * Minimum time (ms) before a beacon can be sent.\n   */\n  minMeasureTime: optional(number()),\n  /**\n   * Maximum time (ms) after which the beacon is sent regardless of load state.\n   * @default 60000\n   */\n  maxMeasureTime: optional(number()),\n  /**\n   * Start a new beacon when the page becomes visible after being hidden.\n   */\n  newBeaconOnPageShow: optional(boolean()),\n  /**\n   * Track pages loaded in background tabs.\n   * @default false\n   */\n  trackHiddenPages: optional(boolean()),\n  /**\n   * Cookie domain for cross-subdomain session tracking.\n   */\n  cookieDomain: optional(string()),\n})"
+        "code": "export const SpeedCurveOptions = object({\n  /**\n   * Your SpeedCurve customer ID.\n   * @see https://support.speedcurve.com/docs/add-rum-to-your-site\n   */\n  id: pipe(string(), minLength(1)),\n  /**\n   * Enable SPA (single-page application) mode.\n   * When true, lux.js tracks soft navigations instead of full page loads.\n   * @see https://support.speedcurve.com/docs/single-page-applications\n   */\n  spaMode: optional(boolean()),\n  /**\n   * Automatically wire Vue Router hooks for SPA tracking when spaMode is true.\n   * Set to false to instrument navigations manually.\n   * @default true (when spaMode is true)\n   */\n  autoTrackSpaNavigations: optional(boolean()),\n  /**\n   * Page label shown in the SpeedCurve dashboard.\n   * Accepts a static string, a function `(to) => string` for per-navigation labels,\n   * or `false` to disable labeling entirely.\n   * @default String(to.name ?? to.path)\n   */\n  label: optional(union([string(), function_(), literal(false)])),\n  /**\n   * Sampling rate (0–100). Percentage of sessions that send beacons.\n   * Upstream spelling is lowercase — matches LUX UserConfig.\n   */\n  samplerate: optional(pipe(number(), minValue(0), maxValue(100))),\n  /**\n   * Send the beacon when the page is hidden (pagehide event).\n   * @default true\n   */\n  sendBeaconOnPageHidden: optional(boolean()),\n  /**\n   * Track JavaScript errors.\n   * @default true\n   */\n  trackErrors: optional(boolean()),\n  /**\n   * Maximum number of errors to track per page view.\n   * @default 5\n   */\n  maxErrors: optional(number()),\n  /**\n   * Minimum time (ms) before a beacon can be sent.\n   */\n  minMeasureTime: optional(number()),\n  /**\n   * Maximum time (ms) after which the beacon is sent regardless of load state.\n   * @default 60000\n   */\n  maxMeasureTime: optional(number()),\n  /**\n   * Start a new beacon when the page becomes visible after being hidden.\n   */\n  newBeaconOnPageShow: optional(boolean()),\n  /**\n   * Track pages loaded in background tabs.\n   * @default false\n   */\n  trackHiddenPages: optional(boolean()),\n  /**\n   * Cookie domain for cross-subdomain session tracking.\n   */\n  cookieDomain: optional(string()),\n})"
       },
       {
         "name": "SpeedCurveApi",
@@ -2408,17 +2408,11 @@
         "defaultValue": "true (when spaMode is true)"
       },
       {
-        "name": "auto",
-        "type": "boolean",
-        "required": false,
-        "description": "Automatically send a LUX beacon when the page loads.",
-        "defaultValue": "true"
-      },
-      {
         "name": "label",
-        "type": "string",
+        "type": "string | Function | false",
         "required": false,
-        "description": "Page label shown in the SpeedCurve dashboard."
+        "description": "Page label shown in the SpeedCurve dashboard. Accepts a static string, a function `(to) => string` for per-navigation labels, or `false` to disable labeling entirely.",
+        "defaultValue": "String(to.name ?? to.path)"
       },
       {
         "name": "samplerate",

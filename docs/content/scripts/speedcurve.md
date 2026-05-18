@@ -83,7 +83,7 @@ Set `label: false` to disable labeling entirely. Pass a plain string to set a st
 
 Add these directives to your Content Security Policy:
 
-```
+```text
 script-src  cdn.speedcurve.com;
 img-src     lux.speedcurve.com;
 connect-src lux.speedcurve.com beacon.speedcurve.com;

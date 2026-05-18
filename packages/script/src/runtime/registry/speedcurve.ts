@@ -22,7 +22,7 @@ declare global {
 }
 
 export type SpeedCurveInput = Omit<RegistryScriptInput<typeof SpeedCurveOptions>, 'label'> & Omit<UserConfig, 'label'> & {
-  label?: string | ((to: RouteLocationNormalized) => string) | false
+  label?: string | ((to: RouteLocationNormalized) => string | false) | false
 }
 
 // Derived from the schema: all schema keys except the composable-only ones.
@@ -103,13 +103,19 @@ export function installAutoTracker(options?: SpeedCurveInput): void {
       return
     if (pendingInitial) {
       pendingInitial = false
-      if (label)
-        lux.label = label(to)
+      if (label) {
+        const nextLabel = label(to)
+        if (nextLabel !== false)
+          lux.label = nextLabel
+      }
       return
     }
     lux.startSoftNavigation()
-    if (label)
-      lux.label = label(to)
+    if (label) {
+      const nextLabel = label(to)
+      if (nextLabel !== false)
+        lux.label = nextLabel
+    }
   })
 
   // If a guard cancels navigation, seal the phantom beacon with a filterable tag.
