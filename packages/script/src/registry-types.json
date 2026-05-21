@@ -1015,14 +1015,29 @@
         "code": "interface TrackOptions {\n  /** Used to deduplicate events sent from both the browser Pixel and the server-side Events API. */\n  event_id?: string\n  /**\n   * Sandbox test-event identifier. When set, events route to TikTok's Test Events panel\n   * without affecting production reporting.\n   */\n  test_event_code?: string\n  [key: string]: any\n}"
       },
       {
-        "name": "TtqFns",
+        "name": "TtqInstance",
+        "kind": "interface",
+        "code": "export interface TtqInstance {\n  /** Track a page view. */\n  page: () => void\n  /** Track a standard or custom conversion event. */\n  track: (event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void\n  /** Associate advanced-matching identifiers with the current user. */\n  identify: (properties: IdentifyProperties) => void\n  /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */\n  grantConsent: () => void\n  /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */\n  revokeConsent: () => void\n  /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */\n  holdConsent: () => void\n  enableCookie: () => void\n  disableCookie: () => void\n}"
+      },
+      {
+        "name": "TtqCallable",
         "kind": "type",
-        "code": "type TtqFns\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
+        "code": "type TtqCallable\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
+      },
+      {
+        "name": "Ttq",
+        "kind": "type",
+        "code": "export type Ttq = TtqCallable & TtqInstance & {\n  /** Resolve the per-pixel method bag for a specific pixel id. */\n  instance: (id: string) => TtqInstance\n}"
       },
       {
         "name": "TikTokPixelApi",
         "kind": "interface",
-        "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n    /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */\n    grantConsent: () => void\n    /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */\n    revokeConsent: () => void\n    /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */\n    holdConsent: () => void\n  }\n}"
+        "code": "export interface TikTokPixelApi {\n  ttq: Ttq\n}"
+      },
+      {
+        "name": "TtqArray",
+        "kind": "type",
+        "code": "type TtqArray = TtqInstance & Array<any[]> & {\n  methods: string[]\n  setAndDefer: (target: any, method: string) => void\n  instance: (id: string) => TtqInstance\n  _i?: Record<string, any[]>\n  _t?: Record<string, number>\n  _o?: Record<string, any>\n}"
       },
       {
         "name": "TikTokPixelOptions",
