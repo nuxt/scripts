@@ -1,9 +1,7 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
-import { withSigning } from './utils/withSigning'
 
 export { proxyAssetUrl, proxyImageUrl, rewriteUrl, rewriteUrlsInText, scopeCss } from './utils/instagram-embed'
 
@@ -38,12 +36,11 @@ function removeNode(node: any): void {
   node.children = []
 }
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   // Derive the scripts prefix from the handler's own route path.
   // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_INSTAGRAM_SUFFIX_RE, '') || '/_scripts'
-  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
 
   const query = getQuery(event)
   const postUrl = query.url as string
@@ -112,7 +109,7 @@ export default withSigning(defineEventHandler(async (event) => {
 
     for (const attr of ['src', 'poster']) {
       if (node.attributes[attr])
-        node.attributes[attr] = rewriteUrl(node.attributes[attr], prefix, secret)
+        node.attributes[attr] = rewriteUrl(node.attributes[attr], prefix)
     }
 
     if (node.attributes.srcset) {
@@ -122,18 +119,18 @@ export default withSigning(defineEventHandler(async (event) => {
           const parts = entry.trim().split(SRCSET_SPLIT_RE)
           const url = parts[0]
           const descriptor = parts.slice(1).join(' ')
-          return url ? `${rewriteUrl(url, prefix, secret)}${descriptor ? ` ${descriptor}` : ''}` : entry
+          return url ? `${rewriteUrl(url, prefix)}${descriptor ? ` ${descriptor}` : ''}` : entry
         })
         .join(', ')
     }
 
     if (node.attributes.style)
-      node.attributes.style = rewriteUrlsInText(node.attributes.style, prefix, secret)
+      node.attributes.style = rewriteUrlsInText(node.attributes.style, prefix)
   })
 
   walkSync(ast, (node) => {
     if (node.type === TEXT_NODE && node.value)
-      node.value = rewriteUrlsInText(node.value, prefix, secret)
+      node.value = rewriteUrlsInText(node.value, prefix)
   })
 
   let bodyNode: any = null
@@ -157,9 +154,9 @@ export default withSigning(defineEventHandler(async (event) => {
   let combinedCss = cssContents.join('\n')
   combinedCss = combinedCss.replace(
     RSRC_RE,
-    (_m, path) => `url(${proxyAssetUrl(`https://static.cdninstagram.com/rsrc.php${path}`, prefix, secret)})`,
+    (_m, path) => `url(${proxyAssetUrl(`https://static.cdninstagram.com/rsrc.php${path}`, prefix)})`,
   )
-  combinedCss = rewriteUrlsInText(combinedCss, prefix, secret)
+  combinedCss = rewriteUrlsInText(combinedCss, prefix)
   combinedCss = scopeCss(combinedCss, '.instagram-embed-root')
 
   const baseStyles = `
@@ -175,4 +172,4 @@ export default withSigning(defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return result
-}))
+})

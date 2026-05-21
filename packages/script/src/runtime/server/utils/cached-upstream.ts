@@ -7,17 +7,10 @@ import { $fetch } from 'ofetch'
  *
  * ## Why
  *
- * Proxy URLs arriving from the client carry per-request auth artefacts (`sig`,
- * `_pt`, `_ts`) that change across renders. CDNs key on full URL so each
- * rotation produces a unique edge cache entry and upstream origins take the hit
- * on every render. Caching the *upstream response* here — keyed on the inner
- * resource URL (or normalized param set) — dedupes those fetches across every
- * request that resolves to the same upstream, regardless of how the caller
- * authenticated.
- *
- * Safe because `withSigning` runs before any cache path: unsigned requests 403
- * before they can do a cache lookup. Cache stores hold only responses produced
- * from legitimately-authenticated requests.
+ * The same upstream resource is often requested under slightly different proxy
+ * URLs across renders. Caching the *upstream response* here — keyed on the
+ * inner resource URL (or normalized param set) — dedupes those fetches across
+ * every request that resolves to the same upstream.
  *
  * ## Binary payloads
  *

@@ -2,7 +2,6 @@ import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
 import { withQuery } from 'ufo'
 import { createCachedJsonFetch } from './utils/cached-upstream'
-import { withSigning } from './utils/withSigning'
 
 // Addresses rarely change; a 30-day cache avoids billable geocode lookups for
 // the same address on every page render. Keyed on the upstream URL (the API
@@ -13,7 +12,7 @@ const cachedGeocodeFetch = createCachedJsonFetch<any>(
   url => url,
 )
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleMapsGeocodeProxy
 
@@ -46,4 +45,4 @@ export default withSigning(defineEventHandler(async (event) => {
   setHeader(event, 'Cache-Control', 'public, max-age=86400, s-maxage=86400')
 
   return data
-}))
+})

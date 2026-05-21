@@ -3,9 +3,7 @@ import {
   rewriteBlueskyPostImages,
   rewriteTweetImages,
 } from '../../packages/script/src/runtime/server/utils/embed-rewriters'
-import { SIG_PARAM } from '../../packages/script/src/runtime/server/utils/sign-constants'
 
-const SECRET = 'test-secret-deterministic'
 const X_PATH = '/_scripts/embed/x-image'
 const BSKY_PATH = '/_scripts/embed/bluesky-image'
 
@@ -25,7 +23,7 @@ function makeTweet(overrides: Record<string, any> = {}) {
   }
 }
 
-describe('rewriteTweetImages (unsigned)', () => {
+describe('rewriteTweetImages', () => {
   it('rewrites the user avatar URL', () => {
     const tweet = makeTweet()
     rewriteTweetImages(tweet, X_PATH)
@@ -91,47 +89,6 @@ describe('rewriteTweetImages (unsigned)', () => {
   })
 })
 
-describe('rewriteTweetImages (signed)', () => {
-  it('appends sig= on every rewritten URL when a secret is provided', () => {
-    const tweet = makeTweet({
-      photos: [{ url: 'https://pbs.twimg.com/media/a.jpg', width: 1, height: 1 }],
-      video: { poster: 'https://pbs.twimg.com/media/p.jpg', variants: [] },
-      quoted_tweet: makeTweet({
-        user: {
-          name: 'Bob',
-          screen_name: 'bob',
-          profile_image_url_https: 'https://pbs.twimg.com/profile_images/2/q.jpg',
-        },
-      }),
-    })
-    rewriteTweetImages(tweet, X_PATH, SECRET)
-    for (const url of [
-      tweet.user.profile_image_url_https,
-      tweet.photos[0].url,
-      tweet.video.poster,
-      tweet.quoted_tweet.user.profile_image_url_https,
-    ]) {
-      expect(url).toMatch(new RegExp(`${SIG_PARAM}=[a-f0-9]{16}`))
-    }
-  })
-
-  it('produces deterministic URLs for the same input + secret', () => {
-    const a = makeTweet()
-    const b = makeTweet()
-    rewriteTweetImages(a, X_PATH, SECRET)
-    rewriteTweetImages(b, X_PATH, SECRET)
-    expect(a.user.profile_image_url_https).toBe(b.user.profile_image_url_https)
-  })
-
-  it('produces different signatures for different secrets', () => {
-    const a = makeTweet()
-    const b = makeTweet()
-    rewriteTweetImages(a, X_PATH, SECRET)
-    rewriteTweetImages(b, X_PATH, `${SECRET}-other`)
-    expect(a.user.profile_image_url_https).not.toBe(b.user.profile_image_url_https)
-  })
-})
-
 describe('rewriteBlueskyPostImages', () => {
   it('rewrites the author avatar', () => {
     const post = {
@@ -177,19 +134,6 @@ describe('rewriteBlueskyPostImages', () => {
     }
     rewriteBlueskyPostImages(post, BSKY_PATH)
     expect(post.embed.external.thumb).toContain(encodeURIComponent('https://cdn.bsky.app/img/ext-thumb.jpg'))
-  })
-
-  it('signs URLs when a secret is provided', () => {
-    const post = {
-      author: { avatar: 'https://cdn.bsky.app/img/avatar.jpg' },
-      embed: {
-        images: [{ thumb: 'https://cdn.bsky.app/img/t.jpg', fullsize: 'https://cdn.bsky.app/img/f.jpg' }],
-      },
-    }
-    rewriteBlueskyPostImages(post, BSKY_PATH, SECRET)
-    expect(post.author.avatar).toMatch(new RegExp(`${SIG_PARAM}=[a-f0-9]{16}`))
-    expect(post.embed.images[0].thumb).toMatch(new RegExp(`${SIG_PARAM}=[a-f0-9]{16}`))
-    expect(post.embed.images[0].fullsize).toMatch(new RegExp(`${SIG_PARAM}=[a-f0-9]{16}`))
   })
 
   it('is a no-op on null/undefined', () => {
