@@ -373,8 +373,12 @@ export interface ModuleOptions {
    *
    * The secret must be deterministic across deployments so that prerendered URLs
    * remain valid. Set it via `NUXT_SCRIPTS_PROXY_SECRET` or `security.secret`.
+   *
+   * Set to `false` to disable proxy security entirely: no secret is resolved or
+   * auto-generated, no page token is injected into the SSR payload, and proxy
+   * endpoints pass requests through without signature verification.
    */
-  security?: {
+  security?: false | {
     /**
      * HMAC secret used to sign proxy URLs.
      *
@@ -408,17 +412,6 @@ export interface ModuleOptions {
      * @default 3600
      */
     pageTokenMaxAge?: number
-    /**
-     * Emit a per-request proxy page token into the SSR payload so client-driven
-     * proxy calls authenticate without each URL being HMAC-signed up front.
-     *
-     * Set to `false` to keep the token out of the payload (e.g. when computing a
-     * stable response `etag`). Client-side proxy requests that rely on the token
-     * will then need explicitly signed URLs.
-     *
-     * @default true
-     */
-    pageToken?: boolean
   }
   /**
    * Google Static Maps proxy configuration.
@@ -1040,7 +1033,14 @@ export default defineNuxtModule<ModuleOptions>({
     const isStaticTarget = staticPresets.includes(nitroPreset)
     const isSpa = nuxt.options.ssr === false
 
-    if (anyHandlerRequiresSigning && (isSpa || isStaticTarget)) {
+    // Proxy security explicitly disabled: skip secret resolution and the page
+    // token plugin. `withSigning` passes requests through unverified.
+    if (config.security === false) {
+      if (anyHandlerRequiresSigning && !nuxt.options.dev) {
+        logger.info('[security] Proxy security disabled via `security: false`. Proxy endpoints will pass requests through without signature verification.')
+      }
+    }
+    else if (anyHandlerRequiresSigning && (isSpa || isStaticTarget)) {
       logger.warn(
         `[security] URL signing requires a server runtime${isStaticTarget ? ` (detected preset: ${nitroPreset})` : ' (ssr: false)'}.\n`
         + '  Proxy endpoints will work without signature verification.\n'
@@ -1069,14 +1069,10 @@ export default defineNuxtModule<ModuleOptions>({
         // Emit a per-request page token during SSR so client-driven proxy
         // calls (reactive fetches, dynamic image helpers) authenticate via
         // `_pt` + `_ts` without needing each URL to be HMAC-signed up front.
-        // Opt out via `security.pageToken: false` to keep the token out of the
-        // SSR payload (e.g. for a stable response etag).
-        if (config.security?.pageToken !== false) {
-          addPlugin({
-            src: await resolvePath('./runtime/plugins/proxy-token.server'),
-            mode: 'server',
-          })
-        }
+        addPlugin({
+          src: await resolvePath('./runtime/plugins/proxy-token.server'),
+          mode: 'server',
+        })
       }
       else if (!nuxt.options.dev) {
         logger.warn(
