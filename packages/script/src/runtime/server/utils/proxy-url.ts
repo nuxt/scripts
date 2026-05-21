@@ -1,17 +1,11 @@
-import { buildSignedProxyUrl } from './sign'
-
 /**
- * Build a proxy URL with query params, signing it when a secret is available.
+ * Build a proxy URL with query params.
  *
- * Used by embed handlers that inject proxy URLs into HTML/JSON responses.
- * When `secret` is set, URLs are HMAC-signed so clients can fetch them without
- * needing a page token. When it's undefined, URLs fall back to unsigned form
- * (which is only safe when the `withSigning` middleware has no secret either).
+ * Used by embed handlers that inject proxy URLs into HTML/JSON responses so
+ * the client loads upstream assets through the site origin. The proxy
+ * endpoints are restricted to an allowlist of upstream domains.
  */
-export function buildProxyUrl(path: string, query: Record<string, unknown>, secret?: string): string {
-  if (secret)
-    return buildSignedProxyUrl(path, query, secret)
-
+export function buildProxyUrl(path: string, query: Record<string, unknown>): string {
   const parts: string[] = []
   for (const [key, value] of Object.entries(query)) {
     if (value === undefined || value === null)
