@@ -58,7 +58,14 @@ describe('tiktokPixel', async () => {
       const src = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLScriptElement>('script[src]'))
           .map(s => s.src)
-          .find(s => s.includes('analytics.tiktok.com')),
+          .find((s) => {
+            try {
+              return new URL(s).hostname === 'analytics.tiktok.com'
+            }
+            catch {
+              return false
+            }
+          }),
       )
       expect(src).toMatch(/analytics\.tiktok\.com\/i18n\/pixel\/events\.js/)
       expect(src).toMatch(/sdkid=TEST_PIXEL_ID/)
