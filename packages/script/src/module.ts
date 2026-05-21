@@ -408,6 +408,17 @@ export interface ModuleOptions {
      * @default 3600
      */
     pageTokenMaxAge?: number
+    /**
+     * Emit a per-request proxy page token into the SSR payload so client-driven
+     * proxy calls authenticate without each URL being HMAC-signed up front.
+     *
+     * Set to `false` to keep the token out of the payload (e.g. when computing a
+     * stable response `etag`). Client-side proxy requests that rely on the token
+     * will then need explicitly signed URLs.
+     *
+     * @default true
+     */
+    pageToken?: boolean
   }
   /**
    * Google Static Maps proxy configuration.
@@ -1058,10 +1069,14 @@ export default defineNuxtModule<ModuleOptions>({
         // Emit a per-request page token during SSR so client-driven proxy
         // calls (reactive fetches, dynamic image helpers) authenticate via
         // `_pt` + `_ts` without needing each URL to be HMAC-signed up front.
-        addPlugin({
-          src: await resolvePath('./runtime/plugins/proxy-token.server'),
-          mode: 'server',
-        })
+        // Opt out via `security.pageToken: false` to keep the token out of the
+        // SSR payload (e.g. for a stable response etag).
+        if (config.security?.pageToken !== false) {
+          addPlugin({
+            src: await resolvePath('./runtime/plugins/proxy-token.server'),
+            mode: 'server',
+          })
+        }
       }
       else if (!nuxt.options.dev) {
         logger.warn(
