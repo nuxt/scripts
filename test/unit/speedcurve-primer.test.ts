@@ -1,7 +1,7 @@
 /**
  * @vitest-environment happy-dom
  */
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const useHeadCalls: any[] = []
 
@@ -24,6 +24,11 @@ vi.mock('@speedcurve/lux/dist/lux-snippet.js?raw', () => ({
 }))
 
 describe('useScriptSpeedCurve primer injection', () => {
+  beforeEach(() => {
+    useHeadCalls.length = 0
+    vi.clearAllMocks()
+  })
+
   it('calls useHead with a critical inline head script', async () => {
     const { useScriptSpeedCurve } = await import('../../packages/script/src/runtime/registry/speedcurve')
 
