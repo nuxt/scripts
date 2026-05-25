@@ -257,7 +257,7 @@ if (import.meta.server) {
         rel: props.loading === 'eager' ? 'preconnect' : 'dns-prefetch',
         href: useProxy ? undefined : 'https://maps.googleapis.com',
       },
-    ].filter(l => l.href),
+    ].filter(l => l.href) as any,
   })
 }
 

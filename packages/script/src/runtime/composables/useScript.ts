@@ -171,7 +171,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       throw new Error('useScript with partytown requires a src')
     }
     useHead({
-      script: [{ src, type: 'text/partytown' }],
+      script: [{ src, type: 'text/partytown' } as any],
     })
     const nuxtApp = useNuxtApp() as NuxtScriptsApp
     ensureScripts(nuxtApp)
@@ -238,7 +238,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   // browser hint optimizations
   const nuxtApp = useNuxtApp() as NuxtScriptsApp
   const id = String(resolveScriptKey(input))
-  options.head = options.head || injectHead()
+  options.head = options.head || injectHead() as any
   if (!options.head) {
     throw new Error('useScript() has been called without Nuxt context.')
   }
@@ -318,7 +318,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       ...ctx,
       trigger: typeof trigger === 'object' ? (trigger instanceof Promise ? 'promise' : JSON.stringify(trigger)) : trigger,
     })
-    options.head.hooks.hook('script:updated', (entry) => {
+    options.head.hooks!.hook('script:updated', (entry) => {
       if (entry.script.id !== instance.id)
         return
       const status = entry.script.status
@@ -369,7 +369,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
 
     if (!nuxtApp._scripts[instance.id]) {
-      options.head.hooks.hook('script:updated', (ctx) => {
+      options.head.hooks!.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
           return
         // convert the status to a timestamp
@@ -382,7 +382,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         syncScripts()
       })
       // @ts-expect-error untyped
-      options.head.hooks.hook('script:instance-fn', (ctx) => {
+      options.head.hooks!.hook('script:instance-fn', (ctx) => {
         if (ctx.script.id !== instance.id || String(ctx.fn).startsWith('__v_'))
           return
         // log all events
