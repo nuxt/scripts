@@ -328,7 +328,7 @@ importers:
         specifier: ^0.1.0
         version: 0.1.2
       '@unhead/vue':
-        specifier: ^2.0.3
+        specifier: ^2.0.3 || ^3.0.0
         version: 2.1.15(vue@3.5.34(typescript@6.0.3))
       '@vueuse/core':
         specifier: 'catalog:'
