@@ -254,10 +254,10 @@ if (import.meta.server) {
   useHead({
     link: [
       {
-        rel: props.loading === 'eager' ? 'preconnect' : 'dns-prefetch',
+        rel: (props.loading === 'eager' ? 'preconnect' : 'dns-prefetch') as 'preconnect',
         href: useProxy ? undefined : 'https://maps.googleapis.com',
       },
-    ].filter(l => l.href) as any,
+    ].filter(l => l.href),
   })
 }
 
