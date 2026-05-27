@@ -253,16 +253,41 @@ watch(status, (status) => {
   }
 })
 
+// Keyboard accessibility: dispatch the configured trigger event on Enter/Space
+// so users navigating via keyboard can activate the placeholder.
+const keyboardTriggerable = computed(() => {
+  if (ready.value)
+    return false
+  const triggers = Array.isArray(props.trigger) ? props.trigger : [props.trigger]
+  return triggers.some(t => typeof t === 'string' && !['immediate', 'onNuxtReady', 'visibility', 'visible'].includes(t))
+})
+
+function onPlaceholderKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Enter' && e.key !== ' ')
+    return
+  e.preventDefault()
+  if (!rootEl.value)
+    return
+  const triggers = (Array.isArray(props.trigger) ? props.trigger : [props.trigger]).filter(Boolean) as string[]
+  for (const t of triggers) {
+    if (['immediate', 'onNuxtReady', 'visibility', 'visible'].includes(t))
+      continue
+    rootEl.value.dispatchEvent(new Event(t, { bubbles: false }))
+  }
+}
+
 const rootAttrs = computed(() => {
+  const interactive = keyboardTriggerable.value
   return defu(props.rootAttrs, {
     'aria-busy': status.value === 'loading',
     'aria-label': status.value === 'awaitingLoad'
-      ? 'Vimeo Player - Placeholder'
+      ? (interactive ? 'Play video' : 'Vimeo Player - Placeholder')
       : status.value === 'loading'
         ? 'Vimeo Player - Loading'
         : 'Vimeo Player - Loaded',
     'aria-live': 'polite',
-    'role': 'application',
+    'role': interactive ? 'button' : 'application',
+    'tabindex': interactive ? 0 : undefined,
     'style': {
       '--vimeo-ratio': props.ratio,
       'maxWidth': '100%',
@@ -279,7 +304,7 @@ const rootAttrs = computed(() => {
 const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: placeholder.value,
-    alt: '',
+    alt: 'Play video',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     // @ts-expect-error untyped
     fetchpriority: props.aboveTheFold ? 'high' : undefined,
@@ -296,7 +321,7 @@ onBeforeUnmount(() => player?.unload())
 </script>
 
 <template>
-  <div ref="rootEl" v-bind="rootAttrs">
+  <div ref="rootEl" v-bind="rootAttrs" @keydown="keyboardTriggerable ? onPlaceholderKeydown($event) : undefined">
     <div v-show="ready" ref="elVimeo" class="vimeo-player" />
     <slot v-if="!ready" v-bind="payload" :placeholder="placeholder" name="placeholder">
       <img v-if="placeholder" v-bind="placeholderAttrs">
