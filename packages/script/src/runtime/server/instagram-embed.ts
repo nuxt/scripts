@@ -1,8 +1,9 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
+import { defineCachedFunction, useRuntimeConfig } from 'nitropack/runtime'
+import { $fetch } from 'ofetch'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { createCachedJsonFetch } from './utils/cached-upstream'
-import { proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
+import { isEmbedShell, proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
 import { withSigning } from './utils/withSigning'
 
 export { proxyAssetUrl, proxyImageUrl, rewriteUrl, rewriteUrlsInText, scopeCss } from './utils/instagram-embed'
@@ -12,10 +13,35 @@ const SRCSET_SPLIT_RE = /\s+/
 
 // Instagram embed HTML is semi-fresh (likes, captions may update); 10min
 // matches the outbound Cache-Control header and dedupes per post+captions.
-const cachedEmbedFetch = createCachedJsonFetch<string>(
-  'nuxt-scripts-instagram-embed',
-  600,
-  url => url,
+// Throws on shell responses so nitro doesn't cache them.
+const cachedEmbedFetch = defineCachedFunction(
+  async (url: string, headers: Record<string, string>): Promise<string> => {
+    const html = await $fetch<string>(url, { timeout: 10000, headers })
+    if (isEmbedShell(html)) {
+      throw createError({
+        statusCode: 502,
+        statusMessage: 'Instagram returned an empty embed shell (post unavailable or upstream rate-limiting)',
+      })
+    }
+    return html
+  },
+  {
+    // v2 — bump to evict any v1 entries that cached the empty JS shell
+    // before the shell-detection / UA fix landed.
+    name: 'nuxt-scripts-instagram-embed-v2',
+    maxAge: 600,
+    swr: true,
+    staleMaxAge: 600,
+    // Vary on headers too — Instagram's response is UA-dependent, so
+    // different callers (e.g. unit tests, future UA changes) must not
+    // collide on the same key.
+    getKey: (url: string, headers: Record<string, string>) => {
+      const parts = [url]
+      for (const [k, v] of Object.entries(headers).sort(([a], [b]) => a.localeCompare(b)))
+        parts.push(`${k}=${v}`)
+      return parts.join('|')
+    },
+  },
 )
 
 // Static CSS from Instagram's CDN is versioned; 24h cache is safe because the
@@ -79,10 +105,12 @@ export default withSigning(defineEventHandler(async (event) => {
   const embedUrl = `${cleanUrl}embed/${captions ? 'captioned/' : ''}`
 
   const html = await cachedEmbedFetch(embedUrl, {
-    headers: {
-      'Accept': 'text/html',
-      'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-    },
+    'Accept': 'text/html',
+    // Meta's own crawler UA. Googlebot's UA is also accepted by Instagram
+    // but is IP-verified, so it fails from hosts outside Google's ranges
+    // (e.g. Cloudflare/Vercel) and Instagram serves the JS shell instead
+    // of the SSR'd post.
+    'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
   }).catch((error: any) => {
     throw createError({
       statusCode: error.statusCode || 500,
