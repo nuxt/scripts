@@ -40,6 +40,7 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
   let lastForwardedHeaders: Record<string, string> = {}
   let upstreamServer: Server
   let upstreamPort: number
+  let realFetch: typeof globalThis.fetch
 
   beforeAll(async () => {
     upstreamServer = createServer((_req, res) => {
@@ -49,7 +50,7 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
     await new Promise<void>(resolve => upstreamServer.listen(0, resolve))
     upstreamPort = (upstreamServer.address() as any).port
 
-    const realFetch = globalThis.fetch
+    realFetch = globalThis.fetch
     globalThis.fetch = async (input: any, init?: any) => {
       const reqUrl = typeof input === 'string' ? input : input.url
       const url = new URL(reqUrl)
@@ -78,6 +79,8 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
   })
 
   afterAll(() => {
+    if (realFetch)
+      globalThis.fetch = realFetch
     upstreamServer?.close()
     proxyServer?.close()
   })
