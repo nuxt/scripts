@@ -58,6 +58,8 @@ onMounted(() => {
   >
   <span
     v-else
+    role="status"
+    aria-label="Loading avatar"
     :style="{ display: 'inline-block', width: `${size}px`, height: `${size}px`, borderRadius: '50%', background: '#e0e0e0' }"
   />
 </template>
