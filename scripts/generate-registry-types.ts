@@ -87,6 +87,8 @@ function resolveAstType(node: any, source: string): string {
       }
       return 'unknown'
     }
+    if (callee === 'function' || callee === 'function_')
+      return 'Function'
     if (callee === 'custom')
       return 'Function'
   }
