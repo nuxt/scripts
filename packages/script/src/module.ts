@@ -669,8 +669,11 @@ export default defineNuxtModule<ModuleOptions>({
         filename: 'nuxt-scripts-speedcurve-snippet.mjs',
         async getContents() {
           const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js').catch(() => null)
+          // The named export must exist or ESM instantiation fails before the
+          // install hint is ever read. Wrap the throw in the export's
+          // initializer so the error surfaces only when the snippet is read.
           if (!snippetPath || !existsSync(snippetPath))
-            return `throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux')\n`
+            return `export const luxSnippetSource = (() => { throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux') })()\n`
           const source = readFileSync(snippetPath, 'utf-8')
           return `export const luxSnippetSource = ${JSON.stringify(source)}\n`
         },
