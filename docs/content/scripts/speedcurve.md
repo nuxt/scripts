@@ -22,24 +22,37 @@ The composable comes with the following defaults:
 
 ## Setup
 
-SpeedCurve LUX is opt-in. Register it in your Nuxt config so the module resolves the primer snippet at build time, then install the `@speedcurve/lux` peer dep:
-
-```ts [nuxt.config.ts]
-export default defineNuxtConfig({
-  modules: ['@nuxt/scripts'],
-  scripts: {
-    registry: {
-      speedcurve: { id: 'YOUR_SPEEDCURVE_ID' },
-    },
-  },
-})
-```
+SpeedCurve LUX is opt-in. You **must** register it in `scripts.registry.speedcurve` before calling `useScriptSpeedCurve`, even if you're not auto-loading globally; registration is what triggers the module to resolve and inline the LUX primer at build time. Install the `@speedcurve/lux` peer dep alongside:
 
 ```bash
 npm i -D @speedcurve/lux
 ```
 
-Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
+```ts [nuxt.config.ts: composable-only (no global load)]
+export default defineNuxtConfig({
+  modules: ['@nuxt/scripts'],
+  scripts: {
+    registry: {
+      // Minimum registration — enables the composable per-page.
+      // Pass `id` here and you can omit it from each useScriptSpeedCurve() call.
+      speedcurve: {},
+    },
+  },
+})
+```
+
+```ts [nuxt.config.ts: auto-load globally]
+export default defineNuxtConfig({
+  modules: ['@nuxt/scripts'],
+  scripts: {
+    registry: {
+      speedcurve: { id: 'YOUR_SPEEDCURVE_ID', trigger: 'onNuxtReady' },
+    },
+  },
+})
+```
+
+If `speedcurve` isn't registered, builds fail with an unresolved `#build/nuxt-scripts-speedcurve-snippet` import. If it's registered but `@speedcurve/lux` is missing, you'll see an install hint at runtime when LUX initialises. Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
 
 You can access the `LUX` object as a proxy directly, or await `$script` to get the loaded instance.
 
