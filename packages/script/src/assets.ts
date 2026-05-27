@@ -1,4 +1,3 @@
-import type { NitroConfig } from 'nitropack'
 import { addDevServerHandler, extendRouteRules, tryUseNuxt, useNuxt } from '@nuxt/kit'
 import { createError, eventHandler, lazyEventHandler, setHeader } from 'h3'
 import { fetch } from 'ofetch'
@@ -7,12 +6,6 @@ import { joinURL } from 'ufo'
 import { createStorage } from 'unstorage'
 
 import fsDriver from 'unstorage/drivers/fs-lite'
-
-declare module '@nuxt/schema' {
-  interface NuxtHooks {
-    'nitro:config': (config: NitroConfig) => void | Promise<void>
-  }
-}
 
 const renderedScript = new Map<string, {
   content: Buffer

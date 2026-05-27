@@ -1,0 +1,10 @@
+{
+  "name": "unhead-v3-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@nuxt/scripts": "workspace:*",
+    "@unhead/vue": "^3.0.0",
+    "nuxt": "catalog:"
+  }
+}

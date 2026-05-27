@@ -22,7 +22,7 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
       // possibly no head update is needed
       new Promise(resolve => setTimeout(resolve, 100)),
       new Promise<void>((resolve) => {
-        stopDomWatcher = head.hooks.hook('dom:rendered', () => resolve())
+        stopDomWatcher = head.hooks!.hook('dom:rendered', () => resolve())
       }),
     ])
       .finally(stopDomWatcher)
