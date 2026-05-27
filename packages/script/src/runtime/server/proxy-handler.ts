@@ -26,6 +26,17 @@ interface ProxyConfig {
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
 const SKIP_RESPONSE_HEADERS = new Set(['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length'])
+// Hop-by-hop request headers per RFC 7230 §6.1 — must not be forwarded by a proxy
+export const SKIP_REQUEST_HEADERS = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+])
 
 /**
  * Strip fingerprinting from URL query string.
@@ -144,6 +155,13 @@ export default defineEventHandler(async (event) => {
 
   const headers: Record<string, string> = {}
 
+  // Collect additional hop-by-hop headers named in the Connection header value (RFC 7230 §6.1).
+  // e.g. `Connection: keep-alive, X-Custom` → also strip `X-Custom`.
+  const connectionHeaderValue = originalHeaders.connection
+  const connectionNamedHeaders = connectionHeaderValue
+    ? new Set(connectionHeaderValue.split(',').map(h => h.trim().toLowerCase()).filter(Boolean))
+    : null
+
   // Process headers based on per-flag privacy
   for (const [key, value] of Object.entries(originalHeaders)) {
     if (!value)
@@ -152,6 +170,14 @@ export default defineEventHandler(async (event) => {
 
     // host header — fetch derives it from URL, don't forward the first-party host
     if (lowerKey === 'host')
+      continue
+
+    // Hop-by-hop headers (RFC 7230 §6.1) — never forward
+    if (SKIP_REQUEST_HEADERS.has(lowerKey))
+      continue
+
+    // Headers listed in the Connection header are also hop-by-hop
+    if (connectionNamedHeaders?.has(lowerKey))
       continue
 
     // SENSITIVE_HEADERS always stripped regardless of privacy flags
