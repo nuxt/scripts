@@ -115,7 +115,7 @@ Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
 | `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo, Calendly |
 
-Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capability), so no privacy transforms are applied.
+Note: GTM, Segment, Crisp, Mixpanel, Bing UET, and SpeedCurve have no proxy capability, so no privacy transforms are applied.
 
 ## Script Support
 
@@ -150,6 +150,7 @@ Note: GTM, Segment, Crisp, Mixpanel, and Bing UET are bundle-only (no proxy capa
 | `googleTagManager` | googleTagManager | n/a | Bundle only |
 | `segment` | segment | n/a | Bundle only |
 | `crisp` | crisp | n/a | Bundle only |
+| `speedcurve` | speedcurve | n/a | No proxy (ID-parameterized CDN URL) |
 
 ### Excluded from first-party mode (`proxy: false`)
 
