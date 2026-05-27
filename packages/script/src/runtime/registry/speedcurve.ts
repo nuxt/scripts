@@ -2,11 +2,12 @@ import type { LuxGlobal, UserConfig } from '@speedcurve/lux'
 import type { RouteLocationNormalized } from 'vue-router'
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
-// Virtual: emitted by the Nuxt module when `speedcurve` is registered in
-// `scripts.registry`. The module resolves the primer snippet from the
-// user-installed `@speedcurve/lux` peer dep at build time. Calling
-// useScriptSpeedCurve without registering speedcurve in nuxt.config raises a
-// build error pointing at the missing registration.
+// Virtual: emitted by the Nuxt module only when `speedcurve` is registered in
+// `scripts.registry`. Contents inline the LUX primer resolved from the
+// user-installed `@speedcurve/lux` peer dep at build time. If the user is not
+// registered, the import errors at build (pointing at the missing
+// registration); if registered without the peer dep, reading the export
+// throws an install hint.
 import { luxSnippetSource } from '#build/nuxt-scripts-speedcurve-snippet'
 import { useRegistryScript } from '../utils'
 import { afterNextPaint } from '../utils/after-next-paint'

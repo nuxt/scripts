@@ -661,17 +661,21 @@ export default defineNuxtModule<ModuleOptions>({
 
     // SpeedCurve requires opt-in via `scripts.registry.speedcurve` plus the
     // `@speedcurve/lux` peer dep so the user controls the snippet version.
-    // Only emit the snippet template when the user has registered the script;
-    // otherwise the virtual import in speedcurve.ts errors at build, pointing
-    // at the missing registration.
+    // Types are always declared so typecheck stays green; the runtime .mjs is
+    // only emitted on registration. Non-registered consumers of
+    // useScriptSpeedCurve hit a build error from the unresolved virtual.
+    addTemplate({
+      filename: 'nuxt-scripts-speedcurve-snippet.d.ts',
+      write: true,
+      getContents: () => `export declare const luxSnippetSource: string\n`,
+    })
     if (config.registry?.speedcurve) {
       addTemplate({
         filename: 'nuxt-scripts-speedcurve-snippet.mjs',
         async getContents() {
           const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js').catch(() => null)
-          // The named export must exist or ESM instantiation fails before the
-          // install hint is ever read. Wrap the throw in the export's
-          // initializer so the error surfaces only when the snippet is read.
+          // Named export must exist or ESM instantiation fails before the
+          // install hint is ever read, hence the IIFE initializer pattern.
           if (!snippetPath || !existsSync(snippetPath))
             return `export const luxSnippetSource = (() => { throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux') })()\n`
           const source = readFileSync(snippetPath, 'utf-8')
