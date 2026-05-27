@@ -661,14 +661,8 @@ export default defineNuxtModule<ModuleOptions>({
 
     // SpeedCurve requires opt-in via `scripts.registry.speedcurve` plus the
     // `@speedcurve/lux` peer dep so the user controls the snippet version.
-    // Types are always declared so typecheck stays green; the runtime .mjs is
-    // only emitted on registration. Non-registered consumers of
+    // Template only emitted on registration; non-registered consumers of
     // useScriptSpeedCurve hit a build error from the unresolved virtual.
-    addTemplate({
-      filename: 'nuxt-scripts-speedcurve-snippet.d.ts',
-      write: true,
-      getContents: () => `export declare const luxSnippetSource: string\n`,
-    })
     if (config.registry?.speedcurve) {
       addTemplate({
         filename: 'nuxt-scripts-speedcurve-snippet.mjs',

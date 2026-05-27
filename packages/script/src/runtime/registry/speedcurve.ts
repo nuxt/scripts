@@ -4,10 +4,10 @@ import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
 // Virtual: emitted by the Nuxt module only when `speedcurve` is registered in
 // `scripts.registry`. Contents inline the LUX primer resolved from the
-// user-installed `@speedcurve/lux` peer dep at build time. If the user is not
-// registered, the import errors at build (pointing at the missing
-// registration); if registered without the peer dep, reading the export
-// throws an install hint.
+// user-installed `@speedcurve/lux` peer dep at build time. Non-registered
+// users hit a build error from the unresolved virtual; registered users
+// without the peer dep get an install hint when the export is read.
+// @ts-expect-error virtual is only emitted when speedcurve is registered
 import { luxSnippetSource } from '#build/nuxt-scripts-speedcurve-snippet'
 import { useRegistryScript } from '../utils'
 import { afterNextPaint } from '../utils/after-next-paint'
