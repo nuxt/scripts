@@ -15,7 +15,7 @@ links:
 [Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.
 
 Nuxt Scripts provides two Stripe features:
-- [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/basil/stripe.js`.
+- [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/basil/stripe.js` by default. Use the `version` option to [pin a Stripe.js SDK release](https://docs.stripe.com/sdks/stripejs-versioning) (e.g. `acacia`, `clover`, `dahlia`).
 - `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site using `https://js.stripe.com/v3/pricing-table.js`.
 
 ::script-stats

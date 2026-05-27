@@ -982,7 +982,7 @@
       {
         "name": "StripeOptions",
         "kind": "const",
-        "code": "export const StripeOptions = object({\n  /**\n   * Whether to load Stripe's advanced fraud detection signals.\n   * Set to `false` to opt out.\n   * @default true\n   * @see https://docs.stripe.com/disputes/prevention/advanced-fraud-detection\n   */\n  advancedFraudSignals: optional(boolean()),\n})"
+        "code": "export const StripeOptions = object({\n  /**\n   * Whether to load Stripe's advanced fraud detection signals.\n   * Set to `false` to opt out.\n   * @default true\n   * @see https://docs.stripe.com/disputes/prevention/advanced-fraud-detection\n   */\n  advancedFraudSignals: optional(boolean()),\n  /**\n   * The Stripe.js SDK version to load.\n   * Named releases get autocomplete; any future codename is also accepted.\n   * @default 'basil'\n   * @see https://docs.stripe.com/sdks/stripejs-versioning\n   */\n  version: optional(union([literal('v3'), literal('acacia'), literal('basil'), literal('clover'), literal('dahlia'), string()])),\n})"
       },
       {
         "name": "StripeApi",
@@ -2495,6 +2495,13 @@
         "required": false,
         "description": "Whether to load Stripe's advanced fraud detection signals. Set to `false` to opt out.",
         "defaultValue": "true"
+      },
+      {
+        "name": "version",
+        "type": "'v3' | 'acacia' | 'basil' | 'clover' | 'dahlia' | string",
+        "required": false,
+        "description": "The Stripe.js SDK version to load. Named releases get autocomplete; any future codename is also accepted.",
+        "defaultValue": "'basil'"
       }
     ],
     "TikTokPixelOptions": [
