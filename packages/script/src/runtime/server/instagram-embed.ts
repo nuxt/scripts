@@ -81,7 +81,11 @@ export default withSigning(defineEventHandler(async (event) => {
   const html = await cachedEmbedFetch(embedUrl, {
     headers: {
       'Accept': 'text/html',
-      'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      // Meta's own crawler UA. Googlebot's UA is also accepted by Instagram
+      // but is IP-verified, so it fails from hosts outside Google's ranges
+      // (e.g. Cloudflare/Vercel) and Instagram serves the JS shell instead
+      // of the SSR'd post.
+      'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
     },
   }).catch((error: any) => {
     throw createError({
