@@ -250,14 +250,14 @@ const rootStyle = computed(() => ({
   overflow: 'hidden',
 }))
 
-if (import.meta.server) {
+if (import.meta.server && !useProxy) {
   useHead({
     link: [
       {
         rel: props.loading === 'eager' ? 'preconnect' : 'dns-prefetch',
-        href: useProxy ? undefined : 'https://maps.googleapis.com',
+        href: 'https://maps.googleapis.com',
       },
-    ].filter(l => l.href),
+    ],
   })
 }
 
