@@ -1,6 +1,7 @@
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { describe, expect, it } from 'vitest'
 import {
+  isEmbedShell,
   proxyImageUrl,
   rewriteUrl,
   rewriteUrlsInText,
@@ -300,5 +301,27 @@ html, body { margin: 0; padding: 0; }
     const css = '[data-x="a,b"] .Embed { color: red; }'
     const result = scopeCss(css, scope)
     expect(result).toContain(`${scope} [data-x="a,b"] .Embed`)
+  })
+})
+
+describe('instagram-embed: isEmbedShell', () => {
+  it('detects JS-only shell with splash-screen and no post markup', () => {
+    const html = '<body><div id="splash-screen"></div><div id="has-finished-comet-page"></div></body>'
+    expect(isEmbedShell(html)).toBe(true)
+  })
+
+  it('accepts real SSR\'d post even when shell sentinels appear elsewhere', () => {
+    // Some Instagram responses include the comet sentinel alongside real content.
+    const html = '<body><a class="EmbeddedMedia"><img class="EmbeddedMediaImage" /></a><div id="has-finished-comet-page"></div></body>'
+    expect(isEmbedShell(html)).toBe(false)
+  })
+
+  it('accepts real post with Embed wrapper', () => {
+    const html = '<div class="Embed" data-media-id="123"><div>content</div></div>'
+    expect(isEmbedShell(html)).toBe(false)
+  })
+
+  it('returns false on unrelated HTML (no shell sentinels)', () => {
+    expect(isEmbedShell('<html><body>nothing here</body></html>')).toBe(false)
   })
 })

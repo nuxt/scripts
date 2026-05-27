@@ -3,24 +3,13 @@ import { defineCachedFunction, useRuntimeConfig } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { createCachedJsonFetch } from './utils/cached-upstream'
-import { proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
+import { isEmbedShell, proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
 import { withSigning } from './utils/withSigning'
 
 export { proxyAssetUrl, proxyImageUrl, rewriteUrl, rewriteUrlsInText, scopeCss } from './utils/instagram-embed'
 
 const EMBED_INSTAGRAM_SUFFIX_RE = /\/embed\/instagram$/
 const SRCSET_SPLIT_RE = /\s+/
-
-// Instagram serves a JS-only shell (splash screen + comet sentinel, no SSR'd
-// post markup) when it can't or won't render server-side — e.g. for bot UAs
-// it can't verify, or for removed/private posts. Caching that shell would
-// hide the real post for the full 10min window even after upstream recovers.
-const SHELL_BODY_RE = /id="(?:splash-screen|has-finished-comet-page)"/
-const HAS_POST_CONTENT_RE = /class="(?:Embed|EmbeddedMedia)"/
-
-function isEmbedShell(html: string): boolean {
-  return SHELL_BODY_RE.test(html) && !HAS_POST_CONTENT_RE.test(html)
-}
 
 // Instagram embed HTML is semi-fresh (likes, captions may update); 10min
 // matches the outbound Cache-Control header and dedupes per post+captions.
