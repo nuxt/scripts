@@ -17,10 +17,6 @@ vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
   useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
 }))
 
-vi.mock('@speedcurve/lux/dist/lux-snippet.js?raw', () => ({
-  default: '/* lux snippet */',
-}))
-
 describe('applyConfig', () => {
   beforeEach(() => {
     Object.defineProperty(window, 'LUX', { value: {}, writable: true, configurable: true })

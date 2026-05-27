@@ -1,10 +1,10 @@
 import type { LuxGlobal, UserConfig } from '@speedcurve/lux'
 import type { RouteLocationNormalized } from 'vue-router'
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
-import luxSnippetSource from '@speedcurve/lux/dist/lux-snippet.js?raw'
 import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
 import { useRegistryScript } from '../utils'
 import { afterNextPaint } from '../utils/after-next-paint'
+import { luxSnippetSource } from '../utils/speedcurve-snippet'
 import { SpeedCurveOptions } from './schemas'
 
 export { SpeedCurveOptions }

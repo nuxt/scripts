@@ -1008,6 +1008,7 @@ export const InitObjectPropertiesSchema = object({
 })
 
 export const SpeedCurveOptions = object({
+  // -- Composable-only options (consumed by useScriptSpeedCurve, not forwarded to LUX) --
   /**
    * Your SpeedCurve customer ID.
    * @see https://support.speedcurve.com/docs/add-rum-to-your-site
@@ -1025,10 +1026,15 @@ export const SpeedCurveOptions = object({
    * @default true (when spaMode is true)
    */
   autoTrackSpaNavigations: optional(boolean()),
+
+  // -- LUX UserConfig passthrough (forwarded onto window.LUX before lux.js loads) --
+  // Property names match upstream LUX UserConfig casing exactly. Keep this list in
+  // sync with the LUX_USER_CONFIG_KEYS filter in speedcurve.ts.
   /**
    * Page label shown in the SpeedCurve dashboard.
-   * Accepts a static string, a function `(to) => string` for per-navigation labels,
-   * or `false` to disable labeling entirely.
+   * Accepts a static string, a function `(to) => string | false` for per-navigation labels,
+   * or `false` to disable labeling entirely. A callback returning `false` skips updating
+   * the label for that navigation.
    * @default String(to.name ?? to.path)
    */
   label: optional(union([string(), function_(), literal(false)])),
