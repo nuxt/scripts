@@ -68,6 +68,7 @@
       "unimport",
       "#nuxt-scripts/types",
       "posthog-js",
+      "@speedcurve/lux",
       "@nuxt/devtools-kit",
       "sirv"
     ]
@@ -75,6 +76,7 @@
   "peerDependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
     "@paypal/paypal-js": "^8.1.2 || ^9.0.0",
+    "@speedcurve/lux": "^4.4.3",
     "@stripe/stripe-js": "^7.0.0 || ^8.0.0 || ^9.0.0",
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
@@ -87,6 +89,9 @@
       "optional": true
     },
     "@paypal/paypal-js": {
+      "optional": true
+    },
+    "@speedcurve/lux": {
       "optional": true
     },
     "@stripe/stripe-js": {
@@ -130,6 +135,7 @@
   "devDependencies": {
     "@nuxt/kit": "catalog:",
     "@nuxt/module-builder": "catalog:",
+    "@speedcurve/lux": "catalog:",
     "rollup": "catalog:",
     "unbuild": "catalog:",
     "unimport": "catalog:"
