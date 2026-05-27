@@ -1,4 +1,4 @@
-import { any, array, boolean, custom, literal, minLength, number, object, optional, pipe, record, string, union } from 'valibot'
+import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, pipe, record, string, union } from 'valibot'
 
 // Shared GCMv2 consent category value.
 const consentCategoryValue = union([literal('granted'), literal('denied')])
@@ -1005,6 +1005,75 @@ export const InitObjectPropertiesSchema = object({
    * The user's age.
    */
   age: optional(string()),
+})
+
+export const SpeedCurveOptions = object({
+  /**
+   * Your SpeedCurve customer ID.
+   * @see https://support.speedcurve.com/docs/add-rum-to-your-site
+   */
+  id: pipe(string(), minLength(1)),
+  /**
+   * Enable SPA (single-page application) mode.
+   * When true, lux.js tracks soft navigations instead of full page loads.
+   * @see https://support.speedcurve.com/docs/single-page-applications
+   */
+  spaMode: optional(boolean()),
+  /**
+   * Automatically wire Vue Router hooks for SPA tracking when spaMode is true.
+   * Set to false to instrument navigations manually.
+   * @default true (when spaMode is true)
+   */
+  autoTrackSpaNavigations: optional(boolean()),
+  /**
+   * Page label shown in the SpeedCurve dashboard.
+   * Accepts a static string, a function `(to) => string` for per-navigation labels,
+   * or `false` to disable labeling entirely.
+   * @default String(to.name ?? to.path)
+   */
+  label: optional(union([string(), function_(), literal(false)])),
+  /**
+   * Sampling rate (0–100). Percentage of sessions that send beacons.
+   * Upstream spelling is lowercase — matches LUX UserConfig.
+   */
+  samplerate: optional(pipe(number(), minValue(0), maxValue(100))),
+  /**
+   * Send the beacon when the page is hidden (pagehide event).
+   * @default true
+   */
+  sendBeaconOnPageHidden: optional(boolean()),
+  /**
+   * Track JavaScript errors.
+   * @default true
+   */
+  trackErrors: optional(boolean()),
+  /**
+   * Maximum number of errors to track per page view.
+   * @default 5
+   */
+  maxErrors: optional(number()),
+  /**
+   * Minimum time (ms) before a beacon can be sent.
+   */
+  minMeasureTime: optional(number()),
+  /**
+   * Maximum time (ms) after which the beacon is sent regardless of load state.
+   * @default 60000
+   */
+  maxMeasureTime: optional(number()),
+  /**
+   * Start a new beacon when the page becomes visible after being hidden.
+   */
+  newBeaconOnPageShow: optional(boolean()),
+  /**
+   * Track pages loaded in background tabs.
+   * @default false
+   */
+  trackHiddenPages: optional(boolean()),
+  /**
+   * Cookie domain for cross-subdomain session tracking.
+   */
+  cookieDomain: optional(string()),
 })
 
 export const SnapTrPixelOptions = object({
