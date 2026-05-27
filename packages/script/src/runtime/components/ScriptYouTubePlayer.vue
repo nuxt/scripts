@@ -245,7 +245,7 @@ if (import.meta.server) {
 const placeholderAttrs = computed(() => {
   return defu(props.placeholderAttrs, {
     src: isFallbackPlaceHolder.value ? fallbackPlaceHolder.value : placeholder.value,
-    alt: '',
+    alt: 'Play video',
     loading: props.aboveTheFold ? 'eager' : 'lazy',
     // @ts-expect-error untyped
     fetchpriority: props.aboveTheFold ? 'high' : undefined,
