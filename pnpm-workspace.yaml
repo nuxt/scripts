@@ -1,12 +1,13 @@
 shellEmulator: true
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - tinyexec@1.2.2
 packages:
   - packages/*
   - playground
   - test/fixtures/unhead-v3
   - '!examples/**'
-
 overrides:
   '@nuxt/scripts': 'workspace:*'
   # Force unhead v3 only inside the unhead-v3 regression fixture; the rest of
@@ -26,8 +27,11 @@ catalog:
   '@paypal/paypal-js': ^9.7.0
   '@shikijs/langs': ^4.1.0
   '@shikijs/themes': ^4.1.0
+  # Pin to ^4.4.x: snippet protocol 2.0.0. Treat major bumps as breaking — verify primer compatibility before upgrading.
+  '@speedcurve/lux': ^4.4.3
   '@types/google.maps': ^3.64.1
   '@types/jest-image-snapshot': ^6.4.1
+  '@types/node': ^22.10.0
   '@types/youtube': ^0.2.0
   '@vue/test-utils': ^2.4.10
   '@vueuse/core': ^14.3.0
