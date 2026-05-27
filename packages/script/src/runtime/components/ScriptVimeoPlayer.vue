@@ -270,6 +270,8 @@ function onPlaceholderKeydown(e: KeyboardEvent) {
     return
   const triggers = (Array.isArray(props.trigger) ? props.trigger : [props.trigger]).filter(Boolean) as string[]
   for (const t of triggers) {
+    if (typeof t !== 'string')
+      continue
     if (['immediate', 'onNuxtReady', 'visibility', 'visible'].includes(t))
       continue
     rootEl.value.dispatchEvent(new Event(t, { bubbles: false }))
