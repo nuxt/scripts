@@ -4,10 +4,14 @@ trustPolicy: no-downgrade
 packages:
   - packages/*
   - playground
+  - test/fixtures/unhead-v3
   - '!examples/**'
 
 overrides:
   '@nuxt/scripts': 'workspace:*'
+  # Force unhead v3 only inside the unhead-v3 regression fixture; the rest of
+  # the workspace stays on v2 via Nuxt's transitive resolution.
+  unhead-v3-fixture>@unhead/vue: ^3.0.0
   vitest-environment-nuxt: 2.0.0
 catalog:
   '@antfu/eslint-config': ^9.0.0
