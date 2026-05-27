@@ -20,6 +20,27 @@ The composable comes with the following defaults:
 <!-- eslint-disable-next-line harlanzw/ai-deslop-passive-voice -->
 - **Trigger: Client** The LUX primer is injected into `<head>`{lang="html"} immediately; `lux.js` loads when Nuxt hydrates.
 
+## Setup
+
+SpeedCurve LUX is opt-in. Register it in your Nuxt config so the module resolves the primer snippet at build time, then install the `@speedcurve/lux` peer dep:
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  modules: ['@nuxt/scripts'],
+  scripts: {
+    registry: {
+      speedcurve: { id: 'YOUR_SPEEDCURVE_ID' },
+    },
+  },
+})
+```
+
+```bash
+npm i -D @speedcurve/lux
+```
+
+Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
+
 You can access the `LUX` object as a proxy directly, or await `$script` to get the loaded instance.
 
 ::code-group
