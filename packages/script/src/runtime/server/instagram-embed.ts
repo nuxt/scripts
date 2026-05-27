@@ -26,11 +26,21 @@ const cachedEmbedFetch = defineCachedFunction(
     return html
   },
   {
-    name: 'nuxt-scripts-instagram-embed',
+    // v2 — bump to evict any v1 entries that cached the empty JS shell
+    // before the shell-detection / UA fix landed.
+    name: 'nuxt-scripts-instagram-embed-v2',
     maxAge: 600,
     swr: true,
     staleMaxAge: 600,
-    getKey: (url: string) => url,
+    // Vary on headers too — Instagram's response is UA-dependent, so
+    // different callers (e.g. unit tests, future UA changes) must not
+    // collide on the same key.
+    getKey: (url: string, headers: Record<string, string>) => {
+      const parts = [url]
+      for (const [k, v] of Object.entries(headers).sort(([a], [b]) => a.localeCompare(b)))
+        parts.push(`${k}=${v}`)
+      return parts.join('|')
+    },
   },
 )
 

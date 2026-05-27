@@ -5,8 +5,10 @@ export const RSRC_RE = /url\(\/rsrc\.php([^)]+)\)/g
 // Instagram serves a JS-only shell (splash-screen + comet sentinel, no SSR'd
 // post markup) when it can't or won't render server-side — e.g. for bot UAs
 // it can't verify, or for removed/private posts.
-const SHELL_BODY_RE = /id="(?:splash-screen|has-finished-comet-page)"/
-const HAS_POST_CONTENT_RE = /class="(?:Embed|EmbeddedMedia)"/
+const SHELL_BODY_RE = /id=["'](?:splash-screen|has-finished-comet-page)["']/
+// Match Embed / EmbeddedMedia / EmbeddedMediaImage as tokens inside any
+// class attribute (single- or double-quoted, multi-class lists).
+const HAS_POST_CONTENT_RE = /\bclass=(["'])[^"']*\b(?:Embed|EmbeddedMedia|EmbeddedMediaImage)\b[^"']*\1/i
 
 export function isEmbedShell(html: string): boolean {
   return SHELL_BODY_RE.test(html) && !HAS_POST_CONTENT_RE.test(html)

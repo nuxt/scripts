@@ -324,4 +324,22 @@ describe('instagram-embed: isEmbedShell', () => {
   it('returns false on unrelated HTML (no shell sentinels)', () => {
     expect(isEmbedShell('<html><body>nothing here</body></html>')).toBe(false)
   })
+
+  it('detects post content inside multi-class lists', () => {
+    // Real Instagram responses include splash-screen alongside the SSR'd post;
+    // multi-class lists like `class="post EmbeddedMedia foo"` must count.
+    const html = '<div id="splash-screen"></div><div class="post EmbeddedMedia foo"></div>'
+    expect(isEmbedShell(html)).toBe(false)
+  })
+
+  it('detects post content with single-quoted class attribute', () => {
+    const html = `<div id='splash-screen'></div><a class='EmbeddedMedia'></a>`
+    expect(isEmbedShell(html)).toBe(false)
+  })
+
+  it('does not match Embed inside an unrelated class token (word boundary)', () => {
+    // `EmbedSomething` should not count as post content.
+    const html = '<div id="splash-screen"></div><div class="NotAnEmbedThing"></div>'
+    expect(isEmbedShell(html)).toBe(true)
+  })
 })
