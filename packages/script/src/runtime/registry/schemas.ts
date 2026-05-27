@@ -1028,6 +1028,13 @@ export const StripeOptions = object({
    * @see https://docs.stripe.com/disputes/prevention/advanced-fraud-detection
    */
   advancedFraudSignals: optional(boolean()),
+  /**
+   * The Stripe.js SDK version to load.
+   * Named releases get autocomplete; any future codename is also accepted.
+   * @default 'basil'
+   * @see https://docs.stripe.com/sdks/stripejs-versioning
+   */
+  version: optional(union([literal('v3'), literal('acacia'), literal('basil'), literal('clover'), literal('dahlia'), string()])),
 })
 
 export const TikTokPixelOptions = object({
