@@ -197,16 +197,41 @@ defineExpose({
   player,
 })
 
+// Keyboard accessibility: dispatch the configured trigger event on Enter/Space
+// so users navigating via keyboard can activate the placeholder (fixes #797).
+const keyboardTriggerable = computed(() => {
+  if (isTriggered.value)
+    return false
+  const triggers = Array.isArray(props.trigger) ? props.trigger : [props.trigger]
+  return triggers.some(t => typeof t === 'string' && !['immediate', 'onNuxtReady', 'visibility', 'visible'].includes(t))
+})
+
+function onPlaceholderKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Enter' && e.key !== ' ')
+    return
+  e.preventDefault()
+  if (!rootEl.value)
+    return
+  const triggers = (Array.isArray(props.trigger) ? props.trigger : [props.trigger]).filter(Boolean) as string[]
+  for (const t of triggers) {
+    if (['immediate', 'onNuxtReady', 'visibility', 'visible'].includes(t))
+      continue
+    rootEl.value.dispatchEvent(new Event(t, { bubbles: false }))
+  }
+}
+
 const rootAttrs = computed(() => {
+  const interactive = keyboardTriggerable.value
   return defu(props.rootAttrs, {
     'aria-busy': status.value === 'loading',
     'aria-label': status.value === 'awaitingLoad'
-      ? 'YouTube Player - Placeholder'
+      ? (interactive ? 'Play video' : 'YouTube Player - Placeholder')
       : status.value === 'loading'
         ? 'YouTube Player - Loading'
         : 'YouTube Player - Loaded',
     'aria-live': 'polite',
-    'role': 'application',
+    'role': interactive ? 'button' : 'application',
+    'tabindex': interactive ? 0 : undefined,
     'style': {
       cursor: 'pointer',
       position: 'relative',
@@ -265,7 +290,7 @@ const placeholderAttrs = computed(() => {
 </script>
 
 <template>
-  <div ref="rootEl" v-bind="rootAttrs">
+  <div ref="rootEl" v-bind="rootAttrs" @keydown="keyboardTriggerable ? onPlaceholderKeydown($event) : undefined">
     <div ref="youtubeEl" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;" />
     <slot v-if="!ready" :placeholder="placeholder" name="placeholder">
       <img v-bind="placeholderAttrs">
