@@ -53,7 +53,6 @@ catalog:
   '@paypal/paypal-js': ^9.7.0
   '@shikijs/langs': ^4.1.0
   '@shikijs/themes': ^4.1.0
-  # Pin to ^4.4.x: snippet protocol 2.0.0. Treat major bumps as breaking — verify primer compatibility before upgrading.
   '@speedcurve/lux': ^4.4.3
   '@types/google.maps': ^3.65.0
   '@types/jest-image-snapshot': ^6.4.1
