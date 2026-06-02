@@ -1,7 +1,7 @@
 {
   "name": "@nuxt/scripts",
   "type": "module",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "author": {
     "name": "Harlan Wilton",
