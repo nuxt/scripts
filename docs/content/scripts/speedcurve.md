@@ -22,7 +22,7 @@ The composable comes with the following defaults:
 
 ## Setup
 
-SpeedCurve LUX is opt-in. You **must** register it in `scripts.registry.speedcurve` before calling `useScriptSpeedCurve`, including for per-page usage. Registration triggers the module to resolve and inline the LUX primer at build time. Install the `@speedcurve/lux` peer dep alongside:
+SpeedCurve LUX is opt-in. Register it in `scripts.registry.speedcurve` to resolve and inline the LUX primer at build time. Install the `@speedcurve/lux` peer dep alongside:
 
 ```bash
 pnpm add -D @speedcurve/lux
@@ -52,7 +52,7 @@ export default defineNuxtConfig({
 })
 ```
 
-If `speedcurve` isn't registered, builds fail with an unresolved `#build/nuxt-scripts-speedcurve-snippet` import. If it's registered but `@speedcurve/lux` is missing, the build fails with an install hint. Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
+If `speedcurve` isn't registered, `useScriptSpeedCurve` builds with an empty primer fallback. If it's registered but `@speedcurve/lux` is missing, the build fails with an install hint. Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
 
 You can access the `LUX` object as a proxy directly, or await `$script` to get the loaded instance.
 
