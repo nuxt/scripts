@@ -667,11 +667,10 @@ export default defineNuxtModule<ModuleOptions>({
       addTemplate({
         filename: 'nuxt-scripts-speedcurve-snippet.mjs',
         async getContents() {
-          const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js').catch(() => null)
-          // Named export must exist or ESM instantiation fails before the
-          // install hint is ever read, hence the IIFE initializer pattern.
-          if (!snippetPath || !existsSync(snippetPath))
-            return `export const luxSnippetSource = (() => { throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux') })()\n`
+          const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js')
+          if (!existsSync(snippetPath)) {
+            throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux')
+          }
           const source = readFileSync(snippetPath, 'utf-8')
           return `export const luxSnippetSource = ${JSON.stringify(source)}\n`
         },
