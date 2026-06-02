@@ -659,23 +659,24 @@ export default defineNuxtModule<ModuleOptions>({
       },
     })
 
-    // SpeedCurve requires opt-in via `scripts.registry.speedcurve` plus the
-    // `@speedcurve/lux` peer dep so the user controls the snippet version.
-    // Template only emitted on registration; non-registered consumers of
-    // useScriptSpeedCurve hit a build error from the unresolved virtual.
-    if (config.registry?.speedcurve) {
-      addTemplate({
-        filename: 'nuxt-scripts-speedcurve-snippet.mjs',
-        async getContents() {
-          const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js')
-          if (!existsSync(snippetPath)) {
-            throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux')
-          }
-          const source = readFileSync(snippetPath, 'utf-8')
-          return `export const luxSnippetSource = ${JSON.stringify(source)}\n`
-        },
-      })
-    }
+    // SpeedCurve's runtime composable statically imports this virtual module.
+    // Emit an empty fallback unless `scripts.registry.speedcurve` is configured;
+    // registered users still control the primer version through @speedcurve/lux.
+    const speedcurveRegistered = !!config.registry?.speedcurve
+    addTemplate({
+      filename: 'nuxt-scripts-speedcurve-snippet.mjs',
+      async getContents() {
+        if (!speedcurveRegistered)
+          return 'export const luxSnippetSource = ""\n'
+
+        const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js')
+        if (!existsSync(snippetPath)) {
+          throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux')
+        }
+        const source = readFileSync(snippetPath, 'utf-8')
+        return `export const luxSnippetSource = ${JSON.stringify(source)}\n`
+      },
+    })
 
     logger.debug('[nuxt-scripts] Proxy prefix:', proxyPrefix)
 

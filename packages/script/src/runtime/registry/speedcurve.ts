@@ -49,6 +49,9 @@ export function useScriptSpeedCurve<T extends SpeedCurveApi>(_options?: SpeedCur
       trigger: 'client',
       use: () => ({ LUX: window.LUX! } as T),
       beforeInit: () => {
+        if (!luxSnippetSource)
+          return
+
         useHead({
           script: [{
             key: 'speedcurve-lux-primer',
