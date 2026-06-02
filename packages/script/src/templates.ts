@@ -26,6 +26,9 @@ declare module '#app' {
   }
   interface RuntimeNuxtHooks {
     'scripts:updated': (ctx: { scripts: Record<string, import('#nuxt-scripts/types').NuxtDevToolsScriptInstance> }) => void | Promise<void>
+    'scripts:globals': (globals: ${globalsKeys.length
+      ? `{ ${globalsKeys.map(k => `${JSON.stringify(k)}: Record<string, any>`).join('; ')} }`
+      : 'Record<string, Record<string, any>>'}) => void | Promise<void>
   }
 }
 ${globalsKeys.length
@@ -113,6 +116,10 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   }
   const imports = []
   const inits = []
+  // Globals are split out so the resolved inputs can be collected into a mutable map,
+  // passed through the `scripts:globals` runtime hook, then registered.
+  const globalMapEntries: string[] = []
+  const globalInits: string[] = []
   const resolvedRegistryKeys: string[] = []
   let needsIdleTimeoutImport = false
   let needsInteractionImport = false
@@ -211,7 +218,13 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     }
     const useFn = `use: () => ({ ${k}: window.${k} })`
     const optionsArg = optionsJson ? `{ ...${optionsJson}, ${useFn} }` : `{ ${useFn} }`
-    inits.push(`const ${k} = useScript(${inputExpr}, ${optionsArg})`)
+    // Resolved input goes into the mutable `__globals` map keyed by its global key, so the
+    // `scripts:globals` hook can rewrite/delete/add entries before registration.
+    globalMapEntries.push(`${JSON.stringify(k)}: ${inputExpr}`)
+    // Registration is guarded so a runtime override (env or hook) can disable an entry
+    // per-instance (multi-tenant single-build): set `enabled: false` or an empty/null `src`
+    // and the script is never registered. See https://github.com/nuxt/scripts/issues/759.
+    globalInits.push(`const ${k} = __registerGlobal(__globals[${JSON.stringify(k)}], ${optionsArg})`)
   }
   // Add conditional imports for trigger composables
   const triggerImports = []
@@ -226,8 +239,20 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
   }
 
   const setupBody: string[] = []
-  if (hasGlobals)
+  if (hasGlobals) {
     setupBody.push(`    const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}`)
+    // A global is skipped when the merged input disables it: `enabled === false`, or an
+    // empty/null `src` (the env-overridable way to drop an unused integration per instance).
+    setupBody.push(`    const __registerGlobal = (input, options) => { const { enabled, ...rest } = input; return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options) }`)
+    // Resolved inputs (build-time default <- env override) collected into a mutable map.
+    setupBody.push(`    const __globals = {`)
+    setupBody.push(...globalMapEntries.map(e => `      ${e},`))
+    setupBody.push(`    }`)
+    // Runtime hook: userland may rewrite `src`/attrs, delete keys, or add new entries before
+    // registration. Register the listener from an `enforce: 'pre'` plugin so it runs first.
+    setupBody.push(`    await nuxtApp.hooks.callHook('scripts:globals', __globals)`)
+    setupBody.push(...globalInits.map(i => `    ${i}`))
+  }
   setupBody.push(...inits.map(i => `    ${i}`))
   setupBody.push(`    return { provide: { scripts: { ${[...Object.keys(config.globals || {}), ...resolvedRegistryKeys].join(', ')} } } }`)
   return [
@@ -240,7 +265,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     `  name: "scripts:init",`,
     `  env: { islands: false },`,
     `  parallel: true,`,
-    `  setup() {`,
+    `  ${hasGlobals ? 'async setup(nuxtApp) {' : 'setup() {'}`,
     ...setupBody,
     `  }`,
     `})`,
