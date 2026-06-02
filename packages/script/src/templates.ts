@@ -26,9 +26,9 @@ declare module '#app' {
   }
   interface RuntimeNuxtHooks {
     'scripts:updated': (ctx: { scripts: Record<string, import('#nuxt-scripts/types').NuxtDevToolsScriptInstance> }) => void | Promise<void>
-    'scripts:globals': (globals: ${globalsKeys.length
-      ? `{ ${globalsKeys.map(k => `${JSON.stringify(k)}: Record<string, any>`).join('; ')} }`
-      : 'Record<string, Record<string, any>>'}) => void | Promise<void>
+    // Index signature (not a literal-key Record) so listeners can both \`delete globals[key]\`
+    // and mutate \`globals[key].src\` without TS2790 / possibly-undefined errors.
+    'scripts:globals': (globals: Record<string, Record<string, any>>) => void | Promise<void>
   }
 }
 ${globalsKeys.length
@@ -243,7 +243,7 @@ export function templatePlugin(config: Partial<ModuleOptions>, registry: Require
     setupBody.push(`    const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}`)
     // A global is skipped when the merged input disables it: `enabled === false`, or an
     // empty/null `src` (the env-overridable way to drop an unused integration per instance).
-    setupBody.push(`    const __registerGlobal = (input, options) => { const { enabled, ...rest } = input; return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options) }`)
+    setupBody.push(`    const __registerGlobal = (input, options) => { if (!input) return undefined; const { enabled, ...rest } = input; return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options) }`)
     // Resolved inputs (build-time default <- env override) collected into a mutable map.
     setupBody.push(`    const __globals = {`)
     setupBody.push(...globalMapEntries.map(e => `      ${e},`))

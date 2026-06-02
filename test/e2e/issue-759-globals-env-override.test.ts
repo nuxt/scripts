@@ -37,4 +37,12 @@ describe('issue-759 globals env override', () => {
     // ...while the un-mutated build-time src is never used for registration.
     expect(html).not.toContain('href="https://scrads.example/baked.js"')
   })
+
+  it('the scripts:globals hook can delete an entry without crashing setup', async () => {
+    const html = await $fetch<string>('/')
+    // Page renders (plugin setup didn't throw on the deleted entry)...
+    expect(html).toContain('<div id="legacy-registered">no</div>')
+    // ...and the deleted global is never registered/preloaded.
+    expect(html).not.toContain('href="https://legacy.example/baked.js"')
+  })
 })

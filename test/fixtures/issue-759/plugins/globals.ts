@@ -3,8 +3,10 @@
 export default defineNuxtPlugin({
   enforce: 'pre',
   setup(nuxtApp) {
-    nuxtApp.hooks.hook('scripts:globals', (globals: Record<string, Record<string, any>>) => {
+    nuxtApp.hooks.hook('scripts:globals', (globals) => {
       globals.scrads.src = 'https://scrads.example/from-hook.js'
+      // Removing an entry must skip its registration without crashing setup.
+      delete globals.legacy
     })
   },
 })

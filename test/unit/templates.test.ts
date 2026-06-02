@@ -105,7 +105,7 @@ describe('template plugin file', () => {
         parallel: true,
         async setup(nuxtApp) {
           const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}
-          const __registerGlobal = (input, options) => { const { enabled, ...rest } = input; return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options) }
+          const __registerGlobal = (input, options) => { if (!input) return undefined; const { enabled, ...rest } = input; return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options) }
           const __globals = {
             "stripe1": Object.assign({ key: "stripe1" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe1"] || {}),
             "stripe2": Object.assign({ key: "stripe2" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe2"] || {}),
@@ -310,7 +310,7 @@ describe('template plugin file', () => {
       },
     }, [])
     // Helper is emitted once and strips `enabled` so it never leaks as a script attribute.
-    expect(res).toContain('const __registerGlobal = (input, options) => { const { enabled, ...rest } = input; return (enabled === false || rest.src === \'\' || rest.src === null) ? undefined : useScript(rest, options) }')
+    expect(res).toContain('const __registerGlobal = (input, options) => { if (!input) return undefined; const { enabled, ...rest } = input; return (enabled === false || rest.src === \'\' || rest.src === null) ? undefined : useScript(rest, options) }')
     // Each global goes through the guard rather than calling useScript directly.
     expect(res).toContain('const awin = __registerGlobal(__globals["awin"]')
     expect(res).not.toContain('const awin = useScript(')
@@ -346,6 +346,8 @@ describe('template plugin file', () => {
       return input
     }
     const __registerGlobal = (input: any, options: any) => {
+      if (!input)
+        return undefined
       const { enabled, ...rest } = input
       return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options)
     }
@@ -356,6 +358,8 @@ describe('template plugin file', () => {
     expect(__registerGlobal({ key: 'd', src: null }, {})).toBeUndefined()
     // No src field (inline/non-src global) still registers.
     expect(__registerGlobal({ key: 'e' }, {})).toBeDefined()
+    // A hook that deleted the entry leaves `undefined`; must not throw on destructure.
+    expect(__registerGlobal(undefined, {})).toBeUndefined()
     // `enabled` is stripped, never forwarded to useScript as an attribute.
     expect(calls.every(c => !('enabled' in c))).toBe(true)
   })

@@ -18,6 +18,8 @@ export default defineNuxtConfig({
         { src: 'https://scrads.example/baked.js' },
         { trigger: 'onNuxtReady' },
       ],
+      // `delete`d at runtime by the scripts:globals hook; must not crash plugin setup.
+      legacy: { src: 'https://legacy.example/baked.js' },
     },
   },
   compatibilityDate: '2024-07-05',

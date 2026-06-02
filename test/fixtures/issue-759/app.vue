@@ -9,5 +9,6 @@ const rc = useRuntimeConfig()
     <div id="script-src">{{ $scripts?.trustedShops?.$script?.src || $scripts?.trustedShops?.options?.src || '' }}</div>
     <div id="awin-registered">{{ $scripts?.awin ? 'yes' : 'no' }}</div>
     <div id="scrads-src">{{ $scripts?.scrads?.$script?.src || $scripts?.scrads?.options?.src || '' }}</div>
+    <div id="legacy-registered">{{ $scripts?.legacy ? 'yes' : 'no' }}</div>
   </div>
 </template>
