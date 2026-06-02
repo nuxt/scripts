@@ -659,22 +659,29 @@ export default defineNuxtModule<ModuleOptions>({
       },
     })
 
-    // SpeedCurve's runtime composable statically imports this virtual module.
-    // Emit an empty fallback unless `scripts.registry.speedcurve` is configured;
-    // registered users still control the primer version through @speedcurve/lux.
-    const speedcurveRegistered = !!config.registry?.speedcurve
-    addTemplate({
-      filename: 'nuxt-scripts-speedcurve-snippet.mjs',
-      async getContents() {
-        if (!speedcurveRegistered)
-          return 'export const luxSnippetSource = ""\n'
-
+    // Build-time snippet sources inlined into `#build/nuxt-scripts-snippets` and
+    // imported by runtime composables. Every snippet is always exported (empty
+    // until its registry entry is configured) so the static import always
+    // resolves, even when the related script isn't registered.
+    const snippets: Record<string, () => string | Promise<string>> = {
+      async speedcurveLuxSnippet() {
+        if (!config.registry?.speedcurve)
+          return ''
         const snippetPath = await resolvePath('@speedcurve/lux/dist/lux-snippet.js')
         if (!existsSync(snippetPath)) {
           throw new Error('[nuxt-scripts] useScriptSpeedCurve requires the @speedcurve/lux package. Install it with: npm i -D @speedcurve/lux')
         }
-        const source = readFileSync(snippetPath, 'utf-8')
-        return `export const luxSnippetSource = ${JSON.stringify(source)}\n`
+        return readFileSync(snippetPath, 'utf-8')
+      },
+    }
+    addTemplate({
+      filename: 'nuxt-scripts-snippets.mjs',
+      async getContents() {
+        const exports = await Promise.all(
+          Object.entries(snippets).map(async ([name, getSource]) =>
+            `export const ${name} = ${JSON.stringify(await getSource())}\n`),
+        )
+        return exports.join('')
       },
     })
 

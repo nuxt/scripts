@@ -290,6 +290,24 @@ describe('gravatar', () => {
 })
 
 describe('third-party-capital', () => {
+  // Regression for #810: useScriptSpeedCurve is auto-imported and statically
+  // imports `#build/nuxt-scripts-snippets`. The basic fixture does NOT register
+  // speedcurve, so this page only builds if that virtual is always emitted with
+  // an (empty) `speedcurveLuxSnippet` export. The empty source must also skip the
+  // LUX primer injection at runtime rather than emit an empty inline script.
+  it('useScriptSpeedCurve builds and skips the primer when speedcurve is unregistered', async () => {
+    const { page } = await createPage('/tpc/speedcurve-unregistered')
+
+    // page rendered => the virtual module resolved and the composable ran without throwing
+    expect(await page.$('#status')).not.toBeNull()
+
+    // empty snippet => no inline LUX primer injected into <head>
+    const hasPrimer = await page.evaluate(() =>
+      [...document.querySelectorAll('head script:not([src])')]
+        .some(s => (s.textContent || '').includes('window.LUX')))
+    expect(hasPrimer).toBe(false)
+  })
+
   it('expect GA to collect data', {
     timeout: 10000,
   }, async () => {

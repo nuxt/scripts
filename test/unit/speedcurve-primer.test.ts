@@ -19,8 +19,8 @@ vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
   useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
 }))
 
-vi.mock('#build/nuxt-scripts-speedcurve-snippet', () => ({
-  luxSnippetSource: '(function(){window.LUX=window.LUX||{};window.LUX.snippetVersion="2.0.0";})()',
+vi.mock('#build/nuxt-scripts-snippets', () => ({
+  speedcurveLuxSnippet: '(function(){window.LUX=window.LUX||{};window.LUX.snippetVersion="2.0.0";})()',
 }))
 
 describe('useScriptSpeedCurve primer injection', () => {
