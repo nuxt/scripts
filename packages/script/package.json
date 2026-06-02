@@ -68,7 +68,6 @@
       "unimport",
       "#nuxt-scripts/types",
       "posthog-js",
-      "@speedcurve/lux",
       "@nuxt/devtools-kit",
       "sirv"
     ]

@@ -92,6 +92,7 @@ export default defineNuxtConfig({
       databuddyAnalytics: { clientId: 'demo-client-123', trigger: 'manual' },
       segment: { writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C', trigger: 'manual' },
       posthog: { apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W', trigger: 'manual' },
+      speedcurve: { id: 'DEMO_LUX_ID', trigger: 'manual' },
 
       // Pixels — infrastructure only
       metaPixel: { id: '3925006', trigger: 'manual' },

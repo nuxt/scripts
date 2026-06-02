@@ -21,8 +21,8 @@ vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
   useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
 }))
 
-vi.mock('@speedcurve/lux/dist/lux-snippet.js?raw', () => ({
-  default: '/* lux snippet */',
+vi.mock('#build/nuxt-scripts-speedcurve-snippet', () => ({
+  luxSnippetSource: '/* lux snippet */',
 }))
 
 describe('installAutoTracker', () => {
@@ -85,11 +85,11 @@ describe('installAutoTracker', () => {
       injectHead: vi.fn(),
       onNuxtReady: vi.fn(),
     }))
-    vi.doMock('@speedcurve/lux/dist/lux-snippet.js?raw', () => ({
-      default: '/* lux snippet */',
-    }))
     vi.doMock('../../packages/script/src/runtime/composables/useScript', () => ({
       useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
+    }))
+    vi.doMock('#build/nuxt-scripts-speedcurve-snippet', () => ({
+      luxSnippetSource: '/* lux snippet */',
     }))
 
     vi.clearAllMocks()
@@ -119,11 +119,11 @@ describe('installAutoTracker', () => {
       injectHead: vi.fn(),
       onNuxtReady: vi.fn(),
     }))
-    vi.doMock('@speedcurve/lux/dist/lux-snippet.js?raw', () => ({
-      default: '/* lux snippet */',
-    }))
     vi.doMock('../../packages/script/src/runtime/composables/useScript', () => ({
       useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
+    }))
+    vi.doMock('#build/nuxt-scripts-speedcurve-snippet', () => ({
+      luxSnippetSource: '/* lux snippet */',
     }))
   })
 

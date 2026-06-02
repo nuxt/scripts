@@ -20,6 +20,40 @@ The composable comes with the following defaults:
 <!-- eslint-disable-next-line harlanzw/ai-deslop-passive-voice -->
 - **Trigger: Client** The LUX primer is injected into `<head>`{lang="html"} immediately; `lux.js` loads when Nuxt hydrates.
 
+## Setup
+
+SpeedCurve LUX is opt-in. You **must** register it in `scripts.registry.speedcurve` before calling `useScriptSpeedCurve`, including for per-page usage. Registration triggers the module to resolve and inline the LUX primer at build time. Install the `@speedcurve/lux` peer dep alongside:
+
+```bash
+pnpm add -D @speedcurve/lux
+```
+
+```ts [nuxt.config.ts: composable-only (no global load)]
+export default defineNuxtConfig({
+  modules: ['@nuxt/scripts'],
+  scripts: {
+    registry: {
+      // Minimum registration — enables the composable per-page.
+      // Pass `id` here and you can omit it from each useScriptSpeedCurve() call.
+      speedcurve: {},
+    },
+  },
+})
+```
+
+```ts [nuxt.config.ts: auto-load globally]
+export default defineNuxtConfig({
+  modules: ['@nuxt/scripts'],
+  scripts: {
+    registry: {
+      speedcurve: { id: 'YOUR_SPEEDCURVE_ID', trigger: 'onNuxtReady' },
+    },
+  },
+})
+```
+
+If `speedcurve` isn't registered, builds fail with an unresolved `#build/nuxt-scripts-speedcurve-snippet` import. If it's registered but `@speedcurve/lux` is missing, the build fails with an install hint. Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
+
 You can access the `LUX` object as a proxy directly, or await `$script` to get the loaded instance.
 
 ::code-group
