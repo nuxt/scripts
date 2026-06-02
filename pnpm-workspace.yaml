@@ -1,3 +1,29 @@
+minimumReleaseAgeExclude:
+  - '@oxc-parser/binding-android-arm-eabi@0.134.0'
+  - '@oxc-parser/binding-android-arm64@0.134.0'
+  - '@oxc-parser/binding-darwin-arm64@0.134.0'
+  - '@oxc-parser/binding-darwin-x64@0.134.0'
+  - '@oxc-parser/binding-freebsd-x64@0.134.0'
+  - '@oxc-parser/binding-linux-arm-gnueabihf@0.134.0'
+  - '@oxc-parser/binding-linux-arm-musleabihf@0.134.0'
+  - '@oxc-parser/binding-linux-arm64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-arm64-musl@0.134.0'
+  - '@oxc-parser/binding-linux-ppc64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-riscv64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-riscv64-musl@0.134.0'
+  - '@oxc-parser/binding-linux-s390x-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-x64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-x64-musl@0.134.0'
+  - '@oxc-parser/binding-openharmony-arm64@0.134.0'
+  - '@oxc-parser/binding-wasm32-wasi@0.134.0'
+  - '@oxc-parser/binding-win32-arm64-msvc@0.134.0'
+  - '@oxc-parser/binding-win32-ia32-msvc@0.134.0'
+  - '@oxc-parser/binding-win32-x64-msvc@0.134.0'
+  - '@oxc-project/types@0.134.0'
+  - '@posthog/core@1.30.2'
+  - '@posthog/types@1.378.1'
+  - oxc-parser@0.134.0
+  - posthog-js@1.378.1
 shellEmulator: true
 
 trustPolicy: no-downgrade
@@ -22,16 +48,16 @@ catalog:
   '@nuxt/kit': ^4.4.6
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
-  '@nuxt/ui': ^4.7.1
+  '@nuxt/ui': ^4.8.1
   '@nuxtjs/partytown': ^2.0.0
   '@paypal/paypal-js': ^9.7.0
   '@shikijs/langs': ^4.1.0
   '@shikijs/themes': ^4.1.0
   # Pin to ^4.4.x: snippet protocol 2.0.0. Treat major bumps as breaking — verify primer compatibility before upgrading.
   '@speedcurve/lux': ^4.4.3
-  '@types/google.maps': ^3.64.1
+  '@types/google.maps': ^3.65.0
   '@types/jest-image-snapshot': ^6.4.1
-  '@types/node': ^22.10.0
+  '@types/node': ^25.9.1
   '@types/youtube': ^0.2.0
   '@vue/test-utils': ^2.4.10
   '@vueuse/core': ^14.3.0
@@ -39,8 +65,8 @@ catalog:
   bumpp: ^11.1.0
   consola: ^3.4.2
   defu: ^6.1.7
-  eslint: ^10.4.0
-  eslint-plugin-harlanzw: ^0.15.1
+  eslint: ^10.4.1
+  eslint-plugin-harlanzw: ^0.17.0
   h3: ^1.15.11
   happy-dom: ^20.9.0
   jest-image-snapshot: ^6.5.2
@@ -48,12 +74,12 @@ catalog:
   nuxt: ^4.4.6
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.132.0
+  oxc-parser: ^0.134.0
   oxc-walker: ^1.0.0
   pathe: ^2.0.3
   pkg-types: ^2.3.1
   playwright-core: ^1.60.0
-  posthog-js: ^1.374.2
+  posthog-js: ^1.378.1
   rollup: ^4.60.4
   shiki: ^4.1.0
   sirv: ^3.0.2
@@ -65,10 +91,10 @@ catalog:
   unimport: ^6.3.0
   unplugin: ^3.0.0
   unstorage: ^1.17.5
-  valibot: ^1.4.0
-  vitest: ^4.1.6
-  vue: ^3.5.34
-  vue-tsc: ^3.3.1
+  valibot: ^1.4.1
+  vitest: ^4.1.7
+  vue: ^3.5.35
+  vue-tsc: ^3.3.3
 trustPolicyIgnoreAfter: 262800
 
 ignoredBuiltDependencies:
