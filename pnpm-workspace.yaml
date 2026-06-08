@@ -50,7 +50,7 @@ catalog:
   '@nuxt/test-utils': ^4.0.3
   '@nuxt/ui': ^4.8.1
   '@nuxtjs/partytown': ^2.0.0
-  '@paypal/paypal-js': ^9.7.0
+  '@paypal/paypal-js': ^10.0.0
   '@shikijs/langs': ^4.1.0
   '@shikijs/themes': ^4.1.0
   '@speedcurve/lux': ^4.4.3
