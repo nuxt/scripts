@@ -48,7 +48,10 @@ export function useScriptUmamiAnalytics<T extends UmamiAnalyticsApi>(_options?: 
       schema: import.meta.dev ? UmamiAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          return window.umami
+          if (import.meta.client) {
+            return window.umami
+          }
+          return undefined
         },
       },
     }
