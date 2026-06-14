@@ -38,7 +38,7 @@ overrides:
   '@nuxt/scripts': 'workspace:*'
   # Force unhead v3 only inside the unhead-v3 regression fixture; the rest of
   # the workspace stays on v2 via Nuxt's transitive resolution.
-  unhead-v3-fixture>@unhead/vue: ^3.0.0
+  unhead-v3-fixture>@unhead/vue: ^3.1.4
   vitest-environment-nuxt: 2.0.0
 catalog:
   '@antfu/eslint-config': ^9.0.0
@@ -48,39 +48,39 @@ catalog:
   '@nuxt/kit': ^4.4.6
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
-  '@nuxt/ui': ^4.8.1
+  '@nuxt/ui': ^4.8.2
   '@nuxtjs/partytown': ^2.0.0
-  '@paypal/paypal-js': ^9.7.0
-  '@shikijs/langs': ^4.1.0
-  '@shikijs/themes': ^4.1.0
+  '@paypal/paypal-js': ^9.8.0
+  '@shikijs/langs': ^4.2.0
+  '@shikijs/themes': ^4.2.0
   '@speedcurve/lux': ^4.4.3
-  '@types/google.maps': ^3.65.0
+  '@types/google.maps': ^3.65.1
   '@types/jest-image-snapshot': ^6.4.1
-  '@types/node': ^25.9.1
-  '@types/youtube': ^0.2.0
-  '@vue/test-utils': ^2.4.10
+  '@types/node': ^25.9.3
+  '@types/youtube': ^0.3.0
+  '@vue/test-utils': ^2.4.11
   '@vueuse/core': ^14.3.0
   '@vueuse/shared': ^14.3.0
   bumpp: ^11.1.0
   consola: ^3.4.2
   defu: ^6.1.7
-  eslint: ^10.4.1
+  eslint: ^10.5.0
   eslint-plugin-harlanzw: ^0.17.0
   h3: ^1.15.11
-  happy-dom: ^20.9.0
+  happy-dom: ^20.10.3
   jest-image-snapshot: ^6.5.2
   magic-string: ^0.30.21
   nuxt: ^4.4.6
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.134.0
+  oxc-parser: ^0.135.0
   oxc-walker: ^1.0.0
   pathe: ^2.0.3
   pkg-types: ^2.3.1
   playwright-core: ^1.60.0
-  posthog-js: ^1.378.1
-  rollup: ^4.60.4
-  shiki: ^4.1.0
+  posthog-js: ^1.386.6
+  rollup: ^4.62.0
+  shiki: ^4.2.0
   sirv: ^3.0.2
   std-env: ^4.1.0
   typescript: ^6.0.3
@@ -91,9 +91,9 @@ catalog:
   unplugin: ^3.0.0
   unstorage: ^1.17.5
   valibot: ^1.4.1
-  vitest: ^4.1.7
-  vue: ^3.5.35
-  vue-tsc: ^3.3.3
+  vitest: ^4.1.8
+  vue: ^3.5.38
+  vue-tsc: ^3.3.5
 trustPolicyIgnoreAfter: 262800
 
 ignoredBuiltDependencies:
