@@ -951,8 +951,19 @@ export default defineNuxtModule<ModuleOptions>({
         // collision (two domains resolving to the same alias would mis-route at runtime).
         domainAliases = buildDomainAliasMap(Object.keys(domainPrivacy), proxyAlias)
         const aliasToDomain = invertAliasMap(domainAliases)
+        // Two domains sharing an alias would mis-route at runtime (one upstream wins).
+        // Fail the build rather than silently send one domain's traffic to the other.
         if (Object.keys(aliasToDomain).length !== Object.values(domainAliases).length) {
-          logger.warn('[nuxt-scripts] Proxy alias collision detected: multiple domains map to the same alias. Use unique aliases.')
+          const seen = new Map<string, string>()
+          const clashes: string[] = []
+          for (const [domain, alias] of Object.entries(domainAliases)) {
+            const prev = seen.get(alias)
+            if (prev)
+              clashes.push(`"${prev}" and "${domain}" → "${alias}"`)
+            else
+              seen.set(alias, domain)
+          }
+          throw new Error(`[nuxt-scripts] Proxy alias collision: ${clashes.join(', ')}. Give each domain a unique alias.`)
         }
 
         // Register intercept plugin

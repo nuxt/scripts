@@ -90,7 +90,9 @@ export default defineEventHandler(async (event) => {
 
   // Resolve path alias back to the real third-party domain. Falls back to the
   // segment itself so verbatim-hostname paths keep working when aliasing is off.
-  const domain = aliasToDomain?.[segment] ?? segment
+  // `Object.hasOwn` guard: a crafted segment like `toString`/`constructor` must not
+  // resolve to an inherited prototype member (which would break allowlist matching).
+  const domain = aliasToDomain && Object.hasOwn(aliasToDomain, segment) ? aliasToDomain[segment] : segment
 
   if (!domain) {
     log('[proxy] No domain in path:', path)

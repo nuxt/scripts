@@ -95,4 +95,11 @@ describe('proxy handler - path aliases (#814)', () => {
     const res = await get('/_scripts/p/deadbeef/api/send')
     expect(res.status).toBe(403)
   })
+
+  it('rejects a crafted segment matching a prototype member (no 500)', async () => {
+    // `aliasToDomain['toString']` would be Object.prototype.toString without the
+    // own-property guard, breaking allowlist matching and 500-ing.
+    const res = await get('/_scripts/p/toString/api/send')
+    expect(res.status).toBe(403)
+  })
 })

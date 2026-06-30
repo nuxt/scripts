@@ -24,9 +24,12 @@ export function aliasForDomain(domain: string, alias: ProxyAliasConfig): string 
   if (!alias || WILDCARD_RE.test(domain))
     return undefined
   if (alias === true)
-    // 8 hex chars (32 bits) — collision-free for the handful of domains a site proxies.
-    return createHash('sha256').update(domain).digest('hex').slice(0, 8)
-  return alias[domain] || undefined
+    // 12 hex chars (48 bits) — collision space large enough that auto-aliasing never
+    // silently misroutes; explicit-alias collisions are caught at build time instead.
+    return createHash('sha256').update(domain).digest('hex').slice(0, 12)
+  // Own-property guard so a domain literally named `toString`/`constructor` can't
+  // resolve to an inherited prototype member.
+  return Object.hasOwn(alias, domain) ? (alias[domain] || undefined) : undefined
 }
 
 /** Build a `domain → alias` map for the given proxied domains. */

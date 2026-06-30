@@ -12,9 +12,14 @@ describe('proxy-alias', () => {
       const a = aliasForDomain('us.i.posthog.com', true)
       const b = aliasForDomain('us.i.posthog.com', true)
       expect(a).toBe(b)
-      expect(a).toMatch(/^[a-f0-9]{8}$/)
+      expect(a).toMatch(/^[a-f0-9]{12}$/)
       // hostname is never present verbatim
       expect(a).not.toContain('posthog')
+    })
+
+    it('does not resolve inherited prototype members for an explicit map', () => {
+      expect(aliasForDomain('toString', { 'us.i.posthog.com': 'ph' })).toBeUndefined()
+      expect(aliasForDomain('constructor', { 'us.i.posthog.com': 'ph' })).toBeUndefined()
     })
 
     it('produces distinct aliases for distinct domains', () => {
