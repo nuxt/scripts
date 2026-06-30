@@ -165,6 +165,9 @@ export function resolveScriptKey(input: any): string {
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
+  if (!import.meta.client && options.use) {
+    options.use = (() => undefined) as typeof options.use
+  }
 
   // Partytown quick-path: use useHead for SSR rendering
   // Partytown needs scripts in initial HTML with type="text/partytown"

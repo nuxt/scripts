@@ -52,6 +52,13 @@ type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptIn
   gcmConsent?: GcmConsentContract
 })
 
+function resolveClientUse(use?: NuxtUseScriptOptions['use']): NuxtUseScriptOptions['use'] | undefined {
+  if (!import.meta.client && use) {
+    return (() => undefined) as typeof use
+  }
+  return use
+}
+
 export function scriptRuntimeConfig<T extends RegistryScriptKey>(key: T): ScriptRegistry[T] {
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
@@ -79,7 +86,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   if (options.scriptMode === 'npm') {
     return createNpmScriptStub<T>({
       key: String(registryKey),
-      use: options.scriptOptions?.use,
+      use: resolveClientUse(options.scriptOptions?.use),
       clientInit: options.clientInit,
       trigger: userOptions.scriptOptions?.trigger as any,
     }) as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
@@ -112,6 +119,9 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
 
   const scriptInput = defu(finalScriptInput as any, userOptions.scriptInput as any, { key: registryKey }) as any as UseScriptInput
   const scriptOptions = { ...userOptions?.scriptOptions, ...options.scriptOptions }
+  if (scriptOptions.use) {
+    scriptOptions.use = resolveClientUse(scriptOptions.use as NuxtUseScriptOptions['use']) as typeof scriptOptions.use
+  }
   if (import.meta.dev) {
     // Capture where the component was loaded from
     const error = new Error('Stack trace for component location')
