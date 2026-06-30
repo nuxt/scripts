@@ -46,6 +46,8 @@ function toNetworkRequest(entry: PerformanceResourceTiming, proxyPrefix: string)
 
 function createDomainMatcher(domains: Set<string>, proxyPrefix: string, scriptSrc: string | undefined) {
   const localHostname = window.location.hostname
+  // alias → real domain, so aliased proxy paths (/_scripts/p/<alias>/...) still attribute
+  const aliasToDomain = (useRuntimeConfig().public['nuxt-scripts-devtools'] as any)?.aliasToDomain || {}
   const scriptUrl = (() => {
     if (!scriptSrc)
       return ''
@@ -69,7 +71,8 @@ function createDomainMatcher(domains: Set<string>, proxyPrefix: string, scriptSr
       const proxyIdx = entryUrl.pathname.indexOf(proxyPath)
       if (proxyIdx !== -1) {
         const afterPrefix = entryUrl.pathname.slice(proxyIdx + proxyPath.length)
-        const proxyDomain = afterPrefix.split('/')[0]
+        const proxySegment = afterPrefix.split('/')[0]
+        const proxyDomain = proxySegment ? (aliasToDomain[proxySegment] || proxySegment) : undefined
         if (proxyDomain && domains.has(proxyDomain))
           return true
       }

@@ -73,6 +73,8 @@ export interface AssetBundlerTransformerOptions {
    * Proxy prefix for first-party mode. Used to derive rewrite targets from domains.
    */
   proxyPrefix?: string
+  /** Map of real third-party domain → path alias, used to hide hostnames in proxy URLs. */
+  domainAliases?: Record<string, string>
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
@@ -469,7 +471,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // no literal form to rewrite at build time.
                     const proxyRewrites = proxyConfig?.domains?.filter(domain => !domain.includes('*')).map(domain => ({
                       from: domain,
-                      to: `${options.proxyPrefix}/${domain}`,
+                      to: `${options.proxyPrefix}/${options.domainAliases?.[domain] ?? domain}`,
                     }))
                     // Bundle-only SDK patches (independent of proxy). Used when bundling
                     // a script that needs neutralize-domain-check etc. but should keep

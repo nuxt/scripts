@@ -1,6 +1,7 @@
 import type { FetchOptions } from 'ofetch'
 import type { ProxyDevtoolsScript } from './devtools'
 import type { NormalizedRegistryEntry } from './normalize'
+import type { ProxyAliasConfig } from './proxy-alias'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type {
   FirstPartyPrivacy,
@@ -38,6 +39,7 @@ import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistry
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
+import { aliasProxyValue, buildDomainAliasMap, invertAliasMap } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
@@ -215,6 +217,7 @@ export function applyAutoInject(
   proxyPrefix: string,
   registryKey: string,
   autoInject: ResolvedProxyAutoInject,
+  alias?: ProxyAliasConfig,
 ): void {
   if (isProxyDisabled(registryKey, registry, runtimeConfig))
     return
@@ -229,7 +232,7 @@ export function applyAutoInject(
   if (!config || config[autoInject.configField])
     return
 
-  const value = autoInject.computeValue(proxyPrefix, config)
+  const value = aliasProxyValue(autoInject.computeValue(proxyPrefix, config), proxyPrefix, alias)
   input[autoInject.configField] = value
 
   if (rtEntry && typeof rtEntry === 'object' && rtEntry !== input)
@@ -316,6 +319,23 @@ export interface ModuleOptions {
    * @default undefined (per-script defaults)
    */
   privacy?: FirstPartyPrivacy
+  /**
+   * First-party proxy behaviour.
+   */
+  proxy?: {
+    /**
+     * Replace third-party hostnames in proxy paths with aliases, so the real domain
+     * (e.g. a self-hosted analytics host) never appears in client-facing URLs.
+     *
+     * - `false` (default): paths embed the verbatim hostname (`/_scripts/p/us.i.posthog.com/...`)
+     * - `true`: auto-generate a short opaque alias per domain (`/_scripts/p/a1b2c3d4/...`)
+     * - `Record<domain, alias>`: explicit aliases (domain → alias); unlisted domains stay verbatim
+     *
+     * @default false
+     * @example { 'us.i.posthog.com': 'ph', 'analytics.internal.example.com': 'a' }
+     */
+    alias?: ProxyAliasConfig
+  }
   /**
    * The registry of supported third-party scripts. Presence enables infrastructure (proxy routes, types, bundling, composable auto-imports).
    * Scripts only auto-load globally when `trigger` is explicitly set in the config object.
@@ -853,6 +873,11 @@ export default defineNuxtModule<ModuleOptions>({
         }
       }
 
+      // Path alias config — maps real third-party domains to opaque/custom aliases so
+      // hostnames don't leak into client-facing proxy URLs. Shared with the transformer.
+      const proxyAlias = config.proxy?.alias
+      let domainAliases: Record<string, string> = {}
+
       // Finalize proxy setup: build configs, register intercept plugin, wire devtools
       if (anyNeedsProxy) {
         const builtConfigs = buildProxyConfigsFromRegistry(registryScripts, scriptByKey)
@@ -903,7 +928,7 @@ export default defineNuxtModule<ModuleOptions>({
           }
 
           if (proxyConfig.autoInject && config.registry)
-            applyAutoInject(config.registry, nuxt.options.runtimeConfig, proxyPrefix, key, proxyConfig.autoInject)
+            applyAutoInject(config.registry, nuxt.options.runtimeConfig, proxyPrefix, key, proxyConfig.autoInject, proxyAlias)
 
           if (nuxt.options.dev)
             devtoolsScripts.push(buildDevtoolsEntry(key, script, configKey, proxyConfig))
@@ -922,16 +947,25 @@ export default defineNuxtModule<ModuleOptions>({
           )
         }
 
+        // Build the domain → alias map from every proxied domain, then warn on any
+        // collision (two domains resolving to the same alias would mis-route at runtime).
+        domainAliases = buildDomainAliasMap(Object.keys(domainPrivacy), proxyAlias)
+        const aliasToDomain = invertAliasMap(domainAliases)
+        if (Object.keys(aliasToDomain).length !== Object.values(domainAliases).length) {
+          logger.warn('[nuxt-scripts] Proxy alias collision detected: multiple domains map to the same alias. Use unique aliases.')
+        }
+
         // Register intercept plugin
         addPluginTemplate({
           filename: 'nuxt-scripts-intercept.client.mjs',
-          getContents() { return generateInterceptPluginContents(proxyPrefix, { testMode: !!nuxt.options.test }) },
+          getContents() { return generateInterceptPluginContents(proxyPrefix, { testMode: !!nuxt.options.test, domainAliases }) },
         })
 
         // Server-side proxy config
         nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
           proxyPrefix,
           domainPrivacy,
+          aliasToDomain,
           privacy: config.privacy,
         } as any
 
@@ -954,14 +988,14 @@ export default defineNuxtModule<ModuleOptions>({
 
         // Expose devtools data
         if (nuxt.options.dev) {
-          nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = buildDevtoolsData(proxyPrefix, privacyLabel, devtoolsScripts) as any
+          nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = buildDevtoolsData(proxyPrefix, privacyLabel, devtoolsScripts, aliasToDomain) as any
         }
 
         // Auto-configure Partytown resolveUrl for proxy
         if (partytownScripts.size && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
-            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix)
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix, domainAliases)
             ;(nuxt.options as any).partytown = partytownConfig
             logger.info('[partytown] Auto-configured resolveUrl for proxy')
           }
@@ -981,6 +1015,7 @@ export default defineNuxtModule<ModuleOptions>({
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         proxyConfigs,
         proxyPrefix,
+        domainAliases,
         partytownScripts,
         moduleDetected(module) {
           if (nuxt.options.dev && module !== '@nuxt/scripts' && !moduleInstallPromises.has(module) && !hasNuxtModule(module))
