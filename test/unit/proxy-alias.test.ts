@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aliasForDomain, aliasProxyValue, buildDomainAliasMap, invertAliasMap } from '../../packages/script/src/proxy-alias'
+import { aliasForDomain, aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from '../../packages/script/src/proxy-alias'
 
 describe('proxy-alias', () => {
   describe('aliasForDomain', () => {
@@ -48,6 +48,23 @@ describe('proxy-alias', () => {
     it('auto-aliases every non-wildcard domain', () => {
       const map = buildDomainAliasMap(['a.example.com', '*.example.com'], true)
       expect(Object.keys(map)).toEqual(['a.example.com'])
+    })
+  })
+
+  describe('isSafeAliasSegment', () => {
+    it('accepts URL-safe single segments', () => {
+      expect(isSafeAliasSegment('ph')).toBe(true)
+      expect(isSafeAliasSegment('a1b2c3d4e5f6')).toBe(true)
+      expect(isSafeAliasSegment('my-alias_1.2')).toBe(true)
+    })
+
+    it('rejects segments with path/query/hash/whitespace characters', () => {
+      expect(isSafeAliasSegment('foo/bar')).toBe(false)
+      expect(isSafeAliasSegment('../etc')).toBe(false)
+      expect(isSafeAliasSegment('a?b')).toBe(false)
+      expect(isSafeAliasSegment('a#b')).toBe(false)
+      expect(isSafeAliasSegment('a b')).toBe(false)
+      expect(isSafeAliasSegment('')).toBe(false)
     })
   })
 

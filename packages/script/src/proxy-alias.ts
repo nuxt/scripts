@@ -12,6 +12,14 @@ import { createHash } from 'node:crypto'
 export type ProxyAliasConfig = boolean | Record<string, string> | undefined
 
 const WILDCARD_RE = /\*/
+// An alias is interpolated into `/_scripts/p/<alias>/...`, so it must be a single
+// URL path segment: no slash/query/hash/whitespace that would split or break the path.
+const SAFE_ALIAS_SEGMENT_RE = /^[\w.-]+$/
+
+/** Whether an explicit alias is a single URL-safe path segment. */
+export function isSafeAliasSegment(alias: string): boolean {
+  return SAFE_ALIAS_SEGMENT_RE.test(alias)
+}
 
 /**
  * Resolve the alias for a single third-party domain. Pure and deterministic so the

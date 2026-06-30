@@ -39,7 +39,7 @@ import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistry
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
-import { aliasProxyValue, buildDomainAliasMap, invertAliasMap } from './proxy-alias'
+import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
@@ -950,21 +950,22 @@ export default defineNuxtModule<ModuleOptions>({
         // Build the domain → alias map from every proxied domain, then warn on any
         // collision (two domains resolving to the same alias would mis-route at runtime).
         domainAliases = buildDomainAliasMap(Object.keys(domainPrivacy), proxyAlias)
-        const aliasToDomain = invertAliasMap(domainAliases)
-        // Two domains sharing an alias would mis-route at runtime (one upstream wins).
-        // Fail the build rather than silently send one domain's traffic to the other.
-        if (Object.keys(aliasToDomain).length !== Object.values(domainAliases).length) {
-          const seen = new Map<string, string>()
-          const clashes: string[] = []
-          for (const [domain, alias] of Object.entries(domainAliases)) {
-            const prev = seen.get(alias)
-            if (prev)
-              clashes.push(`"${prev}" and "${domain}" → "${alias}"`)
-            else
-              seen.set(alias, domain)
-          }
-          throw new Error(`[nuxt-scripts] Proxy alias collision: ${clashes.join(', ')}. Give each domain a unique alias.`)
+        // Validate aliases at the build boundary so the runtime map is unambiguous:
+        // every alias must be a safe single path segment, unique, and must not equal a
+        // real proxied domain (else the verbatim-hostname fallback could pick the wrong one).
+        const realDomains = new Set(Object.keys(domainPrivacy))
+        const aliasOwner = new Map<string, string>()
+        for (const [domain, alias] of Object.entries(domainAliases)) {
+          if (!isSafeAliasSegment(alias))
+            throw new Error(`[nuxt-scripts] Invalid proxy alias "${alias}" for "${domain}": use a single URL-safe path segment (letters, digits, '-', '_', '.').`)
+          if (realDomains.has(alias))
+            throw new Error(`[nuxt-scripts] Proxy alias "${alias}" for "${domain}" collides with proxied domain "${alias}". Pick an alias that is not also a proxied hostname.`)
+          const prev = aliasOwner.get(alias)
+          if (prev)
+            throw new Error(`[nuxt-scripts] Proxy alias collision: "${prev}" and "${domain}" both map to "${alias}". Give each domain a unique alias.`)
+          aliasOwner.set(alias, domain)
         }
+        const aliasToDomain = invertAliasMap(domainAliases)
 
         // Register intercept plugin
         addPluginTemplate({
