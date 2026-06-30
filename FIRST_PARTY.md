@@ -53,6 +53,22 @@ Some SDKs have quirks that require targeted regex patches after AST rewriting. T
 
 Note: Google Analytics previously needed `postProcess` regex patches for dynamically constructed collect URLs. This is no longer needed since the runtime intercept plugin catches all non-same-origin URLs at the `sendBeacon`/`fetch` call site.
 
+## Path aliases (`proxy.alias`)
+
+By default proxy paths embed the verbatim third-party hostname (`/_scripts/p/us.i.posthog.com/e/`), which leaks self-hosted/internal domains and is trivially classified by ad-blockers. `scripts.proxy.alias` replaces the hostname segment with an alias:
+- `true` — auto-generate a short deterministic hash per domain (`sha256(domain).slice(0,8)`)
+- `Record<domain, alias>` — explicit aliases; unlisted domains stay verbatim
+
+The pure logic lives in `proxy-alias.ts` (`aliasForDomain`, `buildDomainAliasMap`, `invertAliasMap`, `aliasProxyValue`). The module builds a `domain → alias` map from every proxied domain (those in `domainPrivacy`) and threads it through every point that emits a proxy path:
+- **Build-time rewrites** (`transform.ts`): `to: ${proxyPrefix}/${alias ?? domain}`
+- **Auto-inject** (`applyAutoInject`): `aliasProxyValue` rewrites the host segment of the computed endpoint
+- **Runtime intercept** (`intercept.ts`): embeds the alias map; `proxyUrl` maps `parsed.host → alias`
+- **Partytown** (`generatePartytownResolveUrl`): embeds the alias map; worker requests map `url.host → alias`
+- **Server handler** (`proxy-handler.ts`): the inverted `aliasToDomain` map resolves the alias segment back to the real domain before allowlist matching and forwarding (verbatim hostnames still resolve, so aliasing is non-breaking)
+- **Devtools** (`useScript.ts` network matcher): `aliasToDomain` is exposed in devtools config so aliased requests still attribute to their script
+
+Wildcard domains (`*`) are never aliased — they have no literal path form to rewrite and only exist for runtime allowlist matching.
+
 ## Key mapping
 
 Proxy config keys match registry keys directly — no indirection layer. A script's `registryKey` is used to look up its proxy config from `proxy-configs.ts`.

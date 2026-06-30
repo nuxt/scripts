@@ -869,12 +869,17 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
 /**
  * Generate a Partytown `resolveUrl` function string for proxy routing.
  * Partytown calls this for every network request made by worker-executed scripts.
- * Any non-same-origin URL is proxied through `proxyPrefix/<host><path>`.
+ * Any non-same-origin URL is proxied through `proxyPrefix/<host-or-alias><path>`.
+ *
+ * `domainAliases` (real domain → path alias) is embedded so worker requests use the
+ * same opaque path segment as build-time rewrites, keeping hostnames out of URLs.
  */
-export function generatePartytownResolveUrl(proxyPrefix: string): string {
+export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: Record<string, string> = {}): string {
   return `function(url, location, type) {
   if (url.origin !== location.origin) {
-    return new URL(${JSON.stringify(proxyPrefix)} + '/' + url.host + url.pathname + url.search, location.origin);
+    var aliases = ${JSON.stringify(domainAliases)};
+    var seg = aliases[url.host] || url.host;
+    return new URL(${JSON.stringify(proxyPrefix)} + '/' + seg + url.pathname + url.search, location.origin);
   }
 }`
 }

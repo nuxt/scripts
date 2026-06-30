@@ -17,6 +17,8 @@ interface ProxyConfig {
   proxyPrefix: string
   /** Allowed domains with their privacy config */
   domainPrivacy: Record<string, ProxyPrivacyInput>
+  /** Reverse map of path alias → real third-party domain (when alias paths are enabled) */
+  aliasToDomain?: Record<string, string>
   /** Global user override — undefined means use per-script defaults */
   privacy?: ProxyPrivacyInput
   /** Enable verbose logging (default: only in dev) */
@@ -71,7 +73,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { proxyPrefix, domainPrivacy, privacy: globalPrivacy, debug = import.meta.dev } = proxyConfig
+  const { proxyPrefix, domainPrivacy, aliasToDomain, privacy: globalPrivacy, debug = import.meta.dev } = proxyConfig
   const path = event.path
   const log = debug
     ? (message: string, ...args: any[]) => {
@@ -80,11 +82,17 @@ export default defineEventHandler(async (event) => {
       }
     : () => {}
 
-  // Extract domain and remaining path from: /_scripts/p/<host>/<path>
+  // Extract domain and remaining path from: /_scripts/p/<host-or-alias>/<path>
   const afterPrefix = path.slice(proxyPrefix.length + 1) // +1 for the slash after prefix
   const slashIdx = afterPrefix.indexOf('/')
-  const domain = slashIdx > 0 ? afterPrefix.slice(0, slashIdx) : afterPrefix
+  const segment = slashIdx > 0 ? afterPrefix.slice(0, slashIdx) : afterPrefix
   const remainingPath = slashIdx > 0 ? afterPrefix.slice(slashIdx) : '/'
+
+  // Resolve path alias back to the real third-party domain. Falls back to the
+  // segment itself so verbatim-hostname paths keep working when aliasing is off.
+  // `Object.hasOwn` guard: a crafted segment like `toString`/`constructor` must not
+  // resolve to an inherited prototype member (which would break allowlist matching).
+  const domain = aliasToDomain && Object.hasOwn(aliasToDomain, segment) ? aliasToDomain[segment] : segment
 
   if (!domain) {
     log('[proxy] No domain in path:', path)

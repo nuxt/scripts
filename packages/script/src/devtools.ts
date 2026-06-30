@@ -129,6 +129,8 @@ export interface ProxyDevtoolsData {
   privacyMode: string
   scripts: ProxyDevtoolsScript[]
   totalDomains: number
+  /** Path alias → real domain, so devtools can attribute aliased proxy requests. */
+  aliasToDomain?: Record<string, string>
 }
 
 function computeDevtoolsPrivacyLevel(privacy: Record<string, boolean>): 'full' | 'partial' | 'none' {
@@ -178,6 +180,7 @@ export function buildDevtoolsData(
   proxyPrefix: string,
   privacyLabel: string,
   scripts: ProxyDevtoolsScript[],
+  aliasToDomain?: Record<string, string>,
 ): ProxyDevtoolsData {
   const allDomains = new Set<string>()
   for (const s of scripts) {
@@ -190,5 +193,6 @@ export function buildDevtoolsData(
     privacyMode: privacyLabel,
     scripts,
     totalDomains: allDomains.size,
+    aliasToDomain,
   }
 }
