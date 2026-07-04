@@ -643,8 +643,6 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     })
 
     it('should bypass cache for registry scriptOptions.bundle force', async () => {
-      vi.mocked(hash).mockImplementationOnce(() => 'scevent.min')
-
       // Mock that cache exists and is fresh
       mockBundleStorage.hasItem.mockResolvedValue(true)
       mockBundleStorage.getItem.mockResolvedValue({ timestamp: Date.now() })

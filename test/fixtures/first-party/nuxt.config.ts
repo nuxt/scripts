@@ -1,8 +1,8 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
 // trigger: 'manual' prevents the auto-generated plugin from loading all 18
-// scripts globally on every page. Pages that need the real SDK load provide an
-// explicit trigger in their composable call, keeping cross-provider noise low.
+// scripts globally on every page. Pages that need the real SDK should provide
+// an explicit trigger in their composable call, keeping cross-provider noise low.
 const manual = { trigger: 'manual' as const }
 
 export default defineNuxtConfig({

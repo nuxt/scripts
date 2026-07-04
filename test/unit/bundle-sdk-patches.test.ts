@@ -9,6 +9,7 @@ import { hash } from 'ohash'
 import { hasProtocol } from 'ufo'
 import { describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
+import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
 
 vi.mock('ohash', async (og) => {
   const mod = await og<typeof import('ohash')>()
@@ -44,6 +45,13 @@ vi.mock('@nuxt/kit', async (og) => {
 
 vi.mocked(hasProtocol).mockImplementation(() => true)
 vi.mocked(hash).mockImplementation(() => 'fathom-script')
+
+let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
+async function getProxyConfigs() {
+  if (!_proxyConfigs)
+    _proxyConfigs = buildProxyConfigsFromRegistry(await registry())
+  return _proxyConfigs
+}
 
 function mockUpstream(bytes: Buffer) {
   fetchMock.mockResolvedValueOnce({
@@ -152,6 +160,7 @@ describe('bundle-only sdkPatches integration', () => {
     mockUpstream(snapchatLike)
     vi.mocked(hash).mockImplementationOnce(() => 'snapchat-script')
     const renderedScript = new Map()
+    const proxyConfigs = await getProxyConfigs()
 
     await runTransform(
       `const instance = useScriptSnapchatPixel({ id: '2295cbcc-cb3f-4727-8c09-1133b742722c' }, { bundle: true })`,
@@ -169,13 +178,7 @@ describe('bundle-only sdkPatches integration', () => {
           },
         ] as any,
         proxyConfigs: {
-          snapchatPixel: {
-            domains: ['sc-static.net', 'tr.snapchat.com', 'pixel.tapad.com'],
-            sdkPatches: [
-              { type: 'replace-new-url-host', host: 'sc-static.net' },
-              { type: 'replace-script-loader-url', fromDomain: 'tr.snapchat.com', pathPrefix: '/config' },
-            ],
-          } as any,
+          snapchatPixel: proxyConfigs.snapchatPixel,
         },
         proxyPrefix: '/_scripts/p',
       },
