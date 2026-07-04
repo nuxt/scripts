@@ -1,4 +1,4 @@
-import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue'
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
 import type {
   Script,
 } from '@unhead/vue/types'

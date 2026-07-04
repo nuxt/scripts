@@ -260,6 +260,10 @@ function isLocationQuery(s: string | any) {
 }
 
 type ScriptGoogleMapsCenter = ScriptGoogleMapsProps['center'] | google.maps.MapOptions['center']
+interface GoogleMapsGeocodeProxyResponse {
+  results: Array<{ geometry: { location: { lat: number, lng: number } } }>
+  status: string
+}
 
 function getCenterWatchKey(center: ScriptGoogleMapsCenter): string | undefined {
   const raw = toRaw(center)
@@ -327,9 +331,9 @@ async function resolveQueryToLatLng(query: string) {
   // Use geocode proxy if available (avoids loading Places library client-side)
   const endpoints = (runtimeConfig.public['nuxt-scripts'] as any)?.endpoints
   if (endpoints?.googleMaps) {
-    const data = await $fetch<{ results: Array<{ geometry: { location: { lat: number, lng: number } } }>, status: string }>(`${scriptsPrefix()}/proxy/google-maps-geocode`, {
+    const data = await $fetch(`${scriptsPrefix()}/proxy/google-maps-geocode`, {
       params: { address: query },
-    })
+    }) as GoogleMapsGeocodeProxyResponse
     if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
       const loc = data.results[0].geometry.location
       const latLng = { lat: loc.lat, lng: loc.lng }

@@ -1,6 +1,5 @@
-import type { UseScriptContext } from '@unhead/vue'
 import type Vimeo from '@vimeo/player'
-import type { RegistryScriptInput } from '#nuxt-scripts/types'
+import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead } from '@unhead/vue'
 import { watch } from 'vue'
 import { useRegistryScript } from '../utils'

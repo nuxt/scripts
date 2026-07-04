@@ -123,7 +123,7 @@ defineSlots<ScriptGoogleMapsOverlayViewSlots>()
 // it accepts `default: undefined`, which opts out of Vue's boolean prop
 // coercion that would otherwise turn an unset `open` into `false`. We then
 // seed the local default below if the model is uncontrolled.
-const open = defineModel<boolean>('open', { default: undefined })
+const open = defineModel<boolean, 'open', boolean | undefined, boolean>('open', { default: undefined as never })
 if (open.value === undefined)
   open.value = defaultOpen ?? true
 
