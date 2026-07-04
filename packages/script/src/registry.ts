@@ -519,10 +519,16 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: 'https://sc-static.net/scevent.min.js',
       category: 'ad',
       envDefaults: { id: '' },
-      bundle: true,
+      bundle: {
+        sdkPatches: [{ type: 'replace-new-url-host', host: 'sc-static.net' }],
+      },
       proxy: {
         domains: ['sc-static.net', 'tr.snapchat.com', 'pixel.tapad.com'],
         privacy: PRIVACY_FULL,
+        sdkPatches: [
+          { type: 'replace-new-url-host', host: 'sc-static.net' },
+          { type: 'replace-script-loader-url', fromDomain: 'tr.snapchat.com', pathPrefix: '/config' },
+        ],
       },
       partytown: { forwards: ['snaptr'] },
     }),

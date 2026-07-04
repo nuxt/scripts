@@ -208,10 +208,181 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
     return prev && WORD_OR_DOLLAR_RE.test(prev) ? ' ' : ''
   }
 
+  function sourceOf(node: any): string {
+    return content.slice(node.start, node.end)
+  }
+
   // Pass 1: collect all declarations
   const scopeTracker = new ScopeTracker({ preserveExitedScopes: true })
   const { program } = parseAndWalk(content, filename, { scopeTracker })
   scopeTracker.freeze()
+
+  const scriptLoaderUrlPatches = sdkPatches?.filter((p): p is Extract<SdkPatch, { type: 'replace-script-loader-url' }> =>
+    p.type === 'replace-script-loader-url') ?? []
+  const scriptLoaderPathPrefixes = scriptLoaderUrlPatches.map(p => p.pathPrefix)
+  const scriptLoaderFunctionKeys = new Set<string>()
+
+  function isIdentifier(node: any, name?: string): boolean {
+    return node?.type === 'Identifier' && (!name || node.name === name)
+  }
+
+  function propertyName(node: any): string | null {
+    if (!node)
+      return null
+    if (node.type === 'Identifier')
+      return node.name
+    if (node.type === 'Literal' && typeof node.value === 'string')
+      return node.value
+    return null
+  }
+
+  function firstParamName(node: any): string | null {
+    const param = node?.params?.[0]
+    return param?.type === 'Identifier' ? param.name : null
+  }
+
+  function functionName(node: any, parent: any): string | null {
+    if (node.type === 'FunctionDeclaration' && node.id?.type === 'Identifier')
+      return node.id.name
+    if ((node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression')
+      && parent?.type === 'VariableDeclarator'
+      && parent.id?.type === 'Identifier') {
+      return parent.id.name
+    }
+    if ((node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression')
+      && parent?.type === 'AssignmentExpression'
+      && parent.left?.type === 'Identifier') {
+      return parent.left.name
+    }
+    return null
+  }
+
+  function declarationKey(name: string): string {
+    const decl = scopeTracker.getDeclaration(name)
+    if (decl) {
+      const node = (decl as any).node
+      return `${decl.type}:${decl.scope}:${node?.start ?? decl.start}:${node?.end ?? decl.end}`
+    }
+    return `global:${name}`
+  }
+
+  function isScriptLoaderPathLiteral(value: string): boolean {
+    return scriptLoaderPathPrefixes.some(prefix => value === prefix || value.startsWith(`${prefix}/`))
+  }
+
+  function getIdentifierInit(name: string): any | null {
+    const decl = scopeTracker.getDeclaration(name)
+    if (!(decl instanceof ScopeTrackerVariable))
+      return null
+
+    const declarators = (decl.variableNode as any).declarations
+    if (!declarators)
+      return null
+
+    for (const declarator of declarators) {
+      if (declarator.id?.type === 'Identifier' && declarator.id.name === name)
+        return declarator.init ?? null
+    }
+    return null
+  }
+
+  function findScriptLoaderPathExpression(node: any, seenIdentifiers = new Set<string>()): any {
+    if (!node)
+      return null
+    if (node.type === 'Identifier') {
+      if (seenIdentifiers.has(node.name))
+        return null
+      const init = getIdentifierInit(node.name)
+      if (!init)
+        return null
+      seenIdentifiers.add(node.name)
+      return findScriptLoaderPathExpression(init, seenIdentifiers) ? node : null
+    }
+    if (node.type === 'Literal' && typeof node.value === 'string' && isScriptLoaderPathLiteral(node.value))
+      return node
+    if (node.type === 'TemplateLiteral') {
+      const hasConfigPrefix = node.quasis?.some((q: any) => {
+        const value = q.value?.cooked ?? q.value?.raw
+        return typeof value === 'string' && isScriptLoaderPathLiteral(value)
+      })
+      return hasConfigPrefix ? node : null
+    }
+    if (node.type === 'CallExpression') {
+      for (const arg of node.arguments ?? []) {
+        const found = findScriptLoaderPathExpression(arg, seenIdentifiers)
+        if (found)
+          return found
+      }
+      return null
+    }
+    if (node.type === 'BinaryExpression' || node.type === 'LogicalExpression')
+      return findScriptLoaderPathExpression(node.right, seenIdentifiers) || findScriptLoaderPathExpression(node.left, seenIdentifiers)
+    if (node.type === 'ConditionalExpression')
+      return findScriptLoaderPathExpression(node.consequent, seenIdentifiers) || findScriptLoaderPathExpression(node.alternate, seenIdentifiers)
+    if (node.type === 'SequenceExpression') {
+      for (let i = node.expressions.length - 1; i >= 0; i--) {
+        const found = findScriptLoaderPathExpression(node.expressions[i], seenIdentifiers)
+        if (found)
+          return found
+      }
+    }
+    return null
+  }
+
+  function isScriptLoaderFunction(node: any, urlParam: string): boolean {
+    let matches = false
+    walk(node.body, {
+      enter(child) {
+        if (child !== node.body
+          && (child.type === 'FunctionDeclaration' || child.type === 'FunctionExpression' || child.type === 'ArrowFunctionExpression')) {
+          this.skip()
+          return
+        }
+        if (child.type === 'CallExpression'
+          && child.callee?.type === 'Identifier'
+          && child.callee.name === 'importScripts'
+          && isIdentifier(child.arguments?.[0], urlParam)) {
+          matches = true
+        }
+        if (child.type === 'CallExpression'
+          && child.callee?.type === 'MemberExpression'
+          && propertyName(child.callee.property) === 'setAttribute'
+          && child.arguments?.[0]?.type === 'Literal'
+          && child.arguments[0].value === 'src'
+          && isIdentifier(child.arguments?.[1], urlParam)) {
+          matches = true
+        }
+        if (child.type === 'Property'
+          && propertyName(child.key) === 'src'
+          && isIdentifier(child.value, urlParam)) {
+          matches = true
+        }
+        if (child.type === 'AssignmentExpression'
+          && child.left?.type === 'MemberExpression'
+          && propertyName(child.left.property) === 'src'
+          && isIdentifier(child.right, urlParam)) {
+          matches = true
+        }
+      },
+    })
+    return matches
+  }
+
+  if (scriptLoaderUrlPatches.length) {
+    walk(program, {
+      scopeTracker,
+      enter(node, parent) {
+        if (node.type !== 'FunctionDeclaration' && node.type !== 'FunctionExpression' && node.type !== 'ArrowFunctionExpression')
+          return
+        const name = functionName(node, parent)
+        const param = firstParamName(node)
+        if (!name || !param)
+          return
+        if (isScriptLoaderFunction(node, param))
+          scriptLoaderFunctionKeys.add(declarationKey(name))
+      },
+    })
+  }
 
   // Pass 2: rewrite with scope resolution
   walk(program, {
@@ -429,6 +600,46 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
             if (!rewrite)
               continue
             s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}(self.location.origin+"${rewrite.to}")`)
+            break
+          }
+        }
+      }
+
+      // SDK patch: replace-new-url-host
+      // Matches `new URL(<expr>).host` / `.hostname` and replaces it with a
+      // known vendor host so bundled scripts do not detect self-hosting.
+      if (sdkPatches?.some(p => p.type === 'replace-new-url-host')
+        && node.type === 'MemberExpression'
+        && !(node as any).computed) {
+        const obj = (node as any).object
+        const prop = (node as any).property
+        if (prop?.type === 'Identifier' && (prop.name === 'host' || prop.name === 'hostname')
+          && obj?.type === 'NewExpression'
+          && obj.callee?.type === 'Identifier' && obj.callee.name === 'URL'
+          && obj.arguments?.length >= 1) {
+          const patch = sdkPatches.find(p => p.type === 'replace-new-url-host')
+          if (patch)
+            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${JSON.stringify(patch.host)}`)
+        }
+      }
+
+      // SDK patch: replace-script-loader-url
+      // Some SDKs assemble script URLs from minified variables, then pass them
+      // into a tiny script loader helper. Match the stable behavior: a known
+      // path prefix reaches a function that uses its first parameter as a
+      // script `src` or `importScripts` URL.
+      if (scriptLoaderUrlPatches.length
+        && node.type === 'CallExpression'
+        && (node as any).callee?.type === 'Identifier'
+        && scriptLoaderFunctionKeys.has(declarationKey((node as any).callee.name))) {
+        const urlArg = (node as any).arguments?.[0]
+        const pathNode = findScriptLoaderPathExpression(urlArg)
+        if (urlArg && pathNode) {
+          for (const patch of scriptLoaderUrlPatches) {
+            const rewrite = rewrites.find(r => r.from === patch.fromDomain)
+            if (!rewrite)
+              continue
+            s.overwrite(urlArg.start, urlArg.end, `${needsLeadingSpace(urlArg.start)}self.location.origin+"${rewrite.to}"+${sourceOf(pathNode)}`)
             break
           }
         }

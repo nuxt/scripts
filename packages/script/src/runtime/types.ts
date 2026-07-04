@@ -466,6 +466,20 @@ export type SdkPatch
    * lands on a 404 instead of the proxy. This patch redirects it through the proxy.
    */
     | { type: 'replace-new-url-origin', fromDomain: string }
+  /**
+   * Replace `new URL(<expr>).host` / `.hostname` with a known vendor host.
+   * Used by SDKs that detect self-hosting from their own script URL and switch
+   * into a different endpoint mode when bundled.
+   */
+    | { type: 'replace-new-url-host', host: string }
+  /**
+   * Replace script loader calls that receive a known path prefix with the
+   * configured proxied domain. This covers SDKs that assemble URLs from
+   * minified variables before passing them to a script `src` helper or
+   * `importScripts`, where ordinary string literal URL rewriting cannot see
+   * the final host.
+   */
+    | { type: 'replace-script-loader-url', fromDomain: string, pathPrefix: string }
 
 /**
  * Partytown capability config. When present, the script can run in a
