@@ -105,6 +105,9 @@
     "@types/youtube": {
       "optional": true
     },
+    "@unhead/vue": {
+      "optional": true
+    },
     "posthog-js": {
       "optional": true
     }
