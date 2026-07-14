@@ -642,6 +642,49 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
     })
 
+    it('should bypass cache for registry scriptOptions.bundle force', async () => {
+      // Mock that cache exists and is fresh
+      mockBundleStorage.hasItem.mockResolvedValue(true)
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: Date.now() })
+      mockBundleStorage.getItemRaw.mockResolvedValue(Buffer.from('cached content'))
+
+      // Mock successful fetch for force download
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        headers: { get: () => null },
+      } as any)
+
+      const code = await transform(
+        `const instance = useScriptSnapchatPixel({
+          id: '2295cbcc-cb3f-4727-8c09-1133b742722c',
+          scriptOptions: {
+            bundle: 'force',
+            trigger: 'client'
+          }
+        })`,
+        {
+          renderedScript: new Map(),
+          scripts: [
+            {
+              bundle: {
+                resolve() {
+                  return 'https://sc-static.net/scevent.min.js'
+                },
+              },
+              import: {
+                name: 'useScriptSnapchatPixel',
+                from: '',
+              },
+            },
+          ] as any,
+        },
+      )
+
+      expect(fetch).toHaveBeenCalled()
+      expect(code).toContain('scriptInput: { src: \'/_scripts/assets/e3b0c44298fc1c14.js\' }')
+    })
+
     it('should store bundle metadata with timestamp on download', async () => {
       vi.mocked(hash).mockImplementationOnce(() => 'beacon.min')
 

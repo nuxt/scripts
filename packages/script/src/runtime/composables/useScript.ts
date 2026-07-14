@@ -265,7 +265,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
   else if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
-    if (!options.warmupStrategy) {
+    // `false` is a valid value to disable warmup (#826)
+    if (options.warmupStrategy === undefined) {
       options.warmupStrategy = 'preload'
     }
     if (options.trigger === 'onNuxtReady') {
