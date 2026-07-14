@@ -101,6 +101,18 @@ describe.skipIf(process.env.CI)('script warmup', () => {
     `)
     script.remove()
   })
+  it('warmupStrategy: false disables preload - #826', async () => {
+    const head = createHead({ disableDefaults: true })
+    const script = useScript({
+      src: 'https://example.com/no-preload.js',
+    }, {
+      warmupStrategy: false,
+      head,
+    })
+    const ssr = await renderSSRHead(head)
+    expect(ssr.headTags).toMatchInlineSnapshot(`""`)
+    script.remove()
+  })
   it('respects useScript privacy controls', async () => {
     const head = createHead({ disableDefaults: true })
     const script = useScript({
