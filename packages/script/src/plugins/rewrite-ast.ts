@@ -219,7 +219,6 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
 
   const scriptLoaderUrlPatches = sdkPatches?.filter((p): p is Extract<SdkPatch, { type: 'replace-script-loader-url' }> =>
     p.type === 'replace-script-loader-url') ?? []
-  const scriptLoaderPathPrefixes = scriptLoaderUrlPatches.map(p => p.pathPrefix)
   const scriptLoaderFunctionKeys = new Set<string>()
 
   function isIdentifier(node: any, name?: string): boolean {
@@ -266,8 +265,8 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
     return `global:${name}`
   }
 
-  function isScriptLoaderPathLiteral(value: string): boolean {
-    return scriptLoaderPathPrefixes.some(prefix => value === prefix || value.startsWith(`${prefix}/`))
+  function isScriptLoaderPathLiteral(value: string, pathPrefix: string): boolean {
+    return value === pathPrefix || value.startsWith(`${pathPrefix}/`)
   }
 
   function getIdentifierInit(name: string): any | null {
@@ -286,7 +285,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
     return null
   }
 
-  function findScriptLoaderPathExpression(node: any, seenIdentifiers = new Set<string>()): any {
+  function findScriptLoaderPathExpression(node: any, pathPrefix: string, seenIdentifiers = new Set<string>()): any {
     if (!node)
       return null
     if (node.type === 'Identifier') {
@@ -296,32 +295,32 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       if (!init)
         return null
       seenIdentifiers.add(node.name)
-      return findScriptLoaderPathExpression(init, seenIdentifiers) ? node : null
+      return findScriptLoaderPathExpression(init, pathPrefix, seenIdentifiers) ? node : null
     }
-    if (node.type === 'Literal' && typeof node.value === 'string' && isScriptLoaderPathLiteral(node.value))
+    if (node.type === 'Literal' && typeof node.value === 'string' && isScriptLoaderPathLiteral(node.value, pathPrefix))
       return node
     if (node.type === 'TemplateLiteral') {
       const hasConfigPrefix = node.quasis?.some((q: any) => {
         const value = q.value?.cooked ?? q.value?.raw
-        return typeof value === 'string' && isScriptLoaderPathLiteral(value)
+        return typeof value === 'string' && isScriptLoaderPathLiteral(value, pathPrefix)
       })
       return hasConfigPrefix ? node : null
     }
     if (node.type === 'CallExpression') {
       for (const arg of node.arguments ?? []) {
-        const found = findScriptLoaderPathExpression(arg, seenIdentifiers)
+        const found = findScriptLoaderPathExpression(arg, pathPrefix, seenIdentifiers)
         if (found)
           return found
       }
       return null
     }
     if (node.type === 'BinaryExpression' || node.type === 'LogicalExpression')
-      return findScriptLoaderPathExpression(node.right, seenIdentifiers) || findScriptLoaderPathExpression(node.left, seenIdentifiers)
+      return findScriptLoaderPathExpression(node.right, pathPrefix, seenIdentifiers) || findScriptLoaderPathExpression(node.left, pathPrefix, seenIdentifiers)
     if (node.type === 'ConditionalExpression')
-      return findScriptLoaderPathExpression(node.consequent, seenIdentifiers) || findScriptLoaderPathExpression(node.alternate, seenIdentifiers)
+      return findScriptLoaderPathExpression(node.consequent, pathPrefix, seenIdentifiers) || findScriptLoaderPathExpression(node.alternate, pathPrefix, seenIdentifiers)
     if (node.type === 'SequenceExpression') {
       for (let i = node.expressions.length - 1; i >= 0; i--) {
-        const found = findScriptLoaderPathExpression(node.expressions[i], seenIdentifiers)
+        const found = findScriptLoaderPathExpression(node.expressions[i], pathPrefix, seenIdentifiers)
         if (found)
           return found
       }
@@ -633,13 +632,18 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
         && (node as any).callee?.type === 'Identifier'
         && scriptLoaderFunctionKeys.has(declarationKey((node as any).callee.name))) {
         const urlArg = (node as any).arguments?.[0]
-        const pathNode = findScriptLoaderPathExpression(urlArg)
-        if (urlArg && pathNode) {
+        if (urlArg) {
           for (const patch of scriptLoaderUrlPatches) {
             const rewrite = rewrites.find(r => r.from === patch.fromDomain)
             if (!rewrite)
               continue
+            const pathNode = findScriptLoaderPathExpression(urlArg, patch.pathPrefix)
+            if (!pathNode)
+              continue
             s.overwrite(urlArg.start, urlArg.end, `${needsLeadingSpace(urlArg.start)}self.location.origin+"${rewrite.to}"+${sourceOf(pathNode)}`)
+            // The replaced range may contain literals the domain-rewrite pass
+            // would also edit — descending would produce conflicting overwrites.
+            this.skip()
             break
           }
         }

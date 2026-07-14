@@ -470,6 +470,10 @@ export type SdkPatch
    * Replace `new URL(<expr>).host` / `.hostname` with a known vendor host.
    * Used by SDKs that detect self-hosting from their own script URL and switch
    * into a different endpoint mode when bundled.
+   *
+   * Applies to EVERY `new URL(...).host` / `.hostname` in the bundle, not just
+   * the self-src detection — only use it for SDKs that don't parse other URLs
+   * (e.g. referrers, click-throughs) with this pattern.
    */
     | { type: 'replace-new-url-host', host: string }
   /**
@@ -478,6 +482,11 @@ export type SdkPatch
    * minified variables before passing them to a script `src` helper or
    * `importScripts`, where ordinary string literal URL rewriting cannot see
    * the final host.
+   *
+   * The loader's whole first argument is replaced with
+   * `origin + proxyPath + <matched path expression>` — any parts of the
+   * argument outside the matched path expression (e.g. an appended query
+   * string) are dropped.
    */
     | { type: 'replace-script-loader-url', fromDomain: string, pathPrefix: string }
 

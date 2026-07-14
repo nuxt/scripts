@@ -395,6 +395,38 @@ describe('rewriteScriptUrlsAST', () => {
       const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
       expect(result).toBe(code)
     })
+
+    it('handles loader args containing proxied domain literals without conflicting edits', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      // The literal inside the replaced arg would also match the domain rewrite —
+      // the loader rewrite must not leave a nested edit for it to conflict with.
+      const code = [
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'load(cond?"https://config.example.com/settings/fallback.js":path);',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+    })
+
+    it('rewrites to the patch whose pathPrefix actually matched', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'other.example.com', pathPrefix: '/alpha' },
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['other.example.com', 'config.example.com'], '/_scripts/p')
+      const code = [
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'load(host!==cdn?proto+host+path:buildVendorUrl(path));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+      expect(result).not.toContain('other.example.com')
+    })
   })
 
   describe('fathom SDK self-hosted detection patching', () => {
