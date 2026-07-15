@@ -1,5 +1,8 @@
-export async function fetchScript(url: string) {
-  const compressedResponse = await fetch(url, { headers: { 'Accept-Encoding': 'gzip' } }).catch((err) => {
+export async function fetchScript(url: string, signal?: AbortSignal) {
+  const compressedResponse = await fetch(url, {
+    headers: { 'Accept-Encoding': 'gzip' },
+    signal,
+  }).catch((err) => {
     return {
       size: null,
       error: err,

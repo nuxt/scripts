@@ -27,7 +27,6 @@ export function createNpmScriptStub<T = any>(
 ): NpmScriptStub<T> {
   const status = ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>('awaitingLoad')
   const loadedCallbacks: Array<(api: T) => void> = []
-  let initPromise: Promise<any> | null = null
   let hasInitialized = false
 
   // Get the proxy/API from use() function
@@ -50,8 +49,7 @@ export function createNpmScriptStub<T = any>(
         if (options.clientInit) {
           // eslint-disable-next-line no-console
           console.log(`[NpmScriptStub] Initializing ${options.key}...`)
-          initPromise = Promise.resolve(options.clientInit())
-          await initPromise
+          await options.clientInit()
           // eslint-disable-next-line no-console
           console.log(`[NpmScriptStub] ${options.key} initialized successfully`)
         }
@@ -59,7 +57,9 @@ export function createNpmScriptStub<T = any>(
         status.value = 'loaded'
 
         // Fire all onLoaded callbacks with the proxy
-        loadedCallbacks.forEach((cb) => {
+        // Release callback closures as soon as they have fired. Registry stubs
+        // can live for the app lifetime, while their callers may not.
+        loadedCallbacks.splice(0).forEach((cb) => {
           try {
             cb(proxy)
           }

@@ -15,18 +15,28 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
     return payload
 
   let lastPayload: TrackedPage = { path: '', title: '' }
-  let stopDomWatcher = () => {}
+  let disposed = false
+  const pendingCleanups = new Set<() => void>()
   // TODO make sure useAsyncData isn't running
   const stopPageFinishHook = nuxt.hooks.hook('page:finish', () => {
-    Promise.race([
-      // possibly no head update is needed
-      new Promise(resolve => setTimeout(resolve, 100)),
-      new Promise<void>((resolve) => {
-        stopDomWatcher = head.hooks!.hook('dom:rendered', () => resolve())
-      }),
-    ])
-      .finally(stopDomWatcher)
-      .then(() => {
+    let settled = false
+    let stopDomWatcher = () => {}
+    const timer = setTimeout(finish, 100)
+
+    function cleanup() {
+      clearTimeout(timer)
+      stopDomWatcher()
+      pendingCleanups.delete(cleanup)
+    }
+
+    function finish() {
+      if (settled)
+        return
+      settled = true
+      cleanup()
+      queueMicrotask(() => {
+        if (disposed)
+          return
         payload.value = {
           path: route.fullPath,
           title: document.title,
@@ -38,10 +48,17 @@ export function useScriptEventPage(onChange?: (payload: TrackedPage) => void) {
           lastPayload = payload.value
         }
       })
+    }
+
+    pendingCleanups.add(cleanup)
+    stopDomWatcher = head.hooks!.hook('dom:rendered', finish)
   })
 
   onScopeDispose(() => {
-    stopDomWatcher()
+    disposed = true
+    for (const cleanup of pendingCleanups)
+      cleanup()
+    pendingCleanups.clear()
     stopPageFinishHook()
   })
 

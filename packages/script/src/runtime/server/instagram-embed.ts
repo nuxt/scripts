@@ -2,6 +2,7 @@ import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { defineCachedFunction, useRuntimeConfig } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
+import { NUXT_SCRIPTS_CACHE_BASE } from './utils/cache-config'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { isEmbedShell, proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
 import { withSigning } from './utils/withSigning'
@@ -26,6 +27,7 @@ const cachedEmbedFetch = defineCachedFunction(
     return html
   },
   {
+    base: NUXT_SCRIPTS_CACHE_BASE,
     // v2 — bump to evict any v1 entries that cached the empty JS shell
     // before the shell-detection / UA fix landed.
     name: 'nuxt-scripts-instagram-embed-v2',

@@ -82,6 +82,7 @@ const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
 const failed = ref(false)
 const messagesSession = shallowRef<PayPalMessagesSession>()
+let disposed = false
 
 const { onLoaded, status } = useScriptPayPal({
   ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
@@ -107,6 +108,8 @@ onMounted(() => {
 
     try {
       const instance = await paypal.createInstance(instanceOptions) as SdkInstance<['paypal-messages']>
+      if (disposed)
+        return
       messagesSession.value = instance.createPayPalMessages(props.messagesOptions)
       ready.value = true
       emit('ready', messagesSession.value)
@@ -120,6 +123,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   messagesSession.value = undefined
 })
 

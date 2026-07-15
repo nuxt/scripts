@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { defineCachedFunction } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
+import { NUXT_SCRIPTS_CACHE_BASE } from './cache-config'
 
 /**
  * Server-side caches for upstream proxy fetches.
@@ -69,6 +70,7 @@ export function createCachedBinaryFetch(
       }
     },
     {
+      base: NUXT_SCRIPTS_CACHE_BASE,
       name,
       maxAge,
       swr: true,
@@ -117,6 +119,7 @@ export function createCachedJsonFetch<T>(
       })
     },
     {
+      base: NUXT_SCRIPTS_CACHE_BASE,
       name,
       maxAge,
       swr: true,

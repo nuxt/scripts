@@ -58,15 +58,17 @@ defineExpose({
   crisp,
 })
 
-let observer: MutationObserver
+let observer: MutationObserver | undefined
 onMounted(() => {
   watch(status, (status) => {
     if (status === 'loaded') {
+      observer?.disconnect()
       observer = new MutationObserver(() => {
         if (document.getElementById('crisp-chatbox')) {
           isReady.value = true
           emits('ready', crisp)
-          observer.disconnect()
+          observer?.disconnect()
+          observer = undefined
         }
       })
       observer.observe(document.body, { childList: true, subtree: true })
@@ -78,6 +80,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   observer?.disconnect()
+  observer = undefined
 })
 
 const rootAttrs = computed(() => {
