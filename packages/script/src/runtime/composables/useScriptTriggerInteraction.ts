@@ -25,13 +25,35 @@ export function useScriptTriggerInteraction(options: InteractionScriptTriggerOpt
   const { events, target = document.documentElement } = options
 
   return new Promise<boolean>((resolve) => {
+    let disposed = false
+    let settled = false
+    const cleanupFns: Array<() => void> = []
+
+    const cleanup = () => {
+      cleanupFns.splice(0).forEach(fn => fn())
+    }
+    const settle = (value: boolean) => {
+      if (settled)
+        return
+      settled = true
+      cleanup()
+      resolve(value)
+    }
+
+    // onNuxtReady can run after the component scope has already been stopped,
+    // so disposal must be registered synchronously during setup.
+    tryOnScopeDispose(() => {
+      disposed = true
+      settle(false)
+    })
+
     onNuxtReady(() => {
+      if (disposed)
+        return
       if (!target) {
-        resolve(false)
+        settle(false)
         return
       }
-
-      const cleanupFns: Array<() => void> = []
 
       // Listen for all specified events
       events.forEach((event) => {
@@ -39,18 +61,11 @@ export function useScriptTriggerInteraction(options: InteractionScriptTriggerOpt
           target,
           event,
           () => {
-            // Clean up all listeners when any event triggers
-            cleanupFns.forEach(fn => fn())
-            resolve(true)
+            settle(true)
           },
           { once: true, passive: true },
         )
         cleanupFns.push(cleanup)
-      })
-
-      tryOnScopeDispose(() => {
-        cleanupFns.forEach(fn => fn())
-        resolve(false)
       })
     })
   })

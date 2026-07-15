@@ -81,6 +81,7 @@ const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
 const failed = ref(false)
 const sdkInstance = shallowRef<SdkInstance<Components[]>>()
+let disposed = false
 
 const { onLoaded, status } = useScriptPayPal({
   ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
@@ -103,7 +104,10 @@ onMounted(() => {
     } as CreateInstanceOptions<Components[]>
 
     try {
-      sdkInstance.value = await paypal.createInstance(instanceOptions)
+      const instance = await paypal.createInstance(instanceOptions)
+      if (disposed)
+        return
+      sdkInstance.value = instance
       ready.value = true
       emit('ready', sdkInstance.value)
     }
@@ -116,6 +120,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   sdkInstance.value = undefined
 })
 

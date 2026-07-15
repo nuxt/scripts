@@ -135,21 +135,55 @@ export async function waitForMapsReady({
   map,
   status,
   load,
+  signal,
 }: {
   mapsApi: ShallowRef<typeof google.maps | undefined>
   map: ShallowRef<google.maps.Map | undefined>
   status: Ref<string>
   load: () => Promise<unknown> | unknown
+  signal?: AbortSignal
 }): Promise<void> {
+  const abortError = () => {
+    const error = new Error('Google Maps readiness wait was aborted')
+    error.name = 'AbortError'
+    return error
+  }
+  const throwIfAborted = () => {
+    if (signal?.aborted)
+      throw abortError()
+  }
+
+  throwIfAborted()
   if (mapsApi.value && map.value)
     return
   if (status.value === 'error')
     throw new Error('Google Maps script failed to load')
 
-  await load()
+  await new Promise<void>((resolve, reject) => {
+    let settled = false
+    let onAbort: (() => void) | undefined
+    const cleanup = () => {
+      if (onAbort)
+        signal?.removeEventListener('abort', onAbort)
+    }
+    const settle = (fn: () => void) => {
+      if (settled)
+        return
+      settled = true
+      cleanup()
+      fn()
+    }
+    onAbort = () => settle(() => reject(abortError()))
+    signal?.addEventListener('abort', onAbort, { once: true })
+    Promise.resolve(load()).then(
+      () => settle(resolve),
+      error => settle(() => reject(error)),
+    )
+  })
 
   // load() may have populated both refs synchronously — re-check before
   // installing a watcher to avoid the race that hangs the promise forever.
+  throwIfAborted()
   if (mapsApi.value && map.value)
     return
   if (status.value === 'error')
@@ -158,16 +192,31 @@ export async function waitForMapsReady({
   const scope = effectScope(true)
   try {
     await new Promise<void>((resolve, reject) => {
+      let settled = false
+      let onAbort: (() => void) | undefined
+      const cleanup = () => {
+        if (onAbort)
+          signal?.removeEventListener('abort', onAbort)
+      }
+      const settle = (fn: () => void) => {
+        if (settled)
+          return
+        settled = true
+        cleanup()
+        fn()
+      }
+      onAbort = () => settle(() => reject(abortError()))
+      signal?.addEventListener('abort', onAbort, { once: true })
       scope.run(() => {
         watch(
           [mapsApi, map, status],
           ([api, m, s]) => {
             if (api && m) {
-              resolve()
+              settle(resolve)
               return
             }
             if (s === 'error')
-              reject(new Error('Google Maps script failed to load'))
+              settle(() => reject(new Error('Google Maps script failed to load')))
           },
           { immediate: true },
         )

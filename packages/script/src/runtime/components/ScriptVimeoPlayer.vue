@@ -319,7 +319,18 @@ const placeholderAttrs = computed(() => {
   } satisfies ImgHTMLAttributes)
 })
 
-onBeforeUnmount(() => player?.unload())
+// destroy() (not unload()) unbinds every player.on() handler and removes the
+// SDK's global window `message` listener; unload() only resets the video and
+// would leak the player instance + its handler closures on every unmount.
+onBeforeUnmount(() => {
+  const currentPlayer = player
+  player = undefined
+  void currentPlayer?.destroy().catch((error) => {
+    // The iframe may already have been detached by Vue; destroy is best-effort.
+    if (import.meta.dev)
+      console.warn('[nuxt-scripts] Vimeo player cleanup failed:', error)
+  })
+})
 </script>
 
 <template>
