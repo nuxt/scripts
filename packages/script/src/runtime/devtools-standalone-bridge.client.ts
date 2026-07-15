@@ -13,17 +13,25 @@ export default defineNuxtPlugin(() => {
   const firstPartyData = (config.public['nuxt-scripts-devtools'] as any) || null
 
   let lastScripts: Record<string, any> = {}
+  let disposed = false
+  let requestController: AbortController | undefined
 
   function pushState(scripts?: Record<string, any>) {
+    if (disposed)
+      return
     if (scripts)
       lastScripts = scripts
     const route = nuxtApp.$router?.currentRoute?.value
     // Don't report the devtools UI route as the user's current page
     if (route?.path?.startsWith('/__nuxt-scripts'))
       return
+    requestController?.abort()
+    const controller = new AbortController()
+    requestController = controller
     fetch('/__nuxt-scripts-api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         scripts: serializeScripts(lastScripts),
         version,
@@ -31,19 +39,36 @@ export default defineNuxtPlugin(() => {
         route: route ? { path: route.path, fullPath: route.fullPath, query: route.query } : null,
       }),
     }).catch((error) => {
-      if (import.meta.dev)
+      if (import.meta.dev && error?.name !== 'AbortError')
         console.warn('[nuxt-scripts] Failed to sync standalone devtools state:', error)
+    }).finally(() => {
+      if (requestController === controller)
+        requestController = undefined
     })
   }
 
-  nuxtApp.hooks.hook('scripts:updated' as any, (ctx: { scripts: Record<string, any> }) => {
+  const stopScriptsHook = nuxtApp.hooks.hook('scripts:updated' as any, (ctx: { scripts: Record<string, any> }) => {
     pushState(ctx.scripts)
   })
 
   // Sync route changes
-  nuxtApp.$router?.afterEach(() => {
+  const stopRouterHook = nuxtApp.$router?.afterEach(() => {
     pushState()
   })
+
+  let stopUnmountHook = () => {}
+  const cleanup = () => {
+    if (disposed)
+      return
+    disposed = true
+    requestController?.abort()
+    requestController = undefined
+    lastScripts = {}
+    stopScriptsHook()
+    stopRouterHook?.()
+    stopUnmountHook()
+  }
+  stopUnmountHook = nuxtApp.hooks.hook('app:unmount' as any, cleanup)
 
   // Push initial state on load
   pushState((nuxtApp as any)._scripts || {})

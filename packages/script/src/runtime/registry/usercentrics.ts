@@ -1,5 +1,7 @@
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead } from '@unhead/vue'
+import { useNuxtApp } from 'nuxt/app'
+import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
 import { UsercentricsOptions } from './schemas'
 
@@ -117,16 +119,57 @@ export function useScriptUsercentrics<T extends UsercentricsApi>(
   }, _options) as UseScriptContext<T, UsercentricsConsent>
 
   if (import.meta.client && !instance.consent) {
-    const whenReady = (): Promise<UsercentricsCmp> => new Promise((resolve) => {
-      // __ucCmp is present from loader bootstrap, but methods aren't callable
-      // until UC_CMP_API_READY fires. Resolve on that event (or now if it
-      // already fired and __ucCmp is bound).
-      const onReady = () => {
-        window.removeEventListener('UC_CMP_API_READY', onReady)
-        resolve(window.__ucCmp as UsercentricsCmp)
+    let readyApi: UsercentricsCmp | undefined
+    let readyPromise: Promise<UsercentricsCmp> | undefined
+    let resolveReady: ((api: UsercentricsCmp) => void) | undefined
+
+    const onReady = () => {
+      const api = window.__ucCmp
+      if (!api)
+        return
+      readyApi = api
+      window.removeEventListener('UC_CMP_API_READY', onReady)
+      resolveReady?.(api)
+      resolveReady = undefined
+    }
+    const cleanupReadyListener = () => {
+      window.removeEventListener('UC_CMP_API_READY', onReady)
+      resolveReady = undefined
+    }
+    const whenReady = (): Promise<UsercentricsCmp> => {
+      if (readyApi)
+        return Promise.resolve(readyApi)
+      if (!readyPromise) {
+        // Install the event listener before checking isInitialized() so an
+        // event fired during that async check cannot be missed.
+        readyPromise = new Promise((resolve) => {
+          resolveReady = resolve
+          window.addEventListener('UC_CMP_API_READY', onReady)
+        })
+        const api = window.__ucCmp
+        if (api?.isInitialized) {
+          Promise.resolve(api.isInitialized())
+            .then((initialized) => {
+              if (initialized)
+                onReady()
+            })
+            .catch((error) => {
+              // Some bootstrap stubs throw until the ready event; the event
+              // listener remains the authoritative readiness signal.
+              logger.debug('[usercentrics] Waiting for UC_CMP_API_READY after isInitialized() failed', error)
+            })
+        }
       }
-      window.addEventListener('UC_CMP_API_READY', onReady)
-    })
+      return readyPromise
+    }
+
+    const stopAppUnmount = useNuxtApp().hooks.hook('app:unmount' as any, cleanupReadyListener)
+    const originalRemove = instance.remove
+    instance.remove = () => {
+      cleanupReadyListener()
+      stopAppUnmount()
+      return originalRemove()
+    }
 
     instance.consent = {
       whenReady,

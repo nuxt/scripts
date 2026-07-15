@@ -29,6 +29,7 @@ const attrId = `_carbonads_js`
 const carbonadsEl = ref<HTMLElement | null>(import.meta.client ? document.getElementById(attrId) : null)
 // syncs to useScript status
 const status = ref('awaitingLoad')
+let scriptEl: HTMLScriptElement | undefined
 
 function loadCarbon() {
   if (!carbonadsEl.value) {
@@ -36,6 +37,7 @@ function loadCarbon() {
   }
   status.value = 'loading'
   const script = document.createElement('script')
+  scriptEl = script
   script.setAttribute('src', withQuery('https://cdn.carbonads.com/carbon.js', {
     serve: props.serve,
     placement: props.placement,
@@ -63,7 +65,10 @@ onMounted(() => {
     loadCarbon()
   }
   else {
-    trigger.then(loadCarbon)
+    trigger.then((triggered) => {
+      if (triggered)
+        loadCarbon()
+    })
   }
 })
 
@@ -74,8 +79,15 @@ const rootAttrs = computed(() => {
 })
 
 onBeforeUnmount(() => {
+  if (scriptEl) {
+    scriptEl.onload = null
+    scriptEl.onerror = null
+    scriptEl.remove()
+    scriptEl = undefined
+  }
   if (carbonadsEl.value) {
     carbonadsEl.value.remove()
+    carbonadsEl.value = null
   }
 })
 </script>

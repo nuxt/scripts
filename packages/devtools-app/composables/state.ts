@@ -84,6 +84,7 @@ export const version = ref<string | null>(null)
 export const firstPartyData = ref<FirstPartyDevtoolsData | null>(null)
 
 let _lastSyncedScripts: any[] | null = null
+const scriptFetches = new Map<string, AbortController>()
 
 export async function initRegistry() {
   scriptRegistry.value = await _registryPromise
@@ -107,9 +108,16 @@ export function syncScripts(_scripts: any[]) {
   if (!_scripts || typeof _scripts !== 'object') {
     _lastSyncedScripts = null
     scripts.value = {}
+    pruneScriptState(new Set())
     return
   }
   _lastSyncedScripts = _scripts
+  const activeSources = new Set(
+    Object.values(_scripts)
+      .map((script: any) => script?.src)
+      .filter((src): src is string => typeof src === 'string' && !!src),
+  )
+  pruneScriptState(activeSources)
   scripts.value = Object.fromEntries(
     Object.entries({ ..._scripts })
       .map(([key, script]: [string, any]) => {
@@ -124,9 +132,13 @@ export function syncScripts(_scripts: any[]) {
           script.loadTime = msToHumanReadable(loadedAt - loadingAt)
         const scriptSizeKey = script.src
         // Skip size fetching in standalone mode (cross-origin fetch blocked by CORS)
-        if (!scriptSizes[scriptSizeKey] && script.src && !isStandalone.value) {
-          fetchScript(script.src)
+        if (!scriptSizes[scriptSizeKey] && !scriptErrors[scriptSizeKey] && script.src && !isStandalone.value && !scriptFetches.has(scriptSizeKey)) {
+          const controller = new AbortController()
+          scriptFetches.set(scriptSizeKey, controller)
+          fetchScript(script.src, controller.signal)
             .then((res) => {
+              if (controller.signal.aborted || !activeSources.has(scriptSizeKey))
+                return
               if (res.size) {
                 scriptSizes[scriptSizeKey] = res.size
                 script.size = res.size
@@ -136,10 +148,29 @@ export function syncScripts(_scripts: any[]) {
                 script.error = scriptErrors[scriptSizeKey]
               }
             })
+            .finally(() => {
+              if (scriptFetches.get(scriptSizeKey) === controller)
+                scriptFetches.delete(scriptSizeKey)
+            })
         }
         return [key, script]
       }),
   )
+}
+
+function pruneScriptState(activeSources: Set<string>) {
+  for (const [src, controller] of scriptFetches) {
+    if (!activeSources.has(src)) {
+      controller.abort()
+      scriptFetches.delete(src)
+    }
+  }
+  for (const state of [scriptSizes, scriptErrors, scriptTabs]) {
+    for (const src of Object.keys(state)) {
+      if (!activeSources.has(src))
+        delete state[src]
+    }
+  }
 }
 
 // Script status helper (handles both reactive refs from embedded mode and plain strings from standalone)

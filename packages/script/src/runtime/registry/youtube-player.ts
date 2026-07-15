@@ -56,7 +56,18 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
       ? undefined
       : () => {
           readyPromise = new Promise((resolve) => {
-            window.onYouTubeIframeAPIReady = resolve
+            const previousReady = window.onYouTubeIframeAPIReady
+            const onReady = () => {
+              if (window.onYouTubeIframeAPIReady === onReady) {
+                if (previousReady)
+                  window.onYouTubeIframeAPIReady = previousReady
+                else
+                  delete (window as any).onYouTubeIframeAPIReady
+              }
+              previousReady?.()
+              resolve()
+            }
+            window.onYouTubeIframeAPIReady = onReady
           })
         },
   }), _options)

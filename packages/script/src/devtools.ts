@@ -7,6 +7,7 @@ import { createResolver, extendViteConfig } from '@nuxt/kit'
 const DEVTOOLS_UI_ROUTE = '/__nuxt-scripts'
 const DEVTOOLS_UI_LOCAL_PORT = 3030
 const DEVTOOLS_API_STATE_ROUTE = '/__nuxt-scripts-api/state'
+const DEVTOOLS_API_MAX_BODY_SIZE = 2 * 1024 * 1024
 
 export interface DevtoolsOptions {
   standalone?: boolean
@@ -82,10 +83,41 @@ function setupStandaloneApi(nuxt: Nuxt) {
 
       if (req.method === 'POST') {
         let body = ''
-        req.on('data', (chunk: Buffer) => {
+        let size = 0
+        let finished = false
+
+        function cleanup() {
+          req.off('data', onData)
+          req.off('end', onEnd)
+          req.off('aborted', onAborted)
+          req.off('error', onAborted)
+        }
+        function onAborted() {
+          finished = true
+          body = ''
+          cleanup()
+        }
+        function onData(chunk: Buffer) {
+          if (finished)
+            return
+          size += chunk.byteLength
+          if (size > DEVTOOLS_API_MAX_BODY_SIZE) {
+            finished = true
+            body = ''
+            cleanup()
+            // Drain the remainder so the keep-alive connection can be reused.
+            req.resume()
+            res.statusCode = 413
+            res.end('payload too large')
+            return
+          }
           body += chunk.toString()
-        })
-        req.on('end', () => {
+        }
+        function onEnd() {
+          if (finished)
+            return
+          finished = true
+          cleanup()
           try {
             const data = JSON.parse(body)
             scriptsState = { ...data, updatedAt: Date.now() }
@@ -96,7 +128,13 @@ function setupStandaloneApi(nuxt: Nuxt) {
             res.statusCode = 400
             res.end('invalid json')
           }
-        })
+          body = ''
+        }
+
+        req.on('data', onData)
+        req.on('end', onEnd)
+        req.on('aborted', onAborted)
+        req.on('error', onAborted)
         return
       }
 

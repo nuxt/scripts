@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer'
 import { $fetch } from 'ofetch'
 import { hash } from 'ohash'
 import { defineCachedFunction } from '#nuxt-scripts/nitro'
+import { NUXT_SCRIPTS_CACHE_BASE } from './cache-config'
 
 /**
  * Server-side caches for upstream proxy fetches.
@@ -70,6 +71,7 @@ export function createCachedBinaryFetch(
       }
     },
     {
+      base: NUXT_SCRIPTS_CACHE_BASE,
       name,
       maxAge,
       swr: true,
@@ -121,6 +123,7 @@ export function createCachedJsonFetch<T>(
       })
     },
     {
+      base: NUXT_SCRIPTS_CACHE_BASE,
       name,
       maxAge,
       swr: true,
