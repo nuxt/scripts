@@ -1,6 +1,7 @@
 import type { InjectionKey, Ref, ShallowRef } from 'vue'
 import { whenever } from '@vueuse/core'
 import { effectScope, inject, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { createAbortablePromise, createAbortError } from '../../utils/abortable-promise'
 
 export const MAP_INJECTION_KEY = Symbol('map') as InjectionKey<{
   map: ShallowRef<google.maps.Map | undefined>
@@ -143,14 +144,10 @@ export async function waitForMapsReady({
   load: () => Promise<unknown> | unknown
   signal?: AbortSignal
 }): Promise<void> {
-  const abortError = () => {
-    const error = new Error('Google Maps readiness wait was aborted')
-    error.name = 'AbortError'
-    return error
-  }
+  const abortMessage = 'Google Maps readiness wait was aborted'
   const throwIfAborted = () => {
     if (signal?.aborted)
-      throw abortError()
+      throw createAbortError(abortMessage)
   }
 
   throwIfAborted()
@@ -159,35 +156,9 @@ export async function waitForMapsReady({
   if (status.value === 'error')
     throw new Error('Google Maps script failed to load')
 
-  await new Promise<void>((resolve, reject) => {
-    let settled = false
-    let onAbort: (() => void) | undefined
-    const cleanup = () => {
-      if (onAbort)
-        signal?.removeEventListener('abort', onAbort)
-    }
-    const settle = (fn: () => void) => {
-      if (settled)
-        return
-      settled = true
-      cleanup()
-      fn()
-    }
-    onAbort = () => settle(() => reject(abortError()))
-    signal?.addEventListener('abort', onAbort, { once: true })
-    let loading: Promise<unknown>
-    try {
-      loading = Promise.resolve(load())
-    }
-    catch (error) {
-      settle(() => reject(error))
-      return
-    }
-    loading.then(
-      () => settle(resolve),
-      error => settle(() => reject(error)),
-    )
-  })
+  await createAbortablePromise<void>((resolve, reject) => {
+    Promise.resolve(load()).then(() => resolve(), reject)
+  }, { signal, abortMessage })
 
   // load() may have populated both refs synchronously — re-check before
   // installing a watcher to avoid the race that hangs the promise forever.
@@ -198,42 +169,23 @@ export async function waitForMapsReady({
     throw new Error('Google Maps script failed to load')
 
   const scope = effectScope(true)
-  try {
-    await new Promise<void>((resolve, reject) => {
-      let settled = false
-      let onAbort: (() => void) | undefined
-      const cleanup = () => {
-        if (onAbort)
-          signal?.removeEventListener('abort', onAbort)
-      }
-      const settle = (fn: () => void) => {
-        if (settled)
-          return
-        settled = true
-        cleanup()
-        fn()
-      }
-      onAbort = () => settle(() => reject(abortError()))
-      signal?.addEventListener('abort', onAbort, { once: true })
-      scope.run(() => {
-        watch(
-          [mapsApi, map, status],
-          ([api, m, s]) => {
-            if (api && m) {
-              settle(resolve)
-              return
-            }
-            if (s === 'error')
-              settle(() => reject(new Error('Google Maps script failed to load')))
-          },
-          { immediate: true },
-        )
-      })
+  await createAbortablePromise<void>((resolve, reject) => {
+    scope.run(() => {
+      watch(
+        [mapsApi, map, status],
+        ([api, m, s]) => {
+          if (api && m) {
+            resolve()
+            return
+          }
+          if (s === 'error')
+            reject(new Error('Google Maps script failed to load'))
+        },
+        { immediate: true },
+      )
     })
-  }
-  finally {
-    scope.stop()
-  }
+    return () => scope.stop()
+  }, { signal, abortMessage })
 }
 
 /**
