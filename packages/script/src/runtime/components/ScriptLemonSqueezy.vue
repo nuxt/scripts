@@ -1,3 +1,7 @@
+<script lang="ts">
+let activeLemonSqueezyOwner: symbol | undefined
+</script>
+
 <script lang="ts" setup>
 import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
 import type { ElementScriptTrigger } from '../types'
@@ -21,6 +25,8 @@ defineSlots<{
 }>()
 
 const rootEl = ref<HTMLElement | null>(null)
+const owner = Symbol('ScriptLemonSqueezy')
+let disposed = false
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const instance = useScriptLemonSqueezy({
   scriptOptions: {
@@ -32,23 +38,29 @@ onMounted(() => {
     a.classList.add('lemonsqueezy-button')
   })
   instance.onLoaded(({ Setup, Refresh }) => {
+    if (disposed)
+      return
     Setup({
       eventHandler(event) {
         emits('lemonSqueezyEvent', event)
       },
     })
+    activeLemonSqueezyOwner = owner
     Refresh()
     emits('ready', instance)
   })
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   // Lemon.js `Setup()` stores a single global `eventHandler`, which captures
   // this component's `emits` (and therefore the instance). Setup() replaces
-  // rather than appends, so resetting it to a noop on unmount releases the
-  // closure and lets the unmounted instance be garbage-collected.
-  if (import.meta.client && typeof window.LemonSqueezy?.Setup === 'function')
+  // rather than appends. Only the component that most recently installed the
+  // handler may clear it; an older instance can unmount after a newer one.
+  if (activeLemonSqueezyOwner === owner && import.meta.client && typeof window.LemonSqueezy?.Setup === 'function') {
     window.LemonSqueezy.Setup({ eventHandler() {} })
+    activeLemonSqueezyOwner = undefined
+  }
 })
 
 const rootAttrs = computed(() => {

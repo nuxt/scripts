@@ -106,6 +106,9 @@ function setupStandaloneApi(nuxt: Nuxt) {
             body = ''
             cleanup()
             // Drain the remainder so the keep-alive connection can be reused.
+            // `cleanup()` removed the normal error handler, so keep one listener
+            // attached while the unread request bytes are being discarded.
+            req.once('error', () => {})
             req.resume()
             res.statusCode = 413
             res.end('payload too large')

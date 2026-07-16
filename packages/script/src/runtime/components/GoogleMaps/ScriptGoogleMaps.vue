@@ -517,7 +517,7 @@ onMounted(() => {
     await nextTick()
     // Component may have unmounted (or refs been torn down) during nextTick;
     // bail out so we don't spin up a Map against a detached container.
-    if (!mapEl.value || !mapsApi.value)
+    if (isUnmounted || !mapEl.value || !mapsApi.value)
       return
     const _options: google.maps.MapOptions = {
       ...options.value,
