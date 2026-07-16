@@ -40,8 +40,27 @@ export function createAbortablePromise<T>(
       }
       settle(value)
     }
-    const resolve = (value: T | PromiseLike<T>) => finish(outerResolve, value)
     const reject = (reason?: unknown) => finish(outerReject, reason)
+    const resolve = (value: T | PromiseLike<T>) => {
+      if ((typeof value === 'object' && value !== null) || typeof value === 'function') {
+        let then: unknown
+        try {
+          then = (value as PromiseLike<T>).then
+        }
+        catch (error) {
+          reject(error)
+          return
+        }
+        if (typeof then === 'function') {
+          Promise.resolve(value).then(
+            resolved => finish(outerResolve, resolved),
+            reject,
+          )
+          return
+        }
+      }
+      finish(outerResolve, value)
+    }
     onAbort = () => reject(createAbortError(abortMessage))
 
     if (signal?.aborted) {
