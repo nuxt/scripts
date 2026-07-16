@@ -30,6 +30,23 @@ describe('createAbortablePromise', () => {
     expect(cleanup).toHaveBeenCalledOnce()
   })
 
+  it('keeps abort handling active while adopting a pending promise', async () => {
+    const controller = new AbortController()
+    const cleanup = vi.fn()
+    const inner = Promise.withResolvers<number>()
+    const promise = createAbortablePromise<number>((resolve) => {
+      resolve(inner.promise)
+      return cleanup
+    }, { signal: controller.signal })
+
+    controller.abort()
+
+    await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+    inner.resolve(42)
+    await inner.promise
+    expect(cleanup).toHaveBeenCalledOnce()
+  })
+
   it('does not run setup for an already-aborted signal', async () => {
     const controller = new AbortController()
     const setup = vi.fn()

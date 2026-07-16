@@ -386,12 +386,12 @@ function importLibrary(key: string): Promise<any>
 function importLibrary<T>(key: string): Promise<T> {
   if (libraries.has(key))
     return libraries.get(key)
-  const p = mapsApi.value?.importLibrary(key) || createAbortablePromise((resolve, reject) => {
+  const p = createAbortablePromise<T>((resolve, reject) => {
     let stop = () => {}
     stop = watch(mapsApi, (api) => {
       if (api) {
         try {
-          resolve(api.importLibrary(key))
+          resolve(api.importLibrary(key) as Promise<T>)
         }
         catch (error) {
           reject(error)
