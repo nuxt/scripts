@@ -499,4 +499,23 @@ describe('waitForMapsReady', () => {
     map.value = {}
     await nextTick()
   })
+
+  it('removes the abort listener when load throws synchronously', async () => {
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const controller = new AbortController()
+    const removeEventListener = vi.spyOn(controller.signal, 'removeEventListener')
+    const error = new Error('load failed synchronously')
+
+    await expect(waitForMapsReady({
+      mapsApi,
+      map,
+      status,
+      load: () => { throw error },
+      signal: controller.signal,
+    })).rejects.toBe(error)
+
+    expect(removeEventListener).toHaveBeenCalledWith('abort', expect.any(Function))
+  })
 })

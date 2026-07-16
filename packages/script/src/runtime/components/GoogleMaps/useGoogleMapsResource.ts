@@ -175,7 +175,15 @@ export async function waitForMapsReady({
     }
     onAbort = () => settle(() => reject(abortError()))
     signal?.addEventListener('abort', onAbort, { once: true })
-    Promise.resolve(load()).then(
+    let loading: Promise<unknown>
+    try {
+      loading = Promise.resolve(load())
+    }
+    catch (error) {
+      settle(() => reject(error))
+      return
+    }
+    loading.then(
       () => settle(resolve),
       error => settle(() => reject(error)),
     )
@@ -258,20 +266,26 @@ export function useGoogleMapsResource<T>({
   whenever(
     () => mapContext?.map.value && mapContext.mapsApi.value && (!ready || ready()),
     () => {
-      Promise.resolve(create({
-        map: mapContext!.map.value!,
-        mapsApi: mapContext!.mapsApi.value!,
-      }))
-        .then((result) => {
-          if (isUnmounted.value) {
-            // Resource was created during the async gap after unmount — clean it up immediately
-            if (cleanup && mapContext?.mapsApi.value) {
-              cleanup(result, { mapsApi: mapContext.mapsApi.value })
-            }
-            return
+      let creation: Promise<T>
+      try {
+        creation = Promise.resolve(create({
+          map: mapContext!.map.value!,
+          mapsApi: mapContext!.mapsApi.value!,
+        }))
+      }
+      catch (error) {
+        creation = Promise.reject(error)
+      }
+      creation.then((result) => {
+        if (isUnmounted.value) {
+          // Resource was created during the async gap after unmount — clean it up immediately
+          if (cleanup && mapContext?.mapsApi.value) {
+            cleanup(result, { mapsApi: mapContext.mapsApi.value })
           }
-          resource.value = result
-        })
+          return
+        }
+        resource.value = result
+      })
         .catch((err) => {
           if (import.meta.dev) {
             console.error('[nuxt-scripts] Google Maps resource creation failed:', err)

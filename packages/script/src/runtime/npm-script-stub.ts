@@ -69,6 +69,7 @@ export function createNpmScriptStub<T = any>(
         })
       }
       catch (error) {
+        loadedCallbacks.splice(0)
         logger.error(`[NpmScriptStub] Failed to initialize ${options.key}:`, error)
         status.value = 'error'
       }
@@ -79,7 +80,7 @@ export function createNpmScriptStub<T = any>(
         // Already loaded, call immediately
         callback(proxy)
       }
-      else {
+      else if (status.value !== 'error') {
         // Queue for when load completes
         loadedCallbacks.push(callback)
       }
