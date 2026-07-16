@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createNpmScriptStub } from '../../packages/script/src/runtime/npm-script-stub'
 
 vi.mock('../../packages/script/src/runtime/logger', () => ({
@@ -6,6 +6,10 @@ vi.mock('../../packages/script/src/runtime/logger', () => ({
 }))
 
 describe('npm script stub lifecycle', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('does not retain callbacks registered after initialization fails', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
     const beforeFailure = vi.fn()

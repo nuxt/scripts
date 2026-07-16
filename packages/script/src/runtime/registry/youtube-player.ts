@@ -76,6 +76,10 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
               try {
                 previousReady?.()
               }
+              catch (error) {
+                if (import.meta.dev)
+                  console.error('[nuxt-scripts] Previous onYouTubeIframeAPIReady handler failed:', error)
+              }
               finally {
                 resolve()
               }
