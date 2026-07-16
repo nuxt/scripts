@@ -3,6 +3,7 @@ import { useHead } from '@unhead/vue'
 import { useNuxtApp } from 'nuxt/app'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
+import { createAbortablePromise, createAbortError } from '../utils/abortable-promise'
 import { UsercentricsOptions } from './schemas'
 
 export { UsercentricsOptions }
@@ -121,66 +122,51 @@ export function useScriptUsercentrics<T extends UsercentricsApi>(
   if (import.meta.client && !instance.consent) {
     let readyApi: UsercentricsCmp | undefined
     let readyPromise: Promise<UsercentricsCmp> | undefined
-    let resolveReady: ((api: UsercentricsCmp) => void) | undefined
-    let rejectReady: ((error: Error) => void) | undefined
+    const readyController = new AbortController()
     let disposed = false
-
-    const abortError = () => {
-      const error = new Error('Usercentrics readiness wait was aborted')
-      error.name = 'AbortError'
-      return error
-    }
-
-    const onReady = () => {
-      if (disposed)
-        return
-      const api = window.__ucCmp
-      if (!api)
-        return
-      readyApi = api
-      window.removeEventListener('UC_CMP_API_READY', onReady)
-      resolveReady?.(api)
-      resolveReady = undefined
-      rejectReady = undefined
-    }
     const cleanupReadyListener = () => {
       if (disposed)
         return
       disposed = true
-      window.removeEventListener('UC_CMP_API_READY', onReady)
-      const reject = rejectReady
-      resolveReady = undefined
-      rejectReady = undefined
-      reject?.(abortError())
+      readyController.abort()
     }
     const whenReady = (): Promise<UsercentricsCmp> => {
       if (disposed)
-        return Promise.reject(abortError())
+        return Promise.reject(createAbortError('Usercentrics readiness wait was aborted'))
       if (readyApi)
         return Promise.resolve(readyApi)
       if (!readyPromise) {
         // Install the event listener before checking isInitialized() so an
         // event fired during that async check cannot be missed.
-        readyPromise = new Promise((resolve, reject) => {
-          resolveReady = resolve
-          rejectReady = reject
+        readyPromise = createAbortablePromise<UsercentricsCmp>((resolve) => {
+          const onReady = () => {
+            const api = window.__ucCmp
+            if (!api)
+              return
+            readyApi = api
+            resolve(api)
+          }
           window.addEventListener('UC_CMP_API_READY', onReady)
+          const api = window.__ucCmp
+          if (api?.isInitialized) {
+            Promise.resolve()
+              .then(() => api.isInitialized())
+              .then((initialized) => {
+                if (initialized && !readyController.signal.aborted)
+                  onReady()
+              })
+              .catch((error) => {
+                // Some bootstrap stubs throw until the ready event; the event
+                // listener remains the authoritative readiness signal.
+                if (!readyController.signal.aborted)
+                  logger.debug('[usercentrics] Waiting for UC_CMP_API_READY after isInitialized() failed', error)
+              })
+          }
+          return () => window.removeEventListener('UC_CMP_API_READY', onReady)
+        }, {
+          signal: readyController.signal,
+          abortMessage: 'Usercentrics readiness wait was aborted',
         })
-        const api = window.__ucCmp
-        if (api?.isInitialized) {
-          Promise.resolve()
-            .then(() => api.isInitialized())
-            .then((initialized) => {
-              if (initialized && !disposed)
-                onReady()
-            })
-            .catch((error) => {
-              // Some bootstrap stubs throw until the ready event; the event
-              // listener remains the authoritative readiness signal.
-              if (!disposed)
-                logger.debug('[usercentrics] Waiting for UC_CMP_API_READY after isInitialized() failed', error)
-            })
-        }
       }
       return readyPromise
     }
