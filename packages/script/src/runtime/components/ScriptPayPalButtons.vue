@@ -112,6 +112,8 @@ onMounted(() => {
       emit('ready', sdkInstance.value)
     }
     catch (err) {
+      if (disposed)
+        return
       sdkInstance.value = undefined
       failed.value = true
       emit('error', err)

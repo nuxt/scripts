@@ -363,6 +363,9 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
   // Add reload method for scripts that need to re-execute (e.g., DOM-scanning scripts)
   instance.reload = async () => {
+    if (err)
+      return Promise.reject(err)
+
     // Remove only the current Unhead entry. Runtime observers/hooks belong to
     // this stable public instance and remain active across the reload.
     currentRemove()
@@ -511,10 +514,13 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       instance.reload = async () => {
         // Disconnect before reload, reconnect after so new network entries are tracked
         disconnectObserver()
-        const result = await _origReload()
-        if (!cleaned)
-          disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, input.src)
-        return result
+        try {
+          return await _origReload()
+        }
+        finally {
+          if (!cleaned)
+            disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, input.src)
+        }
       }
 
       syncScripts()

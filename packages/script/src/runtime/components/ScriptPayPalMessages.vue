@@ -115,6 +115,8 @@ onMounted(() => {
       emit('ready', messagesSession.value)
     }
     catch (err) {
+      if (disposed)
+        return
       messagesSession.value = undefined
       failed.value = true
       emit('error', err)

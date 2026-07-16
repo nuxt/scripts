@@ -35,9 +35,11 @@ declare global {
 }
 
 export type YouTubePlayerInput = RegistryScriptInput
+const cleanupDecoratedInstances = new WeakSet<object>()
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
   let readyPromise: Promise<void> = Promise.resolve()
+  let cleanupReady = () => {}
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
@@ -55,22 +57,58 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     clientInit: import.meta.server
       ? undefined
       : () => {
-          readyPromise = new Promise((resolve) => {
+          readyPromise = new Promise((resolve, reject) => {
             const previousReady = window.onYouTubeIframeAPIReady
-            const onReady = () => {
-              if (window.onYouTubeIframeAPIReady === onReady) {
-                if (previousReady)
-                  window.onYouTubeIframeAPIReady = previousReady
-                else
-                  delete (window as any).onYouTubeIframeAPIReady
+            let settled = false
+            let onReady: () => void
+            const restoreReady = () => {
+              if (window.onYouTubeIframeAPIReady !== onReady)
+                return
+              if (previousReady)
+                window.onYouTubeIframeAPIReady = previousReady
+              else
+                delete (window as any).onYouTubeIframeAPIReady
+            }
+            onReady = () => {
+              if (settled)
+                return
+              settled = true
+              restoreReady()
+              cleanupReady = () => {}
+              try {
+                previousReady?.()
               }
-              previousReady?.()
-              resolve()
+              finally {
+                resolve()
+              }
+            }
+            cleanupReady = () => {
+              if (settled)
+                return
+              settled = true
+              restoreReady()
+              cleanupReady = () => {}
+              const error = new Error('YouTube API readiness wait was aborted')
+              error.name = 'AbortError'
+              reject(error)
             }
             window.onYouTubeIframeAPIReady = onReady
           })
+          // Removal can reject readiness before any caller has requested YT.
+          // Mark the internal promise handled while preserving rejection for
+          // consumers that do await the promise returned by `use()`.
+          void readyPromise.then(undefined, () => undefined)
         },
   }), _options)
+  if (import.meta.client && !cleanupDecoratedInstances.has(instance)) {
+    cleanupDecoratedInstances.add(instance)
+    const originalRemove = instance.remove
+    instance.remove = () => {
+      cleanupReady()
+      cleanupDecoratedInstances.delete(instance)
+      return originalRemove()
+    }
+  }
   // insert preconnect once we start loading the script
   if (import.meta.client) {
     const _ = watch(instance.status, (status) => {

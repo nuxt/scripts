@@ -62,7 +62,12 @@ async function readTransformBody(event: Parameters<typeof getRequestWebStream>[0
         continue
       total += value.byteLength
       if (total > MAX_TRANSFORM_BODY_SIZE) {
-        await reader.cancel('Proxy request body too large')
+        try {
+          await reader.cancel('Proxy request body too large')
+        }
+        catch {
+          // The size-limit response takes precedence over cancellation errors.
+        }
         throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
       }
       chunks.push(value)
@@ -88,6 +93,13 @@ function streamUpstreamResponse(
 ): ReadableStream<Uint8Array> {
   const reader = body.getReader()
   let finished = false
+  let readerReleased = false
+  const releaseReader = () => {
+    if (readerReleased)
+      return
+    readerReleased = true
+    reader.releaseLock()
+  }
   const cleanup = () => {
     if (finished)
       return
@@ -101,7 +113,7 @@ function streamUpstreamResponse(
         const { done, value } = await reader.read()
         if (done) {
           cleanup()
-          reader.releaseLock()
+          releaseReader()
           streamController.close()
         }
         else if (value) {
@@ -110,15 +122,19 @@ function streamUpstreamResponse(
       }
       catch (error) {
         cleanup()
-        reader.releaseLock()
+        releaseReader()
         streamController.error(error)
       }
     },
     async cancel(reason) {
       cleanup()
       controller.abort()
-      await reader.cancel(reason)
-      reader.releaseLock()
+      try {
+        await reader.cancel(reason)
+      }
+      finally {
+        releaseReader()
+      }
     },
   })
 }

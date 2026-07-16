@@ -31,10 +31,23 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
   const inIframe = window.parent !== window
   let disposed = false
   const connectionCleanups: Array<() => void> = []
+  let pollTimer: ReturnType<typeof setInterval> | undefined
+  let pollController: AbortController | undefined
+
+  const stopPolling = () => {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = undefined
+    }
+    pollController?.abort()
+    pollController = undefined
+  }
 
   const cleanupConnection = () => {
     connectionCleanups.splice(0).forEach(cleanup => cleanup())
     devtools.value = undefined
+    appFetch.value = undefined
+    isConnected.value = false
   }
 
   // Embedded mode: connect via devtools-kit iframe client
@@ -43,6 +56,7 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
     stopClientConnection = onDevtoolsClientConnected((client) => {
       if (disposed)
         return
+      stopPolling()
       cleanupConnection()
       isConnected.value = true
       // @ts-expect-error untyped
@@ -69,18 +83,6 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
   }
 
   // Standalone mode: create appFetch from manually entered URL and poll for state
-  let pollTimer: ReturnType<typeof setInterval> | undefined
-  let pollController: AbortController | undefined
-
-  const stopPolling = () => {
-    if (pollTimer) {
-      clearInterval(pollTimer)
-      pollTimer = undefined
-    }
-    pollController?.abort()
-    pollController = undefined
-  }
-
   const poll = async (url: string) => {
     // A slow/unreachable app must not accumulate overlapping interval requests.
     if (pollController)
@@ -119,8 +121,6 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
     stopStandaloneWatch()
     stopClientConnection()
     cleanupConnection()
-    appFetch.value = undefined
-    isConnected.value = false
   }
 }
 
