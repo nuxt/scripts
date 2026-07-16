@@ -4,6 +4,7 @@ import { useHead } from '@unhead/vue'
 /// <reference types="youtube" />
 import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
+import { createAbortablePromise } from '../utils/abortable-promise'
 
 export interface YouTubePlayerApi {
   YT: MaybePromise<{
@@ -39,7 +40,7 @@ const cleanupDecoratedInstances = new WeakSet<object>()
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
   let readyPromise: Promise<void> = Promise.resolve()
-  let cleanupReady = () => {}
+  let readyController: AbortController | undefined
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
@@ -57,9 +58,10 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     clientInit: import.meta.server
       ? undefined
       : () => {
-          readyPromise = new Promise((resolve, reject) => {
+          readyController?.abort()
+          readyController = new AbortController()
+          readyPromise = createAbortablePromise((resolve) => {
             const previousReady = window.onYouTubeIframeAPIReady
-            let settled = false
             let onReady: () => void
             const restoreReady = () => {
               if (window.onYouTubeIframeAPIReady !== onReady)
@@ -70,11 +72,7 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
                 delete (window as any).onYouTubeIframeAPIReady
             }
             onReady = () => {
-              if (settled)
-                return
-              settled = true
               restoreReady()
-              cleanupReady = () => {}
               try {
                 previousReady?.()
               }
@@ -82,17 +80,11 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
                 resolve()
               }
             }
-            cleanupReady = () => {
-              if (settled)
-                return
-              settled = true
-              restoreReady()
-              cleanupReady = () => {}
-              const error = new Error('YouTube API readiness wait was aborted')
-              error.name = 'AbortError'
-              reject(error)
-            }
             window.onYouTubeIframeAPIReady = onReady
+            return restoreReady
+          }, {
+            signal: readyController.signal,
+            abortMessage: 'YouTube API readiness wait was aborted',
           })
           // Removal can reject readiness before any caller has requested YT.
           // Mark the internal promise handled while preserving rejection for
@@ -104,7 +96,7 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     cleanupDecoratedInstances.add(instance)
     const originalRemove = instance.remove
     instance.remove = () => {
-      cleanupReady()
+      readyController?.abort()
       cleanupDecoratedInstances.delete(instance)
       return originalRemove()
     }

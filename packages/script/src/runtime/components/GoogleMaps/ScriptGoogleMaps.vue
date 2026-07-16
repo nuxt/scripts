@@ -156,6 +156,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, provide, r
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
+import { createAbortablePromise } from '../../utils/abortable-promise'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 
@@ -385,41 +386,22 @@ function importLibrary(key: string): Promise<any>
 function importLibrary<T>(key: string): Promise<T> {
   if (libraries.has(key))
     return libraries.get(key)
-  if (lifecycleController.signal.aborted) {
-    const error = new Error(`Google Maps library import "${key}" was aborted`)
-    error.name = 'AbortError'
-    return Promise.reject(error)
-  }
-  const p = mapsApi.value?.importLibrary(key) || new Promise((resolve, reject) => {
+  const p = mapsApi.value?.importLibrary(key) || createAbortablePromise((resolve, reject) => {
     let stop = () => {}
-    let settled = false
-    const cleanup = () => {
-      stop()
-      lifecycleController.signal.removeEventListener('abort', onAbort)
-    }
-    const settle = (fn: () => void) => {
-      if (settled)
-        return
-      settled = true
-      cleanup()
-      fn()
-    }
-    const onAbort = () => settle(() => {
-      const error = new Error(`Google Maps library import "${key}" was aborted`)
-      error.name = 'AbortError'
-      reject(error)
-    })
-
-    if (lifecycleController.signal.aborted) {
-      onAbort()
-      return
-    }
-    lifecycleController.signal.addEventListener('abort', onAbort, { once: true })
     stop = watch(mapsApi, (api) => {
       if (api) {
-        settle(() => resolve(api.importLibrary(key)))
+        try {
+          resolve(api.importLibrary(key))
+        }
+        catch (error) {
+          reject(error)
+        }
       }
     }, { immediate: true })
+    return () => stop()
+  }, {
+    signal: lifecycleController.signal,
+    abortMessage: `Google Maps library import "${key}" was aborted`,
   })
   // Clear cache on failure to allow retry
   const cached = Promise.resolve(p).catch((err) => {
