@@ -34,17 +34,13 @@ vi.mock('../../packages/script/src/assets', () => ({
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-vi.mock('@nuxt/kit', async (og) => {
-  const mod = await og<typeof import('@nuxt/kit')>()
-  const nuxt = {
-    options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
-    hooks: { hook: vi.fn() },
-  }
-  return { ...mod, useNuxt: () => nuxt, tryUseNuxt: () => nuxt }
-})
-
 vi.mocked(hasProtocol).mockImplementation(() => true)
 vi.mocked(hash).mockImplementation(() => 'fathom-script')
+
+const mockNuxt = {
+  options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
+  hooks: { hook: vi.fn() },
+} as any
 
 let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
 async function getProxyConfigs() {
@@ -63,7 +59,7 @@ function mockUpstream(bytes: Buffer) {
 }
 
 async function runTransform(code: string, options: AssetBundlerTransformerOptions) {
-  const plugin = NuxtScriptBundleTransformer(options).vite() as any
+  const plugin = NuxtScriptBundleTransformer({ ...options, nuxt: mockNuxt }).vite() as any
   await plugin.transform.handler.call({}, code, 'file.js')
 }
 

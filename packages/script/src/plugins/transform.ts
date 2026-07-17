@@ -1,3 +1,4 @@
+import type { Nuxt } from '@nuxt/schema'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
 import type { InferInput } from 'valibot'
@@ -84,6 +85,12 @@ export interface AssetBundlerTransformerOptions {
    * @default false
    */
   integrity?: boolean | IntegrityAlgorithm
+  /**
+   * The active Nuxt instance. Used to resolve the build directory and register the
+   * `build:done` copy hook. Defaults to `useNuxt()`; pass it explicitly to run the
+   * transformer without an active Nuxt context (e.g. unit tests).
+   */
+  nuxt?: Nuxt
   renderedScript?: Map<string, RenderedScriptMeta | Error>
   /**
    * Set of registry script keys that use Partytown.
@@ -214,7 +221,7 @@ async function downloadScript(opts: {
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
   renderedScript: new Map(),
 }) {
-  const nuxt = useNuxt()
+  const nuxt = options.nuxt ?? useNuxt()
   const { renderedScript = new Map() } = options
   const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
 
@@ -239,7 +246,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     await Promise.all(scripts.map(async ([url, content]) => {
       if (content instanceof Error || !content.filename)
         return
-      await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
+      await fsp.writeFile(join(cacheDir, content.filename), content.content)
       logger.debug(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
     }))
   })

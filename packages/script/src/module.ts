@@ -1023,6 +1023,7 @@ export default defineNuxtModule<ModuleOptions>({
         dev: true,
       })
       addBuildPlugin(NuxtScriptBundleTransformer({
+        nuxt,
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         proxyConfigs,
