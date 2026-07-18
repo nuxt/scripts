@@ -51,45 +51,10 @@ vi.stubGlobal('fetch', vi.fn(() => {
   return Promise.resolve({ arrayBuffer: vi.fn(() => Buffer.from('')), ok: true, headers: { get: vi.fn() } })
 }))
 
-vi.mock('@nuxt/kit', async (og) => {
-  const mod = await og<typeof import('@nuxt/kit')>()
-
-  return {
-    ...mod,
-    useNuxt() {
-      return {
-        options: {
-          buildDir: '.nuxt',
-          app: {
-            baseURL: '/',
-          },
-          runtimeConfig: {
-            app: {},
-          },
-        },
-        hooks: {
-          hook: vi.fn(),
-        },
-      }
-    },
-    tryUseNuxt() {
-      return {
-        options: {
-          buildDir: '.nuxt',
-          app: {
-            baseURL: '/',
-          },
-          runtimeConfig: {
-            app: {},
-          },
-        },
-        hooks: {
-          hook: vi.fn(),
-        },
-      }
-    },
-  }
-})
+const mockNuxt = {
+  options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
+  hooks: { hook: vi.fn() },
+} as any
 
 // we want to control normalizeScriptData() output
 vi.mocked(hasProtocol).mockImplementation(() => true)
@@ -97,7 +62,7 @@ vi.mocked(hasProtocol).mockImplementation(() => true)
 vi.mocked(hash).mockImplementation(src => src.pathname)
 
 async function transform(code: string | string[], options?: AssetBundlerTransformerOptions) {
-  const plugin = NuxtScriptBundleTransformer(options).vite() as any
+  const plugin = NuxtScriptBundleTransformer({ ...options, nuxt: mockNuxt }).vite() as any
   const res = await plugin.transform.handler.call(
     {},
     Array.isArray(code) ? code.join('\n') : code,
