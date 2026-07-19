@@ -101,7 +101,6 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     const originalRemove = instance.remove
     instance.remove = () => {
       readyController?.abort()
-      delete (instance as any)[cleanupDecoration]
       return originalRemove()
     }
   }
