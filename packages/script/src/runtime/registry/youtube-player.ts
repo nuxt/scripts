@@ -36,7 +36,7 @@ declare global {
 }
 
 export type YouTubePlayerInput = RegistryScriptInput
-const cleanupDecoratedInstances = new WeakSet<object>()
+const cleanupDecoration = Symbol('nuxt-scripts:youtube-cleanup')
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
   let readyPromise: Promise<void> = Promise.resolve()
@@ -96,12 +96,12 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
           void readyPromise.then(undefined, () => undefined)
         },
   }), _options)
-  if (import.meta.client && !cleanupDecoratedInstances.has(instance)) {
-    cleanupDecoratedInstances.add(instance)
+  if (import.meta.client && !(instance as any)[cleanupDecoration]) {
+    ;(instance as any)[cleanupDecoration] = true
     const originalRemove = instance.remove
     instance.remove = () => {
       readyController?.abort()
-      cleanupDecoratedInstances.delete(instance)
+      delete (instance as any)[cleanupDecoration]
       return originalRemove()
     }
   }
