@@ -3,7 +3,7 @@ import type { NuxtDevToolsNetworkRequest, NuxtDevToolsScriptInstance, NuxtUseScr
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
-import { markRaw, ref } from 'vue'
+import { markRaw, ref, watch } from 'vue'
 // @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
@@ -331,6 +331,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
   const cleanupFns = new Set<() => void>()
   let cleaned = false
+  const publicStatus = instance.status
+  let stopStatusSync = () => {}
   const addCleanup = (cleanup: () => void) => {
     if (cleaned)
       cleanup()
@@ -354,6 +356,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
 
   let currentRemove = instance.remove
   let currentLoad = instance.load
+  addCleanup(() => stopStatusSync())
   instance.remove = () => {
     const result = currentRemove()
     cleanupInstance()
@@ -378,19 +381,22 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       ? { src: input, key: `${id}-${Date.now()}` }
       : { ...input, key: `${id}-${Date.now()}` }
     // Re-create the script entry
-    const reloaded = _useScript<T>(reloadInput, { ...options, trigger: 'client' } as any as UseScriptOptions<T>)
+    const reloadOptions = { ...options, trigger: 'client' }
+    const reloaded = _useScript<T>(reloadInput, reloadOptions as any as UseScriptOptions<T>)
+    delete (reloadOptions as any).eventContext
     currentRemove = reloaded.remove
     currentLoad = reloaded.load
-    // Both supported @unhead/vue majors expose status through `_statusRef`.
-    // Repoint it without overwriting the core script's string status.
-    ;(instance as any)._statusRef = reloaded.status
+    stopStatusSync()
+    stopStatusSync = watch(reloaded.status, status => publicStatus.value = status, {
+      flush: 'sync',
+      immediate: true,
+    })
     instance.entry = reloaded.entry
     return currentLoad()
   }
   nuxtApp.$scripts[id] = instance
   addCleanup(nuxtApp.hooks.hook('app:unmount' as any, () => {
-    currentRemove()
-    cleanupInstance()
+    instance.remove()
   }))
 
   // Debug logging: emit a structured log per script lifecycle event when debug
