@@ -314,8 +314,13 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
+  // Nuxt returns a caller-owned handle while Unhead keeps the script resource
+  // shared on the request/app-local head instance.
+  ;(options as any).scope = true
   const instance = _useScript<T>(input, options as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> & { reload: () => Promise<T> }
-
+  // Unhead v3 returns a consumer scope whose `script` property is the shared
+  // backing instance. Older Unhead versions return that shared instance directly.
+  const sharedInstance = ((instance as any).script || instance) as typeof instance
   // _useScript still needs to run for repeated calls because @unhead/vue
   // registers the caller's scoped callbacks. The shared instance itself must
   // only be decorated once, otherwise every mount stacks app-global hooks and
@@ -323,8 +328,15 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   if (exists)
     return instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
+  // `$scripts` is app-owned and must not retain the first component's disposable
+  // scope. Its reactive status is shared, while lifecycle methods inherit from
+  // the stable Unhead resource.
+  const appInstance = (instance as any).script
+    ? Object.assign(Object.create(sharedInstance), { status: instance.status }) as typeof instance
+    : instance
   markRaw(instance as any)
-  ;(instance as any).toJSON = () => ({ id: instance.id, status: instance.status.value })
+  markRaw(appInstance as any)
+  ;(sharedInstance as any).toJSON = () => ({ id: instance.id, status: instance.status.value })
 
   const cleanupFns = new Set<() => void>()
   let cleaned = false
@@ -341,7 +353,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     for (const cleanup of cleanupFns)
       cleanup()
     cleanupFns.clear()
-    if (nuxtApp.$scripts[id] === instance)
+    if (nuxtApp.$scripts[id] === appInstance)
       delete nuxtApp.$scripts[id]
     if (import.meta.dev && import.meta.client && nuxtApp._scripts?.[instance.id]) {
       delete nuxtApp._scripts[instance.id]
@@ -349,21 +361,21 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
-  let currentRemove = instance.remove
-  let currentLoad = instance.load
-  instance.remove = () => {
+  let currentRemove = sharedInstance.remove
+  let currentLoad = sharedInstance.load
+  sharedInstance.remove = () => {
     const result = currentRemove()
     cleanupInstance()
     return result
   }
-  instance.load = async () => {
+  sharedInstance.load = async () => {
     if (err) {
       return Promise.reject(err)
     }
     return currentLoad()
   }
   // Add reload method for scripts that need to re-execute (e.g., DOM-scanning scripts)
-  instance.reload = async () => {
+  sharedInstance.reload = async () => {
     if (err)
       return Promise.reject(err)
 
@@ -375,17 +387,25 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       ? { src: input, key: `${id}-${Date.now()}` }
       : { ...input, key: `${id}-${Date.now()}` }
     // Re-create the script entry
-    const reloaded = _useScript<T>(reloadInput, { ...options, trigger: 'client' } as any as UseScriptOptions<T>)
-    currentRemove = reloaded.remove
-    currentLoad = reloaded.load
-    // Copy over the new instance properties
-    Object.assign(instance, {
-      status: reloaded.status,
-      entry: reloaded.entry,
-    })
+    const reloaded = _useScript<T>(reloadInput, { ...options, scope: false, trigger: 'client' } as any as UseScriptOptions<T>)
+    const reloadedShared = ((reloaded as any).script || reloaded) as typeof reloaded
+    currentRemove = reloadedShared.remove
+    currentLoad = reloadedShared.load
+    // Vue scopes expose status through their shared script's private ref. Keep
+    // the stable public instance wired to the replacement script across reloads.
+    if ((instance as any).script) {
+      ;(sharedInstance as any)._statusRef = reloaded.status
+      sharedInstance.entry = reloadedShared.entry
+    }
+    else {
+      Object.assign(sharedInstance, {
+        status: reloaded.status,
+        entry: reloaded.entry,
+      })
+    }
     return currentLoad()
   }
-  nuxtApp.$scripts[id] = instance
+  nuxtApp.$scripts[id] = appInstance
   addCleanup(nuxtApp.hooks.hook('app:unmount' as any, () => {
     currentRemove()
     cleanupInstance()
@@ -425,18 +445,18 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       const fn = status === 'error' ? log.warn : log.debug
       fn(`status: ${status}`, payload)
     }))
-    const _origLoad = instance.load
-    instance.load = () => {
+    const _origLoad = sharedInstance.load
+    sharedInstance.load = () => {
       log.debug('load() called', ctx)
       return _origLoad()
     }
-    const _origRemove = instance.remove
-    instance.remove = () => {
+    const _origRemove = sharedInstance.remove
+    sharedInstance.remove = () => {
       log.debug('remove() called', ctx)
       return _origRemove()
     }
-    const _origReload = instance.reload
-    instance.reload = async () => {
+    const _origReload = sharedInstance.reload
+    sharedInstance.reload = async () => {
       log.debug('reload() called', ctx)
       return _origReload()
     }
@@ -471,7 +491,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
           status: ctx.script.status,
           at: Date.now(),
         }, DEVTOOLS_EVENT_LIMIT)
-        payload.$script = instance
+        payload.$script = appInstance
         syncScripts()
       }))
       // @ts-expect-error untyped
@@ -486,7 +506,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         }, DEVTOOLS_EVENT_LIMIT)
         syncScripts()
       }))
-      payload.$script = instance
+      payload.$script = appInstance
       if (err) {
         pushBounded(payload.events, {
           type: 'status',
@@ -511,8 +531,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       let disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, input.src)
       addCleanup(() => disconnectObserver())
       // Clean up observer when script is removed, but keep it alive across reload()
-      const _origReload = instance.reload
-      instance.reload = async () => {
+      const _origReload = sharedInstance.reload
+      sharedInstance.reload = async () => {
         // Disconnect before reload, reconnect after so new network entries are tracked
         disconnectObserver()
         try {
