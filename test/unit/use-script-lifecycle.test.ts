@@ -10,18 +10,17 @@ const mocks = vi.hoisted(() => {
   const shared = {
     id: 'https://example.com/sdk.js',
     status: { value: 'awaitingLoad' },
+    _statusRef: { value: 'awaitingLoad' },
     signal: new AbortController().signal,
     entry: undefined,
     load: baseLoad,
     remove: baseRemove,
   }
-  const createScope = () => {
-    const controller = new AbortController()
-    return Object.assign(Object.create(shared), {
-      script: shared,
-      signal: controller.signal,
-      status: shared.status,
-      dispose: () => controller.abort(),
+  const createHandle = (target = shared) => {
+    return new Proxy(target, {
+      get(_, key, receiver) {
+        return Reflect.get(_, key === 'status' ? '_statusRef' : key, receiver)
+      },
     })
   }
   const head = {
@@ -41,10 +40,10 @@ const mocks = vi.hoisted(() => {
     app,
     baseLoad,
     baseRemove,
-    createScope,
+    createHandle,
     head,
     shared,
-    unheadUseScript: vi.fn(createScope),
+    unheadUseScript: vi.fn(createHandle),
   }
 })
 
@@ -77,6 +76,7 @@ describe('useScript shared instance lifecycle', () => {
     Object.assign(mocks.shared, {
       id: 'https://example.com/sdk.js',
       status: { value: 'awaitingLoad' },
+      _statusRef: { value: 'awaitingLoad' },
       signal: new AbortController().signal,
       entry: undefined,
       load: mocks.baseLoad,
@@ -84,7 +84,7 @@ describe('useScript shared instance lifecycle', () => {
     })
     delete (mocks.shared as any).reload
     delete (mocks.shared as any).toJSON
-    mocks.unheadUseScript.mockImplementation(mocks.createScope)
+    mocks.unheadUseScript.mockImplementation(() => mocks.createHandle())
   })
 
   it('decorates a shared Unhead instance only once and removes its registry entry', () => {
@@ -92,25 +92,17 @@ describe('useScript shared instance lifecycle', () => {
     const decoratedRemove = first.remove
     const second = useScript('https://example.com/sdk.js')
 
-    // Unhead still sees both callers so it can register their scoped callbacks.
+    // Unhead still sees both callers so Vue can bind their callbacks to the
+    // active component scope.
     expect(mocks.unheadUseScript).toHaveBeenCalledTimes(2)
-    // Each caller keeps its own scope while app-global wrappers live on the
-    // shared backing instance and remain available through inheritance.
     expect(second).not.toBe(first)
-    expect(second.script).toBe(first.script)
     expect(second.remove).toBe(decoratedRemove)
     expect(second.reload).toBe(first.reload)
     const appInstance = mocks.app.$scripts['https://example.com/sdk.js']
-    expect(appInstance).not.toBe(first)
-    expect(Object.getPrototypeOf(appInstance)).toBe(first.script)
+    expect(appInstance).toBe(first)
     expect(appInstance.remove).toBe(decoratedRemove)
     expect(mocks.app.hooks.hook).toHaveBeenCalledTimes(1)
-    expect(mocks.unheadUseScript).toHaveBeenNthCalledWith(1, expect.anything(), expect.objectContaining({ scope: true }))
-
-    ;(first as any).dispose()
-    expect(first.signal.aborted).toBe(true)
-    expect(appInstance.signal.aborted).toBe(false)
-    expect(mocks.app.$scripts['https://example.com/sdk.js']).toBe(appInstance)
+    expect(mocks.unheadUseScript.mock.calls[0]?.[1]).not.toHaveProperty('scope')
 
     expect(first.remove()).toBe(true)
     expect(mocks.baseRemove).toHaveBeenCalledOnce()
@@ -125,6 +117,41 @@ describe('useScript shared instance lifecycle', () => {
 
     expect(second).toBe(first)
     expect(mocks.app.$scripts['https://example.com/sdk.js']).toBe(first)
+  })
+
+  it('releases event context added by older Vue integrations', () => {
+    mocks.unheadUseScript.mockImplementation((_input, options) => {
+      options.eventContext = { component: true }
+      return mocks.createHandle()
+    })
+
+    useScript('https://example.com/sdk.js')
+
+    expect(mocks.unheadUseScript.mock.calls[0]?.[1]).not.toHaveProperty('eventContext')
+  })
+
+  it('keeps the public status ref live across reloads without requesting a scope', async () => {
+    const reloadedStatus = { value: 'loading' }
+    const reloadedLoad = vi.fn(() => Promise.resolve({ ready: true }))
+    const reloaded = {
+      id: 'reload-script',
+      _statusRef: reloadedStatus,
+      status: 'loading',
+      entry: { dispose: vi.fn() },
+      load: reloadedLoad,
+      remove: vi.fn(() => true),
+    }
+    mocks.unheadUseScript
+      .mockImplementationOnce(() => mocks.createHandle())
+      .mockImplementationOnce(() => mocks.createHandle(reloaded as any))
+    const instance = useScript('https://example.com/sdk.js')
+
+    await expect((instance as any).reload()).resolves.toEqual({ ready: true })
+
+    expect(instance.status).toBe(reloadedStatus)
+    expect(instance.entry).toBe(reloaded.entry)
+    expect(reloadedLoad).toHaveBeenCalledOnce()
+    expect(mocks.unheadUseScript.mock.calls[1]?.[1]).not.toHaveProperty('scope')
   })
 
   it('does not bypass validation when reload is called', async () => {
