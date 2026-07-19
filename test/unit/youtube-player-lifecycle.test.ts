@@ -47,5 +47,8 @@ describe('youtube player lifecycle', () => {
 
     expect(first.remove()).toBe(true)
     expect(mocks.remove).toHaveBeenCalledOnce()
+
+    const afterRemove = useScriptYouTubePlayer({})
+    expect(afterRemove.remove).toBe(decoratedRemove)
   })
 })
