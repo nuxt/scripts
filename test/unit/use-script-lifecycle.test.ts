@@ -2,6 +2,7 @@
  * @vitest-environment happy-dom
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { useScript } from '../../packages/script/src/runtime/composables/useScript'
 
 const mocks = vi.hoisted(() => {
@@ -28,16 +29,23 @@ const mocks = vi.hoisted(() => {
       hook: vi.fn(() => vi.fn()),
     },
   }
+  const appHookCallbacks = new Map<string, (() => void)[]>()
   const app = {
     $scripts: {} as Record<string, any>,
     _scripts: {} as Record<string, any>,
     hooks: {
-      hook: vi.fn(() => vi.fn()),
+      hook: vi.fn((name: string, callback: () => void) => {
+        const callbacks = appHookCallbacks.get(name) || []
+        callbacks.push(callback)
+        appHookCallbacks.set(name, callbacks)
+        return vi.fn()
+      }),
       callHook: vi.fn(),
     },
   }
   return {
     app,
+    appHookCallbacks,
     baseLoad,
     baseRemove,
     createHandle,
@@ -73,6 +81,7 @@ describe('useScript shared instance lifecycle', () => {
     vi.clearAllMocks()
     mocks.app.$scripts = {}
     mocks.app._scripts = {}
+    mocks.appHookCallbacks.clear()
     Object.assign(mocks.shared, {
       id: 'https://example.com/sdk.js',
       status: { value: 'awaitingLoad' },
@@ -130,9 +139,24 @@ describe('useScript shared instance lifecycle', () => {
     expect(mocks.unheadUseScript.mock.calls[0]?.[1]).not.toHaveProperty('eventContext')
   })
 
+  it('runs provider cleanup wrappers during app teardown', () => {
+    const instance = useScript('https://example.com/sdk.js')
+    const remove = instance.remove
+    const providerRemove = vi.fn(() => remove())
+    instance.remove = providerRemove
+
+    mocks.appHookCallbacks.get('app:unmount')?.[0]?.()
+
+    expect(providerRemove).toHaveBeenCalledOnce()
+    expect(mocks.baseRemove).toHaveBeenCalledOnce()
+  })
+
   it('keeps the public status ref live across reloads without requesting a scope', async () => {
-    const reloadedStatus = { value: 'loading' }
-    const reloadedLoad = vi.fn(() => Promise.resolve({ ready: true }))
+    const reloadedStatus = ref('loading')
+    const reloadedLoad = vi.fn(() => {
+      reloadedStatus.value = 'loaded'
+      return Promise.resolve({ ready: true })
+    })
     const reloaded = {
       id: 'reload-script',
       _statusRef: reloadedStatus,
@@ -145,13 +169,36 @@ describe('useScript shared instance lifecycle', () => {
       .mockImplementationOnce(() => mocks.createHandle())
       .mockImplementationOnce(() => mocks.createHandle(reloaded as any))
     const instance = useScript('https://example.com/sdk.js')
+    const status = instance.status
 
     await expect((instance as any).reload()).resolves.toEqual({ ready: true })
 
-    expect(instance.status).toBe(reloadedStatus)
+    expect(instance.status).toBe(status)
+    expect(status.value).toBe('loaded')
     expect(instance.entry).toBe(reloaded.entry)
     expect(reloadedLoad).toHaveBeenCalledOnce()
     expect(mocks.unheadUseScript.mock.calls[1]?.[1]).not.toHaveProperty('scope')
+  })
+
+  it('releases event context added while reloading with older Unhead versions', async () => {
+    const reloaded = {
+      id: 'reload-script',
+      _statusRef: ref('loading'),
+      entry: undefined,
+      load: vi.fn(() => Promise.resolve({ ready: true })),
+      remove: vi.fn(() => true),
+    }
+    mocks.unheadUseScript
+      .mockImplementationOnce(() => mocks.createHandle())
+      .mockImplementationOnce((_input, options) => {
+        options.eventContext = { component: true }
+        return mocks.createHandle(reloaded as any)
+      })
+    const instance = useScript('https://example.com/sdk.js')
+
+    await (instance as any).reload()
+
+    expect(mocks.unheadUseScript.mock.calls[1]?.[1]).not.toHaveProperty('eventContext')
   })
 
   it('does not bypass validation when reload is called', async () => {
