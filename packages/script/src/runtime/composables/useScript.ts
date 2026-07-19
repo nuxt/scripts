@@ -1,9 +1,11 @@
-import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance, VueScriptScope } from '@unhead/vue/scripts'
+import type { ScriptInstance } from 'unhead/scripts'
 import type { NuxtDevToolsNetworkRequest, NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
-import { markRaw, ref, watch } from 'vue'
+import { useScript as useUnheadScript } from 'unhead/scripts'
+import { markRaw, ref } from 'vue'
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
@@ -15,6 +17,7 @@ type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
 
 const DEVTOOLS_EVENT_LIMIT = 250
 const DEVTOOLS_NETWORK_REQUEST_LIMIT = 500
+const NUXT_SCRIPT_CONTROLLER = Symbol('nuxt-scripts:controller')
 
 function pushBounded<T>(items: T[], item: T, limit: number): void {
   items.push(item)
@@ -201,6 +204,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       return existing as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
     const status = ref('loaded')
+    const lifecycleController = new AbortController()
     let disconnectObserver = () => {}
     let stopAppUnmountHook = () => {}
     let cleaned = false
@@ -209,6 +213,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       if (cleaned)
         return
       cleaned = true
+      lifecycleController.abort()
       disconnectObserver()
       stopAppUnmountHook()
       if (nuxtApp.$scripts[src] === stub)
@@ -221,6 +226,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     stub = {
       id: src,
       status,
+      signal: lifecycleController.signal,
+      dispose: () => {},
       load: () => Promise.resolve({} as T),
       remove: () => {
         cleanup()
@@ -228,6 +235,11 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       },
       entry: undefined,
     } as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    Object.defineProperty(stub, 'script', {
+      configurable: true,
+      enumerable: true,
+      get: () => stub,
+    })
     nuxtApp.$scripts[src] = stub
 
     // Partytown devtools: partytown routes requests through the first-party proxy
@@ -313,24 +325,34 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
 
-  const unheadOptions = { ...options }
-  const instance = _useScript<T>(input, unheadOptions as any as UseScriptOptions<T>) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> & { reload: () => Promise<T> }
-  // @unhead/vue v2 mutates the passed object with the current component. The
-  // core script keeps that options object, so release the component reference
-  // after event handlers have been bound. Newer Unhead versions clone it.
-  delete (unheadOptions as any).eventContext
-  // _useScript still needs to run for repeated calls so @unhead/vue can bind
-  // caller callbacks to the active Vue scope. Decorate the shared resource only
-  // once so repeated mounts do not stack app-global hooks and wrappers.
-  if (exists)
+  const unheadOptions = { ...options, scope: true as const }
+  const instance = _useScript<T>(input, unheadOptions as UseScriptOptions<T> & { scope: true }) as VueScriptScope<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  const sharedInstance = instance.script as ScriptInstance<UseFunctionType<NuxtUseScriptOptions<T>, T>> & {
+    [NUXT_SCRIPT_CONTROLLER]?: UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    reload?: () => Promise<T>
+    toJSON?: () => { id: string, status: string }
+  }
+  // Every caller receives its own Unhead consumer scope. The shared resource is
+  // decorated once and the app registry retains a separate, component-free facade.
+  if (sharedInstance[NUXT_SCRIPT_CONTROLLER])
     return instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
+  const publicStatus = instance.status
+  let currentScript = sharedInstance as ScriptInstance<any>
+  const appInstance = Object.create(sharedInstance) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  Object.defineProperties(appInstance, {
+    status: { configurable: true, enumerable: true, value: publicStatus },
+    script: { configurable: true, enumerable: true, get: () => currentScript },
+    signal: { configurable: true, enumerable: true, get: () => currentScript.signal },
+    dispose: { configurable: true, enumerable: true, value: () => {} },
+  })
+  sharedInstance[NUXT_SCRIPT_CONTROLLER] = appInstance
   markRaw(instance as any)
-  ;(instance as any).toJSON = () => ({ id: instance.id, status: instance.status.value })
+  markRaw(appInstance as any)
+  sharedInstance.toJSON = () => ({ id: sharedInstance.id, status: publicStatus.value })
 
   const cleanupFns = new Set<() => void>()
   let cleaned = false
-  const publicStatus = instance.status
   let stopStatusSync = () => {}
   const addCleanup = (cleanup: () => void) => {
     if (cleaned)
@@ -345,74 +367,83 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     for (const cleanup of cleanupFns)
       cleanup()
     cleanupFns.clear()
-    if (nuxtApp.$scripts[id] === instance)
+    if (nuxtApp.$scripts[id] === appInstance)
       delete nuxtApp.$scripts[id]
-    if (import.meta.dev && import.meta.client && nuxtApp._scripts?.[instance.id]) {
-      delete nuxtApp._scripts[instance.id]
+    if (import.meta.dev && import.meta.client && nuxtApp._scripts?.[sharedInstance.id]) {
+      delete nuxtApp._scripts[sharedInstance.id]
       nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
     }
   }
 
-  let currentRemove = instance.remove
-  let currentLoad = instance.load
+  let currentRemove = sharedInstance.remove
+  let currentLoad = sharedInstance.load
+  let reloadPromise: Promise<T> | undefined
   addCleanup(() => stopStatusSync())
-  instance.remove = () => {
+  sharedInstance.remove = () => {
     const result = currentRemove()
     cleanupInstance()
     return result
   }
-  instance.load = async () => {
+  sharedInstance.load = async () => {
     if (err) {
       return Promise.reject(err)
     }
     return currentLoad()
   }
   // Add reload method for scripts that need to re-execute (e.g., DOM-scanning scripts)
-  instance.reload = async () => {
+  sharedInstance.reload = () => {
     if (err)
       return Promise.reject(err)
+    if (reloadPromise)
+      return reloadPromise
 
-    // Remove only the current Unhead entry. Runtime observers/hooks belong to
-    // this stable public instance and remain active across the reload.
-    currentRemove()
-    // Use unique key to bypass Unhead's deduplication
-    const reloadInput = typeof input === 'string'
-      ? { src: input, key: `${id}-${Date.now()}` }
-      : { ...input, key: `${id}-${Date.now()}` }
-    // Re-create the script entry
-    const reloadOptions = { ...options, trigger: 'client' }
-    const reloaded = _useScript<T>(reloadInput, reloadOptions as any as UseScriptOptions<T>)
-    delete (reloadOptions as any).eventContext
-    currentRemove = reloaded.remove
-    currentLoad = reloaded.load
-    stopStatusSync()
-    stopStatusSync = watch(reloaded.status, status => publicStatus.value = status, {
-      flush: 'sync',
-      immediate: true,
+    reloadPromise = (async () => {
+      // Remove only the current Unhead resource. App-owned hooks and the public
+      // facade remain live while the replacement script is registered.
+      currentRemove()
+      const reloadInput = { ...input, key: `${id}-${Date.now()}` }
+      const reloadOptions = { ...options, scope: false, trigger: 'client' }
+      const reloaded = useUnheadScript(
+        options.head as any,
+        reloadInput as any,
+        reloadOptions as any,
+      ) as ScriptInstance<T>
+      currentScript = reloaded
+      currentRemove = reloaded.remove
+      currentLoad = reloaded.load
+      sharedInstance.entry = reloaded.entry
+      publicStatus.value = reloaded.status
+      stopStatusSync()
+      stopStatusSync = headHooks.hook('script:updated', ({ script }) => {
+        if (script === reloaded)
+          publicStatus.value = script.status
+      })
+      return await currentLoad()
+    })().finally(() => {
+      reloadPromise = undefined
     })
-    instance.entry = reloaded.entry
-    return currentLoad()
+    return reloadPromise
   }
-  nuxtApp.$scripts[id] = instance
+  nuxtApp.$scripts[id] = appInstance
   addCleanup(nuxtApp.hooks.hook('app:unmount' as any, () => {
-    instance.remove()
+    sharedInstance.remove()
   }))
 
   // Debug logging: emit a structured log per script lifecycle event when debug
   // is enabled at build-time (or in dev). Tagged with registryKey when present
   // (e.g. `googleTagManager`), else the script id (src/key).
-  if (import.meta.client && debugEnabled && !exists) {
+  if (import.meta.client && debugEnabled) {
     const registryKey = options?.devtools?.registryKey as string | undefined
     const src = (input as any)?.src
     const trigger = options?.trigger
     const loadedFrom = options?.devtools?.loadedFrom as string | undefined
     const ctx = {
-      id: instance.id,
+      id: sharedInstance.id,
       ...(registryKey ? { registryKey } : {}),
       ...(src ? { src } : {}),
       ...(loadedFrom ? { loadedFrom } : {}),
     }
-    const log = logger.withTag(registryKey || instance.id)
+    const log = logger.withTag(registryKey || sharedInstance.id)
     const t0 = performance.now()
     let tLoadStart = 0
     log.debug('registered', {
@@ -420,7 +451,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       trigger: typeof trigger === 'object' ? (trigger instanceof Promise ? 'promise' : JSON.stringify(trigger)) : trigger,
     })
     addCleanup(headHooks.hook('script:updated', (entry) => {
-      if (entry.script.id !== instance.id)
+      if (entry.script !== currentScript)
         return
       const status = entry.script.status
       const elapsed = Math.round(performance.now() - t0)
@@ -432,20 +463,20 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       const fn = status === 'error' ? log.warn : log.debug
       fn(`status: ${status}`, payload)
     }))
-    const _origLoad = instance.load
-    instance.load = () => {
+    const _origLoad = sharedInstance.load
+    sharedInstance.load = () => {
       log.debug('load() called', ctx)
       return _origLoad()
     }
-    const _origRemove = instance.remove
-    instance.remove = () => {
+    const _origRemove = sharedInstance.remove
+    sharedInstance.remove = () => {
       log.debug('remove() called', ctx)
       return _origRemove()
     }
-    const _origReload = instance.reload
-    instance.reload = async () => {
+    const _origReload = sharedInstance.reload
+    sharedInstance.reload = async () => {
       log.debug('reload() called', ctx)
-      return _origReload()
+      return _origReload!()
     }
   }
 
@@ -464,13 +495,13 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     function syncScripts() {
       if (cleaned)
         return
-      nuxtApp._scripts[instance.id] = payload
+      nuxtApp._scripts[sharedInstance.id] = payload
       nuxtApp.hooks.callHook('scripts:updated' as any, { scripts: nuxtApp._scripts })
     }
 
-    if (!nuxtApp._scripts[instance.id]) {
+    if (!nuxtApp._scripts[sharedInstance.id]) {
       addCleanup(headHooks.hook('script:updated', (ctx) => {
-        if (ctx.script.id !== instance.id)
+        if (ctx.script !== currentScript)
           return
         // convert the status to a timestamp
         pushBounded(payload.events, {
@@ -478,12 +509,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
           status: ctx.script.status,
           at: Date.now(),
         }, DEVTOOLS_EVENT_LIMIT)
-        payload.$script = instance
+        payload.$script = appInstance
         syncScripts()
       }))
       // @ts-expect-error untyped
       addCleanup(headHooks.hook('script:instance-fn', (ctx) => {
-        if (ctx.script.id !== instance.id || String(ctx.fn).startsWith('__v_'))
+        if (ctx.script !== currentScript || String(ctx.fn).startsWith('__v_'))
           return
         // log all events
         pushBounded(payload.events, {
@@ -493,7 +524,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         }, DEVTOOLS_EVENT_LIMIT)
         syncScripts()
       }))
-      payload.$script = instance
+      payload.$script = appInstance
       if (err) {
         pushBounded(payload.events, {
           type: 'status',
@@ -518,12 +549,12 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       let disconnectObserver = observeNetworkRequests(payload, domains, syncScripts, input.src)
       addCleanup(() => disconnectObserver())
       // Clean up observer when script is removed, but keep it alive across reload()
-      const _origReload = instance.reload
-      instance.reload = async () => {
+      const _origReload = sharedInstance.reload
+      sharedInstance.reload = async () => {
         // Disconnect before reload, reconnect after so new network entries are tracked
         disconnectObserver()
         try {
-          return await _origReload()
+          return await _origReload!()
         }
         finally {
           if (!cleaned)

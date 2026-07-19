@@ -348,12 +348,17 @@
       {
         "name": "MapsNamespace",
         "kind": "type",
-        "code": "type MapsNamespace = typeof window.google.maps"
+        "code": "type MapsNamespace = typeof google.maps"
+      },
+      {
+        "name": "GoogleMapsWindow",
+        "kind": "type",
+        "code": "type GoogleMapsWindow = Window & {\n  google: {\n    maps: MapsNamespace & { __ib__?: () => void }\n  }\n}"
       },
       {
         "name": "GoogleMapsApi",
         "kind": "interface",
-        "code": "export interface GoogleMapsApi {\n  maps: Promise<MapsNamespace>\n}"
+        "code": "export interface GoogleMapsApi {\n  maps: MapsNamespace\n}"
       },
       {
         "name": "ScriptGoogleMapsProps",
@@ -1208,7 +1213,7 @@
       {
         "name": "YouTubePlayerApi",
         "kind": "interface",
-        "code": "export interface YouTubePlayerApi {\n  YT: MaybePromise<{\n    Player: YT.Player\n    PlayerState: YT.PlayerState\n    get: (k: string) => any\n    loaded: 0 | 1\n    loading: 0 | 1\n    ready: (f: () => void) => void\n    scan: () => void\n    setConfig: (config: YT.PlayerOptions) => void\n    subscribe: <EventName extends keyof YT.Events>(\n      event: EventName,\n      listener: YT.Events[EventName],\n      context?: any,\n    ) => void\n    unsubscribe: <EventName extends keyof YT.Events>(\n      event: EventName,\n      listener: YT.Events[EventName],\n      context?: any,\n    ) => void\n  }>\n}"
+        "code": "export interface YouTubePlayerApi {\n  YT: {\n    Player: YT.Player\n    PlayerState: YT.PlayerState\n    get: (k: string) => any\n    loaded: 0 | 1\n    loading: 0 | 1\n    ready: (f: () => void) => void\n    scan: () => void\n    setConfig: (config: YT.PlayerOptions) => void\n    subscribe: <EventName extends keyof YT.Events>(\n      event: EventName,\n      listener: YT.Events[EventName],\n      context?: any,\n    ) => void\n    unsubscribe: <EventName extends keyof YT.Events>(\n      event: EventName,\n      listener: YT.Events[EventName],\n      context?: any,\n    ) => void\n  }\n}"
       },
       {
         "name": "ScriptYouTubePlayerProps",

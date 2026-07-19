@@ -59,6 +59,7 @@
   "build": {
     "externals": [
       "@unhead/vue",
+      "unhead",
       "@unhead/schema",
       "knitwork",
       "#build/modules/nuxt-scripts-gtm",
@@ -80,8 +81,9 @@
     "@types/google.maps": "^3.58.1",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
-    "@unhead/vue": "^2.0.3 || ^3.0.0",
-    "posthog-js": "^1.0.0"
+    "@unhead/vue": "^3.2.0",
+    "posthog-js": "^1.0.0",
+    "unhead": "^3.2.0"
   },
   "peerDependenciesMeta": {
     "@googlemaps/markerclusterer": {
@@ -105,9 +107,6 @@
     "@types/youtube": {
       "optional": true
     },
-    "@unhead/vue": {
-      "optional": true
-    },
     "posthog-js": {
       "optional": true
     }
@@ -126,6 +125,7 @@
     "oxc-walker": "catalog:",
     "pathe": "catalog:",
     "pkg-types": "catalog:",
+    "semver": "catalog:",
     "sirv": "catalog:",
     "std-env": "catalog:",
     "ufo": "catalog:",
@@ -138,8 +138,10 @@
     "@nuxt/kit": "catalog:",
     "@nuxt/module-builder": "catalog:",
     "@speedcurve/lux": "catalog:",
+    "@unhead/vue": "catalog:",
     "rollup": "catalog:",
     "unbuild": "catalog:",
+    "unhead": "catalog:",
     "unimport": "catalog:"
   }
 }

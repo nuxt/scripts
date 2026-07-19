@@ -40,7 +40,9 @@
     "@types/google.maps": "catalog:",
     "@types/jest-image-snapshot": "catalog:",
     "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "@types/youtube": "catalog:",
+    "@unhead/vue": "catalog:",
     "@vue/test-utils": "catalog:",
     "bumpp": "catalog:",
     "defu": "catalog:",
@@ -59,6 +61,7 @@
     "typescript": "catalog:",
     "ufo": "catalog:",
     "ultrahtml": "catalog:",
+    "unhead": "catalog:",
     "vitest": "catalog:",
     "vue": "catalog:",
     "vue-tsc": "catalog:"

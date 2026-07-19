@@ -1,9 +1,7 @@
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead } from '@unhead/vue'
-import { useNuxtApp } from 'nuxt/app'
 import { logger } from '../logger'
 import { useRegistryScript } from '../utils'
-import { createAbortablePromise, createAbortError } from '../utils/abortable-promise'
 import { UsercentricsOptions } from './schemas'
 
 export { UsercentricsOptions }
@@ -112,84 +110,60 @@ export function useScriptUsercentrics<T extends UsercentricsApi>(
       },
       schema: import.meta.dev ? UsercentricsOptions : undefined,
       scriptOptions: {
-        use() {
-          return { ucCmp: window.__ucCmp } as unknown as T
+        resolve({ waitFor }) {
+          return waitFor<T>((resolve) => {
+            const onReady = () => {
+              if (window.__ucCmp)
+                resolve({ ucCmp: window.__ucCmp } as T)
+            }
+            // Register first so an event fired during the async readiness
+            // check cannot be missed.
+            window.addEventListener('UC_CMP_API_READY', onReady)
+            const api = window.__ucCmp
+            if (api?.isInitialized) {
+              Promise.resolve(api.isInitialized())
+                .then((initialized) => {
+                  if (initialized)
+                    onReady()
+                })
+                .catch((error) => {
+                  // Some bootstrap stubs throw until the ready event; the
+                  // listener remains the authoritative readiness signal.
+                  logger.debug('[usercentrics] Waiting for UC_CMP_API_READY after isInitialized() failed', error)
+                })
+            }
+            return () => window.removeEventListener('UC_CMP_API_READY', onReady)
+          })
         },
       },
     }
   }, _options) as UseScriptContext<T, UsercentricsConsent>
 
   if (import.meta.client && !instance.consent) {
-    let readyApi: UsercentricsCmp | undefined
-    let readyPromise: Promise<UsercentricsCmp> | undefined
-    const readyController = new AbortController()
-    let disposed = false
-    const cleanupReadyListener = () => {
-      if (disposed)
-        return
-      disposed = true
-      readyController.abort()
-    }
-    const whenReady = (): Promise<UsercentricsCmp> => {
-      if (disposed)
-        return Promise.reject(createAbortError('Usercentrics readiness wait was aborted'))
-      if (readyApi)
-        return Promise.resolve(readyApi)
-      if (!readyPromise) {
-        // Install the event listener before checking isInitialized() so an
-        // event fired during that async check cannot be missed.
-        readyPromise = createAbortablePromise<UsercentricsCmp>((resolve) => {
-          const onReady = () => {
-            const api = window.__ucCmp
-            if (!api)
-              return
-            readyApi = api
-            resolve(api)
-          }
-          window.addEventListener('UC_CMP_API_READY', onReady)
-          const api = window.__ucCmp
-          if (api?.isInitialized) {
-            Promise.resolve()
-              .then(() => api.isInitialized())
-              .then((initialized) => {
-                if (initialized && !readyController.signal.aborted)
-                  onReady()
-              })
-              .catch((error) => {
-                // Some bootstrap stubs throw until the ready event; the event
-                // listener remains the authoritative readiness signal.
-                if (!readyController.signal.aborted)
-                  logger.debug('[usercentrics] Waiting for UC_CMP_API_READY after isInitialized() failed', error)
-              })
-          }
-          return () => window.removeEventListener('UC_CMP_API_READY', onReady)
-        }, {
-          signal: readyController.signal,
-          abortMessage: 'Usercentrics readiness wait was aborted',
-        })
-      }
-      return readyPromise
-    }
-
-    const stopAppUnmount = useNuxtApp().hooks.hook('app:unmount' as any, cleanupReadyListener)
-    const originalRemove = instance.remove
-    instance.remove = () => {
-      cleanupReadyListener()
-      stopAppUnmount()
-      return originalRemove()
-    }
+    const whenReady = () => instance.load().then(api => api.ucCmp)
 
     instance.consent = {
       whenReady,
       onConsentChange(cb) {
+        if (instance.signal.aborted)
+          return () => {}
         const handler = (e: Event) => cb((e as CustomEvent).detail, e)
+        let active = true
+        const stop = () => {
+          if (!active)
+            return
+          active = false
+          window.removeEventListener('UC_UI_CMP_EVENT', handler)
+          instance.signal.removeEventListener('abort', stop)
+        }
         window.addEventListener('UC_UI_CMP_EVENT', handler)
-        return () => window.removeEventListener('UC_UI_CMP_EVENT', handler)
+        instance.signal.addEventListener('abort', stop, { once: true })
+        return stop
       },
-      showFirstLayer: () => window.__ucCmp?.showFirstLayer?.(),
-      showSecondLayer: () => window.__ucCmp?.showSecondLayer?.(),
-      acceptAll: () => window.__ucCmp?.acceptAllConsents?.(),
-      denyAll: () => window.__ucCmp?.denyAllConsents?.(),
+      showFirstLayer: () => whenReady().then(api => api.showFirstLayer()),
+      showSecondLayer: () => whenReady().then(api => api.showSecondLayer()),
+      acceptAll: () => whenReady().then(api => api.acceptAllConsents()),
+      denyAll: () => whenReady().then(api => api.denyAllConsents()),
     }
   }
 

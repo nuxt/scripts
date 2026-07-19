@@ -11,9 +11,14 @@ export interface NpmScriptStubOptions {
 }
 
 export interface NpmScriptStub<T = any> {
-  status: Ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>
+  id: string
+  status: Ref<'awaitingLoad' | 'loading' | 'loaded' | 'error' | 'removed'>
+  signal: AbortSignal
+  readonly script: NpmScriptStub<T>
+  dispose: () => void
+  remove: () => boolean
   load: () => Promise<void>
-  onLoaded: (callback: (api: T) => void) => void
+  onLoaded: (callback: (api: T) => void) => () => void
   proxy: T
   $script?: any
 }
@@ -25,20 +30,48 @@ export interface NpmScriptStub<T = any> {
 export function createNpmScriptStub<T = any>(
   options: NpmScriptStubOptions,
 ): NpmScriptStub<T> {
-  const status = ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>('awaitingLoad')
+  const status = ref<'awaitingLoad' | 'loading' | 'loaded' | 'error' | 'removed'>('awaitingLoad')
+  const lifecycleController = new AbortController()
   const loadedCallbacks: Array<(api: T) => void> = []
+  const triggerCleanups = new Set<() => void>()
   let hasInitialized = false
+  let disposed = false
 
   // Get the proxy/API from use() function
   const proxy = (options.use?.() || {}) as T
 
   const stub: NpmScriptStub<T> = {
-    status: status as Ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>,
+    id: options.key,
+    status,
+    signal: lifecycleController.signal,
     proxy,
+
+    get script() {
+      return stub
+    },
+
+    dispose() {
+      if (disposed)
+        return
+      disposed = true
+      lifecycleController.abort()
+      loadedCallbacks.splice(0)
+      for (const cleanup of triggerCleanups)
+        cleanup()
+      triggerCleanups.clear()
+      status.value = 'removed'
+    },
+
+    remove() {
+      if (disposed)
+        return false
+      stub.dispose()
+      return true
+    },
 
     async load() {
       // Prevent multiple initialization
-      if (hasInitialized || status.value !== 'awaitingLoad')
+      if (disposed || hasInitialized || status.value !== 'awaitingLoad')
         return
 
       hasInitialized = true
@@ -79,10 +112,16 @@ export function createNpmScriptStub<T = any>(
       if (status.value === 'loaded') {
         // Already loaded, call immediately
         callback(proxy)
+        return () => {}
       }
-      else if (status.value !== 'error') {
+      else if (status.value !== 'error' && status.value !== 'removed') {
         // Queue for when load completes
         loadedCallbacks.push(callback)
+      }
+      return () => {
+        const index = loadedCallbacks.indexOf(callback)
+        if (index !== -1)
+          loadedCallbacks.splice(index, 1)
       }
     },
 
@@ -100,7 +139,9 @@ export function createNpmScriptStub<T = any>(
     if (typeof options.trigger === 'function') {
       // Custom trigger function (e.g., onNuxtReady)
       const res = (options.trigger as any)(() => stub.load())
-      if (res && typeof res === 'object' && 'then' in res)
+      if (typeof res === 'function')
+        triggerCleanups.add(res)
+      else if (res && typeof res === 'object' && 'then' in res)
         res.then(() => stub.load())
     }
     else if (options.trigger === 'manual') {

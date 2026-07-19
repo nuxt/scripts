@@ -29,6 +29,9 @@ minimumReleaseAgeExclude:
   - '@nuxt/schema@4.5.0'
   - '@nuxt/vite-builder@4.5.0'
   - nuxt@4.5.0
+  - '@unhead/bundler@3.2.0 || 3.2.1'
+  - '@unhead/vue@3.2.0 || 3.2.1'
+  - unhead@3.2.0 || 3.2.1
 shellEmulator: true
 
 trustPolicy: no-downgrade
@@ -41,9 +44,10 @@ packages:
   - '!examples/**'
 overrides:
   '@nuxt/scripts': 'workspace:*'
-  # Force unhead v3 only inside the unhead-v3 regression fixture; the rest of
-  # the workspace stays on v2 via Nuxt's transitive resolution.
-  unhead-v3-fixture>@unhead/vue: ^3.0.0
+  '@unhead/bundler@>=3': 3.2.1
+  '@unhead/vue@>=3': 3.2.1
+  unhead-v3-fixture>@unhead/vue: 3.2.1
+  unhead@>=3: 3.2.1
   vitest-environment-nuxt: 2.0.0
 catalog:
   '@antfu/eslint-config': ^9.1.0
@@ -62,7 +66,9 @@ catalog:
   '@types/google.maps': ^3.65.2
   '@types/jest-image-snapshot': ^6.4.1
   '@types/node': ^26.1.1
+  '@types/semver': ^7.7.1
   '@types/youtube': ^0.3.0
+  '@unhead/vue': ^3.2.1
   '@vue/test-utils': ^2.4.11
   '@vueuse/core': ^14.3.0
   '@vueuse/shared': ^14.3.0
@@ -85,6 +91,7 @@ catalog:
   playwright-core: ^1.61.1
   posthog-js: ^1.404.1
   rollup: ^4.62.2
+  semver: ^7.8.5
   shiki: ^4.3.1
   sirv: ^3.0.2
   std-env: ^4.2.0
@@ -92,6 +99,7 @@ catalog:
   ufo: ^1.6.4
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
+  unhead: ^3.2.1
   unimport: ^6.3.0
   unplugin: ^3.3.0
   unstorage: ^1.17.5

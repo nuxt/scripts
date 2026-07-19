@@ -1,6 +1,6 @@
-import { useEventListener } from '@vueuse/core'
-import { tryOnScopeDispose } from '@vueuse/shared'
-import { onNuxtReady } from 'nuxt/app'
+import type { UseScriptTrigger } from '@unhead/vue/scripts'
+import { createScriptTriggerInteraction } from 'unhead/scripts/triggers'
+import { createNuxtReadyScriptTrigger } from '../utils/nuxt-ready-script-trigger'
 
 export interface InteractionScriptTriggerOptions {
   /**
@@ -17,56 +17,19 @@ export interface InteractionScriptTriggerOptions {
 /**
  * Create a trigger that loads a script when any of the specified interaction events occur.
  */
-export function useScriptTriggerInteraction(options: InteractionScriptTriggerOptions): Promise<boolean> {
-  if (import.meta.server) {
-    return new Promise(() => {})
-  }
+export function useScriptTriggerInteraction(options: InteractionScriptTriggerOptions): UseScriptTrigger {
+  if (!options.events.length)
+    throw new Error('[nuxt-scripts] Interaction script triggers require at least one event.')
 
-  const { events, target = document.documentElement } = options
-
-  return new Promise<boolean>((resolve) => {
-    let disposed = false
-    let settled = false
-    const cleanupFns: Array<() => void> = []
-
-    const cleanup = () => {
-      cleanupFns.splice(0).forEach(fn => fn())
-    }
-    const settle = (value: boolean) => {
-      if (settled)
-        return
-      settled = true
-      cleanup()
-      resolve(value)
-    }
-
-    // onNuxtReady can run after the component scope has already been stopped,
-    // so disposal must be registered synchronously during setup.
-    tryOnScopeDispose(() => {
-      disposed = true
-      settle(false)
-    })
-
-    onNuxtReady(() => {
-      if (disposed)
-        return
-      if (!target) {
-        settle(false)
-        return
+  const target = options.target === undefined
+    ? () => typeof document === 'undefined' ? null : document.documentElement
+    : () => {
+        if (!options.target && import.meta.dev)
+          console.warn('[nuxt-scripts] Interaction script trigger has no event target; the script will remain unloaded.')
+        return options.target || null
       }
-
-      // Listen for all specified events
-      events.forEach((event) => {
-        const cleanup = useEventListener(
-          target,
-          event,
-          () => {
-            settle(true)
-          },
-          { once: true, passive: true },
-        )
-        cleanupFns.push(cleanup)
-      })
-    })
-  })
+  return createNuxtReadyScriptTrigger(createScriptTriggerInteraction({
+    events: options.events,
+    target,
+  }))
 }

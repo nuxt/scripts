@@ -2,31 +2,45 @@
  * @vitest-environment happy-dom
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
 import { useScript } from '../../packages/script/src/runtime/composables/useScript'
 
 const mocks = vi.hoisted(() => {
   const baseRemove = vi.fn(() => true)
   const baseLoad = vi.fn(() => Promise.resolve({}))
-  const shared = {
+  const shared: any = {
     id: 'https://example.com/sdk.js',
-    status: { value: 'awaitingLoad' },
+    status: 'awaitingLoad',
     _statusRef: { value: 'awaitingLoad' },
     signal: new AbortController().signal,
     entry: undefined,
     load: baseLoad,
     remove: baseRemove,
   }
-  const createHandle = (target = shared) => {
-    return new Proxy(target, {
-      get(_, key, receiver) {
-        return Reflect.get(_, key === 'status' ? '_statusRef' : key, receiver)
-      },
+  const scopes: any[] = []
+  const createScope = (script = shared) => {
+    const controller = new AbortController()
+    const scope = Object.assign(Object.create(script), {
+      script,
+      status: script._statusRef,
+      signal: controller.signal,
+      dispose: vi.fn(() => controller.abort()),
     })
+    scopes.push(scope)
+    return scope
   }
+  const headHookCallbacks = new Map<string, Array<(ctx: any) => void>>()
   const head = {
     hooks: {
-      hook: vi.fn(() => vi.fn()),
+      hook: vi.fn((name: string, callback: (ctx: any) => void) => {
+        const callbacks = headHookCallbacks.get(name) || []
+        callbacks.push(callback)
+        headHookCallbacks.set(name, callbacks)
+        return vi.fn(() => {
+          const index = callbacks.indexOf(callback)
+          if (index !== -1)
+            callbacks.splice(index, 1)
+        })
+      }),
     },
   }
   const appHookCallbacks = new Map<string, (() => void)[]>()
@@ -48,15 +62,22 @@ const mocks = vi.hoisted(() => {
     appHookCallbacks,
     baseLoad,
     baseRemove,
-    createHandle,
+    coreUseScript: vi.fn(),
+    createScope,
     head,
+    headHookCallbacks,
+    scopes,
     shared,
-    unheadUseScript: vi.fn(createHandle),
+    vueUseScript: vi.fn(),
   }
 })
 
 vi.mock('@unhead/vue/scripts', () => ({
-  useScript: mocks.unheadUseScript,
+  useScript: mocks.vueUseScript,
+}))
+
+vi.mock('unhead/scripts', () => ({
+  useScript: mocks.coreUseScript,
 }))
 
 vi.mock('nuxt/app', () => ({
@@ -82,123 +103,95 @@ describe('useScript shared instance lifecycle', () => {
     mocks.app.$scripts = {}
     mocks.app._scripts = {}
     mocks.appHookCallbacks.clear()
+    mocks.headHookCallbacks.clear()
+    mocks.scopes.length = 0
     Object.assign(mocks.shared, {
       id: 'https://example.com/sdk.js',
-      status: { value: 'awaitingLoad' },
+      status: 'awaitingLoad',
       _statusRef: { value: 'awaitingLoad' },
       signal: new AbortController().signal,
       entry: undefined,
       load: mocks.baseLoad,
       remove: mocks.baseRemove,
     })
-    delete (mocks.shared as any).reload
-    delete (mocks.shared as any).toJSON
-    mocks.unheadUseScript.mockImplementation(() => mocks.createHandle())
+    delete mocks.shared.reload
+    delete mocks.shared.toJSON
+    for (const symbol of Object.getOwnPropertySymbols(mocks.shared))
+      delete mocks.shared[symbol]
+    mocks.vueUseScript.mockImplementation(() => mocks.createScope())
   })
 
-  it('decorates a shared Unhead instance only once and removes its registry entry', () => {
+  it('returns a consumer scope while retaining a component-free app facade', () => {
     const first = useScript('https://example.com/sdk.js')
     const decoratedRemove = first.remove
     const second = useScript('https://example.com/sdk.js')
-
-    // Unhead still sees both callers so Vue can bind their callbacks to the
-    // active component scope.
-    expect(mocks.unheadUseScript).toHaveBeenCalledTimes(2)
-    expect(second).not.toBe(first)
-    expect(second.remove).toBe(decoratedRemove)
-    expect(second.reload).toBe(first.reload)
     const appInstance = mocks.app.$scripts['https://example.com/sdk.js']
-    expect(appInstance).toBe(first)
-    expect(appInstance.remove).toBe(decoratedRemove)
-    expect(mocks.app.hooks.hook).toHaveBeenCalledTimes(1)
-    expect(mocks.unheadUseScript.mock.calls[0]?.[1]).not.toHaveProperty('scope')
 
-    expect(first.remove()).toBe(true)
+    expect(mocks.vueUseScript).toHaveBeenCalledTimes(2)
+    expect(mocks.vueUseScript.mock.calls[0]?.[1]).toMatchObject({ scope: true })
+    expect(first).not.toBe(second)
+    expect(first.script).toBe(mocks.shared)
+    expect(second.script).toBe(mocks.shared)
+    expect(second.remove).toBe(decoratedRemove)
+    expect(appInstance).not.toBe(first)
+    expect(appInstance.script).toBe(mocks.shared)
+    expect(appInstance.status).toBe(first.status)
+
+    first.dispose()
+
+    expect(mocks.baseRemove).not.toHaveBeenCalled()
+    expect(mocks.app.$scripts).toHaveProperty('https://example.com/sdk.js')
+  })
+
+  it('removes the shared resource and app registry entry globally', () => {
+    const instance = useScript('https://example.com/sdk.js')
+
+    expect(instance.remove()).toBe(true)
     expect(mocks.baseRemove).toHaveBeenCalledOnce()
     expect(mocks.app.$scripts).not.toHaveProperty('https://example.com/sdk.js')
   })
 
-  it('preserves shared identity with older Unhead versions', () => {
-    mocks.unheadUseScript.mockReturnValue(mocks.shared as any)
-
-    const first = useScript('https://example.com/sdk.js')
-    const second = useScript('https://example.com/sdk.js')
-
-    expect(second).toBe(first)
-    expect(mocks.app.$scripts['https://example.com/sdk.js']).toBe(first)
-  })
-
-  it('releases event context added by older Vue integrations', () => {
-    mocks.unheadUseScript.mockImplementation((_input, options) => {
-      options.eventContext = { component: true }
-      return mocks.createHandle()
-    })
-
+  it('removes the shared resource during app teardown', () => {
     useScript('https://example.com/sdk.js')
-
-    expect(mocks.unheadUseScript.mock.calls[0]?.[1]).not.toHaveProperty('eventContext')
-  })
-
-  it('runs provider cleanup wrappers during app teardown', () => {
-    const instance = useScript('https://example.com/sdk.js')
-    const remove = instance.remove
-    const providerRemove = vi.fn(() => remove())
-    instance.remove = providerRemove
 
     mocks.appHookCallbacks.get('app:unmount')?.[0]?.()
 
-    expect(providerRemove).toHaveBeenCalledOnce()
     expect(mocks.baseRemove).toHaveBeenCalledOnce()
+    expect(mocks.app.$scripts).not.toHaveProperty('https://example.com/sdk.js')
   })
 
-  it('keeps the public status ref live across reloads without requesting a scope', async () => {
-    const reloadedStatus = ref('loading')
-    const reloadedLoad = vi.fn(() => {
-      reloadedStatus.value = 'loaded'
-      return Promise.resolve({ ready: true })
-    })
+  it('keeps the app facade and public status ref live across reloads', async () => {
     const reloaded = {
       id: 'reload-script',
-      _statusRef: reloadedStatus,
       status: 'loading',
+      signal: new AbortController().signal,
       entry: { dispose: vi.fn() },
-      load: reloadedLoad,
+      load: vi.fn(async () => {
+        reloaded.status = 'loaded'
+        for (const callback of mocks.headHookCallbacks.get('script:updated') || [])
+          callback({ script: reloaded })
+        return { ready: true }
+      }),
       remove: vi.fn(() => true),
     }
-    mocks.unheadUseScript
-      .mockImplementationOnce(() => mocks.createHandle())
-      .mockImplementationOnce(() => mocks.createHandle(reloaded as any))
+    mocks.coreUseScript.mockReturnValue(reloaded as any)
     const instance = useScript('https://example.com/sdk.js')
+    const appInstance = mocks.app.$scripts['https://example.com/sdk.js']
     const status = instance.status
 
-    await expect((instance as any).reload()).resolves.toEqual({ ready: true })
+    await expect(instance.reload()).resolves.toEqual({ ready: true })
 
     expect(instance.status).toBe(status)
     expect(status.value).toBe('loaded')
     expect(instance.entry).toBe(reloaded.entry)
-    expect(reloadedLoad).toHaveBeenCalledOnce()
-    expect(mocks.unheadUseScript.mock.calls[1]?.[1]).not.toHaveProperty('scope')
-  })
-
-  it('releases event context added while reloading with older Unhead versions', async () => {
-    const reloaded = {
-      id: 'reload-script',
-      _statusRef: ref('loading'),
-      entry: undefined,
-      load: vi.fn(() => Promise.resolve({ ready: true })),
-      remove: vi.fn(() => true),
-    }
-    mocks.unheadUseScript
-      .mockImplementationOnce(() => mocks.createHandle())
-      .mockImplementationOnce((_input, options) => {
-        options.eventContext = { component: true }
-        return mocks.createHandle(reloaded as any)
-      })
-    const instance = useScript('https://example.com/sdk.js')
-
-    await (instance as any).reload()
-
-    expect(mocks.unheadUseScript.mock.calls[1]?.[1]).not.toHaveProperty('eventContext')
+    expect(appInstance.script).toBe(reloaded)
+    expect(appInstance.signal).toBe(reloaded.signal)
+    expect(reloaded.load).toHaveBeenCalledOnce()
+    expect(mocks.coreUseScript).toHaveBeenCalledWith(
+      mocks.head,
+      expect.objectContaining({ key: expect.stringContaining('https://example.com/sdk.js-') }),
+      expect.objectContaining({ scope: false, trigger: 'client' }),
+    )
   })
 
   it('does not bypass validation when reload is called', async () => {
@@ -207,7 +200,8 @@ describe('useScript shared instance lifecycle', () => {
       _validate: () => validationError,
     } as any)
 
-    await expect((instance as any).reload()).rejects.toBe(validationError)
+    await expect(instance.reload()).rejects.toBe(validationError)
     expect(mocks.baseRemove).not.toHaveBeenCalled()
+    expect(mocks.coreUseScript).not.toHaveBeenCalled()
   })
 })

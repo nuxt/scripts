@@ -1,4 +1,4 @@
-import type { UseScriptInput, UseScriptOptions, VueScriptInstance } from '@unhead/vue/scripts'
+import type { UseScriptInput, UseScriptOptions, VueScriptInstance, VueScriptScope } from '@unhead/vue/scripts'
 import type {
   Script,
 } from '@unhead/vue/types'
@@ -92,7 +92,7 @@ export interface GcmConsentApi {
   update: (state: ConsentState) => void
 }
 
-export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptInstance<T> & {
+export type UseScriptContext<T extends Record<symbol | string, any>, C = unknown> = VueScriptScope<T> & {
   /**
    * Remove and reload the script. Useful for scripts that need to re-execute
    * after SPA navigation (e.g., DOM-scanning scripts like iubenda).
@@ -336,8 +336,10 @@ export interface NuxtConfigScriptRegistry extends _NuxtConfigScriptRegistryEntri
 }
 
 export type UseFunctionType<T, U> = T extends {
-  use: infer V
-} ? V extends (...args: any) => any ? ReturnType<V> : U : U
+  resolve: infer V
+} ? V extends (...args: any) => any ? NonNullable<Awaited<ReturnType<V>>> : U : T extends {
+    use: infer V
+  } ? V extends (...args: any) => any ? NonNullable<Awaited<ReturnType<V>>> : U : U
 
 export type EmptyOptionsSchema = ObjectSchema<ObjectEntries, undefined>
 

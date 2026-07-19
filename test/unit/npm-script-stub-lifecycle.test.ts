@@ -28,4 +28,22 @@ describe('npm script stub lifecycle', () => {
     expect(beforeFailure).not.toHaveBeenCalled()
     expect(afterFailure).not.toHaveBeenCalled()
   })
+
+  it('releases callbacks and trigger resources when disposed', () => {
+    const cleanup = vi.fn()
+    const callback = vi.fn()
+    const stub = createNpmScriptStub({
+      key: 'scoped-script',
+      trigger: vi.fn(() => cleanup),
+    })
+    stub.onLoaded(callback)
+
+    stub.dispose()
+
+    expect(stub.signal.aborted).toBe(true)
+    expect(stub.status.value).toBe('removed')
+    expect(cleanup).toHaveBeenCalledOnce()
+    expect(stub.remove()).toBe(false)
+    expect(stub.script).toBe(stub)
+  })
 })
