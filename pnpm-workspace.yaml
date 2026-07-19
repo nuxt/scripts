@@ -24,6 +24,11 @@ minimumReleaseAgeExclude:
   - '@posthog/types@1.378.1'
   - oxc-parser@0.134.0
   - posthog-js@1.378.1
+  - '@nuxt/kit@4.5.0'
+  - '@nuxt/nitro-server@4.5.0'
+  - '@nuxt/schema@4.5.0'
+  - '@nuxt/vite-builder@4.5.0'
+  - nuxt@4.5.0
 shellEmulator: true
 
 trustPolicy: no-downgrade
@@ -45,10 +50,10 @@ catalog:
   '@googlemaps/markerclusterer': ^2.6.2
   '@nuxt/devtools-kit': ^3.2.4
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.4.8
+  '@nuxt/kit': ^4.5.0
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
-  '@nuxt/ui': ^4.9.0
+  '@nuxt/ui': ^4.10.0
   '@nuxtjs/partytown': ^2.0.0
   '@paypal/paypal-js': ^10.0.3
   '@shikijs/langs': ^4.3.1
@@ -69,21 +74,21 @@ catalog:
   h3: ^1.15.11
   happy-dom: ^20.10.6
   jest-image-snapshot: ^6.5.2
-  magic-string: ^0.30.21
-  nuxt: ^4.4.8
+  magic-string: ^1.0.0
+  nuxt: ^4.5.0
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.139.0
+  oxc-parser: ^0.140.0
   oxc-walker: ^1.0.0
   pathe: ^2.0.3
   pkg-types: ^2.3.1
   playwright-core: ^1.61.1
-  posthog-js: ^1.399.2
+  posthog-js: ^1.404.1
   rollup: ^4.62.2
   shiki: ^4.3.1
   sirv: ^3.0.2
   std-env: ^4.2.0
-  typescript: ^6.0.3
+  typescript: 6.0.3
   ufo: ^1.6.4
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
@@ -92,7 +97,7 @@ catalog:
   unstorage: ^1.17.5
   valibot: ^1.4.2
   vitest: ^4.1.10
-  vue: ^3.5.39
+  vue: ^3.5.40
   vue-tsc: ^3.3.7
 trustPolicyIgnoreAfter: 262800
 

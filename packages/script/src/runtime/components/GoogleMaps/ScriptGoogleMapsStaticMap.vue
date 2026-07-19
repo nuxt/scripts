@@ -259,6 +259,7 @@ if (import.meta.server && !useProxy) {
   useHead({
     link: [
       {
+        // @ts-expect-error untyped
         rel: props.loading === 'eager' ? 'preconnect' : 'dns-prefetch',
         href: 'https://maps.googleapis.com',
       },

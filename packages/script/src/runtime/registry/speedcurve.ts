@@ -2,7 +2,6 @@ import type { LuxGlobal, UserConfig } from '@speedcurve/lux'
 import type { RouteLocationNormalized } from 'vue-router'
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
-// @ts-expect-error virtual emitted by the Nuxt module
 import { speedcurveLuxSnippet } from '#build/nuxt-scripts-snippets'
 import { useRegistryScript } from '../utils'
 import { afterNextPaint } from '../utils/after-next-paint'
