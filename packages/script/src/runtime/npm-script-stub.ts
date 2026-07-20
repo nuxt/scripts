@@ -83,10 +83,14 @@ export function createNpmScriptStub<T = any>(
           // eslint-disable-next-line no-console
           console.log(`[NpmScriptStub] Initializing ${options.key}...`)
           await options.clientInit()
+          if (disposed)
+            return
           // eslint-disable-next-line no-console
           console.log(`[NpmScriptStub] ${options.key} initialized successfully`)
         }
 
+        if (disposed)
+          return
         status.value = 'loaded'
 
         // Fire all onLoaded callbacks with the proxy
@@ -103,6 +107,8 @@ export function createNpmScriptStub<T = any>(
       }
       catch (error) {
         loadedCallbacks.splice(0)
+        if (disposed)
+          return
         logger.error(`[NpmScriptStub] Failed to initialize ${options.key}:`, error)
         status.value = 'error'
       }

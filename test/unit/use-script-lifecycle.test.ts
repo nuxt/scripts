@@ -161,17 +161,19 @@ describe('useScript shared instance lifecycle', () => {
   })
 
   it('keeps the app facade and public status ref live across reloads', async () => {
-    const reloaded = {
+    let reloaded: any
+    const reloadedLoad = vi.fn(async () => {
+      reloaded.status = 'loaded'
+      for (const callback of mocks.headHookCallbacks.get('script:updated') || [])
+        callback({ script: reloaded })
+      return { ready: true }
+    })
+    reloaded = {
       id: 'reload-script',
       status: 'loading',
       signal: new AbortController().signal,
       entry: { dispose: vi.fn() },
-      load: vi.fn(async () => {
-        reloaded.status = 'loaded'
-        for (const callback of mocks.headHookCallbacks.get('script:updated') || [])
-          callback({ script: reloaded })
-        return { ready: true }
-      }),
+      load: reloadedLoad,
       remove: vi.fn(() => true),
     }
     mocks.coreUseScript.mockReturnValue(reloaded as any)
@@ -186,11 +188,43 @@ describe('useScript shared instance lifecycle', () => {
     expect(instance.entry).toBe(reloaded.entry)
     expect(appInstance.script).toBe(reloaded)
     expect(appInstance.signal).toBe(reloaded.signal)
-    expect(reloaded.load).toHaveBeenCalledOnce()
+    expect(reloadedLoad).toHaveBeenCalledOnce()
     expect(mocks.coreUseScript).toHaveBeenCalledWith(
       mocks.head,
       expect.objectContaining({ key: expect.stringContaining('https://example.com/sdk.js-') }),
       expect.objectContaining({ scope: false, trigger: 'client' }),
+    )
+  })
+
+  it('shares a reloaded resource with consumers mounted later', async () => {
+    const reloaded = {
+      id: 'https://example.com/sdk.js-reload',
+      status: 'loading',
+      _statusRef: { value: 'loading' },
+      signal: new AbortController().signal,
+      entry: { dispose: vi.fn() },
+      load: vi.fn(async () => ({ ready: true })),
+      remove: vi.fn(() => true),
+    }
+    mocks.coreUseScript.mockReturnValue(reloaded as any)
+    const first = useScript('https://example.com/sdk.js')
+    const appInstance = mocks.app.$scripts['https://example.com/sdk.js']
+
+    await first.reload()
+    mocks.vueUseScript.mockImplementationOnce(() => mocks.createScope(reloaded))
+    const later = useScript('https://example.com/sdk.js')
+
+    expect(later.script).toBe(reloaded)
+    expect(later.remove).toBe(first.remove)
+    expect(later.reload).toBe(first.reload)
+    expect(mocks.app.$scripts['https://example.com/sdk.js']).toBe(appInstance)
+    expect(mocks.appHookCallbacks.get('app:unmount')).toHaveLength(1)
+    expect(mocks.vueUseScript).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        key: 'https://example.com/sdk.js-reload',
+        src: 'https://example.com/sdk.js',
+      }),
+      expect.objectContaining({ scope: true }),
     )
   })
 

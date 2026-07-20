@@ -46,4 +46,25 @@ describe('npm script stub lifecycle', () => {
     expect(stub.remove()).toBe(false)
     expect(stub.script).toBe(stub)
   })
+
+  it('does not revive a disposed stub when asynchronous initialization settles', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    const initialization = Promise.withResolvers<void>()
+    const callback = vi.fn()
+    const stub = createNpmScriptStub({
+      key: 'slow-script',
+      clientInit: () => initialization.promise,
+      trigger: 'manual',
+    })
+    stub.onLoaded(callback)
+
+    const loading = stub.load()
+    expect(stub.status.value).toBe('loading')
+    stub.dispose()
+    initialization.resolve()
+    await loading
+
+    expect(stub.status.value).toBe('removed')
+    expect(callback).not.toHaveBeenCalled()
+  })
 })

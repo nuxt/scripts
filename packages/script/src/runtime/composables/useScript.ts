@@ -326,7 +326,14 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
 
   const unheadOptions = { ...options, scope: true as const }
-  const instance = _useScript<T>(input, unheadOptions as UseScriptOptions<T> & { scope: true }) as VueScriptScope<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+  const existingScript = nuxtApp.$scripts[id]?.script
+  // Reloaded scripts use a unique Unhead key so the browser executes their
+  // replacement element. Route later consumers to that current resource while
+  // keeping Nuxt's stable public registry key.
+  const unheadInput = existingScript && existingScript.id !== id
+    ? { ...input, key: existingScript.id }
+    : input
+  const instance = _useScript<T>(unheadInput, unheadOptions as UseScriptOptions<T> & { scope: true }) as VueScriptScope<UseFunctionType<NuxtUseScriptOptions<T>, T>>
   const sharedInstance = instance.script as ScriptInstance<UseFunctionType<NuxtUseScriptOptions<T>, T>> & {
     [NUXT_SCRIPT_CONTROLLER]?: UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
     reload?: () => Promise<T>
@@ -407,10 +414,18 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         options.head as any,
         reloadInput as any,
         reloadOptions as any,
-      ) as ScriptInstance<T>
+      ) as typeof sharedInstance
       currentScript = reloaded
       currentRemove = reloaded.remove
       currentLoad = reloaded.load
+      // The replacement becomes the shared Nuxt-owned resource. Transfer the
+      // decorated methods and controller marker so later consumer scopes reuse
+      // this lifecycle instead of installing a second set of app hooks.
+      reloaded.remove = sharedInstance.remove
+      reloaded.load = sharedInstance.load
+      reloaded.reload = sharedInstance.reload
+      reloaded.toJSON = sharedInstance.toJSON
+      reloaded[NUXT_SCRIPT_CONTROLLER] = appInstance
       sharedInstance.entry = reloaded.entry
       publicStatus.value = reloaded.status
       stopStatusSync()
