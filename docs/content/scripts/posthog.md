@@ -1,6 +1,6 @@
 ---
 title: PostHog
-description: Use PostHog in your Nuxt app.
+description: Load posthog-js with first-party proxy support, feature flags, and opt-in or opt-out controls.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,9 +8,9 @@ links:
   size: xs
 ---
 
-[PostHog](https://posthog.com) is an open-source product analytics platform that provides analytics, session replay, feature flags, A/B testing, and more.
+[PostHog](https://posthog.com) is an open-source product analytics platform with session replay, feature flags, and experiments. Nuxt Scripts loads PostHog's official [`posthog-js` browser SDK](https://posthog.com/docs/libraries/js) from [npm](https://www.npmjs.com/).
 
-Nuxt Scripts provides a registry script composable [`useScriptPostHog()`{lang="ts"}](/scripts/posthog){lang="ts"} to easily integrate PostHog in your Nuxt app.
+Use [`useScriptPostHog()`{lang="ts"}](/scripts/posthog){lang="ts"} to load the SDK and access the PostHog client.
 
 ::script-stats
 ::
@@ -45,9 +45,9 @@ export default defineNuxtConfig({
 
 ## First-Party Proxy
 
-When [first-party mode](/docs/guides/first-party) is active (auto-enabled for scripts that support it), your server automatically proxies PostHog requests. This improves event capture reliability by avoiding ad blockers. Nuxt applies no privacy anonymization; PostHog is a trusted, open-source tool that requires full-fidelity data for GeoIP enrichment, feature flags, and session replay.
+When [first-party mode](/docs/guides/first-party) is active (auto-enabled for scripts that support it), your server automatically proxies PostHog requests. PostHog [recommends a reverse proxy](https://posthog.com/docs/advanced/proxy) for more reliable event capture because ad blockers can reject requests to known analytics domains. Nuxt anonymizes the client IP address to subnet level; other data passes through so features such as session replay and feature flags continue to work.
 
-No additional configuration required. The module automatically sets `apiHost` to route through your server's proxy endpoint:
+The module sets `apiHost` to your server's proxy endpoint:
 
 ```ts
 export default defineNuxtConfig({
@@ -62,7 +62,7 @@ export default defineNuxtConfig({
 })
 ```
 
-The proxy handles both API requests and static assets (e.g. session recording SDK), routing them to the correct PostHog endpoints.
+The proxy handles API requests and static assets, including the session recording SDK.
 
 ## Custom API Host
 
@@ -103,11 +103,11 @@ onLoaded(({ posthog }) => {
 
 ## Consent Mode
 
-PostHog exposes [`opt_in_capturing` / `opt_out_capturing`](https://posthog.com/docs/privacy/opting-out). Set the boot-time default with `defaultConsent` and call `consent.optIn()`{lang="ts"} / `consent.optOut()`{lang="ts"} at runtime.
+PostHog exposes [`opt_in_capturing` / `opt_out_capturing`](https://posthog.com/docs/libraries/js#opt-out-of-data-capture). Set the boot-time default with `defaultConsent` and call `consent.optIn()`{lang="ts"} / `consent.optOut()`{lang="ts"} at runtime.
 
 ### `defaultConsent`
 
-| Value | Behaviour |
+| Value | Behavior |
 |-------|-----------|
 | `'opt-in'` | Calls `posthog.opt_in_capturing()`{lang="ts"} immediately after init. |
 | `'opt-out'` | Calls `posthog.init(..., { opt_out_capturing_by_default: true })`{lang="ts"} so the SDK boots opted out. |

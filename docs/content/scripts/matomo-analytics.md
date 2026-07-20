@@ -1,6 +1,6 @@
 ---
 title: Matomo Analytics
-description: Use Matomo Analytics in your Nuxt app.
+description: Track Matomo page views and events with built-in consent controls.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,9 +8,7 @@ links:
     size: xs
 ---
 
-[Matomo Analytics](https://matomo.org/) is a great analytics solution for Nuxt Apps.
-
-It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
+[Matomo Analytics](https://matomo.org/) tracks page views and events with either Matomo Cloud or a self-hosted instance.
 
 ::script-stats
 ::
@@ -18,21 +16,22 @@ It provides detailed insights into how your website is performing, how users are
 ::script-docs
 ::
 
-By default, Nuxt uses a `siteId` of `1` and automatically enables page tracking via the `watch` option.
+The `watch` option defaults to `true`. The composable registers its `useScriptEventPage` watcher immediately, independently of the script trigger. Register the composable before the initial `page:finish` hook to track that route and later navigations; registering it afterward only catches subsequent navigations. Pass `siteId` explicitly: the current runtime does not apply its intended fallback of `1` when the option is omitted.
 
 ```ts
 useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID', // e.g. nuxt.matomo.cloud
   siteId: 2,
-  // watch: true, // enabled by default - automatic page tracking!
+  // watch: true, // Enabled by default; tracks pages automatically.
 })
 ```
 
-If you'd like more control over the tracking, for example to set a custom dimension, you can send events using the `proxy` object.
+Push commands to `_paq` for custom dimensions or manual events:
 
 ```ts
 const { proxy } = useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID', // e.g. nuxt.matomo.cloud
+  siteId: 2,
 })
 
 // set custom dimension
@@ -41,19 +40,21 @@ proxy._paq.push(['setCustomDimension', 1, 'value'])
 proxy._paq.push(['trackPageView'])
 ```
 
-Please see the [Config Schema](#config-schema) for all available options.
+See the [Config Schema](#config-schema) for the full option list.
 
-## Custom Page Tracking
+## Custom page tracking
 
-By default, Nuxt tracks all pages automatically; provide `watch: false` to disable automatic tracking.
+Provide `watch: false` to disable the built-in page watcher, then queue the initial route yourself if you need it:
 
 ```ts
-import { useScriptEventPage } from '#nuxt-scripts'
-
 const { proxy } = useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID',
+  siteId: 2,
   watch: false, // disable automatic tracking
 })
+
+// watch: false disables the built-in page watcher.
+proxy._paq.push(['trackPageView'])
 
 // Custom page tracking with additional logic
 useScriptEventPage((payload) => {
@@ -72,31 +73,32 @@ useScriptEventPage((payload) => {
 })
 ```
 
-### Using Matomo Self-Hosted
+### Using self-hosted Matomo
 
-For self-hosted Matomo, set `matomoUrl` to customize tracking, you may need to set the `trackerUrl` if you've customized this.
+For self-hosted Matomo, set `matomoUrl` to customize tracking. Set `trackerUrl` as well if you use a custom tracking endpoint.
 
 ```ts
 useScriptMatomoAnalytics({
-  // e.g. https://your-url.com/tracker.js & https://your-url.com//matomo.php both exists
+  // For example, https://your-url.com/matomo.js and /matomo.php both exist.
   matomoUrl: 'https://your-url.com',
+  siteId: 2,
 })
 ```
 
-## Consent Mode
+## Consent mode
 
 Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides/tracking-consent) gated by `requireConsent`. Set `defaultConsent` to arm the gate at registration, then call `consent.give()`{lang="ts"} / `consent.forget()`{lang="ts"} at runtime.
 
 ### `defaultConsent`
 
-| Value | Behaviour |
+| Value | Behavior |
 |-------|-----------|
 | `'required'` | Pushes `['requireConsent']`. Matomo tracks nothing until the user opts in. |
 | `'given'` | Pushes `['requireConsent']` then `['setConsentGiven']`. Tracking starts immediately. |
-| `'not-required'` | Default Matomo behaviour (no consent gating). |
+| `'not-required'` | Default Matomo behavior (no consent gating). |
 
 ::callout{icon="i-heroicons-exclamation-triangle" color="warning"}
-`consent.give()`{lang="ts"} / `consent.forget()`{lang="ts"} are **no-ops unless `defaultConsent: 'required'` or `'given'` was set at registration** -- Matomo ignores `setConsentGiven` / `forgetConsentGiven` when `requireConsent` hasn't been pushed. A dev-only warning fires if you forget.
+`consent.give()`{lang="ts"} and `consent.forget()`{lang="ts"} are **no-ops unless `defaultConsent: 'required'` or `'given'` was set at registration**. Matomo ignores `setConsentGiven` and `forgetConsentGiven` when `requireConsent` hasn't been pushed. A development-only warning fires if you forget.
 ::
 
 ### Example
@@ -105,6 +107,7 @@ Matomo has a built-in [tracking-consent API](https://developer.matomo.org/guides
 <script setup lang="ts">
 const { consent } = useScriptMatomoAnalytics({
   cloudId: 'YOUR_CLOUD_ID',
+  siteId: 2,
   defaultConsent: 'required',
 })
 
@@ -117,12 +120,13 @@ function onRevoke() {
 </script>
 ```
 
-### Using Matomo Whitelabel
+### Using white-label Matomo
 
-For Matomo Whitelabel, set `trackerUrl` and `scriptInput.src` to customize tracking.
+For a white-label Matomo deployment, set `trackerUrl` and `scriptInput.src` to customize tracking.
 
 ```ts
 useScriptMatomoAnalytics({
+  siteId: 2,
   trackerUrl: 'https://c.staging.cookie3.co/lake',
   scriptInput: {
     src: 'https://cdn.cookie3.co/scripts/latest/cookie3.analytics.min.js',

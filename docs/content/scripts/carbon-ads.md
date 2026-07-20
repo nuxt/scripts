@@ -8,9 +8,9 @@ links:
     size: xs
 ---
 
-[Carbon Ads](https://www.carbonads.net/) is an ad service that provides a performance friendly way to show ads on your site.
+[Carbon Ads](https://www.carbonads.net/) serves ads through a standard embed script.
 
-Nuxt Scripts provides a headless [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"} component to embed Carbon Ads in your Nuxt app.
+Use the headless [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"} component to place one of its ads in a Nuxt page.
 
 ::script-stats
 ::
@@ -20,11 +20,11 @@ Nuxt Scripts provides a headless [`<ScriptCarbonAds>`{lang="html"}](/scripts/car
 
 ## [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"}
 
-The [`<ScriptCarbonAds>`{lang="html"}](/scripts/carbon-ads){lang="html"} component works differently to other Nuxt Scripts component and does not rely on [`useScript()`{lang="ts"}](/docs/api/use-script){lang="ts"}, instead it simply
-inserts a script tag into the div of the component on mount.
+Unlike other Nuxt Scripts components, `<ScriptCarbonAds>`{lang="html"} bypasses [`useScript()`{lang="ts"}](/docs/api/use-script){lang="ts"} and inserts the Carbon script into its own `div`.
 
-By default, the component uses CarbonAds best practices which is to load immediately on mount. You can make use of [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers) if you
-want to load the ads on a specific event.
+It loads when mounted. Pass an [element event trigger](/docs/guides/script-triggers#element-event-triggers) if the ad should wait for a specific interaction.
+
+Carbon's [placement policy](https://www.carbonads.net/placement-policy) requires the ad code to load only once per page and forbids modifying or self-hosting the script. Render one component for the active page. The component requests Carbon's CDN script directly, but it does not enforce the one-component limit.
 
 ```vue
 <template>
@@ -36,9 +36,9 @@ want to load the ads on a specific event.
 </template>
 ```
 
-### Handling Ad-blockers
+### Handling ad blockers
 
-You can use these hooks to add a fallback when CarbonAds is blocked.
+Use the `error` slot when Carbon Ads is blocked:
 
 ```vue
 <template>
@@ -57,8 +57,7 @@ You can use these hooks to add a fallback when CarbonAds is blocked.
 
 ### Adding UI
 
-The component renders as headless, meaning there is no inherit styles. If you'd like to customize the look of the ad, you can
-use this example from nuxt.com.
+The component has no inherited styles. This example uses the styles from nuxt.com:
 
 ```vue
 <template>
@@ -170,7 +169,7 @@ use this example from nuxt.com.
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-Note: The Carbon Ads script _does not_ extend the [`useScript()`{lang="ts"}](/docs/api/use-script){lang="ts"} composable. Accessing the script will return the `HTMLScriptElement`.
+The component's `ready` event receives the injected `HTMLScriptElement`.
 
 ::script-types
 ::

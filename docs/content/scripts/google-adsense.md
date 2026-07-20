@@ -1,6 +1,6 @@
 ---
-title: Google Adsense
-description: Show Google Adsense ads in your Nuxt app.
+title: Google AdSense
+description: Show Google AdSense ads in your Nuxt app.
 links:
   - label: useScriptGoogleAdsense
     icon: i-simple-icons-github
@@ -12,12 +12,12 @@ links:
     size: xs
 ---
 
-[Google AdSense](https://www.google.com/adsense/start/) allows you to monetize your website by displaying relevant ads from Google.
+[Google AdSense](https://www.google.com/adsense/start/) serves Google ads on your site.
 
-Nuxt Scripts provides:
+Choose the API that matches the placement:
 
-- [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"}: A composable to manage Google AdSense dynamically.
-- `<ScriptGoogleAdsense>`{lang="html"}: A headless component to embed ads directly in your Nuxt app.
+- [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} loads the `adsbygoogle` queue.
+- `<ScriptGoogleAdsense>`{lang="html"} renders an ad unit.
 
 ::script-stats
 ::
@@ -25,22 +25,17 @@ Nuxt Scripts provides:
 ::script-docs
 ::
 
-## Where to Find `<your-id>`{lang="html"} (Publisher ID)
+## Where to find `<your-id>`{lang="html"} (publisher ID)
 
-Find your **Google AdSense Publisher ID** (also known as `ca-pub-XXXXXXX`) in your **Google AdSense Account**:
-
-1. Log in to your **Google AdSense** account.
-2. Navigate to **Account > Settings** (click on your profile icon > "Account information").
-3. Locate the **Publisher ID** under **Account Information**.
-4. Replace `<your-id>`{lang="html"} in the config above with your actual ID.
+Find your [Google AdSense publisher ID](https://support.google.com/adsense/answer/2923881?hl=en) under **Account > Settings > Account information**. It appears as `pub-…` in your account and as `ca-pub-…` in ad code. Replace `<your-id>`{lang="html"} below with that value.
 
 ::callout{icon="i-heroicons-light-bulb" to="https://adsense.google.com/start/" target="_blank"}
-You can also manage **Auto Ads settings** from your **Google AdSense Dashboard** to control *ad types, placements, and revenue optimization*.
+Manage ad types and placements from the **Auto ads** settings in your AdSense dashboard.
 ::
 
-## Site Ownership Verification
+## Site ownership verification
 
-### Automatic Meta Tag Insertion
+### Automatic meta tag insertion
 
 If you provide a `client`, Nuxt automatically inserts a **meta tag** on the page for Google to verify your site ownership.
 
@@ -73,11 +68,11 @@ If you provide a `client`, Nuxt automatically inserts a **meta tag** on the page
   ::
 ::
 
-### Using `ads.txt` for Verification
+### Adding `ads.txt`
 
-Google recommends adding an `ads.txt` file for **ad revenue eligibility**.
+Google recommends adding an `ads.txt` file to identify the advertising systems authorized to sell your inventory and reduce counterfeit inventory.
 
-#### Steps:
+#### Steps
 
 1. Create a new file: `public/ads.txt`
 2. Add the following content:
@@ -86,13 +81,13 @@ Google recommends adding an `ads.txt` file for **ad revenue eligibility**.
    ```
 3. Replace `<your-id>`{lang="html"} with your **AdSense Publisher ID**.
 
-::callout{icon="i-heroicons-light-bulb"}
-**Why use `ads.txt`?** It helps **prevent ad fraud** and ensures that **only your site** can display your ads.
+::callout{icon="i-heroicons-light-bulb" to="https://support.google.com/adsense/answer/12171612" target="_blank"}
+An `ads.txt` file does not replace AdSense's site review. After publishing it, check the file's status in your AdSense dashboard.
 ::
 
-## Enabling Auto Ads
+## Enabling Auto ads
 
-Auto Ads allow Google to **automatically** place ads for **better optimization**.
+[Auto ads](https://support.google.com/adsense/answer/9261805?hl=en) let Google choose placements based on the page's layout, content, and existing ads. You can still control formats and exclude pages or areas in AdSense.
 
 ::tabs
   ::div
@@ -129,9 +124,9 @@ Auto Ads allow Google to **automatically** place ads for **better optimization**
   ::
 ::
 
-## Using [`<ScriptGoogleAdsense>`{lang="html"}](/scripts/google-adsense){lang="html"} Component
+## Using the [`<ScriptGoogleAdsense>`{lang="html"}](/scripts/google-adsense){lang="html"} component
 
-It provides a simple way to **embed ads** in your Nuxt app.
+`<ScriptGoogleAdsense>`{lang="html"} renders one ad unit:
 
 ```vue
 <template>
@@ -147,15 +142,15 @@ It provides a simple way to **embed ads** in your Nuxt app.
 
 | Prop                         | Description                                                           |
 | ---------------------------- | --------------------------------------------------------------------- |
-| `data-ad-client`             | Your **Google Adsense Publisher ID**(`ca-pub-XXXXXXXXXX`).            |
+| `data-ad-client`             | Your **Google AdSense publisher ID** (`ca-pub-XXXXXXXXXX`).           |
 | `data-ad-slot`               | Your **Ad Slot ID** (available in AdSense dashboard).                 |
 | `data-ad-format`             | Ad format type (`auto`, `rectangle`, `horizontal`, `vertical`, `fluid`, `autorelaxed`). |
 | `data-ad-layout`             | Layout (`in-article`, `in-feed`, `fixed`).                            |
 | `data-full-width-responsive` | **Set to `true`** to make the ad responsive.                          |
 
-#### Example Usage with `data-ad-layout`
+#### Example using `data-ad-layout`
 
-To specify a layout for your ads (such as "in-article"), you can use the `data-ad-layout` attribute:
+Set `data-ad-layout` for layouts such as `in-article`:
 
 ```vue
 <template>
@@ -168,9 +163,9 @@ To specify a layout for your ads (such as "in-article"), you can use the `data-a
 </template>
 ```
 
-## How to Handle Ad-Blockers?
+## Handling ad blockers
 
-If a user has an **ad-blocker enabled**, you can show **fallback content**.
+Use the `error` slot for visitors whose ad blocker stops the script:
 
 ```vue
 <template>
@@ -183,9 +178,9 @@ If a user has an **ad-blocker enabled**, you can show **fallback content**.
 </template>
 ```
 
-## Using [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} Composable
+## Using the [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} composable
 
-The [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} composable allows **fine-grain control** over the AdSense script.
+Use [`useScriptGoogleAdsense()`{lang="ts"}](/scripts/google-adsense){lang="ts"} when you need the `adsbygoogle` queue without an ad-unit component.
 
 ```ts
 export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(
@@ -193,10 +188,10 @@ export function useScriptGoogleAdsense<T extends GoogleAdsenseApi>(
 ) {}
 ```
 
-See the [Registry Scripts Guide](/docs/guides/registry-scripts) for advanced usage.
+See the [Registry Scripts guide](/docs/guides/registry-scripts) for trigger and loading options.
 
 ::callout{icon="i-heroicons-light-bulb" to="https://support.google.com/adsense" target="_blank"}
-Need more help? Check out the official **Google AdSense Guide**
+See the official **Google AdSense guide**.
 ::
 
 ::script-types
