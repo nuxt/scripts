@@ -126,7 +126,7 @@ function mapOptions(): Leaflet.MapOptions {
 }
 
 onMounted(() => {
-  onLoaded((instance) => {
+  onLoaded((instance: { L: typeof Leaflet }) => {
     if (isUnmounted || !mapEl.value)
       return
 
