@@ -1,6 +1,6 @@
 ---
 title: Google Maps
-description: Show performance-optimized Google Maps in your Nuxt app.
+description: Load interactive maps on demand and proxy Static Maps or geocoding requests.
 links:
   - label: useScriptGoogleMaps
     icon: i-simple-icons-github
@@ -12,17 +12,16 @@ links:
     size: xs
 ---
 
-[Google Maps](https://maps.google.com/) allows you to embed maps in your website and customize them with your content.
+[Google Maps](https://maps.google.com/) provides interactive and static maps for websites.
 
-Nuxt Scripts provides a [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps/api/use-script-google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps/api/script-google-maps){lang="html"} component to interact with the Google Maps.
+Nuxt Scripts provides a [`useScriptGoogleMaps()`{lang="ts"}](/scripts/google-maps/api/use-script-google-maps){lang="ts"} composable and a headless [`<ScriptGoogleMaps>`{lang="html"}](/scripts/google-maps/api/script-google-maps){lang="html"} component for working with Google Maps.
 
 ::script-types{exclude-components}
 ::
 
 ## Types
 
-To use Google Maps with full TypeScript support, you will need
-to install the `@types/google.maps` dependency.
+Install `@types/google.maps` for full TypeScript support.
 
 ```bash
 pnpm add -D @types/google.maps
@@ -36,16 +35,9 @@ Enable Google Maps in your `nuxt.config` and provide your API key via environmen
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      googleMaps: { trigger: 'onNuxtReady' },
-    },
-  },
-  runtimeConfig: {
-    public: {
-      scripts: {
-        googleMaps: {
-          apiKey: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY
-        },
-      },
+      // Register infrastructure without loading Maps on every page.
+      // <ScriptGoogleMaps> will load it after its element trigger fires.
+      googleMaps: {},
     },
   },
 })
@@ -55,12 +47,19 @@ export default defineNuxtConfig({
 NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY=<YOUR_API_KEY>
 ```
 
-You must add this. It registers server proxy routes that keep your API key server-side:
+Registering Google Maps also adds server proxy routes that keep the key out of static-map and geocoding request URLs:
+
 - `/_scripts/proxy/google-static-maps` for placeholder images
 - `/_scripts/proxy/google-maps-geocode` for location search
 
+Add `trigger: 'onNuxtReady'` to the registry entry only when you want the interactive Maps API to load globally. It bypasses the component's default interaction delay because the shared script instance is already loading.
+
 ::callout{color="amber"}
-You can pass `api-key` directly on the `<ScriptGoogleMaps>`{lang="html"} component, but this approach is not recommended, as it exposes your key in client-side requests.
+The Maps JavaScript API still sends the key to the browser when the interactive map loads. Follow Google's [API security guidance](https://developers.google.com/maps/api-security-best-practices): restrict keys by application and API, and use separate keys for client-side and server-side services when possible. Passing `api-key` directly on `<ScriptGoogleMaps>`{lang="html"} also exposes it in the client bundle, whereas runtime config lets you vary the key by deployment.
+::
+
+::callout{color="amber"}
+Google's [Maps Platform FAQ](https://developers.google.com/maps/faq#static_map) requires browser pages to load Static Maps images directly from Google. The current static-map proxy caches and serves those images, so pass an explicit `api-key` to `<ScriptGoogleMapsStaticMap>`{lang="html"} to bypass the proxy and review the Maps Platform terms before using that component.
 ::
 
 ::callout{type="info"}

@@ -1,6 +1,6 @@
 ---
 title: Ahrefs Web Analytics
-description: Use Ahrefs Web Analytics in your Nuxt app to track page views and custom events with a privacy-first, cookie-less analytics script.
+description: Track page views and custom events with Ahrefs Web Analytics in Nuxt.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Ahrefs Web Analytics](https://ahrefs.com/web-analytics) is a privacy-first, cookie-less web analytics service from [Ahrefs](https://ahrefs.com) that tracks page views and custom events without sharing visitor data with third parties.
+[Ahrefs Web Analytics](https://help.ahrefs.com/en/articles/10247870-about-ahrefs-web-analytics) tracks page views and custom events without cookies or persistent identifiers. It discards the raw IP address after deriving coarse location data.
 
 ::script-stats
 ::
@@ -16,10 +16,11 @@ links:
 ::script-docs
 ::
 
-The composable comes with the following defaults:
-- **Trigger: Client** Script will load when Nuxt is hydrating.
+Default:
 
-You can access the `AhrefsAnalytics` object as a proxy directly or await the `$script` promise to access the object. It's recommended to use the proxy for any void functions.
+- **Trigger: `onNuxtReady`** The script loads when the Nuxt app is ready.
+
+Use the proxy for void calls. Await `$script` when you need the loaded `AhrefsAnalytics` object. The [Ahrefs tracked events guide](https://help.ahrefs.com/en/articles/11381932-tracked-events-in-ahrefs-web-analytics) documents the JavaScript API and event-property shape.
 
 ::code-group
 
@@ -49,22 +50,7 @@ onLoaded(({ AhrefsAnalytics }) => {
 
 ## SPA navigation
 
-Ahrefs Analytics tracks single-page-app navigations natively: the loaded `analytics.js` patches `history.pushState` and listens for `popstate`, firing a fresh page-view whenever the URL changes. Nuxt route changes need no extra configuration.
+Ahrefs Analytics tracks single-page app navigations natively: the loaded [`analytics.js`](https://analytics.ahrefs.com/analytics.js) patches `history.pushState` and listens for `popstate`, firing a fresh page view whenever the URL changes. Nuxt route changes need no extra configuration.
 
 ::script-types
 ::
-
-## Example
-
-Loading Ahrefs Web Analytics through `app.vue` when Nuxt is ready.
-
-```vue [app.vue]
-<script setup lang="ts">
-useScriptAhrefsAnalytics({
-  key: 'your-project-key',
-  scriptOptions: {
-    trigger: 'onNuxtReady'
-  }
-})
-</script>
-```

@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[SpeedCurve LUX](https://speedcurve.com/features/lux/) is a Real User Monitoring (RUM) tool that measures the performance your users experience. It tracks Core Web Vitals, custom timing marks, and JavaScript errors.
+[SpeedCurve LUX](https://www.speedcurve.com/features/performance-monitoring/) collects field performance data, including Core Web Vitals, custom timing marks, and JavaScript errors.
 
 ::script-stats
 ::
@@ -16,9 +16,7 @@ links:
 ::script-docs
 ::
 
-The composable comes with the following defaults:
-<!-- eslint-disable-next-line harlanzw/ai-deslop-passive-voice -->
-- **Trigger: Client** The LUX primer is injected into `<head>`{lang="html"} immediately; `lux.js` loads when Nuxt hydrates.
+By default, the composable injects the LUX primer into `<head>`{lang="html"} immediately and loads `lux.js` during Nuxt hydration.
 
 ## Setup
 
@@ -33,7 +31,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/scripts'],
   scripts: {
     registry: {
-      // Minimum registration — enables the composable per-page.
+      // Minimum registration: enables the composable per page.
       // Pass `id` here and you can omit it from each useScriptSpeedCurve() call.
       speedcurve: {},
     },
@@ -46,11 +44,13 @@ export default defineNuxtConfig({
   modules: ['@nuxt/scripts'],
   scripts: {
     registry: {
-      speedcurve: { id: 'YOUR_SPEEDCURVE_ID', trigger: 'onNuxtReady' },
+      speedcurve: { id: 'YOUR_SPEEDCURVE_ID', trigger: 'client' },
     },
   },
 })
 ```
+
+For SpeedCurve, the registry `trigger` above is the marker that generates a global composable call. `useScriptSpeedCurve()`{lang="ts"} hard-codes the effective trigger to `client`, so `onNuxtReady`, manual, consent, and custom promise triggers in registry or composable options do not change its load timing.
 
 If `speedcurve` isn't registered, `useScriptSpeedCurve` builds with an empty primer fallback. If it's registered but `@speedcurve/lux` is missing, the build fails with an install hint. Pinning your own `@speedcurve/lux` version means you control when the primer snippet updates.
 
@@ -74,11 +74,13 @@ onLoaded(({ LUX }) => {
 
 ## SPA navigation
 
-Set `spaMode: true` to enable SpeedCurve's SPA tracking mode. The composable wires Vue Router automatically:
+Set `spaMode: true` to enable SpeedCurve's [SPA tracking mode](https://support.speedcurve.com/docs/single-page-applications). The composable wires Vue Router automatically:
 
-- `router.beforeEach` calls `LUX.startSoftNavigation()`{lang="ts"} (closes the previous beacon, starts a new one)
-- `nuxt.hook('page:finish')`{lang="ts"} calls `LUX.markLoadTime()`{lang="ts"} after the next paint (sets the END mark)
-- Cancelled navigations seal the phantom beacon with `addData('luxNavFailed', '1')`{lang="ts"} for easy filtering
+- `router.beforeEach` calls `LUX.startSoftNavigation()`{lang="ts"}, closing the previous beacon and starting a new one
+- `nuxt.hook('page:finish')`{lang="ts"} calls `LUX.markLoadTime()`{lang="ts"} after the next paint to set the END mark
+- Canceled navigations tag the phantom beacon with `addData('luxNavFailed', '1')`{lang="ts"}
+
+Install this in `app.vue`. Nuxt Scripts creates the automatic router hooks once per browser session, so the first auto-tracked call supplies their label and navigation options.
 
 ```ts [app.vue]
 useScriptSpeedCurve({
@@ -123,14 +125,14 @@ img-src     lux.speedcurve.com;
 connect-src lux.speedcurve.com beacon.speedcurve.com;
 ```
 
-Reference: https://support.speedcurve.com/docs/add-rum-to-your-csp
+See SpeedCurve's [LUX Content Security Policy guide](https://support.speedcurve.com/docs/add-rum-to-your-csp) for the vendor's current directives.
 
 ::script-types
 ::
 
 ## Example
 
-Loading SpeedCurve LUX through `app.vue` with SPA tracking enabled.
+Load SpeedCurve LUX through `app.vue` with SPA tracking enabled:
 
 ```vue [app.vue]
 <script setup lang="ts">

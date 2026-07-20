@@ -12,9 +12,9 @@ links:
     size: xs
 ---
 
-[YouTube](https://youtube.com/) is a video hosting platform that allows you to upload and share videos.
+[YouTube](https://youtube.com/) hosts videos and provides an iframe player API.
 
-Nuxt Scripts provides a [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable and a headless [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component to interact with the YouTube Player.
+Nuxt Scripts provides a [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable and a headless [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component for controlling the YouTube player.
 
 ::script-stats
 ::
@@ -24,8 +24,7 @@ Nuxt Scripts provides a [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube
 
 ## Types
 
-To use [YouTube](https://youtube.com) with full TypeScript support, you will need
-to install the `@types/youtube` dependency.
+Install `@types/youtube` for full TypeScript support.
 
 ```bash
 pnpm add -D @types/youtube
@@ -33,11 +32,11 @@ pnpm add -D @types/youtube
 
 ## [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"}
 
-The [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component is a wrapper around the [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable. It provides a simple way to embed YouTube videos in your Nuxt app.
+[`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} wraps [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} with a lazy thumbnail and a headless player UI.
 
-It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the YouTube Player when the specific elements events happen.
+An [Element Event Trigger](/docs/guides/script-triggers#element-event-triggers) delays the iframe API and player until the configured event fires.
 
-By default, it will load on the `mousedown` event.
+The default event is `mousedown`.
 
 ### Demo
 
@@ -70,7 +69,7 @@ function stateChange(event) {
       </ScriptYouTubePlayer>
     </div>
     <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the Youtube iframe and start the video." />
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the video will load the YouTube iframe and start the video." />
       <UButton v-if="isLoaded && !isPlaying" @click="play">
         Play Video
       </UButton>
@@ -83,32 +82,29 @@ function stateChange(event) {
 
 ### Privacy
 
-The `<ScriptYouTubePlayer>`{lang="html"} component is privacy-friendly by default and sets the video host to `https://www.youtube-nocookie.com`.
+The `<ScriptYouTubePlayer>`{lang="html"} component uses YouTube's privacy-enhanced `https://www.youtube-nocookie.com` host by default. See YouTube's [embed instructions](https://support.google.com/youtube/answer/171780) for details.
 
-To modify this behavior, you can set the `host` prop to `https://www.youtube.com`.
+To use the standard cookie-enabled host, set the `cookies` prop.
 
 ```vue
-<ScriptYouTubePlayer video-id="d_IFKP1Ofq0" :player-options="{ host: 'https://www.youtube.com' }" />
+<ScriptYouTubePlayer video-id="d_IFKP1Ofq0" cookies />
 ```
 
 ### Placeholder
 
-The YouTube Player placeholder image is 1280x720 webp that is lazy-loaded by default.
+The YouTube Player placeholder is a 1280x720 WebP image that is lazy-loaded by default.
 
-To modify the placeholder size you can set the `thumbnailSize` prop, if you'd prefer
-to use a `jpg` you can pass the `webp` prop as `false`.
+Set `thumbnailSize` to change the placeholder size. Set `webp` to `false` for a JPEG thumbnail.
 
 ```vue
 <ScriptYouTubePlayer video-id="d_IFKP1Ofq0" thumbnail-size="maxresdefault" />
 ```
 
-If you need fine control over the placeholder you can set `placeholderAttrs` prop or override it using
-the `#placeholder` slot.
+For finer control, set `placeholderAttrs` or replace the image through the `#placeholder` slot.
 
 #### Eager Loading
 
-You should change this behavior if your video is above the fold
-or consider using the `#placeholder` slot to customize the placeholder image.
+For an above-the-fold video, load the thumbnail eagerly or replace it through the `#placeholder` slot.
 
 ::code-group
 
@@ -132,26 +128,26 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ### Events
 
-The [`<ScriptYouTubePlayer>`{lang="html"}](/scripts/youtube-player){lang="html"} component emits all events from the YouTube Player SDK. Please consult the [Player Events](https://developers.google.com/youtube/iframe_api_reference#Events) for full documentation.
+The component forwards the six events below. At runtime, each handler receives only the event object shown here. A failure while loading the iframe API also emits `error` with no arguments. The component's current TypeScript declaration lists a second `YT.Player` argument for five events, but that argument is not emitted. The YouTube API defines `onAutoplayBlocked` too, but the component does not currently forward it. See [Player Events](https://developers.google.com/youtube/iframe_api_reference#Events) for payload details.
 
 ```ts
 const emits = defineEmits<{
   'ready': [e: YT.PlayerEvent]
-  'state-change': [e: YT.OnStateChangeEvent, target: YT.Player]
-  'playback-quality-change': [e: YT.OnPlaybackQualityChangeEvent, target: YT.Player]
-  'playback-rate-change': [e: YT.OnPlaybackRateChangeEvent, target: YT.Player]
-  'error': [e: YT.OnErrorEvent, target: YT.Player]
-  'api-change': [e: YT.PlayerEvent, target: YT.Player]
+  'state-change': [e: YT.OnStateChangeEvent]
+  'playback-quality-change': [e: YT.OnPlaybackQualityChangeEvent]
+  'playback-rate-change': [e: YT.OnPlaybackRateChangeEvent]
+  'error': [e: YT.OnErrorEvent]
+  'api-change': [e: YT.PlayerEvent]
 }>()
 ```
 
 ### Slots
 
-As Nuxt provides the component headless, you can use slots to customize the player however you like before it loads.
+Use the slots to control the facade around the player.
 
 **default**
 
-The default slot displays content that will always be visible.
+Always visible.
 
 ```vue
 <template>
@@ -165,7 +161,7 @@ The default slot displays content that will always be visible.
 
 **awaitingLoad**
 
-This slot displays content while the video is loading.
+Shown while the component waits for its element trigger.
 
 ```vue
 <template>
@@ -181,7 +177,7 @@ This slot displays content while the video is loading.
 
 **loading**
 
-This slot displays content while the video is loading.
+Shown while the iframe API loads.
 
 ```vue
 <template>
@@ -197,8 +193,7 @@ This slot displays content while the video is loading.
 
 **placeholder**
 
-This slot displays a placeholder image before the video loads. By default, this will show the
-YouTube thumbnail for the video. You can display it however you like.
+Replaces the default YouTube thumbnail. The slot receives the computed `placeholder` URL.
 
 ```vue
 <template>
@@ -212,13 +207,13 @@ YouTube thumbnail for the video. You can display it however you like.
 
 ## [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"}
 
-The [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} composable lets you have fine-grain control over the YouTube Player SDK. It provides a way to load the YouTube Player SDK and interact with it programmatically.
+Use [`useScriptYouTubePlayer()`{lang="ts"}](/scripts/youtube-player){lang="ts"} when you need to load the iframe API and create a player programmatically.
 
 ```ts
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput) {}
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+For triggers, proxying, and other script options, see [Registry Scripts](/docs/guides/registry-scripts).
 
 ::script-types
 ::
@@ -230,20 +225,20 @@ Loading the YouTube Player SDK and interacting with it programmatically.
 ```vue
 <script setup lang="ts">
 const video = ref()
-const { onLoaded } = useScriptYouTubePlayer()
+const { onLoaded } = useScriptYouTubePlayer({})
 
 const player = ref(null)
 onLoaded(async ({ YT }) => {
   // we need to wait for the internal YouTube APIs to be ready
   const YouTube = await YT
   await new Promise<void>((resolve) => {
-    if (typeof YT.Player === 'undefined')
+    if (typeof YouTube.Player === 'undefined')
       YouTube.ready(resolve)
     else
       resolve()
   })
   // load the API
-  player.value = new YT.Player(video.value, {
+  player.value = new YouTube.Player(video.value, {
     videoId: 'd_IFKP1Ofq0'
   })
 })

@@ -12,9 +12,9 @@ links:
     size: xs
 ---
 
-[Vimeo](https://vimeo.com/) is a video hosting platform that allows you to upload and share videos.
+[Vimeo](https://vimeo.com/) hosts videos and provides a JavaScript player API.
 
-Nuxt Scripts provides a [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable and a headless [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} a component to interact with the Vimeo Player.
+Nuxt Scripts provides a [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable and a headless [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} component for interacting with the Vimeo Player.
 
 ::script-stats
 ::
@@ -24,8 +24,7 @@ Nuxt Scripts provides a [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-pla
 
 ## Types
 
-To use Video Player with full TypeScript support, you will need
-to install the `@vimeo/player` dependency which includes its own types.
+Install `@vimeo/player`, which includes its own types, for full TypeScript support.
 
 ```bash
 pnpm add -D @vimeo/player
@@ -33,11 +32,15 @@ pnpm add -D @vimeo/player
 
 ## [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"}
 
-The [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} component is a wrapper around the [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable. It provides a simple way to embed Vimeo videos in your Nuxt app.
+[`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} wraps [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} with a lazy placeholder and headless player UI.
 
-It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading the Vimeo Player when the specific elements events happen.
+An [Element Event Trigger](/docs/guides/script-triggers#element-event-triggers) delays the Vimeo player until the configured event fires.
 
-By default, it will load on the `mousedown` event.
+The default event is `mousedown`.
+
+::callout{color="amber"}
+The player accepts either `id` or `url`, but the current oEmbed thumbnail request reads only `id`. When you pass only `url`, provide your own `#placeholder` content or also pass the numeric video ID.
+::
 
 ### Demo
 
@@ -67,7 +70,7 @@ async function play() {
       </ScriptVimeoPlayer>
     </div>
     <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Clicks the video!" description="Clicking the video will load the Vimeo iframe and start the video." />
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click the video!" description="Clicking the video will load the Vimeo iframe and start the video." />
       <UButton v-if="isLoaded && !isPlaying" @click="play">
         Play Video
       </UButton>
@@ -80,8 +83,7 @@ async function play() {
 
 #### Eager Loading Placeholder
 
-The Vimeo Video placeholder image is lazy-loaded by default. You should change this behavior if your video is above the fold
-or consider using the `#placeholder` slot to customize the placeholder image.
+The Vimeo video placeholder is lazy-loaded by default. For an above-the-fold video, load the image eagerly or replace it through the `#placeholder` slot.
 
 ::code-group
 
@@ -105,7 +107,7 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ### Events
 
-The [`<ScriptVimeoPlayer>`{lang="html"}](/scripts/vimeo-player){lang="html"} component emits all events from the Vimeo Player SDK. Please consult the [Player Events](https://developer.vimeo.com/player/sdk/reference#about-player-events) for full documentation.
+The component forwards the Vimeo Player SDK events below. See [Player Events](https://developer.vimeo.com/player/sdk/reference#about-player-events) for payload details. A failure while loading the SDK also emits `error`, but without the event and player arguments declared for Vimeo's own `error` event.
 
 ```ts
 const emits = defineEmits<{
@@ -139,11 +141,11 @@ const emits = defineEmits<{
 
 ### Slots
 
-As Nuxt provides the component headless, you can use slots to customize the player however you like before it loads.
+Use the slots to control the facade around the player.
 
 **default**
 
-The default slot displays content that will always be visible.
+Always visible.
 
 ```vue
 <template>
@@ -157,7 +159,7 @@ The default slot displays content that will always be visible.
 
 **awaitingLoad**
 
-This slot displays content while the video is loading.
+Shown while the component waits for its element trigger.
 
 ```vue
 <template>
@@ -173,7 +175,7 @@ This slot displays content while the video is loading.
 
 **loading**
 
-This slot displays content while the video is loading.
+Shown while the Vimeo SDK loads.
 
 ```vue
 <template>
@@ -189,8 +191,7 @@ This slot displays content while the video is loading.
 
 **placeholder**
 
-This slot displays a placeholder image before the video loads. By default, this will show the
-vimeo thumbnail for the video. You can display it however you like.
+Replaces the default Vimeo thumbnail. The slot receives the resolved `placeholder` URL.
 
 ```vue
 <template>
@@ -204,13 +205,13 @@ vimeo thumbnail for the video. You can display it however you like.
 
 ## [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"}
 
-The [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} composable lets you have fine-grain control over the Vimeo Player SDK. It provides a way to load the Vimeo Player SDK and interact with it programmatically.
+Use [`useScriptVimeoPlayer()`{lang="ts"}](/scripts/vimeo-player){lang="ts"} when you need to load the Vimeo Player SDK and create a player programmatically.
 
 ```ts
 export function useScriptVimeoPlayer<T extends VimeoPlayerApi>(_options?: VimeoPlayerInput) {}
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+For triggers, proxying, and other script options, see [Registry Scripts](/docs/guides/registry-scripts).
 
 ::script-types
 ::
@@ -230,12 +231,16 @@ onLoaded(({ Vimeo }) => {
     id: 331567154
   })
 })
+
+function play() {
+  player?.play()
+}
 </script>
 
 <template>
   <div>
     <div ref="video" />
-    <button @click="player.play()">
+    <button @click="play">
       Play
     </button>
   </div>

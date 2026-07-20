@@ -1,6 +1,6 @@
 ---
 title: X Embed
-description: Server-side rendered X (Twitter) embeds with zero client-side API calls.
+description: Server-rendered X posts without direct browser requests to X for post JSON or proxied images.
 links:
   - label: ScriptXEmbed
     icon: i-simple-icons-github
@@ -10,7 +10,7 @@ links:
 
 [X (formerly Twitter)](https://x.com) is a social media platform for sharing posts.
 
-Nuxt Scripts provides a [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component that fetches tweet data server-side and exposes it via slots for complete styling control. All data is proxied through your server - no client-side API calls to X.
+[`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} fetches post data through your Nuxt server and exposes it through slots. Post JSON and images pass through your origin rather than loading X's widget JavaScript.
 
 ::script-stats
 ::
@@ -26,11 +26,11 @@ This registers the required server API routes (`/_scripts/embed/x` and `/_script
 
 ## [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"}
 
-The [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component is a headless component that:
-- Fetches tweet data server-side via the X syndication API
-- Proxies all images through your server for privacy
-- Exposes tweet data via scoped slots for custom rendering
-- Caches responses for 10 minutes
+The post endpoint caches syndication responses for 10 minutes and rewrites profile photos, attached photos, entity media, quoted-post images, and video posters through the image endpoint. Video variant URLs remain unchanged, so rendering one in a `<video>`{lang="html"} element makes a direct browser request to X.
+
+::callout{color="amber"}
+The image proxy validates the initial hostname but currently follows redirects without validating each destination. Do not treat that allowlist as a complete SSRF boundary until redirect targets are checked too.
+::
 
 ### Demo
 
@@ -56,7 +56,7 @@ The [`<ScriptXEmbed>`{lang="html"}](/scripts/x-embed){lang="html"} component is 
 </template>
 ```
 
-<template [Styled Tweet Card]>
+```vue [Styled Tweet Card]
 <template>
   <ScriptXEmbed tweet-id="1754336034228171055">
     <template #default="{ userName, userHandle, userAvatar, text, datetime, likesFormatted, repliesFormatted, photos, isVerified }">
@@ -118,8 +118,7 @@ interface SlotProps {
   userName: string
   userHandle: string
   userAvatar: string // Proxied URL
-  userAvatarOriginal: string // Original X URL
-  isVerified: boolean
+  isVerified: boolean | undefined
   // Tweet content
   text: string
   // Formatted values
@@ -130,17 +129,14 @@ interface SlotProps {
   replies: number
   repliesFormatted: string // "234"
   // Media
-  photos?: Array<{
-    URL: string
+  photos?: Array<NonNullable<XEmbedTweetData['photos']>[number] & {
     proxiedUrl: string
-    width: number
-    height: number
   }>
-  video?: {
+  video: {
     poster: string
     posterProxied: string
     variants: Array<{ type: string, src: string }>
-  }
+  } | null
   // Links
   tweetUrl: string
   userUrl: string
@@ -150,7 +146,7 @@ interface SlotProps {
   isReply: boolean
   replyToUser?: string
   // Helpers
-  proxyImage: (URL: string) => string
+  proxyImage: (imageUrl: string) => string
 }
 ```
 
@@ -162,22 +158,9 @@ interface SlotProps {
 | `loading` | Shown while fetching tweet data |
 | `error` | Shown if tweet fetch fails, receives `{ error }` |
 
-## How It Works
+## Data flow
 
-1. **Server-side fetch**: Tweet data is fetched from `cdn.syndication.twimg.com` during SSR
-2. **Image proxying**: All images are rewritten to proxy through `/_scripts/embed/x-image`
-3. **Caching**: Responses are cached for 10 minutes at the server level
-4. **No client-side API calls**: The user's browser never contacts X directly
-
-This approach is inspired by [Cloudflare Zaraz's embed implementation](https://blog.cloudflare.com/zaraz-supports-server-side-rendering-of-embeds/).
-
-## Privacy Benefits
-
-- No third-party JavaScript loaded
-- No cookies set by X
-- No direct browser-to-X communication
-- User IP addresses not shared with X
-- All content served from your domain
+The implementation follows [Cloudflare Zaraz's server-rendered embed approach](https://blog.cloudflare.com/zaraz-supports-server-side-rendering-of-embeds/). No X JavaScript runs in the page, and X does not receive the visitor's IP address for post JSON or proxied images. Rendered video variants and links to X still contact X directly.
 
 ::script-types
 ::

@@ -1,6 +1,6 @@
 ---
 title: Google Analytics
-description: Use Google Analytics in your Nuxt app.
+description: Send Google Analytics page views and events with typed consent controls.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,9 +8,7 @@ links:
     size: xs
 ---
 
-[Google Analytics](https://marketingplatform.google.com/about/analytics/) is an analytics solution for Nuxt Apps.
-
-It provides detailed insights into how your website is performing, how users are interacting with your content, and how they are navigating through your site.
+[Google Analytics](https://marketingplatform.google.com/about/analytics/) records page views and events for traffic and audience analysis.
 
 ::script-stats
 ::
@@ -20,22 +18,24 @@ It provides detailed insights into how your website is performing, how users are
 
 ### Usage
 
-To interact with the Google Analytics API, it's recommended to use script [proxy](/docs/guides/key-concepts#understanding-proxied-functions).
+Call [`gtag`](https://developers.google.com/tag-platform/gtagjs/reference) through the script [proxy](/docs/guides/key-concepts#understanding-proxied-functions):
 
 ```ts
-const { proxy } = useScriptGoogleAnalytics()
+const { proxy } = useScriptGoogleAnalytics({ id: 'G-XXXXXXXX' })
 
 proxy.gtag('event', 'page_view')
 ```
 
-The proxy exposes the `gtag` and `dataLayer` properties, and you should use them following Google Analytics best practices.
+The proxy also exposes `dataLayer`.
+
+Examples below that omit `id` assume it is supplied through `scripts.registry.googleAnalytics`.
 
 ## Consent Mode
 
-Google Analytics natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). Set the default with `defaultConsent` (fires `gtag('consent', 'default', state)`{lang="ts"} before `gtag('js', ...)`{lang="ts"}) and call `consent.update()`{lang="ts"} at runtime to flip categories. For runtime-derived defaults (waiting for region/CMS to resolve before firing), call `consent.default()`{lang="ts"} from the client.
+Google Analytics accepts [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent). `defaultConsent` fires before `gtag('js', ...)`{lang="ts"}; use `consent.update()`{lang="ts"} for later choices. Calling `consent.default()`{lang="ts"} after the composable returns queues a new default, but it cannot reproduce that pre-initialization ordering.
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent" target="_blank"}
-Try the live [Regional Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) on [StackBlitz](https://stackblitz.com).
+Open the [regional consent example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) on [StackBlitz](https://stackblitz.com).
 ::
 
 ```vue
@@ -82,7 +82,7 @@ useScriptGoogleAnalytics({
   id: 'G-XXXXXXXX',
   defaultConsent: [
     {
-      // EEA + UK + Switzerland — start denied, wait 500ms for the user's choice
+      // EEA + UK + Switzerland: start denied and wait 500ms for a choice.
       ad_storage: 'denied',
       ad_user_data: 'denied',
       ad_personalization: 'denied',
@@ -91,7 +91,7 @@ useScriptGoogleAnalytics({
       wait_for_update: 500,
     },
     {
-      // Everywhere else — granted by default
+      // Everywhere else: granted by default.
       ad_storage: 'granted',
       ad_user_data: 'granted',
       ad_personalization: 'granted',
@@ -104,9 +104,9 @@ useScriptGoogleAnalytics({
 
 The module forwards each entry verbatim, in input order. Precedence between region-scoped and unscoped defaults is enforced by gtag at runtime, not by ordering.
 
-## Customer/Consumer ID Tracking
+## Customer-specific GA properties
 
-For e-commerce or multi-tenant applications where you need to track customer-specific analytics alongside your main tracking:
+For a marketplace or multi-tenant app, a second tag can send events to the customer's GA property:
 
 ```vue [ProductPage.vue]
 <script setup lang="ts">
@@ -114,38 +114,36 @@ For e-commerce or multi-tenant applications where you need to track customer-spe
 const route = useRoute()
 const pageData = await $fetch(`/api/product/${route.params.id}`)
 
-// Load gtag with a custom dataLayer name for customer tracking
-const { proxy: customerGtag, load } = useScriptGoogleAnalytics({
+const consumerGtagId = pageData.gtag
+
+// Load gtag with a custom data layer name for customer tracking.
+const { proxy: customerGtag } = useScriptGoogleAnalytics({
   key: 'gtag-customer',
-  l: 'customerDataLayer', // Custom dataLayer name
+  id: consumerGtagId,
+  l: 'customerDataLayer',
 })
 
-// Configure customer's tracking ID when available
-const consumerGtagId = computed(() => pageData?.gtag)
-
-if (consumerGtagId.value) {
-  // Configure the customer's GA4 property
-  customerGtag.gtag('config', consumerGtagId.value)
-
-  // Send customer-specific events
-  customerGtag.gtag('event', 'product_view', {
-    item_id: pageData.id,
-    customer_id: pageData.customerId,
-    value: pageData.price
-  })
-}
+customerGtag.gtag('event', 'product_view', {
+  item_id: pageData.id,
+  customer_id: pageData.customerId,
+  value: pageData.price,
+})
 </script>
 ```
 
 ## Custom Dimensions and User Properties
 
+Google documents the scopes for [`config`, `set`, and event parameters](https://developers.google.com/tag-platform/gtagjs/reference#parameter_scope). Use `config` for values tied to one GA property and `set` for global defaults.
+
 ```ts
 const { proxy } = useScriptGoogleAnalytics()
 
-// User properties (persist across sessions)
-proxy.gtag('set', 'user_properties', {
-  user_tier: 'premium',
-  account_type: 'business'
+// User properties for this GA4 property
+proxy.gtag('config', 'G-XXXXXXXX', {
+  user_properties: {
+    user_tier: 'premium',
+    account_type: 'business',
+  },
 })
 
 // Event with custom dimensions (register in GA4 Admin > Custom Definitions)
@@ -160,26 +158,41 @@ proxy.gtag('event', 'purchase', {
 proxy.gtag('set', { country: 'US', currency: 'USD' })
 ```
 
-## Manual Page View Tracking (SPAs)
+## Tracking SPA page views
 
-GA4 auto-tracks page views. To disable and track manually:
+The registry configures the Google tag and sends its initial page view. `useScriptEventPage` listens to Nuxt's `page:finish` hook, including the initial client render when you register it early enough. In a long-lived component such as `app.vue`, ignore that initial callback but do not accidentally drop the first navigation when registration happens later. Keep the previous URL as `page_referrer`, as described in Google's [SPA measurement guide](https://developers.google.com/analytics/devguides/collection/ga4/single-page-applications):
 
 ```ts
 const { proxy } = useScriptGoogleAnalytics()
+const initialPath = useRoute().fullPath
+let initialPageSeen = false
+let previousLocation: string | undefined
 
-// Disable automatic page views
-proxy.gtag('config', 'G-XXXXXXXX', { send_page_view: false })
+useScriptEventPage(({ title, path }) => {
+  const pageLocation = new URL(path, window.location.origin).href
 
-// Track on route change
-const router = useRouter()
-router.afterEach((to) => {
-  proxy.gtag('event', 'page_view', { page_path: to.fullPath })
+  // page:finish may emit for the initial client render.
+  if (!initialPageSeen && path === initialPath) {
+    initialPageSeen = true
+    previousLocation = pageLocation
+    return
+  }
+
+  previousLocation ||= new URL(initialPath, window.location.origin).href
+  proxy.gtag('event', 'page_view', {
+    page_title: title,
+    page_location: pageLocation,
+    page_referrer: previousLocation,
+  })
+  previousLocation = pageLocation
 })
 ```
 
-## Proxy Queuing
+Do not add manual page views if your web stream's enhanced measurement already [tracks browser history changes](https://developers.google.com/analytics/devguides/collection/ga4/views), or you will record duplicate events.
 
-The proxy queues all `gtag` calls until the script loads. Calls are SSR-safe, adblocker-resilient, and order-preserved.
+## Proxy queue
+
+The proxy queues `gtag` calls until the script loads and preserves their order.
 
 ```ts
 const { proxy, onLoaded } = useScriptGoogleAnalytics()
@@ -193,7 +206,9 @@ onLoaded(({ gtag }) => {
 })
 ```
 
-## Common Event Patterns
+## Common events
+
+Use Google's [recommended events](https://developers.google.com/analytics/devguides/collection/ga4/events) when one matches the action; custom names remain available for app-specific behavior.
 
 ```ts
 const { proxy } = useScriptGoogleAnalytics()
@@ -216,13 +231,13 @@ proxy.gtag('event', 'feature_used', { feature_name: 'dark_mode' })
 
 ## Debugging
 
-Enable debug mode via config or URL param `?debug_mode=true`:
+Enable debug mode for a tag configuration:
 
 ```ts
 proxy.gtag('config', 'G-XXXXXXXX', { debug_mode: true })
 ```
 
-View events in GA4: **Admin > DebugView**. Install [GA Debugger extension](https://chrome.google.com/webstore/detail/google-analytics-debugger/jnkmfdileelhofjcijamephohjechhna) for console logging.
+Use [DebugView, Tag Assistant, or your browser's Network panel](https://developers.google.com/analytics/devguides/collection/ga4/troubleshoot) to verify the tag. In the Network panel, look for successful requests to `google-analytics.com/g/collect` or `analytics.google.com/g/collect`.
 
 For consent mode setup, see the [Consent Guide](/docs/guides/consent).
 
