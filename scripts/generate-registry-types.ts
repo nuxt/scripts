@@ -252,21 +252,40 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
 
 // --- Component props & events extraction ---
 
-const SCRIPT_SETUP_RE = /<script\s[^>]*\bsetup\b[^>]*>([\s\S]*?)<\/script>/
-const SCRIPT_RE = /<script([^>]*)>([\s\S]*?)<\/script>/gi
 const SETUP_ATTRIBUTE_RE = /\bsetup\b/
 
-function extractScriptSetup(vueSource: string): string | null {
-  const match = vueSource.match(SCRIPT_SETUP_RE)
-  return match?.[1] ?? null
+interface VueScriptBlock {
+  attributes: string
+  content: string
 }
 
-function extractScript(vueSource: string): string | null {
-  for (const match of vueSource.matchAll(SCRIPT_RE)) {
-    if (!SETUP_ATTRIBUTE_RE.test(match[1]!))
-      return match[2] ?? null
+function extractScriptBlocks(vueSource: string): VueScriptBlock[] {
+  const normalizedSource = vueSource.toLowerCase()
+  const blocks: VueScriptBlock[] = []
+  let offset = 0
+
+  while (offset < normalizedSource.length) {
+    const openStart = normalizedSource.indexOf('<script', offset)
+    if (openStart === -1)
+      break
+    const openEnd = normalizedSource.indexOf('>', openStart + 7)
+    if (openEnd === -1)
+      break
+    const closeStart = normalizedSource.indexOf('</script', openEnd + 1)
+    if (closeStart === -1)
+      break
+    const closeEnd = normalizedSource.indexOf('>', closeStart + 8)
+    if (closeEnd === -1)
+      break
+
+    blocks.push({
+      attributes: vueSource.slice(openStart + 7, openEnd),
+      content: vueSource.slice(openEnd + 1, closeStart),
+    })
+    offset = closeEnd + 1
   }
-  return null
+
+  return blocks
 }
 
 interface NamedTypeDeclaration {
@@ -669,12 +688,13 @@ const componentMetas: Record<string, ComponentMeta> = {}
 
 for (const filePath of componentFiles) {
   const vueSource = readFileSync(filePath, 'utf-8')
-  const scriptSetup = extractScriptSetup(vueSource)
+  const scriptBlocks = extractScriptBlocks(vueSource)
+  const scriptSetup = scriptBlocks.find(block => SETUP_ATTRIBUTE_RE.test(block.attributes))?.content
   if (!scriptSetup)
     continue
 
   const fileName = filePath.split('/').pop()!
-  const normalScript = extractScript(vueSource)
+  const normalScript = scriptBlocks.find(block => !SETUP_ATTRIBUTE_RE.test(block.attributes))?.content ?? null
   const namedTypes = extractNamedTypeDeclarations(normalScript, fileName.replace('.vue', '.types.ts'))
   const meta = extractComponentMeta(scriptSetup, fileName.replace('.vue', '.ts'), namedTypes)
   if (meta) {
