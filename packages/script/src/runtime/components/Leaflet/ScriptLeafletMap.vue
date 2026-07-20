@@ -59,7 +59,7 @@ export interface ScriptLeafletMapSlots {
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, provide, shallowRef, toRaw, useTemplateRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, shallowRef, toRaw, useTemplateRef, watch } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptLeaflet } from '#nuxt-scripts/registry/leaflet'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
@@ -192,6 +192,9 @@ const rootAttrs = computed(() => ({
 
 onBeforeUnmount(() => {
   isUnmounted = true
+})
+
+onUnmounted(() => {
   map.value?.off()
   map.value?.remove()
   map.value = undefined
