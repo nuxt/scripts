@@ -34,9 +34,10 @@ export function useScriptLeaflet<T extends LeafletApi>(_options?: LeafletInput) 
       schema: import.meta.dev ? LeafletOptions : undefined,
       scriptOptions: {
         use() {
-          if (injectStyles)
-            configureLeafletDefaultIcons(window.L)
-          return { L: window.L }
+          const leaflet = window.L
+          if (injectStyles && leaflet)
+            configureLeafletDefaultIcons(leaflet)
+          return { L: leaflet }
         },
       },
     }

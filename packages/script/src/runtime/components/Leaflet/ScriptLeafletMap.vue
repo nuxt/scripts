@@ -162,7 +162,7 @@ watch(() => props.center, (center) => {
     return
   const next = leaflet.value.latLng(toRaw(center))
   if (!map.value.getCenter().equals(next))
-    map.value.panTo(next)
+    map.value.panTo(next, { animate: false })
 }, { deep: 1 })
 
 watch(() => props.zoom, (zoom) => {
@@ -216,13 +216,19 @@ onUnmounted(() => {
 <template>
   <div ref="rootEl" v-bind="rootAttrs">
     <div
-      v-show="isMapReady"
       ref="mapEl"
       :aria-hidden="interactive ? undefined : 'true'"
       :aria-label="interactive ? ariaLabel : undefined"
       :inert="interactive ? undefined : true"
       :role="interactive ? 'region' : undefined"
-      :style="{ width: '100%', height: '100%', maxWidth: '100%' }"
+      :style="{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        maxWidth: '100%',
+        visibility: isMapReady ? 'visible' : 'hidden',
+      }"
     />
     <slot v-if="!isMapReady && !hasError" name="placeholder" />
     <slot v-if="hasError" name="error" :error="loadError">

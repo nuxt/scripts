@@ -61,4 +61,5 @@ defineExpose({ geoJson })
 </script>
 
 <template>
+  <!-- nuxt-scripts: Leaflet GeoJSON layer -->
 </template>

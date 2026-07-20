@@ -102,4 +102,5 @@ defineExpose({ geoJson })
 </script>
 
 <template>
+  <!-- nuxt-scripts: MapLibre GeoJSON source and layers -->
 </template>

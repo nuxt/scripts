@@ -52,4 +52,5 @@ defineExpose({ tileLayer })
 </script>
 
 <template>
+  <!-- nuxt-scripts: Leaflet tile layer -->
 </template>

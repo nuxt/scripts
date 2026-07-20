@@ -3,6 +3,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  configureMapLibreWorker,
   ensureMapLibreStyles,
   MAPLIBRE_STYLESHEET_INTEGRITY,
   MAPLIBRE_STYLESHEET_URL,
@@ -59,5 +60,14 @@ describe('mapLibre styles', () => {
       MAPLIBRE_STYLESHEET_URL,
       'https://cdn.example.com/maplibre.css',
     ])
+  })
+
+  it('configures a custom worker only after MapLibre has loaded', () => {
+    expect(() => configureMapLibreWorker(undefined, '/maplibre-worker.js')).not.toThrow()
+
+    const setWorkerUrl = vi.fn()
+    configureMapLibreWorker({ setWorkerUrl } as any, '/maplibre-worker.js')
+
+    expect(setWorkerUrl).toHaveBeenCalledWith('/maplibre-worker.js')
   })
 })

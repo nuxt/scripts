@@ -39,7 +39,7 @@ export default defineNuxtConfig({
 
 ## Quick start
 
-Pass a MapLibre style URL or an inline style specification. This example uses MapLibre's public demonstration style.
+Pass a MapLibre style URL or an inline style specification. This example uses OpenFreeMap's keyless Liberty style.
 
 ```vue
 <script setup lang="ts">
@@ -51,7 +51,7 @@ const center = ref<LngLatLike>([144.9631, -37.8136])
 <template>
   <ScriptMapLibreMap
     v-model:center="center"
-    map-style="https://demotiles.maplibre.org/style.json"
+    map-style="https://tiles.openfreemap.org/styles/liberty"
     :zoom="12"
     width="100%"
     :height="480"
@@ -80,8 +80,131 @@ MapLibre coordinates use `[longitude, latitude]` order. This is the reverse of t
 The default `visible` trigger defers the SDK, style, and tile requests until the map approaches the viewport. The component reserves its dimensions during SSR to avoid layout shift.
 
 ::callout{color="amber"}
-The MapLibre demo tiles are intended for examples. Choose a hosted or self-hosted tile service for production, follow its terms, and retain the attribution required by your data and style providers.
+OpenFreeMap's public instance needs no account or API key, and its MapLibre styles include the required attribution. The service has no SLA, so review the [terms](https://openfreemap.org/tos/) or self-host the [OpenFreeMap stack](https://github.com/hyperknot/openfreemap) when availability requirements demand it.
 ::
+
+## Recipe: track a delivery
+
+This example combines a GeoJSON route with a reactive courier marker. In a production app, update `center` or the marker `position` from your timer or [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) handler. MapLibre moves the marker without recreating it.
+
+```vue
+<script setup lang="ts">
+import type { Feature, LineString } from 'geojson'
+import type { LngLatLike } from 'maplibre-gl'
+
+interface Checkpoint {
+  label: string
+  detail: string
+  position: [number, number]
+}
+
+const checkpoints: Checkpoint[] = [
+  {
+    label: 'West Melbourne depot',
+    detail: 'Parcel collected',
+    position: [144.9495, -37.8101],
+  },
+  {
+    label: 'Docklands checkpoint',
+    detail: 'Courier heading east',
+    position: [144.9538, -37.8151],
+  },
+  {
+    label: 'Southbank checkpoint',
+    detail: 'Final approach',
+    position: [144.9632, -37.8227],
+  },
+  {
+    label: 'Flinders Lane delivery',
+    detail: 'Customer destination',
+    position: [144.9687, -37.8154],
+  },
+]
+
+const currentIndex = ref(0)
+const center = ref<LngLatLike>(checkpoints[0]!.position)
+const current = computed(() => checkpoints[currentIndex.value]!)
+
+const route: Feature<LineString> = {
+  type: 'Feature',
+  properties: {},
+  geometry: {
+    type: 'LineString',
+    coordinates: checkpoints.map(checkpoint => checkpoint.position),
+  },
+}
+
+const routeLayers = [{
+  id: 'delivery-route',
+  type: 'line' as const,
+  paint: {
+    'line-color': '#2563eb',
+    'line-width': 6,
+  },
+}]
+
+function advanceCourier() {
+  if (currentIndex.value === checkpoints.length - 1)
+    return
+
+  currentIndex.value += 1
+  center.value = checkpoints[currentIndex.value]!.position
+}
+</script>
+
+<template>
+  <div>
+    <p aria-live="polite">
+      Current status: <strong>{{ current.detail }}</strong>
+    </p>
+
+    <ScriptMapLibreMap
+      v-model:center="center"
+      map-style="https://tiles.openfreemap.org/styles/liberty"
+      :zoom="14"
+      width="100%"
+      :height="520"
+      aria-label="Delivery route from West Melbourne to Flinders Lane"
+    >
+      <template #description>
+        Delivery route from West Melbourne depot to Flinders Lane via Docklands and Southbank.
+        The courier is currently at {{ current.label }}.
+      </template>
+
+      <template #error>
+        <p role="alert">
+          Live map unavailable. Follow the delivery status above instead.
+        </p>
+      </template>
+
+      <ScriptMapLibreNavigationControl position="top-right" />
+
+      <ScriptMapLibreGeoJson
+        source-id="delivery-route"
+        :data="route"
+        :layers="routeLayers"
+      />
+
+      <ScriptMapLibreMarker
+        :position="current.position"
+        :aria-label="`Courier at ${current.label}`"
+        title="Current courier position"
+        :options="{ color: '#2563eb' }"
+      />
+    </ScriptMapLibreMap>
+
+    <button
+      type="button"
+      :disabled="currentIndex === checkpoints.length - 1"
+      @click="advanceCourier"
+    >
+      Advance courier
+    </button>
+  </div>
+</template>
+```
+
+Keep order status, checkpoint names, and estimated times in normal HTML outside the canvas. The `description` slot connects the essential route summary to the map for assistive technology.
 
 ## MapLibre, OpenMapTiles, and OpenStreetMap
 

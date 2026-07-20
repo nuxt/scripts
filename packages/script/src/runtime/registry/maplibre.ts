@@ -1,6 +1,6 @@
 import type * as MapLibre from 'maplibre-gl'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { ensureMapLibreStyles, MAPLIBRE_STYLESHEET_URL } from '../maplibre-styles'
+import { configureMapLibreWorker, ensureMapLibreStyles, MAPLIBRE_STYLESHEET_URL } from '../maplibre-styles'
 import { useRegistryScript } from '../utils'
 import { MapLibreOptions } from './schemas'
 
@@ -36,9 +36,9 @@ export function useScriptMapLibre<T extends MapLibreApi>(_options?: MapLibreInpu
       schema: import.meta.dev ? MapLibreOptions : undefined,
       scriptOptions: {
         use() {
-          if (options?.workerUrl)
-            window.maplibregl.setWorkerUrl(options.workerUrl)
-          return { maplibregl: window.maplibregl }
+          const maplibregl = window.maplibregl
+          configureMapLibreWorker(maplibregl, options?.workerUrl)
+          return { maplibregl }
         },
       },
     }

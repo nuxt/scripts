@@ -40,4 +40,8 @@ describe('leaflet styles', () => {
       shadowUrl: LEAFLET_DEFAULT_SHADOW_URL,
     })
   })
+
+  it('does not configure icons before Leaflet has loaded', () => {
+    expect(() => configureLeafletDefaultIcons(undefined)).not.toThrow()
+  })
 })

@@ -25,7 +25,10 @@ export function ensureLeafletStyles(): void {
   document.head.append(style)
 }
 
-export function configureLeafletDefaultIcons(leaflet: typeof Leaflet): void {
+export function configureLeafletDefaultIcons(leaflet: typeof Leaflet | undefined): void {
+  if (!leaflet)
+    return
+
   leaflet.Icon.Default.mergeOptions({
     iconUrl: LEAFLET_DEFAULT_ICON_URL,
     iconRetinaUrl: LEAFLET_DEFAULT_ICON_RETINA_URL,

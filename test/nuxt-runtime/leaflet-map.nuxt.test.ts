@@ -71,6 +71,8 @@ describe('scriptLeafletMap', () => {
     await nextTick()
 
     expect(scriptState.callbacks).toHaveLength(1)
+    expect(wrapper.get('[role="region"]').attributes('style')).toContain('position: absolute')
+    expect(wrapper.get('[role="region"]').attributes('style')).toContain('visibility: hidden')
     scriptState.callbacks[0]!({ L: mocks.leaflet })
     await nextTick()
 
@@ -79,9 +81,10 @@ describe('scriptLeafletMap', () => {
     expect(wrapper.emitted('ready')).toHaveLength(1)
     expect(wrapper.attributes('style')).toContain('aspect-ratio: 800 / 500')
     expect(wrapper.get('[role="region"]').attributes('aria-label')).toBe('Interactive map')
+    expect(wrapper.get('[role="region"]').attributes('style')).toContain('visibility: visible')
 
     await wrapper.setProps({ center: [-37.8304, 144.9796], zoom: 14 })
-    expect(mocks.map.panTo).toHaveBeenCalledWith([-37.8304, 144.9796])
+    expect(mocks.map.panTo).toHaveBeenCalledWith([-37.8304, 144.9796], { animate: false })
     expect(mocks.map.setZoom).toHaveBeenCalledWith(14)
 
     mocks.events.get('moveend')?.({ type: 'moveend' })

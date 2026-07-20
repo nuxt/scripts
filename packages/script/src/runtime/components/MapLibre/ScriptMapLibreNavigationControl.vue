@@ -25,4 +25,5 @@ defineExpose({ control })
 </script>
 
 <template>
+  <!-- nuxt-scripts: MapLibre navigation control -->
 </template>
