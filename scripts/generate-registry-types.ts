@@ -253,7 +253,7 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
 // --- Component props & events extraction ---
 
 const SCRIPT_SETUP_RE = /<script\s[^>]*\bsetup\b[^>]*>([\s\S]*?)<\/script>/
-const SCRIPT_RE = /<script([^>]*)>([\s\S]*?)<\/script>/g
+const SCRIPT_RE = /<script([^>]*)>([\s\S]*?)<\/script>/gi
 const SETUP_ATTRIBUTE_RE = /\bsetup\b/
 
 function extractScriptSetup(vueSource: string): string | null {
