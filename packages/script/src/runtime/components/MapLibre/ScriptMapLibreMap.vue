@@ -113,6 +113,8 @@ const maplibre = shallowRef() as VueShallowRef<typeof MapLibre | undefined>
 const map = shallowRef<MapLibre.Map>()
 const isMapReady = shallowRef(false)
 const loadError = shallowRef(new Error('MapLibre failed to load'))
+const initializationError = shallowRef<Error>()
+const hasError = computed(() => status.value === 'error' || !!initializationError.value)
 let isUnmounted = false
 
 onError((error?: Error) => {
@@ -161,25 +163,35 @@ onMounted(() => {
       return
 
     maplibre.value = instance.maplibregl
-    const mapInstance = new instance.maplibregl.Map({
-      ...toRaw(props.options),
-      container: mapEl.value,
-      style: toRaw(props.mapStyle),
-      center: toRaw(props.center),
-      zoom: props.zoom,
-      bearing: props.bearing,
-      pitch: props.pitch,
-      interactive: props.interactive,
-    })
-    bindMapEvents(mapInstance)
-    map.value = mapInstance
-    mapInstance.once('load', () => {
-      if (isUnmounted)
-        return
-      isMapReady.value = true
-      mapInstance.resize()
-      emit('ready', exposed)
-    })
+    let mapInstance: MapLibre.Map | undefined
+    try {
+      mapInstance = new instance.maplibregl.Map({
+        ...toRaw(props.options),
+        container: mapEl.value,
+        style: toRaw(props.mapStyle),
+        center: toRaw(props.center),
+        zoom: props.zoom,
+        bearing: props.bearing,
+        pitch: props.pitch,
+        interactive: props.interactive,
+      })
+      bindMapEvents(mapInstance)
+      map.value = mapInstance
+      mapInstance.once('load', () => {
+        if (isUnmounted)
+          return
+        isMapReady.value = true
+        mapInstance!.resize()
+        emit('ready', exposed)
+      })
+    }
+    catch (error) {
+      mapInstance?.remove()
+      const cause = error instanceof Error ? error : new Error('MapLibre map initialization failed')
+      initializationError.value = cause
+      loadError.value = cause
+      emit('error', cause)
+    }
   })
 })
 
@@ -274,16 +286,16 @@ onUnmounted(() => {
     <div v-if="interactive && slots.description" :id="descriptionId" class="maplibre-map-description">
       <slot name="description" />
     </div>
-    <slot v-if="!isMapReady" name="placeholder" />
-    <slot v-if="status === 'loading'" name="loading">
-      <ScriptAriaLoadingIndicator />
-    </slot>
-    <slot v-else-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'error'" name="error" :error="loadError">
+    <slot v-if="!isMapReady && !hasError" name="placeholder" />
+    <slot v-if="hasError" name="error" :error="loadError">
       <p role="alert">
         The map could not be loaded.
       </p>
     </slot>
+    <slot v-else-if="status === 'loading'" name="loading">
+      <ScriptAriaLoadingIndicator />
+    </slot>
+    <slot v-else-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot />
   </div>
 </template>

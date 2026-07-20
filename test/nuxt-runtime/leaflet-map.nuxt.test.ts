@@ -78,6 +78,7 @@ describe('scriptLeafletMap', () => {
     expect(mocks.map.setView).toHaveBeenCalledWith([-37.8136, 144.9631], 13, { animate: false })
     expect(wrapper.emitted('ready')).toHaveLength(1)
     expect(wrapper.attributes('style')).toContain('aspect-ratio: 800 / 500')
+    expect(wrapper.get('[role="region"]').attributes('aria-label')).toBe('Interactive map')
 
     await wrapper.setProps({ center: [-37.8304, 144.9796], zoom: 14 })
     expect(mocks.map.panTo).toHaveBeenCalledWith([-37.8304, 144.9796])
@@ -122,5 +123,24 @@ describe('scriptLeafletMap', () => {
     expect(wrapper.get('[role="alert"]').text()).toBe('The map could not be loaded.')
     expect(wrapper.emitted('error')?.[0]).toEqual([loadFailure])
     expect(wrapper.get('[aria-hidden="true"]').attributes()).toHaveProperty('inert')
+  })
+
+  it('surfaces synchronous map initialization failures', async () => {
+    const mocks = createLeafletMock()
+    const initializationFailure = new Error('Invalid Leaflet options')
+    mocks.leaflet.map.mockImplementationOnce(() => {
+      throw initializationFailure
+    })
+    const wrapper = mount(ScriptLeafletMap, {
+      props: { center: [0, 0] },
+    })
+    await nextTick()
+
+    scriptState.callbacks[0]!({ L: mocks.leaflet })
+    await nextTick()
+
+    expect(wrapper.get('[role="alert"]').text()).toBe('The map could not be loaded.')
+    expect(wrapper.emitted('error')?.[0]).toEqual([initializationFailure])
+    expect(wrapper.emitted('ready')).toBeUndefined()
   })
 })

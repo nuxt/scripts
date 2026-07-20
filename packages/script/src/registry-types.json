@@ -810,7 +810,7 @@
       {
         "name": "ScriptMapLibreGeoJsonProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** Stable MapLibre source ID. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>\n  /** Style layers backed by this source. */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n}"
+        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>\n  /** Style layers backed by this source. */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n}"
       },
       {
         "name": "ScriptMapLibreMapProps",
@@ -830,7 +830,7 @@
       {
         "name": "ScriptMapLibreMarkerProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibreMarkerProps {\n  /** Reactive marker position in `[longitude, latitude]` order. */\n  position: MapLibre.LngLatLike\n  /** Accessible name for the marker element. */\n  ariaLabel?: string\n  /** Tooltip text for the marker element. */\n  title?: string\n  /** Options passed to `new maplibregl.Marker()`. */\n  options?: MapLibre.MarkerOptions\n}"
+        "code": "interface ScriptMapLibreMarkerProps {\n  /** Reactive marker position in `[longitude, latitude]` order. */\n  position: MapLibre.LngLatLike\n  /** Accessible name for the marker element. */\n  ariaLabel?: string\n  /** Tooltip text for the marker element. */\n  title?: string\n  /** Options passed to `new maplibregl.Marker()`. Options with public setters also update reactively. */\n  options?: MapLibre.MarkerOptions\n}"
       },
       {
         "name": "ScriptMapLibreMarkerEvents",
@@ -850,7 +850,7 @@
       {
         "name": "ScriptMapLibrePopupProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibrePopupProps {\n  /** Position for a standalone popup. Omit when nested inside a marker. */\n  position?: MapLibre.LngLatLike\n  /** Whether the popup is open. @default false */\n  open?: boolean\n  /** Options passed to `new maplibregl.Popup()`. */\n  options?: MapLibre.PopupOptions\n}"
+        "code": "interface ScriptMapLibrePopupProps {\n  /** Position for a standalone popup. Omit when nested inside a marker. */\n  position?: MapLibre.LngLatLike\n  /** Whether the popup is open. @default false */\n  open?: boolean\n  /** Options passed to `new maplibregl.Popup()`. Options with public setters also update reactively. */\n  options?: MapLibre.PopupOptions\n}"
       },
       {
         "name": "ScriptMapLibrePopupEvents",

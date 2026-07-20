@@ -4,14 +4,7 @@ import type * as Leaflet from 'leaflet'
 import { watch } from 'vue'
 import { bindLeafletEvents, useLeafletResource } from './useLeafletResource'
 
-const props = defineProps<{
-  /** GeoJSON object, feature, or feature collection. Replace it to update the layer. */
-  data: GeoJsonObject | GeoJsonObject[]
-  /** Options passed to `L.geoJSON`. */
-  options?: Leaflet.GeoJSONOptions
-}>()
-
-const emit = defineEmits<{
+interface ScriptLeafletGeoJsonEmits {
   click: [event: Leaflet.LeafletMouseEvent]
   dblclick: [event: Leaflet.LeafletMouseEvent]
   mousedown: [event: Leaflet.LeafletMouseEvent]
@@ -20,14 +13,23 @@ const emit = defineEmits<{
   contextmenu: [event: Leaflet.LeafletMouseEvent]
   layeradd: [event: Leaflet.LayerEvent]
   layerremove: [event: Leaflet.LayerEvent]
+}
+
+const props = defineProps<{
+  /** GeoJSON object, feature, or feature collection. Replace it to update the layer. */
+  data: GeoJsonObject | GeoJsonObject[]
+  /** Options passed to `L.geoJSON`. */
+  options?: Leaflet.GeoJSONOptions
 }>()
+
+const emit = defineEmits<ScriptLeafletGeoJsonEmits>()
 
 const geoJsonEvents = ['click', 'dblclick', 'mousedown', 'mouseover', 'mouseout', 'contextmenu', 'layeradd', 'layerremove'] as const
 
 const geoJson = useLeafletResource<Leaflet.GeoJSON>({
   create({ leaflet, map }) {
     const layer = leaflet.geoJSON(props.data, props.options)
-    bindLeafletEvents(layer, emit as any, geoJsonEvents)
+    bindLeafletEvents<ScriptLeafletGeoJsonEmits>(layer, emit, geoJsonEvents)
     return layer.addTo(map)
   },
   cleanup(layer) {

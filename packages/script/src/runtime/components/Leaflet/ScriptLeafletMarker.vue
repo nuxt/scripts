@@ -3,6 +3,19 @@ import type * as Leaflet from 'leaflet'
 import { inject, onMounted, provide, watch } from 'vue'
 import { bindLeafletEvents, LEAFLET_MAP_INJECTION_KEY, LEAFLET_MARKER_INJECTION_KEY, useLeafletResource } from './useLeafletResource'
 
+interface ScriptLeafletMarkerEmits {
+  click: [event: Leaflet.LeafletMouseEvent]
+  dblclick: [event: Leaflet.LeafletMouseEvent]
+  mousedown: [event: Leaflet.LeafletMouseEvent]
+  mouseover: [event: Leaflet.LeafletMouseEvent]
+  mouseout: [event: Leaflet.LeafletMouseEvent]
+  contextmenu: [event: Leaflet.LeafletMouseEvent]
+  dragstart: [event: Leaflet.LeafletEvent]
+  drag: [event: Leaflet.LeafletEvent]
+  dragend: [event: Leaflet.DragEndEvent]
+  move: [event: Leaflet.LeafletEvent]
+}
+
 const props = defineProps<{
   /** Reactive marker position. */
   position: Leaflet.LatLngExpression
@@ -14,18 +27,7 @@ const props = defineProps<{
   options?: Leaflet.MarkerOptions
 }>()
 
-const emit = defineEmits<{
-  click: [event: Leaflet.LeafletMouseEvent]
-  dblclick: [event: Leaflet.LeafletMouseEvent]
-  mousedown: [event: Leaflet.LeafletMouseEvent]
-  mouseover: [event: Leaflet.LeafletMouseEvent]
-  mouseout: [event: Leaflet.LeafletMouseEvent]
-  contextmenu: [event: Leaflet.LeafletMouseEvent]
-  dragstart: [event: Leaflet.LeafletEvent]
-  drag: [event: Leaflet.LeafletEvent]
-  dragend: [event: Leaflet.DragEndEvent]
-  move: [event: Leaflet.LeafletEvent]
-}>()
+const emit = defineEmits<ScriptLeafletMarkerEmits>()
 
 defineSlots<{
   default?: () => any
@@ -45,7 +47,7 @@ function markerOptions(): Leaflet.MarkerOptions {
 const marker = useLeafletResource<Leaflet.Marker>({
   create({ leaflet, map }) {
     const instance = leaflet.marker(props.position, markerOptions())
-    bindLeafletEvents(instance, emit as any, markerEvents)
+    bindLeafletEvents<ScriptLeafletMarkerEmits>(instance, emit, markerEvents)
     return instance.addTo(map)
   },
   cleanup(instance) {

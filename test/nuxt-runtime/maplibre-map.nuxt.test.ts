@@ -49,8 +49,11 @@ function createMapLibreMock() {
     resize: vi.fn(() => map),
     remove: vi.fn(),
   }
+  let mapConstructionError: Error | undefined
 
   function MapConstructor() {
+    if (mapConstructionError)
+      throw mapConstructionError
     return map
   }
 
@@ -58,7 +61,16 @@ function createMapLibreMock() {
     Map: vi.fn(MapConstructor),
     LngLat: { convert: vi.fn(value => ({ lng: value[0], lat: value[1] })) },
   }
-  return { maplibregl, map, center, events, onceEvents }
+  return {
+    maplibregl,
+    map,
+    center,
+    events,
+    onceEvents,
+    failMapConstruction(error: Error) {
+      mapConstructionError = error
+    },
+  }
 }
 
 describe('scriptMapLibreMap', () => {
@@ -140,5 +152,25 @@ describe('scriptMapLibreMap', () => {
     expect(wrapper.get('[role="alert"]').text()).toBe('The map could not be loaded.')
     expect(wrapper.emitted('error')?.[0]).toEqual([loadFailure])
     expect(wrapper.get('[aria-hidden="true"]').attributes()).toHaveProperty('inert')
+  })
+
+  it('surfaces synchronous map initialization failures', async () => {
+    const mocks = createMapLibreMock()
+    const initializationFailure = new Error('Invalid MapLibre options')
+    mocks.failMapConstruction(initializationFailure)
+    const wrapper = mount(ScriptMapLibreMap, {
+      props: {
+        mapStyle: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+      },
+    })
+    await nextTick()
+
+    scriptState.callbacks[0]!({ maplibregl: mocks.maplibregl })
+    await nextTick()
+
+    expect(wrapper.get('[role="alert"]').text()).toBe('The map could not be loaded.')
+    expect(wrapper.emitted('error')?.[0]).toEqual([initializationFailure])
+    expect(wrapper.emitted('ready')).toBeUndefined()
   })
 })

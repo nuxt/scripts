@@ -19,7 +19,7 @@ import { toRaw, watch } from 'vue'
 import { useMapLibreResource } from './useMapLibreResource'
 
 const props = defineProps<{
-  /** Stable MapLibre source ID. */
+  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */
   sourceId: string
   /** Inline GeoJSON data or a URL returning GeoJSON. */
   data: GeoJSON | string
@@ -32,6 +32,7 @@ const props = defineProps<{
 }>()
 
 let ownedLayerIds: string[] = []
+let ownedSourceId: string | undefined
 
 function removeOwnedResources(map: MapLibreGl.Map): void {
   for (const layerId of [...ownedLayerIds].reverse()) {
@@ -39,8 +40,9 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
       map.removeLayer(layerId)
   }
   ownedLayerIds = []
-  if (map.getSource(props.sourceId))
-    map.removeSource(props.sourceId)
+  if (ownedSourceId && map.getSource(ownedSourceId))
+    map.removeSource(ownedSourceId)
+  ownedSourceId = undefined
 }
 
 function syncResources(map: MapLibreGl.Map): void {
@@ -48,19 +50,27 @@ function syncResources(map: MapLibreGl.Map): void {
     return
 
   removeOwnedResources(map)
-  map.addSource(props.sourceId, {
-    ...toRaw(props.sourceOptions),
-    type: 'geojson',
-    data: toRaw(props.data),
-  })
+  const sourceId = props.sourceId
+  try {
+    map.addSource(sourceId, {
+      ...toRaw(props.sourceOptions),
+      type: 'geojson',
+      data: toRaw(props.data),
+    })
+    ownedSourceId = sourceId
 
-  for (const layer of props.layers) {
-    const nextLayer = {
-      ...toRaw(layer),
-      source: layer.source || props.sourceId,
-    } as MapLibreGl.LayerSpecification
-    map.addLayer(nextLayer, props.beforeId)
-    ownedLayerIds.push(nextLayer.id)
+    for (const layer of props.layers) {
+      const nextLayer = {
+        ...toRaw(layer),
+        source: layer.source || sourceId,
+      } as MapLibreGl.LayerSpecification
+      map.addLayer(nextLayer, props.beforeId)
+      ownedLayerIds.push(nextLayer.id)
+    }
+  }
+  catch (error) {
+    removeOwnedResources(map)
+    throw error
   }
 }
 
@@ -83,7 +93,7 @@ watch(() => props.data, (data) => {
     (source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
 }, { deep: 2 })
 
-watch(() => [props.layers, props.sourceOptions, props.beforeId] as const, () => {
+watch(() => [props.sourceId, props.layers, props.sourceOptions, props.beforeId] as const, () => {
   if (geoJson.value)
     syncResources(geoJson.value.map)
 }, { deep: 3 })

@@ -13,31 +13,51 @@ describe('mapLibre styles', () => {
     vi.restoreAllMocks()
   })
 
-  it('injects the pinned stylesheet once with integrity metadata', () => {
-    let style: HTMLLinkElement | undefined
+  function mockStylesheetInsertion() {
+    const styles: HTMLLinkElement[] = []
     const append = vi.spyOn(document.head, 'append').mockImplementation((node) => {
-      style = node as HTMLLinkElement
+      styles.push(node as HTMLLinkElement)
     })
-    vi.spyOn(document, 'getElementById').mockImplementation(() => style ?? null)
+    vi.spyOn(document, 'querySelectorAll').mockImplementation((selector) => {
+      if (selector === 'link[rel~="stylesheet"][href]')
+        return styles as unknown as NodeListOf<Element>
+      return styles.filter(style => style.dataset.nuxtScriptsMaplibre) as unknown as NodeListOf<Element>
+    })
+    return { append, styles }
+  }
+
+  it('injects the pinned stylesheet once with integrity metadata', () => {
+    const { append, styles } = mockStylesheetInsertion()
 
     ensureMapLibreStyles()
     ensureMapLibreStyles()
 
     expect(append).toHaveBeenCalledOnce()
-    expect(style?.href).toBe(MAPLIBRE_STYLESHEET_URL)
-    expect(style?.integrity).toBe(MAPLIBRE_STYLESHEET_INTEGRITY)
-    expect(style?.crossOrigin).toBe('anonymous')
+    expect(styles[0]?.href).toBe(MAPLIBRE_STYLESHEET_URL)
+    expect(styles[0]?.integrity).toBe(MAPLIBRE_STYLESHEET_INTEGRITY)
+    expect(styles[0]?.crossOrigin).toBe('anonymous')
   })
 
   it('does not apply pinned integrity metadata to a custom stylesheet', () => {
-    let style: HTMLLinkElement | undefined
-    vi.spyOn(document.head, 'append').mockImplementation((node) => {
-      style = node as HTMLLinkElement
-    })
+    const { styles } = mockStylesheetInsertion()
 
     ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
 
-    expect(style?.href).toBe('https://cdn.example.com/maplibre.css')
-    expect(style?.integrity).toBeFalsy()
+    expect(styles[0]?.href).toBe('https://cdn.example.com/maplibre.css')
+    expect(styles[0]?.integrity).toBeFalsy()
+  })
+
+  it('injects distinct stylesheet URLs once each', () => {
+    const { append, styles } = mockStylesheetInsertion()
+
+    ensureMapLibreStyles()
+    ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
+    ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
+
+    expect(append).toHaveBeenCalledTimes(2)
+    expect(styles.map(style => style.href)).toEqual([
+      MAPLIBRE_STYLESHEET_URL,
+      'https://cdn.example.com/maplibre.css',
+    ])
   })
 })

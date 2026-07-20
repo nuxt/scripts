@@ -89,6 +89,8 @@ const leaflet = shallowRef<typeof Leaflet>()
 const map = shallowRef<Leaflet.Map>()
 const isMapReady = shallowRef(false)
 const loadError = shallowRef(new Error('Leaflet failed to load'))
+const initializationError = shallowRef<Error>()
+const hasError = computed(() => status.value === 'error' || !!initializationError.value)
 let isUnmounted = false
 
 onError((error?: Error) => {
@@ -100,18 +102,18 @@ const exposed: ScriptLeafletMapExpose = { leaflet, map, load }
 defineExpose<ScriptLeafletMapExpose>(exposed)
 provide(LEAFLET_MAP_INJECTION_KEY, { leaflet, map })
 
-const mapEvents = ['click', 'move', 'moveend', 'zoom', 'zoomend'] as const
-
 function bindMapEvents(instance: Leaflet.Map): void {
-  for (const eventName of mapEvents) {
-    instance.on(eventName, (event) => {
-      ;(emit as any)(eventName, event)
-      if (eventName === 'moveend')
-        emit('update:center', instance.getCenter())
-      if (eventName === 'zoomend')
-        emit('update:zoom', instance.getZoom())
-    })
-  }
+  instance.on('click', event => emit('click', event))
+  instance.on('move', event => emit('move', event))
+  instance.on('moveend', (event) => {
+    emit('moveend', event)
+    emit('update:center', instance.getCenter())
+  })
+  instance.on('zoom', event => emit('zoom', event))
+  instance.on('zoomend', (event) => {
+    emit('zoomend', event)
+    emit('update:zoom', instance.getZoom())
+  })
 }
 
 function mapOptions(): Leaflet.MapOptions {
@@ -136,12 +138,22 @@ onMounted(() => {
       return
 
     leaflet.value = instance.L
-    const mapInstance = instance.L.map(mapEl.value, mapOptions())
-    mapInstance.setView(toRaw(props.center), props.zoom, { animate: false })
-    bindMapEvents(mapInstance)
-    map.value = mapInstance
-    isMapReady.value = true
-    emit('ready', exposed)
+    let mapInstance: Leaflet.Map | undefined
+    try {
+      mapInstance = instance.L.map(mapEl.value, mapOptions())
+      mapInstance.setView(toRaw(props.center), props.zoom, { animate: false })
+      bindMapEvents(mapInstance)
+      map.value = mapInstance
+      isMapReady.value = true
+      emit('ready', exposed)
+    }
+    catch (error) {
+      mapInstance?.remove()
+      const cause = error instanceof Error ? error : new Error('Leaflet map initialization failed')
+      initializationError.value = cause
+      loadError.value = cause
+      emit('error', cause)
+    }
   })
 })
 
@@ -209,18 +221,19 @@ onUnmounted(() => {
       :aria-hidden="interactive ? undefined : 'true'"
       :aria-label="interactive ? ariaLabel : undefined"
       :inert="interactive ? undefined : true"
+      :role="interactive ? 'region' : undefined"
       :style="{ width: '100%', height: '100%', maxWidth: '100%' }"
     />
-    <slot v-if="!isMapReady" name="placeholder" />
-    <slot v-if="status === 'loading'" name="loading">
-      <ScriptAriaLoadingIndicator />
-    </slot>
-    <slot v-else-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'error'" name="error" :error="loadError">
+    <slot v-if="!isMapReady && !hasError" name="placeholder" />
+    <slot v-if="hasError" name="error" :error="loadError">
       <p role="alert">
         The map could not be loaded.
       </p>
     </slot>
+    <slot v-else-if="status === 'loading'" name="loading">
+      <ScriptAriaLoadingIndicator />
+    </slot>
+    <slot v-else-if="status === 'awaitingLoad'" name="awaitingLoad" />
     <slot />
   </div>
 </template>

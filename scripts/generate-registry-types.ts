@@ -397,14 +397,20 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
   const models: SchemaFieldMeta[] = []
   const slots: SchemaFieldMeta[] = []
   const constArrays: Record<string, string[]> = {}
+  const unresolvedTypeNames = new Set<string>()
 
   function resolveTypeNode(typeNode: any): { node: any, source: string } {
     if (typeNode?.type !== 'TSTypeReference' || typeNode.typeName?.type !== 'Identifier')
       return { node: typeNode, source: scriptSource }
 
     const declaration = namedTypes.get(typeNode.typeName.name)
-    if (!declaration)
+    if (!declaration) {
+      if (!unresolvedTypeNames.has(typeNode.typeName.name)) {
+        unresolvedTypeNames.add(typeNode.typeName.name)
+        console.warn(`[generate-registry-types] Could not resolve referenced type "${typeNode.typeName.name}" in ${fileName}; declare it in the component's <script> or <script setup> block.`)
+      }
       return { node: typeNode, source: scriptSource }
+    }
 
     if (declaration.node.type === 'TSInterfaceDeclaration')
       return { node: declaration.node.body, source: declaration.source }
@@ -696,6 +702,10 @@ for (const filePath of componentFiles) {
   const fileName = filePath.split('/').pop()!
   const normalScript = scriptBlocks.find(block => !SETUP_ATTRIBUTE_RE.test(block.attributes))?.content ?? null
   const namedTypes = extractNamedTypeDeclarations(normalScript, fileName.replace('.vue', '.types.ts'))
+  for (const [name, declaration] of extractNamedTypeDeclarations(scriptSetup, fileName.replace('.vue', '.setup-types.ts'))) {
+    if (!namedTypes.has(name))
+      namedTypes.set(name, declaration)
+  }
   const meta = extractComponentMeta(scriptSetup, fileName.replace('.vue', '.ts'), namedTypes)
   if (meta) {
     componentMetas[fileName.replace('.vue', '')] = meta

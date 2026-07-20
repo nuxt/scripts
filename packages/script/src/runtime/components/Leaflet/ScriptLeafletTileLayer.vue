@@ -3,6 +3,15 @@ import type * as Leaflet from 'leaflet'
 import { inject, watch } from 'vue'
 import { bindLeafletEvents, LEAFLET_MAP_INJECTION_KEY, useLeafletResource } from './useLeafletResource'
 
+interface ScriptLeafletTileLayerEmits {
+  loading: [event: Leaflet.LeafletEvent]
+  load: [event: Leaflet.LeafletEvent]
+  tileloadstart: [event: Leaflet.TileEvent]
+  tileload: [event: Leaflet.TileEvent]
+  tileabort: [event: Leaflet.TileEvent]
+  tileerror: [event: Leaflet.TileErrorEvent]
+}
+
 const props = defineProps<{
   /** Tile URL template, for example `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. */
   url: string
@@ -10,14 +19,7 @@ const props = defineProps<{
   options?: Leaflet.TileLayerOptions
 }>()
 
-const emit = defineEmits<{
-  loading: [event: Leaflet.LeafletEvent]
-  load: [event: Leaflet.LeafletEvent]
-  tileloadstart: [event: Leaflet.TileEvent]
-  tileload: [event: Leaflet.TileEvent]
-  tileabort: [event: Leaflet.TileEvent]
-  tileerror: [event: Leaflet.TileErrorEvent]
-}>()
+const emit = defineEmits<ScriptLeafletTileLayerEmits>()
 
 const mapContext = inject(LEAFLET_MAP_INJECTION_KEY, undefined)
 const tileEvents = ['loading', 'load', 'tileloadstart', 'tileload', 'tileabort', 'tileerror'] as const
@@ -25,7 +27,7 @@ const tileEvents = ['loading', 'load', 'tileloadstart', 'tileload', 'tileabort',
 const tileLayer = useLeafletResource<Leaflet.TileLayer>({
   create({ leaflet, map }) {
     const layer = leaflet.tileLayer(props.url, props.options)
-    bindLeafletEvents(layer, emit as any, tileEvents)
+    bindLeafletEvents<ScriptLeafletTileLayerEmits>(layer, emit, tileEvents)
     return layer.addTo(map)
   },
   cleanup(layer) {

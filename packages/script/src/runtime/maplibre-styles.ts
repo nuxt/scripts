@@ -5,14 +5,20 @@ const MAPLIBRE_STYLE_ID = 'nuxt-scripts-maplibre-styles'
 
 /** Injects MapLibre's required control and marker stylesheet once. */
 export function ensureMapLibreStyles(stylesheetUrl = MAPLIBRE_STYLESHEET_URL): void {
-  if (typeof document === 'undefined' || document.getElementById(MAPLIBRE_STYLE_ID))
+  if (typeof document === 'undefined')
     return
 
   const link = document.createElement('link')
-  link.id = MAPLIBRE_STYLE_ID
-  link.dataset.nuxtScriptsMaplibre = '1'
   link.rel = 'stylesheet'
   link.href = stylesheetUrl
+
+  const stylesheets = document.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"][href]')
+  if ([...stylesheets].some(stylesheet => stylesheet.href === link.href))
+    return
+
+  const injectedStylesheets = document.querySelectorAll('[data-nuxt-scripts-maplibre]')
+  link.id = injectedStylesheets.length ? `${MAPLIBRE_STYLE_ID}-${injectedStylesheets.length + 1}` : MAPLIBRE_STYLE_ID
+  link.dataset.nuxtScriptsMaplibre = '1'
 
   if (stylesheetUrl === MAPLIBRE_STYLESHEET_URL) {
     link.integrity = MAPLIBRE_STYLESHEET_INTEGRITY

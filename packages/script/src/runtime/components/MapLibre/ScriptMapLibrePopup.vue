@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<{
   position?: MapLibre.LngLatLike
   /** Whether the popup is open. @default false */
   open?: boolean
-  /** Options passed to `new maplibregl.Popup()`. */
+  /** Options passed to `new maplibregl.Popup()`. Options with public setters also update reactively. */
   options?: MapLibre.PopupOptions
 }>(), {
   open: false,
@@ -27,6 +27,7 @@ const markerContext = inject(MAPLIBRE_MARKER_INJECTION_KEY, undefined)
 const content = useTemplateRef<HTMLElement>('content')
 let boundMarker: MapLibre.Marker | undefined
 let popupMap: MapLibre.Map | undefined
+let popupClassNames = new Set((props.options?.className || '').split(/\s+/).filter(Boolean))
 const openHandler = (event: MapLibre.Event) => emit('open', event)
 const closeHandler = (event: MapLibre.Event) => emit('close', event)
 
@@ -49,6 +50,7 @@ const popup = useMapLibreResource<MapLibre.Popup>({
   create({ maplibre, map }) {
     popupMap = map
     const instance = new maplibre.Popup(props.options).setDOMContent(content.value!)
+    popupClassNames = new Set((props.options?.className || '').split(/\s+/).filter(Boolean))
     instance.on('open', openHandler)
     instance.on('close', closeHandler)
 
@@ -83,11 +85,26 @@ watch(() => props.position, (position) => {
 watch(() => props.options, (options) => {
   if (!popup.value || !options)
     return
-  Object.assign(popup.value.options, options)
-  if (options.maxWidth)
+  if (options.maxWidth !== undefined)
     popup.value.setMaxWidth(options.maxWidth)
-  if (options.offset)
+  if (options.offset !== undefined)
     popup.value.setOffset(options.offset)
+  if (options.padding !== undefined)
+    popup.value.setPadding(options.padding)
+  if (options.subpixelPositioning !== undefined)
+    popup.value.setSubpixelPositioning(options.subpixelPositioning)
+  if (options.className !== undefined) {
+    const nextClassNames = new Set(options.className.split(/\s+/).filter(Boolean))
+    for (const className of popupClassNames) {
+      if (!nextClassNames.has(className))
+        popup.value.removeClassName(className)
+    }
+    for (const className of nextClassNames) {
+      if (!popupClassNames.has(className))
+        popup.value.addClassName(className)
+    }
+    popupClassNames = nextClassNames
+  }
 }, { deep: 2 })
 
 defineExpose({ popup })

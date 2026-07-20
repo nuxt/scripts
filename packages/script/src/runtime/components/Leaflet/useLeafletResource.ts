@@ -20,13 +20,22 @@ export interface LeafletResourceContext {
   leaflet: LeafletNamespace
 }
 
-export function bindLeafletEvents(
+type UnionToIntersection<T> = (T extends unknown ? (value: T) => void : never) extends (value: infer I) => void ? I : never
+
+type LeafletEmit<TEvents extends object> = UnionToIntersection<{
+  [TEvent in keyof TEvents]: TEvents[TEvent] extends unknown[]
+    ? (event: TEvent, ...args: TEvents[TEvent]) => void
+    : never
+}[keyof TEvents]>
+
+export function bindLeafletEvents<TEvents extends object>(
   target: Leaflet.Evented,
-  emit: (event: any, ...args: any[]) => void,
-  events: readonly string[],
+  emit: LeafletEmit<TEvents>,
+  events: readonly (keyof TEvents & string)[],
 ): void {
+  const emitEvent = emit as (event: keyof TEvents & string, payload: Leaflet.LeafletEvent) => void
   for (const event of events)
-    target.on(event, payload => emit(event, payload))
+    target.on(event, payload => emitEvent(event, payload))
 }
 
 /**

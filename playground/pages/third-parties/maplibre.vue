@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Feature, Polygon } from 'geojson'
+import type { LngLatLike } from 'maplibre-gl'
 import { ref } from 'vue'
 
-const center = ref<[number, number]>([144.9631, -37.8136])
+const center = ref<LngLatLike>([144.9631, -37.8136])
 const zoom = ref(12)
 const bearing = ref(0)
 const pitch = ref(0)
@@ -111,7 +112,7 @@ function resetCamera() {
       />
     </ScriptMapLibreMap>
 
-    <div class="controls" aria-label="Map camera controls">
+    <div class="controls" role="group" aria-label="Map camera controls">
       <button type="button" @click="showBotanicGardens">
         Explore the Botanic Gardens
       </button>

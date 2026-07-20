@@ -43,7 +43,9 @@ Pass a MapLibre style URL or an inline style specification. This example uses Ma
 
 ```vue
 <script setup lang="ts">
-const center = ref<[number, number]>([144.9631, -37.8136])
+import type { LngLatLike } from 'maplibre-gl'
+
+const center = ref<LngLatLike>([144.9631, -37.8136])
 </script>
 
 <template>
