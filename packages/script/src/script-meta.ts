@@ -181,6 +181,10 @@ export const scriptMeta = {
     urls: ['https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'],
     trackedData: [],
   },
+  maplibre: {
+    urls: ['https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'],
+    trackedData: [],
+  },
 
   // CDN
   npm: {

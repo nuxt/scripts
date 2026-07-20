@@ -84,6 +84,7 @@
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
     "@unhead/vue": "^2.0.3 || ^3.0.0",
+    "maplibre-gl": "^5.24.0",
     "posthog-js": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -115,6 +116,9 @@
       "optional": true
     },
     "@unhead/vue": {
+      "optional": true
+    },
+    "maplibre-gl": {
       "optional": true
     },
     "posthog-js": {

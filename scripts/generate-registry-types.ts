@@ -253,10 +253,40 @@ function extractDeclarations(source: string, fileName: string): ExtractedDeclara
 // --- Component props & events extraction ---
 
 const SCRIPT_SETUP_RE = /<script\s[^>]*\bsetup\b[^>]*>([\s\S]*?)<\/script>/
+const SCRIPT_RE = /<script([^>]*)>([\s\S]*?)<\/script>/g
+const SETUP_ATTRIBUTE_RE = /\bsetup\b/
 
 function extractScriptSetup(vueSource: string): string | null {
   const match = vueSource.match(SCRIPT_SETUP_RE)
   return match?.[1] ?? null
+}
+
+function extractScript(vueSource: string): string | null {
+  for (const match of vueSource.matchAll(SCRIPT_RE)) {
+    if (!SETUP_ATTRIBUTE_RE.test(match[1]!))
+      return match[2] ?? null
+  }
+  return null
+}
+
+interface NamedTypeDeclaration {
+  node: any
+  source: string
+}
+
+function extractNamedTypeDeclarations(source: string | null, fileName: string): Map<string, NamedTypeDeclaration> {
+  const declarations = new Map<string, NamedTypeDeclaration>()
+  if (!source)
+    return declarations
+
+  const { program } = parseSync(fileName, source)
+  for (const programNode of program.body) {
+    const node = programNode.type === 'ExportNamedDeclaration' ? programNode.declaration : programNode
+    if (node?.type !== 'TSInterfaceDeclaration' && node?.type !== 'TSTypeAliasDeclaration')
+      continue
+    declarations.set(node.id.name, { node, source })
+  }
+  return declarations
 }
 
 interface ComponentMeta {
@@ -309,18 +339,21 @@ function resolveTSType(node: any, source: string): string {
   return source.slice(node.start, node.end)
 }
 
-function extractPropsFields(typeNode: any, source: string, fullSource?: string): SchemaFieldMeta[] {
-  if (!typeNode || typeNode.type !== 'TSTypeLiteral')
+function extractPropsFields(typeNode: any, source: string): SchemaFieldMeta[] {
+  const members = typeNode?.type === 'TSTypeLiteral'
+    ? typeNode.members
+    : typeNode?.type === 'TSInterfaceBody'
+      ? typeNode.body
+      : undefined
+  if (!members)
     return []
 
   // Parse JSDoc comments from the type literal source text
-  const typeCode = fullSource
-    ? fullSource.slice(typeNode.start, typeNode.end)
-    : source.slice(typeNode.start, typeNode.end)
+  const typeCode = source.slice(typeNode.start, typeNode.end)
   const comments = parseSchemaComments(typeCode)
 
   const fields: SchemaFieldMeta[] = []
-  for (const member of typeNode.members || []) {
+  for (const member of members) {
     if (member.type !== 'TSPropertySignature')
       continue
     const name = member.key?.name || member.key?.value
@@ -338,13 +371,26 @@ function extractPropsFields(typeNode: any, source: string, fullSource?: string):
   return fields
 }
 
-function extractComponentMeta(scriptSource: string, fileName: string): ComponentMeta | null {
+function extractComponentMeta(scriptSource: string, fileName: string, namedTypes = new Map<string, NamedTypeDeclaration>()): ComponentMeta | null {
   const { program } = parseSync(fileName, scriptSource)
   let propsResult: { code: string, defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
   const events: SchemaFieldMeta[] = []
   const models: SchemaFieldMeta[] = []
   const slots: SchemaFieldMeta[] = []
   const constArrays: Record<string, string[]> = {}
+
+  function resolveTypeNode(typeNode: any): { node: any, source: string } {
+    if (typeNode?.type !== 'TSTypeReference' || typeNode.typeName?.type !== 'Identifier')
+      return { node: typeNode, source: scriptSource }
+
+    const declaration = namedTypes.get(typeNode.typeName.name)
+    if (!declaration)
+      return { node: typeNode, source: scriptSource }
+
+    if (declaration.node.type === 'TSInterfaceDeclaration')
+      return { node: declaration.node.body, source: declaration.source }
+    return { node: declaration.node.typeAnnotation, source: declaration.source }
+  }
 
   // First pass: collect `as const` arrays for event name resolution
   walk(program, {
@@ -401,17 +447,23 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
           return
         }
 
-        const typeArg = node.typeArguments?.params?.[0]
-        if (!typeArg)
+        const rawTypeArg = node.typeArguments?.params?.[0]
+        if (!rawTypeArg)
           return
+        const { node: typeArg, source: typeSource } = resolveTypeNode(rawTypeArg)
 
         // Parse call signatures or object syntax from TSTypeLiteral
-        if (typeArg.type === 'TSTypeLiteral') {
+        const members = typeArg.type === 'TSTypeLiteral'
+          ? typeArg.members
+          : typeArg.type === 'TSInterfaceBody'
+            ? typeArg.body
+            : undefined
+        if (members) {
           // Parse JSDoc comments from the emits type literal
-          const emitsCode = scriptSource.slice(typeArg.start, typeArg.end)
+          const emitsCode = typeSource.slice(typeArg.start, typeArg.end)
           const emitsComments = parseSchemaComments(emitsCode)
 
-          for (const member of typeArg.members || []) {
+          for (const member of members) {
             // Object syntax: { click: [payload: Type] } or { close: [] }
             if (member.type === 'TSPropertySignature') {
               const eventName = member.key?.name || member.key?.value
@@ -426,7 +478,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
                   // Named tuple: [payload: Type] → TSNamedTupleMember with elementType
                   const el = elements[0]
                   const typeNode = el.elementType || el.typeAnnotation || el
-                  payloadType = resolveTSType(typeNode, scriptSource)
+                  payloadType = resolveTSType(typeNode, typeSource)
                 }
                 events.push({
                   name: eventName,
@@ -456,7 +508,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
                 const refName = objType.exprName?.name
                 if (refName && constArrays[refName]) {
                   const payloadType = params.length > 1
-                    ? resolveTSType(params[1]?.typeAnnotation?.typeAnnotation, scriptSource)
+                    ? resolveTSType(params[1]?.typeAnnotation?.typeAnnotation, typeSource)
                     : undefined
                   for (const eventName of constArrays[refName]) {
                     events.push({
@@ -471,7 +523,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
             // Literal string event: (event: 'ready', ...): void
             else if (eventType?.type === 'TSLiteralType' && (eventType.literal?.type === 'StringLiteral' || eventType.literal?.type === 'Literal')) {
               const payloadType = params.length > 1
-                ? resolveTSType(params[1]?.typeAnnotation?.typeAnnotation, scriptSource)
+                ? resolveTSType(params[1]?.typeAnnotation?.typeAnnotation, typeSource)
                 : undefined
               events.push({
                 name: eventType.literal.value,
@@ -486,12 +538,18 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
 
       // defineSlots<{...}>()
       if (node.callee?.name === 'defineSlots') {
-        const typeArg = node.typeArguments?.params?.[0]
-        if (typeArg?.type === 'TSTypeLiteral') {
-          const slotsCode = scriptSource.slice(typeArg.start, typeArg.end)
+        const rawTypeArg = node.typeArguments?.params?.[0]
+        const { node: typeArg, source: typeSource } = resolveTypeNode(rawTypeArg)
+        const members = typeArg?.type === 'TSTypeLiteral'
+          ? typeArg.members
+          : typeArg?.type === 'TSInterfaceBody'
+            ? typeArg.body
+            : undefined
+        if (members) {
+          const slotsCode = typeSource.slice(typeArg.start, typeArg.end)
           const slotsComments = parseSchemaComments(slotsCode)
 
-          for (const member of typeArg.members || []) {
+          for (const member of members) {
             if (member.type !== 'TSPropertySignature')
               continue
             const slotName = member.key?.name || member.key?.value
@@ -505,7 +563,7 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
               const param = fnType.params[0]
               const paramType = param?.typeAnnotation?.typeAnnotation
               if (paramType) {
-                const resolved = resolveTSType(paramType, scriptSource)
+                const resolved = resolveTSType(paramType, typeSource)
                 // Avoid leaking unresolvable `typeof` references from runtime variables
                 propsType = resolved.includes('typeof') ? 'object' : resolved
               }
@@ -537,12 +595,13 @@ function extractComponentMeta(scriptSource: string, fileName: string): Component
       if (!definePropsCall)
         return
 
-      const typeArg = definePropsCall.typeArguments?.params?.[0]
-      if (!typeArg)
+      const rawTypeArg = definePropsCall.typeArguments?.params?.[0]
+      if (!rawTypeArg)
         return
+      const { node: typeArg, source: typeSource } = resolveTypeNode(rawTypeArg)
 
-      const code = scriptSource.slice(typeArg.start, typeArg.end)
-      const fields = extractPropsFields(typeArg, scriptSource, scriptSource)
+      const code = typeSource.slice(typeArg.start, typeArg.end)
+      const fields = extractPropsFields(typeArg, typeSource)
 
       const defaults: Record<string, string> = {}
       if (defaultsObj?.type === 'ObjectExpression') {
@@ -615,7 +674,9 @@ for (const filePath of componentFiles) {
     continue
 
   const fileName = filePath.split('/').pop()!
-  const meta = extractComponentMeta(scriptSetup, fileName.replace('.vue', '.ts'))
+  const normalScript = extractScript(vueSource)
+  const namedTypes = extractNamedTypeDeclarations(normalScript, fileName.replace('.vue', '.types.ts'))
+  const meta = extractComponentMeta(scriptSetup, fileName.replace('.vue', '.ts'), namedTypes)
   if (meta) {
     componentMetas[fileName.replace('.vue', '')] = meta
   }
@@ -644,6 +705,11 @@ const componentToSlug: Record<string, string> = {
   ScriptLeafletMarker: 'leaflet',
   ScriptLeafletPopup: 'leaflet',
   ScriptLeafletGeoJson: 'leaflet',
+  ScriptMapLibreMap: 'maplibre',
+  ScriptMapLibreMarker: 'maplibre',
+  ScriptMapLibrePopup: 'maplibre',
+  ScriptMapLibreGeoJson: 'maplibre',
+  ScriptMapLibreNavigationControl: 'maplibre',
   ScriptCarbonAds: 'carbon-ads',
   ScriptCrisp: 'crisp',
   ScriptIntercom: 'intercom',

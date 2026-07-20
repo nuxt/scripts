@@ -46,6 +46,7 @@ function getPlaygroundPath(script: any): string | null {
     'youtube-player': '/third-parties/youtube/nuxt-scripts',
     'google-maps': '/third-parties/google-maps/nuxt-scripts',
     'leaflet': '/third-parties/leaflet',
+    'maplibre-gl-js': '/third-parties/maplibre',
     'google-recaptcha': '/third-parties/google-recaptcha/nuxt-scripts',
     'calendly': '/third-parties/calendly/nuxt-scripts',
     'usercentrics': '/third-parties/usercentrics/nuxt-scripts',
