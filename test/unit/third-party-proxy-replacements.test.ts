@@ -177,6 +177,9 @@ describe('third-party script proxy replacements', () => {
         (function(c,l,a,r,i,t,y) {
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
           t.src="https://www.clarity.ms/tag/"+i;
+          y.src="https://scripts.clarity.ms/0.8.67/clarity.js";
+          i.upload="https://p.clarity.ms/collect";
+          i.sync="https://c.clarity.ms/c.gif";
         })();
       `,
       hotjar: `

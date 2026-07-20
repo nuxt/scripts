@@ -3,7 +3,7 @@ import { useHead, useScriptMatomoAnalytics } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Matomo - First Party' })
-const { status, proxy } = useScriptMatomoAnalytics({ cloudId: 'demo.matomo.cloud', siteId: '1' })
+const { status, proxy } = useScriptMatomoAnalytics({ cloudId: 'demo.matomo.cloud', siteId: '1', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackPageview() {

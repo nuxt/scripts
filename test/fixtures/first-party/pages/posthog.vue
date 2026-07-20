@@ -7,6 +7,7 @@ const { status, proxy } = useScriptPostHog({
   apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W',
   region: 'us',
   config: { autocapture: false, capture_pageview: true },
+  scriptOptions: { trigger: 'client' },
 })
 const result = ref('')
 

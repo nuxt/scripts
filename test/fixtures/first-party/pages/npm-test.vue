@@ -3,7 +3,7 @@ import { useHead, useScriptNpm } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'NPM - First Party' })
-const { status, onLoaded } = useScriptNpm({ packageName: 'js-confetti', file: 'dist/js-confetti.browser.js', version: '0.12.0' })
+const { status, onLoaded } = useScriptNpm({ packageName: 'js-confetti', file: 'dist/js-confetti.browser.js', version: '0.12.0', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function fireConfetti() {

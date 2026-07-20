@@ -3,7 +3,7 @@ import { useHead, useScriptUmamiAnalytics } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Umami - First Party' })
-const { status } = useScriptUmamiAnalytics({ websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c' })
+const { status } = useScriptUmamiAnalytics({ websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackEvent() {

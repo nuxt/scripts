@@ -634,10 +634,11 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         // Clarity buckets visitors across letter/hash-prefixed shards (a/b/c/d/e/k/...).
         // Microsoft adds shards over time, so an enumerated list silently 403s
         // through the proxy when an unlisted letter is rolled out (#728-class bug).
-        // `*.clarity.ms` covers the full surface at runtime; `www.clarity.ms` is
-        // kept literal so the build-time URL rewrite (which filters wildcards)
-        // can still rewrite `https://www.clarity.ms/tag/<id>` in bundled SDKs.
-        domains: ['www.clarity.ms', '*.clarity.ms'],
+        // `*.clarity.ms` covers the full surface at runtime. Literal hosts are
+        // also required because build-time URL rewriting filters wildcards; the
+        // bootstrap currently loads its SDK from `scripts`, uploads to `p`, and
+        // synchronizes consent through `c`.
+        domains: ['www.clarity.ms', 'scripts.clarity.ms', 'p.clarity.ms', 'c.clarity.ms', '*.clarity.ms'],
         privacy: PRIVACY_HEATMAP,
       },
       partytown: { forwards: ['clarity'] },

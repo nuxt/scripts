@@ -2,7 +2,7 @@
 import { useHead, useScriptGravatar } from '#imports'
 
 useHead({ title: 'Gravatar - First Party' })
-const { status } = useScriptGravatar()
+const { status } = useScriptGravatar({ scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>

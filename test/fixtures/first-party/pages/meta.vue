@@ -7,6 +7,7 @@ useHead({
 
 const { proxy, status } = useScriptMetaPixel({
   id: '3925006',
+  scriptOptions: { trigger: 'client' },
 })
 
 function trackPageView() {

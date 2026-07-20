@@ -3,7 +3,7 @@ import { useHead, useScriptGoogleRecaptcha } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Google reCAPTCHA - First Party' })
-const { status, proxy } = useScriptGoogleRecaptcha({ siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' })
+const { status, proxy } = useScriptGoogleRecaptcha({ siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function executeRecaptcha() {
