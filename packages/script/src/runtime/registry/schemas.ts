@@ -19,6 +19,15 @@ export const gcmConsentState = object({
   region: optional(array(string())),
 })
 
+export const LeafletOptions = object({
+  /**
+   * Inject the Leaflet 1.9.4 styles and default marker images when the script
+   * begins loading. Disable this when supplying your own Leaflet stylesheet.
+   * @default true
+   */
+  injectStyles: optional(boolean()),
+})
+
 export const AhrefsAnalyticsOptions = object({
   /**
    * Your Ahrefs Web Analytics project key. Set as the `data-key` attribute

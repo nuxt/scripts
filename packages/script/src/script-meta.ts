@@ -177,6 +177,10 @@ export const scriptMeta = {
     urls: [], // Dynamic URL with API key
     trackedData: [],
   },
+  leaflet: {
+    urls: ['https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'],
+    trackedData: [],
+  },
 
   // CDN
   npm: {

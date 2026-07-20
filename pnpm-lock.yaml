@@ -45,12 +45,18 @@ catalogs:
     '@speedcurve/lux':
       specifier: ^4.4.3
       version: 4.4.3
+    '@types/geojson':
+      specifier: ^7946.0.16
+      version: 7946.0.16
     '@types/google.maps':
       specifier: ^3.65.2
       version: 3.65.2
     '@types/jest-image-snapshot':
       specifier: ^6.4.1
       version: 6.4.1
+    '@types/leaflet':
+      specifier: ^1.9.21
+      version: 1.9.21
     '@types/node':
       specifier: ^26.1.1
       version: 26.1.1
@@ -196,12 +202,18 @@ importers:
       '@paypal/paypal-js':
         specifier: 'catalog:'
         version: 10.0.3
+      '@types/geojson':
+        specifier: 'catalog:'
+        version: 7946.0.16
       '@types/google.maps':
         specifier: 'catalog:'
         version: 3.65.2
       '@types/jest-image-snapshot':
         specifier: 'catalog:'
         version: 6.4.1
+      '@types/leaflet':
+        specifier: 'catalog:'
+        version: 1.9.21
       '@types/node':
         specifier: 'catalog:'
         version: 26.1.1
@@ -328,9 +340,15 @@ importers:
       '@stripe/stripe-js':
         specifier: ^7.0.0 || ^8.0.0 || ^9.0.0
         version: 8.11.0
+      '@types/geojson':
+        specifier: ^7946.0.0
+        version: 7946.0.16
       '@types/google.maps':
         specifier: ^3.58.1
         version: 3.65.2
+      '@types/leaflet':
+        specifier: ^1.9.0
+        version: 1.9.21
       '@types/vimeo__player':
         specifier: ^2.18.3
         version: 2.18.3
@@ -3342,6 +3360,9 @@ packages:
 
   '@types/katex@0.16.8':
     resolution: {integrity: sha512-trgaNyfU+Xh2Tc+ABIb44a5AYUpicB3uwirOioeOkNPPbmgRNtcWyDeeFRzjPZENO9Vq8gvVqfhaaXWLlevVwg==}
+
+  '@types/leaflet@1.9.21':
+    resolution: {integrity: sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -10949,6 +10970,10 @@ snapshots:
   '@types/json-schema@7.0.15': {}
 
   '@types/katex@0.16.8': {}
+
+  '@types/leaflet@1.9.21':
+    dependencies:
+      '@types/geojson': 7946.0.16
 
   '@types/mdast@4.0.4':
     dependencies:

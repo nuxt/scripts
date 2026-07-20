@@ -650,6 +650,73 @@
         "code": "interface ScriptIntercomSlots {\n  default?: (props: { ready: boolean }) => any\n  awaitingLoad?: () => any\n  loading?: () => any\n  error?: () => any\n}"
       }
     ],
+    "leaflet": [
+      {
+        "name": "LeafletOptions",
+        "kind": "const",
+        "code": "export const LeafletOptions = object({\n  /**\n   * Inject the Leaflet 1.9.4 styles and default marker images when the script\n   * begins loading. Disable this when supplying your own Leaflet stylesheet.\n   * @default true\n   */\n  injectStyles: optional(boolean()),\n})"
+      },
+      {
+        "name": "LeafletApi",
+        "kind": "interface",
+        "code": "export interface LeafletApi {\n  L: typeof Leaflet\n}"
+      },
+      {
+        "name": "ScriptLeafletGeoJsonProps",
+        "kind": "interface",
+        "code": "interface ScriptLeafletGeoJsonProps {\n  /** GeoJSON object, feature, or feature collection. Replace it to update the layer. */\n  data: GeoJsonObject | GeoJsonObject[]\n  /** Options passed to `L.geoJSON`. */\n  options?: Leaflet.GeoJSONOptions\n}"
+      },
+      {
+        "name": "ScriptLeafletGeoJsonEvents",
+        "kind": "interface",
+        "code": "interface ScriptLeafletGeoJsonEvents {\n  click: Leaflet.LeafletMouseEvent\n  dblclick: Leaflet.LeafletMouseEvent\n  mousedown: Leaflet.LeafletMouseEvent\n  mouseover: Leaflet.LeafletMouseEvent\n  mouseout: Leaflet.LeafletMouseEvent\n  contextmenu: Leaflet.LeafletMouseEvent\n  layeradd: Leaflet.LayerEvent\n  layerremove: Leaflet.LayerEvent\n}"
+      },
+      {
+        "name": "ScriptLeafletMapProps",
+        "kind": "interface",
+        "code": "interface ScriptLeafletMapProps ScriptLeafletMapProps"
+      },
+      {
+        "name": "ScriptLeafletMarkerProps",
+        "kind": "interface",
+        "code": "interface ScriptLeafletMarkerProps {\n  /** Reactive marker position. */\n  position: Leaflet.LatLngExpression\n  /** Unique text alternative for the marker icon. */\n  alt?: string\n  /** Tooltip text for the marker icon. */\n  title?: string\n  /** Options passed to `L.marker`. */\n  options?: Leaflet.MarkerOptions\n}"
+      },
+      {
+        "name": "ScriptLeafletMarkerEvents",
+        "kind": "interface",
+        "code": "interface ScriptLeafletMarkerEvents {\n  click: Leaflet.LeafletMouseEvent\n  dblclick: Leaflet.LeafletMouseEvent\n  mousedown: Leaflet.LeafletMouseEvent\n  mouseover: Leaflet.LeafletMouseEvent\n  mouseout: Leaflet.LeafletMouseEvent\n  contextmenu: Leaflet.LeafletMouseEvent\n  dragstart: Leaflet.DragEndEvent\n  drag: Leaflet.LeafletEvent\n  dragend: Leaflet.DragEndEvent\n  move: Leaflet.LeafletEvent\n}"
+      },
+      {
+        "name": "ScriptLeafletMarkerSlots",
+        "kind": "interface",
+        "code": "interface ScriptLeafletMarkerSlots {\n  default?: () => any\n}"
+      },
+      {
+        "name": "ScriptLeafletPopupProps",
+        "kind": "interface",
+        "code": "interface ScriptLeafletPopupProps {\n  /** Position for a standalone popup. Omit when nested inside a marker. */\n  position?: Leaflet.LatLngExpression\n  /** Whether the popup is open. @default false */\n  open?: boolean\n  /** Options passed to `L.popup`. */\n  options?: Leaflet.PopupOptions\n}"
+      },
+      {
+        "name": "ScriptLeafletPopupEvents",
+        "kind": "interface",
+        "code": "interface ScriptLeafletPopupEvents {\n  open: Leaflet.LeafletEvent\n  close: Leaflet.LeafletEvent\n}"
+      },
+      {
+        "name": "ScriptLeafletPopupSlots",
+        "kind": "interface",
+        "code": "interface ScriptLeafletPopupSlots {\n  default?: () => any\n}"
+      },
+      {
+        "name": "ScriptLeafletTileLayerProps",
+        "kind": "interface",
+        "code": "interface ScriptLeafletTileLayerProps {\n  /** Tile URL template, for example `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. */\n  url: string\n  /** Tile layer options. Include the provider's required `attribution`. */\n  options?: Leaflet.TileLayerOptions\n}"
+      },
+      {
+        "name": "ScriptLeafletTileLayerEvents",
+        "kind": "interface",
+        "code": "interface ScriptLeafletTileLayerEvents {\n  loading: Leaflet.LeafletEvent\n  load: Leaflet.LeafletEvent\n  tileloadstart: Leaflet.TileEvent\n  tileload: Leaflet.TileEvent\n  tileabort: Leaflet.TileEvent\n  tileerror: Leaflet.TileErrorEvent\n}"
+      }
+    ],
     "lemon-squeezy": [
       {
         "name": "LemonSqueezyEventPayload",
@@ -1290,6 +1357,15 @@
         "name": "region",
         "type": "string[]",
         "required": false
+      }
+    ],
+    "LeafletOptions": [
+      {
+        "name": "injectStyles",
+        "type": "boolean",
+        "required": false,
+        "description": "Inject the Leaflet 1.9.4 styles and default marker images when the script begins loading. Disable this when supplying your own Leaflet stylesheet.",
+        "defaultValue": "true"
       }
     ],
     "AhrefsAnalyticsOptions": [
@@ -3261,6 +3337,221 @@
         "type": "google.maps.MapMouseEvent",
         "required": false,
         "description": "Fired when the DOM mouseup event is fired on the rectangle."
+      }
+    ],
+    "ScriptLeafletGeoJsonProps": [
+      {
+        "name": "data",
+        "type": "GeoJsonObject | GeoJsonObject[]",
+        "required": true
+      },
+      {
+        "name": "options",
+        "type": "Leaflet.GeoJSONOptions",
+        "required": false
+      }
+    ],
+    "ScriptLeafletGeoJsonEvents": [
+      {
+        "name": "click",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "layeradd",
+        "type": "Leaflet.LayerEvent",
+        "required": false
+      },
+      {
+        "name": "layerremove",
+        "type": "Leaflet.LayerEvent",
+        "required": false
+      }
+    ],
+    "ScriptLeafletMarkerProps": [
+      {
+        "name": "position",
+        "type": "Leaflet.LatLngExpression",
+        "required": true
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "Leaflet.MarkerOptions",
+        "required": false
+      }
+    ],
+    "ScriptLeafletMarkerEvents": [
+      {
+        "name": "click",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dblclick",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mousedown",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseover",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseout",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "contextmenu",
+        "type": "Leaflet.LeafletMouseEvent",
+        "required": false
+      },
+      {
+        "name": "dragstart",
+        "type": "Leaflet.DragEndEvent",
+        "required": false
+      },
+      {
+        "name": "drag",
+        "type": "Leaflet.LeafletEvent",
+        "required": false
+      },
+      {
+        "name": "dragend",
+        "type": "Leaflet.DragEndEvent",
+        "required": false
+      },
+      {
+        "name": "move",
+        "type": "Leaflet.LeafletEvent",
+        "required": false
+      }
+    ],
+    "ScriptLeafletMarkerSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      }
+    ],
+    "ScriptLeafletPopupProps": [
+      {
+        "name": "position",
+        "type": "Leaflet.LatLngExpression",
+        "required": false
+      },
+      {
+        "name": "open",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "Leaflet.PopupOptions",
+        "required": false
+      }
+    ],
+    "ScriptLeafletPopupEvents": [
+      {
+        "name": "open",
+        "type": "Leaflet.LeafletEvent",
+        "required": false
+      },
+      {
+        "name": "close",
+        "type": "Leaflet.LeafletEvent",
+        "required": false
+      }
+    ],
+    "ScriptLeafletPopupSlots": [
+      {
+        "name": "default",
+        "type": "-",
+        "required": false
+      }
+    ],
+    "ScriptLeafletTileLayerProps": [
+      {
+        "name": "url",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "options",
+        "type": "Leaflet.TileLayerOptions",
+        "required": false
+      }
+    ],
+    "ScriptLeafletTileLayerEvents": [
+      {
+        "name": "loading",
+        "type": "Leaflet.LeafletEvent",
+        "required": false
+      },
+      {
+        "name": "load",
+        "type": "Leaflet.LeafletEvent",
+        "required": false
+      },
+      {
+        "name": "tileloadstart",
+        "type": "Leaflet.TileEvent",
+        "required": false
+      },
+      {
+        "name": "tileload",
+        "type": "Leaflet.TileEvent",
+        "required": false
+      },
+      {
+        "name": "tileabort",
+        "type": "Leaflet.TileEvent",
+        "required": false
+      },
+      {
+        "name": "tileerror",
+        "type": "Leaflet.TileErrorEvent",
+        "required": false
       }
     ],
     "ScriptBlueskyEmbedProps": [

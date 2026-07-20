@@ -32,6 +32,7 @@ import {
   HotjarOptions,
   InstagramEmbedOptions,
   IntercomOptions,
+  LeafletOptions,
   LinkedInInsightOptions,
   MatomoAnalyticsOptions,
   MetaPixelOptions,
@@ -158,6 +159,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('vimeoPlayer', 'Vimeo Player', 'video', 'useScriptVimeoPlayer', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   // content
   m('googleMaps', 'Google Maps', 'content', 'useScriptGoogleMaps', {}, null),
+  m('leaflet', 'Leaflet', 'content', 'useScriptLeaflet', { bundle: true }, null),
   m('instagramEmbed', 'Instagram Embed', 'content', false, {}, null),
   m('xEmbed', 'X Embed', 'content', false, {}, null),
   m('blueskyEmbed', 'Bluesky Embed', 'content', false, {}, null),
@@ -694,6 +696,13 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         { route: '/_scripts/proxy/google-static-maps', handler: './runtime/server/google-static-maps-proxy', requiresSigning: true },
         { route: '/_scripts/proxy/google-maps-geocode', handler: './runtime/server/google-maps-geocode-proxy', requiresSigning: true },
       ],
+    }),
+    def('leaflet', {
+      schema: LeafletOptions,
+      label: 'Leaflet',
+      src: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+      category: 'content',
+      bundle: true,
     }),
     def('blueskyEmbed', {
       composableName: false,
