@@ -5,6 +5,7 @@ import ScriptLeafletMap from '../../packages/script/src/runtime/components/Leafl
 
 const scriptState = vi.hoisted(() => ({
   callbacks: [] as Array<(instance: any) => void>,
+  errorCallbacks: [] as Array<(error?: Error) => void>,
   load: vi.fn(() => Promise.resolve()),
   status: undefined as any,
 }))
@@ -21,6 +22,7 @@ vi.mock('#nuxt-scripts/registry/leaflet', async () => {
       load: scriptState.load,
       status: scriptState.status,
       onLoaded: (callback: (instance: any) => void) => scriptState.callbacks.push(callback),
+      onError: (callback: (error?: Error) => void) => scriptState.errorCallbacks.push(callback),
     })),
   }
 })
@@ -51,6 +53,7 @@ function createLeafletMock() {
 describe('scriptLeafletMap', () => {
   beforeEach(() => {
     scriptState.callbacks.length = 0
+    scriptState.errorCallbacks.length = 0
     scriptState.status.value = 'awaitingLoad'
     vi.clearAllMocks()
   })
@@ -111,11 +114,13 @@ describe('scriptLeafletMap', () => {
       },
     })
 
+    const loadFailure = new Error('Leaflet request failed')
+    scriptState.errorCallbacks[0]!(loadFailure)
     scriptState.status.value = 'error'
     await nextTick()
 
     expect(wrapper.get('[role="alert"]').text()).toBe('The map could not be loaded.')
-    expect(wrapper.emitted('error')).toHaveLength(1)
+    expect(wrapper.emitted('error')?.[0]).toEqual([loadFailure])
     expect(wrapper.get('[aria-hidden="true"]').attributes()).toHaveProperty('inert')
   })
 })

@@ -80,7 +80,7 @@ defineSlots<ScriptLeafletMapSlots>()
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
 const mapEl = useTemplateRef<HTMLElement>('mapEl')
 const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
-const { load, status, onLoaded } = useScriptLeaflet({
+const { load, status, onLoaded, onError } = useScriptLeaflet({
   injectStyles: props.injectStyles,
   scriptOptions: { trigger },
 })
@@ -90,6 +90,11 @@ const map = shallowRef<Leaflet.Map>()
 const isMapReady = shallowRef(false)
 const loadError = shallowRef(new Error('Leaflet failed to load'))
 let isUnmounted = false
+
+onError((error?: Error) => {
+  loadError.value = error ?? new Error('Leaflet failed to load')
+  emit('error', loadError.value)
+})
 
 const exposed: ScriptLeafletMapExpose = { leaflet, map, load }
 defineExpose<ScriptLeafletMapExpose>(exposed)
@@ -138,13 +143,6 @@ onMounted(() => {
     isMapReady.value = true
     emit('ready', exposed)
   })
-})
-
-watch(status, (value) => {
-  if (value !== 'error')
-    return
-  loadError.value = new Error('Leaflet failed to load')
-  emit('error', loadError.value)
 })
 
 watch(() => props.center, (center) => {

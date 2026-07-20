@@ -684,7 +684,7 @@
       {
         "name": "ScriptLeafletMarkerEvents",
         "kind": "interface",
-        "code": "interface ScriptLeafletMarkerEvents {\n  click: Leaflet.LeafletMouseEvent\n  dblclick: Leaflet.LeafletMouseEvent\n  mousedown: Leaflet.LeafletMouseEvent\n  mouseover: Leaflet.LeafletMouseEvent\n  mouseout: Leaflet.LeafletMouseEvent\n  contextmenu: Leaflet.LeafletMouseEvent\n  dragstart: Leaflet.DragEndEvent\n  drag: Leaflet.LeafletEvent\n  dragend: Leaflet.DragEndEvent\n  move: Leaflet.LeafletEvent\n}"
+        "code": "interface ScriptLeafletMarkerEvents {\n  click: Leaflet.LeafletMouseEvent\n  dblclick: Leaflet.LeafletMouseEvent\n  mousedown: Leaflet.LeafletMouseEvent\n  mouseover: Leaflet.LeafletMouseEvent\n  mouseout: Leaflet.LeafletMouseEvent\n  contextmenu: Leaflet.LeafletMouseEvent\n  dragstart: Leaflet.LeafletEvent\n  drag: Leaflet.LeafletEvent\n  dragend: Leaflet.DragEndEvent\n  move: Leaflet.LeafletEvent\n}"
       },
       {
         "name": "ScriptLeafletMarkerSlots",
@@ -3448,7 +3448,7 @@
       },
       {
         "name": "dragstart",
-        "type": "Leaflet.DragEndEvent",
+        "type": "Leaflet.LeafletEvent",
         "required": false
       },
       {

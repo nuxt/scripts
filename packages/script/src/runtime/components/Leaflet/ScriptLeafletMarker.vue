@@ -21,7 +21,7 @@ const emit = defineEmits<{
   mouseover: [event: Leaflet.LeafletMouseEvent]
   mouseout: [event: Leaflet.LeafletMouseEvent]
   contextmenu: [event: Leaflet.LeafletMouseEvent]
-  dragstart: [event: Leaflet.DragEndEvent]
+  dragstart: [event: Leaflet.LeafletEvent]
   drag: [event: Leaflet.LeafletEvent]
   dragend: [event: Leaflet.DragEndEvent]
   move: [event: Leaflet.LeafletEvent]
