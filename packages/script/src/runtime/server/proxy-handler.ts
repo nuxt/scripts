@@ -1,5 +1,5 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, setResponseHeader, setResponseStatus } from 'h3'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
 import {
@@ -131,20 +131,29 @@ export default defineEventHandler(async (event) => {
   const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
   const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
 
-  // Detect binary/compressed bodies that cannot be safely parsed as text.
-  // These must be passed through as raw bytes to avoid corruption:
-  // - content-encoding: transport-level compression (gzip, br, etc.)
-  // - application/octet-stream: explicitly binary content
-  // - ?compression=gzip-js: client-side compression (e.g. PostHog sends gzip bytes as text/plain)
   const originalHeaders = getHeaders(event)
   const originalQuery = getQuery(event)
-  const contentType = originalHeaders['content-type'] || ''
+  const contentType = originalHeaders['content-type']?.toLowerCase() || ''
   const compressionParam = (originalQuery.compression as string) || ''
-  const isBinaryBody = Boolean(
+  const method = event.method?.toUpperCase()
+  const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
+  const transformableBodyType = contentType.includes('application/x-www-form-urlencoded')
+    ? 'form'
+    : contentType.includes('json')
+      ? 'json'
+      : undefined
+
+  // Only parse formats whose structure is known. Opaque bodies may contain binary
+  // data despite a text content type, as with PostHog's gzip payloads.
+  const hasOpaqueBodyEncoding = Boolean(
     originalHeaders['content-encoding']
     || contentType.includes('octet-stream')
     || (compressionParam && COMPRESSION_RE.test(compressionParam)),
   )
+  const shouldTransformBody = isWriteMethod
+    && anyPrivacy
+    && !hasOpaqueBodyEncoding
+    && transformableBodyType !== undefined
 
   // Build target URL with stripped query params
   let targetUrl = targetBase + remainingPath
@@ -192,10 +201,9 @@ export default defineEventHandler(async (event) => {
     if (SENSITIVE_HEADERS.includes(lowerKey))
       continue
 
-    // Skip content-length when body will be modified by privacy transforms
-    // (preserved for binary passthrough and no-privacy paths)
+    // Skip content-length when body will be modified by privacy transforms.
     if (lowerKey === 'content-length') {
-      if (anyPrivacy && !isBinaryBody)
+      if (shouldTransformBody)
         continue
       headers[lowerKey] = value
       continue
@@ -266,100 +274,69 @@ export default defineEventHandler(async (event) => {
   }
 
   // Process request body: either stream through raw or read + transform
-  let body: string | Record<string, unknown> | unknown[] | undefined
+  let body: string | Record<string, unknown> | unknown[] | number | boolean | null | undefined
   let rawBody: unknown
   // When true, body is not read — the raw request stream is piped directly to upstream
   let passthroughBody = false
-  const method = event.method?.toUpperCase()
-  const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
 
   if (isWriteMethod) {
-    if (isBinaryBody || !anyPrivacy) {
-      // No transforms needed — don't read the body at all, stream it through directly.
+    if (!shouldTransformBody) {
+      // No safe transforms available or needed. Stream the original bytes directly.
       passthroughBody = true
     }
-    else {
-      // Text body with privacy transforms — parse and strip fingerprinting
-      rawBody = await readBody(event)
+    else if (transformableBodyType === 'form') {
+      const formBody = await readRawBody(event)
+      rawBody = formBody
 
-      if (rawBody != null) {
-        if (Array.isArray(rawBody)) {
-          // JSON array body (e.g. batch payloads) — strip each element individually
-          body = rawBody.map(item =>
-            item && typeof item === 'object' && !Array.isArray(item)
-              ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
-              : item,
-          )
-        }
-        else if (typeof rawBody === 'object') {
-          // JSON object body - strip fingerprinting recursively
-          body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
-        }
-        else if (typeof rawBody === 'string') {
-          if (contentType.includes('application/x-www-form-urlencoded')) {
-            // URL-encoded form data — preserve repeated keys (e.g. ?tag=a&tag=b)
-            const params = new URLSearchParams(rawBody)
-            const obj: Record<string, unknown> = {}
-            for (const [key, value] of params.entries()) {
-              if (key in obj) {
-                // Repeated key → accumulate as array
-                const existing = obj[key]
-                obj[key] = Array.isArray(existing) ? [...existing, value] : [existing, value]
-              }
-              else {
-                obj[key] = value
-              }
-            }
-            const stripped = stripPayloadFingerprinting(obj, privacy)
-            // Reconstruct form data, expanding arrays back to repeated keys
-            const out = new URLSearchParams()
-            for (const [k, v] of Object.entries(stripped)) {
-              if (v === undefined || v === null)
-                continue
-              if (Array.isArray(v)) {
-                for (const item of v)
-                  out.append(k, typeof item === 'string' ? item : JSON.stringify(item))
-              }
-              else {
-                out.append(k, typeof v === 'string' ? v : JSON.stringify(v))
-              }
-            }
-            body = out.toString()
+      if (formBody != null) {
+        // Preserve repeated keys while applying privacy transforms to form fields.
+        const params = new URLSearchParams(formBody)
+        const formRecord: Record<string, unknown> = Object.create(null)
+        for (const [key, value] of params.entries()) {
+          if (Object.hasOwn(formRecord, key)) {
+            const existing = formRecord[key]
+            formRecord[key] = Array.isArray(existing) ? [...existing, value] : [existing, value]
           }
           else {
-            // Try parsing as JSON: explicit JSON content-type, or heuristic for
-            // sendBeacon payloads that send JSON with text/plain content-type
-            const maybeJson = contentType.includes('json')
-              || (rawBody.startsWith('{') || rawBody.startsWith('['))
-            if (maybeJson) {
-              let parsed: unknown = null
-              try {
-                parsed = JSON.parse(rawBody)
-              }
-              catch { /* not valid JSON — fall through to raw */ }
-
-              if (Array.isArray(parsed)) {
-                body = parsed.map(item =>
-                  item && typeof item === 'object' && !Array.isArray(item)
-                    ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
-                    : item,
-                )
-              }
-              else if (parsed && typeof parsed === 'object') {
-                body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
-              }
-              else {
-                body = rawBody
-              }
-            }
-            else {
-              body = rawBody
-            }
+            formRecord[key] = value
           }
         }
-        else {
-          body = rawBody as string
+
+        const stripped = stripPayloadFingerprinting(formRecord, privacy)
+        const transformedValues = new Map<string, unknown[]>()
+        for (const [key, value] of Object.entries(stripped)) {
+          transformedValues.set(key, Array.isArray(value) ? [...value] : [value])
         }
+
+        const transformed = new URLSearchParams()
+        for (const [key] of params.entries()) {
+          const value = transformedValues.get(key)?.shift()
+          if (value === undefined || value === null)
+            continue
+          transformed.append(key, typeof value === 'string' ? value : JSON.stringify(value))
+        }
+        body = transformed.toString()
+      }
+    }
+    else {
+      // JSON body with privacy transforms.
+      rawBody = await readBody(event)
+
+      if (Array.isArray(rawBody)) {
+        // JSON array body (e.g. batch payloads) — strip each element individually
+        body = rawBody.map(item =>
+          item && typeof item === 'object' && !Array.isArray(item)
+            ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+            : item,
+        )
+      }
+      else if (rawBody !== null && typeof rawBody === 'object') {
+        // JSON object body, strip fingerprinting recursively.
+        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
+      }
+      else {
+        // JSON primitives do not contain fingerprinting fields, but must retain JSON encoding.
+        body = rawBody as string | number | boolean | null | undefined
       }
     }
   }
@@ -401,7 +378,7 @@ export default defineEventHandler(async (event) => {
     fetchBody = getRequestWebStream(event) as BodyInit | undefined
   }
   else if (body !== undefined) {
-    fetchBody = typeof body === 'string' ? body : JSON.stringify(body)
+    fetchBody = transformableBodyType === 'json' ? JSON.stringify(body) : String(body)
   }
 
   let response: Response
