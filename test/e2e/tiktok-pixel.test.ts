@@ -60,7 +60,9 @@ describe('tiktokPixel', async () => {
           .map(s => s.src)
           .find((s) => {
             try {
-              return new URL(s).hostname === 'analytics.tiktok.com'
+              const scriptUrl = new URL(s)
+              return scriptUrl.hostname === 'analytics.tiktok.com'
+                && scriptUrl.pathname === '/i18n/pixel/events.js'
             }
             catch {
               return false
