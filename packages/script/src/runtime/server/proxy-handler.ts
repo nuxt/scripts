@@ -137,8 +137,11 @@ export default defineEventHandler(async (event) => {
   const compressionParam = (originalQuery.compression as string) || ''
   const method = event.method?.toUpperCase()
   const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
-  const isFormBody = contentType.includes('application/x-www-form-urlencoded')
-  const isJsonBody = contentType.includes('json')
+  const transformableBodyType = contentType.includes('application/x-www-form-urlencoded')
+    ? 'form'
+    : contentType.includes('json')
+      ? 'json'
+      : undefined
 
   // Only parse formats whose structure is known. Opaque bodies may contain binary
   // data despite a text content type, as with PostHog's gzip payloads.
@@ -150,7 +153,7 @@ export default defineEventHandler(async (event) => {
   const shouldTransformBody = isWriteMethod
     && anyPrivacy
     && !hasOpaqueBodyEncoding
-    && (isJsonBody || isFormBody)
+    && transformableBodyType !== undefined
 
   // Build target URL with stripped query params
   let targetUrl = targetBase + remainingPath
@@ -271,7 +274,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Process request body: either stream through raw or read + transform
-  let body: string | Record<string, unknown> | unknown[] | undefined
+  let body: string | Record<string, unknown> | unknown[] | number | boolean | null | undefined
   let rawBody: unknown
   // When true, body is not read — the raw request stream is piped directly to upstream
   let passthroughBody = false
@@ -281,16 +284,16 @@ export default defineEventHandler(async (event) => {
       // No safe transforms available or needed. Stream the original bytes directly.
       passthroughBody = true
     }
-    else if (isFormBody) {
+    else if (transformableBodyType === 'form') {
       const formBody = await readRawBody(event)
       rawBody = formBody
 
       if (formBody != null) {
         // Preserve repeated keys while applying privacy transforms to form fields.
         const params = new URLSearchParams(formBody)
-        const formRecord: Record<string, unknown> = {}
+        const formRecord: Record<string, unknown> = Object.create(null)
         for (const [key, value] of params.entries()) {
-          if (key in formRecord) {
+          if (Object.hasOwn(formRecord, key)) {
             const existing = formRecord[key]
             formRecord[key] = Array.isArray(existing) ? [...existing, value] : [existing, value]
           }
@@ -300,17 +303,17 @@ export default defineEventHandler(async (event) => {
         }
 
         const stripped = stripPayloadFingerprinting(formRecord, privacy)
-        const transformed = new URLSearchParams()
+        const transformedValues = new Map<string, unknown[]>()
         for (const [key, value] of Object.entries(stripped)) {
+          transformedValues.set(key, Array.isArray(value) ? [...value] : [value])
+        }
+
+        const transformed = new URLSearchParams()
+        for (const [key] of params.entries()) {
+          const value = transformedValues.get(key)?.shift()
           if (value === undefined || value === null)
             continue
-          if (Array.isArray(value)) {
-            for (const item of value)
-              transformed.append(key, typeof item === 'string' ? item : JSON.stringify(item))
-          }
-          else {
-            transformed.append(key, typeof value === 'string' ? value : JSON.stringify(value))
-          }
+          transformed.append(key, typeof value === 'string' ? value : JSON.stringify(value))
         }
         body = transformed.toString()
       }
@@ -319,46 +322,21 @@ export default defineEventHandler(async (event) => {
       // JSON body with privacy transforms.
       rawBody = await readBody(event)
 
-      if (rawBody != null) {
-        if (Array.isArray(rawBody)) {
-          // JSON array body (e.g. batch payloads) — strip each element individually
-          body = rawBody.map(item =>
-            item && typeof item === 'object' && !Array.isArray(item)
-              ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
-              : item,
-          )
-        }
-        else if (typeof rawBody === 'object') {
-          // JSON object body, strip fingerprinting recursively.
-          body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
-        }
-        else if (typeof rawBody === 'string') {
-          // readBody may return a string for JSON primitives or malformed JSON.
-          let parsed: unknown = null
-          try {
-            parsed = JSON.parse(rawBody)
-          }
-          catch {
-            // Preserve malformed JSON for the upstream service to handle.
-          }
-
-          if (Array.isArray(parsed)) {
-            body = parsed.map(item =>
-              item && typeof item === 'object' && !Array.isArray(item)
-                ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
-                : item,
-            )
-          }
-          else if (parsed && typeof parsed === 'object') {
-            body = stripPayloadFingerprinting(parsed as Record<string, unknown>, privacy)
-          }
-          else {
-            body = rawBody
-          }
-        }
-        else {
-          body = rawBody as string
-        }
+      if (Array.isArray(rawBody)) {
+        // JSON array body (e.g. batch payloads) — strip each element individually
+        body = rawBody.map(item =>
+          item && typeof item === 'object' && !Array.isArray(item)
+            ? stripPayloadFingerprinting(item as Record<string, unknown>, privacy)
+            : item,
+        )
+      }
+      else if (rawBody !== null && typeof rawBody === 'object') {
+        // JSON object body, strip fingerprinting recursively.
+        body = stripPayloadFingerprinting(rawBody as Record<string, unknown>, privacy)
+      }
+      else {
+        // JSON primitives do not contain fingerprinting fields, but must retain JSON encoding.
+        body = rawBody as string | number | boolean | null | undefined
       }
     }
   }
@@ -400,7 +378,7 @@ export default defineEventHandler(async (event) => {
     fetchBody = getRequestWebStream(event) as BodyInit | undefined
   }
   else if (body !== undefined) {
-    fetchBody = typeof body === 'string' ? body : JSON.stringify(body)
+    fetchBody = transformableBodyType === 'json' ? JSON.stringify(body) : String(body)
   }
 
   let response: Response
