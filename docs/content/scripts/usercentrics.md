@@ -8,9 +8,9 @@ links:
     size: xs
 ---
 
-[Usercentrics](https://usercentrics.com) is a Consent Management Platform (CMP) used to collect, store, and signal end-user consent for third-party scripts under GDPR, CCPA, and the IAB TCF v2 framework.
+[Usercentrics](https://usercentrics.com) is a Consent Management Platform (CMP) for recording consent choices and controlling third-party services.
 
-Nuxt Scripts ships [`useScriptUsercentrics()`{lang="ts"}](/scripts/usercentrics) so you can boot the CMP v3 ("Web CMP") loader, expose typed access to the `window.__ucCmp` programmatic API, and wire other registry scripts' consent triggers directly to Usercentrics' `UC_UI_CMP_EVENT` browser event.
+[`useScriptUsercentrics()`{lang="ts"}](/scripts/usercentrics) loads the CMP v3 ("Web CMP") script, types the `window.__ucCmp` API, and exposes the `UC_UI_CMP_EVENT` changes needed to trigger other registry scripts.
 
 ::script-stats
 ::
@@ -18,11 +18,12 @@ Nuxt Scripts ships [`useScriptUsercentrics()`{lang="ts"}](/scripts/usercentrics)
 ::script-docs
 ::
 
-The composable comes with the following defaults:
-- **Trigger: Client** Script will load when Nuxt is hydrating.
-- **Bundle / proxy: off** The CMP is the consent surface itself, so it must hit the vendor origin directly. It is also exempt from consent gating.
+The composable uses these defaults:
 
-You can access the `ucCmp` object as a proxy directly or await the `$script` promise. It's recommended to use the proxy for any void / Promise-returning calls.
+- **Trigger: `onNuxtReady`.** The script loads after Nuxt hydration, using the module-wide default.
+- **Bundle and proxy: off.** The CMP loads directly from Usercentrics and is not consent-gated.
+
+Access `ucCmp` through the proxy, or await `$script` when you need the loaded object.
 
 ::code-group
 
@@ -87,11 +88,11 @@ useScriptGoogleAnalytics({
 </template>
 ```
 
-`onConsentChange` returns a teardown function so you can unsubscribe inside `onScopeDispose`. The callback receives the raw `UC_UI_CMP_EVENT` detail (e.g. `{ type: 'ACCEPT_ALL' | 'DENY_ALL' | 'SAVE', ... }`).
+`onConsentChange` returns a teardown function for use with `onScopeDispose`. Its callback receives the raw `UC_UI_CMP_EVENT` detail, such as `{ type: 'ACCEPT_ALL' | 'DENY_ALL' | 'SAVE', ... }`.
 
 ## Open the consent UI
 
-`__ucCmp`'s methods are no-ops until the CMP API is ready. Use `consent.whenReady()`{lang="ts"} to await it, or call the helpers on `consent` directly (they no-op while the CMP boots):
+Call `consent.whenReady()`{lang="ts"} before the CMP's `UC_CMP_API_READY` event when you need to await initialization. The current helper only listens for the next event; it does not detect a CMP that is already ready, so a later call can remain pending. The other `consent` helpers call `window.__ucCmp` when it is present and otherwise return without doing anything.
 
 ```vue
 <script setup lang="ts">
@@ -120,7 +121,7 @@ async function logConsent() {
 
 ## Auto Blocking
 
-If your Usercentrics ruleset uses **Auto Blocking** (rather than Manual Blocking), set `autoblocker: true` to inject the autoblocker module ahead of the loader:
+If your Usercentrics ruleset uses **Auto Blocking**, set `autoblocker: true` to inject the autoblocker module ahead of the loader:
 
 ```ts
 useScriptUsercentrics({
@@ -129,24 +130,11 @@ useScriptUsercentrics({
 })
 ```
 
+Usercentrics requires the autoblocker to run before other service scripts; see its [direct implementation guide](https://support.usercentrics.com/hc/en-us/articles/19446626144540-Direct-implementation-and-markup-guide). Because the composable adds this option when it runs on the client, verify the ordering in your rendered app before relying on it for consent enforcement.
+
 ::script-types
 ::
 
-## Example
-
-Loading Usercentrics through `app.vue` when Nuxt is ready.
-
-```vue [app.vue]
-<script setup lang="ts">
-useScriptUsercentrics({
-  rulesetId: 'your-ruleset-id',
-  scriptOptions: {
-    trigger: 'onNuxtReady'
-  }
-})
-</script>
-```
-
 ## Partytown
 
-Do not run Usercentrics under Partytown. The `__ucCmp` API is method-heavy and unsafe to forward across the worker boundary, and the CMP needs main-thread DOM access to render its UI overlays.
+Do not run Usercentrics under Partytown. Its CMP renders DOM overlays and its `__ucCmp` methods are not configured for worker forwarding.

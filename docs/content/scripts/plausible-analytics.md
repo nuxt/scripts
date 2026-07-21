@@ -1,6 +1,6 @@
 ---
 title: Plausible Analytics
-description: Use Plausible Analytics in your Nuxt app.
+description: Load Plausible's site-specific or legacy tracker, including custom self-hosted endpoints.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Plausible Analytics](https://plausible.io/) is a privacy-friendly analytics solution for Nuxt Apps, allowing you to track your website's traffic without compromising your users' privacy.
+[Plausible Analytics](https://plausible.io/) is a privacy-focused web analytics platform. This registry entry supports both Plausible's current site-specific script and its legacy domain-based script.
 
 ::script-stats
 ::
@@ -18,21 +18,26 @@ links:
 
 ### Self-hosted Plausible
 
-If you use a self-hosted version of Plausible, provide an explicit src for the script so that the browser sends API events to the correct endpoint.
+If you use a self-hosted version of Plausible, provide both the script URL and the event endpoint. Changing the script URL alone does not change the endpoint passed to Plausible.
 
 ```ts
 useScriptPlausibleAnalytics({
+  endpoint: 'https://my-self-hosted-plausible.io/api/event',
   scriptInput: {
     src: 'https://my-self-hosted-plausible.io/js/script.js'
   }
 })
 ```
 
-**Note:** Find the `scriptId` in your Plausible dashboard under **Site Installation** in your site settings.
+For Plausible Cloud's current script, find the `scriptId` under **Site Installation** in your site settings. Plausible's [script update guide](https://plausible.io/docs/script-update-guide) explains the site-specific URL and the newer `plausible.init()`{lang="ts"} options.
 
-**Extracting your Script ID:**
+::callout{color="amber"}
+The current wrapper builds `plausible.init()`{lang="ts"} options but places its initialization hook inside `scriptOptions`, where `useRegistryScript` does not run it. With `scriptId`, options such as `customProperties`, `endpoint`, `fileDownloads`, `hashBasedRouting`, `autoCapturePageviews`, and `captureOnLocalhost` are therefore not applied; `trackForms` is not forwarded either. The legacy self-hosted example above still uses `data-api`, although development also logs a missing `scriptId`/`domain` warning for that valid custom-source setup.
+::
 
-Plausible provides you with a script tag like this:
+### Extract a Script ID
+
+A current Plausible installation tag looks like this:
 
 ```html
 <script async src="https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js"></script>

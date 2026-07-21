@@ -1,6 +1,6 @@
 ---
 title: Umami Analytics
-description: Use Umami Analytics in your Nuxt app.
+description: Load Umami, identify sessions, and inspect or filter event payloads before they are sent.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Umami](https://umami.is/) collects all the metrics you care about to help you make better decisions.
+[Umami](https://umami.is/) is an open-source web analytics platform that can run in Umami Cloud or on your own server.
 
 ::script-stats
 ::
@@ -18,7 +18,7 @@ links:
 
 ### Self-hosted Umami
 
-If you use a self-hosted version of Umami, set `hostUrl` to your Umami origin. This is the provider-specific way to tell Umami where to send events.
+If you use a self-hosted version of Umami, set `hostUrl` to your Umami origin. This maps to Umami's documented [`data-host-url`](https://docs.umami.is/docs/tracker-configuration#data-host-url) setting and tells the tracker where to send events.
 
 ```ts
 useScriptUmamiAnalytics({
@@ -29,36 +29,36 @@ useScriptUmamiAnalytics({
 
 Use `scriptInput.src` only if you also need to override the script URL itself.
 
-## Advanced Features
+## Identify Sessions and Filter Data
 
-### Session Identification
+### Identify a Session
 
-Umami v2.18.0+ supports setting unique session IDs using the `identify` function. You can pass either a string (unique ID) or an object with session data:
+Umami's [`identify`](https://docs.umami.is/docs/tracker-functions#sessions) function accepts either a distinct ID or an object with session data:
 
 ```ts
 const { proxy } = useScriptUmamiAnalytics({
   websiteId: 'YOUR_WEBSITE_ID'
 })
 
-// Using a unique string ID
+// Set a distinct ID
 proxy.identify('user-12345')
 
-// Using session data object
+// Attach data to the session
 proxy.identify({
   userId: 'user-12345',
   plan: 'premium'
 })
 ```
 
-### Data Filtering with beforeSend
+### Filter Data with `beforeSend`
 
-The `beforeSend` option allows you to inspect, modify, or cancel data before it's sent to Umami. This is useful for implementing custom privacy controls or data filtering:
+Use [`beforeSend`](https://docs.umami.is/docs/tracker-configuration#data-before-send) to inspect, modify, or cancel a payload before Umami receives it:
 
 ```ts
 useScriptUmamiAnalytics({
   websiteId: 'YOUR_WEBSITE_ID',
   beforeSend: (type, payload) => {
-    // Log what's being sent (for debugging)
+    // Log what's being sent while debugging
     console.log('Sending to Umami:', type, payload)
 
     // Filter out sensitive data

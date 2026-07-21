@@ -1,6 +1,6 @@
 ---
 title: Stripe
-description: Use Stripe in your Nuxt app.
+description: Load Stripe.js programmatically or embed a deferred Stripe Pricing Table.
 links:
   - label: useScriptStripe
     icon: i-simple-icons-github
@@ -12,11 +12,12 @@ links:
     size: xs
 ---
 
-[Stripe](https://stripe.com) is a popular payment gateway that allows you to accept payments online.
+[Stripe](https://stripe.com) provides payment APIs and hosted checkout components.
 
 Nuxt Scripts provides two Stripe features:
+
 - [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable which loads the script `https://js.stripe.com/basil/stripe.js` by default. Use the `version` option to [pin a Stripe.js SDK release](https://docs.stripe.com/sdks/stripejs-versioning) (e.g. `acacia`, `clover`, `dahlia`).
-- `ScriptStripePricingTable` component that allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site using `https://js.stripe.com/v3/pricing-table.js`.
+- `ScriptStripePricingTable` component for embedding a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) with `https://js.stripe.com/v3/pricing-table.js`.
 
 ::script-stats
 ::
@@ -26,8 +27,7 @@ Nuxt Scripts provides two Stripe features:
 
 ## Types
 
-To use the Stripe with full TypeScript support, you will need
-to install the `@stripe/stripe-js` dependency.
+Install `@stripe/stripe-js` for full TypeScript support.
 
 ```bash
 pnpm add -D @stripe/stripe-js
@@ -35,7 +35,7 @@ pnpm add -D @stripe/stripe-js
 
 ## Loading Globally
 
-Stripe recommends loading their script globally on your app to improve fraud detection.
+Stripe recommends loading Stripe.js on every page so its [advanced fraud detection](https://docs.stripe.com/disputes/prevention/advanced-fraud-detection) can observe browsing behavior before checkout.
 
 ::code-group
 
@@ -66,10 +66,9 @@ export default defineNuxtConfig({
 
 ## ScriptStripePricingTable
 
-The `ScriptStripePricingTable` component allows you to embed a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) on your site
-in an optimized way.
+`ScriptStripePricingTable` embeds a [Stripe Pricing Table](https://docs.stripe.com/payments/checkout/pricing-table) and defers its script until the component is visible.
 
-To improve performance it will load the table when it's visible using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers).
+An [Element Event Trigger](/docs/guides/script-triggers#element-event-triggers) delays the pricing table script until the component becomes visible.
 
 ::callout
 You'll need to create your own [Pricing Table](https://dashboard.stripe.com/pricing-tables) before proceeding.
@@ -98,31 +97,36 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ## [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"}
 
-The [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} composable lets you have fine-grain control over the Stripe SDK. It provides a way to load the Stripe SDK and interact with it programmatically.
+Use [`useScriptStripe()`{lang="ts"}](/scripts/stripe){lang="ts"} when you need to load Stripe.js and call it programmatically.
 
 ```ts
 export function useScriptStripe<T extends StripeApi>(_options?: StripeInput) {}
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+For triggers and other script options, see [Registry Scripts](/docs/guides/registry-scripts).
 
 ::script-types
 ::
 
 ## Example
 
-Loading the Stripe SDK and using it to create a payment element.
+This mounts a Payment Element for a $10.99 USD payment. You still need to finish the payment on your server; Stripe's [deferred-intent guide](https://docs.stripe.com/payments/accept-a-payment-deferred) covers the complete flow.
 
 ```vue
 <script setup lang="ts">
-const paymentEl = ref(null)
+const paymentEl = ref<HTMLElement | null>(null)
 const { onLoaded } = useScriptStripe()
 onMounted(() => {
   onLoaded(({ Stripe }) => {
     const stripe = Stripe('YOUR_STRIPE_KEY')
-    const elements = stripe.elements()
-    const paymentElement = elements.create('payment', { /* pass keys */})
-    paymentElement.mount(paymentEl.value)
+    const elements = stripe.elements({
+      mode: 'payment',
+      amount: 1099,
+      currency: 'usd',
+    })
+    const paymentElement = elements.create('payment')
+    if (paymentEl.value)
+      paymentElement.mount(paymentEl.value)
   })
 })
 </script>

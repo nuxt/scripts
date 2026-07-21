@@ -1,6 +1,6 @@
 ---
 title: Vercel Analytics
-description: Use Vercel Analytics in your Nuxt app.
+description: Load Vercel Web Analytics and send page views or custom events.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Vercel Analytics](https://vercel.com/docs/analytics) provides lightweight, privacy-friendly web analytics for your Nuxt app. It tracks page views and custom events with zero configuration when deployed on [Vercel](https://vercel.com).
+[Vercel Web Analytics](https://vercel.com/docs/analytics) records page views and custom events. Its [Privacy and Compliance](https://vercel.com/docs/analytics/privacy-policy) guide documents the collection and visitor identification model.
 
 ::script-stats
 ::
@@ -18,7 +18,7 @@ links:
 
 ### Non-Vercel Deployment
 
-When deploying outside of Vercel, provide your DSN explicitly:
+When deploying outside [Vercel](https://vercel.com), provide your DSN explicitly. Its [analytics package reference](https://vercel.com/docs/analytics/package) documents the `dsn` option for this case:
 
 ```ts
 useScriptVercelAnalytics({
@@ -28,13 +28,13 @@ useScriptVercelAnalytics({
 
 ### First-Party Mode
 
-First-party mode is auto-enabled for Vercel Analytics. Nuxt bundles the analytics script locally and proxies data collection requests through your server. This prevents ad blockers from blocking analytics and removes sensitive data from third-party requests.
+This registry entry enables first-party mode. Nuxt bundles the script locally and proxies intake requests through your server. The proxy anonymizes the client IP to a subnet, but it does not redact event bodies or URLs.
 
 ```ts
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      vercelAnalytics: { trigger: 'onNuxtReady' },
+      vercelAnalytics: { trigger: 'client' },
     }
   }
 })
@@ -42,9 +42,13 @@ export default defineNuxtConfig({
 
 ## Defaults
 
-- **Trigger: Client** Script will load when Nuxt is hydrating to keep web vital metrics accurate.
+- **Trigger: Client** The script loads during Nuxt hydration to keep Web Vitals metrics accurate.
 
-You can access the `track` and `pageview` methods as a proxy directly or await the `$script` promise to access the object. It's recommended to use the proxy for any void functions.
+The registry fixes this trigger to `client`. A `scriptOptions.trigger` value passed by the caller is overwritten.
+
+The build environment selects the file: development builds use `script.debug.js`, while production builds use `script.js`. The `mode` option sets Vercel's `window.vam` runtime value; it does not change that file selection. The current `debug` mapping only forwards `debug: false` in development, so `debug: true` does not enable the debug script in a production build.
+
+Call the void-returning `track` and `pageview` methods through the proxy. You can also await `$script` to access the loaded object.
 
 ::code-group
 
@@ -67,15 +71,11 @@ onLoaded(({ track }) => {
 
 ## Example
 
-Loading Vercel Analytics through `app.vue` when Nuxt is ready.
+Load Vercel Analytics through `app.vue`:
 
 ```vue [app.vue]
 <script setup lang="ts">
-const { proxy } = useScriptVercelAnalytics({
-  scriptOptions: {
-    trigger: 'onNuxtReady',
-  },
-})
+const { proxy } = useScriptVercelAnalytics()
 
 // Track a custom event
 proxy.track('signup', { plan: 'pro' })
@@ -84,7 +84,7 @@ proxy.track('signup', { plan: 'pro' })
 
 ### Manual Tracking
 
-If you want full control over what gets tracked, disable automatic tracking and call `track` / `pageview` manually.
+Disable automatic tracking and call `track` or `pageview` yourself:
 
 ```vue [app.vue]
 <script setup lang="ts">
@@ -102,7 +102,7 @@ proxy.pageview({ path: '/custom-page' })
 
 ### beforeSend
 
-Use `beforeSend` to filter or modify events before they reach Vercel. Return `null` to cancel an event.
+Use `beforeSend` to filter or modify events before they reach Vercel. Return `null` to cancel an event. This is also where Vercel recommends [redacting sensitive URL data](https://vercel.com/docs/analytics/redacting-sensitive-data).
 
 ```vue [app.vue]
 <script setup lang="ts">

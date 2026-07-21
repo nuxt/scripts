@@ -1,6 +1,6 @@
 ---
 title: Crisp
-description: Show performance-optimized Crisp in your Nuxt app.
+description: Add a lazy-loaded Crisp chat launcher to your Nuxt app.
 links:
   - label: useScriptCrisp
     icon: i-simple-icons-github
@@ -12,9 +12,9 @@ links:
     size: xs
 ---
 
-[Crisp](https://crisp.chat/) is a customer messaging platform that lets you communicate with your customers through chat, email, and more.
+[Crisp](https://crisp.chat/) combines live chat, email, and other customer-messaging channels.
 
-Nuxt Scripts provides a [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="ts"} composable and a headless Facade Component [`<ScriptCrisp>`{lang="html"}](#scriptcrisp){lang="html"} component to interact with crisp.
+Use [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="ts"} for direct SDK calls, or [`<ScriptCrisp>`{lang="html"}](#scriptcrisp){lang="html"} for a custom chat launcher.
 
 ::script-stats
 ::
@@ -24,11 +24,7 @@ Nuxt Scripts provides a [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="t
 
 ## [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"}
 
-The [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"} component is headless Facade Component wrapping the [`useScriptCrisp()`{lang="ts"}](#usescriptcrisp){lang="ts"} composable, providing a simple, performance optimized way to load Crisp in your Nuxt app.
-
-It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading crisp when specific elements events happen.
-
-By default, it will load on the `click` DOM event.
+The headless facade holds back the Crisp SDK until its [element trigger](/docs/guides/script-triggers#element-event-triggers) fires. It listens for `click` by default.
 
 ### Demo
 
@@ -44,7 +40,7 @@ const isLoaded = ref(false)
 <template>
   <div class="not-prose">
     <div class="flex items-center justify-center p-5">
-      <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp">
+      <ScriptCrisp id="b1021910-7ace-425a-9ef5-07f49e5ce417" class="crisp" @ready="isLoaded = true">
         <template #awaitingLoad>
           <div class="crisp-icon" />
         </template>
@@ -54,7 +50,7 @@ const isLoaded = ref(false)
       </ScriptCrisp>
     </div>
     <div class="text-center">
-      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load crisp script" />
+      <UAlert v-if="!isLoaded" class="mb-5" size="sm" color="blue" variant="soft" title="Click to load" description="Clicking the button to the right will load the Crisp script." />
       <UAlert v-else color="green" variant="soft" title="Crisp is loaded" description="The Crisp Facade component is no longer being displayed." />
     </div>
   </div>
@@ -71,7 +67,7 @@ const isLoaded = ref(false)
   bottom: 20px;
   right: 24px;
   z-index: 100000;
-  box-shadow: 0 4px 10px 0 rgba(0,0,0!important,.05) !important;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.05);
 }
 .crisp-icon {
   position: absolute;
@@ -99,9 +95,9 @@ const isLoaded = ref(false)
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-#### With Environment Variables
+#### With environment variables
 
-If you prefer to configure your id using environment variables.
+You can configure the Crisp website ID with an environment variable.
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({
@@ -110,7 +106,7 @@ export default defineNuxtConfig({
       crisp: { trigger: 'onNuxtReady' },
     }
   },
-  // you need to provide a runtime config to access the environment variables
+  // Public runtime config receives the environment variable.
   runtimeConfig: {
     public: {
       scripts: {
@@ -129,11 +125,16 @@ NUXT_PUBLIC_SCRIPTS_CRISP_ID=<YOUR_ID>
 
 ### Events
 
-The [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"} component emits a single `ready` event when Crisp loads.
+The [`<ScriptCrisp>`{lang="html"}](/scripts/crisp){lang="html"} component emits `ready` after it mounts the chatbox and `error` if the script fails to load.
+
+::callout{color="amber"}
+The current template checks `status === 'loading' || !isReady` before its `error` branch, so the named `#error` slot is unreachable. Listen for `@error` and render fallback UI outside the component until that ordering bug is fixed.
+::
 
 ```ts
 const emits = defineEmits<{
-  ready: [crisp: Crisp]
+  ready: [crisp: ReturnType<typeof useScriptCrisp>]
+  error: []
 }>()
 ```
 
@@ -145,7 +146,7 @@ function onReady(crisp) {
 </script>
 
 <template>
-  <ScriptCrisp @ready="onReady" />
+  <ScriptCrisp id="YOUR_ID" @ready="onReady" />
 </template>
 ```
 
@@ -153,11 +154,11 @@ function onReady(crisp) {
 
 **awaitingLoad**
 
-This slot displays content while Crisp is loading.
+This slot displays content while Crisp waits for its configured trigger.
 
 ```vue
 <template>
-  <ScriptCrisp>
+  <ScriptCrisp id="YOUR_ID">
     <template #awaitingLoad>
       <div style="width: 54px; height: 54px; border-radius: 54px; cursor: pointer; background-color: #1972F5;">
         chat!
@@ -171,11 +172,11 @@ This slot displays content while Crisp is loading.
 
 This slot displays content while Crisp is loading.
 
-Tip: You should use the `ScriptLoadingIndicator` by default for accessibility and UX.
+`ScriptLoadingIndicator` provides the module's standard accessible loading state.
 
 ```vue
 <template>
-  <ScriptCrisp>
+  <ScriptCrisp id="YOUR_ID">
     <template #loading>
       <div class="bg-blue-500 text-white p-5">
         Loading...
@@ -187,22 +188,20 @@ Tip: You should use the `ScriptLoadingIndicator` by default for accessibility an
 
 ## [`useScriptCrisp()`{lang="ts"}](/scripts/crisp){lang="ts"}
 
-The [`useScriptCrisp()`{lang="ts"}](/scripts/crisp){lang="ts"} composable lets you have fine-grain control over Crisp SDK. It provides a way to load crisp SDK and interact with it programmatically.
+Use [`useScriptCrisp()`{lang="ts"}](/scripts/crisp){lang="ts"} when you need to call Crisp without the launcher component.
 
 ```ts
 export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {}
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
-
-For more information, please refer to the [Crisp API documentation](https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/dollar-crisp/).
+See [Registry Scripts](/docs/guides/registry-scripts) for trigger and loading options, and the [Crisp API documentation](https://docs.crisp.chat/guides/chatbox-sdks/web-sdk/dollar-crisp/) for available commands.
 
 ::script-types
 ::
 
 ## Example
 
-Loading the Crisp SDK and interacting with it programmatically.
+Call Crisp through the proxy:
 
 ```vue
 <script setup lang="ts">

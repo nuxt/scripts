@@ -1,6 +1,6 @@
 ---
 title: Intercom
-description: Use Intercom in your Nuxt app.
+description: Load Intercom through a typed command queue or a click-triggered custom launcher.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -12,9 +12,9 @@ links:
     size: xs
 ---
 
-[Intercom](https://www.intercom.com/) is a customer messaging platform that helps you build better customer relationships.
+[Intercom](https://www.intercom.com/) provides an in-app messenger for customer conversations.
 
-Nuxt Scripts provides a [`useScriptIntercom()`{lang="ts"}](#usescriptintercom){lang="ts"} composable and a headless Facade Component [`<ScriptIntercom>`{lang="html"}](#scriptintercom){lang="html"} component to interact with Intercom.
+Use [`useScriptIntercom()`{lang="ts"}](#usescriptintercom){lang="ts"} for direct API calls, or [`<ScriptIntercom>`{lang="html"}](#scriptintercom){lang="html"} for a custom messenger launcher.
 
 ::script-stats
 ::
@@ -24,12 +24,7 @@ Nuxt Scripts provides a [`useScriptIntercom()`{lang="ts"}](#usescriptintercom){l
 
 ## [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"}
 
-
-The [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"} component is headless Facade Component wrapping the [`useScriptIntercom()`{lang="ts"}](#usescriptintercom){lang="ts"} composable, providing a simple, performance optimized way to load Intercom in your Nuxt app.
-
-It's optimized for performance by using the [Element Event Triggers](/docs/guides/script-triggers#element-event-triggers), only loading Intercom when specific elements events happen.
-
-By default, it will load on the `click` DOM event.
+The headless facade holds back Intercom until its [element trigger](/docs/guides/script-triggers#element-event-triggers) fires. It listens for `click` by default.
 
 ### Demo
 
@@ -44,7 +39,7 @@ const isLoaded = ref(false)
 
 <template>
   <div>
-    <ScriptIntercom app-id="akg5rmxb" api-base="https://api-iam.intercom.io" alignment="left" :horizontal-padding="50" class="intercom" @ready="isLoaded = true">
+    <ScriptIntercom app-id="akg5rmxb" alignment="left" :horizontal-padding="50" class="intercom" @ready="isLoaded = true">
       <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px;">
         <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 28 32"><path d="M28 32s-4.714-1.855-8.527-3.34H3.437C1.54 28.66 0 27.026 0 25.013V3.644C0 1.633 1.54 0 3.437 0h21.125c1.898 0 3.437 1.632 3.437 3.645v18.404H28V32zm-4.139-11.982a.88.88 0 00-1.292-.105c-.03.026-3.015 2.681-8.57 2.681-5.486 0-8.517-2.636-8.571-2.684a.88.88 0 00-1.29.107 1.01 1.01 0 00-.219.708.992.992 0 00.318.664c.142.128 3.537 3.15 9.762 3.15 6.226 0 9.621-3.022 9.763-3.15a.992.992 0 00.317-.664 1.01 1.01 0 00-.218-.707z" /></svg>
       </div>
@@ -79,9 +74,20 @@ const isLoaded = ref(false)
 
 See the [Facade Component API](/docs/guides/facade-components#facade-components-api) for full props, events, and slots.
 
-#### With Environment Variables
+::warning
+The component's `api-base` prop currently forwards `app_base`, but Intercom expects [`api_base`](https://developers.intercom.com/installing-intercom/web/installation). Until that mapping changes, the prop cannot select the EU or Australian data host. Use the composable directly when you need a regional endpoint:
 
-If you prefer to configure your app ID using environment variables.
+```ts
+useScriptIntercom({
+  app_id: 'YOUR_APP_ID',
+  api_base: 'https://api-iam.eu.intercom.io',
+})
+```
+::
+
+#### With environment variables
+
+After you enable the registry entry, the module creates its public runtime-config fields. Set the app ID without adding a separate `runtimeConfig` block:
 
 ```ts [nuxt.config.ts]
 export default defineNuxtConfig({
@@ -89,16 +95,6 @@ export default defineNuxtConfig({
     registry: {
       intercom: { trigger: 'onNuxtReady' },
     }
-  },
-  // you need to provide a runtime config to access the environment variables
-  runtimeConfig: {
-    public: {
-      scripts: {
-        intercom: {
-          app_id: '', // NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID
-        },
-      },
-    },
   },
 })
 ```
@@ -109,11 +105,12 @@ NUXT_PUBLIC_SCRIPTS_INTERCOM_APP_ID=<YOUR_APP_ID>
 
 ### Events
 
-The [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"} component emits a single `ready` event when Intercom loads.
+The [`<ScriptIntercom>`{lang="html"}](/scripts/intercom){lang="html"} component emits `ready` after it mounts the messenger and `error` if the script fails to load.
 
 ```ts
 const emits = defineEmits<{
-  ready: [intercom: Intercom]
+  ready: [intercom: ReturnType<typeof useScriptIntercom>]
+  error: []
 }>()
 ```
 
@@ -125,42 +122,46 @@ function onReady(intercom) {
 </script>
 
 <template>
-  <ScriptIntercom @ready="onReady" />
+  <ScriptIntercom app-id="YOUR_APP_ID" @ready="onReady" />
 </template>
 ```
 
 ### Intercom API
 
-The component exposes an `intercom` instance (the return value of `useScriptIntercom()`{lang="ts"}) that you can use to call the Intercom API.
+The component exposes its `intercom` instance, which is the return value of `useScriptIntercom()`{lang="ts"}. Call the [Intercom JavaScript API](https://developers.intercom.com/installing-intercom/web/methods) through its proxy:
 
 ```vue
 <script setup lang="ts">
 const intercomEl = ref()
-onMounted(() => {
-  intercomEl.value.intercom.proxy.Intercom('show')
-})
+
+function showMessenger() {
+  intercomEl.value?.intercom.proxy.Intercom('show')
+}
 </script>
 
 <template>
-  <ScriptIntercom ref="intercomEl" />
+  <ScriptIntercom ref="intercomEl" app-id="YOUR_APP_ID" trigger="immediate" />
+  <button @click="showMessenger">
+    Open chat
+  </button>
 </template>
 ```
 
 ### Slots
 
-The component provides minimal UI by default, only enough to be functional and accessible. There are a number of slots for you to customize the maps however you like.
+Use the slots to build the launcher and its loading states.
 
 **default**
 
-The default slot displays content that will always be visible.
+The default slot displays content while the facade is visible.
 
 **awaitingLoad**
 
-This slot displays content while Intercom is not loading.
+This slot displays content while Intercom waits for its configured trigger.
 
 ```vue
 <template>
-  <ScriptIntercom>
+  <ScriptIntercom app-id="YOUR_APP_ID">
     <template #awaitingLoad>
       <div style="width: 54px; height: 54px; border-radius: 54px; cursor: pointer; background-color: #1972F5;">
         chat!
@@ -174,11 +175,11 @@ This slot displays content while Intercom is not loading.
 
 This slot displays content while Intercom is loading.
 
-Tip: You should use the `ScriptLoadingIndicator` by default for accessibility and UX.
+`ScriptLoadingIndicator` supplies a visible state and status label:
 
 ```vue
 <template>
-  <ScriptIntercom>
+  <ScriptIntercom app-id="YOUR_APP_ID">
     <template #loading>
       <div class="bg-blue-500 text-white p-5">
         Loading...
@@ -188,10 +189,12 @@ Tip: You should use the `ScriptLoadingIndicator` by default for accessibility an
 </template>
 ```
 
+The component declares an `error` slot, but its loading branch currently wins whenever `isReady` is false, including after a load failure. Use the emitted `error` event to render a fallback outside the component until that branch order is fixed.
+
 
 ## [`useScriptIntercom()`{lang="ts"}](/scripts/intercom){lang="ts"}
 
-The [`useScriptIntercom()`{lang="ts"}](/scripts/intercom){lang="ts"} composable lets you have fine-grain control over when and how Intercom loads on your site.
+Use [`useScriptIntercom()`{lang="ts"}](/scripts/intercom){lang="ts"} when you need the command queue without the launcher component.
 
 ```ts
 const { proxy } = useScriptIntercom({
@@ -203,23 +206,29 @@ proxy.Intercom('show')
 proxy.Intercom('update', { name: 'John Doe' })
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+When an identified user signs out, call `shutdown` before another person uses the same browser. Intercom recommends this to clear the prior user's Messenger session:
+
+```ts
+proxy.Intercom('shutdown')
+```
+
+See [Registry Scripts](/docs/guides/registry-scripts) for trigger and loading options.
 
 ::script-types
 ::
 
 ## Example
 
-Using Intercom only in production.
+Open Intercom from a button:
 
 ::code-group
 
 ```vue [IntercomButton.vue]
 <script setup lang="ts">
-const { proxy } = useScriptIntercom()
+const { proxy } = useScriptIntercom({
+  app_id: 'YOUR_APP_ID',
+})
 
-// noop in development, ssr
-// just works in production, client
 function showIntercom() {
   proxy.Intercom('show')
 }

@@ -1,6 +1,6 @@
 ---
 title: Segment
-description: Use Segment in your Nuxt app.
+description: Load Segment Analytics.js and queue page, event, identity, and group calls.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,9 +8,11 @@ links:
   size: xs
 ---
 
-[Segment](https://segment.com/) lets you collect, clean, and control your customer data. Segment helps you to understand your customers and personalize their experience.
+[Segment](https://www.twilio.com/en-us/segment) routes events from your site to analytics, marketing, and data warehouse destinations.
 
-Nuxt Scripts provides a registry script composable [`useScriptSegment()`{lang="ts"}](/scripts/segment){lang="ts"} to easily integrate Segment in your Nuxt app.
+Use [`useScriptSegment()`{lang="ts"}](/scripts/segment){lang="ts"} to load Analytics.js and access its tracking methods. Segment's [Analytics.js quickstart](https://www.twilio.com/docs/segment/connections/sources/catalog/libraries/website/javascript/quickstart) explains write keys and the `page`, `track`, and `identify` calls exposed by the library.
+
+The client initializer queues one `page()`{lang="ts"} call before Analytics.js loads. Avoid sending another page call for the initial route unless you intend to count it twice.
 
 ::script-stats
 ::

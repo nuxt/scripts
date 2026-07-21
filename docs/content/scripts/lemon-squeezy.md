@@ -1,6 +1,6 @@
 ---
 title: Lemon Squeezy
-description: Use Lemon Squeezy in your Nuxt app.
+description: Load Lemon.js or turn checkout links into lazy overlay triggers.
 links:
   - label: useScriptLemonSqueezy
     icon: i-simple-icons-github
@@ -12,10 +12,9 @@ links:
     size: xs
 ---
 
-[Lemon Squeezy](https://www.lemonsqueezy.com/) is a popular payment gateway that allows you to accept payments online.
+[Lemon Squeezy](https://www.lemonsqueezy.com/) is a merchant-of-record platform for digital products and subscriptions.
 
-Nuxt Scripts provides a [`useScriptLemonSqueezy()`{lang="ts"}](#usescriptlemonsqueezy){lang="ts"} composable and a headless Facade Component [`<ScriptLemonSqueezy>`{lang="html"}](#scriptlemonsqueezy){lang="html"} component to interact with lemon squeezy.
-
+Use [`useScriptLemonSqueezy()`{lang="ts"}](#usescriptlemonsqueezy){lang="ts"} for Lemon.js calls. [`<ScriptLemonSqueezy>`{lang="html"}](#scriptlemonsqueezy){lang="html"} turns checkout links into overlay triggers.
 
 ::script-stats
 ::
@@ -25,20 +24,19 @@ Nuxt Scripts provides a [`useScriptLemonSqueezy()`{lang="ts"}](#usescriptlemonsq
 
 ## [`<ScriptLemonSqueezy>`{lang="html"}](/scripts/lemon-squeezy){lang="html"}
 
-The [`<ScriptLemonSqueezy>`{lang="html"}](/scripts/lemon-squeezy){lang="html"} component is headless [Facade Component](/docs/guides/facade-components) wrapping the [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"} composable, providing a simple, performance optimized way to load Lemon Squeezy in your Nuxt app.
+The headless [facade component](/docs/guides/facade-components) scans the links present when it mounts. It loads [Lemon.js](https://docs.lemonsqueezy.com/guides/developer-guide/lemonjs) when the component's root enters the viewport.
 
 ```vue
 <template>
   <ScriptLemonSqueezy>
     <NuxtLink href="https://harlantest.lemonsqueezy.com/buy/52a40427-36d2-4450-a514-ae80d9e1a333?embed=1">
-      Buy me - $9.99
+      Buy me for $9.99
     </NuxtLink>
   </ScriptLemonSqueezy>
 </template>
 ```
 
-It works by injecting a `.lemonsqueezy-button` class onto any `a` tags within the component then loading in
-the Lemon Squeezy script with the `visibility` [Element Event Trigger](/docs/guides/script-triggers#element-event-triggers).
+At mount, it adds the `.lemonsqueezy-button` class to links inside the component. Links inserted later are not scanned. Add the class yourself and call `Refresh()`{lang="ts"}, or remount the component, after adding a checkout link dynamically.
 
 ### Demo
 
@@ -57,10 +55,10 @@ const events = ref([])
     <div class="flex items-center justify-center p-5">
       <ScriptLemonSqueezy @lemon-squeezy-event="e => events.push(e)" @ready="ready = true">
         <UButton to="https://harlantest.lemonsqueezy.com/buy/52a40427-36d2-4450-a514-ae80d9e1a333?embed=1" class="block mb-3">
-          Buy me - $9.99
+          Buy me for $9.99
         </UButton>
         <UButton to="https://harlantest.lemonsqueezy.com/buy/76bbfa74-a81a-4111-8449-4f5ad564ed76?embed=1" class="block">
-          Buy me - pay what you want
+          Buy me: pay what you want
         </UButton>
       </ScriptLemonSqueezy>
     </div>
@@ -91,40 +89,42 @@ See the [Facade Component API](/docs/guides/facade-components#facade-components-
 
 ***`lemon-squeezy-event`***
 
-Events emitted by the Lemon.js script are forwarded through this event. The payload is an object with an `event` key and a `data` key.
+The component forwards [Lemon.js overlay events](https://docs.lemonsqueezy.com/help/lemonjs/handling-events) through this event. The payload contains an `event` name and, for events such as `Checkout.Success`, a `data` object.
 
-```ts
-export type LemonSqueezyEventPayload = { event: 'Checkout.Success', data: Record<string, any> }
-  & { event: 'Checkout.ViewCart', data: Record<string, any> }
-  & { event: 'GA.ViewCart', data: Record<string, any> }
-  & { event: 'PaymentMethodUpdate.Mounted' }
-  & { event: 'PaymentMethodUpdate.Closed' }
-  & { event: 'PaymentMethodUpdate.Updated' }
-  & { event: string }
-  ```
+::warning
+The component emits the correct object at runtime, but the current `LemonSqueezyEventPayload` TypeScript definition intersects mutually exclusive event names and can reduce the payload to `never`. Until the type changes, accept `unknown` at your handler boundary and narrow it to the fields you use.
+::
 
 ## [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"}
 
-The [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"} composable lets you have fine-grain control over the Lemon Squeezy SDK. It provides a way to load the Lemon Squeezy SDK and interact with it programmatically.
+Use [`useScriptLemonSqueezy()`{lang="ts"}](/scripts/lemon-squeezy){lang="ts"} when you need Lemon.js without the checkout-link component.
 
 ```ts
 export function useScriptLemonSqueezy<T extends LemonSqueezyApi>(_options?: LemonSqueezyInput) {}
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+See [Registry Scripts](/docs/guides/registry-scripts) for trigger and loading options.
+
+If you use the composable without the component and add checkout links after Lemon.js loads, call [`Refresh()`{lang="ts"}](https://docs.lemonsqueezy.com/help/lemonjs/methods) so the SDK attaches overlay listeners to the new links:
+
+```ts
+proxy.Refresh()
+```
 
 ::script-types
 ::
 
 ## Example
 
-Using the Lemon Squeezy SDK with a payment link.
+Initialize Lemon.js for a payment link:
 
 ```vue
 <script setup lang="ts">
 const { proxy } = useScriptLemonSqueezy()
-onMounted(() => {
-  proxy.Setup()
+proxy.Setup({
+  eventHandler(event) {
+    console.log(event)
+  },
 })
 </script>
 

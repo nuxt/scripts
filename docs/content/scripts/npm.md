@@ -16,17 +16,13 @@ links:
 
 ## Background
 
-When working with [npm](https://npmjs.com) files, you'd typically include them as a node_module dependency in the `package.json` file. However,
-optimizing the script loading of these scripts can be difficult, requiring a dynamic import of the module from a separate chunk and
-loading it only when needed. It also slows down your build as the module needs to be transpiled.
+You'd usually install an [npm](https://www.npmjs.com/) package and bundle it with your app. Loading it only when needed takes more work: you need a [dynamic `import()`{lang="ts"}](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import), a separate chunk, and any required transpilation during the build.
 
-The [`useScriptNpm()`{lang="ts"}](/scripts/npm){lang="ts"} registry script abstracts this process, allowing you to load scripts that export immediately invokable functions with a single line of code.
+The [`useScriptNpm()`{lang="ts"}](/scripts/npm){lang="ts"} registry script abstracts this process, allowing you to load immediately invoked function expression (IIFE) builds with a single line of code.
 
-In many instances it will still make more sense to include the script as a dependency in the `package.json` file, but for scripts that are not used often or
-are not critical to the application, this can be a great alternative.
+Keep frequently used or critical packages in `package.json`. CDN loading is most useful for an occasional, non-critical IIFE.
 
-To begin with we can think of using this script as an alternative to the `useHead` composable. You can see an example of the abstraction
-layers in the following code sample.
+The three examples below load the same file through the registry, `useScript`, and `useHead`.
 
 ::code-group
 
@@ -35,6 +31,7 @@ useScriptNpm({
   packageName: 'js-confetti',
   file: 'dist/js-confetti.browser.js',
   version: '0.12.0',
+  provider: 'jsdelivr',
 })
 ```
 
@@ -45,7 +42,7 @@ useScript('https://cdn.jsdelivr.net/npm/js-confetti@0.12.0/dist/js-confetti.brow
 ```ts [useHead]
 useHead({
   script: [
-    { src: 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js' }
+    { src: 'https://cdn.jsdelivr.net/npm/js-confetti@0.12.0/dist/js-confetti.browser.js' }
   ]
 })
 ```
@@ -54,26 +51,34 @@ useHead({
 
 ## [`useScriptNpm()`{lang="ts"}](/scripts/npm){lang="ts"}
 
-The [`useScriptNpm()`{lang="ts"}](/scripts/npm){lang="ts"} composable lets you have fine-grain control over when and how npm scripts load on your site.
+The [`useScriptNpm()`{lang="ts"}](/scripts/npm){lang="ts"} composable uses unpkg by default. Set `provider` to `'jsdelivr'` or `'cdnjs'` for the other supported URL formats.
 
 ```ts
 function useScriptNpm<T extends Record<string | symbol, any>>(_options: NpmInput) {}
 ```
 
-Please follow the [Registry Scripts](/docs/guides/registry-scripts) guide to learn more about advanced usage.
+For triggers, proxying, and other script options, see [Registry Scripts](/docs/guides/registry-scripts).
 
-### Return
+### Map the loaded global
 
-To get types for the script you're loading, you'll need to augment the types of the [`useScriptNpm()`{lang="ts"}](/scripts/npm){lang="ts"} function.
+The generic type describes the proxy, but it does not discover a browser global. Map the loaded library explicitly with `scriptOptions.use`:
 
 ```ts
 interface SomeApi {
   doSomething: () => void
 }
-useScriptNpm<SomeApi>({
-  packageName: 'some-api'
+
+const { proxy } = useScriptNpm<SomeApi>({
+  packageName: 'some-api',
+  scriptOptions: {
+    use: () => (window as Window & { SomeApi: SomeApi }).SomeApi,
+  },
 })
+
+proxy.doSomething()
 ```
+
+Without `scriptOptions.use`, the IIFE still loads, but the composable does not expose its global API through `proxy` or `onLoaded`.
 
 ::script-types
 ::

@@ -1,6 +1,6 @@
 ---
 title: Reddit Pixel
-description: Use Reddit Pixel in your Nuxt app.
+description: Load Reddit Pixel and send page visits or conversion events through its typed API.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,15 +8,19 @@ links:
   size: xs
 ---
 
-[Reddit Pixel](https://advertising.reddithelp.com/en/categories/custom-audiences-and-conversion-tracking/reddit-pixel) helps you track conversions and build audiences for your Reddit advertising campaigns.
+[Reddit Pixel](https://business.reddithelp.com/s/article/reddit-pixel) helps you track conversions and build audiences for your Reddit advertising campaigns.
 
-Nuxt Scripts provides a registry script composable [`useScriptRedditPixel()`{lang="ts"}](/scripts/reddit-pixel){lang="ts"} to easily integrate Reddit Pixel in your Nuxt app.
+Use [`useScriptRedditPixel()`{lang="ts"}](/scripts/reddit-pixel){lang="ts"} to load Reddit Pixel and access its `rdt` API.
 
 ::script-stats
 ::
 
 ::script-docs
 ::
+
+## Initial page visit
+
+The client initializer queues `rdt('track', 'PageVisit')`{lang="ts"} once after it queues `init`. It does not send another page visit on Nuxt route changes. Add your own route tracking if each client-side navigation should count as a [`PageVisit`](https://business.reddithelp.com/articles/Knowledge/supported-conversion-events).
 
 ::script-types
 ::
