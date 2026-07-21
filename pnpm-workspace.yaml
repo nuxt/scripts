@@ -88,7 +88,7 @@ catalog:
   shiki: ^4.3.1
   sirv: ^3.0.2
   std-env: ^4.2.0
-  typescript: 6.0.3
+  typescript: 7.0.2
   ufo: ^1.6.4
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
