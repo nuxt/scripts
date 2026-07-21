@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { defineCachedFunction } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
+import { hash } from 'ohash'
 import { NUXT_SCRIPTS_CACHE_BASE } from './cache-config'
 
 /**
@@ -77,7 +78,7 @@ export function createCachedBinaryFetch(
       staleMaxAge: maxAge,
       getKey: (url: string, opts?: CachedBinaryFetchOptions) => {
         if (!opts)
-          return url
+          return hash(url)
         // Vary on headers + redirect mode — callers with different user agents
         // or redirect policies may get different upstream responses.
         const parts = [url]
@@ -88,7 +89,9 @@ export function createCachedBinaryFetch(
         }
         if (opts.redirect)
           parts.push(`redirect=${opts.redirect}`)
-        return parts.join('|')
+        if (opts.ignoreResponseError !== undefined)
+          parts.push(`ignoreResponseError=${opts.ignoreResponseError}`)
+        return hash(parts)
       },
     },
   )
@@ -104,7 +107,8 @@ export function createCachedBinaryFetch(
 /**
  * Cache upstream JSON/text fetches. `getKey` is caller-controlled so handlers
  * can normalize on whichever inner params identify the resource (tweet ID,
- * post URL, query hash).
+ * post URL, query hash). The normalized value is hashed before it reaches
+ * Nitro storage because raw URLs can contain reserved key characters.
  */
 export function createCachedJsonFetch<T>(
   name: string,
@@ -124,7 +128,7 @@ export function createCachedJsonFetch<T>(
       maxAge,
       swr: true,
       staleMaxAge: maxAge,
-      getKey,
+      getKey: (url, opts) => hash(getKey(url, opts)),
     },
   )
 }

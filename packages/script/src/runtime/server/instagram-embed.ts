@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { defineCachedFunction, useRuntimeConfig } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
+import { hash } from 'ohash'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { NUXT_SCRIPTS_CACHE_BASE } from './utils/cache-config'
 import { createCachedJsonFetch } from './utils/cached-upstream'
@@ -41,7 +42,7 @@ const cachedEmbedFetch = defineCachedFunction(
       const parts = [url]
       for (const [k, v] of Object.entries(headers).sort(([a], [b]) => a.localeCompare(b)))
         parts.push(`${k}=${v}`)
-      return parts.join('|')
+      return hash(parts)
     },
   },
 )
