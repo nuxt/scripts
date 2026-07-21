@@ -241,6 +241,194 @@ describe('rewriteScriptUrlsAST', () => {
     })
   })
 
+  describe('snapchat SDK config host patching', () => {
+    async function getSnapchatConfig() {
+      const configs = await getProxyConfigs()
+      return configs.snapchatPixel
+    }
+
+    it('pins bundled script host detection to sc-static.net', () => {
+      const patches = [{ type: 'replace-new-url-host' as const, host: 'sc-static.net' }]
+      const code = 'var xe=y((function(){return new URL(S).host}),s);'
+      const result = rewriteScriptUrlsAST(code, 'scevent.min.js', [], patches)
+      expect(result).toContain('return "sc-static.net"')
+      expect(result).not.toContain('new URL(S).host')
+    })
+
+    it('rewrites the self-hosted config loader branch to the proxy path', async () => {
+      const snapchatConfig = await getSnapchatConfig()
+      const snapchatRewrites = deriveRewrites(snapchatConfig.domains, '/_scripts/p')
+      const code = [
+        'function qr(t){var e={src:t};}',
+        'var xe=y((function(){return new URL(S).host}),s);',
+        'function De(t,n,r,e){return void 0===n&&(n=4),e?v+e+t:r?v+xe+t:v+"tr"+"."+l+t}',
+        'var i="/config/no/id.js?v=3.59.0";',
+        'qr(xe!==s?v+xe+i:De(i));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'scevent.min.js', snapchatRewrites, snapchatConfig.sdkPatches)
+      expect(result).toContain('return "sc-static.net"')
+      expect(result).toContain('qr(self.location.origin+"/_scripts/p/tr.snapchat.com"+i);')
+      expect(result).not.toContain('v+xe+i:De(i)')
+    })
+
+    it('rewrites the nested production config loader branch to the proxy path', async () => {
+      const snapchatConfig = await getSnapchatConfig()
+      const snapchatRewrites = deriveRewrites(snapchatConfig.domains, '/_scripts/p')
+      const code = [
+        'function qr(t){var e={src:t};}',
+        'var xe=y((function(){return new URL(S).host}),s);',
+        'function De(t,n,r,e){return void 0===n&&(n=4),e?v+e+t:r?v+xe+t:v+"tr"+(ce()?"-shadow":6===n?"6":"")+"."+l+t}',
+        'var pa="/config",r=pa+"/"+n+"/"+t,i=r+".js"+e,a=r+".json"+e;',
+        '$n(xe,"localhost")?qr(De(i)):C?Sa(t,a):qr(xe!==s?v+xe+i:De(i));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'scevent.min.js', snapchatRewrites, snapchatConfig.sdkPatches)
+      expect(result).toContain('return "sc-static.net"')
+      expect(result).toContain('qr(self.location.origin+"/_scripts/p/tr.snapchat.com"+i);')
+      expect(result).not.toContain('xe!==s?v+xe+i:De(i)')
+    })
+
+    it('does not depend on Snapchat minified variable or loader names', async () => {
+      const snapchatConfig = await getSnapchatConfig()
+      const snapchatRewrites = deriveRewrites(snapchatConfig.domains, '/_scripts/p')
+      const code = [
+        'function loadScript(url){importScripts(url);}',
+        'var scriptHost=y((function(){return new URL(stackUrl).hostname}),fallbackHost);',
+        'function makeUrl(path,mode,useDetected,override){return override?proto+override+path:useDetected?proto+scriptHost+path:proto+"tr"+"."+snapDomain+path}',
+        'var base="/config",path=base+"/"+tld+"/"+pixel,jsPath=path+".js"+version;',
+        'loadScript(scriptHost!==fallbackHost?proto+scriptHost+jsPath:makeUrl(jsPath));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'scevent.min.js', snapchatRewrites, snapchatConfig.sdkPatches)
+      expect(result).toContain('return "sc-static.net"')
+      expect(result).toContain('loadScript(self.location.origin+"/_scripts/p/tr.snapchat.com"+jsPath);')
+      expect(result).not.toContain('scriptHost!==fallbackHost?proto+scriptHost+jsPath:makeUrl(jsPath)')
+    })
+  })
+
+  describe('generic script-loader URL patching', () => {
+    it('rewrites obfuscated script loader URLs by configured path prefix', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      const code = [
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var base="/settings",path=base+"/"+tenant+"/"+id+".js";',
+        'load(host!==cdn?proto+host+path:buildVendorUrl(path));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+      expect(result).not.toContain('host!==cdn?proto+host+path:buildVendorUrl(path)')
+    })
+
+    it('does not rewrite matching path variables passed to non-loader functions', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      const code = [
+        'function log(u){console.log(u);}',
+        'var base="/settings",path=base+"/"+tenant+"/"+id+".js";',
+        'log(host!==cdn?proto+host+path:buildVendorUrl(path));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toBe(code)
+    })
+
+    it('keeps minified variable names scoped when detecting path variables', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      const code = [
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var p=proto+cdn+"/sdk.js";',
+        'load(p+"?u="+id);',
+        'function init(){var p="/settings/"+tenant+"/"+id+".js";load(host!==cdn?proto+host+p:buildVendorUrl(p));}',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(p+"?u="+id);')
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+p);')
+    })
+
+    it('keeps minified loader function names scoped', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      const code = [
+        'function load(u){console.log(u);}',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'load(path);',
+        'function init(){function load(u){var s=document.createElement("script");s.src=u;}load(host!==cdn?proto+host+path:buildVendorUrl(path));}',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(path);')
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+    })
+
+    it('keeps function-expression loader declarations distinct in the same var statement', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      const code = [
+        'var load=function(u){var s=document.createElement("script");s.src=u},log=function(u){console.log(u)};',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'load(host!==cdn?proto+host+path:buildVendorUrl(path));',
+        'log(path);',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+      expect(result).toContain('log(path);')
+    })
+
+    it('does not treat wrapper functions as loaders based on nested functions', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      const code = [
+        'function wrapper(u){function nested(){var s=document.createElement("script");s.src=u}return nested;}',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'wrapper(path);',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toBe(code)
+    })
+
+    it('handles loader args containing proxied domain literals without conflicting edits', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['config.example.com'], '/_scripts/p')
+      // The literal inside the replaced arg would also match the domain rewrite —
+      // the loader rewrite must not leave a nested edit for it to conflict with.
+      const code = [
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'load(cond?"https://config.example.com/settings/fallback.js":path);',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+    })
+
+    it('rewrites to the patch whose pathPrefix actually matched', () => {
+      const patches = [
+        { type: 'replace-script-loader-url' as const, fromDomain: 'other.example.com', pathPrefix: '/alpha' },
+        { type: 'replace-script-loader-url' as const, fromDomain: 'config.example.com', pathPrefix: '/settings' },
+      ]
+      const configRewrites = deriveRewrites(['other.example.com', 'config.example.com'], '/_scripts/p')
+      const code = [
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var path="/settings/"+tenant+"/"+id+".js";',
+        'load(host!==cdn?proto+host+path:buildVendorUrl(path));',
+      ].join('')
+      const result = rewriteScriptUrlsAST(code, 'vendor.js', configRewrites, patches)
+      expect(result).toContain('load(self.location.origin+"/_scripts/p/config.example.com"+path);')
+      expect(result).not.toContain('other.example.com')
+    })
+  })
+
   describe('fathom SDK self-hosted detection patching', () => {
     // Fathom is bundle-only (no proxy capability) — sdkPatches come from
     // BundleCapability.sdkPatches and are self-contained with their own domain.

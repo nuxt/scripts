@@ -1,6 +1,6 @@
 ---
 title: LinkedIn Insight Tag
-description: Use the LinkedIn Insight Tag in your Nuxt app to track conversions, retarget visitors, and learn about your audience.
+description: Track LinkedIn Ads conversions, enhanced matching, and SPA page views.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,9 +8,9 @@ links:
   size: xs
 ---
 
-The [LinkedIn Insight Tag](https://business.linkedin.com/marketing-solutions/insight-tag) is a lightweight JavaScript snippet for conversion tracking, retargeting, and audience insights on LinkedIn Ads campaigns.
+The [LinkedIn Insight Tag](https://business.linkedin.com/marketing-solutions/insight-tag) tracks conversions and sends audience signals to LinkedIn Ads.
 
-Nuxt Scripts provides a registry script composable [`useScriptLinkedInInsight()`{lang="ts"}](/scripts/linkedin-insight) to integrate it in your Nuxt app.
+[`useScriptLinkedInInsight()`{lang="ts"}](/scripts/linkedin-insight) registers the partner ID and exposes the `lintrk` command queue.
 
 ::script-stats
 ::
@@ -61,7 +61,7 @@ For dedup on the auto-fired page-view, set `eventId` at registration. The compos
 
 ```vue
 <script setup lang="ts">
-const { proxy } = useScriptLinkedInInsight({
+useScriptLinkedInInsight({
   id: '111143',
   eventId: 'page-load-event-id-123',
 })
@@ -84,8 +84,6 @@ function onSignupSuccess(email: string) {
 </script>
 ```
 
-The Insight Tag stores the hashed email in `localStorage["li_hem"]` and transmits it on the next page-view via a separate POST to `https://px.ads.linkedin.com/wa/...` (the WebsiteActions gateway). The `/collect` URL of the page-view immediately following `setUserData` does not carry it; LinkedIn picks it up on the next full page load when the bootstrap reads it back from `localStorage`.
-
 ### SPA virtual page views
 
 By default, the Insight Tag fires a page-view exactly once when the script loads, so SPA route changes go untracked. Opt in to per-route tracking with `enableAutoSpaTracking`:
@@ -99,9 +97,9 @@ useScriptLinkedInInsight({
 </script>
 ```
 
-When enabled, the composable suppresses the script's built-in auto-page-view (via `window._wait_for_lintrk = true`) and fires `lintrk('track')`{lang="ts"} on Nuxt's `page:finish` hook instead, so each route (including the initial page) produces exactly one `/collect` beacon.
+When enabled, the composable suppresses the script's built-in automatic page view (with `window._wait_for_lintrk = true`) and fires `lintrk('track')`{lang="ts"} on Nuxt's `page:finish` hook. Under the standard `<NuxtPage />`{lang="html"} lifecycle, this produces one `/collect` beacon for each route, including the initial page. Keep-alive or overlapping page transitions can register multiple hooks, so call the composable once from a long-lived component in those setups.
 
-### Multiple Partner IDs
+### Multiple partner IDs
 
 If you need to push more than one Partner ID onto `window._linkedin_data_partner_ids`, pass an array. The composable promotes the first ID to the primary `_linkedin_partner_id` global.
 

@@ -1,3 +1,4 @@
+import type { Nuxt } from '@nuxt/schema'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
 import type { InferInput } from 'valibot'
@@ -73,6 +74,8 @@ export interface AssetBundlerTransformerOptions {
    * Proxy prefix for first-party mode. Used to derive rewrite targets from domains.
    */
   proxyPrefix?: string
+  /** Map of real third-party domain → path alias, used to hide hostnames in proxy URLs. */
+  domainAliases?: Record<string, string>
   fallbackOnSrcOnBundleFail?: boolean
   fetchOptions?: FetchOptions
   cacheMaxAge?: number
@@ -82,6 +85,12 @@ export interface AssetBundlerTransformerOptions {
    * @default false
    */
   integrity?: boolean | IntegrityAlgorithm
+  /**
+   * The active Nuxt instance. Used to resolve the build directory and register the
+   * `build:done` copy hook. Defaults to `useNuxt()`; pass it explicitly to run the
+   * transformer without an active Nuxt context (e.g. unit tests).
+   */
+  nuxt?: Nuxt
   renderedScript?: Map<string, RenderedScriptMeta | Error>
   /**
    * Set of registry script keys that use Partytown.
@@ -212,7 +221,7 @@ async function downloadScript(opts: {
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
   renderedScript: new Map(),
 }) {
-  const nuxt = useNuxt()
+  const nuxt = options.nuxt ?? useNuxt()
   const { renderedScript = new Map() } = options
   const cacheDir = join(nuxt.options.buildDir, 'cache', 'scripts')
 
@@ -237,7 +246,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     await Promise.all(scripts.map(async ([url, content]) => {
       if (content instanceof Error || !content.filename)
         return
-      await fsp.writeFile(join(nuxt.options.buildDir, 'cache', 'scripts', content.filename), content.content)
+      await fsp.writeFile(join(cacheDir, content.filename), content.content)
       logger.debug(colors.gray(`  ├─ ${url} → ${joinURL(content.src)} (${content.size.toFixed(2)} kB ${content.encoding})`))
     }))
   })
@@ -469,7 +478,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // no literal form to rewrite at build time.
                     const proxyRewrites = proxyConfig?.domains?.filter(domain => !domain.includes('*')).map(domain => ({
                       from: domain,
-                      to: `${options.proxyPrefix}/${domain}`,
+                      to: `${options.proxyPrefix}/${options.domainAliases?.[domain] ?? domain}`,
                     }))
                     // Bundle-only SDK patches (independent of proxy). Used when bundling
                     // a script that needs neutralize-domain-check etc. but should keep

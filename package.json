@@ -1,9 +1,9 @@
 {
   "name": "nuxt-scripts-monorepo",
   "type": "module",
-  "version": "1.1.0",
+  "version": "1.3.1",
   "private": true,
-  "packageManager": "pnpm@11.1.3",
+  "packageManager": "pnpm@11.15.0",
   "description": "Load third-party scripts with better performance, privacy and DX in Nuxt Apps.",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,7 @@
     "dev": "nuxt dev playground",
     "dev:ssl": "nuxt dev playground --https",
     "dev:prepare": "pnpm -r dev:prepare && nuxt prepare && nuxt prepare playground && pnpm prepare:fixtures",
-    "prepare:fixtures": "nuxt prepare test/fixtures/basic && nuxt prepare test/fixtures/cdn && nuxt prepare test/fixtures/extend-registry && nuxt prepare test/fixtures/partytown && nuxt prepare test/fixtures/first-party && nuxt prepare test/fixtures/linkedin-insight && nuxt prepare test/fixtures/linkedin-insight-cdn && nuxt prepare test/fixtures/calendly && nuxt prepare test/fixtures/calendly-cdn && nuxt prepare test/fixtures/ahrefs-analytics && nuxt prepare test/fixtures/ahrefs-analytics-cdn && nuxt prepare test/fixtures/usercentrics",
+    "prepare:fixtures": "nuxt prepare test/fixtures/basic && nuxt prepare test/fixtures/cdn && nuxt prepare test/fixtures/extend-registry && nuxt prepare test/fixtures/partytown && nuxt prepare test/fixtures/first-party && nuxt prepare test/fixtures/linkedin-insight && nuxt prepare test/fixtures/linkedin-insight-cdn && nuxt prepare test/fixtures/tiktok-pixel && nuxt prepare test/fixtures/calendly && nuxt prepare test/fixtures/calendly-cdn && nuxt prepare test/fixtures/ahrefs-analytics && nuxt prepare test/fixtures/ahrefs-analytics-cdn && nuxt prepare test/fixtures/usercentrics && nuxt prepare test/fixtures/speedcurve && nuxt prepare test/fixtures/unhead-v3",
     "typecheck": "nuxt typecheck",
     "release": "pnpm build && bumpp -r --output=CHANGELOG.md",
     "lint": "eslint .",
@@ -39,6 +39,7 @@
     "@paypal/paypal-js": "catalog:",
     "@types/google.maps": "catalog:",
     "@types/jest-image-snapshot": "catalog:",
+    "@types/node": "catalog:",
     "@types/youtube": "catalog:",
     "@vue/test-utils": "catalog:",
     "bumpp": "catalog:",

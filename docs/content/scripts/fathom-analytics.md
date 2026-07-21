@@ -1,6 +1,6 @@
 ---
 title: Fathom Analytics
-description: Use Fathom Analytics in your Nuxt app.
+description: Load Fathom Analytics and track page views, goals, and custom events.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Fathom Analytics](https://usefathom.com/) is a great privacy analytics solution for your Nuxt app. It doesn't gather personal data from your visitors, yet provides detailed insights into how visitors use your site.
+[Fathom Analytics](https://usefathom.com/) tracks site traffic without collecting visitors' personal data.
 
 ::script-stats
 ::
@@ -20,18 +20,17 @@ links:
 
 Unlike most analytics integrations in Nuxt Scripts, Fathom **cannot** be proxied (`proxy: true`).
 
-Fathom's bot detection uses the connecting source IP address. When beacons are proxied, they reach Fathom from your server's IP (typically a datacenter), and Fathom's bot detection ignores `X-Forwarded-For` from arbitrary servers, so every visitor gets flagged as a bot.
+Fathom's bot detection uses the connecting source IP address. When beacons are proxied, they reach Fathom from your server's IP (typically a datacenter), and Fathom's bot detection ignores `X-Forwarded-For` from arbitrary servers, so every visitor gets flagged as a bot. This behavior and the resulting Nuxt Scripts change are documented in the [proxy-support fix](https://github.com/nuxt/scripts/pull/722).
 
-Fathom previously offered an official Custom Domain feature (CNAME to their infrastructure) for first-party hosting, but they [deprecated it in May 2023](https://usefathom.com/changelog/mar2023-firewall-settings) and there is no replacement.
+Fathom [stopped offering custom domains in March 2023](https://usefathom.com/changelog/mar2023-firewall-settings). Existing custom domains continue to work, but new customers cannot configure one.
 
 Bundling (`bundle: true`) **is** supported: the script is served from your origin, but beacons still go directly to `cdn.usefathom.com` from the browser so real client IPs reach Fathom's bot detection correctly.
 
 ## Defaults
 
-- **Trigger**: Script will load when Nuxt is hydrated.
+- **Trigger: `onNuxtReady`** The script loads when the Nuxt app is ready.
 
-You can access the `fathom` object as a proxy directly or await the `$script` promise to access the object. It's recommended
-to use the proxy for any void functions.
+Use the composable's `proxy` object for void calls. Use `onLoaded` when you need the loaded `fathom` object.
 
 ::code-group
 
@@ -56,15 +55,12 @@ onLoaded(({ trackGoal }) => {
 
 ## Example
 
-Loading Fathom Analytics through the `app.vue` when Nuxt is ready.
+The default trigger waits until Nuxt is ready:
 
 ```vue [app.vue]
 <script setup lang="ts">
 useScriptFathomAnalytics({
   site: 'YOUR_SITE_ID',
-  scriptOptions: {
-    trigger: 'onNuxtReady'
-  }
 })
 </script>
 ```

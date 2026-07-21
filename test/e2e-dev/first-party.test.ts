@@ -563,8 +563,8 @@ describe('first-party privacy stripping', () => {
 
     it('bundled scripts contain rewritten collect URLs', async () => {
       // Check bundled scripts have proxy URLs
-      const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-proxy')
-      expect(existsSync(cacheDir), `Bundle proxy cache dir should exist at ${cacheDir}`).toBe(true)
+      const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-patched')
+      expect(existsSync(cacheDir), `Patched bundle cache dir should exist at ${cacheDir}`).toBe(true)
 
       const files = readdirSync(cacheDir).filter(f => f.endsWith('.js'))
       expect(files.length).toBeGreaterThan(0)
@@ -591,6 +591,7 @@ describe('first-party privacy stripping', () => {
       let serverOrigin = ''
       const proxyRequests: string[] = []
       const externalRequests: string[] = []
+      const sameOriginRequests: string[] = []
 
       page.on('request', (req) => {
         const reqUrl = req.url()
@@ -605,6 +606,9 @@ describe('first-party privacy stripping', () => {
         const parsed = new URL(reqUrl)
         if (parsed.pathname.startsWith('/_scripts/p/')) {
           proxyRequests.push(parsed.pathname)
+        }
+        else if (serverOrigin && reqUrl.startsWith(serverOrigin)) {
+          sameOriginRequests.push(parsed.pathname)
         }
         else if (serverOrigin && !reqUrl.startsWith(serverOrigin) && parsed.protocol.startsWith('http')) {
           externalRequests.push(reqUrl)
@@ -639,7 +643,7 @@ describe('first-party privacy stripping', () => {
 
       await page.close()
 
-      return { captures, rawCaptures, proxyRequests, externalRequests, preClickProxyCount, postClickProxyCount }
+      return { captures, rawCaptures, proxyRequests, externalRequests, sameOriginRequests, preClickProxyCount, postClickProxyCount }
     }
 
     /**
@@ -818,13 +822,17 @@ describe('first-party privacy stripping', () => {
     }, 30000)
 
     it('snapchatPixel', async () => {
-      const { captures, rawCaptures, proxyRequests, externalRequests, preClickProxyCount, postClickProxyCount } = await testProvider('snapchatPixel', '/snap', {
+      const { captures, rawCaptures, proxyRequests, externalRequests, sameOriginRequests, preClickProxyCount, postClickProxyCount } = await testProvider('snapchatPixel', '/snap', {
         clickSelectors: ['#trigger-pageview', '#trigger-event'],
       })
       await assertCaptures('snapchatPixel', captures, rawCaptures, proxyRequests, externalRequests, {
         proxyPrefix: '/_scripts/p/snap',
         domains: ['snapchat.com'],
       }, { pre: preClickProxyCount, post: postClickProxyCount })
+      expect(
+        sameOriginRequests.some(path => path.startsWith('/config/')),
+        `snapchatPixel: bundled SDK requested config from the app origin: ${JSON.stringify(sameOriginRequests.filter(path => path.startsWith('/config/')))}`,
+      ).toBe(false)
     }, 30000)
 
     it('clarity', async () => {
@@ -1111,7 +1119,7 @@ describe('first-party privacy stripping', () => {
    */
   describe('bundled script integrity', () => {
     it('all cached proxy-rewritten scripts are syntactically valid', async () => {
-      const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-proxy')
+      const cacheDir = join(fixtureDir, 'node_modules/.cache/nuxt/scripts/bundle-patched')
       if (!existsSync(cacheDir))
         return // skip if no cached scripts
 

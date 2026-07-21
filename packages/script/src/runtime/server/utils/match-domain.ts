@@ -34,7 +34,7 @@ export function matchDomain(domain: string, pattern: string): boolean {
     return domain === pattern || domain.endsWith(`.${pattern}`)
 
   // Leading subdomain wildcard: `*.host.tld` matches exactly one non-dot label.
-  if (pattern.startsWith('*.') && pattern.indexOf('*') === 0) {
+  if (pattern.startsWith('*.') && pattern.startsWith('*')) {
     const suffix = pattern.slice(2) // drop leading "*."
     if (!domain.endsWith(`.${suffix}`))
       return false

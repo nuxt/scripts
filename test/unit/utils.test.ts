@@ -23,6 +23,36 @@ describe('useRegistryScript scriptOptions', () => {
 
     expect(userScriptOptions).not.toHaveProperty('use')
   })
+
+  it('replaces registry use() with a server-safe noop outside client builds', () => {
+    const unsafeUse = vi.fn(() => {
+      throw new Error('use() should not run server-side')
+    })
+    const mockOptionsFunction = vi.fn((_opts, _ctx) => ({
+      scriptInput: { src: 'https://example.com/script.js' },
+      scriptOptions: { use: unsafeUse },
+    }))
+
+    const result = useRegistryScript('test', mockOptionsFunction, {})
+
+    expect(result.options.use()).toBeUndefined()
+    expect(unsafeUse).not.toHaveBeenCalled()
+  })
+
+  it('does not call npm-mode use() outside client builds', () => {
+    const unsafeUse = vi.fn(() => {
+      throw new Error('use() should not run server-side')
+    })
+    const mockOptionsFunction = vi.fn((_opts, _ctx) => ({
+      scriptMode: 'npm' as const,
+      scriptOptions: { use: unsafeUse },
+    }))
+
+    const result = useRegistryScript('test', mockOptionsFunction, {})
+
+    expect(result.proxy).toEqual({})
+    expect(unsafeUse).not.toHaveBeenCalled()
+  })
 })
 
 describe('useRegistryScript query param merging', () => {

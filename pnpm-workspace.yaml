@@ -1,66 +1,104 @@
+minimumReleaseAgeExclude:
+  - '@oxc-parser/binding-android-arm-eabi@0.134.0'
+  - '@oxc-parser/binding-android-arm64@0.134.0'
+  - '@oxc-parser/binding-darwin-arm64@0.134.0'
+  - '@oxc-parser/binding-darwin-x64@0.134.0'
+  - '@oxc-parser/binding-freebsd-x64@0.134.0'
+  - '@oxc-parser/binding-linux-arm-gnueabihf@0.134.0'
+  - '@oxc-parser/binding-linux-arm-musleabihf@0.134.0'
+  - '@oxc-parser/binding-linux-arm64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-arm64-musl@0.134.0'
+  - '@oxc-parser/binding-linux-ppc64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-riscv64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-riscv64-musl@0.134.0'
+  - '@oxc-parser/binding-linux-s390x-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-x64-gnu@0.134.0'
+  - '@oxc-parser/binding-linux-x64-musl@0.134.0'
+  - '@oxc-parser/binding-openharmony-arm64@0.134.0'
+  - '@oxc-parser/binding-wasm32-wasi@0.134.0'
+  - '@oxc-parser/binding-win32-arm64-msvc@0.134.0'
+  - '@oxc-parser/binding-win32-ia32-msvc@0.134.0'
+  - '@oxc-parser/binding-win32-x64-msvc@0.134.0'
+  - '@oxc-project/types@0.134.0'
+  - '@posthog/core@1.30.2'
+  - '@posthog/types@1.378.1'
+  - oxc-parser@0.134.0
+  - posthog-js@1.378.1
+  - '@nuxt/kit@4.5.0'
+  - '@nuxt/nitro-server@4.5.0'
+  - '@nuxt/schema@4.5.0'
+  - '@nuxt/vite-builder@4.5.0'
+  - nuxt@4.5.0
 shellEmulator: true
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - tinyexec@1.2.2
 packages:
   - packages/*
   - playground
+  - test/fixtures/unhead-v3
   - '!examples/**'
-
 overrides:
   '@nuxt/scripts': 'workspace:*'
+  # Force unhead v3 only inside the unhead-v3 regression fixture; the rest of
+  # the workspace stays on v2 via Nuxt's transitive resolution.
+  unhead-v3-fixture>@unhead/vue: ^3.0.0
   vitest-environment-nuxt: 2.0.0
 catalog:
-  '@antfu/eslint-config': ^9.0.0
+  '@antfu/eslint-config': ^9.1.0
   '@googlemaps/markerclusterer': ^2.6.2
   '@nuxt/devtools-kit': ^3.2.4
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.4.6
+  '@nuxt/kit': ^4.5.0
   '@nuxt/module-builder': ^1.0.2
   '@nuxt/test-utils': ^4.0.3
-  '@nuxt/ui': ^4.7.1
+  '@nuxt/ui': ^4.10.0
   '@nuxtjs/partytown': ^2.0.0
-  '@paypal/paypal-js': ^9.7.0
-  '@shikijs/langs': ^4.1.0
-  '@shikijs/themes': ^4.1.0
-  '@types/google.maps': ^3.64.1
+  '@paypal/paypal-js': ^10.0.3
+  '@shikijs/langs': ^4.3.1
+  '@shikijs/themes': ^4.3.1
+  '@speedcurve/lux': ^4.4.3
+  '@types/google.maps': ^3.65.2
   '@types/jest-image-snapshot': ^6.4.1
-  '@types/youtube': ^0.2.0
-  '@vue/test-utils': ^2.4.10
+  '@types/node': ^26.1.1
+  '@types/youtube': ^0.3.0
+  '@vue/test-utils': ^2.4.11
   '@vueuse/core': ^14.3.0
   '@vueuse/shared': ^14.3.0
   bumpp: ^11.1.0
   consola: ^3.4.2
   defu: ^6.1.7
-  eslint: ^10.4.0
-  eslint-plugin-harlanzw: ^0.15.1
+  eslint: ^10.7.0
+  eslint-plugin-harlanzw: ^0.17.0
   h3: ^1.15.11
-  happy-dom: ^20.9.0
+  happy-dom: ^20.10.6
   jest-image-snapshot: ^6.5.2
-  magic-string: ^0.30.21
-  nuxt: ^4.4.6
+  magic-string: ^1.0.0
+  nuxt: ^4.5.0
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.132.0
+  oxc-parser: ^0.140.0
   oxc-walker: ^1.0.0
   pathe: ^2.0.3
   pkg-types: ^2.3.1
-  playwright-core: ^1.60.0
-  posthog-js: ^1.374.2
-  rollup: ^4.60.4
-  shiki: ^4.1.0
+  playwright-core: ^1.61.1
+  posthog-js: ^1.404.1
+  rollup: ^4.62.2
+  shiki: ^4.3.1
   sirv: ^3.0.2
-  std-env: ^4.1.0
-  typescript: ^6.0.3
+  std-env: ^4.2.0
+  typescript: 6.0.3
   ufo: ^1.6.4
-  ultrahtml: ^1.6.0
+  ultrahtml: ^1.7.0
   unbuild: ^3.6.1
   unimport: ^6.3.0
-  unplugin: ^3.0.0
+  unplugin: ^3.3.0
   unstorage: ^1.17.5
-  valibot: ^1.4.0
-  vitest: ^4.1.6
-  vue: ^3.5.34
-  vue-tsc: ^3.3.1
+  valibot: ^1.4.2
+  vitest: ^4.1.10
+  vue: ^3.5.40
+  vue-tsc: ^3.3.7
 trustPolicyIgnoreAfter: 262800
 
 ignoredBuiltDependencies:

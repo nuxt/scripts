@@ -1,14 +1,14 @@
 ---
 title: Clarity
-description: Use Clarity in your Nuxt app.
+description: Load Microsoft Clarity and manage its session-recording consent state.
 links:
-- label: Source
-  icon: i-simple-icons-github
-  to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/clarity.ts
-  size: xs
+  - label: Source
+    icon: i-simple-icons-github
+    to: https://github.com/nuxt/scripts/blob/main/packages/script/src/runtime/registry/clarity.ts
+    size: xs
 ---
 
-[Clarity](https://clarity.microsoft.com/) by Microsoft is a screen recorder and heatmap tool that helps you understand how users interact with your website.
+[Microsoft Clarity](https://learn.microsoft.com/en-us/clarity/setup-and-installation/about-clarity) records sessions and generates heatmaps for your site.
 
 ::script-stats
 ::
@@ -19,9 +19,9 @@ links:
 ::script-types
 ::
 
-## Consent Mode
+## Consent mode
 
-Clarity supports a cookie consent toggle (boolean) or an advanced consent vector (record). Set the initial value with `defaultConsent` and call `consent.set()`{lang="ts"} at runtime:
+The `defaultConsent` option and `consent.set()`{lang="ts"} wrap Clarity's deprecated [Consent API V1](https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-consent-api-v1). Microsoft documents that API with a boolean value (or no value to grant consent). Although the current Nuxt Scripts schema also accepts `Record<string, string>`{lang="html"}, Clarity does not document an object payload for V1.
 
 ```vue
 <script setup lang="ts">
@@ -36,21 +36,23 @@ function acceptAnalytics() {
 </script>
 ```
 
-`consent.set()`{lang="ts"} also accepts Clarity's advanced consent vector for fine-grained cookie categories:
+For new integrations, call Consent API V2 through the script proxy, using Clarity's case-sensitive category names:
 
 ```ts
-const { consent } = useScriptClarity({
+const { proxy } = useScriptClarity({
   id: 'YOUR_PROJECT_ID',
-  defaultConsent: {
-    ad_storage: 'denied',
-    analytics_storage: 'granted',
-  },
 })
 
-consent.set({
-  ad_storage: 'granted',
-  analytics_storage: 'granted',
+proxy.clarity('consentv2', {
+  ad_Storage: 'denied',
+  analytics_Storage: 'denied',
+})
+
+// Update after the user grants consent.
+proxy.clarity('consentv2', {
+  ad_Storage: 'granted',
+  analytics_Storage: 'granted',
 })
 ```
 
-See [Clarity cookie consent](https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent) for details.
+`defaultConsent` and `consent.set()`{lang="ts"} do not issue `consentv2` commands. See [Clarity Consent API V2](https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-consent-api-v2) for the current API.

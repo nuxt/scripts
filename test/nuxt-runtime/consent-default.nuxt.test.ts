@@ -479,11 +479,13 @@ describe('per-script consent object', () => {
     const { useScriptTikTokPixel } = await import('../../packages/script/src/runtime/registry/tiktok-pixel')
     const result: any = useScriptTikTokPixel({ id: 'CA123' })
     result._opts.clientInit()
-    ;(window as any).ttq.queue = []
+    // TikTok's array protocol: window.ttq is the queue itself. Clear the
+    // clientInit entries (page view + scaffolding) before asserting.
+    ;(window as any).ttq.length = 0
     result.consent.grant()
     result.consent.revoke()
     result.consent.hold()
-    const queue = (window as any).ttq.queue as any[]
+    const queue = (window as any).ttq as any[]
     expect(queue.map(e => e[0])).toEqual(['grantConsent', 'revokeConsent', 'holdConsent'])
   })
 

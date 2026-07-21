@@ -383,7 +383,7 @@
       {
         "name": "ScriptGoogleMapsHeatmapLayerProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsHeatmapLayerProps {\n  /**\n   * Configuration options for the heatmap layer visualization.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/visualization#HeatmapLayerOptions\n   */\n  options?: Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>\n}"
+        "code": "interface ScriptGoogleMapsHeatmapLayerProps {\n  /**\n   * Configuration options for the heatmap layer visualization.\n   * @deprecated Google deprecated the Maps JavaScript API `HeatmapLayer` (May 2025) and removed it in v3.65 (May 2026). Consider [deck.gl HeatmapLayer](https://deck.gl/docs/api-reference/aggregation-layers/heatmap-layer) instead.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/visualization#HeatmapLayerOptions\n   */\n  options?: Omit<HeatmapLayerOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsInfoWindowProps",
@@ -966,11 +966,23 @@
         "code": "export interface SnapPixelApi {\n  snaptr: SnapTrFns & {\n    push: SnapTrFns\n    loaded: boolean\n    version: string\n    queue: any[]\n  }\n  _snaptr: SnapPixelApi['snaptr']\n  handleRequest?: SnapTrFns\n}"
       }
     ],
+    "speedcurve": [
+      {
+        "name": "SpeedCurveOptions",
+        "kind": "const",
+        "code": "export const SpeedCurveOptions = object({\n  // -- Composable-only options (consumed by useScriptSpeedCurve, not forwarded to LUX) --\n  /**\n   * Your SpeedCurve customer ID.\n   * @see https://support.speedcurve.com/docs/add-rum-to-your-site\n   */\n  id: pipe(string(), minLength(1)),\n  /**\n   * Enable SPA (single-page application) mode.\n   * When true, lux.js tracks soft navigations instead of full page loads.\n   * @see https://support.speedcurve.com/docs/single-page-applications\n   */\n  spaMode: optional(boolean()),\n  /**\n   * Automatically wire Vue Router hooks for SPA tracking when spaMode is true.\n   * Set to false to instrument navigations manually.\n   * @default true (when spaMode is true)\n   */\n  autoTrackSpaNavigations: optional(boolean()),\n\n  // -- LUX UserConfig passthrough (forwarded onto window.LUX before lux.js loads) --\n  // Property names match upstream LUX UserConfig casing exactly. Keep this list in\n  // sync with the LUX_USER_CONFIG_KEYS filter in speedcurve.ts.\n  /**\n   * Page label shown in the SpeedCurve dashboard.\n   * Accepts a static string, a function `(to) => string | false` for per-navigation labels,\n   * or `false` to disable labeling entirely. A callback returning `false` skips updating\n   * the label for that navigation.\n   * @default String(to.name ?? to.path)\n   */\n  label: optional(union([string(), function_(), literal(false)])),\n  /**\n   * Sampling rate (0–100). Percentage of sessions that send beacons.\n   * Upstream spelling is lowercase — matches LUX UserConfig.\n   */\n  samplerate: optional(pipe(number(), minValue(0), maxValue(100))),\n  /**\n   * Send the beacon when the page is hidden (pagehide event).\n   * @default true\n   */\n  sendBeaconOnPageHidden: optional(boolean()),\n  /**\n   * Track JavaScript errors.\n   * @default true\n   */\n  trackErrors: optional(boolean()),\n  /**\n   * Maximum number of errors to track per page view.\n   * @default 5\n   */\n  maxErrors: optional(number()),\n  /**\n   * Minimum time (ms) before a beacon can be sent.\n   */\n  minMeasureTime: optional(number()),\n  /**\n   * Maximum time (ms) after which the beacon is sent regardless of load state.\n   * @default 60000\n   */\n  maxMeasureTime: optional(number()),\n  /**\n   * Start a new beacon when the page becomes visible after being hidden.\n   */\n  newBeaconOnPageShow: optional(boolean()),\n  /**\n   * Track pages loaded in background tabs.\n   * @default false\n   */\n  trackHiddenPages: optional(boolean()),\n  /**\n   * Cookie domain for cross-subdomain session tracking.\n   */\n  cookieDomain: optional(string()),\n})"
+      },
+      {
+        "name": "SpeedCurveApi",
+        "kind": "interface",
+        "code": "export interface SpeedCurveApi {\n  LUX: LuxGlobal\n}"
+      }
+    ],
     "stripe": [
       {
         "name": "StripeOptions",
         "kind": "const",
-        "code": "export const StripeOptions = object({\n  /**\n   * Whether to load Stripe's advanced fraud detection signals.\n   * Set to `false` to opt out.\n   * @default true\n   * @see https://docs.stripe.com/disputes/prevention/advanced-fraud-detection\n   */\n  advancedFraudSignals: optional(boolean()),\n})"
+        "code": "export const StripeOptions = object({\n  /**\n   * Whether to load Stripe's advanced fraud detection signals.\n   * Set to `false` to opt out.\n   * @default true\n   * @see https://docs.stripe.com/disputes/prevention/advanced-fraud-detection\n   */\n  advancedFraudSignals: optional(boolean()),\n  /**\n   * The Stripe.js SDK version to load.\n   * Named releases get autocomplete; any future codename is also accepted.\n   * @default 'basil'\n   * @see https://docs.stripe.com/sdks/stripejs-versioning\n   */\n  version: optional(union([literal('v3'), literal('acacia'), literal('basil'), literal('clover'), literal('dahlia'), string()])),\n})"
       },
       {
         "name": "StripeApi",
@@ -1015,14 +1027,29 @@
         "code": "interface TrackOptions {\n  /** Used to deduplicate events sent from both the browser Pixel and the server-side Events API. */\n  event_id?: string\n  /**\n   * Sandbox test-event identifier. When set, events route to TikTok's Test Events panel\n   * without affecting production reporting.\n   */\n  test_event_code?: string\n  [key: string]: any\n}"
       },
       {
-        "name": "TtqFns",
+        "name": "TtqInstance",
+        "kind": "interface",
+        "code": "export interface TtqInstance {\n  /** Track a page view. */\n  page: () => void\n  /** Track a standard or custom conversion event. */\n  track: (event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void\n  /** Associate advanced-matching identifiers with the current user. */\n  identify: (properties: IdentifyProperties) => void\n  /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */\n  grantConsent: () => void\n  /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */\n  revokeConsent: () => void\n  /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */\n  holdConsent: () => void\n  enableCookie: () => void\n  disableCookie: () => void\n}"
+      },
+      {
+        "name": "TtqCallable",
         "kind": "type",
-        "code": "type TtqFns\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
+        "code": "type TtqCallable\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
+      },
+      {
+        "name": "Ttq",
+        "kind": "type",
+        "code": "export type Ttq = TtqCallable & TtqInstance & {\n  /** Resolve the per-pixel method bag for a specific pixel id. */\n  instance: (id: string) => TtqInstance\n}"
       },
       {
         "name": "TikTokPixelApi",
         "kind": "interface",
-        "code": "export interface TikTokPixelApi {\n  ttq: TtqFns & {\n    push: TtqFns\n    loaded: boolean\n    queue: any[]\n    /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */\n    grantConsent: () => void\n    /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */\n    revokeConsent: () => void\n    /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */\n    holdConsent: () => void\n  }\n}"
+        "code": "export interface TikTokPixelApi {\n  ttq: Ttq\n}"
+      },
+      {
+        "name": "TtqArray",
+        "kind": "type",
+        "code": "type TtqArray = TtqInstance & Array<any[]> & {\n  methods: string[]\n  setAndDefer: (target: any, method: string) => void\n  instance: (id: string) => TtqInstance\n  _i?: Record<string, any[]>\n  _t?: Record<string, number>\n  _o?: Record<string, any>\n}"
       },
       {
         "name": "TikTokPixelOptions",
@@ -2360,6 +2387,93 @@
         "description": "The user's age."
       }
     ],
+    "SpeedCurveOptions": [
+      {
+        "name": "id",
+        "type": "string",
+        "required": true,
+        "description": "Your SpeedCurve customer ID."
+      },
+      {
+        "name": "spaMode",
+        "type": "boolean",
+        "required": false,
+        "description": "Enable SPA (single-page application) mode. When true, lux.js tracks soft navigations instead of full page loads."
+      },
+      {
+        "name": "autoTrackSpaNavigations",
+        "type": "boolean",
+        "required": false,
+        "description": "Automatically wire Vue Router hooks for SPA tracking when spaMode is true. Set to false to instrument navigations manually.",
+        "defaultValue": "true (when spaMode is true)"
+      },
+      {
+        "name": "label",
+        "type": "string | Function | false",
+        "required": false,
+        "description": "Page label shown in the SpeedCurve dashboard. Accepts a static string, a function `(to) => string | false` for per-navigation labels, or `false` to disable labeling entirely. A callback returning `false` skips updating the label for that navigation.",
+        "defaultValue": "String(to.name ?? to.path)"
+      },
+      {
+        "name": "samplerate",
+        "type": "number",
+        "required": false,
+        "description": "Sampling rate (0–100). Percentage of sessions that send beacons. Upstream spelling is lowercase — matches LUX UserConfig."
+      },
+      {
+        "name": "sendBeaconOnPageHidden",
+        "type": "boolean",
+        "required": false,
+        "description": "Send the beacon when the page is hidden (pagehide event).",
+        "defaultValue": "true"
+      },
+      {
+        "name": "trackErrors",
+        "type": "boolean",
+        "required": false,
+        "description": "Track JavaScript errors.",
+        "defaultValue": "true"
+      },
+      {
+        "name": "maxErrors",
+        "type": "number",
+        "required": false,
+        "description": "Maximum number of errors to track per page view.",
+        "defaultValue": "5"
+      },
+      {
+        "name": "minMeasureTime",
+        "type": "number",
+        "required": false,
+        "description": "Minimum time (ms) before a beacon can be sent."
+      },
+      {
+        "name": "maxMeasureTime",
+        "type": "number",
+        "required": false,
+        "description": "Maximum time (ms) after which the beacon is sent regardless of load state.",
+        "defaultValue": "60000"
+      },
+      {
+        "name": "newBeaconOnPageShow",
+        "type": "boolean",
+        "required": false,
+        "description": "Start a new beacon when the page becomes visible after being hidden."
+      },
+      {
+        "name": "trackHiddenPages",
+        "type": "boolean",
+        "required": false,
+        "description": "Track pages loaded in background tabs.",
+        "defaultValue": "false"
+      },
+      {
+        "name": "cookieDomain",
+        "type": "string",
+        "required": false,
+        "description": "Cookie domain for cross-subdomain session tracking."
+      }
+    ],
     "SnapTrPixelOptions": [
       {
         "name": "id",
@@ -2381,6 +2495,13 @@
         "required": false,
         "description": "Whether to load Stripe's advanced fraud detection signals. Set to `false` to opt out.",
         "defaultValue": "true"
+      },
+      {
+        "name": "version",
+        "type": "'v3' | 'acacia' | 'basil' | 'clover' | 'dahlia' | string",
+        "required": false,
+        "description": "The Stripe.js SDK version to load. Named releases get autocomplete; any future codename is also accepted.",
+        "defaultValue": "'basil'"
       }
     ],
     "TikTokPixelOptions": [
@@ -2733,7 +2854,7 @@
     "ScriptGoogleMapsHeatmapLayerProps": [
       {
         "name": "options",
-        "type": "Omit<google.maps.visualization.HeatmapLayerOptions, 'map'>",
+        "type": "Omit<HeatmapLayerOptions, 'map'>",
         "required": false,
         "description": "Configuration options for the heatmap layer visualization."
       }

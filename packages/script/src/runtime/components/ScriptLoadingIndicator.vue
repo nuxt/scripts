@@ -16,7 +16,7 @@ const styles = computed(() => ({
 </script>
 
 <template>
-  <div class="loader" :styles="styles" aria-label="Loading..." role="status" />
+  <div class="loader" :style="styles" aria-label="Loading..." role="status" />
 </template>
 
 <style scoped>

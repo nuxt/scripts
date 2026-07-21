@@ -1,6 +1,6 @@
 ---
 title: Meta Pixel
-description: Use Meta Pixel in your Nuxt app.
+description: Load Meta Pixel, send events through fbq, and manage its binary consent state.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,9 +8,9 @@ links:
   size: xs
 ---
 
-[Meta Pixel](https://www.facebook.com/business/tools/meta-pixel) lets you measure, optimise and build audiences for your Facebook ad campaigns.
+[Meta Pixel](https://www.facebook.com/business/tools/meta-pixel) sends conversion and audience events to Meta Ads.
 
-Nuxt Scripts provides a registry script composable [`useScriptMetaPixel()`{lang="ts"}](/scripts/meta-pixel){lang="ts"} to easily integrate Meta Pixel in your Nuxt app.
+[`useScriptMetaPixel()`{lang="ts"}](/scripts/meta-pixel){lang="ts"} loads the pixel and exposes the `fbq` queue.
 
 ::script-stats
 ::
@@ -41,4 +41,4 @@ function rejectAds() {
 </script>
 ```
 
-See [Meta's consent docs](https://www.facebook.com/business/help/1151321516677370) for details.
+`defaultConsent: 'denied'` queues a revoke command before pixel initialization, but it does not delay the SDK request. If your consent policy requires no request to Meta before opt-in, use a [binary load gate](/docs/guides/consent#binary-load-gate) for the script itself.

@@ -21,6 +21,15 @@ export default defineConfig({
       }),
       // utils folders as *.test.ts in either test/unit or in src/**/*.test.ts
       defineProject({
+        resolve: {
+          alias: {
+            // Virtual emitted by the Nuxt module at build time; unit tests
+            // mock it via `vi.mock('#build/nuxt-scripts-snippets')`, but the
+            // import must first resolve to *something* the bundler accepts.
+            // The alias points at an empty placeholder.
+            '#build/nuxt-scripts-snippets': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
+          },
+        },
         test: {
           name: 'unit',
           environment: 'node',

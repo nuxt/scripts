@@ -51,45 +51,10 @@ vi.stubGlobal('fetch', vi.fn(() => {
   return Promise.resolve({ arrayBuffer: vi.fn(() => Buffer.from('')), ok: true, headers: { get: vi.fn() } })
 }))
 
-vi.mock('@nuxt/kit', async (og) => {
-  const mod = await og<typeof import('@nuxt/kit')>()
-
-  return {
-    ...mod,
-    useNuxt() {
-      return {
-        options: {
-          buildDir: '.nuxt',
-          app: {
-            baseURL: '/',
-          },
-          runtimeConfig: {
-            app: {},
-          },
-        },
-        hooks: {
-          hook: vi.fn(),
-        },
-      }
-    },
-    tryUseNuxt() {
-      return {
-        options: {
-          buildDir: '.nuxt',
-          app: {
-            baseURL: '/',
-          },
-          runtimeConfig: {
-            app: {},
-          },
-        },
-        hooks: {
-          hook: vi.fn(),
-        },
-      }
-    },
-  }
-})
+const mockNuxt = {
+  options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
+  hooks: { hook: vi.fn() },
+} as any
 
 // we want to control normalizeScriptData() output
 vi.mocked(hasProtocol).mockImplementation(() => true)
@@ -97,7 +62,7 @@ vi.mocked(hasProtocol).mockImplementation(() => true)
 vi.mocked(hash).mockImplementation(src => src.pathname)
 
 async function transform(code: string | string[], options?: AssetBundlerTransformerOptions) {
-  const plugin = NuxtScriptBundleTransformer(options).vite() as any
+  const plugin = NuxtScriptBundleTransformer({ ...options, nuxt: mockNuxt }).vite() as any
   const res = await plugin.transform.handler.call(
     {},
     Array.isArray(code) ? code.join('\n') : code,
@@ -640,6 +605,49 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
       // Verify the script was fetched (not just cached)
       expect(fetch).toHaveBeenCalled()
       expect(code).toMatchInlineSnapshot(`"const instance = useScript('/_scripts/assets/e3b0c44298fc1c14.js', )"`)
+    })
+
+    it('should bypass cache for registry scriptOptions.bundle force', async () => {
+      // Mock that cache exists and is fresh
+      mockBundleStorage.hasItem.mockResolvedValue(true)
+      mockBundleStorage.getItem.mockResolvedValue({ timestamp: Date.now() })
+      mockBundleStorage.getItemRaw.mockResolvedValue(Buffer.from('cached content'))
+
+      // Mock successful fetch for force download
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        headers: { get: () => null },
+      } as any)
+
+      const code = await transform(
+        `const instance = useScriptSnapchatPixel({
+          id: '2295cbcc-cb3f-4727-8c09-1133b742722c',
+          scriptOptions: {
+            bundle: 'force',
+            trigger: 'client'
+          }
+        })`,
+        {
+          renderedScript: new Map(),
+          scripts: [
+            {
+              bundle: {
+                resolve() {
+                  return 'https://sc-static.net/scevent.min.js'
+                },
+              },
+              import: {
+                name: 'useScriptSnapchatPixel',
+                from: '',
+              },
+            },
+          ] as any,
+        },
+      )
+
+      expect(fetch).toHaveBeenCalled()
+      expect(code).toContain('scriptInput: { src: \'/_scripts/assets/e3b0c44298fc1c14.js\' }')
     })
 
     it('should store bundle metadata with timestamp on download', async () => {

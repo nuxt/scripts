@@ -4,7 +4,6 @@ import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { markRaw, ref } from 'vue'
-// @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
@@ -46,6 +45,8 @@ function toNetworkRequest(entry: PerformanceResourceTiming, proxyPrefix: string)
 
 function createDomainMatcher(domains: Set<string>, proxyPrefix: string, scriptSrc: string | undefined) {
   const localHostname = window.location.hostname
+  // alias → real domain, so aliased proxy paths (/_scripts/p/<alias>/...) still attribute
+  const aliasToDomain = (useRuntimeConfig().public['nuxt-scripts-devtools'] as any)?.aliasToDomain || {}
   const scriptUrl = (() => {
     if (!scriptSrc)
       return ''
@@ -69,7 +70,8 @@ function createDomainMatcher(domains: Set<string>, proxyPrefix: string, scriptSr
       const proxyIdx = entryUrl.pathname.indexOf(proxyPath)
       if (proxyIdx !== -1) {
         const afterPrefix = entryUrl.pathname.slice(proxyIdx + proxyPath.length)
-        const proxyDomain = afterPrefix.split('/')[0]
+        const proxySegment = afterPrefix.split('/')[0]
+        const proxyDomain = proxySegment ? (aliasToDomain[proxySegment] || proxySegment) : undefined
         if (proxyDomain && domains.has(proxyDomain))
           return true
       }
@@ -162,6 +164,9 @@ export function resolveScriptKey(input: any): string {
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
+  if (!import.meta.client && options.use) {
+    options.use = (() => undefined) as typeof options.use
+  }
 
   // Partytown quick-path: use useHead for SSR rendering
   // Partytown needs scripts in initial HTML with type="text/partytown"
@@ -171,7 +176,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       throw new Error('useScript with partytown requires a src')
     }
     useHead({
-      script: [{ src, type: 'text/partytown' }],
+      script: [{ src, type: 'text/partytown' as 'text/javascript' }],
     })
     const nuxtApp = useNuxtApp() as NuxtScriptsApp
     ensureScripts(nuxtApp)
@@ -238,10 +243,11 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   // browser hint optimizations
   const nuxtApp = useNuxtApp() as NuxtScriptsApp
   const id = String(resolveScriptKey(input))
-  options.head = options.head || injectHead()
+  options.head = options.head || injectHead() as NonNullable<typeof options.head>
   if (!options.head) {
     throw new Error('useScript() has been called without Nuxt context.')
   }
+  const headHooks = options.head.hooks!
   ensureScripts(nuxtApp)
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
 
@@ -258,7 +264,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
   }
   else if (options.trigger === 'onNuxtReady' || options.trigger === 'client') {
-    if (!options.warmupStrategy) {
+    // `false` is a valid value to disable warmup (#826)
+    if (options.warmupStrategy === undefined) {
       options.warmupStrategy = 'preload'
     }
     if (options.trigger === 'onNuxtReady') {
@@ -318,7 +325,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
       ...ctx,
       trigger: typeof trigger === 'object' ? (trigger instanceof Promise ? 'promise' : JSON.stringify(trigger)) : trigger,
     })
-    options.head.hooks.hook('script:updated', (entry) => {
+    headHooks.hook('script:updated', (entry) => {
       if (entry.script.id !== instance.id)
         return
       const status = entry.script.status
@@ -369,7 +376,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     }
 
     if (!nuxtApp._scripts[instance.id]) {
-      options.head.hooks.hook('script:updated', (ctx) => {
+      headHooks.hook('script:updated', (ctx) => {
         if (ctx.script.id !== instance.id)
           return
         // convert the status to a timestamp
@@ -382,7 +389,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
         syncScripts()
       })
       // @ts-expect-error untyped
-      options.head.hooks.hook('script:instance-fn', (ctx) => {
+      headHooks.hook('script:instance-fn', (ctx) => {
         if (ctx.script.id !== instance.id || String(ctx.fn).startsWith('__v_'))
           return
         // log all events

@@ -1,6 +1,6 @@
 ---
 title: TikTok Pixel
-description: Use TikTok Pixel in your Nuxt app.
+description: Track TikTok conversions with consent, deduplication, and advanced matching.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,9 +8,9 @@ links:
   size: xs
 ---
 
-[TikTok Pixel](https://ads.tiktok.com/help/article/tiktok-pixel) lets you measure, optimize and build audiences for your TikTok ad campaigns.
+[TikTok Pixel](https://ads.tiktok.com/help/article/tiktok-pixel) reports browser events to TikTok Ads for conversion measurement and audiences.
 
-Nuxt Scripts provides a registry script composable [`useScriptTikTokPixel()`{lang="ts"}](/scripts/tiktok-pixel){lang="ts"} to easily integrate TikTok Pixel in your Nuxt app.
+Use [`useScriptTikTokPixel()`{lang="ts"}](/scripts/tiktok-pixel){lang="ts"} to load the pixel and access its `ttq` API.
 
 ::script-stats
 ::
@@ -18,37 +18,18 @@ Nuxt Scripts provides a registry script composable [`useScriptTikTokPixel()`{lan
 ::script-docs
 ::
 
-## Identifying Users
+## Disabling automatic page views
 
-You can identify users for advanced matching:
+By default, TikTok Pixel tracks a page view during initialization. Disable it in the composable call:
 
 ```ts
-const { proxy } = useScriptTikTokPixel()
-
-proxy.ttq('identify', {
-  email: 'user@example.com',
-  phone_number: '+1234567890'
+useScriptTikTokPixel({
+  id: 'YOUR_PIXEL_ID',
+  trackPageView: false,
 })
 ```
 
-## Disabling Auto Page View
-
-By default, TikTok Pixel tracks page views automatically. To disable:
-
-```ts
-export default defineNuxtConfig({
-  scripts: {
-    registry: {
-      tiktokPixel: {
-        id: 'YOUR_PIXEL_ID',
-        trackPageView: false
-      }
-    }
-  }
-})
-```
-
-## Consent Mode
+## Consent mode
 
 TikTok Pixel exposes a three-state consent API: grant, revoke, or hold (defer the decision). Set the initial state with `defaultConsent` and call `consent.grant()`{lang="ts"} / `consent.revoke()`{lang="ts"} / `consent.hold()`{lang="ts"} at runtime:
 
@@ -68,11 +49,13 @@ function rejectAds() {
 </script>
 ```
 
-See the [TikTok cookie consent docs](https://business-api.tiktok.com/portal/docs?id=1739585600931842) for the full behaviour.
+See the [TikTok cookie consent docs](https://business-api.tiktok.com/portal/docs?id=1739585600931842) for the full behavior.
 
-## Data Residency Region
+The initial consent command is queued before pixel initialization, but it does not delay the SDK request. If your policy requires no request to TikTok before opt-in, use a [consent trigger](/docs/guides/consent#binary-load-gate) for the script itself.
 
-Enterprises with US data-residency requirements can route the Pixel SDK through `analytics.us.tiktok.com` by setting `region: 'us'` (default `'global'`):
+## Data-residency endpoint
+
+Set `region: 'us'` to load the Pixel SDK from `analytics.us.tiktok.com` instead of the global host:
 
 ```ts
 useScriptTikTokPixel({
@@ -81,7 +64,9 @@ useScriptTikTokPixel({
 })
 ```
 
-## Server-Side Event Deduplication
+This option selects the SDK host only. It does not by itself establish that the rest of your tracking setup meets a data-residency or privacy requirement.
+
+## Server-side event deduplication
 
 For the Pixel + Events API (CAPI) pattern, pass the same `event_id` on both the browser and server sides so TikTok deduplicates the pair:
 
@@ -104,27 +89,31 @@ async function checkout(order: { id: string, total: number }) {
 
 See [TikTok's event-deduplication guide](https://ads.tiktok.com/help/article/event-deduplication?lang=en) for full rules.
 
-## Test Events Sandbox
+## Testing browser events
 
-Set `test_event_code` on the 4th `track` argument to route an event into TikTok's Test Events panel without affecting production reporting:
+TikTok's [browser Pixel testing guide](https://ads.us.tiktok.com/help/article/test-tiktok-pixel-events-video-walkthrough?lang=en) uses the Test Events tab in Events Manager: enter the site URL, open it through the generated test flow, then perform the action you want to inspect.
 
-```ts
-proxy.ttq('track', 'Purchase', { value: 99 }, { test_event_code: 'TEST12345' })
-```
+The current Nuxt Scripts type also accepts `test_event_code` in a fourth `track` argument and forwards it to the SDK. TikTok documents that field for the server-side Events API, not for the browser `ttq.track` signature, so do not rely on it for browser testing.
 
-## Advanced Matching
+## Advanced matching
 
-TikTok requires identify fields (`email`, `phone_number`, `external_id`, `first_name`, `last_name`, `city`, `state`, `country`, `zip_code`) to be SHA-256-hashed lowercase. TikTok silently drops raw values; in development, Nuxt Scripts logs a warning if it spots an unhashed value:
+Nuxt Scripts expects each identify field (`email`, `phone_number`, `external_id`, `first_name`, `last_name`, `city`, `state`, `country`, `zip_code`) as a 64-character SHA-256 hex digest. TikTok's [Advanced Matching guide](https://ads.tiktok.com/help/article/advanced-matching-web?lang=en) covers normalization and hashing. In development, the composable warns when a value does not look hashed.
 
 ```ts
-import { sha256 } from 'ohash'
+async function sha256(value: string) {
+  const input = new TextEncoder().encode(value)
+  const digest = await crypto.subtle.digest('SHA-256', input)
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+}
 
 const { proxy } = useScriptTikTokPixel({ id: 'YOUR_PIXEL_ID' })
 proxy.ttq('identify', {
-  email: sha256('user@example.com'.trim().toLowerCase()),
-  phone_number: sha256('+15551234567'),
+  email: await sha256('user@example.com'.trim().toLowerCase()),
+  phone_number: await sha256('+15551234567'),
 })
 ```
+
+[`crypto.subtle.digest()`{lang="ts"}](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest) is available only in a secure context in browsers. Localhost is treated as secure for development; deploy this example over HTTPS.
 
 ::script-types
 ::

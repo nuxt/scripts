@@ -1,6 +1,6 @@
 ---
 title: Google Tag Manager
-description: Use Google Tag Manager in your Nuxt app.
+description: Load a GTM web container and push page or consent events from Nuxt.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,16 +8,14 @@ links:
     size: xs
 ---
 
-[Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) is a tag management system that allows you to quickly and easily update tags and code snippets on your website or mobile app, such as those intended for traffic analysis and marketing optimization.
+[Google Tag Manager](https://marketingplatform.google.com/about/tag-manager/) loads tags from a web container, letting you change tracking configuration without redeploying the app.
 
 ::callout
-You may not need Google Tag Manager with Nuxt Scripts. GTM is 82kb and will slow down your site.
-Nuxt Scripts provides many features you can easily
-implement within your Nuxt app. If you're using GTM for Google Analytics, you can use the [`useScriptGoogleAnalytics()`{lang="ts"}](/scripts/google-analytics){lang="ts"} composable instead.
+GTM can load any tags configured in your container, so its performance cost varies with that configuration. If you only need Google Analytics, the [`useScriptGoogleAnalytics()`{lang="ts"}](/scripts/google-analytics){lang="ts"} composable may be simpler.
 ::
 
 ::callout{icon="i-heroicons-information-circle"}
-Nuxt Scripts only loads the GTM **container**. It does not auto-track page views, clicks, scrolls, or form submits on its own. The **tags and triggers configured inside your GTM workspace** (tagmanager.google.com), or `dataLayer.push` calls you make from your app, determine what gets tracked (see [Sending Page Events](#guide-sending-page-events)). For automatic page/click/scroll/video tracking, enable [GA4 Enhanced Measurement](https://support.google.com/analytics/answer/9216061) on your GA4 tag inside GTM.
+Nuxt Scripts only loads the GTM **container**. Tracking comes from the tags and triggers in your GTM workspace or from your own `dataLayer.push` calls. For automatic page, click, scroll, and video tracking, enable [GA4 Enhanced Measurement](https://support.google.com/analytics/answer/9216061) for the GA4 web data stream.
 ::
 
 ::script-stats
@@ -26,10 +24,9 @@ Nuxt Scripts only loads the GTM **container**. It does not auto-track page views
 ::script-docs
 ::
 
-### Guide: Sending Page Events
+### Sending page events
 
-If you'd like to manually send page events to Google Tag Manager, you can use the `proxy` with the [`useScriptEventPage()`{lang="ts"}](/docs/api/use-script-event-page){lang="ts"} composable.
-This composable triggers the provided function on route change after Nuxt updates the page title.
+Use the proxy with [`useScriptEventPage()`{lang="ts"}](/docs/api/use-script-event-page){lang="ts"} to push an event after Nuxt finishes the initial client render or a later route change and updates the page title:
 
 ```ts
 const { proxy } = useScriptGoogleTagManager({
@@ -37,7 +34,7 @@ const { proxy } = useScriptGoogleTagManager({
 })
 
 useScriptEventPage(({ title, path }) => {
-  // triggered on route change after title is updated
+  // Runs for the initial render when registered early, then for route changes.
   proxy.dataLayer.push({
     event: 'pageview',
     title,
@@ -48,13 +45,13 @@ useScriptEventPage(({ title, path }) => {
 
 ## Consent Mode
 
-Google Tag Manager natively consumes [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). Set the default with `defaultConsent` (pushes `['consent','default', state]` onto the dataLayer before the `gtm.js` event) and call `consent.update()`{lang="ts"} at runtime. Pass an **array** to `defaultConsent` to fire multiple defaults, for example [region-specific defaults](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior) where each entry targets different countries via `region`. For runtime-derived defaults (waiting for region/CMS to resolve before queueing), call `consent.default()`{lang="ts"} from the client.
+Google Tag Manager accepts [GCMv2 consent state](https://developers.google.com/tag-platform/security/guides/consent?consentmode=basic). `defaultConsent` enters the queue before the `gtm.js` event; use `consent.update()`{lang="ts"} for later choices. If client state determines the initial default, resolve it before calling the composable and pass it through `defaultConsent`. A later `consent.default()`{lang="ts"} call queues another default after initialization and cannot reproduce the original ordering.
 
 ::callout{icon="i-heroicons-play" to="https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent" target="_blank"}
-Try the live [Cookie Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent), [Granular Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent), or [Regional Consent Example](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) on [StackBlitz](https://stackblitz.com).
+Open the [cookie consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/cookie-consent), [granular consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/granular-consent), or [regional consent](https://stackblitz.com/github/nuxt/scripts/tree/main/examples/regional-consent) example on [StackBlitz](https://stackblitz.com).
 ::
 
-### Consent Mode v2 Signals
+### Consent Mode v2 signals
 
 | Signal | Purpose |
 |--------|---------|
@@ -103,7 +100,7 @@ useScriptEventPage(({ title, path }) => {
 
 ### Per-region defaults
 
-Pass an array to `defaultConsent` to fire one `['consent','default', state]` push per entry, in order. This matches Google's [region-specific consent pattern](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior): more specific regions (e.g. `US-CA`) override broader ones (`US`); an entry with no `region` is the unscoped global fallback.
+Pass an array to `defaultConsent` to queue one consent-default command per entry, in order. This matches Google's [region-specific consent pattern](https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior): more specific regions (e.g. `US-CA`) override broader ones (`US`); an entry with no `region` is the unscoped global fallback.
 
 ```vue
 <script setup lang="ts">
@@ -111,7 +108,7 @@ useScriptGoogleTagManager({
   id: 'GTM-XXXXXX',
   defaultConsent: [
     {
-      // EEA + UK + Switzerland — start denied, wait 500ms for the user's choice
+      // EEA + UK + Switzerland: start denied and wait 500ms for a choice.
       ad_storage: 'denied',
       ad_user_data: 'denied',
       ad_personalization: 'denied',
@@ -120,7 +117,7 @@ useScriptGoogleTagManager({
       wait_for_update: 500,
     },
     {
-      // Everywhere else — granted by default
+      // Everywhere else: granted by default.
       ad_storage: 'granted',
       ad_user_data: 'granted',
       ad_personalization: 'granted',
@@ -140,15 +137,15 @@ The module forwards each entry verbatim, in input order. Precedence between regi
 
 ## Examples
 
-### Server-Side GTM Setup
+### Server-side GTM
 
-Server-side GTM moves tag execution to your server for better privacy, performance (~500ms faster), and ad-blocker bypass.
+With [server-side tagging](https://developers.google.com/tag-platform/tag-manager/server-side/intro), the web container still runs in the browser and sends measurement requests to a server container that you operate. Set each supported tag's transport URL (for example, `server_container_url` in a Google tag) to the server container; changing the GTM loader URL alone does not reroute those requests.
 
-**Prerequisites:** [Server-side GTM container](https://tagmanager.google.com), hosting ([Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) / [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide)), and a custom domain.
+Prerequisites include a [server-side GTM container](https://tagmanager.google.com), hosting such as [Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) or a [manual deployment](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide), and a [custom domain](https://developers.google.com/tag-platform/tag-manager/server-side/custom-domain).
 
 #### Configuration
 
-Override the script source with your custom domain:
+If your configured first-party tagging domain serves the web container loader, override the source and retain the container ID query parameter:
 
 ```ts
 // nuxt.config.ts
@@ -157,8 +154,9 @@ export default defineNuxtConfig({
     registry: {
       googleTagManager: {
         id: 'GTM-XXXXXX',
+        trigger: 'onNuxtReady',
         scriptInput: {
-          src: 'https://gtm.example.com/gtm.js'
+          src: 'https://analytics.example.com/gtm.js?id=GTM-XXXXXX'
         }
       }
     }
@@ -166,16 +164,4 @@ export default defineNuxtConfig({
 })
 ```
 
-For environment tokens (`auth`, `preview`), find them in GTM: Admin > Environments > Get Snippet.
-
-#### Troubleshooting
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Script blocked by ad blocker | Custom domain detected as tracker | Use a non-obvious subdomain name (avoid `gtm`, `analytics`, `tracking`) |
-| Cookies expire after 7 days in Safari | ITP treats subdomain as third-party | Use same-origin setup or implement cookie keeper |
-| Preview mode not working | Missing or incorrect auth/preview tokens | Copy tokens from GTM: Admin > Environments > Get Snippet |
-| CORS errors | Server container misconfigured | Ensure your server container allows requests from your domain |
-| `gtm.js` returns 404 | Incorrect path mapping | Verify your CDN/proxy routes `/gtm.js` to the container |
-
-For infrastructure setup, see [Cloud Run](https://developers.google.com/tag-platform/tag-manager/server-side/cloud-run-setup-guide) or [Docker](https://developers.google.com/tag-platform/tag-manager/server-side/manual-setup-guide) guides.
+This source override only changes where the browser loads `gtm.js`. Configure the web and server containers to route measurement requests to the server container, following Google's [server-side tagging documentation](https://developers.google.com/tag-platform/tag-manager/server-side).

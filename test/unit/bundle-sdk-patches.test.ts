@@ -9,6 +9,7 @@ import { hash } from 'ohash'
 import { hasProtocol } from 'ufo'
 import { describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
+import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
 
 vi.mock('ohash', async (og) => {
   const mod = await og<typeof import('ohash')>()
@@ -33,17 +34,20 @@ vi.mock('../../packages/script/src/assets', () => ({
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-vi.mock('@nuxt/kit', async (og) => {
-  const mod = await og<typeof import('@nuxt/kit')>()
-  const nuxt = {
-    options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
-    hooks: { hook: vi.fn() },
-  }
-  return { ...mod, useNuxt: () => nuxt, tryUseNuxt: () => nuxt }
-})
-
 vi.mocked(hasProtocol).mockImplementation(() => true)
 vi.mocked(hash).mockImplementation(() => 'fathom-script')
+
+const mockNuxt = {
+  options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
+  hooks: { hook: vi.fn() },
+} as any
+
+let _proxyConfigs: ReturnType<typeof buildProxyConfigsFromRegistry> | undefined
+async function getProxyConfigs() {
+  if (!_proxyConfigs)
+    _proxyConfigs = buildProxyConfigsFromRegistry(await registry())
+  return _proxyConfigs
+}
 
 function mockUpstream(bytes: Buffer) {
   fetchMock.mockResolvedValueOnce({
@@ -55,7 +59,7 @@ function mockUpstream(bytes: Buffer) {
 }
 
 async function runTransform(code: string, options: AssetBundlerTransformerOptions) {
-  const plugin = NuxtScriptBundleTransformer(options).vite() as any
+  const plugin = NuxtScriptBundleTransformer({ ...options, nuxt: mockNuxt }).vite() as any
   await plugin.transform.handler.call({}, code, 'file.js')
 }
 
@@ -71,6 +75,13 @@ describe('bundle-only sdkPatches integration', () => {
   // the script's proxy path.
   const ahrefsLike = Buffer.from(
     `(function(){var s=document.currentScript;var E=s.getAttribute("data-api")||new URL(s.src).origin+"/api/event";var _=s.getAttribute("data-error")||new URL(s.src).origin+"/api/error";})();`,
+  )
+
+  // Mirrors Snapchat scevent.min.js config bootstrap. When bundled, `S`
+  // resolves to /_scripts/assets/... and `new URL(S).host` becomes the page
+  // host. The SDK then requests /config/... from the Nuxt app origin.
+  const snapchatLike = Buffer.from(
+    `(function(){var s="sc-static.net",v="https://",l="snapchat.com",S="/_scripts/assets/scevent.min.js";function qr(t){var e={src:t}}var xe=y((function(){return new URL(S).host}),s);function De(t,n,r,e){return void 0===n&&(n=4),e?v+e+t:r?v+xe+t:v+"tr"+(ce()?"-shadow":6===n?"6":"")+"."+l+t}function Ea(t){var i="/config/no/"+t+".js?v=3.59.0";$n(xe,"localhost")?qr(De(i)):C?Sa(t,a):qr(xe!==s?v+xe+i:De(i))}})();`,
   )
 
   it('applies neutralize-domain-check to bundle-only scripts (no proxy)', async () => {
@@ -139,6 +150,43 @@ describe('bundle-only sdkPatches integration', () => {
     expect(content).toMatch(/\(self\.location\.origin\+"\/_scripts\/p\/analytics\.ahrefs\.com"\)\+"\/api\/error"/)
     // Original derivation is gone — no remaining `new URL(s.src).origin`.
     expect(content).not.toMatch(/new URL\(s\.src\)\.origin/)
+  })
+
+  it('applies snapchat config host patches to bundled proxy scripts', async () => {
+    mockUpstream(snapchatLike)
+    vi.mocked(hash).mockImplementationOnce(() => 'snapchat-script')
+    const renderedScript = new Map()
+    const proxyConfigs = await getProxyConfigs()
+
+    await runTransform(
+      `const instance = useScriptSnapchatPixel({ id: '2295cbcc-cb3f-4727-8c09-1133b742722c' }, { bundle: true })`,
+      {
+        renderedScript,
+        scripts: [
+          {
+            registryKey: 'snapchatPixel',
+            src: 'https://sc-static.net/scevent.min.js',
+            bundle: {
+              sdkPatches: [{ type: 'replace-new-url-host', host: 'sc-static.net' }],
+            },
+            proxy: 'snapchatPixel',
+            import: { name: 'useScriptSnapchatPixel', from: '' },
+          },
+        ] as any,
+        proxyConfigs: {
+          snapchatPixel: proxyConfigs.snapchatPixel,
+        },
+        proxyPrefix: '/_scripts/p',
+      },
+    )
+
+    const stored = [...renderedScript.values()][0]
+    expect(stored, 'bundle was not stored').toBeDefined()
+    const content = (stored.content as Buffer).toString('utf-8')
+    expect(content).toContain('return "sc-static.net"')
+    expect(content).toContain('qr(self.location.origin+"/_scripts/p/tr.snapchat.com"+i)')
+    expect(content).not.toContain('new URL(S).host')
+    expect(content).not.toContain('v+xe+i:De(i)')
   })
 
   it('leaves bundles untouched when no patches are configured', async () => {

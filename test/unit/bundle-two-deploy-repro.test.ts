@@ -31,23 +31,19 @@ vi.mock('../../packages/script/src/assets', () => ({
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-vi.mock('@nuxt/kit', async (og) => {
-  const mod = await og<typeof import('@nuxt/kit')>()
-  const nuxt = {
-    options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
-    hooks: { hook: vi.fn() },
-  }
-  return { ...mod, useNuxt: () => nuxt, tryUseNuxt: () => nuxt }
-})
-
 vi.mocked(hasProtocol).mockImplementation(() => true)
 // Source URL hash is stable across both "deploys" — the URL doesn't change between deployments,
 // only the upstream bytes do. This is exactly the real-world scenario in #724.
 vi.mocked(hash).mockImplementation(() => 'adsbygoogle')
 
+const mockNuxt = {
+  options: { buildDir: '.nuxt', app: { baseURL: '/' }, runtimeConfig: { app: {} } },
+  hooks: { hook: vi.fn() },
+} as any
+
 async function runTransform(code: string, options?: AssetBundlerTransformerOptions) {
   mockBundleStorage.hasItem.mockResolvedValue(false)
-  const plugin = NuxtScriptBundleTransformer({ renderedScript: new Map(), ...options }).vite() as any
+  const plugin = NuxtScriptBundleTransformer({ renderedScript: new Map(), ...options, nuxt: mockNuxt }).vite() as any
   const out = await plugin.transform.handler.call({}, code, 'file.js')
   return out?.code as string
 }

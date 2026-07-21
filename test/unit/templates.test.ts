@@ -36,7 +36,8 @@ describe('template plugin file', () => {
         stripe: 'https://js.stripe.com/v3/',
       },
     }, [])
-    expect(res).toContain('const stripe = useScript(Object.assign({ key: "stripe" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe"] || {}), { use: () => ({ stripe: window.stripe }) })')
+    expect(res).toContain('"stripe": Object.assign({ key: "stripe" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe"] || {})')
+    expect(res).toContain('const stripe = __registerGlobal(__globals["stripe"], { use: () => ({ stripe: window.stripe }) })')
   })
   it('object global', async () => {
     const res = templatePlugin({
@@ -50,7 +51,8 @@ describe('template plugin file', () => {
         },
       },
     }, [])
-    expect(res).toContain('const stripe = useScript(Object.assign({ key: "stripe" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe"] || {}), { use: () => ({ stripe: window.stripe }) })')
+    expect(res).toContain('"stripe": Object.assign({ key: "stripe" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe"] || {})')
+    expect(res).toContain('const stripe = __registerGlobal(__globals["stripe"], { use: () => ({ stripe: window.stripe }) })')
   })
   it('array global', async () => {
     const res = templatePlugin({
@@ -70,7 +72,8 @@ describe('template plugin file', () => {
         ],
       },
     }, [])
-    expect(res).toContain('const stripe = useScript(Object.assign({ key: "stripe" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe"] || {}), { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe: window.stripe }) })')
+    expect(res).toContain('"stripe": Object.assign({ key: "stripe" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe"] || {})')
+    expect(res).toContain('const stripe = __registerGlobal(__globals["stripe"], { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe: window.stripe }) })')
   })
   it('mixing global', async () => {
     const res = templatePlugin({
@@ -100,11 +103,18 @@ describe('template plugin file', () => {
         name: "scripts:init",
         env: { islands: false },
         parallel: true,
-        setup() {
+        async setup(nuxtApp) {
           const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}
-          const stripe1 = useScript(Object.assign({ key: "stripe1" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe1"] || {}), { use: () => ({ stripe1: window.stripe1 }) })
-          const stripe2 = useScript(Object.assign({ key: "stripe2" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe2"] || {}), { use: () => ({ stripe2: window.stripe2 }) })
-          const stripe3 = useScript(Object.assign({ key: "stripe3" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe3"] || {}), { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
+          const __registerGlobal = (input, options) => { if (!input) return undefined; const { enabled, ...rest } = input; return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options) }
+          const __globals = {
+            "stripe1": Object.assign({ key: "stripe1" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe1"] || {}),
+            "stripe2": Object.assign({ key: "stripe2" }, {"async":true,"src":"https://js.stripe.com/v3/","key":"stripe","defer":true,"referrerpolicy":"no-referrer"}, __scriptsGlobals["stripe2"] || {}),
+            "stripe3": Object.assign({ key: "stripe3" }, {"src":"https://js.stripe.com/v3/"}, __scriptsGlobals["stripe3"] || {}),
+          }
+          await nuxtApp.hooks.callHook('scripts:globals', __globals)
+          const stripe1 = __registerGlobal(__globals["stripe1"], { use: () => ({ stripe1: window.stripe1 }) })
+          const stripe2 = __registerGlobal(__globals["stripe2"], { use: () => ({ stripe2: window.stripe2 }) })
+          const stripe3 = __registerGlobal(__globals["stripe3"], { ...{"trigger":"onNuxtReady","mode":"client"}, use: () => ({ stripe3: window.stripe3 }) })
           return { provide: { scripts: { stripe1, stripe2, stripe3 } } }
         }
       })"
@@ -287,6 +297,71 @@ describe('template plugin file', () => {
     expect(res).toContain('const __scriptsGlobals = useRuntimeConfig().public.scriptsGlobals || {}')
     // Override slot is last → wins over the build-time JSON.
     expect(res).toContain('Object.assign({ key: "trustedShops" }, {"src":"https://widgets.trustedshops.com/build-time.js"}, __scriptsGlobals["trustedShops"] || {})')
+  })
+
+  // A runtime override can drop an unused integration per instance (multi-tenant single
+  // build) by disabling it: `enabled: false` or an empty/null `src`. The generated plugin
+  // routes every global through __registerGlobal which skips registration when disabled.
+  // See https://github.com/nuxt/scripts/issues/759.
+  it('global registration is guarded so a runtime override can disable it', async () => {
+    const res = templatePlugin({
+      globals: {
+        awin: { src: 'https://www.dwin1.com/build-time.js' },
+      },
+    }, [])
+    // Helper is emitted once and strips `enabled` so it never leaks as a script attribute.
+    expect(res).toContain('const __registerGlobal = (input, options) => { if (!input) return undefined; const { enabled, ...rest } = input; return (enabled === false || rest.src === \'\' || rest.src === null) ? undefined : useScript(rest, options) }')
+    // Each global goes through the guard rather than calling useScript directly.
+    expect(res).toContain('const awin = __registerGlobal(__globals["awin"]')
+    expect(res).not.toContain('const awin = useScript(')
+  })
+
+  // Resolved inputs are collected into a mutable map and passed through a runtime hook
+  // before registration, so userland can rewrite/delete/add entries per instance.
+  // See https://github.com/nuxt/scripts/issues/759.
+  it('globals are passed through the scripts:globals runtime hook before registration', async () => {
+    const res = templatePlugin({
+      globals: {
+        awin: { src: 'https://www.dwin1.com/build-time.js' },
+      },
+    }, [])
+    // setup is async and receives nuxtApp so the hook can be awaited.
+    expect(res).toContain('async setup(nuxtApp) {')
+    // Resolved input lives in the mutable map keyed by the global key.
+    expect(res).toContain('"awin": Object.assign({ key: "awin" }')
+    // Hook fires before any registration, with the mutable map.
+    expect(res).toContain('await nuxtApp.hooks.callHook(\'scripts:globals\', __globals)')
+    const hookIdx = res.indexOf('callHook(\'scripts:globals\'')
+    const registerIdx = res.indexOf('const awin = __registerGlobal')
+    expect(hookIdx).toBeGreaterThan(-1)
+    expect(registerIdx).toBeGreaterThan(hookIdx)
+  })
+
+  // The runtime guard itself: enabled:false and empty/null src skip; undefined src (non-src
+  // globals) and a normal src register.
+  it('__registerGlobal skips disabled entries and registers the rest', () => {
+    const calls: any[] = []
+    const useScript = (input: any) => {
+      calls.push(input)
+      return input
+    }
+    const __registerGlobal = (input: any, options: any) => {
+      if (!input)
+        return undefined
+      const { enabled, ...rest } = input
+      return (enabled === false || rest.src === '' || rest.src === null) ? undefined : useScript(rest, options)
+    }
+
+    expect(__registerGlobal({ key: 'a', src: 'https://e/x.js' }, {})).toBeDefined()
+    expect(__registerGlobal({ key: 'b', src: 'https://e/x.js', enabled: false }, {})).toBeUndefined()
+    expect(__registerGlobal({ key: 'c', src: '' }, {})).toBeUndefined()
+    expect(__registerGlobal({ key: 'd', src: null }, {})).toBeUndefined()
+    // No src field (inline/non-src global) still registers.
+    expect(__registerGlobal({ key: 'e' }, {})).toBeDefined()
+    // A hook that deleted the entry leaves `undefined`; must not throw on destructure.
+    expect(__registerGlobal(undefined, {})).toBeUndefined()
+    // `enabled` is stripped, never forwarded to useScript as an attribute.
+    expect(calls.every(c => !('enabled' in c))).toBe(true)
   })
 
   // Test serviceWorker trigger in globals

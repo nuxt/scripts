@@ -1,6 +1,6 @@
 ---
 title: Google reCAPTCHA
-description: Use Google reCAPTCHA v3 in your Nuxt app.
+description: Load score-based reCAPTCHA v3 or Enterprise and execute protected actions.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,12 +8,12 @@ links:
     size: xs
 ---
 
-[Google reCAPTCHA](https://www.google.com/recaptcha/about/) protects your site from spam and abuse using advanced risk analysis.
+[Google reCAPTCHA](https://cloud.google.com/security/products/recaptcha) scores requests for likely spam and abuse without showing a checkbox.
 
-Nuxt Scripts provides a registry script composable [`useScriptGoogleRecaptcha()`{lang="ts"}](/scripts/google-recaptcha){lang="ts"} to easily integrate reCAPTCHA v3 in your Nuxt app.
+[`useScriptGoogleRecaptcha()`{lang="ts"}](/scripts/google-recaptcha){lang="ts"} loads the selected client and exposes `grecaptcha`.
 
 ::callout
-This integration supports reCAPTCHA v3 (score-based, invisible) only. For v2 checkbox, use the standard reCAPTCHA integration.
+This registry integration supports score-based reCAPTCHA v3 and Enterprise flows. To render a v2 checkbox, load it separately with `useScript()`{lang="ts"} and follow Google's [v2 display guide](https://developers.google.com/recaptcha/docs/display).
 ::
 
 ::script-stats
@@ -39,9 +39,25 @@ export default defineNuxtConfig({
 })
 ```
 
-## China Support
+Enterprise exposes its methods under `grecaptcha.enterprise`, so execute an action with that object rather than `grecaptcha.execute`:
 
-For sites that need to work in China, use `recaptchaNet: true` to load from `recaptcha.net` instead of `google.com`:
+```ts
+const { onLoaded } = useScriptGoogleRecaptcha({
+  siteKey: 'YOUR_SITE_KEY',
+  enterprise: true,
+})
+
+onLoaded(({ grecaptcha }) => {
+  grecaptcha.enterprise!.ready(async () => {
+    const token = await grecaptcha.enterprise!.execute('YOUR_SITE_KEY', { action: 'submit' })
+    // Send the token to your server for assessment.
+  })
+})
+```
+
+## Alternative domain
+
+Set `recaptchaNet: true` where `google.com` is unavailable. Google documents `recaptcha.net` as its [alternative domain for global access](https://developers.google.com/recaptcha/docs/faq#can-i-use-recaptcha-globally):
 
 ```ts
 export default defineNuxtConfig({
@@ -56,9 +72,9 @@ export default defineNuxtConfig({
 })
 ```
 
-## Server-Side Verification
+## Server-side verification
 
-reCAPTCHA tokens must be verified on your server. Create an API endpoint to validate the token:
+Verify every reCAPTCHA token on your server. Google recommends checking both the score and expected action, then tuning the score threshold against your own traffic rather than treating `0.5` as universal. See the [reCAPTCHA v3 verification guide](https://developers.google.com/recaptcha/docs/v3#site_verify_response).
 
 ::code-group
 
@@ -66,6 +82,8 @@ reCAPTCHA tokens must be verified on your server. Create an API endpoint to vali
 export default defineEventHandler(async (event) => {
   const { token } = await readBody(event)
   const secretKey = process.env.RECAPTCHA_SECRET_KEY
+  if (!secretKey)
+    throw createError({ statusCode: 500, message: 'Missing reCAPTCHA secret key' })
 
   const response = await $fetch('https://www.google.com/recaptcha/api/siteverify', {
     method: 'POST',
@@ -75,7 +93,7 @@ export default defineEventHandler(async (event) => {
     }),
   })
 
-  if (!response.success || response.score < 0.5) {
+  if (!response.success || response.action !== 'submit' || response.score < 0.5) {
     throw createError({
       statusCode: 400,
       message: 'reCAPTCHA verification failed',
@@ -86,12 +104,14 @@ export default defineEventHandler(async (event) => {
 })
 ```
 
-```ts [Enterprise - server/api/verify-recaptcha.post.ts]
+```ts [Enterprise: server/api/verify-recaptcha.post.ts]
 export default defineEventHandler(async (event) => {
   const { token } = await readBody(event)
   const projectId = process.env.RECAPTCHA_PROJECT_ID
   const apiKey = process.env.RECAPTCHA_API_KEY
   const siteKey = process.env.NUXT_PUBLIC_SCRIPTS_GOOGLE_RECAPTCHA_SITE_KEY
+  if (!projectId || !apiKey || !siteKey)
+    throw createError({ statusCode: 500, message: 'Missing reCAPTCHA Enterprise configuration' })
 
   const response = await $fetch(
     `https://recaptchaenterprise.googleapis.com/v1/projects/${projectId}/assessments?key=${apiKey}`,
@@ -103,14 +123,15 @@ export default defineEventHandler(async (event) => {
     }
   )
 
-  if (!response.tokenProperties?.valid || response.riskAnalysis?.score < 0.5) {
+  const score = response.riskAnalysis?.score ?? 0
+  if (!response.tokenProperties?.valid || response.tokenProperties.action !== 'submit' || score < 0.5) {
     throw createError({
       statusCode: 400,
       message: 'reCAPTCHA verification failed',
     })
   }
 
-  return { success: true, score: response.riskAnalysis.score }
+  return { success: true, score }
 })
 ```
 
@@ -120,9 +141,13 @@ export default defineEventHandler(async (event) => {
 Never expose your secret key on the client. Always verify tokens server-side.
 ::
 
-## Hiding the Badge
+::callout{type="info"}
+Tokens expire after two minutes. Call `execute` when the user submits the protected action, not when the page loads. See Google's [reCAPTCHA v3 placement guidance](https://developers.google.com/recaptcha/docs/v3#placement_on_your_website).
+::
 
-reCAPTCHA v3 displays a badge in the corner of your site. You can hide it with CSS, but you must include attribution in your form:
+## Hiding the badge
+
+Google [allows you to hide the reCAPTCHA badge](https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed) if the required attribution remains visible in the user flow:
 
 ```css
 .grecaptcha-badge { visibility: hidden; }
@@ -135,70 +160,51 @@ reCAPTCHA v3 displays a badge in the corner of your site. You can hide it with C
 </p>
 ```
 
-## Test Keys
+## Testing
 
-Google provides test keys for development that always pass verification. Use these for local testing:
-
-| Key Type | Value |
-|----------|-------|
-| Site Key | `6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI` |
-| Secret Key | `6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe` |
-
-::callout{type="info"}
-Test keys will always return `success: true` with a score of `0.9`. See [Google's FAQ](https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do) for more details.
-::
-
-```ts [nuxt.config.ts]
-export default defineNuxtConfig({
-  $development: {
-    scripts: {
-      registry: {
-        googleRecaptcha: {
-          siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-        }
-      }
-    }
-  }
-})
-```
+For reCAPTCHA v3, Google recommends a [separate key for test environments](https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do). Scores in development may differ from production because v3 learns from real traffic. Do not use Google's published always-pass keys here; they only work with reCAPTCHA v2.
 
 ::script-types
 ::
 
 ## Example
 
-Using reCAPTCHA v3 to protect a form submission with server-side verification.
+This example scores a contact-form submission and verifies the token on the server:
 
 ::code-group
 
 ```vue [ContactForm.vue]
 <script setup lang="ts">
-const { onLoaded } = useScriptGoogleRecaptcha()
+const { onLoaded, onError } = useScriptGoogleRecaptcha()
 
 const name = ref('')
 const email = ref('')
 const message = ref('')
 const status = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 
-async function onSubmit() {
+onError(() => {
+  status.value = 'error'
+})
+
+function onSubmit() {
   status.value = 'loading'
 
-  onLoaded(async ({ grecaptcha }) => {
-    // Get reCAPTCHA token
-    const token = await grecaptcha.execute('YOUR_SITE_KEY', { action: 'contact' })
+  onLoaded(({ grecaptcha }) => {
+    grecaptcha.ready(async () => {
+      const token = await grecaptcha.execute('YOUR_SITE_KEY', { action: 'contact' })
 
-    // Send form data + token to your API for verification
-    const result = await $fetch('/api/contact', {
-      method: 'POST',
-      body: {
-        token,
-        name: name.value,
-        email: email.value,
-        message: message.value
-      }
-    }).catch(() => null)
+      const result = await $fetch('/api/contact', {
+        method: 'POST',
+        body: {
+          token,
+          name: name.value,
+          email: email.value,
+          message: message.value
+        }
+      }).catch(() => null)
 
-    status.value = result ? 'success' : 'error'
+      status.value = result ? 'success' : 'error'
+    })
   })
 }
 </script>
@@ -227,6 +233,8 @@ export default defineEventHandler(async (event) => {
 
   // Verify reCAPTCHA token
   const secretKey = process.env.RECAPTCHA_SECRET_KEY
+  if (!secretKey)
+    throw createError({ statusCode: 500, message: 'Missing reCAPTCHA secret key' })
   const verification = await $fetch('https://www.google.com/recaptcha/api/siteverify', {
     method: 'POST',
     body: new URLSearchParams({
@@ -235,7 +243,7 @@ export default defineEventHandler(async (event) => {
     }),
   })
 
-  if (!verification.success || verification.score < 0.5) {
+  if (!verification.success || verification.action !== 'contact' || verification.score < 0.5) {
     throw createError({
       statusCode: 400,
       message: 'reCAPTCHA verification failed',

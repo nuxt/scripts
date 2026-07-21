@@ -1,6 +1,6 @@
 ---
 title: Instagram Embed
-description: Server-side rendered Instagram embeds with zero client-side API calls.
+description: Server-rendered Instagram embeds without direct browser requests to Instagram.
 links:
   - label: ScriptInstagramEmbed
     icon: i-simple-icons-github
@@ -8,9 +8,9 @@ links:
     size: xs
 ---
 
-[Instagram](https://instagram.com) is a photo and video sharing social media platform.
+[Instagram](https://instagram.com) hosts photo and video posts.
 
-Nuxt Scripts provides a [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"} component that fetches Instagram embed HTML server-side and proxies all assets through your server - no client-side API calls to Instagram.
+[`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"} fetches embed HTML through your server and proxies supported media and static assets. Changing the post URL or caption setting after client-side navigation refetches your Nuxt endpoint.
 
 ::script-stats
 ::
@@ -21,12 +21,6 @@ Nuxt Scripts provides a [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagr
 This registers the required server API routes (`/_scripts/embed/instagram`, `/_scripts/embed/instagram-image`, and `/_scripts/embed/instagram-asset`) that handle fetching embed HTML and proxying images/assets.
 
 ## [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"}
-
-The [`<ScriptInstagramEmbed>`{lang="html"}](/scripts/instagram-embed){lang="html"} component:
-- Fetches the official Instagram embed HTML server-side
-- Rewrites all image and asset URLs to proxy through your server
-- Removes Instagram's embed.js script (not needed)
-- Caches responses for 10 minutes
 
 ### Demo
 
@@ -88,11 +82,13 @@ The default slot receives:
 
 ```ts
 interface SlotProps {
-  html: string // The processed embed HTML
+  html: string // Processed embed HTML with scripts removed and scoped CSS injected
   shortcode: string // The post shortcode (e.g., "C3Sk6d2MTjI")
   postUrl: string // The original post URL
 }
 ```
+
+The rewriter removes `script`, `noscript`, and original `style` elements. It fetches linked Instagram stylesheets, scopes their selectors, and injects the resulting CSS into the returned HTML. It does not perform general HTML sanitization. The default source is restricted to Instagram. If you pass `html` through your own renderer or introduce a custom endpoint, sanitize it according to your application's content policy before using `v-html`.
 
 ### Named Slots
 
@@ -102,34 +98,29 @@ interface SlotProps {
 | `loading` | Shown while fetching embed HTML |
 | `error` | Shown if embed fetch fails, receives `{ error }` |
 
-## Supported URL Formats
+## Supported URL formats
 
 - Posts: `https://www.instagram.com/p/ABC123/`
 - Reels: `https://www.instagram.com/reel/ABC123/`
 - TV: `https://www.instagram.com/tv/ABC123/`
 
-## How It Works
+## How it works
 
 1. **Server-side fetch**: Nuxt fetches the Instagram embed HTML from `{postUrl}/embed/`
-2. **Asset proxying**: All images from `scontent.cdninstagram.com` and assets from `static.cdninstagram.com` are rewritten to proxy through your server
+2. **Asset proxying**: Images from Instagram's media hosts and assets from `static.cdninstagram.com` are rewritten to proxy through your server
 3. **Script removal**: Nuxt removes Instagram's `embed.js` (not needed for static rendering)
 4. **Caching**: Nuxt caches responses for 10 minutes at the server level
 
-This approach is inspired by [Cloudflare Zaraz's embed implementation](https://blog.cloudflare.com/zaraz-supports-server-side-rendering-of-embeds/).
+## Browser privacy
 
-## Privacy Benefits
-
-- No third-party JavaScript loaded
-- No cookies set by Instagram/Meta
-- No direct browser-to-Instagram communication
-- User IP addresses not shared with Instagram
-- All content served from your domain
+The rendered embed loads no Instagram JavaScript, forwards no Meta `Set-Cookie` response, and sends image and asset requests to your Nuxt server. Instagram sees the server's connection rather than the visitor's. Links in the embed can still take the visitor to Instagram if they choose to open them.
 
 ## Limitations
 
 - Only supports single-image posts (galleries show first image only)
 - Videos display as static poster images
 - Some interactive features are not available (likes, comments)
+- The image endpoint rejects redirects. The static-asset endpoint currently follows them without revalidating the destination host.
 
 ::script-types
 ::

@@ -162,22 +162,31 @@ describe('#nuxt-scripts/types exports', () => {
 describe('tiktok pixel ttq', () => {
   type Ttq = TikTokPixelApi['ttq']
 
-  it('track accepts the 4th options arg with event_id', () => {
+  it('legacy callable form: track accepts the 4th options arg with event_id', () => {
     expectTypeOf<Ttq>().toBeCallableWith('track', 'Purchase', { value: 10 }, { event_id: 'abc' })
   })
 
-  it('track accepts standard events including Purchase and StartTrial', () => {
+  it('legacy callable form: track accepts standard and custom events', () => {
     expectTypeOf<Ttq>().toBeCallableWith('track', 'Purchase')
     expectTypeOf<Ttq>().toBeCallableWith('track', 'StartTrial')
-  })
-
-  it('track still accepts arbitrary custom event names', () => {
     expectTypeOf<Ttq>().toBeCallableWith('track', 'CustomEvent')
   })
 
-  it('proxy.ttq preserves the track overload with event_id', () => {
+  it('method form: track accepts the 3rd options arg with event_id', () => {
+    expectTypeOf<Ttq['track']>().toBeCallableWith('Purchase', { value: 10 }, { event_id: 'abc' })
+    expectTypeOf<Ttq['track']>().toBeCallableWith('StartTrial')
+    expectTypeOf<Ttq['track']>().toBeCallableWith('CustomEvent')
+  })
+
+  it('method form: ttq exposes the array-protocol deferred methods', () => {
+    expectTypeOf<Ttq['page']>().toBeCallableWith()
+    expectTypeOf<Ttq['identify']>().toBeCallableWith({ email: 'abc' })
+    expectTypeOf<Ttq['instance']>().toBeCallableWith('PIXEL_ID')
+  })
+
+  it('proxy.ttq preserves both call forms', () => {
     type ProxyTtq = ReturnType<typeof useScriptTikTokPixel>['proxy']['ttq']
     expectTypeOf<ProxyTtq>().toBeCallableWith('track', 'Purchase', { value: 10 }, { event_id: 'abc' })
-    expectTypeOf<ProxyTtq>().toBeCallableWith('track', 'StartTrial')
+    expectTypeOf<ProxyTtq['track']>().toBeCallableWith('StartTrial')
   })
 })

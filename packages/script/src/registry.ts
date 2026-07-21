@@ -42,6 +42,7 @@ import {
   RybbitAnalyticsOptions,
   SegmentOptions,
   SnapTrPixelOptions,
+  SpeedCurveOptions,
   StripeOptions,
   TikTokPixelOptions,
   UmamiAnalyticsOptions,
@@ -173,6 +174,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // Usercentrics is the consent layer itself: must hit the vendor origin so
   // signature/policy lookups succeed. Bundle/proxy are intentionally absent.
   m('usercentrics', 'Usercentrics', 'utility', 'useScriptUsercentrics', {}, null),
+  m('speedcurve', 'SpeedCurve LUX', 'analytics', 'useScriptSpeedCurve', {}, null),
 ]
 
 export const REGISTRY_CATEGORIES = [
@@ -517,10 +519,16 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: 'https://sc-static.net/scevent.min.js',
       category: 'ad',
       envDefaults: { id: '' },
-      bundle: true,
+      bundle: {
+        sdkPatches: [{ type: 'replace-new-url-host', host: 'sc-static.net' }],
+      },
       proxy: {
         domains: ['sc-static.net', 'tr.snapchat.com', 'pixel.tapad.com'],
         privacy: PRIVACY_FULL,
+        sdkPatches: [
+          { type: 'replace-new-url-host', host: 'sc-static.net' },
+          { type: 'replace-script-loader-url', fromDomain: 'tr.snapchat.com', pathPrefix: '/config' },
+        ],
       },
       partytown: { forwards: ['snaptr'] },
     }),
@@ -851,6 +859,14 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         { route: '/_scripts/proxy/gravatar', handler: './runtime/server/gravatar-proxy' },
       ],
     }),
+    def('speedcurve', {
+      schema: SpeedCurveOptions,
+      label: 'SpeedCurve LUX',
+      src: false,
+      category: 'analytics',
+      envDefaults: { id: '' },
+      composableName: 'useScriptSpeedCurve',
+    }),
   ])
 }
 
@@ -859,12 +875,17 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
 /**
  * Generate a Partytown `resolveUrl` function string for proxy routing.
  * Partytown calls this for every network request made by worker-executed scripts.
- * Any non-same-origin URL is proxied through `proxyPrefix/<host><path>`.
+ * Any non-same-origin URL is proxied through `proxyPrefix/<host-or-alias><path>`.
+ *
+ * `domainAliases` (real domain → path alias) is embedded so worker requests use the
+ * same opaque path segment as build-time rewrites, keeping hostnames out of URLs.
  */
-export function generatePartytownResolveUrl(proxyPrefix: string): string {
+export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: Record<string, string> = {}): string {
   return `function(url, location, type) {
   if (url.origin !== location.origin) {
-    return new URL(${JSON.stringify(proxyPrefix)} + '/' + url.host + url.pathname + url.search, location.origin);
+    var aliases = ${JSON.stringify(domainAliases)};
+    var seg = aliases[url.host] || url.host;
+    return new URL(${JSON.stringify(proxyPrefix)} + '/' + seg + url.pathname + url.search, location.origin);
   }
 }`
 }

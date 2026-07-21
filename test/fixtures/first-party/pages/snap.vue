@@ -7,6 +7,10 @@ useHead({
 
 const { proxy, status } = useScriptSnapchatPixel({
   id: '2295cbcc-cb3f-4727-8c09-1133b742722c',
+  scriptOptions: {
+    bundle: 'force',
+    trigger: 'client',
+  },
 })
 
 function trackPageView() {

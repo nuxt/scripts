@@ -1,6 +1,6 @@
 ---
 title: Mixpanel
-description: Use Mixpanel in your Nuxt app.
+description: Load Mixpanel and track product events, identities, profiles, and consent.
 links:
 - label: Source
   icon: i-simple-icons-github
@@ -8,9 +8,9 @@ links:
   size: xs
 ---
 
-[Mixpanel](https://mixpanel.com) is a product analytics platform that helps you understand how users interact with your application through event tracking, funnels, and retention analysis.
+[Mixpanel](https://mixpanel.com) analyzes product events through funnels and retention reports.
 
-Nuxt Scripts provides a registry script composable [`useScriptMixpanelAnalytics()`{lang="ts"}](/scripts/mixpanel-analytics) to easily integrate Mixpanel in your Nuxt app.
+[`useScriptMixpanelAnalytics()`{lang="ts"}](/scripts/mixpanel-analytics) initializes the SDK and exposes the `mixpanel` API.
 
 ::script-stats
 ::
@@ -57,7 +57,7 @@ function login(userId: string) {
 
 ### Registering Super Properties
 
-Mixpanel sends super properties with every subsequent event:
+Mixpanel [adds registered super properties](https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#setting-super-properties) to subsequent events:
 
 ```vue
 <script setup lang="ts">
@@ -70,19 +70,32 @@ proxy.mixpanel.register({
 </script>
 ```
 
+### Resetting identity on logout
+
+Call `reset()`{lang="ts"} when an identified user signs out or their session expires. Mixpanel [recommends resetting at logout](https://docs.mixpanel.com/docs/tracking-methods/id-management/identifying-users-simplified#client-side-identity-management) so two people sharing a device are not merged into the same identity:
+
+```ts
+const { proxy } = useScriptMixpanelAnalytics()
+
+function logout() {
+  // End your app session first.
+  proxy.mixpanel.reset()
+}
+```
+
 ## Consent Mode
 
-Mixpanel exposes [`opt_in_tracking` / `opt_out_tracking`](https://docs.mixpanel.com/docs/privacy/opt-out-of-tracking). Set the boot-time default with `defaultConsent` and call `consent.optIn()`{lang="ts"} / `consent.optOut()`{lang="ts"} at runtime.
+Mixpanel exposes [`opt_in_tracking` / `opt_out_tracking`](https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#opt-out-of-tracking). Set the boot-time default with `defaultConsent` and call `consent.optIn()`{lang="ts"} / `consent.optOut()`{lang="ts"} at runtime.
 
 ### `defaultConsent`
 
-| Value | Behaviour |
+| Value | Behavior |
 |-------|-----------|
 | `'opt-in'` | Starts opted in. |
 | `'opt-out'` | Calls `mixpanel.init(..., { opt_out_tracking_by_default: true })`{lang="ts"} so the SDK boots opted out. |
 
 ::callout{icon="i-heroicons-information-circle"}
-Use `defaultConsent: 'opt-out'` when you need the SDK to boot opted out. The runtime `consent.optOut()`{lang="ts"} calls `opt_out_tracking()`{lang="ts"} **after** init, which is weaker than the boot-time flag; any events captured between init and the opt-out call are still sent.
+`defaultConsent: 'opt-out'` applies before the first event. Calling `consent.optOut()`{lang="ts"} later cannot retract events already captured by the SDK.
 ::
 
 ### Example
