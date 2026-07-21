@@ -50,7 +50,9 @@ describe('buildProxyUrl', () => {
   })
 
   it('is deterministic: same inputs produce identical URLs', () => {
-    const query = { a: '1', b: ['x', 'y'] }
-    expect(buildProxyUrl('/api/proxy', query)).toBe(buildProxyUrl('/api/proxy', query))
+    const queryA = { a: '1', b: ['x', 'y'] }
+    const queryB = { a: '1', b: ['x', 'y'] }
+    expect(buildProxyUrl('/api/proxy', queryA)).toBe(buildProxyUrl('/api/proxy', queryB))
+    expect(queryA).toEqual({ a: '1', b: ['x', 'y'] })
   })
 })
