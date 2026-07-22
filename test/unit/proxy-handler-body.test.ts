@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
 import { createApp, defineEventHandler, getRequestURL, readRawBody, sendRedirect, setHeader, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import proxyHandler from '../../packages/script/src/runtime/server/proxy-handler'
+import proxyHandler, { withResponseBodyIdleTimeout } from '../../packages/script/src/runtime/server/proxy-handler'
 
 vi.mock('nitropack/runtime', () => ({
   useRuntimeConfig: () => ({
@@ -243,7 +243,7 @@ describe('proxy handler request bodies (#836)', () => {
     let connectionTimeout: ReturnType<typeof setTimeout> | undefined
     const timeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback, delay, ...args) => {
       const timeout = realSetTimeout(callback, delay, ...args)
-      if (delay === 15000)
+      if (delay === 15000 && connectionTimeout === undefined)
         connectionTimeout = timeout
       return timeout
     }) as typeof setTimeout)
@@ -261,6 +261,33 @@ describe('proxy handler request bodies (#836)', () => {
       clearTimeoutSpy.mockRestore()
       timeoutSpy.mockRestore()
       releaseStream?.()
+    }
+  })
+
+  it('cancels an upstream response body that stops producing chunks', async () => {
+    vi.useFakeTimers()
+    const cancel = vi.fn()
+    const abort = vi.fn()
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('first'))
+      },
+      cancel,
+    })
+    const reader = withResponseBodyIdleTimeout(source, 15000, abort).getReader()
+
+    try {
+      expect(new TextDecoder().decode((await reader.read()).value)).toBe('first')
+      const timedOutRead = expect(reader.read()).rejects.toThrow('Upstream response body timed out')
+
+      await vi.advanceTimersByTimeAsync(15000)
+
+      await timedOutRead
+      expect(abort).toHaveBeenCalledOnce()
+      expect(cancel).toHaveBeenCalledOnce()
+    }
+    finally {
+      vi.useRealTimers()
     }
   })
 })

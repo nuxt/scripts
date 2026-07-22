@@ -1,14 +1,21 @@
+import { runInNewContext } from 'node:vm'
 import { describe, expect, it, vi } from 'vitest'
 import { generateInterceptPluginContents } from '../../packages/script/src/plugins/intercept'
 import { generatePartytownResolveUrl } from '../../packages/script/src/registry'
 
 const ALIASES = { 'us.i.posthog.com': 'ph' }
 
+function evaluateResolveUrl(source: string) {
+  return runInNewContext(`(${source})`, { URL }) as (
+    url: URL,
+    location: URL,
+  ) => URL | undefined
+}
+
 describe('proxy alias - generated runtime code (#814)', () => {
   describe('generatePartytownResolveUrl', () => {
     it('rewrites a third-party host to its alias', () => {
-      // eslint-disable-next-line no-eval
-      const resolveUrl = eval(`(${generatePartytownResolveUrl('/_scripts/p', ALIASES)})`)
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', ALIASES))
       const out = resolveUrl(
         new URL('https://us.i.posthog.com/e/?x=1'),
         new URL('https://my-site.test/'),
@@ -18,8 +25,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
     })
 
     it('falls back to the verbatim host when no alias is configured', () => {
-      // eslint-disable-next-line no-eval
-      const resolveUrl = eval(`(${generatePartytownResolveUrl('/_scripts/p')})`)
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p'))
       const out = resolveUrl(
         new URL('https://eu.i.posthog.com/e/'),
         new URL('https://my-site.test/'),
@@ -30,8 +36,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
     it.each(['constructor', 'toString', '__proto__'])(
       'treats inherited property name %s as an unaliased host',
       (host) => {
-        // eslint-disable-next-line no-eval
-        const resolveUrl = eval(`(${generatePartytownResolveUrl('/_scripts/p')})`)
+        const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p'))
         const out = resolveUrl(
           new URL(`https://${host}/collect`),
           new URL('https://my-site.test/'),
@@ -42,8 +47,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
     )
 
     it('leaves non-HTTP protocols unresolved', () => {
-      // eslint-disable-next-line no-eval
-      const resolveUrl = eval(`(${generatePartytownResolveUrl('/_scripts/p')})`)
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p'))
 
       expect(resolveUrl(new URL('data:text/plain,hello'), new URL('https://my-site.test/'))).toBeUndefined()
     })
@@ -72,15 +76,23 @@ describe('proxy alias - generated runtime code (#814)', () => {
       const HTMLImageElement = class {}
       const Request = globalThis.Request
       const generated = generateInterceptPluginContents('/_scripts/p').replace('export default ', '')
-      void [defineNuxtPlugin, navigator, location, XMLHttpRequest, Image, HTMLImageElement, Request]
+      const sandbox = {
+        defineNuxtPlugin,
+        navigator,
+        location,
+        XMLHttpRequest,
+        Image,
+        HTMLImageElement,
+        Request,
+        URL,
+        fetch: globalThis.fetch,
+        __nuxtScripts: undefined as { fetch: (url: string) => Promise<Response> } | undefined,
+      }
 
       try {
-        // eslint-disable-next-line no-eval
-        const plugin = eval(generated) as { setup: () => void }
+        const plugin = runInNewContext(generated, sandbox) as { setup: () => void }
         plugin.setup()
-        const runtime = (globalThis as typeof globalThis & {
-          __nuxtScripts: { fetch: (url: string) => Promise<Response> }
-        }).__nuxtScripts
+        const runtime = sandbox.__nuxtScripts!
 
         await runtime.fetch('data:text/plain,hello')
         await runtime.fetch('javascript:void(0)')
@@ -96,7 +108,6 @@ describe('proxy alias - generated runtime code (#814)', () => {
       }
       finally {
         fetchSpy.mockRestore()
-        delete (globalThis as typeof globalThis & { __nuxtScripts?: unknown }).__nuxtScripts
       }
     })
   })

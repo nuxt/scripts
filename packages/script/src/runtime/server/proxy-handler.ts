@@ -28,6 +28,7 @@ interface ProxyConfig {
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
+const UPSTREAM_TIMEOUT_MS = 15000
 const SKIP_RESPONSE_HEADERS = new Set([
   'alt-svc',
   'clear-site-data',
@@ -60,6 +61,62 @@ export const SKIP_REQUEST_HEADERS = new Set([
   'transfer-encoding',
   'upgrade',
 ])
+
+export function withResponseBodyIdleTimeout(
+  body: ReadableStream<Uint8Array>,
+  timeoutMs: number,
+  onTimeout: () => void,
+): ReadableStream<Uint8Array> {
+  const reader = body.getReader()
+  let stopped = false
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+  const clearIdleTimeout = () => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId)
+      timeoutId = undefined
+    }
+  }
+
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      timeoutId = setTimeout(() => {
+        stopped = true
+        const error = createError({
+          statusCode: 504,
+          statusMessage: 'Gateway Timeout',
+          message: 'Upstream response body timed out',
+        })
+        onTimeout()
+        controller.error(error)
+        void reader.cancel(error).catch((cancelError) => {
+          Object.assign(error, { cause: cancelError })
+        })
+      }, timeoutMs)
+
+      const result = await reader.read().catch((error) => {
+        clearIdleTimeout()
+        if (!stopped)
+          controller.error(error)
+        return undefined
+      })
+      clearIdleTimeout()
+      if (!result || stopped)
+        return
+      if (result.done) {
+        stopped = true
+        controller.close()
+        return
+      }
+      controller.enqueue(result.value)
+    },
+    async cancel(reason) {
+      stopped = true
+      clearIdleTimeout()
+      await reader.cancel(reason)
+    },
+  })
+}
 
 /**
  * Strip fingerprinting from URL query string.
@@ -401,7 +458,7 @@ export default defineEventHandler(async (event) => {
   const timeoutId = setTimeout(() => {
     timedOut = true
     controller.abort()
-  }, 15000) // 15s timeout
+  }, UPSTREAM_TIMEOUT_MS)
 
   // Resolve the fetch body: passthrough streams the raw request, otherwise serialize
   let fetchBody: BodyInit | undefined
@@ -487,5 +544,6 @@ export default defineEventHandler(async (event) => {
 
   // Stream rather than buffering potentially large upstream responses. This lowers
   // memory pressure and lets the browser receive headers and chunks immediately.
-  return sendStream(event, response.body).finally(() => network?.close())
+  const guardedBody = withResponseBodyIdleTimeout(response.body, UPSTREAM_TIMEOUT_MS, () => controller.abort())
+  return sendStream(event, guardedBody).finally(() => network?.close())
 })
