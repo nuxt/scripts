@@ -30,6 +30,7 @@ const STANDALONE_POLL_INTERVAL = 2000
 export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): () => void {
   const inIframe = window.parent !== window
   let disposed = false
+  let connectionMode: 'embedded' | 'standalone' | undefined
   const connectionCleanups: Array<() => void> = []
   let pollTimer: ReturnType<typeof setInterval> | undefined
   let pollController: AbortController | undefined
@@ -45,6 +46,7 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
 
   const cleanupConnection = () => {
     connectionCleanups.splice(0).forEach(cleanup => cleanup())
+    connectionMode = undefined
     devtools.value = undefined
     appFetch.value = undefined
     isConnected.value = false
@@ -58,6 +60,7 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
         return
       stopPolling()
       cleanupConnection()
+      connectionMode = 'embedded'
       isConnected.value = true
       // @ts-expect-error untyped
       appFetch.value = client.host.app.$fetch
@@ -99,10 +102,14 @@ export function useDevtoolsConnection(options: DevtoolsConnectionOptions = {}): 
   }
 
   const stopStandaloneWatch = watch(() => standaloneUrl.value, (url) => {
-    // Clean up previous polling
+    // Reconnect when the configured standalone server changes. Embedded
+    // connections keep ownership until their host disconnects.
     stopPolling()
+    if (connectionMode === 'standalone')
+      cleanupConnection()
 
-    if (url && !isConnected.value) {
+    if (url && connectionMode !== 'embedded') {
+      connectionMode = 'standalone'
       appFetch.value = ofetch.create({ baseURL: url }) as unknown as $Fetch
       // Use system color scheme preference
       colorMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'

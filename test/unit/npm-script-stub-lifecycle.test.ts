@@ -1,8 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { effectScope } from 'vue'
 import { createNpmScriptStub } from '../../packages/script/src/runtime/npm-script-stub'
 
 vi.mock('../../packages/script/src/runtime/logger', () => ({
   logger: { error: vi.fn() },
+}))
+
+vi.mock('nuxt/app', () => ({
+  onNuxtReady: vi.fn(),
 }))
 
 describe('npm script stub lifecycle', () => {
@@ -45,6 +50,21 @@ describe('npm script stub lifecycle', () => {
     expect(cleanup).toHaveBeenCalledOnce()
     expect(stub.remove()).toBe(false)
     expect(stub.script).toBe(stub)
+  })
+
+  it('disposes with its owning Vue scope', () => {
+    const cleanup = vi.fn()
+    const scope = effectScope()
+    const stub = scope.run(() => createNpmScriptStub({
+      key: 'scoped-script',
+      trigger: vi.fn(() => cleanup),
+    }))!
+
+    scope.stop()
+
+    expect(stub.signal.aborted).toBe(true)
+    expect(stub.status.value).toBe('removed')
+    expect(cleanup).toHaveBeenCalledOnce()
   })
 
   it('does not revive a disposed stub when asynchronous initialization settles', async () => {

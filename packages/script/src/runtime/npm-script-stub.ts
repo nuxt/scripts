@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 import type { NuxtUseScriptOptions } from './types'
-import { ref } from 'vue'
+import { onNuxtReady } from 'nuxt/app'
+import { onScopeDispose, ref } from 'vue'
 import { logger } from './logger'
 
 export interface NpmScriptStubOptions {
@@ -140,6 +141,8 @@ export function createNpmScriptStub<T = any>(
     },
   }
 
+  onScopeDispose(stub.dispose, true)
+
   // Auto-trigger based on trigger option
   if (options.trigger) {
     if (typeof options.trigger === 'function') {
@@ -154,10 +157,7 @@ export function createNpmScriptStub<T = any>(
       // Manual trigger - do nothing, user calls load()
     }
     else if (options.trigger === 'onNuxtReady') {
-      // onNuxtReady string - import and use onNuxtReady
-      import('nuxt/app').then(({ onNuxtReady }) => {
-        onNuxtReady(() => stub.load())
-      })
+      onNuxtReady(() => stub.load())
     }
     else if (options.trigger === 'client') {
       // Load immediately on client
