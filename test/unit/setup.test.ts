@@ -118,6 +118,13 @@ describe('resolveConfiguredProxyDomains', () => {
     }, umamiProxyConfig)).toEqual([])
   })
 
+  it('ignores configured domains that do not use HTTP', () => {
+    expect(resolveConfiguredProxyDomains({
+      hostUrl: 'ftp://analytics.example.com/events',
+      scriptInput: { src: 'javascript://scripts.example.com/payload' },
+    }, umamiProxyConfig)).toEqual([])
+  })
+
   it('deduplicates equivalent domains', () => {
     expect(resolveConfiguredProxyDomains({
       hostUrl: 'https://analytics.example.com',

@@ -80,6 +80,16 @@ describe('resolveProxySecret', () => {
     expect(matches).toHaveLength(1)
   })
 
+  it('replaces an empty persisted secret instead of returning an ephemeral value', () => {
+    writeFileSync(join(testDir, '.env'), `${ENV_KEY}=\n`)
+
+    const result = resolveProxySecret(testDir, true)
+
+    expect(result?.source).toBe('dotenv-generated')
+    expect(result?.secret).toHaveLength(64)
+    expect(readFileSync(join(testDir, '.env'), 'utf-8')).toBe(`${ENV_KEY}=${result?.secret}\n`)
+  })
+
   it('populates process.env after generating a new secret', () => {
     resolveProxySecret(testDir, true)
     expect(process.env[ENV_KEY]).toBeDefined()

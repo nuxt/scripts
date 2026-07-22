@@ -49,6 +49,16 @@ describe('proxy-alias', () => {
       const map = buildDomainAliasMap(['a.example.com', '*.example.com'], true)
       expect(Object.keys(map)).toEqual(['a.example.com'])
     })
+
+    it('stores prototype-like domains as ordinary keys', () => {
+      const aliases: Record<string, string> = Object.create(null)
+      Object.defineProperty(aliases, '__proto__', { value: 'proto', enumerable: true })
+      const map = buildDomainAliasMap(['__proto__'], aliases)
+
+      expect(Object.getPrototypeOf(map)).toBe(Object.prototype)
+      expect(Object.hasOwn(map, '__proto__')).toBe(true)
+      expect(Object.getOwnPropertyDescriptor(map, '__proto__')?.value).toBe('proto')
+    })
   })
 
   describe('isSafeAliasSegment', () => {
@@ -64,6 +74,8 @@ describe('proxy-alias', () => {
       expect(isSafeAliasSegment('a?b')).toBe(false)
       expect(isSafeAliasSegment('a#b')).toBe(false)
       expect(isSafeAliasSegment('a b')).toBe(false)
+      expect(isSafeAliasSegment('.')).toBe(false)
+      expect(isSafeAliasSegment('..')).toBe(false)
       expect(isSafeAliasSegment('')).toBe(false)
     })
   })
@@ -71,6 +83,13 @@ describe('proxy-alias', () => {
   describe('invertAliasMap', () => {
     it('inverts domain → alias into alias → domain', () => {
       expect(invertAliasMap({ 'us.i.posthog.com': 'ph' })).toEqual({ ph: 'us.i.posthog.com' })
+    })
+
+    it('stores prototype-like aliases as ordinary keys', () => {
+      const map = invertAliasMap({ 'us.i.posthog.com': '__proto__' })
+
+      expect(Object.getPrototypeOf(map)).toBe(Object.prototype)
+      expect(Object.getOwnPropertyDescriptor(map, '__proto__')?.value).toBe('us.i.posthog.com')
     })
   })
 

@@ -5,6 +5,6 @@ export default createImageProxyHandler({
   accept: '*/*',
   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
   cacheMaxAge: 86400,
-  contentType: 'application/octet-stream',
+  contentTypePrefixes: ['image/', 'font/', 'application/font', 'application/x-font', 'application/vnd.ms-fontobject', 'application/octet-stream'],
   decodeAmpersands: true,
 })

@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
-import { createCachedJsonFetch } from './utils/cached-upstream'
+import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteTweetImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'
 
@@ -61,6 +61,10 @@ const cachedTweetFetch = createCachedJsonFetch<TweetData>(
     // the tweet ID only so renders dedupe.
     const match = url.match(TWEET_ID_FROM_URL_RE)
     return match?.[1] || url
+  },
+  {
+    allowUrl: url => isSafeHttpsUrl(url) && url.hostname === 'cdn.syndication.twimg.com',
+    contentTypePrefixes: ['application/json'],
   },
 )
 

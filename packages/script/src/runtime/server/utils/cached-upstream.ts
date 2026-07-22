@@ -1,3 +1,4 @@
+import type { FetchResponse } from 'ofetch'
 import { Buffer } from 'node:buffer'
 import { defineCachedFunction } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
@@ -40,9 +41,79 @@ export interface CachedBinaryFetchOptions {
   ignoreResponseError?: boolean
 }
 
+export interface CachedBinaryFetchConfig {
+  /** Validate the initial URL and every redirect before requesting it. */
+  allowUrl?: (url: URL) => boolean
+  maxRedirects?: number
+}
+
+export interface CachedJsonFetchConfig<T> {
+  /** Validate the initial URL and every redirect before requesting it. */
+  allowUrl: (url: URL) => boolean
+  maxRedirects?: number
+  responseType?: 'json' | 'text'
+  contentTypePrefixes?: string[]
+  /** Runs before caching. Throw to reject an invalid upstream response. */
+  validateResponse?: (data: T) => void
+}
+
 export interface CachedBinaryResult extends CachedBinaryResponse {
   body: Buffer
   status: number
+}
+
+export function isSafeHttpsUrl(url: URL): boolean {
+  return url.protocol === 'https:'
+    && !url.username
+    && !url.password
+    && (!url.port || url.port === '443')
+}
+
+function upstreamError(message: string, statusCode: number, statusMessage: string, cause?: unknown): Error {
+  return Object.assign(new Error(message, cause === undefined ? undefined : { cause }), {
+    statusCode,
+    statusMessage,
+  })
+}
+
+function parseUpstreamUrl(url: string): URL {
+  try {
+    return new URL(url)
+  }
+  catch (cause) {
+    throw upstreamError('Upstream URL is invalid', 400, 'Invalid upstream URL', cause)
+  }
+}
+
+function assertAllowedUrl(url: URL, allowUrl: ((url: URL) => boolean) | undefined): void {
+  if (allowUrl && !allowUrl(url))
+    throw upstreamError('Upstream URL is not allowed', 403, 'Upstream URL not allowed')
+}
+
+function resolveRedirect(
+  response: Pick<Response, 'headers' | 'status'>,
+  currentUrl: URL,
+  redirectCount: number,
+  config: CachedBinaryFetchConfig,
+): URL | undefined {
+  if (response.status < 300 || response.status >= 400 || response.status === 304)
+    return
+
+  const location = response.headers.get('location')
+  if (!location)
+    throw upstreamError('Upstream redirect has no Location header', 502, 'Invalid upstream redirect')
+  if (redirectCount >= (config.maxRedirects ?? 5))
+    throw upstreamError('Upstream redirect limit exceeded', 502, 'Too many upstream redirects')
+
+  let nextUrl: URL
+  try {
+    nextUrl = new URL(location, currentUrl)
+  }
+  catch (cause) {
+    throw upstreamError('Upstream redirect URL is invalid', 502, 'Invalid upstream redirect', cause)
+  }
+  assertAllowedUrl(nextUrl, config.allowUrl)
+  return nextUrl
 }
 
 /**
@@ -52,16 +123,36 @@ export interface CachedBinaryResult extends CachedBinaryResponse {
 export function createCachedBinaryFetch(
   name: string,
   maxAge: number,
+  config: CachedBinaryFetchConfig = {},
 ): (url: string, opts?: CachedBinaryFetchOptions) => Promise<CachedBinaryResult> {
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
-      const response = await $fetch.raw(url, {
-        responseType: 'arrayBuffer' as const,
-        timeout: opts?.timeout ?? 10000,
-        redirect: opts?.redirect ?? 'follow',
-        ignoreResponseError: opts?.ignoreResponseError ?? false,
-        headers: opts?.headers,
-      })
+      let currentUrl = parseUpstreamUrl(url)
+      assertAllowedUrl(currentUrl, config.allowUrl)
+      let response: FetchResponse<ArrayBuffer>
+
+      for (let redirectCount = 0; ; redirectCount++) {
+        const redirectMode = opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual')
+        if (redirectMode === 'follow' && !config.allowUrl)
+          throw new Error('Automatic redirects require an allowRedirect redirect policy')
+        const validateRedirect = redirectMode === 'follow'
+        response = await $fetch.raw(currentUrl.toString(), {
+          responseType: 'arrayBuffer' as const,
+          timeout: opts?.timeout ?? 10000,
+          redirect: validateRedirect ? 'manual' : redirectMode,
+          ignoreResponseError: opts?.ignoreResponseError ?? false,
+          headers: opts?.headers,
+        })
+
+        if (!validateRedirect)
+          break
+
+        const nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
+        if (!nextUrl)
+          break
+        currentUrl = nextUrl
+      }
+
       const data = response._data as ArrayBuffer | undefined
       return {
         base64: data ? Buffer.from(data).toString('base64') : '',
@@ -112,13 +203,36 @@ export function createCachedJsonFetch<T>(
   name: string,
   maxAge: number,
   getKey: (url: string, opts?: { headers?: Record<string, string> }) => string,
+  config: CachedJsonFetchConfig<T>,
 ): (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => Promise<T> {
   return defineCachedFunction(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
-      return await $fetch<T>(url, {
-        timeout: opts?.timeout ?? 10000,
-        headers: opts?.headers,
-      })
+      let currentUrl = parseUpstreamUrl(url)
+      assertAllowedUrl(currentUrl, config.allowUrl)
+
+      for (let redirectCount = 0; ; redirectCount++) {
+        const response = await $fetch.raw(currentUrl.toString(), {
+          responseType: config.responseType ?? 'json',
+          timeout: opts?.timeout ?? 10000,
+          redirect: 'manual',
+          headers: opts?.headers,
+        }) as FetchResponse<T>
+        const nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
+        if (nextUrl) {
+          currentUrl = nextUrl
+          continue
+        }
+
+        if (config.contentTypePrefixes?.length) {
+          const contentType = response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
+          if (!contentType || !config.contentTypePrefixes.some(prefix => contentType.startsWith(prefix)))
+            throw upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type')
+        }
+
+        const data = response._data as T
+        config.validateResponse?.(data)
+        return data
+      }
     },
     {
       name,

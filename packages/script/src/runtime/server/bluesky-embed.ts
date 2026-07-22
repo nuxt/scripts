@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
-import { createCachedJsonFetch } from './utils/cached-upstream'
+import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteBlueskyPostImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'
 
@@ -25,6 +25,7 @@ interface PostThreadResponse {
 
 const BSKY_POST_URL_RE = /^https:\/\/bsky\.app\/profile\/([^/]+)\/post\/([^/?]+)$/
 const EMBED_BSKY_SUFFIX_RE = /\/embed\/bluesky$/
+const allowBlueskyApiUrl = (url: URL) => isSafeHttpsUrl(url) && url.hostname === 'public.api.bsky.app'
 
 // Handle → DID resolution is stable for the lifetime of the handle (renames
 // are rare); cache for 24h so repeated embeds of the same author skip the
@@ -33,6 +34,10 @@ const cachedProfileFetch = createCachedJsonFetch<{ did: string }>(
   'nuxt-scripts-bsky-profile',
   86400,
   url => url,
+  {
+    allowUrl: allowBlueskyApiUrl,
+    contentTypePrefixes: ['application/json'],
+  },
 )
 
 // Post threads are semi-fresh (like counts, reply counts change); 10min keeps
@@ -41,6 +46,10 @@ const cachedPostFetch = createCachedJsonFetch<PostThreadResponse>(
   'nuxt-scripts-bsky-post',
   600,
   url => url,
+  {
+    allowUrl: allowBlueskyApiUrl,
+    contentTypePrefixes: ['application/json'],
+  },
 )
 
 export default withSigning(defineEventHandler(async (event) => {

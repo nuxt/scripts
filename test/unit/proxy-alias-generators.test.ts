@@ -26,6 +26,13 @@ describe('proxy alias - generated runtime code (#814)', () => {
       )
       expect(out.pathname).toBe('/_scripts/p/eu.i.posthog.com/e/')
     })
+
+    it('leaves non-HTTP protocols unresolved', () => {
+      // eslint-disable-next-line no-eval
+      const resolveUrl = eval(`(${generatePartytownResolveUrl('/_scripts/p')})`)
+
+      expect(resolveUrl(new URL('data:text/plain,hello'), new URL('https://my-site.test/'))).toBeUndefined()
+    })
   })
 
   describe('generateInterceptPluginContents', () => {
@@ -33,6 +40,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
       const code = generateInterceptPluginContents('/_scripts/p', { domainAliases: ALIASES })
       expect(code).toContain('const domainAliases = {"us.i.posthog.com":"ph"}')
       expect(code).toContain('domainAliases[parsed.host] || parsed.host')
+      expect(code).toContain('parsed.protocol === \'http:\' || parsed.protocol === \'https:\'')
     })
 
     it('defaults to an empty alias map', () => {

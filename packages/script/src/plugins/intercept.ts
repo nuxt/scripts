@@ -27,11 +27,11 @@ export function generateInterceptPluginContents(proxyPrefix: string, options?: {
     function proxyUrl(url) {
       try {
         const parsed = new URL(url, location.origin);
-        if (parsed.origin !== location.origin) {
+        if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.origin !== location.origin) {
           const seg = domainAliases[parsed.host] || parsed.host;
           return location.origin + proxyPrefix + '/' + seg + parsed.pathname + parsed.search;
         }
-      } catch {}
+      } catch { /* Invalid URL inputs retain native behavior. */ }
       return url;
     }
 

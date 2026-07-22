@@ -1,6 +1,6 @@
 import type { ResolvedProxyPrivacy } from '../../packages/script/src/runtime/server/utils/privacy'
 import { describe, expect, it } from 'vitest'
-import { mergePrivacy, resolvePrivacy, stripPayloadFingerprinting } from '../../packages/script/src/runtime/server/utils/privacy'
+import { anonymizeIP, mergePrivacy, resolvePrivacy, stripPayloadFingerprinting } from '../../packages/script/src/runtime/server/utils/privacy'
 import {
   ALLOWED_PARAMS,
   NORMALIZE_PARAMS,
@@ -514,5 +514,35 @@ describe('selective privacy in stripPayloadFingerprinting', () => {
     expect(result.ua).toBe('Mozilla/5.0 (compatible; Chrome/120.0)')
     expect(result.sr).toBe('1920x1080')
     expect(result.timezone).toBe('UTC')
+  })
+
+  it('anonymizes every repeated fingerprinting value', () => {
+    const result = stripPayloadFingerprinting({
+      uip: ['192.168.1.100', '10.20.30.40'],
+      ua: ['Chrome/120.0.0.0', 'Firefox/121.0'],
+    })
+
+    expect(result.uip).toEqual(['192.168.1.0', '10.20.30.0'])
+    expect(result.ua).toEqual([
+      'Mozilla/5.0 (compatible; Chrome/120.0)',
+      'Mozilla/5.0 (compatible; Firefox/121.0)',
+    ])
+  })
+
+  it('preserves dangerous property names as data without mutating the result prototype', () => {
+    const payload = JSON.parse('{"__proto__":{"polluted":true},"constructor":"value"}') as Record<string, unknown>
+    const result = stripPayloadFingerprinting(payload)
+
+    expect(Object.getPrototypeOf(result)).toBeNull()
+    expect(Object.hasOwn(result, '__proto__')).toBe(true)
+    expect(Object.getOwnPropertyDescriptor(result, '__proto__')?.value).toEqual({ polluted: true })
+    expect(result.constructor).toBe('value')
+  })
+})
+
+describe('anonymizeIP', () => {
+  it('returns a valid IPv6 /48 network for compressed and expanded addresses', () => {
+    expect(anonymizeIP('2001:db8::1')).toBe('2001:db8:0::')
+    expect(anonymizeIP('2001:0db8:1234:5678:9abc:def0:1234:5678')).toBe('2001:0db8:1234::')
   })
 })

@@ -1,5 +1,5 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, sendStream, setResponseHeader, setResponseStatus } from 'h3'
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
 import {
@@ -27,7 +27,27 @@ interface ProxyConfig {
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
-const SKIP_RESPONSE_HEADERS = new Set(['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length'])
+const SKIP_RESPONSE_HEADERS = new Set([
+  'alt-svc',
+  'clear-site-data',
+  'connection',
+  'content-encoding',
+  'content-length',
+  'keep-alive',
+  'nel',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'report-to',
+  'reporting-endpoints',
+  'set-cookie',
+  'set-cookie2',
+  'strict-transport-security',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'www-authenticate',
+])
 // Hop-by-hop request headers per RFC 7230 §6.1 — must not be forwarded by a proxy
 export const SKIP_REQUEST_HEADERS = new Set([
   'connection',
@@ -51,8 +71,10 @@ function stripQueryFingerprinting(
   const stripped = stripPayloadFingerprinting(query, privacy)
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(stripped)) {
-    if (value !== undefined && value !== null) {
-      params.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
+    const values = Array.isArray(value) ? value : [value]
+    for (const item of values) {
+      if (item !== undefined && item !== null)
+        params.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))
     }
   }
   return { queryString: params.toString(), stripped }
@@ -389,16 +411,18 @@ export default defineEventHandler(async (event) => {
       body: fetchBody,
       credentials: 'omit', // Don't send cookies to third parties
       signal: controller.signal,
+      redirect: 'manual',
       // @ts-expect-error Node fetch supports duplex for streaming request bodies
       duplex: passthroughBody ? 'half' : undefined,
     })
   }
   catch (err) {
+    clearTimeout(timeoutId)
     log('[proxy] Upstream error:', err)
     throw createError({
       statusCode: timedOut ? 504 : 502,
       statusMessage: timedOut ? 'Gateway Timeout' : 'Bad Gateway',
-      message: `Proxy upstream request failed: ${targetUrl}`,
+      message: 'Proxy upstream request failed',
       cause: err,
       data: {
         errorName: (err as Error)?.name,
@@ -406,29 +430,47 @@ export default defineEventHandler(async (event) => {
       },
     })
   }
-  finally {
-    clearTimeout(timeoutId)
-  }
-
   log('[proxy] Response:', response.status, response.statusText)
 
-  // Forward response headers (except problematic ones)
+  if (response.status >= 300 && response.status < 400 && response.status !== 304) {
+    clearTimeout(timeoutId)
+    await response.body?.cancel()
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Unsafe upstream redirect',
+      message: 'Proxy upstream returned a redirect that was not followed',
+    })
+  }
+
+  // Headers named by Connection are hop-by-hop too, including non-standard names.
+  const responseConnectionHeaders = new Set(
+    (response.headers.get('connection') || '')
+      .split(',')
+      .map(header => header.trim().toLowerCase())
+      .filter(Boolean),
+  )
+
+  // Forward response headers except hop-by-hop, framing, compression, and cookies.
   response.headers.forEach((value, key) => {
-    if (!SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) {
+    const lowerKey = key.toLowerCase()
+    if (!SKIP_RESPONSE_HEADERS.has(lowerKey) && !responseConnectionHeaders.has(lowerKey)) {
       setResponseHeader(event, key, value)
     }
   })
 
+  // This route can expose broad vendor hosts under the application's origin.
+  // Sandbox direct document navigations while preserving subresource responses.
+  setResponseHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'; base-uri \'none\'; form-action \'none\'')
+  setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
+
   setResponseStatus(event, response.status, response.statusText)
 
-  // Return the body as text for text-based content, otherwise as buffer
-  const responseContentType = response.headers.get('content-type') || ''
-  const isTextContent = responseContentType.includes('text') || responseContentType.includes('javascript') || responseContentType.includes('json')
-
-  if (isTextContent) {
-    return await response.text()
+  if (!response.body) {
+    clearTimeout(timeoutId)
+    return null
   }
 
-  // For binary content (images, etc.)
-  return Buffer.from(await response.arrayBuffer())
+  // Stream rather than buffering potentially large upstream responses. This lowers
+  // memory pressure and lets the browser receive headers and chunks immediately.
+  return sendStream(event, response.body).finally(() => clearTimeout(timeoutId))
 })
