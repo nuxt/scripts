@@ -10,6 +10,7 @@ vi.mock('nitropack/runtime', () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
       domainPrivacy: {
+        '127.0.0.1': true,
         'upstream.test': true,
       },
       debug: false,
@@ -110,6 +111,12 @@ describe('proxy handler request bodies (#836)', () => {
     expect(response.status).toBe(200)
     expect(capturedBody.equals(compressed)).toBe(true)
     expect(capturedContentType).toBe('text/plain')
+  })
+
+  it('rejects an allowlisted local network target before the upstream fetch', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/127.0.0.1/private`)
+
+    expect(response.status).toBe(403)
   })
 
   it('preserves form encoding when privacy transforms are active', async () => {

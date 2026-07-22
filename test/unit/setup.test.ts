@@ -125,6 +125,13 @@ describe('resolveConfiguredProxyDomains', () => {
     }, umamiProxyConfig)).toEqual([])
   })
 
+  it('ignores configured local network targets', () => {
+    expect(resolveConfiguredProxyDomains({
+      hostUrl: 'http://127.0.0.1:3000/events',
+      scriptInput: { src: 'http://metadata.local/latest' },
+    }, umamiProxyConfig)).toEqual([])
+  })
+
   it('deduplicates equivalent domains', () => {
     expect(resolveConfiguredProxyDomains({
       hostUrl: 'https://analytics.example.com',

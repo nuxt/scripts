@@ -2,6 +2,7 @@ import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
 import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, sendStream, setResponseHeader, setResponseStatus } from 'h3'
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
+import { isPublicNetworkHostname } from './utils/network-host'
 import {
   anonymizeIP,
   mergePrivacy,
@@ -122,6 +123,14 @@ export default defineEventHandler(async (event) => {
       statusCode: 404,
       statusMessage: 'No proxy domain found',
       message: `No domain in proxy path: ${path}`,
+    })
+  }
+
+  if (!isPublicNetworkHostname(domain)) {
+    log('[proxy] Rejected local or non-public target:', domain)
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Local network targets are not allowed',
     })
   }
 

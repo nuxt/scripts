@@ -41,6 +41,7 @@ import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
+import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
 
@@ -258,7 +259,7 @@ function resolveConfiguredProxyDomain(value: unknown): string | undefined {
     const url = new URL(trimmed, 'https://nuxt-scripts.local')
     if (url.protocol !== 'http:' && url.protocol !== 'https:')
       return
-    return url.hostname || undefined
+    return isPublicNetworkHostname(url.hostname) ? url.hostname : undefined
   }
   catch {
     // Invalid user-provided proxy domains cannot be normalized.

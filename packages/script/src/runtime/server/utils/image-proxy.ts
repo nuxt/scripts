@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { createCachedBinaryFetch } from './cached-upstream'
+import { isPublicNetworkHostname } from './network-host'
 import { withSigning } from './withSigning'
 
 const AMP_RE = /&amp;/g
@@ -38,6 +39,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
   const urlAllowed = (url: URL) => (url.protocol === 'http:' || url.protocol === 'https:')
     && !url.username
     && !url.password
+    && isPublicNetworkHostname(url.hostname)
     && domainAllowed(url.hostname)
 
   const cachedFetch = createCachedBinaryFetch(cacheName, cacheMaxAge, {

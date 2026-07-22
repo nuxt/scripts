@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer'
 import { defineCachedFunction } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
 import { hash } from 'ohash'
+import { isPublicNetworkHostname } from './network-host'
 
 /**
  * Server-side caches for upstream proxy fetches.
@@ -67,6 +68,7 @@ export function isSafeHttpsUrl(url: URL): boolean {
     && !url.username
     && !url.password
     && (!url.port || url.port === '443')
+    && isPublicNetworkHostname(url.hostname)
 }
 
 function upstreamError(message: string, statusCode: number, statusMessage: string, cause?: unknown): Error {

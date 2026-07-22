@@ -18,6 +18,7 @@ describe('image proxy security', () => {
   let disallowedServer: Server
   let disallowedPort: number
   let disallowedRequests = 0
+  const realFetch = globalThis.fetch
 
   beforeAll(async () => {
     disallowedServer = createServer((_req, res) => {
@@ -35,7 +36,7 @@ describe('image proxy security', () => {
         return
       }
       if (req.url === '/cross-host-redirect') {
-        res.writeHead(302, { location: `http://localhost:${disallowedPort}/private` })
+        res.writeHead(302, { location: `http://evil.example.com:${disallowedPort}/private` })
         res.end()
         return
       }
@@ -50,14 +51,25 @@ describe('image proxy security', () => {
     await new Promise<void>(resolve => upstreamServer.listen(0, '127.0.0.1', resolve))
     upstreamPort = (upstreamServer.address() as { port: number }).port
 
+    globalThis.fetch = (input, init) => {
+      const requestUrl = input instanceof Request ? input.url : String(input)
+      const url = new URL(requestUrl)
+      if (url.hostname === 'cdn.example.com')
+        return realFetch(`http://127.0.0.1:${upstreamPort}${url.pathname}${url.search}`, init)
+      if (url.hostname === 'evil.example.com')
+        return realFetch(`http://127.0.0.1:${disallowedPort}${url.pathname}${url.search}`, init)
+      return realFetch(input, init)
+    }
+
     const app = createApp()
-    app.use(createImageProxyHandler({ allowedDomains: ['127.0.0.1'] }))
+    app.use(createImageProxyHandler({ allowedDomains: ['cdn.example.com'] }))
     proxyServer = createServer(toNodeListener(app))
     await new Promise<void>(resolve => proxyServer.listen(0, '127.0.0.1', resolve))
     proxyPort = (proxyServer.address() as { port: number }).port
   })
 
   afterAll(async () => {
+    globalThis.fetch = realFetch
     await Promise.all([
       new Promise<void>(resolve => upstreamServer.close(() => resolve())),
       new Promise<void>(resolve => proxyServer.close(() => resolve())),
@@ -66,7 +78,7 @@ describe('image proxy security', () => {
   })
 
   function proxyUrl(path: string): string {
-    const target = `http://127.0.0.1:${upstreamPort}${path}`
+    const target = `http://cdn.example.com${path}`
     return `http://127.0.0.1:${proxyPort}/?url=${encodeURIComponent(target)}`
   }
 
@@ -79,6 +91,14 @@ describe('image proxy security', () => {
 
   it('rejects a redirect to a hostname outside the allowlist before fetching it', async () => {
     const response = await fetch(proxyUrl('/cross-host-redirect'))
+
+    expect(response.status).toBe(403)
+    expect(disallowedRequests).toBe(0)
+  })
+
+  it('rejects a direct local network target before fetching it', async () => {
+    const target = `http://127.0.0.1:${disallowedPort}/private`
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/?url=${encodeURIComponent(target)}`)
 
     expect(response.status).toBe(403)
     expect(disallowedRequests).toBe(0)
