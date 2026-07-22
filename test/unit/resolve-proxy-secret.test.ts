@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -97,6 +97,20 @@ describe('resolveProxySecret', () => {
     await persisted
 
     expect(result).toEqual({ secret: 'shared-process-secret', ephemeral: false, source: 'dotenv-generated' })
+  })
+
+  it('recovers a stale lock left by a crashed process', async () => {
+    const envPath = join(testDir, '.env')
+    const lockPath = `${envPath}.nuxt-scripts.lock`
+    writeFileSync(lockPath, '')
+    const staleTime = new Date(Date.now() - 3000)
+    utimesSync(lockPath, staleTime, staleTime)
+
+    const result = await resolveProxySecret(testDir, true)
+
+    expect(result?.source).toBe('dotenv-generated')
+    expect(result?.ephemeral).toBe(false)
+    expect(readFileSync(envPath, 'utf-8')).toContain(`${ENV_KEY}=${result?.secret}`)
   })
 
   it('replaces an empty persisted secret instead of returning an ephemeral value', async () => {

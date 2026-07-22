@@ -16,7 +16,7 @@ import type {
 } from './runtime/types'
 import { randomBytes } from 'node:crypto'
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { open as openFile, unlink } from 'node:fs/promises'
+import { open as openFile, stat, unlink } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import {
   addBuildPlugin,
@@ -146,21 +146,50 @@ async function withProxySecretFileLock<T>(envPath: string, effect: () => T): Pro
       lockHandle = acquisition.handle
       break
     }
+
+    const existingLock = await stat(lockPath)
+      .then(lockStat => ({ _tag: 'Found' as const, mtimeMs: lockStat.mtimeMs }))
+      .catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT')
+          return { _tag: 'Missing' as const }
+        throw error
+      })
+    if (existingLock._tag === 'Found' && Date.now() - existingLock.mtimeMs >= PROXY_SECRET_LOCK_TIMEOUT_MS) {
+      await unlink(lockPath).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== 'ENOENT')
+          throw error
+      })
+      continue
+    }
     if (Date.now() >= deadline)
       throw Object.assign(new Error('Timed out waiting for proxy secret file lock'), { code: 'ETIMEDOUT' })
     await delay(PROXY_SECRET_LOCK_RETRY_MS)
   }
 
+  let effectResult: { _tag: 'Success', value: T } | { _tag: 'Failure', error: unknown }
   try {
-    return effect()
+    effectResult = { _tag: 'Success', value: effect() }
   }
-  finally {
-    await lockHandle.close()
-    await unlink(lockPath).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== 'ENOENT')
-        throw error
-    })
+  catch (error) {
+    effectResult = { _tag: 'Failure', error }
   }
+
+  const closeResult = await lockHandle.close()
+    .then(() => ({ _tag: 'Success' as const }))
+    .catch((error: Error) => ({ _tag: 'Failure' as const, error }))
+  const unlinkResult = await unlink(lockPath)
+    .then(() => ({ _tag: 'Success' as const }))
+    .catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT'
+      ? { _tag: 'Success' as const }
+      : { _tag: 'Failure' as const, error })
+
+  if (closeResult._tag === 'Failure')
+    logger.warn(`[security] Failed to close the proxy secret lock: ${closeResult.error.message}`)
+  if (unlinkResult._tag === 'Failure')
+    logger.warn(`[security] Failed to remove the proxy secret lock: ${unlinkResult.error.message}`)
+  if (effectResult._tag === 'Failure')
+    throw effectResult.error
+  return effectResult.value
 }
 
 export interface ResolvedProxySecret {
