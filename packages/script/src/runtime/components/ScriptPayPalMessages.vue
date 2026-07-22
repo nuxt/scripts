@@ -84,9 +84,14 @@ const failed = ref(false)
 const messagesSession = shallowRef<PayPalMessagesSession>()
 let disposed = false
 
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const { onLoaded, status } = useScriptPayPal({
   ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
   ...props.paypalScriptOptions,
+  scriptOptions: {
+    ...props.paypalScriptOptions.scriptOptions,
+    trigger,
+  },
 })
 
 onMounted(() => {
@@ -134,8 +139,6 @@ defineExpose({
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
-
-const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {

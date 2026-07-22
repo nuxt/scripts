@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useMutationObserver } from '@vueuse/core'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptIntercom } from '../registry/intercom'
 
@@ -64,29 +65,31 @@ defineExpose({
   intercom,
 })
 
-let observer: MutationObserver | undefined
+const observerTarget = shallowRef<HTMLElement | null>(null)
+function markReady() {
+  if (isReady.value)
+    return true
+  if (!document.getElementById('intercom-frame'))
+    return false
+  isReady.value = true
+  observerTarget.value = null
+  emits('ready', intercom)
+  return true
+}
+useMutationObserver(observerTarget, markReady, { childList: true, subtree: true })
+
 onMounted(() => {
   watch(status, (status) => {
-    if (status === 'loading') {
-      observer?.disconnect()
-      observer = new MutationObserver(() => {
-        if (document.getElementById('intercom-frame')) {
-          isReady.value = true
-          emits('ready', intercom)
-          observer?.disconnect()
-          observer = undefined
-        }
-      })
-      observer.observe(document.body, { childList: true, subtree: true })
+    if (status === 'loading' || status === 'loaded') {
+      if (!markReady())
+        observerTarget.value = document.body
     }
     else if (status === 'error') {
+      observerTarget.value = null
+      isReady.value = false
       emits('error')
     }
-  })
-})
-onBeforeUnmount(() => {
-  observer?.disconnect()
-  observer = undefined
+  }, { immediate: true })
 })
 
 const rootAttrs = computed(() => {
@@ -108,7 +111,7 @@ const rootAttrs = computed(() => {
   >
     <slot :ready="isReady" />
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'loading' || !isReady" name="loading" />
     <slot v-else-if="status === 'error'" name="error" />
+    <slot v-else-if="status === 'loading' || !isReady" name="loading" />
   </div>
 </template>

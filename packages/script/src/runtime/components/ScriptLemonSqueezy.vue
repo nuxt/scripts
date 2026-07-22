@@ -1,9 +1,36 @@
 <script lang="ts">
-let activeLemonSqueezyOwner: symbol | undefined
+import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
+
+type LemonSqueezyEventHandler = (event: LemonSqueezyEventPayload) => void
+
+const lemonSqueezyOwners: Array<{
+  owner: symbol
+  eventHandler: LemonSqueezyEventHandler
+}> = []
+
+function activateLemonSqueezyOwner(owner: symbol, eventHandler: LemonSqueezyEventHandler) {
+  const existingIndex = lemonSqueezyOwners.findIndex(entry => entry.owner === owner)
+  if (existingIndex !== -1)
+    lemonSqueezyOwners.splice(existingIndex, 1)
+  lemonSqueezyOwners.push({ owner, eventHandler })
+}
+
+function removeLemonSqueezyOwner(owner: symbol) {
+  const index = lemonSqueezyOwners.findIndex(entry => entry.owner === owner)
+  if (index === -1)
+    return { _tag: 'Missing' } as const
+  const wasActive = index === lemonSqueezyOwners.length - 1
+  lemonSqueezyOwners.splice(index, 1)
+  if (!wasActive)
+    return { _tag: 'Inactive' } as const
+  return {
+    _tag: 'Active',
+    nextHandler: lemonSqueezyOwners.at(-1)?.eventHandler || (() => {}),
+  } as const
+}
 </script>
 
 <script lang="ts" setup>
-import type { LemonSqueezyEventPayload } from '../registry/lemon-squeezy'
 import type { ElementScriptTrigger } from '../types'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
@@ -40,12 +67,11 @@ onMounted(() => {
   instance.onLoaded(({ Setup, Refresh }) => {
     if (disposed)
       return
-    Setup({
-      eventHandler(event) {
-        emits('lemonSqueezyEvent', event)
-      },
-    })
-    activeLemonSqueezyOwner = owner
+    const eventHandler = (event: LemonSqueezyEventPayload) => {
+      emits('lemonSqueezyEvent', event)
+    }
+    Setup({ eventHandler })
+    activateLemonSqueezyOwner(owner, eventHandler)
     Refresh()
     emits('ready', instance)
   })
@@ -55,12 +81,11 @@ onBeforeUnmount(() => {
   disposed = true
   // Lemon.js `Setup()` stores a single global `eventHandler`, which captures
   // this component's `emits` (and therefore the instance). Setup() replaces
-  // rather than appends. Only the component that most recently installed the
-  // handler may clear it; an older instance can unmount after a newer one.
-  if (activeLemonSqueezyOwner === owner && import.meta.client && typeof window.LemonSqueezy?.Setup === 'function') {
-    window.LemonSqueezy.Setup({ eventHandler() {} })
-    activeLemonSqueezyOwner = undefined
-  }
+  // rather than appends. Restore the previous mounted owner when the active
+  // component leaves so its events are not lost.
+  const removedOwner = removeLemonSqueezyOwner(owner)
+  if (removedOwner._tag === 'Active' && import.meta.client && typeof window.LemonSqueezy?.Setup === 'function')
+    window.LemonSqueezy.Setup({ eventHandler: removedOwner.nextHandler })
 })
 
 const rootAttrs = computed(() => {
