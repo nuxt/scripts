@@ -8,6 +8,17 @@ vi.mock('nitropack/runtime', () => ({
   useRuntimeConfig: () => ({}),
 }))
 
+vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/script/src/runtime/server/utils/network-host')>()
+  return {
+    ...actual,
+    createPublicNetworkDispatcher: async () => ({
+      fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
+      close: async () => {},
+    }),
+  }
+})
+
 const { createImageProxyHandler } = await import('../../packages/script/src/runtime/server/utils/image-proxy')
 
 describe('image proxy security', () => {

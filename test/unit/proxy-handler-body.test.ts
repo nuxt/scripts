@@ -21,6 +21,17 @@ vi.mock('nitropack/runtime', () => ({
   }),
 }))
 
+vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/script/src/runtime/server/utils/network-host')>()
+  return {
+    ...actual,
+    createPublicNetworkDispatcher: async () => ({
+      fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
+      close: async () => {},
+    }),
+  }
+})
+
 describe('proxy handler request bodies (#836)', () => {
   let upstreamServer: Server
   let proxyServer: Server
@@ -225,5 +236,31 @@ describe('proxy handler request bodies (#836)', () => {
 
     expect(receivedHeadersBeforeCompletion).toBe(true)
     expect(await response.text()).toBe('firstsecond')
+  })
+
+  it('does not apply the connection timeout after upstream headers arrive', async () => {
+    const realSetTimeout = globalThis.setTimeout
+    let connectionTimeout: ReturnType<typeof setTimeout> | undefined
+    const timeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback, delay, ...args) => {
+      const timeout = realSetTimeout(callback, delay, ...args)
+      if (delay === 15000)
+        connectionTimeout = timeout
+      return timeout
+    }) as typeof setTimeout)
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+
+    try {
+      const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/stream`)
+      expect(connectionTimeout).toBeDefined()
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(connectionTimeout)
+      releaseStream?.()
+
+      expect(await response.text()).toBe('firstsecond')
+    }
+    finally {
+      clearTimeoutSpy.mockRestore()
+      timeoutSpy.mockRestore()
+      releaseStream?.()
+    }
   })
 })

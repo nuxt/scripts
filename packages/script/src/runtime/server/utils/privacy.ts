@@ -190,12 +190,13 @@ function expandIPv6(address: string): string[] | undefined {
  */
 export function anonymizeIP(ip: string): string {
   if (ip.includes(':')) {
-    const mappedIPv4 = ip.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i)?.[1]
+    const normalized = ip.split('%', 1)[0] || ''
+    const mappedIPv4 = normalized.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i)?.[1]
     if (mappedIPv4)
       return `::ffff:${anonymizeIP(mappedIPv4)}`
     // IPv6: keep first 3 segments (48 bits) — roughly city/ISP-level aggregation
-    const expanded = expandIPv6(ip.split('%', 1)[0] || '')
-    return expanded ? `${expanded.slice(0, 3).join(':')}::` : ip
+    const expanded = expandIPv6(normalized)
+    return expanded ? `${expanded.slice(0, 3).join(':')}::` : normalized
   }
   // IPv4: zero last octet (/24 subnet — typically ISP/neighborhood-level precision)
   const parts = ip.split('.')
@@ -439,13 +440,14 @@ export function stripPayloadFingerprinting(
   // Pre-scan for screen width to enable paired height bucketing.
   // When sw is present, sh maps to the paired height for that device class
   // (e.g., sw=1280 → desktop → sh becomes 1080, not independently bucketed).
-  let deviceClass: DeviceClass | undefined
+  let deviceClasses: Array<DeviceClass | undefined> = []
   for (const [key, value] of Object.entries(payload)) {
     if (key.toLowerCase() === 'sw') {
-      const firstValue = Array.isArray(value) ? value[0] : value
-      const num = typeof firstValue === 'number' ? firstValue : Number(firstValue)
-      if (!Number.isNaN(num))
-        deviceClass = getDeviceClass(num)
+      const widths = Array.isArray(value) ? value : [value]
+      deviceClasses = widths.map((width) => {
+        const num = typeof width === 'number' ? width : Number(width)
+        return Number.isNaN(num) ? undefined : getDeviceClass(num)
+      })
     }
   }
 
@@ -490,10 +492,18 @@ export function stripPayloadFingerprinting(
       if (['sd', 'colordepth', 'pixelratio'].includes(lowerKey)) {
         result[key] = value
       }
-      else if (lowerKey === 'sh' && deviceClass) {
-        // Paired: use height from the device class determined by sw
-        const paired = SCREEN_BUCKETS[deviceClass].h
-        result[key] = mapValue(value, item => typeof item === 'number' ? paired : String(paired))
+      else if (lowerKey === 'sh' && deviceClasses.length > 0) {
+        // Pair repeated heights with their matching widths. A scalar width applies to all heights.
+        const generalizePairedHeight = (item: unknown, index: number) => {
+          const deviceClass = deviceClasses[index] ?? deviceClasses[0]
+          if (!deviceClass)
+            return generalizeScreen(item, 'height')
+          const paired = SCREEN_BUCKETS[deviceClass].h
+          return typeof item === 'number' ? paired : String(paired)
+        }
+        result[key] = Array.isArray(value)
+          ? value.map(generalizePairedHeight)
+          : generalizePairedHeight(value, 0)
       }
       else {
         const dimension = lowerKey === 'sw' ? 'width' : lowerKey === 'sh' ? 'height' : undefined
@@ -530,7 +540,9 @@ export function stripPayloadFingerprinting(
     }
     // Anonymize combined device info (parse and generalize components) — hardware flag
     if (matchesParam(key, STRIP_PARAMS.deviceInfo)) {
-      result[key] = p.hardware ? mapString(value, anonymizeDeviceInfo) : value
+      result[key] = p.hardware
+        ? mapValue(value, item => typeof item === 'string' ? anonymizeDeviceInfo(item) : '')
+        : value
       continue
     }
     // Platform identifiers are low entropy — keep as-is

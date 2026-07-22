@@ -386,6 +386,21 @@ describe('stripFingerprintingFromPayload', () => {
       // Combined sr format — mobile
       const srMobile = stripFingerprintingFromPayload({ sr: '375x667' })
       expect(srMobile.sr).toBe('360x640')
+
+      const repeatedResult = stripFingerprintingFromPayload({ sw: [375, 1280], sh: [667, 720] })
+      expect(repeatedResult.sw).toEqual([360, 1920])
+      expect(repeatedResult.sh).toEqual([640, 1080])
+    })
+
+    it('removes non-string device info values', () => {
+      const result = stripFingerprintingFromPayload({
+        dv: [
+          'Australia/Melbourne&en-GB&Google Inc.&Linux x86_64',
+          { timezone: 'Australia/Melbourne', screen: '2560x1440' },
+        ],
+      })
+
+      expect(result.dv).toEqual(['UTC&en-GB&Google Inc.&Linux x86_64', ''])
     })
   })
 })
@@ -544,5 +559,9 @@ describe('anonymizeIP', () => {
   it('returns a valid IPv6 /48 network for compressed and expanded addresses', () => {
     expect(anonymizeIP('2001:db8::1')).toBe('2001:db8:0::')
     expect(anonymizeIP('2001:0db8:1234:5678:9abc:def0:1234:5678')).toBe('2001:0db8:1234::')
+  })
+
+  it('anonymizes IPv4-mapped IPv6 addresses with zone identifiers', () => {
+    expect(anonymizeIP('::ffff:192.168.1.100%eth0')).toBe('::ffff:192.168.1.0')
   })
 })

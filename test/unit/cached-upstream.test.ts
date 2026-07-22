@@ -18,7 +18,7 @@ vi.mock('ohash', () => ({
 }))
 
 vi.mock('ofetch', () => ({
-  $fetch: Object.assign(vi.fn(), { raw: rawFetchMock }),
+  createFetch: vi.fn(() => Object.assign(vi.fn(), { raw: rawFetchMock })),
 }))
 
 const { createCachedBinaryFetch, createCachedJsonFetch } = await import(
@@ -119,7 +119,7 @@ describe('upstream cache keys', () => {
 
     await expect(fetchBinary('https://cdn.example.com/image', { redirect: 'follow' }))
       .rejects
-      .toThrow('redirect policy')
+      .toThrow('allowUrl redirect policy')
     expect(rawFetchMock).not.toHaveBeenCalled()
   })
 

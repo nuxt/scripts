@@ -121,7 +121,7 @@ const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
 
 const PROXY_SECRET_ENV_KEY = 'NUXT_SCRIPTS_PROXY_SECRET'
-const PROXY_SECRET_ENV_LINE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=/m
+const PROXY_SECRET_ENV_LINE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=.*$/m
 const PROXY_SECRET_ENV_VALUE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=(.+)$/m
 
 export interface ResolvedProxySecret {
@@ -171,9 +171,9 @@ export function resolveProxySecret(
       // and this branch. The regex check is cheap and idempotent.
       if (PROXY_SECRET_ENV_LINE_RE.test(contents)) {
         // Another instance already wrote it. Re-read and return that value.
-        const match = contents.match(PROXY_SECRET_ENV_VALUE_RE)
-        if (match?.[1])
-          return { secret: match[1].trim(), ephemeral: false, source: 'dotenv-generated' }
+        const existingSecret = contents.match(PROXY_SECRET_ENV_VALUE_RE)?.[1]?.trim()
+        if (existingSecret)
+          return { secret: existingSecret, ephemeral: false, source: 'dotenv-generated' }
         // An empty declaration suppresses dotenv fallback on future starts.
         // Replace it in place so the generated secret remains stable.
         writeFileSync(envPath, contents.replace(PROXY_SECRET_ENV_LINE_RE, `${PROXY_SECRET_ENV_KEY}=${secret}`))

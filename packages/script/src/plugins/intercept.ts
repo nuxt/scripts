@@ -18,7 +18,7 @@ export function generateInterceptPluginContents(proxyPrefix: string, options?: {
   enforce: 'pre',
   setup() {
     const proxyPrefix = ${JSON.stringify(proxyPrefix)};
-    const domainAliases = ${JSON.stringify(options?.domainAliases ?? {})};
+    const domainAliases = Object.assign(Object.create(null), ${JSON.stringify(options?.domainAliases ?? {})});
     const origBeacon = typeof navigator !== 'undefined' && navigator.sendBeacon
       ? navigator.sendBeacon.bind(navigator)
       : () => false;

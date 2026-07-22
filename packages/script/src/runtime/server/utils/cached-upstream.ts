@@ -1,9 +1,9 @@
 import type { FetchResponse } from 'ofetch'
 import { Buffer } from 'node:buffer'
 import { defineCachedFunction } from 'nitropack/runtime'
-import { $fetch } from 'ofetch'
+import { createFetch } from 'ofetch'
 import { hash } from 'ohash'
-import { isPublicNetworkHostname } from './network-host'
+import { createPublicNetworkDispatcher, isPublicNetworkHostname } from './network-host'
 
 /**
  * Server-side caches for upstream proxy fetches.
@@ -132,34 +132,41 @@ export function createCachedBinaryFetch(
       let currentUrl = parseUpstreamUrl(url)
       assertAllowedUrl(currentUrl, config.allowUrl)
       let response: FetchResponse<ArrayBuffer>
+      const network = await createPublicNetworkDispatcher()
+      const safeFetch = createFetch({ fetch: network.fetch })
 
-      for (let redirectCount = 0; ; redirectCount++) {
-        const redirectMode = opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual')
-        if (redirectMode === 'follow' && !config.allowUrl)
-          throw new Error('Automatic redirects require an allowRedirect redirect policy')
-        const validateRedirect = redirectMode === 'follow'
-        response = await $fetch.raw(currentUrl.toString(), {
-          responseType: 'arrayBuffer' as const,
-          timeout: opts?.timeout ?? 10000,
-          redirect: validateRedirect ? 'manual' : redirectMode,
-          ignoreResponseError: opts?.ignoreResponseError ?? false,
-          headers: opts?.headers,
-        })
+      try {
+        for (let redirectCount = 0; ; redirectCount++) {
+          const redirectMode = opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual')
+          if (redirectMode === 'follow' && !config.allowUrl)
+            throw new Error('Automatic redirects require an allowUrl redirect policy')
+          const validateRedirect = redirectMode === 'follow'
+          response = await safeFetch.raw(currentUrl.toString(), {
+            responseType: 'arrayBuffer' as const,
+            timeout: opts?.timeout ?? 10000,
+            redirect: validateRedirect ? 'manual' : redirectMode,
+            ignoreResponseError: opts?.ignoreResponseError ?? false,
+            headers: opts?.headers,
+          })
 
-        if (!validateRedirect)
-          break
+          if (!validateRedirect)
+            break
 
-        const nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
-        if (!nextUrl)
-          break
-        currentUrl = nextUrl
+          const nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
+          if (!nextUrl)
+            break
+          currentUrl = nextUrl
+        }
+
+        const data = response._data as ArrayBuffer | undefined
+        return {
+          base64: data ? Buffer.from(data).toString('base64') : '',
+          contentType: response.headers.get('content-type'),
+          status: response.status,
+        }
       }
-
-      const data = response._data as ArrayBuffer | undefined
-      return {
-        base64: data ? Buffer.from(data).toString('base64') : '',
-        contentType: response.headers.get('content-type'),
-        status: response.status,
+      finally {
+        await network.close()
       }
     },
     {
@@ -211,29 +218,36 @@ export function createCachedJsonFetch<T>(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
       let currentUrl = parseUpstreamUrl(url)
       assertAllowedUrl(currentUrl, config.allowUrl)
+      const network = await createPublicNetworkDispatcher()
+      const safeFetch = createFetch({ fetch: network.fetch })
 
-      for (let redirectCount = 0; ; redirectCount++) {
-        const response = await $fetch.raw(currentUrl.toString(), {
-          responseType: config.responseType ?? 'json',
-          timeout: opts?.timeout ?? 10000,
-          redirect: 'manual',
-          headers: opts?.headers,
-        }) as FetchResponse<T>
-        const nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
-        if (nextUrl) {
-          currentUrl = nextUrl
-          continue
+      try {
+        for (let redirectCount = 0; ; redirectCount++) {
+          const response = await safeFetch.raw(currentUrl.toString(), {
+            responseType: config.responseType ?? 'json',
+            timeout: opts?.timeout ?? 10000,
+            redirect: 'manual',
+            headers: opts?.headers,
+          }) as FetchResponse<T>
+          const nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
+          if (nextUrl) {
+            currentUrl = nextUrl
+            continue
+          }
+
+          if (config.contentTypePrefixes?.length) {
+            const contentType = response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
+            if (!contentType || !config.contentTypePrefixes.some(prefix => contentType.startsWith(prefix)))
+              throw upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type')
+          }
+
+          const data = response._data as T
+          config.validateResponse?.(data)
+          return data
         }
-
-        if (config.contentTypePrefixes?.length) {
-          const contentType = response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
-          if (!contentType || !config.contentTypePrefixes.some(prefix => contentType.startsWith(prefix)))
-            throw upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type')
-        }
-
-        const data = response._data as T
-        config.validateResponse?.(data)
-        return data
+      }
+      finally {
+        await network.close()
       }
     },
     {

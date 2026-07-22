@@ -2,7 +2,7 @@ import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
 import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, sendStream, setResponseHeader, setResponseStatus } from 'h3'
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
-import { isPublicNetworkHostname } from './utils/network-host'
+import { createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
 import {
   anonymizeIP,
   mergePrivacy,
@@ -413,24 +413,29 @@ export default defineEventHandler(async (event) => {
   }
 
   let response: Response
+  let network: Awaited<ReturnType<typeof createPublicNetworkDispatcher>> | undefined
   try {
-    response = await fetch(targetUrl, {
+    network = await createPublicNetworkDispatcher()
+    const requestInit: RequestInit & { duplex?: 'half' } = {
       method: method || 'GET',
       headers,
       body: fetchBody,
       credentials: 'omit', // Don't send cookies to third parties
       signal: controller.signal,
       redirect: 'manual',
-      // @ts-expect-error Node fetch supports duplex for streaming request bodies
       duplex: passthroughBody ? 'half' : undefined,
-    })
+    }
+    response = await network.fetch(targetUrl, requestInit)
+    clearTimeout(timeoutId)
   }
   catch (err) {
     clearTimeout(timeoutId)
+    await network?.close()
     log('[proxy] Upstream error:', err)
+    const blockedPrivateNetwork = isPrivateNetworkResolutionError(err)
     throw createError({
-      statusCode: timedOut ? 504 : 502,
-      statusMessage: timedOut ? 'Gateway Timeout' : 'Bad Gateway',
+      statusCode: blockedPrivateNetwork ? 403 : timedOut ? 504 : 502,
+      statusMessage: blockedPrivateNetwork ? 'Local network targets are not allowed' : timedOut ? 'Gateway Timeout' : 'Bad Gateway',
       message: 'Proxy upstream request failed',
       cause: err,
       data: {
@@ -444,6 +449,7 @@ export default defineEventHandler(async (event) => {
   if (response.status >= 300 && response.status < 400 && response.status !== 304) {
     clearTimeout(timeoutId)
     await response.body?.cancel()
+    await network?.close()
     throw createError({
       statusCode: 502,
       statusMessage: 'Unsafe upstream redirect',
@@ -475,11 +481,11 @@ export default defineEventHandler(async (event) => {
   setResponseStatus(event, response.status, response.statusText)
 
   if (!response.body) {
-    clearTimeout(timeoutId)
+    await network?.close()
     return null
   }
 
   // Stream rather than buffering potentially large upstream responses. This lowers
   // memory pressure and lets the browser receive headers and chunks immediately.
-  return sendStream(event, response.body).finally(() => clearTimeout(timeoutId))
+  return sendStream(event, response.body).finally(() => network?.close())
 })

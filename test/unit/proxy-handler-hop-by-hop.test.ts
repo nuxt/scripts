@@ -29,6 +29,17 @@ vi.mock('nitropack/runtime', () => ({
   }),
 }))
 
+vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/script/src/runtime/server/utils/network-host')>()
+  return {
+    ...actual,
+    createPublicNetworkDispatcher: async () => ({
+      fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
+      close: async () => {},
+    }),
+  }
+})
+
 describe('proxy handler - hop-by-hop request headers (#791)', () => {
   let proxyServer: Server
   let proxyPort: number

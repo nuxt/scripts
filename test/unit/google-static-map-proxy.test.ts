@@ -15,7 +15,7 @@ vi.mock('nitropack/runtime', () => ({
 }))
 
 vi.mock('ofetch', () => ({
-  $fetch: Object.assign(vi.fn(), { raw: rawFetchMock }),
+  createFetch: vi.fn(() => Object.assign(vi.fn(), { raw: rawFetchMock })),
 }))
 
 const staticMapHandler = (await import('../../packages/script/src/runtime/server/google-static-maps-proxy')).default
