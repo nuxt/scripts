@@ -9,6 +9,7 @@ import { markRaw, ref } from 'vue'
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
+import { createAbortError } from '../utils/abortable-promise'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
   $scripts: Record<string, UseScriptContext<any> | undefined>
@@ -339,6 +340,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     reload?: () => Promise<T>
     toJSON?: () => { id: string, status: string }
   }
+  markRaw(instance as any)
   // Every caller receives its own Unhead consumer scope. The shared resource is
   // decorated once and the app registry retains a separate, component-free facade.
   if (sharedInstance[NUXT_SCRIPT_CONTROLLER])
@@ -354,7 +356,6 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     dispose: { configurable: true, enumerable: true, value: () => {} },
   })
   sharedInstance[NUXT_SCRIPT_CONTROLLER] = appInstance
-  markRaw(instance as any)
   markRaw(appInstance as any)
   sharedInstance.toJSON = () => ({ id: sharedInstance.id, status: publicStatus.value })
 
@@ -388,6 +389,7 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   addCleanup(() => stopStatusSync())
   sharedInstance.remove = () => {
     const result = currentRemove()
+    sharedInstance.entry = currentScript.entry
     cleanupInstance()
     return result
   }
@@ -401,6 +403,8 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   sharedInstance.reload = () => {
     if (err)
       return Promise.reject(err)
+    if (cleaned)
+      return Promise.reject(createAbortError('Cannot reload a removed script'))
     if (reloadPromise)
       return reloadPromise
 

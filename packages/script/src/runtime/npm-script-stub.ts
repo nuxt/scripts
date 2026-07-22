@@ -148,10 +148,16 @@ export function createNpmScriptStub<T = any>(
     if (typeof options.trigger === 'function') {
       // Custom trigger function (e.g., onNuxtReady)
       const res = (options.trigger as any)(() => stub.load())
-      if (typeof res === 'function')
+      if (typeof res === 'function') {
         triggerCleanups.add(res)
-      else if (res && typeof res === 'object' && 'then' in res)
-        res.then(() => stub.load())
+      }
+      else if (res && typeof res === 'object' && 'then' in res) {
+        void Promise.resolve(res)
+          .then(() => stub.load())
+          .catch((error) => {
+            logger.error(`[NpmScriptStub] Trigger failed for ${options.key}:`, error)
+          })
+      }
     }
     else if (options.trigger === 'manual') {
       // Manual trigger - do nothing, user calls load()

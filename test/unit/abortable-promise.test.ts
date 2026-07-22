@@ -65,4 +65,16 @@ describe('createAbortablePromise', () => {
       throw error
     })).rejects.toBe(error)
   })
+
+  it('rejects when synchronous settlement cleanup fails', async () => {
+    const error = new Error('cleanup failed')
+    const promise = createAbortablePromise<number>((resolve) => {
+      resolve(42)
+      return () => {
+        throw error
+      }
+    })
+
+    await expect(promise).rejects.toBe(error)
+  })
 })

@@ -53,6 +53,19 @@ describe('youtube player lifecycle', () => {
     expect(waitFor).not.toHaveBeenCalled()
   })
 
+  it('waits when the bootstrap namespace exists without Player', () => {
+    ;(window as any).YT = { loading: 1 }
+    useScriptYouTubePlayer({})
+    const resolver = createResolverWait()
+    const waitFor = vi.fn(resolver.waitFor)
+
+    void mocks.definition.scriptOptions.resolve({ waitFor })
+
+    expect(waitFor).toHaveBeenCalledOnce()
+    expect(window.onYouTubeIframeAPIReady).toBeTypeOf('function')
+    resolver.cleanup()
+  })
+
   it('chains and restores an existing readiness callback', async () => {
     const previousReady = vi.fn()
     window.onYouTubeIframeAPIReady = previousReady

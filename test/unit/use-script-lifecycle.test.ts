@@ -2,6 +2,7 @@
  * @vitest-environment happy-dom
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
 import { useScript } from '../../packages/script/src/runtime/composables/useScript'
 
 const mocks = vi.hoisted(() => {
@@ -143,6 +144,14 @@ describe('useScript shared instance lifecycle', () => {
     expect(mocks.app.$scripts).toHaveProperty('https://example.com/sdk.js')
   })
 
+  it('keeps every consumer scope out of deep Vue reactivity', () => {
+    const first = useScript('https://example.com/sdk.js')
+    const second = useScript('https://example.com/sdk.js')
+
+    expect(reactive({ first }).first).toBe(first)
+    expect(reactive({ second }).second).toBe(second)
+  })
+
   it('removes the shared resource and app registry entry globally', () => {
     const instance = useScript('https://example.com/sdk.js')
 
@@ -174,7 +183,10 @@ describe('useScript shared instance lifecycle', () => {
       signal: new AbortController().signal,
       entry: { dispose: vi.fn() },
       load: reloadedLoad,
-      remove: vi.fn(() => true),
+      remove: vi.fn(() => {
+        reloaded.entry = undefined
+        return true
+      }),
     }
     mocks.coreUseScript.mockReturnValue(reloaded as any)
     const instance = useScript('https://example.com/sdk.js')
@@ -194,6 +206,19 @@ describe('useScript shared instance lifecycle', () => {
       expect.objectContaining({ key: expect.stringContaining('https://example.com/sdk.js-') }),
       expect.objectContaining({ scope: false, trigger: 'client' }),
     )
+
+    instance.remove()
+
+    expect(instance.entry).toBeUndefined()
+  })
+
+  it('does not reload a globally removed lifecycle', async () => {
+    const instance = useScript('https://example.com/sdk.js')
+
+    instance.remove()
+
+    await expect(instance.reload()).rejects.toMatchObject({ name: 'AbortError' })
+    expect(mocks.coreUseScript).not.toHaveBeenCalled()
   })
 
   it('shares a reloaded resource with consumers mounted later', async () => {

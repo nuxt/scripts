@@ -2,8 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { effectScope } from 'vue'
 import { createNpmScriptStub } from '../../packages/script/src/runtime/npm-script-stub'
 
+const mocks = vi.hoisted(() => ({
+  loggerError: vi.fn(),
+}))
+
 vi.mock('../../packages/script/src/runtime/logger', () => ({
-  logger: { error: vi.fn() },
+  logger: { error: mocks.loggerError },
 }))
 
 vi.mock('nuxt/app', () => ({
@@ -13,6 +17,7 @@ vi.mock('nuxt/app', () => ({
 describe('npm script stub lifecycle', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    mocks.loggerError.mockReset()
   })
 
   it('does not retain callbacks registered after initialization fails', async () => {
@@ -86,5 +91,26 @@ describe('npm script stub lifecycle', () => {
 
     expect(stub.status.value).toBe('removed')
     expect(callback).not.toHaveBeenCalled()
+  })
+
+  it('reports rejected asynchronous custom triggers', async () => {
+    const error = new Error('trigger failed')
+    const triggerResult = {
+      then: vi.fn((_resolve: () => void, reject?: (reason: unknown) => void) => {
+        reject?.(error)
+      }),
+    }
+
+    createNpmScriptStub({
+      key: 'rejected-trigger',
+      trigger: vi.fn(() => triggerResult) as any,
+    })
+
+    await vi.waitFor(() => {
+      expect(mocks.loggerError).toHaveBeenCalledWith(
+        '[NpmScriptStub] Trigger failed for rejected-trigger:',
+        error,
+      )
+    })
   })
 })

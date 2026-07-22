@@ -43,7 +43,7 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     },
     scriptOptions: {
       resolve({ waitFor }) {
-        if (window.YT)
+        if (typeof window.YT?.Player === 'function')
           return { YT: window.YT } as unknown as T
 
         return waitFor<T>((resolve, reject) => {
@@ -66,10 +66,10 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
               if (import.meta.dev)
                 console.error('[nuxt-scripts] Previous onYouTubeIframeAPIReady handler failed:', error)
             }
-            if (window.YT)
+            if (typeof window.YT?.Player === 'function')
               resolve({ YT: window.YT } as unknown as T)
             else
-              reject(new Error('[nuxt-scripts] YouTube reported ready without exposing window.YT'))
+              reject(new Error('[nuxt-scripts] YouTube reported ready without exposing window.YT.Player'))
           }
           window.onYouTubeIframeAPIReady = onReady
           return restoreReady

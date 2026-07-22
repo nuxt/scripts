@@ -21,10 +21,12 @@ export function createAbortablePromise<T>(
   const { signal, abortMessage } = options
   return new Promise<T>((outerResolve, outerReject) => {
     let settled = false
+    let setupComplete = false
     let cleanup: (() => void) | undefined
     let onAbort: () => void
+    let pendingSettlement: { settle: (value: any) => void, value?: unknown } | undefined
 
-    const finish = (settle: (value: any) => void, value?: unknown) => {
+    const settleNow = (settle: (value: any) => void, value?: unknown) => {
       if (settled)
         return
       settled = true
@@ -39,6 +41,15 @@ export function createAbortablePromise<T>(
         return
       }
       settle(value)
+    }
+    const finish = (settle: (value: any) => void, value?: unknown) => {
+      if (settled || pendingSettlement)
+        return
+      if (!setupComplete) {
+        pendingSettlement = { settle, value }
+        return
+      }
+      settleNow(settle, value)
     }
     const reject = (reason?: unknown) => finish(outerReject, reason)
     const resolve = (value: T | PromiseLike<T>) => {
@@ -64,6 +75,7 @@ export function createAbortablePromise<T>(
     onAbort = () => reject(createAbortError(abortMessage))
 
     if (signal?.aborted) {
+      setupComplete = true
       onAbort()
       return
     }
@@ -71,13 +83,23 @@ export function createAbortablePromise<T>(
     signal?.addEventListener('abort', onAbort, { once: true })
     try {
       cleanup = setup(resolve, reject) || undefined
-      if (settled) {
-        cleanup?.()
-        cleanup = undefined
+      setupComplete = true
+      if (pendingSettlement) {
+        const { settle, value } = pendingSettlement
+        pendingSettlement = undefined
+        settleNow(settle, value)
       }
     }
     catch (error) {
-      reject(error)
+      setupComplete = true
+      if (pendingSettlement) {
+        const { settle, value } = pendingSettlement
+        pendingSettlement = undefined
+        settleNow(settle, value)
+      }
+      else {
+        reject(error)
+      }
     }
   })
 }
