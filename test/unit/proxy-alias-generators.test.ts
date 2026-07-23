@@ -29,6 +29,11 @@ describe('proxy alias - generated runtime code (#814)', () => {
   })
 
   describe('generateInterceptPluginContents', () => {
+    it('imports defineNuxtPlugin when Nuxt auto imports are disabled (#841)', () => {
+      const code = generateInterceptPluginContents('/_scripts/p')
+      expect(code).toContain('import { defineNuxtPlugin } from \'nuxt/app\'')
+    })
+
     it('embeds the alias map into the client intercept plugin', () => {
       const code = generateInterceptPluginContents('/_scripts/p', { domainAliases: ALIASES })
       expect(code).toContain('const domainAliases = {"us.i.posthog.com":"ph"}')
