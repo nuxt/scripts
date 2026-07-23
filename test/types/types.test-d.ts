@@ -28,6 +28,8 @@ describe('module options registry', () => {
     expectTypeOf<Registry['googleAdsense']>().not.toBeAny()
     expectTypeOf<Registry['googleAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['googleMaps']>().not.toBeAny()
+    expectTypeOf<Registry['leaflet']>().not.toBeAny()
+    expectTypeOf<Registry['maplibre']>().not.toBeAny()
     expectTypeOf<Registry['googleRecaptcha']>().not.toBeAny()
     expectTypeOf<Registry['googleSignIn']>().not.toBeAny()
     expectTypeOf<Registry['lemonSqueezy']>().not.toBeAny()
@@ -69,6 +71,8 @@ describe('module options registry', () => {
     // Verify specific input properties survive (not collapsed to unknown)
     type ObjectForm<K extends keyof Registry> = Exclude<Registry[K], boolean | 'mock' | undefined>
     expectTypeOf<ObjectForm<'googleMaps'>['apiKey']>().not.toBeNever()
+    expectTypeOf<ObjectForm<'leaflet'>['injectStyles']>().not.toBeNever()
+    expectTypeOf<ObjectForm<'maplibre'>['workerUrl']>().not.toBeNever()
     expectTypeOf<ObjectForm<'googleAnalytics'>['id']>().not.toBeNever()
     expectTypeOf<ObjectForm<'clarity'>['id']>().not.toBeNever()
   })
