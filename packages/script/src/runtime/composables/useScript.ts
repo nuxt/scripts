@@ -7,6 +7,7 @@ import { markRaw, ref } from 'vue'
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
+import { bindScriptApiResolver } from '../script-api'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
   $scripts: Record<string, UseScriptContext<any> | undefined>
@@ -166,6 +167,9 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
   if (!import.meta.client && options.use) {
     options.use = (() => undefined) as typeof options.use
+  }
+  else if (options.use) {
+    options.use = bindScriptApiResolver(options.use) as typeof options.use
   }
 
   // Partytown quick-path: use useHead for SSR rendering
