@@ -882,8 +882,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
  */
 export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: Record<string, string> = {}): string {
   return `function(url, location, type) {
-  if (url.origin !== location.origin) {
-    var aliases = ${JSON.stringify(domainAliases)};
+  if ((url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== location.origin) {
+    var aliases = Object.assign(Object.create(null), ${JSON.stringify(domainAliases)});
     var seg = aliases[url.host] || url.host;
     return new URL(${JSON.stringify(proxyPrefix)} + '/' + seg + url.pathname + url.search, location.origin);
   }

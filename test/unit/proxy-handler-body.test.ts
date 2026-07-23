@@ -1,15 +1,16 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
-import { createApp, defineEventHandler, readRawBody, toNodeListener } from 'h3'
+import { createApp, defineEventHandler, getRequestURL, readRawBody, sendRedirect, setHeader, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import proxyHandler from '../../packages/script/src/runtime/server/proxy-handler'
+import proxyHandler, { withResponseBodyIdleTimeout } from '../../packages/script/src/runtime/server/proxy-handler'
 
 vi.mock('nitropack/runtime', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
       domainPrivacy: {
+        '127.0.0.1': true,
         'upstream.test': true,
       },
       debug: false,
@@ -20,6 +21,17 @@ vi.mock('nitropack/runtime', () => ({
   }),
 }))
 
+vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/script/src/runtime/server/utils/network-host')>()
+  return {
+    ...actual,
+    createPublicNetworkDispatcher: async () => ({
+      fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
+      close: async () => {},
+    }),
+  }
+})
+
 describe('proxy handler request bodies (#836)', () => {
   let upstreamServer: Server
   let proxyServer: Server
@@ -28,12 +40,33 @@ describe('proxy handler request bodies (#836)', () => {
   let capturedBody = Buffer.alloc(0)
   let capturedContentLength: string | undefined
   let capturedContentType: string | undefined
+  let capturedUrl = ''
+  let releaseStream: (() => void) | undefined
   const realFetch = globalThis.fetch
 
   beforeAll(async () => {
     const upstreamApp = createApp()
     upstreamApp.use('/', defineEventHandler(async (event) => {
-      const rawBody = await readRawBody(event, false)
+      capturedUrl = getRequestURL(event).pathname + getRequestURL(event).search
+      if (getRequestURL(event).pathname === '/redirect')
+        return sendRedirect(event, '/redirected', 302)
+      if (getRequestURL(event).pathname === '/response-hop-headers') {
+        setHeader(event, 'Connection', 'x-upstream-hop')
+        setHeader(event, 'Clear-Site-Data', '"*"')
+        setHeader(event, 'Strict-Transport-Security', 'max-age=0')
+        setHeader(event, 'X-Upstream-Hop', 'must-not-forward')
+        setHeader(event, 'X-End-To-End', 'forward-me')
+      }
+      if (getRequestURL(event).pathname === '/stream') {
+        event.node.res.writeHead(200, { 'content-type': 'text/plain' })
+        event.node.res.write('first')
+        await new Promise<void>((resolve) => {
+          releaseStream = resolve
+        })
+        event.node.res.end('second')
+        return
+      }
+      const rawBody = event.method === 'GET' ? undefined : await readRawBody(event, false)
       capturedBody = rawBody ? Buffer.from(rawBody) : Buffer.alloc(0)
       capturedContentLength = event.headers.get('content-length') ?? undefined
       capturedContentType = event.headers.get('content-type') ?? undefined
@@ -65,6 +98,8 @@ describe('proxy handler request bodies (#836)', () => {
     capturedBody = Buffer.alloc(0)
     capturedContentLength = undefined
     capturedContentType = undefined
+    capturedUrl = ''
+    releaseStream = undefined
   })
 
   afterAll(async () => {
@@ -87,6 +122,12 @@ describe('proxy handler request bodies (#836)', () => {
     expect(response.status).toBe(200)
     expect(capturedBody.equals(compressed)).toBe(true)
     expect(capturedContentType).toBe('text/plain')
+  })
+
+  it('rejects an allowlisted local network target before the upstream fetch', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/127.0.0.1/private`)
+
+    expect(response.status).toBe(403)
   })
 
   it('preserves form encoding when privacy transforms are active', async () => {
@@ -155,5 +196,98 @@ describe('proxy handler request bodies (#836)', () => {
 
     expect(response.status).toBe(400)
     expect(capturedBody).toHaveLength(0)
+  })
+
+  it('preserves repeated query parameters while applying privacy transforms', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/collect?tag=a&tag=b&hardwareConcurrency=128`)
+
+    expect(response.status).toBe(200)
+    expect(capturedUrl).toBe('/collect?tag=a&tag=b&hardwareConcurrency=16')
+  })
+
+  it('rejects upstream redirects instead of following an unchecked target', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect`)
+
+    expect(response.status).toBe(502)
+    expect(capturedUrl).toBe('/redirect')
+  })
+
+  it('strips response headers named by the upstream Connection header', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/response-hop-headers`)
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('x-upstream-hop')).toBeNull()
+    expect(response.headers.get('clear-site-data')).toBeNull()
+    expect(response.headers.get('strict-transport-security')).toBeNull()
+    expect(response.headers.get('x-end-to-end')).toBe('forward-me')
+    expect(response.headers.get('content-security-policy')).toBe('sandbox; default-src \'none\'; base-uri \'none\'; form-action \'none\'')
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+  })
+
+  it('starts the downstream response before the upstream body completes', async () => {
+    const responsePromise = realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/stream`)
+    const receivedHeadersBeforeCompletion = await Promise.race([
+      responsePromise.then(() => true),
+      new Promise<false>(resolve => setTimeout(resolve, 100, false)),
+    ])
+
+    releaseStream?.()
+    const response = await responsePromise
+
+    expect(receivedHeadersBeforeCompletion).toBe(true)
+    expect(await response.text()).toBe('firstsecond')
+  })
+
+  it('does not apply the connection timeout after upstream headers arrive', async () => {
+    const realSetTimeout = globalThis.setTimeout
+    let connectionTimeout: ReturnType<typeof setTimeout> | undefined
+    const timeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback, delay, ...args) => {
+      const timeout = realSetTimeout(callback, delay, ...args)
+      if (delay === 15000 && connectionTimeout === undefined)
+        connectionTimeout = timeout
+      return timeout
+    }) as typeof setTimeout)
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+
+    try {
+      const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/stream`)
+      expect(connectionTimeout).toBeDefined()
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(connectionTimeout)
+      releaseStream?.()
+
+      expect(await response.text()).toBe('firstsecond')
+    }
+    finally {
+      clearTimeoutSpy.mockRestore()
+      timeoutSpy.mockRestore()
+      releaseStream?.()
+    }
+  })
+
+  it('cancels an upstream response body that stops producing chunks', async () => {
+    vi.useFakeTimers()
+    const cancel = vi.fn()
+    const abort = vi.fn()
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('first'))
+      },
+      cancel,
+    })
+    const reader = withResponseBodyIdleTimeout(source, 15000, abort).getReader()
+
+    try {
+      expect(new TextDecoder().decode((await reader.read()).value)).toBe('first')
+      const timedOutRead = expect(reader.read()).rejects.toThrow('Upstream response body timed out')
+
+      await vi.advanceTimersByTimeAsync(15000)
+
+      await timedOutRead
+      expect(abort).toHaveBeenCalledOnce()
+      expect(cancel).toHaveBeenCalledOnce()
+    }
+    finally {
+      vi.useRealTimers()
+    }
   })
 })

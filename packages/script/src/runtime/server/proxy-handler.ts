@@ -1,7 +1,8 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, sendStream, setResponseHeader, setResponseStatus } from 'h3'
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
+import { createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
 import {
   anonymizeIP,
   mergePrivacy,
@@ -27,7 +28,28 @@ interface ProxyConfig {
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
-const SKIP_RESPONSE_HEADERS = new Set(['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length'])
+const UPSTREAM_TIMEOUT_MS = 15000
+const SKIP_RESPONSE_HEADERS = new Set([
+  'alt-svc',
+  'clear-site-data',
+  'connection',
+  'content-encoding',
+  'content-length',
+  'keep-alive',
+  'nel',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'report-to',
+  'reporting-endpoints',
+  'set-cookie',
+  'set-cookie2',
+  'strict-transport-security',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'www-authenticate',
+])
 // Hop-by-hop request headers per RFC 7230 §6.1 — must not be forwarded by a proxy
 export const SKIP_REQUEST_HEADERS = new Set([
   'connection',
@@ -40,6 +62,62 @@ export const SKIP_REQUEST_HEADERS = new Set([
   'upgrade',
 ])
 
+export function withResponseBodyIdleTimeout(
+  body: ReadableStream<Uint8Array>,
+  timeoutMs: number,
+  onTimeout: () => void,
+): ReadableStream<Uint8Array> {
+  const reader = body.getReader()
+  let stopped = false
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+  const clearIdleTimeout = () => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId)
+      timeoutId = undefined
+    }
+  }
+
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      timeoutId = setTimeout(() => {
+        stopped = true
+        const error = createError({
+          statusCode: 504,
+          statusMessage: 'Gateway Timeout',
+          message: 'Upstream response body timed out',
+        })
+        onTimeout()
+        controller.error(error)
+        void reader.cancel(error).catch((cancelError) => {
+          Object.assign(error, { cause: cancelError })
+        })
+      }, timeoutMs)
+
+      const result = await reader.read().catch((error) => {
+        clearIdleTimeout()
+        if (!stopped)
+          controller.error(error)
+        return undefined
+      })
+      clearIdleTimeout()
+      if (!result || stopped)
+        return
+      if (result.done) {
+        stopped = true
+        controller.close()
+        return
+      }
+      controller.enqueue(result.value)
+    },
+    async cancel(reason) {
+      stopped = true
+      clearIdleTimeout()
+      await reader.cancel(reason)
+    },
+  })
+}
+
 /**
  * Strip fingerprinting from URL query string.
  * Returns both the query string and the stripped record (to avoid re-computing for hooks).
@@ -51,8 +129,10 @@ function stripQueryFingerprinting(
   const stripped = stripPayloadFingerprinting(query, privacy)
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(stripped)) {
-    if (value !== undefined && value !== null) {
-      params.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
+    const values = Array.isArray(value) ? value : [value]
+    for (const item of values) {
+      if (item !== undefined && item !== null)
+        params.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))
     }
   }
   return { queryString: params.toString(), stripped }
@@ -100,6 +180,14 @@ export default defineEventHandler(async (event) => {
       statusCode: 404,
       statusMessage: 'No proxy domain found',
       message: `No domain in proxy path: ${path}`,
+    })
+  }
+
+  if (!isPublicNetworkHostname(domain)) {
+    log('[proxy] Rejected local or non-public target:', domain)
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Local network targets are not allowed',
     })
   }
 
@@ -370,7 +458,7 @@ export default defineEventHandler(async (event) => {
   const timeoutId = setTimeout(() => {
     timedOut = true
     controller.abort()
-  }, 15000) // 15s timeout
+  }, UPSTREAM_TIMEOUT_MS)
 
   // Resolve the fetch body: passthrough streams the raw request, otherwise serialize
   let fetchBody: BodyInit | undefined
@@ -382,23 +470,30 @@ export default defineEventHandler(async (event) => {
   }
 
   let response: Response
+  let network: Awaited<ReturnType<typeof createPublicNetworkDispatcher>> | undefined
   try {
-    response = await fetch(targetUrl, {
+    network = await createPublicNetworkDispatcher()
+    const requestInit: RequestInit & { duplex?: 'half' } = {
       method: method || 'GET',
       headers,
       body: fetchBody,
       credentials: 'omit', // Don't send cookies to third parties
       signal: controller.signal,
-      // @ts-expect-error Node fetch supports duplex for streaming request bodies
+      redirect: 'manual',
       duplex: passthroughBody ? 'half' : undefined,
-    })
+    }
+    response = await network.fetch(targetUrl, requestInit)
+    clearTimeout(timeoutId)
   }
   catch (err) {
+    clearTimeout(timeoutId)
+    await network?.close()
     log('[proxy] Upstream error:', err)
+    const blockedPrivateNetwork = isPrivateNetworkResolutionError(err)
     throw createError({
-      statusCode: timedOut ? 504 : 502,
-      statusMessage: timedOut ? 'Gateway Timeout' : 'Bad Gateway',
-      message: `Proxy upstream request failed: ${targetUrl}`,
+      statusCode: blockedPrivateNetwork ? 403 : timedOut ? 504 : 502,
+      statusMessage: blockedPrivateNetwork ? 'Local network targets are not allowed' : timedOut ? 'Gateway Timeout' : 'Bad Gateway',
+      message: 'Proxy upstream request failed',
       cause: err,
       data: {
         errorName: (err as Error)?.name,
@@ -406,29 +501,49 @@ export default defineEventHandler(async (event) => {
       },
     })
   }
-  finally {
-    clearTimeout(timeoutId)
-  }
-
   log('[proxy] Response:', response.status, response.statusText)
 
-  // Forward response headers (except problematic ones)
+  if (response.status >= 300 && response.status < 400 && response.status !== 304) {
+    clearTimeout(timeoutId)
+    await response.body?.cancel()
+    await network?.close()
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Unsafe upstream redirect',
+      message: 'Proxy upstream returned a redirect that was not followed',
+    })
+  }
+
+  // Headers named by Connection are hop-by-hop too, including non-standard names.
+  const responseConnectionHeaders = new Set(
+    (response.headers.get('connection') || '')
+      .split(',')
+      .map(header => header.trim().toLowerCase())
+      .filter(Boolean),
+  )
+
+  // Forward response headers except hop-by-hop, framing, compression, and cookies.
   response.headers.forEach((value, key) => {
-    if (!SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) {
+    const lowerKey = key.toLowerCase()
+    if (!SKIP_RESPONSE_HEADERS.has(lowerKey) && !responseConnectionHeaders.has(lowerKey)) {
       setResponseHeader(event, key, value)
     }
   })
 
+  // This route can expose broad vendor hosts under the application's origin.
+  // Sandbox direct document navigations while preserving subresource responses.
+  setResponseHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'; base-uri \'none\'; form-action \'none\'')
+  setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
+
   setResponseStatus(event, response.status, response.statusText)
 
-  // Return the body as text for text-based content, otherwise as buffer
-  const responseContentType = response.headers.get('content-type') || ''
-  const isTextContent = responseContentType.includes('text') || responseContentType.includes('javascript') || responseContentType.includes('json')
-
-  if (isTextContent) {
-    return await response.text()
+  if (!response.body) {
+    await network?.close()
+    return null
   }
 
-  // For binary content (images, etc.)
-  return Buffer.from(await response.arrayBuffer())
+  // Stream rather than buffering potentially large upstream responses. This lowers
+  // memory pressure and lets the browser receive headers and chunks immediately.
+  const guardedBody = withResponseBodyIdleTimeout(response.body, UPSTREAM_TIMEOUT_MS, () => controller.abort())
+  return sendStream(event, guardedBody).finally(() => network?.close())
 })

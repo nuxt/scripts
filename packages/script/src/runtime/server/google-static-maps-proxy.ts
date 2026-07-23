@@ -1,18 +1,16 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
 import { withQuery } from 'ufo'
-import { createCachedBinaryFetch } from './utils/cached-upstream'
-import { PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, SIG_PARAM } from './utils/sign-constants'
+import { createCachedBinaryFetch, isSafeHttpsUrl } from './utils/cached-upstream'
+import { stripProxyAuthQuery } from './utils/proxy-query'
 import { withSigning } from './utils/withSigning'
 
 // Static maps by (center, zoom, size, style, markers, ...) are essentially
 // immutable; a 7-day cache drastically reduces billable map loads for the
 // common "same map on every page visit" case.
-const cachedMapFetch = createCachedBinaryFetch('nuxt-scripts-static-map', 604800)
-
-// Strip query params that vary per-request (auth artefacts + client-provided
-// API key) so the cache key is pinned to the actual map being requested.
-const STRIP_PARAMS = new Set([SIG_PARAM, PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, 'key'])
+const cachedMapFetch = createCachedBinaryFetch('nuxt-scripts-static-map', 604800, {
+  allowUrl: url => isSafeHttpsUrl(url) && url.hostname === 'maps.googleapis.com',
+})
 
 export default withSigning(defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
@@ -35,12 +33,8 @@ export default withSigning(defineEventHandler(async (event) => {
     })
   }
 
-  const query = getQuery(event)
-  const safeQuery: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(query)) {
-    if (!STRIP_PARAMS.has(k))
-      safeQuery[k] = v
-  }
+  const query = stripProxyAuthQuery(getQuery(event))
+  const { key: _clientKey, ...safeQuery } = query
 
   const googleMapsUrl = withQuery('https://maps.googleapis.com/maps/api/staticmap', {
     ...safeQuery,
@@ -56,10 +50,20 @@ export default withSigning(defineEventHandler(async (event) => {
     })
   })
 
+  const contentType = result.contentType?.split(';', 1)[0]?.trim().toLowerCase()
+  if (!contentType?.startsWith('image/') || contentType === 'image/svg+xml') {
+    throw createError({
+      statusCode: 415,
+      statusMessage: 'Unsupported upstream content type',
+    })
+  }
+
   const cacheMaxAge = publicConfig.cacheMaxAge || 3600
-  setHeader(event, 'Content-Type', result.contentType || 'image/png')
+  setHeader(event, 'Content-Type', result.contentType!)
   setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
   setHeader(event, 'Vary', 'Accept-Encoding')
+  setHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'; base-uri \'none\'; form-action \'none\'')
+  setHeader(event, 'X-Content-Type-Options', 'nosniff')
 
   return result.body
 }))

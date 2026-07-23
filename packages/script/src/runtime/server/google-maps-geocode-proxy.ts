@@ -1,7 +1,8 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
 import { withQuery } from 'ufo'
-import { createCachedJsonFetch } from './utils/cached-upstream'
+import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
+import { stripProxyAuthQuery } from './utils/proxy-query'
 import { withSigning } from './utils/withSigning'
 
 // Addresses rarely change; a 30-day cache avoids billable geocode lookups for
@@ -11,6 +12,10 @@ const cachedGeocodeFetch = createCachedJsonFetch<any>(
   'nuxt-scripts-geocode',
   2592000,
   url => url,
+  {
+    allowUrl: url => isSafeHttpsUrl(url) && url.hostname === 'maps.googleapis.com',
+    contentTypePrefixes: ['application/json'],
+  },
 )
 
 export default withSigning(defineEventHandler(async (event) => {
@@ -25,7 +30,7 @@ export default withSigning(defineEventHandler(async (event) => {
     })
   }
 
-  const query = getQuery(event)
+  const query = stripProxyAuthQuery(getQuery(event))
   const { key: _clientKey, ...safeQuery } = query
 
   const geocodeUrl = withQuery('https://maps.googleapis.com/maps/api/geocode/json', {

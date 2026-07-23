@@ -1,3 +1,4 @@
+import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { buildProxyUrl } from './proxy-url'
 
 export const RSRC_RE = /url\(\/rsrc\.php([^)]+)\)/g
@@ -21,11 +22,201 @@ export const LOOKASIDE_RE = /https:\/\/lookaside\.instagram\.com[^"'\s),]+/g
 export const INSTAGRAM_IMAGE_HOSTS = ['scontent.cdninstagram.com', 'lookaside.instagram.com']
 export const INSTAGRAM_ASSET_HOST = 'static.cdninstagram.com'
 
+const INSTAGRAM_POST_PATH_RE = /^\/(?:p|reel|tv)\/[^/]+\/?$/
+const INSTAGRAM_EMBED_PATH_RE = /^\/(?:p|reel|tv)\/[^/]+\/embed\/(?:captioned\/)?$/
+const BLOCKED_EMBED_TAGS = new Set([
+  'base',
+  'button',
+  'embed',
+  'form',
+  'iframe',
+  'input',
+  'link',
+  'math',
+  'meta',
+  'noscript',
+  'object',
+  'option',
+  'script',
+  'select',
+  'style',
+  'svg',
+  'template',
+  'textarea',
+])
+const EMBED_URL_ATTRS = new Set(['action', 'formaction', 'href', 'xlink:href'])
+const CSS_URL_RE = /url\(([^)]*)\)/gi
+const DANGEROUS_STYLE_RE = /expression\s*\(|@import|-moz-binding|behavior\s*:/i
+const SRCSET_SPLIT_RE = /\s+/
+
 const CHARSET_RE = /@charset\s[^;]+;/gi
 const IMPORT_RE = /@import\s[^;]+;/gi
 const WHITESPACE_RE = /\s/
 const AT_RULE_NAME_RE = /@([\w-]+)/
 const MULTI_SPACE_RE = /\s+/g
+
+function isSafeInstagramOrigin(url: URL): boolean {
+  return url.protocol === 'https:'
+    && !url.username
+    && !url.password
+    && (!url.port || url.port === '443')
+    && (url.hostname === 'instagram.com' || url.hostname === 'www.instagram.com')
+}
+
+export function isSafeInstagramPostUrl(url: URL): boolean {
+  return isSafeInstagramOrigin(url) && INSTAGRAM_POST_PATH_RE.test(url.pathname)
+}
+
+export function isSafeInstagramEmbedUrl(url: URL): boolean {
+  return isSafeInstagramOrigin(url) && INSTAGRAM_EMBED_PATH_RE.test(url.pathname)
+}
+
+export function isSafeInstagramCssUrl(url: URL): boolean {
+  return url.protocol === 'https:'
+    && !url.username
+    && !url.password
+    && (!url.port || url.port === '443')
+    && url.hostname === INSTAGRAM_ASSET_HOST
+}
+
+function removeNode(node: any): void {
+  node.type = TEXT_NODE
+  node.value = ''
+  node.name = undefined
+  node.attributes = {}
+  node.children = []
+}
+
+function isSafeNavigationUrl(value: string): boolean {
+  if (!/^(?:https?:\/\/|\/|#)/i.test(value))
+    return false
+  try {
+    const url = new URL(value, 'https://www.instagram.com')
+    return (url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password
+  }
+  catch {
+    return false
+  }
+}
+
+function sanitizeCssUrls(css: string, proxyPrefix: string): string {
+  const allowedPrefix = `${proxyPrefix}/embed/instagram-`
+  return css.replace(CSS_URL_RE, (match, rawValue: string) => {
+    const trimmed = rawValue.trim()
+    const first = trimmed[0]
+    const value = (first === '"' || first === '\'') && trimmed.at(-1) === first
+      ? trimmed.slice(1, -1).trim()
+      : trimmed
+    return value.startsWith(allowedPrefix) ? match : 'url("")'
+  })
+}
+
+function rewriteMediaUrl(url: string, prefix: string, secret?: string): string | undefined {
+  const rewritten = rewriteUrl(url, prefix, secret)
+  return rewritten === url ? undefined : rewritten
+}
+
+export function sanitizeInstagramEmbedHtml(
+  html: string,
+  prefix: string,
+  secret?: string,
+): { bodyHtml: string, cssUrls: string[] } {
+  const ast = parse(html)
+  const cssUrls: string[] = []
+
+  walkSync(ast, (node) => {
+    if (node.type !== ELEMENT_NODE)
+      return
+
+    const tag = String(node.name).toLowerCase()
+    if (tag === 'link' && node.attributes.rel?.toLowerCase() === 'stylesheet' && node.attributes.href) {
+      try {
+        const cssUrl = new URL(node.attributes.href)
+        if (isSafeInstagramCssUrl(cssUrl))
+          cssUrls.push(cssUrl.toString())
+      }
+      catch {
+        // Invalid stylesheet URLs are removed with the link node.
+      }
+    }
+    if (BLOCKED_EMBED_TAGS.has(tag)) {
+      removeNode(node)
+      return
+    }
+
+    for (const [name, value] of Object.entries(node.attributes as Record<string, string>)) {
+      const lowerName = name.toLowerCase()
+      if (lowerName.startsWith('on') || lowerName === 'srcdoc' || lowerName === 'nonce') {
+        delete node.attributes[name]
+        continue
+      }
+      if (EMBED_URL_ATTRS.has(lowerName) && !isSafeNavigationUrl(value)) {
+        delete node.attributes[name]
+        continue
+      }
+      if (lowerName === 'src' || lowerName === 'poster') {
+        const rewritten = rewriteMediaUrl(value, prefix, secret)
+        if (rewritten)
+          node.attributes[name] = rewritten
+        else
+          delete node.attributes[name]
+        continue
+      }
+      if (lowerName === 'srcset') {
+        const entries = value.split(',').flatMap((entry) => {
+          const [url, descriptor, ...rest] = entry.trim().split(SRCSET_SPLIT_RE)
+          const rewritten = url ? rewriteMediaUrl(url, prefix, secret) : undefined
+          const safeDescriptor = !descriptor || /^\d+(?:\.\d+)?[wx]$/.test(descriptor)
+          return rewritten && safeDescriptor && rest.length === 0
+            ? [`${rewritten}${descriptor ? ` ${descriptor}` : ''}`]
+            : []
+        })
+        if (entries.length)
+          node.attributes[name] = entries.join(', ')
+        else
+          delete node.attributes[name]
+        continue
+      }
+      if (lowerName === 'style') {
+        const rewritten = rewriteUrlsInText(value, prefix, secret)
+        if (DANGEROUS_STYLE_RE.test(rewritten))
+          delete node.attributes[name]
+        else
+          node.attributes[name] = sanitizeCssUrls(rewritten, prefix)
+      }
+    }
+
+    if (tag === 'a' && node.attributes.target?.toLowerCase() === '_blank')
+      node.attributes.rel = 'noopener noreferrer'
+  })
+
+  let bodyNode: any
+  walkSync(ast, (node) => {
+    if (node.type === ELEMENT_NODE && node.name === 'body')
+      bodyNode = node
+  })
+
+  return {
+    bodyHtml: bodyNode
+      ? bodyNode.children.map((child: any) => renderSync(child)).join('')
+      : renderSync(ast),
+    cssUrls,
+  }
+}
+
+export function sanitizeInstagramEmbedCss(
+  css: string,
+  scopeSelector: string,
+  prefix: string,
+  secret?: string,
+): string {
+  const rewritten = rewriteUrlsInText(
+    css.replace(RSRC_RE, (_match, path) => `url(${proxyAssetUrl(`https://${INSTAGRAM_ASSET_HOST}/rsrc.php${path}`, prefix, secret)})`),
+    prefix,
+    secret,
+  )
+  return sanitizeCssUrls(scopeCss(rewritten, scopeSelector), prefix).replace(/<\/style/gi, '<\\/style')
+}
 
 export function proxyImageUrl(url: string, prefix = '/_scripts', secret?: string): string {
   return buildProxyUrl(`${prefix}/embed/instagram-image`, { url: url.replace(AMP_RE, '&') }, secret)

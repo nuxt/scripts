@@ -168,13 +168,35 @@ export const NORMALIZE_PARAMS = {
   userAgent: ['ua', 'useragent', 'user_agent', 'client_user_agent', 'context.useragent'],
 }
 
+function expandIPv6(address: string): string[] | undefined {
+  const halves = address.split('::')
+  if (halves.length > 2)
+    return
+  const left = halves[0] ? halves[0].split(':') : []
+  const right = halves[1] ? halves[1].split(':') : []
+  const valid = (part: string) => /^[\da-f]{1,4}$/i.test(part)
+  if (!left.every(valid) || !right.every(valid))
+    return
+  if (halves.length === 1)
+    return left.length === 8 ? left : undefined
+  const missing = 8 - left.length - right.length
+  if (missing < 1)
+    return
+  return [...left, ...(Array.from({ length: missing }).fill('0') as string[]), ...right]
+}
+
 /**
  * Anonymize an IP address by zeroing trailing segments.
  */
 export function anonymizeIP(ip: string): string {
   if (ip.includes(':')) {
+    const normalized = ip.split('%', 1)[0] || ''
+    const mappedIPv4 = normalized.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i)?.[1]
+    if (mappedIPv4)
+      return `::ffff:${anonymizeIP(mappedIPv4)}`
     // IPv6: keep first 3 segments (48 bits) — roughly city/ISP-level aggregation
-    return `${ip.split(':').slice(0, 3).join(':')}::`
+    const expanded = expandIPv6(normalized)
+    return expanded ? `${expanded.slice(0, 3).join(':')}::` : normalized
   }
   // IPv4: zero last octet (/24 subnet — typically ISP/neighborhood-level precision)
   const parts = ip.split('.')
@@ -400,22 +422,32 @@ function matchesParam(key: string, params: string[]): boolean {
   })
 }
 
+function mapValue(value: unknown, transform: (item: unknown) => unknown): unknown {
+  return Array.isArray(value) ? value.map(transform) : transform(value)
+}
+
+function mapString(value: unknown, transform: (item: string) => string): unknown {
+  return mapValue(value, item => typeof item === 'string' ? transform(item) : item)
+}
+
 export function stripPayloadFingerprinting(
   payload: Record<string, unknown>,
   privacy?: ResolvedProxyPrivacy,
 ): Record<string, unknown> {
   const p = privacy || FULL_PRIVACY
-  const result: Record<string, unknown> = {}
+  const result: Record<string, unknown> = Object.create(null)
 
   // Pre-scan for screen width to enable paired height bucketing.
   // When sw is present, sh maps to the paired height for that device class
   // (e.g., sw=1280 → desktop → sh becomes 1080, not independently bucketed).
-  let deviceClass: DeviceClass | undefined
+  let deviceClasses: Array<DeviceClass | undefined> = []
   for (const [key, value] of Object.entries(payload)) {
     if (key.toLowerCase() === 'sw') {
-      const num = typeof value === 'number' ? value : Number(value)
-      if (!Number.isNaN(num))
-        deviceClass = getDeviceClass(num)
+      const widths = Array.isArray(value) ? value : [value]
+      deviceClasses = widths.map((width) => {
+        const num = typeof width === 'number' ? width : Number(width)
+        return Number.isNaN(num) ? undefined : getDeviceClass(num)
+      })
     }
   }
 
@@ -439,14 +471,14 @@ export function stripPayloadFingerprinting(
 
     // User-agent params — controlled by userAgent flag
     const isUserAgentParam = NORMALIZE_PARAMS.userAgent.some(pm => lowerKey === pm.toLowerCase())
-    if (isUserAgentParam && typeof value === 'string') {
-      result[key] = p.userAgent ? normalizeUserAgent(value) : value
+    if (isUserAgentParam) {
+      result[key] = p.userAgent ? mapString(value, normalizeUserAgent) : value
       continue
     }
 
     // Anonymize IP to subnet — controlled by ip flag
-    if (matchesParam(key, STRIP_PARAMS.ip) && typeof value === 'string') {
-      result[key] = p.ip ? anonymizeIP(value) : value
+    if (matchesParam(key, STRIP_PARAMS.ip)) {
+      result[key] = p.ip ? mapString(value, anonymizeIP) : value
       continue
     }
 
@@ -460,36 +492,45 @@ export function stripPayloadFingerprinting(
       if (['sd', 'colordepth', 'pixelratio'].includes(lowerKey)) {
         result[key] = value
       }
-      else if (lowerKey === 'sh' && deviceClass) {
-        // Paired: use height from the device class determined by sw
-        const paired = SCREEN_BUCKETS[deviceClass].h
-        result[key] = typeof value === 'number' ? paired : String(paired)
+      else if (lowerKey === 'sh' && deviceClasses.length > 0) {
+        // Pair repeated heights with their matching widths. A scalar width applies to all heights.
+        const generalizePairedHeight = (item: unknown, index: number) => {
+          const deviceClass = deviceClasses[index] ?? deviceClasses[0]
+          if (!deviceClass)
+            return generalizeScreen(item, 'height')
+          const paired = SCREEN_BUCKETS[deviceClass].h
+          return typeof item === 'number' ? paired : String(paired)
+        }
+        result[key] = Array.isArray(value)
+          ? value.map(generalizePairedHeight)
+          : generalizePairedHeight(value, 0)
       }
       else {
-        result[key] = generalizeScreen(value, lowerKey === 'sw' ? 'width' : lowerKey === 'sh' ? 'height' : undefined)
+        const dimension = lowerKey === 'sw' ? 'width' : lowerKey === 'sh' ? 'height' : undefined
+        result[key] = mapValue(value, item => generalizeScreen(item, dimension))
       }
       continue
     }
     // Generalize hardware capabilities (concurrency, memory) — hardware flag
     if (matchesParam(key, STRIP_PARAMS.hardware)) {
-      result[key] = p.hardware ? generalizeHardware(value) : value
+      result[key] = p.hardware ? mapValue(value, generalizeHardware) : value
       continue
     }
     // Generalize version strings to major version — hardware flag
     // (OS/platform versions are hardware fingerprinting vectors: d_os, uapv)
     if (matchesParam(key, STRIP_PARAMS.version)) {
-      result[key] = p.hardware ? generalizeVersion(value) : value
+      result[key] = p.hardware ? mapValue(value, generalizeVersion) : value
       continue
     }
     // Generalize browser version lists to major versions — hardware flag
     // (full version lists enable cross-site fingerprinting: d_bvs, uafvl)
     if (matchesParam(key, STRIP_PARAMS.browserVersion)) {
-      result[key] = p.hardware ? generalizeBrowserVersions(value) : value
+      result[key] = p.hardware ? mapValue(value, generalizeBrowserVersions) : value
       continue
     }
     // Generalize timezone — timezone flag
     if (matchesParam(key, STRIP_PARAMS.location)) {
-      result[key] = p.timezone ? generalizeTimezone(value) : value
+      result[key] = p.timezone ? mapValue(value, generalizeTimezone) : value
       continue
     }
     // Replace browser data lists with empty value — hardware flag
@@ -499,7 +540,9 @@ export function stripPayloadFingerprinting(
     }
     // Anonymize combined device info (parse and generalize components) — hardware flag
     if (matchesParam(key, STRIP_PARAMS.deviceInfo)) {
-      result[key] = p.hardware ? (typeof value === 'string' ? anonymizeDeviceInfo(value) : '') : value
+      result[key] = p.hardware
+        ? mapValue(value, item => typeof item === 'string' ? anonymizeDeviceInfo(item) : '')
+        : value
       continue
     }
     // Platform identifiers are low entropy — keep as-is

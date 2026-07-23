@@ -1,7 +1,9 @@
+import type { FetchResponse } from 'ofetch'
 import { Buffer } from 'node:buffer'
 import { defineCachedFunction } from 'nitropack/runtime'
-import { $fetch } from 'ofetch'
+import { createFetch } from 'ofetch'
 import { hash } from 'ohash'
+import { createPublicNetworkDispatcher, isPublicNetworkHostname } from './network-host'
 
 /**
  * Server-side caches for upstream proxy fetches.
@@ -40,9 +42,258 @@ export interface CachedBinaryFetchOptions {
   ignoreResponseError?: boolean
 }
 
+export interface CachedBinaryFetchConfig {
+  /** Validate the initial URL and every redirect before requesting it. */
+  allowUrl?: (url: URL) => boolean
+  maxRedirects?: number
+  /** Maximum decoded response size stored in cache. Defaults to 10 MiB. */
+  maxResponseBytes?: number
+}
+
+export interface CachedJsonFetchConfig<T> {
+  /** Validate the initial URL and every redirect before requesting it. */
+  allowUrl: (url: URL) => boolean
+  maxRedirects?: number
+  responseType?: 'json' | 'text'
+  contentTypePrefixes?: string[]
+  /** Maximum decoded response size stored in cache. Defaults to 2 MiB. */
+  maxResponseBytes?: number
+  /** Runs before caching. Throw to reject an invalid upstream response. */
+  validateResponse?: (data: T) => void
+}
+
 export interface CachedBinaryResult extends CachedBinaryResponse {
   body: Buffer
   status: number
+}
+
+interface BoundedBodyOptions {
+  maxBytes: number
+  timeoutMs: number
+}
+
+type RedirectPolicy = Pick<CachedBinaryFetchConfig, 'allowUrl' | 'maxRedirects'>
+
+interface BoundedUpstreamFetchOptions extends RedirectPolicy {
+  contentTypePrefixes?: string[]
+  headers?: Record<string, string>
+  ignoreResponseError: boolean
+  maxResponseBytes: number
+  redirect: 'follow' | 'manual'
+  timeoutMs: number
+}
+
+interface BoundedUpstreamResponse {
+  contentType: string | null
+  data: Uint8Array
+  status: number
+}
+
+const DEFAULT_BINARY_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+const DEFAULT_JSON_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+
+export function isSafeHttpsUrl(url: URL): boolean {
+  return url.protocol === 'https:'
+    && !url.username
+    && !url.password
+    && (!url.port || url.port === '443')
+    && isPublicNetworkHostname(url.hostname)
+}
+
+function upstreamError(message: string, statusCode: number, statusMessage: string, cause?: unknown): Error {
+  return Object.assign(new Error(message, cause === undefined ? undefined : { cause }), {
+    statusCode,
+    statusMessage,
+  })
+}
+
+function resolveMaxResponseBytes(value: number | undefined, fallback: number): number {
+  const maxBytes = value ?? fallback
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0)
+    throw new TypeError('maxResponseBytes must be a non-negative safe integer')
+  return maxBytes
+}
+
+async function cancelBody(body: ReadableStream<Uint8Array> | null | undefined, error?: Error): Promise<void> {
+  if (!body)
+    return
+  await body.cancel(error).catch((cancelError) => {
+    if (error) {
+      Object.assign(error, { cause: cancelError })
+      return
+    }
+    throw cancelError
+  })
+}
+
+async function readBoundedResponseBody(
+  body: ReadableStream<Uint8Array> | null | undefined,
+  options: BoundedBodyOptions,
+): Promise<Uint8Array> {
+  if (!body)
+    return new Uint8Array()
+
+  const reader = body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const timeoutError = upstreamError('Upstream response body timed out', 504, 'Gateway Timeout')
+  const timeout = options.timeoutMs > 0
+    ? new Promise<never>((_resolve, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(timeoutError)
+          void reader.cancel(timeoutError).catch(cancelError => Object.assign(timeoutError, { cause: cancelError }))
+        }, options.timeoutMs)
+      })
+    : undefined
+
+  try {
+    while (true) {
+      const result = await (timeout ? Promise.race([reader.read(), timeout]) : reader.read())
+      if (result.done)
+        break
+
+      size += result.value.byteLength
+      if (size > options.maxBytes) {
+        const error = upstreamError(
+          `Upstream response exceeded ${options.maxBytes} bytes`,
+          502,
+          'Upstream response too large',
+        )
+        await reader.cancel(error).catch(cancelError => Object.assign(error, { cause: cancelError }))
+        throw error
+      }
+      chunks.push(result.value)
+    }
+  }
+  finally {
+    if (timeoutId !== undefined)
+      clearTimeout(timeoutId)
+  }
+
+  const data = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    data.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return data
+}
+
+async function rejectResponse(
+  response: FetchResponse<ReadableStream<Uint8Array>>,
+  error: Error,
+): Promise<never> {
+  await cancelBody(response._data, error)
+  throw error
+}
+
+function parseUpstreamUrl(url: string): URL {
+  try {
+    return new URL(url)
+  }
+  catch (cause) {
+    throw upstreamError('Upstream URL is invalid', 400, 'Invalid upstream URL', cause)
+  }
+}
+
+function assertAllowedUrl(url: URL, allowUrl: ((url: URL) => boolean) | undefined): void {
+  if (allowUrl && !allowUrl(url))
+    throw upstreamError('Upstream URL is not allowed', 403, 'Upstream URL not allowed')
+}
+
+function resolveRedirect(
+  response: Pick<Response, 'headers' | 'status'>,
+  currentUrl: URL,
+  redirectCount: number,
+  policy: RedirectPolicy,
+): URL | undefined {
+  if (response.status < 300 || response.status >= 400 || response.status === 304)
+    return
+
+  const location = response.headers.get('location')
+  if (!location)
+    throw upstreamError('Upstream redirect has no Location header', 502, 'Invalid upstream redirect')
+  if (redirectCount >= (policy.maxRedirects ?? 5))
+    throw upstreamError('Upstream redirect limit exceeded', 502, 'Too many upstream redirects')
+
+  let nextUrl: URL
+  try {
+    nextUrl = new URL(location, currentUrl)
+  }
+  catch (cause) {
+    throw upstreamError('Upstream redirect URL is invalid', 502, 'Invalid upstream redirect', cause)
+  }
+  assertAllowedUrl(nextUrl, policy.allowUrl)
+  return nextUrl
+}
+
+async function fetchBoundedUpstream(
+  url: string,
+  options: BoundedUpstreamFetchOptions,
+): Promise<BoundedUpstreamResponse> {
+  let currentUrl = parseUpstreamUrl(url)
+  assertAllowedUrl(currentUrl, options.allowUrl)
+  if (options.redirect === 'follow' && !options.allowUrl)
+    throw new Error('Automatic redirects require an allowUrl redirect policy')
+
+  const network = await createPublicNetworkDispatcher()
+  const safeFetch = createFetch({ fetch: network.fetch })
+
+  try {
+    for (let redirectCount = 0; ; redirectCount++) {
+      const response = await safeFetch.raw(currentUrl.toString(), {
+        responseType: 'stream',
+        timeout: options.timeoutMs,
+        redirect: 'manual',
+        ignoreResponseError: true,
+        headers: options.headers,
+      }) as FetchResponse<ReadableStream<Uint8Array>>
+
+      if (options.redirect === 'follow') {
+        let nextUrl: URL | undefined
+        try {
+          nextUrl = resolveRedirect(response, currentUrl, redirectCount, options)
+        }
+        catch (error) {
+          await rejectResponse(response, error as Error)
+        }
+        if (nextUrl) {
+          await cancelBody(response._data)
+          currentUrl = nextUrl
+          continue
+        }
+      }
+
+      if (!options.ignoreResponseError && response.status >= 400 && response.status < 600) {
+        await rejectResponse(response, upstreamError(
+          `Upstream request failed with status ${response.status}`,
+          response.status,
+          response.statusText || 'Upstream request failed',
+        ))
+      }
+
+      const contentType = response.headers.get('content-type')
+      if (options.contentTypePrefixes?.length) {
+        const normalizedContentType = contentType?.split(';', 1)[0]?.trim().toLowerCase()
+        if (!normalizedContentType || !options.contentTypePrefixes.some(prefix => normalizedContentType.startsWith(prefix))) {
+          await rejectResponse(
+            response,
+            upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type'),
+          )
+        }
+      }
+
+      const data = await readBoundedResponseBody(response._data, {
+        maxBytes: options.maxResponseBytes,
+        timeoutMs: options.timeoutMs,
+      })
+      return { contentType, data, status: response.status }
+    }
+  }
+  finally {
+    await network.close()
+  }
 }
 
 /**
@@ -52,20 +303,23 @@ export interface CachedBinaryResult extends CachedBinaryResponse {
 export function createCachedBinaryFetch(
   name: string,
   maxAge: number,
+  config: CachedBinaryFetchConfig = {},
 ): (url: string, opts?: CachedBinaryFetchOptions) => Promise<CachedBinaryResult> {
+  const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_BINARY_MAX_RESPONSE_BYTES)
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
-      const response = await $fetch.raw(url, {
-        responseType: 'arrayBuffer' as const,
-        timeout: opts?.timeout ?? 10000,
-        redirect: opts?.redirect ?? 'follow',
-        ignoreResponseError: opts?.ignoreResponseError ?? false,
+      const response = await fetchBoundedUpstream(url, {
+        allowUrl: config.allowUrl,
         headers: opts?.headers,
+        ignoreResponseError: opts?.ignoreResponseError ?? false,
+        maxRedirects: config.maxRedirects,
+        maxResponseBytes,
+        redirect: opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual'),
+        timeoutMs: opts?.timeout ?? 10000,
       })
-      const data = response._data as ArrayBuffer | undefined
       return {
-        base64: data ? Buffer.from(data).toString('base64') : '',
-        contentType: response.headers.get('content-type'),
+        base64: response.data.byteLength ? Buffer.from(response.data).toString('base64') : '',
+        contentType: response.contentType,
         status: response.status,
       }
     },
@@ -112,13 +366,36 @@ export function createCachedJsonFetch<T>(
   name: string,
   maxAge: number,
   getKey: (url: string, opts?: { headers?: Record<string, string> }) => string,
+  config: CachedJsonFetchConfig<T>,
 ): (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => Promise<T> {
+  const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_JSON_MAX_RESPONSE_BYTES)
   return defineCachedFunction(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
-      return await $fetch<T>(url, {
-        timeout: opts?.timeout ?? 10000,
+      const response = await fetchBoundedUpstream(url, {
+        allowUrl: config.allowUrl,
+        contentTypePrefixes: config.contentTypePrefixes,
         headers: opts?.headers,
+        ignoreResponseError: false,
+        maxRedirects: config.maxRedirects,
+        maxResponseBytes,
+        redirect: 'follow',
+        timeoutMs: opts?.timeout ?? 10000,
       })
+      const text = new TextDecoder().decode(response.data)
+      let data: T
+      if (config.responseType === 'text') {
+        data = text as T
+      }
+      else {
+        try {
+          data = JSON.parse(text) as T
+        }
+        catch (cause) {
+          throw upstreamError('Upstream response is not valid JSON', 502, 'Invalid upstream response', cause)
+        }
+      }
+      config.validateResponse?.(data)
+      return data
     },
     {
       name,

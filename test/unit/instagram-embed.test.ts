@@ -2,11 +2,57 @@ import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
 import { describe, expect, it } from 'vitest'
 import {
   isEmbedShell,
+  isSafeInstagramEmbedUrl,
+  isSafeInstagramPostUrl,
   proxyImageUrl,
   rewriteUrl,
   rewriteUrlsInText,
+  sanitizeInstagramEmbedCss,
+  sanitizeInstagramEmbedHtml,
   scopeCss,
 } from '../../packages/script/src/runtime/server/utils/instagram-embed'
+
+describe('instagram-embed: active content isolation', () => {
+  it('accepts only canonical HTTPS post URLs', () => {
+    expect(isSafeInstagramPostUrl(new URL('https://www.instagram.com/p/ABC123/'))).toBe(true)
+    expect(isSafeInstagramPostUrl(new URL('http://www.instagram.com/p/ABC123/'))).toBe(false)
+    expect(isSafeInstagramPostUrl(new URL('https://user@www.instagram.com/p/ABC123/'))).toBe(false)
+    expect(isSafeInstagramPostUrl(new URL('https://www.instagram.com/accounts/login/'))).toBe(false)
+    expect(isSafeInstagramEmbedUrl(new URL('https://www.instagram.com/p/ABC123/embed/captioned/'))).toBe(true)
+  })
+
+  it('removes executable nodes and attributes before v-html rendering', () => {
+    const html = [
+      '<body>',
+      '<div onclick="alert(1)">safe</div>',
+      '<script>alert(1)</script>',
+      '<iframe srcdoc="<script>alert(1)</script>"></iframe>',
+      '<img src="https://evil.example/pixel" onerror="alert(1)">',
+      '<img src="https://scontent-a.cdninstagram.com/photo.jpg">',
+      '<a href="javascript:alert(1)">bad link</a>',
+      '<link rel="stylesheet" href="https://evil.example/evil.css">',
+      '<link rel="stylesheet" href="https://static.cdninstagram.com/site.css">',
+      '</body>',
+    ].join('')
+
+    const result = sanitizeInstagramEmbedHtml(html, '/_scripts')
+
+    expect(result.bodyHtml).not.toMatch(/onclick|onerror|<script|<iframe|javascript:|evil\.example/i)
+    expect(result.bodyHtml).toContain('/_scripts/embed/instagram-image?url=')
+    expect(result.cssUrls).toEqual(['https://static.cdninstagram.com/site.css'])
+  })
+
+  it('prevents style breakout and browser fetches to untrusted CSS URLs', () => {
+    const css = '.safe { background: url(https://static.cdninstagram.com/a.png) }\n'
+      + '.leak { background: url(https://evil.example/pixel) }</style><script>alert(1)</script>'
+
+    const result = sanitizeInstagramEmbedCss(css, '.instagram-embed-root', '/_scripts')
+
+    expect(result).not.toContain('</style')
+    expect(result).not.toContain('evil.example')
+    expect(result).toContain('/_scripts/embed/instagram-asset?url=')
+  })
+})
 
 describe('instagram-embed: URL rewriting', () => {
   it('proxies scontent CDN image URLs', () => {
