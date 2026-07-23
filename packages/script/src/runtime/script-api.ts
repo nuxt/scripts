@@ -58,8 +58,10 @@ export function bindScriptApiMethods<T>(api: T): T {
 export function bindScriptApiResolver<T>(resolve: () => T | Promise<T>): () => T | Promise<T> {
   return () => {
     const result = resolve()
-    return result instanceof Promise
-      ? result.then(bindScriptApiMethods)
+    const isPromise = result instanceof Promise
+      || Object.prototype.toString.call(result) === '[object Promise]'
+    return isPromise
+      ? (result as Promise<T>).then(bindScriptApiMethods)
       : bindScriptApiMethods(result)
   }
 }

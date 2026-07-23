@@ -1,5 +1,6 @@
+import { runInNewContext } from 'node:vm'
 import { describe, expect, it } from 'vitest'
-import { bindScriptApiMethods } from '../../packages/script/src/runtime/script-api'
+import { bindScriptApiMethods, bindScriptApiResolver } from '../../packages/script/src/runtime/script-api'
 
 function createForwardingProxy<T extends object>(target: T): T {
   const handler: ProxyHandler<object> = {
@@ -45,5 +46,22 @@ describe('bindScriptApiMethods', () => {
 
     expect(bound.call).toBe(bound.call)
     expect(bound.call()).toBe(api)
+  })
+
+  it('binds APIs resolved by promises from another realm', async () => {
+    const brandedApis = new WeakSet<object>()
+    const api = {
+      call() {
+        if (!brandedApis.has(this))
+          throw new TypeError('Illegal invocation')
+        return 120
+      },
+    }
+    brandedApis.add(api)
+    const promise = runInNewContext('Promise.resolve(api)', { api }) as Promise<typeof api>
+    const resolved = await bindScriptApiResolver(() => promise)()
+    const proxy = createForwardingProxy(resolved)
+
+    expect(proxy.call()).toBe(120)
   })
 })
