@@ -80,7 +80,9 @@ describe('proxy alias - generated runtime code (#814)', () => {
       const Image = class {}
       const HTMLImageElement = class {}
       const Request = globalThis.Request
-      const generated = generateInterceptPluginContents('/_scripts/p').replace('export default ', '')
+      const generated = generateInterceptPluginContents('/_scripts/p')
+        .replace('import { defineNuxtPlugin } from \'nuxt/app\'\n\n', '')
+        .replace('export default ', '')
       const sandbox = {
         defineNuxtPlugin,
         navigator,
