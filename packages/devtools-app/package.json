@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxi dev",
+    "dev:prepare": "nuxi prepare",
     "build": "nuxi build",
     "generate": "nuxi generate"
   },

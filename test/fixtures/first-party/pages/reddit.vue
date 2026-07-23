@@ -7,6 +7,7 @@ useHead({
 
 const { status } = useScriptRedditPixel({
   id: 'a2_ilz4u0kbdr3v',
+  scriptOptions: { trigger: 'client' },
 })
 
 function trackPageVisit() {

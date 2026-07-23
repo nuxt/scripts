@@ -475,4 +475,47 @@ describe('waitForMapsReady', () => {
     await expect(promise).resolves.toBeUndefined()
     expect(settled).toBe(true)
   })
+
+  it('stops a detached readiness watcher when its owner aborts', async () => {
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const controller = new AbortController()
+
+    const promise = waitForMapsReady({
+      mapsApi,
+      map,
+      status,
+      load: () => Promise.resolve(),
+      signal: controller.signal,
+    })
+
+    await nextTick()
+    controller.abort()
+
+    await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+    // Later ref changes must not revive or re-settle the stopped watcher.
+    mapsApi.value = { places: {} }
+    map.value = {}
+    await nextTick()
+  })
+
+  it('removes the abort listener when load throws synchronously', async () => {
+    const mapsApi = shallowRef<any>(undefined)
+    const map = shallowRef<any>(undefined)
+    const status = ref<string>('loading')
+    const controller = new AbortController()
+    const removeEventListener = vi.spyOn(controller.signal, 'removeEventListener')
+    const error = new Error('load failed synchronously')
+
+    await expect(waitForMapsReady({
+      mapsApi,
+      map,
+      status,
+      load: () => { throw error },
+      signal: controller.signal,
+    })).rejects.toBe(error)
+
+    expect(removeEventListener).toHaveBeenCalledWith('abort', expect.any(Function))
+  })
 })

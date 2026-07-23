@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "@nuxt/scripts": "workspace:*",
-    "@unhead/vue": "^3.0.0",
+    "@unhead/vue": "3.2.1",
     "nuxt": "catalog:"
   }
 }

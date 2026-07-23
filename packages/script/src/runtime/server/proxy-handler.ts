@@ -1,5 +1,5 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, setResponseHeader, setResponseStatus } from 'h3'
 import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
 import {
@@ -27,6 +27,7 @@ interface ProxyConfig {
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
+const MAX_TRANSFORM_BODY_SIZE = 2 * 1024 * 1024
 const SKIP_RESPONSE_HEADERS = new Set(['set-cookie', 'transfer-encoding', 'content-encoding', 'content-length'])
 // Hop-by-hop request headers per RFC 7230 §6.1 — must not be forwarded by a proxy
 export const SKIP_REQUEST_HEADERS = new Set([
@@ -39,6 +40,104 @@ export const SKIP_REQUEST_HEADERS = new Set([
   'transfer-encoding',
   'upgrade',
 ])
+
+async function readTransformBody(event: Parameters<typeof getRequestWebStream>[0]): Promise<string | undefined> {
+  const contentLength = Number(getHeaders(event)['content-length'] || 0)
+  if (Number.isFinite(contentLength) && contentLength > MAX_TRANSFORM_BODY_SIZE) {
+    throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
+  }
+
+  const stream = getRequestWebStream(event)
+  if (!stream)
+    return undefined
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done)
+        break
+      if (!value)
+        continue
+      total += value.byteLength
+      if (total > MAX_TRANSFORM_BODY_SIZE) {
+        try {
+          await reader.cancel('Proxy request body too large')
+        }
+        catch {
+          // The size-limit response takes precedence over cancellation errors.
+        }
+        throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
+      }
+      chunks.push(value)
+    }
+  }
+  finally {
+    reader.releaseLock()
+  }
+
+  const body = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(body)
+}
+
+function streamUpstreamResponse(
+  body: ReadableStream<Uint8Array>,
+  controller: AbortController,
+  timeoutId: ReturnType<typeof setTimeout>,
+): ReadableStream<Uint8Array> {
+  const reader = body.getReader()
+  let finished = false
+  let readerReleased = false
+  const releaseReader = () => {
+    if (readerReleased)
+      return
+    readerReleased = true
+    reader.releaseLock()
+  }
+  const cleanup = () => {
+    if (finished)
+      return
+    finished = true
+    clearTimeout(timeoutId)
+  }
+
+  return new ReadableStream<Uint8Array>({
+    async pull(streamController) {
+      try {
+        const { done, value } = await reader.read()
+        if (done) {
+          cleanup()
+          releaseReader()
+          streamController.close()
+        }
+        else if (value) {
+          streamController.enqueue(value)
+        }
+      }
+      catch (error) {
+        cleanup()
+        releaseReader()
+        streamController.error(error)
+      }
+    },
+    async cancel(reason) {
+      cleanup()
+      controller.abort()
+      try {
+        await reader.cancel(reason)
+      }
+      finally {
+        releaseReader()
+      }
+    },
+  })
+}
 
 /**
  * Strip fingerprinting from URL query string.
@@ -285,7 +384,7 @@ export default defineEventHandler(async (event) => {
       passthroughBody = true
     }
     else if (transformableBodyType === 'form') {
-      const formBody = await readRawBody(event)
+      const formBody = await readTransformBody(event)
       rawBody = formBody
 
       if (formBody != null) {
@@ -320,7 +419,18 @@ export default defineEventHandler(async (event) => {
     }
     else {
       // JSON body with privacy transforms.
-      rawBody = await readBody(event)
+      const jsonBody = await readTransformBody(event)
+      if (jsonBody === undefined || jsonBody === '') {
+        rawBody = undefined
+      }
+      else {
+        try {
+          rawBody = JSON.parse(jsonBody)
+        }
+        catch {
+          throw createError({ statusCode: 400, statusMessage: 'Invalid JSON body' })
+        }
+      }
 
       if (Array.isArray(rawBody)) {
         // JSON array body (e.g. batch payloads) — strip each element individually
@@ -394,6 +504,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   catch (err) {
+    clearTimeout(timeoutId)
     log('[proxy] Upstream error:', err)
     throw createError({
       statusCode: timedOut ? 504 : 502,
@@ -405,9 +516,6 @@ export default defineEventHandler(async (event) => {
         errorCode: timedOut ? 'TIMEOUT' : (err as { code?: string })?.code,
       },
     })
-  }
-  finally {
-    clearTimeout(timeoutId)
   }
 
   log('[proxy] Response:', response.status, response.statusText)
@@ -421,14 +529,13 @@ export default defineEventHandler(async (event) => {
 
   setResponseStatus(event, response.status, response.statusText)
 
-  // Return the body as text for text-based content, otherwise as buffer
-  const responseContentType = response.headers.get('content-type') || ''
-  const isTextContent = responseContentType.includes('text') || responseContentType.includes('javascript') || responseContentType.includes('json')
-
-  if (isTextContent) {
-    return await response.text()
+  if (!response.body) {
+    clearTimeout(timeoutId)
+    return null
   }
 
-  // For binary content (images, etc.)
-  return Buffer.from(await response.arrayBuffer())
+  // Stream with cancellation propagation. This avoids buffering arbitrarily
+  // large responses and keeps the upstream timeout active until the body is
+  // consumed, cancelled, or errors.
+  return streamUpstreamResponse(response.body, controller, timeoutId)
 })

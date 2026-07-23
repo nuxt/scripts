@@ -2,7 +2,7 @@
 import { useHead, useScriptGoogleSignIn } from '#imports'
 
 useHead({ title: 'Google Sign-In - First Party' })
-const { status } = useScriptGoogleSignIn({ clientId: '000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com' })
+const { status } = useScriptGoogleSignIn({ clientId: '000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com', scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>

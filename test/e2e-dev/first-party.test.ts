@@ -758,19 +758,26 @@ describe('first-party privacy stripping', () => {
       }
       else {
         // Bundle-only: document the gap, verify captures if they exist
-        if (captures.length > 0) {
-          const hasValidCapture = captures.some(c =>
-            opts.domains.some(d => isAllowedDomain(c.targetUrl, d))
-            && hasResolvedPrivacy(c),
-          )
-          expect(hasValidCapture, `${provider}: Captures exist but none valid`).toBe(true)
+        // Other globally configured scripts may emit captures on this page, so
+        // only validate captures that actually belong to the current provider.
+        const providerCaptures = captures.filter(c =>
+          opts.domains.some(d => isAllowedDomain(c.targetUrl, d)),
+        )
+        const providerRawCaptures = rawCaptures.filter(c =>
+          opts.domains.some(d => isAllowedDomain(c.targetUrl, d)),
+        )
+        if (providerCaptures.length > 0) {
+          expect(
+            providerCaptures.some(hasResolvedPrivacy),
+            `${provider}: Captures exist but none have resolved privacy`,
+          ).toBe(true)
 
-          for (const capture of rawCaptures) {
+          for (const capture of providerRawCaptures) {
             const leaked = verifyFingerprintingAnonymized(capture)
             expect(leaked, `${provider}: Leaked fingerprinting params`).toEqual([])
           }
 
-          await assertSnapshots(rawCaptures, captures, provider)
+          await assertSnapshots(providerRawCaptures, providerCaptures, provider)
         }
       }
     }
@@ -1034,6 +1041,10 @@ describe('first-party privacy stripping', () => {
         const text = msg.text()
         // Filter browser-level network noise (CORS, resource loading, MIME, etc.)
         if (text.startsWith('Failed to load resource') || text.includes('CORS policy'))
+          return
+        // Chromium denies this API to reCAPTCHA in an automated top-level test
+        // context; it does not indicate a script or proxy failure.
+        if (text === 'requestStorageAccess: Permission denied.')
           return
         // MIME type errors from proxy endpoints are SDK issues (e.g., PostHog config.js returned as JSON)
         if (text.includes('MIME type') && text.includes('/_scripts/p/'))

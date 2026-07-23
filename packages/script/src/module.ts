@@ -31,6 +31,7 @@ import {
 import { defu } from 'defu'
 import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
+import { satisfies } from 'semver'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
@@ -41,6 +42,12 @@ import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
+import {
+  NUXT_SCRIPTS_CACHE_BASE,
+  NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
+  NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
+  NUXT_SCRIPTS_CACHE_MAX_SIZE,
+} from './runtime/server/utils/cache-config'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
 
@@ -54,6 +61,7 @@ export type { FirstPartyPrivacy }
 // Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
 // e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
 const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
+const UNHEAD_VERSION_RANGE = '>=3.2.0 <4'
 
 /**
  * Expand self-closing `<Script*>` component tags in page files to work around
@@ -483,7 +491,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '>=3.16',
+      nuxt: '>=4.5.0',
     },
   },
   defaults: {
@@ -526,12 +534,21 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
-    // couldn't be found for some reason, assume compatibility
-    const { version: unheadVersion } = await readPackageJSON('@unhead/vue', {
-      from: nuxt.options.modulesDir,
-    }).catch(() => ({ version: null }))
-    if (unheadVersion?.startsWith('1')) {
-      logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
+    const [unheadVuePackage, unheadCorePackage] = await Promise.all([
+      readPackageJSON('@unhead/vue', { from: nuxt.options.modulesDir }).catch(() => null),
+      readPackageJSON('unhead', { from: nuxt.options.modulesDir }).catch(() => null),
+    ])
+    const incompatibleUnheadPackages = [
+      ['@unhead/vue', unheadVuePackage?.version],
+      ['unhead', unheadCorePackage?.version],
+    ].filter(([, dependencyVersion]) => !dependencyVersion || !satisfies(dependencyVersion, UNHEAD_VERSION_RANGE))
+    if (incompatibleUnheadPackages.length) {
+      const resolvedVersions = incompatibleUnheadPackages
+        .map(([dependency, dependencyVersion]) => `${dependency}=${dependencyVersion ? `v${dependencyVersion}` : 'missing'}`)
+        .join(', ')
+      throw new Error(
+        `[nuxt-scripts] Nuxt Scripts 2 requires @unhead/vue and unhead ${UNHEAD_VERSION_RANGE}; resolved ${resolvedVersions}. Run \`npx nuxi@latest upgrade --force\` to upgrade Nuxt and refresh its dependencies.`,
+      )
     }
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
@@ -1091,6 +1108,20 @@ export default defineNuxtModule<ModuleOptions>({
           { googleMapsGeocodeProxy: { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey } },
           nuxt.options.runtimeConfig['nuxt-scripts'] as any,
         ) as any
+      }
+    }
+
+    if (Object.keys(enabledEndpoints).length > 0) {
+      const nitroOptions = nuxt.options.nitro as any
+      nitroOptions.storage ||= {}
+      // Nitro's default memory storage has no eviction policy. Keep proxy and
+      // embed caches bounded unless the application supplied a dedicated
+      // persistent/distributed mount for this namespace.
+      nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] ||= {
+        driver: 'lru-cache',
+        max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
+        maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
+        maxEntrySize: NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
       }
     }
 

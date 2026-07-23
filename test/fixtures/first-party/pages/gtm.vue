@@ -3,7 +3,7 @@ import { useHead, useScriptGoogleTagManager } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Google Tag Manager - First Party' })
-const { status, proxy } = useScriptGoogleTagManager({ id: 'GTM-MWW974PF' })
+const { status, proxy } = useScriptGoogleTagManager({ id: 'GTM-MWW974PF', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function pushEvent() {

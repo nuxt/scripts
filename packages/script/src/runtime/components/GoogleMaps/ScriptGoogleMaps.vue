@@ -152,10 +152,11 @@ export interface ScriptGoogleMapsSlots {
 <script lang="ts" setup>
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
+import { createAbortablePromise } from '../../utils/abortable-promise'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 
@@ -197,6 +198,8 @@ const currentColorScheme = computed<google.maps.ColorScheme | undefined>(() => {
 })
 
 const mapsApi = shallowRef<typeof google.maps | undefined>()
+const lifecycleController = new AbortController()
+let isUnmounted = false
 
 if (import.meta.dev) {
   if (!apiKey)
@@ -333,6 +336,7 @@ async function resolveQueryToLatLng(query: string) {
   if (endpoints?.googleMaps) {
     const data = await $fetch(`${scriptsPrefix()}/proxy/google-maps-geocode`, {
       params: { address: query },
+      signal: lifecycleController.signal,
     }) as GoogleMapsGeocodeProxyResponse
     if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
       const loc = data.results[0].geometry.location
@@ -347,7 +351,7 @@ async function resolveQueryToLatLng(query: string) {
   // Map instance: resolveQueryToLatLng is publicly exposed and may be called
   // before onLoaded has populated map.value, so constructing PlacesService
   // without map would throw.
-  await waitForMapsReady({ mapsApi, map, status, load })
+  await waitForMapsReady({ mapsApi, map, status, load, signal: lifecycleController.signal })
 
   const placesService = new mapsApi.value!.places.PlacesService(map.value!)
   const result = await new Promise<google.maps.LatLng>((resolve, reject) => {
@@ -382,14 +386,22 @@ function importLibrary(key: string): Promise<any>
 function importLibrary<T>(key: string): Promise<T> {
   if (libraries.has(key))
     return libraries.get(key)
-  const p = mapsApi.value?.importLibrary(key) || new Promise((resolve) => {
-    const stop = watch(mapsApi, (api) => {
+  const p = createAbortablePromise<T>((resolve, reject) => {
+    let stop = () => {}
+    stop = watch(mapsApi, (api) => {
       if (api) {
-        const p = api.importLibrary(key)
-        resolve(p)
-        stop()
+        try {
+          resolve(api.importLibrary(key) as Promise<T>)
+        }
+        catch (error) {
+          reject(error)
+        }
       }
     }, { immediate: true })
+    return () => stop()
+  }, {
+    signal: lifecycleController.signal,
+    abortMessage: `Google Maps library import "${key}" was aborted`,
   })
   // Clear cache on failure to allow retry
   const cached = Promise.resolve(p).catch((err) => {
@@ -475,7 +487,9 @@ onMounted(() => {
     // guard skips the redundant setCenter.
     if (center)
       centerOverride.value = { lat: center.lat(), lng: center.lng() }
-    map.value.unbindAll()
+    const previousMap = map.value
+    mapsApi.value.event.clearInstanceListeners(previousMap)
+    previousMap.unbindAll()
     map.value = undefined
     slotMounted.value = false
     // Clear any DOM children left by the previous Map instance — Google Maps
@@ -485,7 +499,7 @@ onMounted(() => {
     await nextTick()
     // Component may have unmounted (or refs been torn down) during nextTick;
     // bail out so we don't spin up a Map against a detached container.
-    if (!mapEl.value || !mapsApi.value)
+    if (isUnmounted || !mapEl.value || !mapsApi.value)
       return
     const _options: google.maps.MapOptions = {
       ...options.value,
@@ -510,31 +524,48 @@ onMounted(() => {
   watch([() => getCenterWatchKey(props.center), () => getCenterWatchKey(props.mapOptions?.center)], () => {
     centerOverride.value = undefined
   })
-  watch([controlledCenterKey, isMapReady, map], async () => {
-    if (!map.value) {
+  watch([controlledCenterKey, isMapReady, map], async (_, __, onCleanup) => {
+    const currentMap = map.value
+    if (!currentMap) {
       return
     }
+    let stale = false
+    onCleanup(() => {
+      stale = true
+    })
     let center = toRaw(options.value.center)
     if (center) {
       if (isLocationQuery(center) && isMapReady.value) {
-        center = await resolveQueryToLatLng(center as string)
+        try {
+          center = await resolveQueryToLatLng(center as string)
+        }
+        catch (error: any) {
+          if (error?.name === 'AbortError')
+            return
+          throw error
+        }
       }
+      if (stale || isUnmounted || map.value !== currentMap)
+        return
       // Skip setCenter if the map is already at the same position to avoid
       // resetting user pan interactions on unrelated re-renders.
-      const current = map.value!.getCenter()
+      const current = currentMap.getCenter()
       if (current) {
         const newLat = typeof (center as any).lat === 'function' ? (center as any).lat() : (center as any).lat
         const newLng = typeof (center as any).lng === 'function' ? (center as any).lng() : (center as any).lng
         if (current.lat() === newLat && current.lng() === newLng)
           return
       }
-      map.value!.setCenter(center as google.maps.LatLng)
+      currentMap.setCenter(center as google.maps.LatLng)
     }
   }, {
     immediate: true,
   })
   onLoaded(async (instance: any) => {
-    mapsApi.value = await instance.maps
+    const api = await instance.maps
+    if (isUnmounted || !mapEl.value)
+      return
+    mapsApi.value = api
     // may need to transform the center before we can init the map
     const center = options.value.center as string
     const _options: google.maps.MapOptions = {
@@ -542,11 +573,22 @@ onMounted(() => {
       // @ts-expect-error broken
       center: !center || isLocationQuery(center) ? undefined : center,
     }
-    map.value = new mapsApi.value!.Map(mapEl.value!, _options)
+    map.value = new api.Map(mapEl.value, _options)
     if (center && isLocationQuery(center)) {
-      centerOverride.value = await resolveQueryToLatLng(center)
-      if (centerOverride.value)
-        map.value?.setCenter(centerOverride.value)
+      let resolvedCenter
+      try {
+        resolvedCenter = await resolveQueryToLatLng(center)
+      }
+      catch (error: any) {
+        if (error?.name === 'AbortError')
+          return
+        throw error
+      }
+      if (isUnmounted)
+        return
+      centerOverride.value = resolvedCenter
+      if (resolvedCenter)
+        map.value?.setCenter(resolvedCenter)
     }
     isMapReady.value = true
   })
@@ -602,6 +644,8 @@ const rootAttrs = computed(() => {
 })
 
 onBeforeUnmount(() => {
+  isUnmounted = true
+  lifecycleController.abort()
   // Synchronous cleanup — Vue does not await async lifecycle hooks,
   // so anything after an `await` runs as a detached microtask.
   // Note: do NOT null mapsApi here — children unmount AFTER onBeforeUnmount
@@ -609,10 +653,19 @@ onBeforeUnmount(() => {
   // Note: do NOT remove map DOM here — during page transitions the leave
   // animation is still playing, and tearing out the iframe leaves blank
   // space. Vue removes the parent element on actual unmount.
-  map.value?.unbindAll()
+  if (map.value && mapsApi.value) {
+    mapsApi.value.event.clearInstanceListeners(map.value)
+    map.value.unbindAll()
+  }
   map.value = undefined
+  activeInfoWindow?.close()
+  activeInfoWindow = undefined
   libraries.clear()
   queryToLatLngCache.clear()
+})
+
+onUnmounted(() => {
+  mapsApi.value = undefined
 })
 </script>
 

@@ -175,11 +175,10 @@ describe('basic', () => {
   })
   it('bundle', async () => {
     const { page } = await createPage('/bundle-use-script')
-    // wait for the script to be loaded
-    await page.waitForTimeout(500)
-    // get content of #script-src
-    const text = await page.$eval('#script-src', el => el.textContent)
-    expect(text).toMatchInlineSnapshot(`"/_scripts/assets/ff1523fb7389539c.js"`)
+    // Assert the transformed script tag directly. The page's diagnostic text is
+    // updated from onLoaded, which also depends on browser scheduling under load.
+    const sources = await page.$$eval('script[src]', scripts => scripts.map(script => script.getAttribute('src')))
+    expect(sources).toContain('/_scripts/assets/ff1523fb7389539c.js')
   })
   it('partytown adds type attribute', async () => {
     const { page } = await createPage('/partytown')

@@ -1,6 +1,6 @@
-import { useEventListener } from '@vueuse/core'
-import { tryOnScopeDispose } from '@vueuse/shared'
-import { onNuxtReady } from 'nuxt/app'
+import type { UseScriptTrigger } from '@unhead/vue/scripts'
+import { createScriptTriggerInteraction } from 'unhead/scripts/triggers'
+import { createNuxtReadyScriptTrigger } from '../utils/nuxt-ready-script-trigger'
 
 export interface InteractionScriptTriggerOptions {
   /**
@@ -17,41 +17,19 @@ export interface InteractionScriptTriggerOptions {
 /**
  * Create a trigger that loads a script when any of the specified interaction events occur.
  */
-export function useScriptTriggerInteraction(options: InteractionScriptTriggerOptions): Promise<boolean> {
-  if (import.meta.server) {
-    return new Promise(() => {})
-  }
+export function useScriptTriggerInteraction(options: InteractionScriptTriggerOptions): UseScriptTrigger {
+  if (!options.events.length)
+    throw new Error('[nuxt-scripts] Interaction script triggers require at least one event.')
 
-  const { events, target = document.documentElement } = options
-
-  return new Promise<boolean>((resolve) => {
-    onNuxtReady(() => {
-      if (!target) {
-        resolve(false)
-        return
+  const target = options.target === undefined
+    ? () => typeof document === 'undefined' ? null : document.documentElement
+    : () => {
+        if (!options.target && import.meta.dev)
+          console.warn('[nuxt-scripts] Interaction script trigger has no event target; the script will remain unloaded.')
+        return options.target || null
       }
-
-      const cleanupFns: Array<() => void> = []
-
-      // Listen for all specified events
-      events.forEach((event) => {
-        const cleanup = useEventListener(
-          target,
-          event,
-          () => {
-            // Clean up all listeners when any event triggers
-            cleanupFns.forEach(fn => fn())
-            resolve(true)
-          },
-          { once: true, passive: true },
-        )
-        cleanupFns.push(cleanup)
-      })
-
-      tryOnScopeDispose(() => {
-        cleanupFns.forEach(fn => fn())
-        resolve(false)
-      })
-    })
-  })
+  return createNuxtReadyScriptTrigger(createScriptTriggerInteraction({
+    events: options.events,
+    target,
+  }))
 }

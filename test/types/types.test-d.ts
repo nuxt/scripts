@@ -2,7 +2,7 @@ import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
 import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
-import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseScriptContext } from '../../packages/script/src/runtime/types'
+import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseFunctionType, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
 describe('module options registry', () => {
@@ -136,6 +136,20 @@ describe('#nuxt-scripts/types exports', () => {
     type Ctx = UseScriptContext<{ foo: string }>
     expectTypeOf<Ctx['reload']>().toBeFunction()
     expectTypeOf<Ctx['reload']>().returns.toEqualTypeOf<Promise<{ foo: string }>>()
+  })
+
+  it('UseScriptContext exposes its Unhead consumer scope', () => {
+    type Ctx = UseScriptContext<{ foo: string }>
+    expectTypeOf<Ctx['signal']>().toEqualTypeOf<AbortSignal>()
+    expectTypeOf<Ctx['dispose']>().toBeFunction()
+    expectTypeOf<Ctx['script']>().toBeObject()
+  })
+
+  it('infers API types from the Unhead resolve callback', () => {
+    type Resolved = UseFunctionType<{
+      resolve: () => Promise<{ ready: true }>
+    }, { fallback: true }>
+    expectTypeOf<Resolved>().toEqualTypeOf<{ ready: true }>()
   })
 
   it('exports NuxtUseScriptOptions type', () => {

@@ -1,5 +1,8 @@
-export async function fetchScript(url: string) {
-  const compressedResponse = await fetch(url, { headers: { 'Accept-Encoding': 'gzip' } }).catch((err) => {
+export async function fetchScript(url: string, signal?: AbortSignal) {
+  const compressedResponse = await fetch(url, {
+    headers: { 'Accept-Encoding': 'gzip' },
+    signal,
+  }).catch((err) => {
     return {
       size: null,
       error: err,
@@ -9,6 +12,7 @@ export async function fetchScript(url: string) {
     return compressedResponse as { size: null, error: Error }
   }
   if (!compressedResponse.ok) {
+    await cancelResponseBody(compressedResponse)
     return {
       size: null,
       error: new Error(`Failed to fetch ${compressedResponse.status} ${compressedResponse.statusText}`),
@@ -17,9 +21,19 @@ export async function fetchScript(url: string) {
   // Guard against measuring HTML error pages as script sizes
   const contentType = compressedResponse.headers.get('Content-Type') || ''
   if (contentType.includes('text/html')) {
+    await cancelResponseBody(compressedResponse)
     return { size: null }
   }
-  const size = await getResponseSize(compressedResponse)
+  let size: number | null
+  try {
+    size = await getResponseSize(compressedResponse)
+  }
+  catch (error) {
+    return {
+      size: null,
+      error: error instanceof Error ? error : new Error(String(error)),
+    }
+  }
   if (!size) {
     return {
       size: null,
@@ -31,23 +45,38 @@ export async function fetchScript(url: string) {
 }
 
 async function getResponseSize(response: Response) {
-  const reader = response.body?.getReader()
   const contentLength = response.headers.get('Content-Length')
 
   if (contentLength) {
+    await cancelResponseBody(response)
     return Number(contentLength)
   }
+  const reader = response.body?.getReader()
   if (!reader) {
     return null
   }
-  let total = 0
-  let done = false
-  while (!done) {
-    const data = await reader.read()
-    done = data.done
-    total += data.value?.length || 0
+  try {
+    let total = 0
+    let done = false
+    while (!done) {
+      const data = await reader.read()
+      done = data.done
+      total += data.value?.length || 0
+    }
+    return total > 0 ? total : null
   }
-  return total > 0 ? total : null
+  finally {
+    reader.releaseLock()
+  }
+}
+
+async function cancelResponseBody(response: Response) {
+  try {
+    await response.body?.cancel()
+  }
+  catch {
+    // The response is being discarded, so cancellation failure is non-fatal.
+  }
 }
 
 function bytesToSize(bytes: number) {

@@ -81,10 +81,16 @@ const rootEl = ref<HTMLDivElement | null>(null)
 const ready = ref(false)
 const failed = ref(false)
 const sdkInstance = shallowRef<SdkInstance<Components[]>>()
+let disposed = false
 
+const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 const { onLoaded, status } = useScriptPayPal({
   ...(props.clientToken ? { clientToken: props.clientToken } : { clientId: props.clientId }),
   ...props.paypalScriptOptions,
+  scriptOptions: {
+    ...props.paypalScriptOptions.scriptOptions,
+    trigger,
+  },
 })
 
 onMounted(() => {
@@ -103,11 +109,16 @@ onMounted(() => {
     } as CreateInstanceOptions<Components[]>
 
     try {
-      sdkInstance.value = await paypal.createInstance(instanceOptions)
+      const instance = await paypal.createInstance(instanceOptions)
+      if (disposed)
+        return
+      sdkInstance.value = instance
       ready.value = true
       emit('ready', sdkInstance.value)
     }
     catch (err) {
+      if (disposed)
+        return
       sdkInstance.value = undefined
       failed.value = true
       emit('error', err)
@@ -116,6 +127,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  disposed = true
   sdkInstance.value = undefined
 })
 
@@ -125,8 +137,6 @@ defineExpose({
 })
 
 const ScriptLoadingIndicator = resolveComponent('ScriptLoadingIndicator')
-
-const trigger = useScriptTriggerElement({ trigger: props.trigger, el: rootEl })
 
 const rootAttrs = computed(() => {
   return defu(props.rootAttrs, {

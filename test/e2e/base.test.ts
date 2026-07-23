@@ -17,9 +17,7 @@ describe('base', async () => {
   })
   it('bundle', async () => {
     const page = await createPage('/foo/bundle-use-script')
-    await page.waitForTimeout(500)
-    // get content of #script-src
-    const text = await page.$eval('#script-src', el => el.textContent)
-    expect(text).toMatchInlineSnapshot(`"/foo/_scripts/assets/ff1523fb7389539c.js"`)
+    const sources = await page.$$eval('script[src]', scripts => scripts.map(script => script.getAttribute('src')))
+    expect(sources).toContain('/foo/_scripts/assets/ff1523fb7389539c.js')
   })
 })
