@@ -35,7 +35,7 @@ describe('google geocode proxy', () => {
   beforeEach(() => {
     rawFetchMock.mockReset()
     rawFetchMock.mockResolvedValue({
-      _data: { status: 'OK', results: [] },
+      _data: new Blob([JSON.stringify({ status: 'OK', results: [] })]).stream(),
       headers: new Headers({ 'content-type': 'application/json' }),
       status: 200,
     })

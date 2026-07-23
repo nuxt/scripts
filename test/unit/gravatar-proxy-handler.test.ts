@@ -32,7 +32,7 @@ describe('gravatar proxy input and response boundaries', () => {
   beforeEach(() => {
     rawFetchMock.mockReset()
     rawFetchMock.mockResolvedValue({
-      _data: new TextEncoder().encode('image').buffer,
+      _data: new Blob(['image']).stream(),
       headers: new Headers({ 'content-type': 'image/png' }),
       status: 200,
     })
@@ -59,7 +59,7 @@ describe('gravatar proxy input and response boundaries', () => {
 
   it('rejects active content returned by the image upstream', async () => {
     rawFetchMock.mockResolvedValueOnce({
-      _data: new TextEncoder().encode('<script>alert(1)</script>').buffer,
+      _data: new Blob(['<script>alert(1)</script>']).stream(),
       headers: new Headers({ 'content-type': 'text/html' }),
       status: 200,
     })

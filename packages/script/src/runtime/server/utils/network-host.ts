@@ -130,7 +130,8 @@ export async function createPublicNetworkDispatcher(resolveHostnameOverride?: Re
   if (runtime !== 'node')
     return { fetch: globalThis.fetch, close: async () => {} }
 
-  // Loaded only on Node. Edge runtimes use their platform-isolated fetch implementation.
+  // Loaded only on Node. Other runtimes keep their platform fetch behavior;
+  // call sites still reject direct non-public hostnames before fetching.
   const { Agent, fetch } = await import('undici')
   let resolveHostname = resolveHostnameOverride
   if (!resolveHostname) {

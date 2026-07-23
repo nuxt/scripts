@@ -21,6 +21,17 @@ vi.mock('ofetch', () => ({
   createFetch: vi.fn(() => Object.assign(vi.fn(), { raw: rawFetchMock })),
 }))
 
+vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/script/src/runtime/server/utils/network-host')>()
+  return {
+    ...actual,
+    createPublicNetworkDispatcher: async () => ({
+      fetch: globalThis.fetch,
+      close: async () => {},
+    }),
+  }
+})
+
 const { createCachedBinaryFetch, createCachedJsonFetch } = await import(
   '../../packages/script/src/runtime/server/utils/cached-upstream',
 )
@@ -29,6 +40,106 @@ beforeEach(() => {
   cacheDefinitions.length = 0
   hashMock.mockClear()
   rawFetchMock.mockReset()
+})
+
+function responseStream(...chunks: string[]): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks)
+        controller.enqueue(new TextEncoder().encode(chunk))
+      controller.close()
+    },
+  })
+}
+
+describe('upstream response bounds', () => {
+  it('times out a binary body that stalls after headers', async () => {
+    vi.useFakeTimers()
+    try {
+      rawFetchMock.mockResolvedValueOnce({
+        _data: new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('partial'))
+          },
+        }),
+        headers: new Headers({ 'content-type': 'image/png' }),
+        status: 200,
+      })
+      const fetchBinary = createCachedBinaryFetch('image-timeout', 60, {
+        allowUrl: url => url.hostname === 'cdn.example.com',
+      })
+
+      const result = expect(fetchBinary('https://cdn.example.com/image', { timeout: 50 }))
+        .rejects
+        .toMatchObject({ statusCode: 504 })
+      await vi.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(50)
+
+      await result
+    }
+    finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('rejects a binary body over its configured byte limit', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('123', '456'),
+      headers: new Headers({ 'content-type': 'image/png' }),
+      status: 200,
+    })
+    const fetchBinary = createCachedBinaryFetch('image-limit', 60, {
+      allowUrl: url => url.hostname === 'cdn.example.com',
+      maxResponseBytes: 5,
+    })
+
+    await expect(fetchBinary('https://cdn.example.com/image'))
+      .rejects
+      .toMatchObject({ statusCode: 502, statusMessage: 'Upstream response too large' })
+  })
+
+  it('rejects cached JSON over its configured byte limit', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('{"value":"too large"}'),
+      headers: new Headers({ 'content-type': 'application/json' }),
+      status: 200,
+    })
+    const fetchJson = createCachedJsonFetch('json-limit', 60, url => url, {
+      allowUrl: url => url.hostname === 'api.example.com',
+      maxResponseBytes: 8,
+    })
+
+    await expect(fetchJson('https://api.example.com/data'))
+      .rejects
+      .toMatchObject({ statusCode: 502, statusMessage: 'Upstream response too large' })
+  })
+
+  it('parses a bounded JSON response', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('{"status":"OK"}'),
+      headers: new Headers({ 'content-type': 'application/json' }),
+      status: 200,
+    })
+    const fetchJson = createCachedJsonFetch<{ status: string }>('json', 60, url => url, {
+      allowUrl: url => url.hostname === 'api.example.com',
+    })
+
+    await expect(fetchJson('https://api.example.com/data')).resolves.toEqual({ status: 'OK' })
+  })
+
+  it('decodes a bounded text response', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('<p>embed</p>'),
+      headers: new Headers({ 'content-type': 'text/html' }),
+      status: 200,
+    })
+    const fetchText = createCachedJsonFetch<string>('text', 60, url => url, {
+      allowUrl: url => url.hostname === 'embed.example.com',
+      responseType: 'text',
+    })
+
+    await expect(fetchText('https://embed.example.com/post')).resolves.toBe('<p>embed</p>')
+  })
 })
 
 describe('upstream cache keys', () => {
@@ -131,7 +242,7 @@ describe('upstream cache keys', () => {
         status: 302,
       })
       .mockResolvedValueOnce({
-        _data: new TextEncoder().encode('image').buffer,
+        _data: responseStream('image'),
         headers: new Headers({ 'content-type': 'image/png' }),
         status: 200,
       })

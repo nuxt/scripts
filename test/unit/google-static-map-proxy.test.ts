@@ -35,7 +35,7 @@ describe('google static map proxy', () => {
   beforeEach(() => {
     rawFetchMock.mockReset()
     rawFetchMock.mockResolvedValue({
-      _data: new TextEncoder().encode('image').buffer,
+      _data: new Blob(['image']).stream(),
       headers: new Headers({ 'content-type': 'image/png' }),
       status: 200,
     })
@@ -67,7 +67,7 @@ describe('google static map proxy', () => {
 
   it('rejects active content returned by the map upstream', async () => {
     rawFetchMock.mockResolvedValueOnce({
-      _data: new TextEncoder().encode('<script>alert(1)</script>').buffer,
+      _data: new Blob(['<script>alert(1)</script>']).stream(),
       headers: new Headers({ 'content-type': 'text/html' }),
       status: 200,
     })
