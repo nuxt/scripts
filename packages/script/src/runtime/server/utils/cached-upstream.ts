@@ -72,6 +72,23 @@ interface BoundedBodyOptions {
   timeoutMs: number
 }
 
+type RedirectPolicy = Pick<CachedBinaryFetchConfig, 'allowUrl' | 'maxRedirects'>
+
+interface BoundedUpstreamFetchOptions extends RedirectPolicy {
+  contentTypePrefixes?: string[]
+  headers?: Record<string, string>
+  ignoreResponseError: boolean
+  maxResponseBytes: number
+  redirect: 'follow' | 'manual'
+  timeoutMs: number
+}
+
+interface BoundedUpstreamResponse {
+  contentType: string | null
+  data: Uint8Array
+  status: number
+}
+
 const DEFAULT_BINARY_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 const DEFAULT_JSON_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 
@@ -171,19 +188,6 @@ async function rejectResponse(
   throw error
 }
 
-async function assertSuccessfulResponse(
-  response: FetchResponse<ReadableStream<Uint8Array>>,
-  ignoreResponseError: boolean,
-): Promise<void> {
-  if (!ignoreResponseError && response.status >= 400 && response.status < 600) {
-    await rejectResponse(response, upstreamError(
-      `Upstream request failed with status ${response.status}`,
-      response.status,
-      response.statusText || 'Upstream request failed',
-    ))
-  }
-}
-
 function parseUpstreamUrl(url: string): URL {
   try {
     return new URL(url)
@@ -202,7 +206,7 @@ function resolveRedirect(
   response: Pick<Response, 'headers' | 'status'>,
   currentUrl: URL,
   redirectCount: number,
-  config: CachedBinaryFetchConfig,
+  policy: RedirectPolicy,
 ): URL | undefined {
   if (response.status < 300 || response.status >= 400 || response.status === 304)
     return
@@ -210,7 +214,7 @@ function resolveRedirect(
   const location = response.headers.get('location')
   if (!location)
     throw upstreamError('Upstream redirect has no Location header', 502, 'Invalid upstream redirect')
-  if (redirectCount >= (config.maxRedirects ?? 5))
+  if (redirectCount >= (policy.maxRedirects ?? 5))
     throw upstreamError('Upstream redirect limit exceeded', 502, 'Too many upstream redirects')
 
   let nextUrl: URL
@@ -220,8 +224,76 @@ function resolveRedirect(
   catch (cause) {
     throw upstreamError('Upstream redirect URL is invalid', 502, 'Invalid upstream redirect', cause)
   }
-  assertAllowedUrl(nextUrl, config.allowUrl)
+  assertAllowedUrl(nextUrl, policy.allowUrl)
   return nextUrl
+}
+
+async function fetchBoundedUpstream(
+  url: string,
+  options: BoundedUpstreamFetchOptions,
+): Promise<BoundedUpstreamResponse> {
+  let currentUrl = parseUpstreamUrl(url)
+  assertAllowedUrl(currentUrl, options.allowUrl)
+  if (options.redirect === 'follow' && !options.allowUrl)
+    throw new Error('Automatic redirects require an allowUrl redirect policy')
+
+  const network = await createPublicNetworkDispatcher()
+  const safeFetch = createFetch({ fetch: network.fetch })
+
+  try {
+    for (let redirectCount = 0; ; redirectCount++) {
+      const response = await safeFetch.raw(currentUrl.toString(), {
+        responseType: 'stream',
+        timeout: options.timeoutMs,
+        redirect: 'manual',
+        ignoreResponseError: true,
+        headers: options.headers,
+      }) as FetchResponse<ReadableStream<Uint8Array>>
+
+      if (options.redirect === 'follow') {
+        let nextUrl: URL | undefined
+        try {
+          nextUrl = resolveRedirect(response, currentUrl, redirectCount, options)
+        }
+        catch (error) {
+          await rejectResponse(response, error as Error)
+        }
+        if (nextUrl) {
+          await cancelBody(response._data)
+          currentUrl = nextUrl
+          continue
+        }
+      }
+
+      if (!options.ignoreResponseError && response.status >= 400 && response.status < 600) {
+        await rejectResponse(response, upstreamError(
+          `Upstream request failed with status ${response.status}`,
+          response.status,
+          response.statusText || 'Upstream request failed',
+        ))
+      }
+
+      const contentType = response.headers.get('content-type')
+      if (options.contentTypePrefixes?.length) {
+        const normalizedContentType = contentType?.split(';', 1)[0]?.trim().toLowerCase()
+        if (!normalizedContentType || !options.contentTypePrefixes.some(prefix => normalizedContentType.startsWith(prefix))) {
+          await rejectResponse(
+            response,
+            upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type'),
+          )
+        }
+      }
+
+      const data = await readBoundedResponseBody(response._data, {
+        maxBytes: options.maxResponseBytes,
+        timeoutMs: options.timeoutMs,
+      })
+      return { contentType, data, status: response.status }
+    }
+  }
+  finally {
+    await network.close()
+  }
 }
 
 /**
@@ -236,55 +308,19 @@ export function createCachedBinaryFetch(
   const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_BINARY_MAX_RESPONSE_BYTES)
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
-      let currentUrl = parseUpstreamUrl(url)
-      assertAllowedUrl(currentUrl, config.allowUrl)
-      let response: FetchResponse<ReadableStream<Uint8Array>>
-      const network = await createPublicNetworkDispatcher()
-      const safeFetch = createFetch({ fetch: network.fetch })
-
-      try {
-        for (let redirectCount = 0; ; redirectCount++) {
-          const redirectMode = opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual')
-          if (redirectMode === 'follow' && !config.allowUrl)
-            throw new Error('Automatic redirects require an allowUrl redirect policy')
-          const validateRedirect = redirectMode === 'follow'
-          response = await safeFetch.raw(currentUrl.toString(), {
-            responseType: 'stream' as const,
-            timeout: opts?.timeout ?? 10000,
-            redirect: validateRedirect ? 'manual' : redirectMode,
-            ignoreResponseError: true,
-            headers: opts?.headers,
-          })
-
-          if (!validateRedirect)
-            break
-
-          let nextUrl: URL | undefined
-          try {
-            nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
-          }
-          catch (error) {
-            await rejectResponse(response, error as Error)
-          }
-          if (!nextUrl)
-            break
-          await cancelBody(response._data)
-          currentUrl = nextUrl
-        }
-
-        await assertSuccessfulResponse(response, opts?.ignoreResponseError ?? false)
-        const data = await readBoundedResponseBody(response._data, {
-          maxBytes: maxResponseBytes,
-          timeoutMs: opts?.timeout ?? 10000,
-        })
-        return {
-          base64: data.byteLength ? Buffer.from(data).toString('base64') : '',
-          contentType: response.headers.get('content-type'),
-          status: response.status,
-        }
-      }
-      finally {
-        await network.close()
+      const response = await fetchBoundedUpstream(url, {
+        allowUrl: config.allowUrl,
+        headers: opts?.headers,
+        ignoreResponseError: opts?.ignoreResponseError ?? false,
+        maxRedirects: config.maxRedirects,
+        maxResponseBytes,
+        redirect: opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual'),
+        timeoutMs: opts?.timeout ?? 10000,
+      })
+      return {
+        base64: response.data.byteLength ? Buffer.from(response.data).toString('base64') : '',
+        contentType: response.contentType,
+        status: response.status,
       }
     },
     {
@@ -335,69 +371,31 @@ export function createCachedJsonFetch<T>(
   const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_JSON_MAX_RESPONSE_BYTES)
   return defineCachedFunction(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
-      let currentUrl = parseUpstreamUrl(url)
-      assertAllowedUrl(currentUrl, config.allowUrl)
-      const network = await createPublicNetworkDispatcher()
-      const safeFetch = createFetch({ fetch: network.fetch })
-
-      try {
-        for (let redirectCount = 0; ; redirectCount++) {
-          const response = await safeFetch.raw(currentUrl.toString(), {
-            responseType: 'stream',
-            timeout: opts?.timeout ?? 10000,
-            redirect: 'manual',
-            ignoreResponseError: true,
-            headers: opts?.headers,
-          }) as FetchResponse<ReadableStream<Uint8Array>>
-          let nextUrl: URL | undefined
-          try {
-            nextUrl = resolveRedirect(response, currentUrl, redirectCount, config)
-          }
-          catch (error) {
-            await rejectResponse(response, error as Error)
-          }
-          if (nextUrl) {
-            await cancelBody(response._data)
-            currentUrl = nextUrl
-            continue
-          }
-
-          await assertSuccessfulResponse(response, false)
-
-          if (config.contentTypePrefixes?.length) {
-            const contentType = response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
-            if (!contentType || !config.contentTypePrefixes.some(prefix => contentType.startsWith(prefix))) {
-              await rejectResponse(
-                response,
-                upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type'),
-              )
-            }
-          }
-
-          const rawData = await readBoundedResponseBody(response._data, {
-            maxBytes: maxResponseBytes,
-            timeoutMs: opts?.timeout ?? 10000,
-          })
-          const text = new TextDecoder().decode(rawData)
-          let data: T
-          if (config.responseType === 'text') {
-            data = text as T
-          }
-          else {
-            try {
-              data = JSON.parse(text) as T
-            }
-            catch (cause) {
-              throw upstreamError('Upstream response is not valid JSON', 502, 'Invalid upstream response', cause)
-            }
-          }
-          config.validateResponse?.(data)
-          return data
+      const response = await fetchBoundedUpstream(url, {
+        allowUrl: config.allowUrl,
+        contentTypePrefixes: config.contentTypePrefixes,
+        headers: opts?.headers,
+        ignoreResponseError: false,
+        maxRedirects: config.maxRedirects,
+        maxResponseBytes,
+        redirect: 'follow',
+        timeoutMs: opts?.timeout ?? 10000,
+      })
+      const text = new TextDecoder().decode(response.data)
+      let data: T
+      if (config.responseType === 'text') {
+        data = text as T
+      }
+      else {
+        try {
+          data = JSON.parse(text) as T
+        }
+        catch (cause) {
+          throw upstreamError('Upstream response is not valid JSON', 502, 'Invalid upstream response', cause)
         }
       }
-      finally {
-        await network.close()
-      }
+      config.validateResponse?.(data)
+      return data
     },
     {
       name,
