@@ -62,10 +62,6 @@ The Maps JavaScript API still sends the key to the browser when the interactive 
 Google's [Maps Platform FAQ](https://developers.google.com/maps/faq#static_map) requires browser pages to load Static Maps images directly from Google. The current static-map proxy caches and serves those images, so pass an explicit `api-key` to `<ScriptGoogleMapsStaticMap>`{lang="html"} to bypass the proxy and review the Maps Platform terms before using that component.
 ::
 
-::callout{type="info"}
-This script's proxy endpoints use [HMAC URL signing](/docs/guides/first-party#proxy-endpoint-security) when you configure a `NUXT_SCRIPTS_PROXY_SECRET`. See the [security guide](/docs/guides/first-party#proxy-endpoint-security) for setup instructions.
-::
-
 See [Billing & Permissions](/scripts/google-maps/guides/billing) for API costs and required permissions.
 
 ## Quick Start

@@ -2,19 +2,17 @@ import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { useRuntimeConfig } from 'nitropack/runtime'
 import { withQuery } from 'ufo'
 import { createCachedBinaryFetch } from './utils/cached-upstream'
-import { PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, SIG_PARAM } from './utils/sign-constants'
-import { withSigning } from './utils/withSigning'
 
 // Static maps by (center, zoom, size, style, markers, ...) are essentially
 // immutable; a 7-day cache drastically reduces billable map loads for the
 // common "same map on every page visit" case.
 const cachedMapFetch = createCachedBinaryFetch('nuxt-scripts-static-map', 604800)
 
-// Strip query params that vary per-request (auth artefacts + client-provided
-// API key) so the cache key is pinned to the actual map being requested.
-const STRIP_PARAMS = new Set([SIG_PARAM, PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, 'key'])
+// Strip the client-provided API key so the cache key is pinned to the actual
+// map being requested (the real key is server-injected below).
+const STRIP_PARAMS = new Set(['key'])
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const publicConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
   const privateConfig = (runtimeConfig['nuxt-scripts'] as any)?.googleStaticMapsProxy
@@ -62,4 +60,4 @@ export default withSigning(defineEventHandler(async (event) => {
   setHeader(event, 'Vary', 'Accept-Encoding')
 
   return result.body
-}))
+})

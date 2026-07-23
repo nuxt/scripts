@@ -27,21 +27,21 @@ const WHITESPACE_RE = /\s/
 const AT_RULE_NAME_RE = /@([\w-]+)/
 const MULTI_SPACE_RE = /\s+/g
 
-export function proxyImageUrl(url: string, prefix = '/_scripts', secret?: string): string {
-  return buildProxyUrl(`${prefix}/embed/instagram-image`, { url: url.replace(AMP_RE, '&') }, secret)
+export function proxyImageUrl(url: string, prefix = '/_scripts'): string {
+  return buildProxyUrl(`${prefix}/embed/instagram-image`, { url: url.replace(AMP_RE, '&') })
 }
 
-export function proxyAssetUrl(url: string, prefix = '/_scripts', secret?: string): string {
-  return buildProxyUrl(`${prefix}/embed/instagram-asset`, { url: url.replace(AMP_RE, '&') }, secret)
+export function proxyAssetUrl(url: string, prefix = '/_scripts'): string {
+  return buildProxyUrl(`${prefix}/embed/instagram-asset`, { url: url.replace(AMP_RE, '&') })
 }
 
-export function rewriteUrl(url: string, prefix = '/_scripts', secret?: string): string {
+export function rewriteUrl(url: string, prefix = '/_scripts'): string {
   try {
     const parsed = new URL(url)
     if (parsed.hostname === INSTAGRAM_ASSET_HOST)
-      return proxyAssetUrl(url, prefix, secret)
+      return proxyAssetUrl(url, prefix)
     if (INSTAGRAM_IMAGE_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith(`.cdninstagram.com`)))
-      return proxyImageUrl(url, prefix, secret)
+      return proxyImageUrl(url, prefix)
   }
   catch {
     // Non-URL values are left unchanged by design.
@@ -49,11 +49,11 @@ export function rewriteUrl(url: string, prefix = '/_scripts', secret?: string): 
   return url
 }
 
-export function rewriteUrlsInText(text: string, prefix = '/_scripts', secret?: string): string {
+export function rewriteUrlsInText(text: string, prefix = '/_scripts'): string {
   return text
-    .replace(SCONTENT_RE, m => proxyImageUrl(m, prefix, secret))
-    .replace(STATIC_CDN_RE, m => proxyAssetUrl(m, prefix, secret))
-    .replace(LOOKASIDE_RE, m => proxyImageUrl(m, prefix, secret))
+    .replace(SCONTENT_RE, m => proxyImageUrl(m, prefix))
+    .replace(STATIC_CDN_RE, m => proxyAssetUrl(m, prefix))
+    .replace(LOOKASIDE_RE, m => proxyImageUrl(m, prefix))
 }
 
 /**

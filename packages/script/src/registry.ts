@@ -691,8 +691,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       envDefaults: { apiKey: '' },
       category: 'content',
       serverHandlers: [
-        { route: '/_scripts/proxy/google-static-maps', handler: './runtime/server/google-static-maps-proxy', requiresSigning: true },
-        { route: '/_scripts/proxy/google-maps-geocode', handler: './runtime/server/google-maps-geocode-proxy', requiresSigning: true },
+        { route: '/_scripts/proxy/google-static-maps', handler: './runtime/server/google-static-maps-proxy' },
+        { route: '/_scripts/proxy/google-maps-geocode', handler: './runtime/server/google-maps-geocode-proxy' },
       ],
     }),
     def('blueskyEmbed', {
@@ -701,8 +701,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'Bluesky Embed',
       category: 'content',
       serverHandlers: [
-        { route: '/_scripts/embed/bluesky', handler: './runtime/server/bluesky-embed', requiresSigning: true },
-        { route: '/_scripts/embed/bluesky-image', handler: './runtime/server/bluesky-embed-image', requiresSigning: true },
+        { route: '/_scripts/embed/bluesky', handler: './runtime/server/bluesky-embed' },
+        { route: '/_scripts/embed/bluesky-image', handler: './runtime/server/bluesky-embed-image' },
       ],
     }),
     def('instagramEmbed', {
@@ -711,9 +711,9 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'Instagram Embed',
       category: 'content',
       serverHandlers: [
-        { route: '/_scripts/embed/instagram', handler: './runtime/server/instagram-embed', requiresSigning: true },
-        { route: '/_scripts/embed/instagram-image', handler: './runtime/server/instagram-embed-image', requiresSigning: true },
-        { route: '/_scripts/embed/instagram-asset', handler: './runtime/server/instagram-embed-asset', requiresSigning: true },
+        { route: '/_scripts/embed/instagram', handler: './runtime/server/instagram-embed' },
+        { route: '/_scripts/embed/instagram-image', handler: './runtime/server/instagram-embed-image' },
+        { route: '/_scripts/embed/instagram-asset', handler: './runtime/server/instagram-embed-asset' },
       ],
     }),
     def('xEmbed', {
@@ -722,8 +722,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'X Embed',
       category: 'content',
       serverHandlers: [
-        { route: '/_scripts/embed/x', handler: './runtime/server/x-embed', requiresSigning: true },
-        { route: '/_scripts/embed/x-image', handler: './runtime/server/x-embed-image', requiresSigning: true },
+        { route: '/_scripts/embed/x', handler: './runtime/server/x-embed' },
+        { route: '/_scripts/embed/x-image', handler: './runtime/server/x-embed-image' },
       ],
     }),
     // support
@@ -856,7 +856,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         privacy: PRIVACY_IP_ONLY,
       },
       serverHandlers: [
-        { route: '/_scripts/proxy/gravatar', handler: './runtime/server/gravatar-proxy', requiresSigning: true },
+        { route: '/_scripts/proxy/gravatar', handler: './runtime/server/gravatar-proxy' },
       ],
     }),
     def('speedcurve', {

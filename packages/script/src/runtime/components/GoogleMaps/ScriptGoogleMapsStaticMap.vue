@@ -227,8 +227,7 @@ const src = computed(() => {
   }
 
   if (useProxy) {
-    // Route through the module's signed proxy. Client-generated URLs attach a
-    // page token from the SSR payload so `withSigning` lets them through.
+    // Route through the module's proxy so the API key stays server-side.
     return proxyUrl('/_scripts/proxy/google-static-maps', query)
   }
   return withQuery('https://maps.googleapis.com/maps/api/staticmap', query as QueryObject)

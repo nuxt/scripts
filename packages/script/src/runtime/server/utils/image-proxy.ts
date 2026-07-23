@@ -1,6 +1,5 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
 import { createCachedBinaryFetch } from './cached-upstream'
-import { withSigning } from './withSigning'
 
 const AMP_RE = /&amp;/g
 
@@ -33,7 +32,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
 
   const cachedFetch = createCachedBinaryFetch(cacheName, cacheMaxAge)
 
-  return withSigning(defineEventHandler(async (event) => {
+  return defineEventHandler(async (event) => {
     const query = getQuery(event)
     let url = query.url as string
 
@@ -103,5 +102,5 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
 
     return result.body
-  }))
+  })
 }
