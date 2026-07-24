@@ -83,3 +83,22 @@ jobs:
 
       - run: pnpm run --if-present prepare:fixtures
       - run: pnpm vitest run --project typecheck --project unit --project e2e --project nuxt-runtime
+
+  nitro-3:
+    runs-on: ubuntu-24.04-arm
+    name: Nitro 3 compatibility
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm i
+      - name: Install Nuxt 5
+        run: |
+          pnpm add --workspace-root --save-dev "nuxt@npm:nuxt-nightly@5.0.0-29738334.1405742f" "@nuxt/kit@npm:@nuxt/kit-nightly@5.0.0-29738334.1405742f"
+          pnpm --filter @nuxt/scripts add --save-dev "@nuxt/kit@npm:@nuxt/kit-nightly@5.0.0-29738334.1405742f"
+      - run: pnpm --filter @nuxt/scripts dev:prepare
+      - run: pnpm exec nuxt prepare
+      - run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts -t 'auto-injects|resolves'

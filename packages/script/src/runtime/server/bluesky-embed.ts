@@ -1,5 +1,4 @@
 import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { rewriteBlueskyPostImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'
@@ -115,7 +114,7 @@ export default withSigning(defineEventHandler(async (event) => {
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_BSKY_SUFFIX_RE, '') || '/_scripts'
   const imagePath = `${prefix}/embed/bluesky-image`
-  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
+  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
   rewriteBlueskyPostImages(post, imagePath, secret)
 
   // Cache for 10 minutes
