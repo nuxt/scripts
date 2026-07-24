@@ -2,10 +2,11 @@ import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
 import { createApp, defineEventHandler, readRawBody, toNodeListener } from 'h3'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import proxyHandler from '../../packages/script/src/runtime/server/proxy-handler'
+import { stubNitroRuntime } from './__mocks__/stub-nitro-runtime'
 
-vi.mock('nitropack/runtime', () => ({
+stubNitroRuntime({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
@@ -18,7 +19,7 @@ vi.mock('nitropack/runtime', () => ({
   useNitroApp: () => ({
     hooks: { callHook: async () => {} },
   }),
-}))
+})
 
 describe('proxy handler request bodies (#836)', () => {
   let upstreamServer: Server

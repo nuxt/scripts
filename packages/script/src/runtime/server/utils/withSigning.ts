@@ -22,14 +22,13 @@
 
 import type { EventHandler, EventHandlerRequest, EventHandlerResponse } from 'h3'
 import { createError, defineEventHandler } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
 import { verifyProxyRequest } from './sign'
 
 export function withSigning<Req extends EventHandlerRequest = EventHandlerRequest, Res extends EventHandlerResponse = EventHandlerResponse>(
   handler: EventHandler<Req, Res>,
 ) {
   return defineEventHandler<Req>(async (event) => {
-    const runtimeConfig = useRuntimeConfig(event)
+    const runtimeConfig = useRuntimeConfig()
     const scriptsConfig = runtimeConfig['nuxt-scripts'] as { proxySecret?: string, pageTokenMaxAge?: number } | undefined
     const secret = scriptsConfig?.proxySecret
 

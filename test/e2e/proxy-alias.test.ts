@@ -38,5 +38,6 @@ describe('proxy path aliases', () => {
     // genuine test failure; a resolved alias always yields an HTTP response.
     expect(res).not.toBeNull()
     expect(res!.status).not.toBe(403)
+    expect(res!.status).not.toBe(500)
   }, 30000)
 })

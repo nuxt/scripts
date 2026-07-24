@@ -1,7 +1,8 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { createApp, toNodeListener } from 'h3'
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { stubNitroRuntime } from './__mocks__/stub-nitro-runtime'
 
 /**
  * Issue #814: proxy paths may use opaque/custom aliases instead of the verbatim
@@ -9,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
  * validating the allowlist and forwarding upstream.
  */
 
-vi.mock('nitropack/runtime', () => ({
+stubNitroRuntime({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
@@ -26,7 +27,7 @@ vi.mock('nitropack/runtime', () => ({
   useNitroApp: () => ({
     hooks: { callHook: async () => {} },
   }),
-}))
+})
 
 describe('proxy handler - path aliases (#814)', () => {
   let proxyServer: Server

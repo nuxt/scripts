@@ -1,5 +1,4 @@
 import { Buffer } from 'node:buffer'
-import { defineCachedFunction } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
 import { hash } from 'ohash'
 
