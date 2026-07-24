@@ -16,6 +16,7 @@ import type {
 } from './runtime/types'
 import { randomBytes } from 'node:crypto'
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import {
   addBuildPlugin,
   addComponentsDir,
@@ -23,13 +24,16 @@ import {
   addPlugin,
   addPluginTemplate,
   addServerHandler,
+  addServerImports,
   addTemplate,
   createResolver,
   defineNuxtModule,
+  getNuxtVersion,
   hasNuxtModule,
+  resolvePath as resolveNuxtPath,
 } from '@nuxt/kit'
 import { defu } from 'defu'
-import { resolve as resolvePath_ } from 'pathe'
+import { dirname, resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
@@ -513,6 +517,16 @@ export default defineNuxtModule<ModuleOptions>({
       // TODO fallback to useHead?
       logger.debug('The module is disabled, skipping setup.')
       return
+    }
+    if (Number.parseInt(getNuxtVersion(nuxt), 10) >= 5) {
+      const nuxtDir = dirname(await resolveNuxtPath('nuxt/package.json'))
+      const nitroDir = dirname(await resolveNuxtPath('@nuxt/nitro-server/package.json', { cwd: nuxtDir }))
+      const resolveNitroImport = async (id: string) => pathToFileURL(await resolveNuxtPath(id, { cwd: nitroDir })).href
+      addServerImports([
+        { name: 'useNitroApp', from: await resolveNitroImport('nitro/app') },
+        { name: 'defineCachedFunction', from: await resolveNitroImport('nitro/cache') },
+        { name: 'useRuntimeConfig', from: await resolveNitroImport('nitro/runtime-config') },
+      ])
     }
     if (nuxt.options.dev) {
       setupDevtools(nuxt, { standalone: config._standaloneDevtools })

@@ -1,6 +1,5 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
 import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
-import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
 import { matchDomain } from './utils/match-domain'
 import {
   anonymizeIP,
