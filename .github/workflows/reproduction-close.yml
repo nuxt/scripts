@@ -1,4 +1,5 @@
 name: Close incomplete issues
+
 on:
   workflow_dispatch:
   schedule:
@@ -9,9 +10,10 @@ permissions:
 
 jobs:
   stale:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
+        name: Stale
         with:
           days-before-stale: -1 # Issues and PR will never be flagged stale automatically.
           stale-issue-label: needs reproduction # Label that flags an issue as stale.
