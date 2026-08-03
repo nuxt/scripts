@@ -21,7 +21,7 @@
  */
 
 import type { EventHandler, EventHandlerRequest, EventHandlerResponse } from 'h3'
-import { createError, defineEventHandler } from 'h3'
+import { defineEventHandler } from 'h3'
 import { verifyProxyRequest } from './sign'
 
 export function withSigning<Req extends EventHandlerRequest = EventHandlerRequest, Res extends EventHandlerResponse = EventHandlerResponse>(

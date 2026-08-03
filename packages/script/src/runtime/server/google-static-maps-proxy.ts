@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { defineEventHandler, getQuery, setHeader } from 'h3'
 import { withQuery } from 'ufo'
 import { createCachedBinaryFetch } from './utils/cached-upstream'
 import { PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, SIG_PARAM } from './utils/sign-constants'

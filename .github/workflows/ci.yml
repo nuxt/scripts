@@ -171,4 +171,4 @@ jobs:
         run: pnpm exec nuxt prepare
 
       - name: Run Nitro 3 compatibility tests
-        run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts -t 'auto-injects|resolves'
+        run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts

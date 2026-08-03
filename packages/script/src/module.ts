@@ -521,8 +521,14 @@ export default defineNuxtModule<ModuleOptions>({
     if (Number.parseInt(getNuxtVersion(nuxt), 10) >= 5) {
       const nuxtDir = dirname(await resolveNuxtPath('nuxt/package.json'))
       const nitroDir = dirname(await resolveNuxtPath('@nuxt/nitro-server/package.json', { cwd: nuxtDir }))
-      const resolveNitroImport = async (id: string) => pathToFileURL(await resolveNuxtPath(id, { cwd: nitroDir })).href
+      const resolveNitroImport = async (id: string) => {
+        const resolved = await resolveNuxtPath(id, { cwd: nitroDir })
+        if (!existsSync(resolved))
+          throw new Error(`[nuxt-scripts] Could not resolve Nitro runtime helper "${id}" from "${nitroDir}".`)
+        return pathToFileURL(resolved).href
+      }
       addServerImports([
+        { name: 'createError', from: await resolveNitroImport('nitro/h3') },
         { name: 'useNitroApp', from: await resolveNitroImport('nitro/app') },
         { name: 'defineCachedFunction', from: await resolveNitroImport('nitro/cache') },
         { name: 'useRuntimeConfig', from: await resolveNitroImport('nitro/runtime-config') },

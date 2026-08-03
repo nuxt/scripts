@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { defineEventHandler, getQuery, setHeader } from 'h3'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { rewriteBlueskyPostImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'

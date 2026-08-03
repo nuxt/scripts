@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { defineEventHandler, getQuery, setHeader } from 'h3'
 import { withQuery } from 'ufo'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { withSigning } from './utils/withSigning'
