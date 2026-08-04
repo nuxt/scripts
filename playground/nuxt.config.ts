@@ -114,6 +114,8 @@ export default defineNuxtConfig({
 
       // Maps
       googleMaps: { trigger: 'manual' },
+      leaflet: { trigger: false },
+      maplibre: { trigger: false },
 
       // Other
       gravatar: { trigger: 'manual' },

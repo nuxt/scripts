@@ -1,5 +1,6 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
 import { createCachedBinaryFetch } from './cached-upstream'
+import { isPublicNetworkHostname } from './network-host'
 
 const AMP_RE = /&amp;/g
 
@@ -8,8 +9,9 @@ export interface ImageProxyConfig {
   accept?: string
   userAgent?: string
   cacheMaxAge?: number
-  contentType?: string
-  /** Follow redirects (default: true). Set to false to reject redirects (SSRF protection). */
+  /** Allowed response Content-Type prefixes. SVG is always rejected as active content. */
+  contentTypePrefixes?: string[]
+  /** Follow redirects after applying the same URL allowlist to every hop. */
   followRedirects?: boolean
   /** Decode &amp; in URL query parameter */
   decodeAmpersands?: boolean
@@ -22,7 +24,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     accept = 'image/webp,image/jpeg,image/png,image/*,*/*;q=0.8',
     userAgent,
     cacheMaxAge = 3600,
-    contentType = 'image/jpeg',
+    contentTypePrefixes = ['image/'],
     followRedirects = true,
     decodeAmpersands = false,
     cacheName = Array.isArray(config.allowedDomains)
@@ -30,7 +32,22 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
       : 'nuxt-scripts-img:custom',
   } = config
 
-  const cachedFetch = createCachedBinaryFetch(cacheName, cacheMaxAge)
+  const domainAllowed = (hostname: string) => typeof config.allowedDomains === 'function'
+    ? config.allowedDomains(hostname)
+    : config.allowedDomains.includes(hostname)
+  const normalizedContentTypePrefixes = contentTypePrefixes.map(prefix => prefix.toLowerCase())
+  const contentTypeAllowed = (contentType: string) => contentType !== 'image/svg+xml'
+    && normalizedContentTypePrefixes.some(prefix => contentType.startsWith(prefix))
+  const urlAllowed = (url: URL) => (url.protocol === 'http:' || url.protocol === 'https:')
+    && !url.username
+    && !url.password
+    && isPublicNetworkHostname(url.hostname)
+    && domainAllowed(url.hostname)
+
+  const cachedFetch = createCachedBinaryFetch(cacheName, cacheMaxAge, {
+    allowContentType: contentTypeAllowed,
+    allowUrl: urlAllowed,
+  })
 
   return defineEventHandler(async (event) => {
     const query = getQuery(event)
@@ -57,21 +74,10 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
       })
     }
 
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    if (!urlAllowed(parsedUrl)) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Invalid URL scheme',
-      })
-    }
-
-    const domainAllowed = typeof config.allowedDomains === 'function'
-      ? config.allowedDomains(parsedUrl.hostname)
-      : config.allowedDomains.includes(parsedUrl.hostname)
-
-    if (!domainAllowed) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Domain not allowed',
+        statusCode: domainAllowed(parsedUrl.hostname) ? 400 : 403,
+        statusMessage: domainAllowed(parsedUrl.hostname) ? 'Invalid image URL' : 'Domain not allowed',
       })
     }
 
@@ -82,7 +88,6 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     const result = await cachedFetch(url, {
       timeout: 5000,
       redirect: followRedirects ? 'follow' : 'manual',
-      ignoreResponseError: !followRedirects,
       headers,
     }).catch((error: any) => {
       throw createError({
@@ -91,15 +96,26 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
       })
     })
 
-    if (!followRedirects && result.status >= 300 && result.status < 400) {
+    if (result.status >= 300 && result.status < 400 && result.status !== 304) {
       throw createError({
         statusCode: 403,
         statusMessage: 'Redirects not allowed',
       })
     }
 
-    setHeader(event, 'Content-Type', result.contentType || contentType)
+    const responseContentType = result.contentType
+    const upstreamContentType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase()
+    if (!responseContentType || !upstreamContentType || !contentTypeAllowed(upstreamContentType)) {
+      throw createError({
+        statusCode: 415,
+        statusMessage: 'Unsupported upstream content type',
+      })
+    }
+
+    setHeader(event, 'Content-Type', responseContentType)
     setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
+    setHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'')
+    setHeader(event, 'X-Content-Type-Options', 'nosniff')
 
     return result.body
   })

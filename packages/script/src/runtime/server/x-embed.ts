@@ -1,5 +1,5 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { createCachedJsonFetch } from './utils/cached-upstream'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteTweetImages } from './utils/embed-rewriters'
 
 interface TweetData {
@@ -60,6 +60,10 @@ const cachedTweetFetch = createCachedJsonFetch<TweetData>(
     const match = url.match(TWEET_ID_FROM_URL_RE)
     return match?.[1] || url
   },
+  {
+    allowUrl: url => isSafeHttpsUrl(url) && url.hostname === 'cdn.syndication.twimg.com',
+    contentTypePrefixes: ['application/json'],
+  },
 )
 
 export default defineEventHandler(async (event) => {
@@ -93,10 +97,9 @@ export default defineEventHandler(async (event) => {
     })
   })
 
-  // Rewrite raw CDN image URLs to proxied URLs so the client loads them
-  // through the site origin. Clone first — the cached tweet is a shared
-  // reference under the memory driver and mutation would corrupt subsequent
-  // cache hits.
+  // Rewrite raw CDN image URLs through the allowlisted image proxy. Clone first because the cached tweet
+  // is a shared reference under the memory driver and mutation would corrupt
+  // subsequent cache hits.
   const tweetData = structuredClone(tweetRaw) as TweetData
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_X_SUFFIX_RE, '') || '/_scripts'

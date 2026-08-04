@@ -1,6 +1,6 @@
 ---
 title: Google Maps
-description: Load interactive maps on demand and proxy Static Maps or geocoding requests.
+description: Load interactive maps, static maps, and location search on demand.
 links:
   - label: useScriptGoogleMaps
     icon: i-simple-icons-github
@@ -47,19 +47,10 @@ export default defineNuxtConfig({
 NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY=<YOUR_API_KEY>
 ```
 
-Registering Google Maps also adds server proxy routes that keep the key out of static-map and geocoding request URLs:
-
-- `/_scripts/proxy/google-static-maps` for placeholder images
-- `/_scripts/proxy/google-maps-geocode` for location search
-
 Add `trigger: 'onNuxtReady'` to the registry entry only when you want the interactive Maps API to load globally. It bypasses the component's default interaction delay because the shared script instance is already loading.
 
 ::callout{color="amber"}
-The Maps JavaScript API still sends the key to the browser when the interactive map loads. Follow Google's [API security guidance](https://developers.google.com/maps/api-security-best-practices): restrict keys by application and API, and use separate keys for client-side and server-side services when possible. Passing `api-key` directly on `<ScriptGoogleMaps>`{lang="html"} also exposes it in the client bundle, whereas runtime config lets you vary the key by deployment.
-::
-
-::callout{color="amber"}
-Google's [Maps Platform FAQ](https://developers.google.com/maps/faq#static_map) requires browser pages to load Static Maps images directly from Google. The current static-map proxy caches and serves those images, so pass an explicit `api-key` to `<ScriptGoogleMapsStaticMap>`{lang="html"} to bypass the proxy and review the Maps Platform terms before using that component.
+The Maps JavaScript and Static Maps APIs send this key to the browser. Follow Google's [API security guidance](https://developers.google.com/maps/api-security-best-practices): apply a Websites application restriction, allow only the APIs this site uses, and configure quota limits. Runtime config keeps deployment values configurable; it does not make a `NUXT_PUBLIC_` key secret.
 ::
 
 See [Billing & Permissions](/scripts/google-maps/guides/billing) for API costs and required permissions.

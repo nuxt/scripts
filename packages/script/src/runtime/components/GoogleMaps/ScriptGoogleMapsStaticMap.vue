@@ -3,11 +3,10 @@
 import type { QueryObject } from 'ufo'
 import type { ImgHTMLAttributes, ReservedProps } from 'vue'
 import { defu } from 'defu'
-import { useHead, useRuntimeConfig } from 'nuxt/app'
+import { useHead } from 'nuxt/app'
 import { withQuery } from 'ufo'
 import { computed, onMounted, ref } from 'vue'
 import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
-import { useScriptProxyUrl } from '../../composables/useScriptProxyUrl'
 </script>
 
 <script lang="ts" setup>
@@ -116,16 +115,13 @@ const props = withDefaults(defineProps<{
 defineSlots<{
   default?: (props: { src: string }) => any
 }>()
-const runtimeConfig = useRuntimeConfig()
-const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.googleStaticMapsProxy
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
-// Only use the proxy when no explicit API key is provided and the proxy is enabled
-const useProxy = !props.apiKey && proxyConfig?.enabled
-const proxyUrl = useScriptProxyUrl()
 
 if (import.meta.dev) {
-  if (!apiKey && !useProxy)
-    console.warn('[nuxt-scripts] ScriptGoogleMapsStaticMap requires a Google Maps API key with Static Maps API access. Set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env, or enable the proxy via `scripts.registry.googleMaps`.')
+  if (!apiKey)
+    console.warn('[nuxt-scripts] ScriptGoogleMapsStaticMap requires a Google Maps API key with Static Maps API access. Set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env or pass the apiKey prop.')
+  if (props.signature && !props.size)
+    console.warn('[nuxt-scripts] ScriptGoogleMapsStaticMap requires an explicit size when using a digital signature because the signature covers the complete request URL.')
 }
 
 const rootEl = ref<HTMLElement>()
@@ -137,7 +133,7 @@ function clampStaticMapSize(width: number, height: number, max = 640): `${number
 }
 
 onMounted(() => {
-  if (props.size || !rootEl.value)
+  if (props.size || props.signature || !rootEl.value)
     return
   const { offsetWidth, offsetHeight } = rootEl.value
   if (offsetWidth > 0 && offsetHeight > 0) {
@@ -217,7 +213,7 @@ const src = computed(() => {
     language: props.language,
     region: props.region,
     signature: props.signature,
-    key: useProxy ? undefined : apiKey,
+    key: apiKey,
   }
 
   // Remove undefined values
@@ -226,10 +222,6 @@ const src = computed(() => {
       delete query[key]
   }
 
-  if (useProxy) {
-    // Route through the module's proxy so the API key stays server-side.
-    return proxyUrl('/_scripts/proxy/google-static-maps', query)
-  }
   return withQuery('https://maps.googleapis.com/maps/api/staticmap', query as QueryObject)
 })
 
@@ -254,7 +246,7 @@ const rootStyle = computed(() => ({
   overflow: 'hidden',
 }))
 
-if (import.meta.server && !useProxy) {
+if (import.meta.server) {
   useHead({
     link: [
       {

@@ -97,7 +97,7 @@ export interface ScriptGoogleMapsExpose {
   map: ShallowRef<google.maps.Map | undefined>
   /**
    * Utility function to resolve a location query (e.g. "New York, NY") to latitude/longitude coordinates.
-   * Uses a caching mechanism and a server-side proxy to avoid unnecessary client-side API calls.
+   * Uses the client Places service and caches results for the current page session.
    */
   resolveQueryToLatLng: (query: string) => Promise<google.maps.LatLng | google.maps.LatLngLiteral | undefined>
   /**
@@ -151,11 +151,11 @@ export interface ScriptGoogleMapsSlots {
 
 <script lang="ts" setup>
 import { defu } from 'defu'
-import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
+import { tryUseNuxtApp, useHead } from 'nuxt/app'
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
-import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
+import { scriptRuntimeConfig } from '#nuxt-scripts/utils'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
 import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
 
@@ -171,7 +171,6 @@ const DIGITS_ONLY_RE = /^\d+$/
 const DIGITS_PX_RE = /^\d+px$/i
 
 const apiKey = props.apiKey || scriptRuntimeConfig('googleMaps')?.apiKey
-const runtimeConfig = useRuntimeConfig()
 
 const nuxtColorMode = computed(() => {
   const value = (tryUseNuxtApp()?.$colorMode as { value: string } | undefined)?.value
@@ -260,11 +259,6 @@ function isLocationQuery(s: string | any) {
 }
 
 type ScriptGoogleMapsCenter = ScriptGoogleMapsProps['center'] | google.maps.MapOptions['center']
-interface GoogleMapsGeocodeProxyResponse {
-  results: Array<{ geometry: { location: { lat: number, lng: number } } }>
-  status: string
-}
-
 function getCenterWatchKey(center: ScriptGoogleMapsCenter): string | undefined {
   const raw = toRaw(center)
   if (!raw)
@@ -328,22 +322,8 @@ async function resolveQueryToLatLng(query: string) {
     return Promise.resolve(queryToLatLngCache.get(query))
   }
 
-  // Use geocode proxy if available (avoids loading Places library client-side)
-  const endpoints = (runtimeConfig.public['nuxt-scripts'] as any)?.endpoints
-  if (endpoints?.googleMaps) {
-    const data = await $fetch(`${scriptsPrefix()}/proxy/google-maps-geocode`, {
-      params: { address: query },
-    }) as GoogleMapsGeocodeProxyResponse
-    if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
-      const loc = data.results[0].geometry.location
-      const latLng = { lat: loc.lat, lng: loc.lng }
-      queryToLatLngCache.set(query, latLng)
-      return latLng
-    }
-    throw new Error(`No location found for ${query}`)
-  }
-
-  // Fallback: use Places API client-side. Wait for both the maps API and a
+  // Use the client Places service so the request is covered by the website
+  // and API restrictions configured for the browser key. Wait for both the maps API and a
   // Map instance: resolveQueryToLatLng is publicly exposed and may be called
   // before onLoaded has populated map.value, so constructing PlacesService
   // without map would throw.

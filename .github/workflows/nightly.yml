@@ -15,19 +15,29 @@ jobs:
   build:
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v6
+      - name: Setup Node
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
           registry-url: https://registry.npmjs.org/
           cache: pnpm
 
-      - run: pnpm i
-      - run: pnpm dev:prepare
-      - run: pnpm build
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Dev prepare
+        run: pnpm dev:prepare
+
+      - name: Build
+        run: pnpm build
 
       - name: Publish
         run: pnpx pkg-pr-new publish --pnpm ./packages/script

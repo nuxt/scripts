@@ -33,12 +33,14 @@ import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
+import { setupNitroRuntimeCompatibility } from './nitro-compatibility'
 import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
+import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
 
@@ -175,7 +177,10 @@ function resolveConfiguredProxyDomain(value: unknown): string | undefined {
     return
 
   try {
-    return new URL(trimmed, 'https://nuxt-scripts.local').hostname || undefined
+    const url = new URL(trimmed, 'https://nuxt-scripts.local')
+    if (url.protocol !== 'http:' && url.protocol !== 'https:')
+      return
+    return isPublicNetworkHostname(url.hostname) ? url.hostname : undefined
   }
   catch {
     // Invalid user-provided proxy domains cannot be normalized.
@@ -308,22 +313,6 @@ export interface ModuleOptions {
     integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
   }
   /**
-   * Google Static Maps proxy configuration.
-   * Proxies static map images through your server to fix CORS issues and enable caching.
-   */
-  googleStaticMapsProxy?: {
-    /**
-     * Enable proxying Google Static Maps through your own origin.
-     * @default false
-     */
-    enabled?: boolean
-    /**
-     * Cache duration for static map images in seconds.
-     * @default 3600 (1 hour)
-     */
-    cacheMaxAge?: number
-  }
-  /**
    * Enable standalone devtools mode.
    * When enabled, exposes a dev-only API endpoint that bridges script state
    * between the running Nuxt app and a standalone devtools UI.
@@ -371,10 +360,6 @@ export default defineNuxtModule<ModuleOptions>({
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
     },
-    googleStaticMapsProxy: {
-      enabled: false,
-      cacheMaxAge: 3600,
-    },
     enabled: true,
     debug: false,
   },
@@ -388,6 +373,7 @@ export default defineNuxtModule<ModuleOptions>({
       logger.debug('The module is disabled, skipping setup.')
       return
     }
+    await setupNitroRuntimeCompatibility(nuxt)
     if (nuxt.options.dev) {
       setupDevtools(nuxt, { standalone: config._standaloneDevtools })
       if (config._standaloneDevtools) {
@@ -464,25 +450,14 @@ export default defineNuxtModule<ModuleOptions>({
       Object.keys(config.globals || {}),
     )
 
-    // Setup runtimeConfig for proxies and devtools.
-    // Must run AFTER env var resolution above so the API key is populated.
-    const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
     nuxt.options.runtimeConfig['nuxt-scripts'] = {
       version: version!,
-      // Private proxy config with API key (server-side only)
-      googleStaticMapsProxy: googleMapsEnabled
-        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
-        : undefined,
     } as any
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
       prefix: config.prefix || '/_scripts',
       defaultScriptOptions: config.defaultScriptOptions as any,
-      // Only expose enabled and cacheMaxAge to client, not apiKey
-      googleStaticMapsProxy: googleMapsEnabled
-        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge ?? 3600 }
-        : undefined,
     } as any
 
     // Build-time constant: `__NUXT_SCRIPTS_DEBUG__` is replaced inline by the
@@ -866,7 +841,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (proxyStaticPresets.includes(proxyPreset)) {
           logger.warn(
             `Proxy collection endpoints require a server runtime (detected: ${proxyPreset || 'static'}).\n`
-            + 'Scripts will be bundled, but collection requests will not be proxied.\n'
+            + 'Scripts will be bundled, but collection requests will not be proxied and URL signing will be unavailable.\n'
             + 'Options: configure platform rewrites, switch to server-rendered mode, or disable with proxy: false.',
           )
         }
@@ -929,10 +904,7 @@ export default defineNuxtModule<ModuleOptions>({
       if (!script.serverHandlers?.length || !script.registryKey)
         continue
 
-      // googleMaps uses googleStaticMapsProxy config for backward compat
-      const isEnabled = script.registryKey === 'googleMaps'
-        ? config.googleStaticMapsProxy?.enabled || config.registry?.googleMaps
-        : config.registry?.[script.registryKey as keyof typeof config.registry]
+      const isEnabled = config.registry?.[script.registryKey as keyof typeof config.registry]
 
       if (!isEnabled)
         continue
@@ -954,12 +926,6 @@ export default defineNuxtModule<ModuleOptions>({
         nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
           { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
           nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
-        ) as any
-      }
-      if (script.registryKey === 'googleMaps') {
-        nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
-          { googleMapsGeocodeProxy: { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey } },
-          nuxt.options.runtimeConfig['nuxt-scripts'] as any,
         ) as any
       }
     }

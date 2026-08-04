@@ -13,12 +13,14 @@
  */
 export function generateInterceptPluginContents(proxyPrefix: string, options?: { testMode?: boolean, domainAliases?: Record<string, string> }): string {
   const testMode = options?.testMode ?? false
-  return `export default defineNuxtPlugin({
+  return `import { defineNuxtPlugin } from 'nuxt/app'
+
+export default defineNuxtPlugin({
   name: 'nuxt-scripts:intercept',
   enforce: 'pre',
   setup() {
     const proxyPrefix = ${JSON.stringify(proxyPrefix)};
-    const domainAliases = ${JSON.stringify(options?.domainAliases ?? {})};
+    const domainAliases = Object.assign(Object.create(null), ${JSON.stringify(options?.domainAliases ?? {})});
     const origBeacon = typeof navigator !== 'undefined' && navigator.sendBeacon
       ? navigator.sendBeacon.bind(navigator)
       : () => false;
@@ -27,11 +29,11 @@ export function generateInterceptPluginContents(proxyPrefix: string, options?: {
     function proxyUrl(url) {
       try {
         const parsed = new URL(url, location.origin);
-        if (parsed.origin !== location.origin) {
+        if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.origin !== location.origin) {
           const seg = domainAliases[parsed.host] || parsed.host;
           return location.origin + proxyPrefix + '/' + seg + parsed.pathname + parsed.search;
         }
-      } catch {}
+      } catch { /* Invalid URL inputs retain native behavior. */ }
       return url;
     }
 
