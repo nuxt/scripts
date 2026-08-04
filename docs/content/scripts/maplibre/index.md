@@ -83,7 +83,9 @@ The default `visible` trigger defers the SDK, style, and tile requests until the
 OpenFreeMap's public instance needs no API key, but it has no SLA. Read [Styles & Providers](/scripts/maplibre/guides/styles-and-providers) before choosing a production style service.
 ::
 
-See [Delivery Tracker](/scripts/maplibre/guides/delivery-tracker) for a complete route tracker with reactive progress, selectable checkpoints, and an accessible text alternative.
+::callout{icon="i-lucide-route"}
+**Real-world example:** [Build a delivery tracker](/scripts/maplibre/guides/delivery-tracker) with reactive route progress, a live courier marker, error fallback content, and an accessible status alternative.
+::
 
 ## Components
 

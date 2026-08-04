@@ -80,7 +80,9 @@ The default `visible` trigger defers the Leaflet SDK and all tile requests until
 OpenStreetMap's public tile service has usage limits and no SLA. Read [Tiles & Attribution](/scripts/leaflet/guides/tiles-and-attribution) before choosing it for production.
 ::
 
-See [Pickup Locator](/scripts/leaflet/guides/pickup-locator) for a complete store locator with a keyboard-accessible location list, popups, and a GeoJSON delivery zone.
+::callout{icon="i-lucide-map-pin"}
+**Real-world example:** [Build a pickup locator](/scripts/leaflet/guides/pickup-locator) with a keyboard-accessible store list, reactive selection, marker popups, error fallback content, and a GeoJSON delivery zone.
+::
 
 ## Components
 
