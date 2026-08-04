@@ -14,15 +14,11 @@ import type {
   RegistryScripts,
   ResolvedProxyAutoInject,
 } from './runtime/types'
-import { randomBytes } from 'node:crypto'
-import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { open as openFile, stat, unlink } from 'node:fs/promises'
-import { setTimeout as delay } from 'node:timers/promises'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import {
   addBuildPlugin,
   addComponentsDir,
   addImports,
-  addPlugin,
   addPluginTemplate,
   addServerHandler,
   addTemplate,
@@ -125,150 +121,6 @@ function fixSelfClosingScriptComponents(nuxt: any) {
 
 const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
-
-const PROXY_SECRET_ENV_KEY = 'NUXT_SCRIPTS_PROXY_SECRET'
-const PROXY_SECRET_ENV_LINE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=.*$/m
-const PROXY_SECRET_ENV_VALUE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=(.+)$/m
-const PROXY_SECRET_LOCK_RETRY_MS = 10
-const PROXY_SECRET_LOCK_TIMEOUT_MS = 2000
-
-async function withProxySecretFileLock<T>(envPath: string, effect: () => T): Promise<T> {
-  const lockPath = `${envPath}.nuxt-scripts.lock`
-  const deadline = Date.now() + PROXY_SECRET_LOCK_TIMEOUT_MS
-  let lockHandle: Awaited<ReturnType<typeof openFile>> | undefined
-
-  while (!lockHandle) {
-    const acquisition = await openFile(lockPath, 'wx')
-      .then(handle => ({ _tag: 'Acquired' as const, handle }))
-      .catch((error: NodeJS.ErrnoException) => {
-        if (error.code === 'EEXIST')
-          return { _tag: 'Busy' as const }
-        throw error
-      })
-
-    if (acquisition._tag === 'Acquired') {
-      lockHandle = acquisition.handle
-      break
-    }
-
-    const existingLock = await stat(lockPath)
-      .then(lockStat => ({ _tag: 'Found' as const, mtimeMs: lockStat.mtimeMs }))
-      .catch((error: NodeJS.ErrnoException) => {
-        if (error.code === 'ENOENT')
-          return { _tag: 'Missing' as const }
-        throw error
-      })
-    if (existingLock._tag === 'Found' && Date.now() - existingLock.mtimeMs >= PROXY_SECRET_LOCK_TIMEOUT_MS) {
-      await unlink(lockPath).catch((error: NodeJS.ErrnoException) => {
-        if (error.code !== 'ENOENT')
-          throw error
-      })
-      continue
-    }
-    if (Date.now() >= deadline)
-      throw Object.assign(new Error('Timed out waiting for proxy secret file lock'), { code: 'ETIMEDOUT' })
-    await delay(PROXY_SECRET_LOCK_RETRY_MS)
-  }
-
-  let effectResult: { _tag: 'Success', value: T } | { _tag: 'Failure', error: unknown }
-  try {
-    effectResult = { _tag: 'Success', value: effect() }
-  }
-  catch (error) {
-    effectResult = { _tag: 'Failure', error }
-  }
-
-  const closeResult = await lockHandle.close()
-    .then(() => ({ _tag: 'Success' as const }))
-    .catch((error: Error) => ({ _tag: 'Failure' as const, error }))
-  const unlinkResult = await unlink(lockPath)
-    .then(() => ({ _tag: 'Success' as const }))
-    .catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT'
-      ? { _tag: 'Success' as const }
-      : { _tag: 'Failure' as const, error })
-
-  if (closeResult._tag === 'Failure')
-    logger.warn(`[security] Failed to close the proxy secret lock: ${closeResult.error.message}`)
-  if (unlinkResult._tag === 'Failure')
-    logger.warn(`[security] Failed to remove the proxy secret lock: ${unlinkResult.error.message}`)
-  if (effectResult._tag === 'Failure')
-    throw effectResult.error
-  return effectResult.value
-}
-
-export interface ResolvedProxySecret {
-  secret: string
-  /** True when the secret exists only in memory (dev-only fallback; won't survive restarts). */
-  ephemeral: boolean
-  /** Where the secret came from, for logging. */
-  source: 'config' | 'env' | 'dotenv-generated' | 'memory-generated'
-}
-
-/**
- * Resolve the HMAC signing secret used for proxy URL signing.
- *
- * Precedence:
- * 1. `scripts.security.secret` in nuxt.config
- * 2. `NUXT_SCRIPTS_PROXY_SECRET` env var
- * 3. Dev-only auto-generation: write to `.env` (or keep in memory as last resort)
- * 4. Empty string (prod without secret; caller decides whether this is fatal)
- */
-export async function resolveProxySecret(
-  rootDir: string,
-  isDev: boolean,
-  configSecret?: string,
-  autoGenerate: boolean = true,
-): Promise<ResolvedProxySecret | undefined> {
-  if (configSecret)
-    return { secret: configSecret, ephemeral: false, source: 'config' }
-
-  const envSecret = process.env[PROXY_SECRET_ENV_KEY]
-  if (envSecret)
-    return { secret: envSecret, ephemeral: false, source: 'env' }
-
-  if (!isDev || !autoGenerate)
-    return undefined
-
-  // Dev fallback: generate a 32-byte hex secret and try to persist to .env.
-  // Persisting matters because the same dev machine restarts many times and
-  // we don't want signed URLs cached in the browser to stop working across HMR.
-  const secret = randomBytes(32).toString('hex')
-  const envPath = resolvePath_(rootDir, '.env')
-  const line = `${PROXY_SECRET_ENV_KEY}=${secret}\n`
-
-  try {
-    const persistedSecret = await withProxySecretFileLock(envPath, () => {
-      if (existsSync(envPath)) {
-        const contents = readFileSync(envPath, 'utf-8')
-        const existingSecret = contents.match(PROXY_SECRET_ENV_VALUE_RE)?.[1]?.trim()
-        if (existingSecret)
-          return existingSecret
-        if (PROXY_SECRET_ENV_LINE_RE.test(contents)) {
-          // An empty declaration suppresses dotenv fallback on future starts.
-          // Replace it in place so the generated secret remains stable.
-          writeFileSync(envPath, contents.replace(PROXY_SECRET_ENV_LINE_RE, `${PROXY_SECRET_ENV_KEY}=${secret}`))
-        }
-        else {
-          appendFileSync(envPath, contents.endsWith('\n') ? line : `\n${line}`)
-        }
-      }
-      else {
-        writeFileSync(envPath, `# Generated by @nuxt/scripts\n${line}`)
-      }
-      return secret
-    })
-    // Also populate process.env so that anything reading it later in the same
-    // dev process (e.g. child workers) sees the value without a restart.
-    process.env[PROXY_SECRET_ENV_KEY] = persistedSecret
-    return { secret: persistedSecret, ephemeral: false, source: 'dotenv-generated' }
-  }
-  catch {
-    // Writing .env failed (read-only FS, permission denied). Fall back to
-    // in-memory only; URLs signed this session won't verify after restart.
-    process.env[PROXY_SECRET_ENV_KEY] = secret
-    return { secret, ephemeral: true, source: 'memory-generated' }
-  }
-}
 
 export function isProxyDisabled(
   registryKey: string,
@@ -464,73 +316,6 @@ export interface ModuleOptions {
     integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
   }
   /**
-   * Proxy endpoint security.
-   *
-   * Several proxy endpoints (Google Static Maps, Geocode, Gravatar, embed image proxies)
-   * inject server-side API keys or forward requests to third-party services. Without
-   * signing, these are open to cost/quota abuse. Enable signing to require that only
-   * URLs generated server-side (during SSR/prerender, or via `/_scripts/sign`) are
-   * accepted.
-   *
-   * The secret must be deterministic across deployments so that prerendered URLs
-   * remain valid. Set it via `NUXT_SCRIPTS_PROXY_SECRET` or `security.secret`.
-   *
-   * Set to `false` to disable proxy security entirely: no secret is resolved or
-   * auto-generated, no page token is injected into the SSR payload, and proxy
-   * endpoints pass requests through without signature verification.
-   */
-  security?: false | {
-    /**
-     * HMAC secret used to sign proxy URLs.
-     *
-     * Falls back to `process.env.NUXT_SCRIPTS_PROXY_SECRET` if unset. In dev,
-     * the module auto-generates a secret into your `.env` file when neither is
-     * provided (disable via `autoGenerateSecret: false`). In production, a
-     * missing secret logs a warning; proxy endpoints remain functional but unprotected.
-     *
-     * Generate one with: `npx @nuxt/scripts generate-secret`
-     */
-    secret?: string
-    /**
-     * Automatically generate and persist a signing secret to `.env` when running
-     * `nuxt dev` without one configured.
-     *
-     * @default true
-     */
-    autoGenerateSecret?: boolean
-    /**
-     * How long (in seconds) a page token issued during SSR remains valid on the
-     * client. Client-driven proxy requests (dynamic fetches, runtime image
-     * helpers) attach this token so `withSigning` accepts them without each URL
-     * being HMAC-signed up front.
-     *
-     * The default of 1 hour is safe for SSR; for SSG or prerendered routes,
-     * deployed HTML carries the build-time token, so bump this (e.g. `2592000`
-     * for 30 days) to keep client-side proxy calls working after the build.
-     * Longer TTLs widen the replay window if a token is scraped, so prefer the
-     * shortest value that covers your cache horizon.
-     *
-     * @default 3600
-     */
-    pageTokenMaxAge?: number
-  }
-  /**
-   * Google Static Maps proxy configuration.
-   * Proxies static map images through your server to fix CORS issues and enable caching.
-   */
-  googleStaticMapsProxy?: {
-    /**
-     * Enable proxying Google Static Maps through your own origin.
-     * @default false
-     */
-    enabled?: boolean
-    /**
-     * Cache duration for static map images in seconds.
-     * @default 3600 (1 hour)
-     */
-    cacheMaxAge?: number
-  }
-  /**
    * Enable standalone devtools mode.
    * When enabled, exposes a dev-only API endpoint that bridges script state
    * between the running Nuxt app and a standalone devtools UI.
@@ -577,10 +362,6 @@ export default defineNuxtModule<ModuleOptions>({
         retryDelay: 2000, // Specifies the delay (in milliseconds) between retry attempts.
         timeout: 15_000, // Configures the maximum time (in milliseconds) allowed for each fetch attempt.
       },
-    },
-    googleStaticMapsProxy: {
-      enabled: false,
-      cacheMaxAge: 3600,
     },
     enabled: true,
     debug: false,
@@ -688,25 +469,14 @@ export default defineNuxtModule<ModuleOptions>({
       Object.keys(config.globals || {}),
     )
 
-    // Setup runtimeConfig for proxies and devtools.
-    // Must run AFTER env var resolution above so the API key is populated.
-    const googleMapsEnabled = config.googleStaticMapsProxy?.enabled || !!config.registry?.googleMaps
     nuxt.options.runtimeConfig['nuxt-scripts'] = {
       version: version!,
-      // Private proxy config with API key (server-side only)
-      googleStaticMapsProxy: googleMapsEnabled
-        ? { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey }
-        : undefined,
     } as any
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = {
       // expose for devtools
       version: nuxt.options.dev ? version : undefined,
       prefix: config.prefix || '/_scripts',
       defaultScriptOptions: config.defaultScriptOptions as any,
-      // Only expose enabled and cacheMaxAge to client, not apiKey
-      googleStaticMapsProxy: googleMapsEnabled
-        ? { enabled: true, cacheMaxAge: config.googleStaticMapsProxy?.cacheMaxAge ?? 3600 }
-        : undefined,
     } as any
 
     // Build-time constants are replaced inline so internal capability choices
@@ -749,7 +519,6 @@ export default defineNuxtModule<ModuleOptions>({
     const composables = [
       'useScript',
       'useScriptEventPage',
-      'useScriptProxyToken',
       'useScriptProxyUrl',
       'useScriptTriggerConsent',
       'useScriptTriggerElement',
@@ -1100,7 +869,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (proxyStaticPresets.includes(proxyPreset)) {
           logger.warn(
             `Proxy collection endpoints require a server runtime (detected: ${proxyPreset || 'static'}).\n`
-            + 'Scripts will be bundled, but collection requests will not be proxied and URL signing will be unavailable.\n'
+            + 'Scripts will be bundled, but collection requests will not be proxied.\n'
             + 'Options: configure platform rewrites, switch to server-rendered mode, or disable with proxy: false.',
           )
         }
@@ -1159,15 +928,11 @@ export default defineNuxtModule<ModuleOptions>({
     // Register server handlers for enabled registry scripts
     const scriptsPrefix = config.prefix || '/_scripts'
     const enabledEndpoints: Record<string, boolean> = {}
-    let anyHandlerRequiresSigning = false
     for (const script of scripts) {
       if (!script.serverHandlers?.length || !script.registryKey)
         continue
 
-      // googleMaps uses googleStaticMapsProxy config for backward compat
-      const isEnabled = script.registryKey === 'googleMaps'
-        ? config.googleStaticMapsProxy?.enabled || config.registry?.googleMaps
-        : config.registry?.[script.registryKey as keyof typeof config.registry]
+      const isEnabled = config.registry?.[script.registryKey as keyof typeof config.registry]
 
       if (!isEnabled)
         continue
@@ -1180,8 +945,6 @@ export default defineNuxtModule<ModuleOptions>({
           handler: handler.handler,
           middleware: handler.middleware,
         })
-        if (handler.requiresSigning)
-          anyHandlerRequiresSigning = true
       }
 
       // Script-specific runtimeConfig setup
@@ -1191,12 +954,6 @@ export default defineNuxtModule<ModuleOptions>({
         nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
           { gravatarProxy: { cacheMaxAge: gravatarConfig.cacheMaxAge ?? 3600 } },
           nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
-        ) as any
-      }
-      if (script.registryKey === 'googleMaps') {
-        nuxt.options.runtimeConfig['nuxt-scripts'] = defu(
-          { googleMapsGeocodeProxy: { apiKey: (nuxt.options.runtimeConfig.public.scripts as any)?.googleMaps?.apiKey } },
-          nuxt.options.runtimeConfig['nuxt-scripts'] as any,
         ) as any
       }
     }
@@ -1211,62 +968,5 @@ export default defineNuxtModule<ModuleOptions>({
       { endpoints: enabledEndpoints },
       nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
     ) as any
-
-    // Signing requires a server runtime to verify HMACs. Skip setup entirely
-    // for SPA mode or static presets where no Nitro server exists at runtime.
-    const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static', 'netlify-static', 'azure-static', 'firebase-static']
-    const nitroPreset = process.env.NITRO_PRESET || ''
-    const isStaticTarget = staticPresets.includes(nitroPreset)
-    const isSpa = nuxt.options.ssr === false
-
-    // Proxy security explicitly disabled: skip secret resolution and the page
-    // token plugin. `withSigning` passes requests through unverified.
-    if (config.security === false) {
-      if (anyHandlerRequiresSigning && !nuxt.options.dev) {
-        logger.info('[security] Proxy security disabled via `security: false`. Proxy endpoints will pass requests through without signature verification.')
-      }
-    }
-    else if (anyHandlerRequiresSigning && (isSpa || isStaticTarget)) {
-      logger.warn(
-        `[security] URL signing requires a server runtime${isStaticTarget ? ` (detected preset: ${nitroPreset})` : ' (ssr: false)'}.\n`
-        + '  Proxy endpoints will work without signature verification.\n'
-        + '  To enable signing, deploy with a server-rendered target or configure platform-level rewrites.',
-      )
-    }
-    // Resolve the HMAC signing secret only when at least one handler needs it
-    // and a server runtime can actually verify signatures.
-    else if (anyHandlerRequiresSigning) {
-      const proxySecretResolved = await resolveProxySecret(
-        nuxt.options.rootDir,
-        !!nuxt.options.dev,
-        config.security?.secret,
-        config.security?.autoGenerateSecret !== false,
-      )
-      if (proxySecretResolved?.source === 'dotenv-generated')
-        logger.info(`[security] Generated ${PROXY_SECRET_ENV_KEY} in .env for signed proxy URLs.`)
-      else if (proxySecretResolved?.source === 'memory-generated')
-        logger.warn(`[security] Generated an in-memory ${PROXY_SECRET_ENV_KEY} (could not write .env). Signed URLs will break across restarts.`)
-
-      if (proxySecretResolved?.secret) {
-        const scriptsRuntime = nuxt.options.runtimeConfig['nuxt-scripts'] as Record<string, unknown>
-        scriptsRuntime.proxySecret = proxySecretResolved.secret
-        if (config.security?.pageTokenMaxAge !== undefined)
-          scriptsRuntime.pageTokenMaxAge = config.security.pageTokenMaxAge
-        // Emit a per-request page token during SSR so client-driven proxy
-        // calls (reactive fetches, dynamic image helpers) authenticate via
-        // `_pt` + `_ts` without needing each URL to be HMAC-signed up front.
-        addPlugin({
-          src: await resolvePath('./runtime/plugins/proxy-token.server'),
-          mode: 'server',
-        })
-      }
-      else if (!nuxt.options.dev) {
-        logger.warn(
-          `[security] ${PROXY_SECRET_ENV_KEY} is not set. Proxy endpoints will pass requests through without signature verification.\n`
-          + '  Generate one with: npx @nuxt/scripts generate-secret\n'
-          + `  Then set the env var: ${PROXY_SECRET_ENV_KEY}=<secret>`,
-        )
-      }
-    }
   },
 })

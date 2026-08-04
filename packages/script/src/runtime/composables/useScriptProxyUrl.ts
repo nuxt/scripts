@@ -1,19 +1,11 @@
-import { PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM } from '../server/utils/sign-constants'
-import { useScriptProxyToken } from './useScriptProxyToken'
-
 /**
- * Build proxy URLs that the server's `withSigning` middleware accepts.
+ * Build a proxy URL (path + query string) for the module's proxy endpoints.
  *
- * Attaches the page token emitted during SSR (`_pt` + `_ts`) when one is
- * available, so client-driven proxy calls (e.g. reactive fetches, dynamic
- * image helpers exposed in slot props) authenticate without needing a
- * server round-trip to sign each URL.
- *
- * When no token is present (signing disabled or no secret), emits plain
- * `?url=...` URLs, matching the pre-signing behavior.
+ * Used by registry helpers (e.g. gravatar) and embed components to point
+ * requests at `/_scripts/proxy/*` and `/_scripts/embed/*`. These endpoints are
+ * restricted to an allowlist of upstream domains.
  */
 export function useScriptProxyUrl() {
-  const token = useScriptProxyToken()
   return (path: string, query: Record<string, unknown> = {}): string => {
     const parts: string[] = []
     for (const [key, value] of Object.entries(query)) {
@@ -30,10 +22,6 @@ export function useScriptProxyUrl() {
       else {
         parts.push(`${encodedKey}=${encodeURIComponent(String(value))}`)
       }
-    }
-    if (token.value) {
-      parts.push(`${PAGE_TOKEN_PARAM}=${encodeURIComponent(token.value.token)}`)
-      parts.push(`${PAGE_TOKEN_TS_PARAM}=${token.value.ts}`)
     }
     return parts.length ? `${path}?${parts.join('&')}` : path
   }

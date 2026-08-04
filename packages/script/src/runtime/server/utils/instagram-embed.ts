@@ -119,15 +119,14 @@ function sanitizeCssUrls(css: string, proxyPrefix: string): string {
   })
 }
 
-function rewriteMediaUrl(url: string, prefix: string, secret?: string): string | undefined {
-  const rewritten = rewriteUrl(url, prefix, secret)
+function rewriteMediaUrl(url: string, prefix: string): string | undefined {
+  const rewritten = rewriteUrl(url, prefix)
   return rewritten === url ? undefined : rewritten
 }
 
 export function sanitizeInstagramEmbedHtml(
   html: string,
   prefix: string,
-  secret?: string,
 ): { bodyHtml: string, cssUrls: string[] } {
   const ast = parse(html)
   const cssUrls = new Set<string>()
@@ -163,7 +162,7 @@ export function sanitizeInstagramEmbedHtml(
         continue
       }
       if (lowerName === 'src' || lowerName === 'poster') {
-        const rewritten = rewriteMediaUrl(value, prefix, secret)
+        const rewritten = rewriteMediaUrl(value, prefix)
         if (rewritten)
           node.attributes[name] = rewritten
         else
@@ -173,7 +172,7 @@ export function sanitizeInstagramEmbedHtml(
       if (lowerName === 'srcset') {
         const entries = value.split(',').flatMap((entry) => {
           const [url, descriptor, ...rest] = entry.trim().split(SRCSET_SPLIT_RE)
-          const rewritten = url ? rewriteMediaUrl(url, prefix, secret) : undefined
+          const rewritten = url ? rewriteMediaUrl(url, prefix) : undefined
           const safeDescriptor = !descriptor || /^\d+(?:\.\d+)?[wx]$/.test(descriptor)
           return rewritten && safeDescriptor && rest.length === 0
             ? [`${rewritten}${descriptor ? ` ${descriptor}` : ''}`]
@@ -186,7 +185,7 @@ export function sanitizeInstagramEmbedHtml(
         continue
       }
       if (lowerName === 'style') {
-        const rewritten = rewriteUrlsInText(value, prefix, secret)
+        const rewritten = rewriteUrlsInText(value, prefix)
         if (DANGEROUS_STYLE_RE.test(rewritten))
           delete node.attributes[name]
         else
@@ -216,31 +215,29 @@ export function sanitizeInstagramEmbedCss(
   css: string,
   scopeSelector: string,
   prefix: string,
-  secret?: string,
 ): string {
   const rewritten = rewriteUrlsInText(
-    css.replace(RSRC_RE, (_match, path) => `url(${proxyAssetUrl(`https://${INSTAGRAM_ASSET_HOST}/rsrc.php${path}`, prefix, secret)})`),
+    css.replace(RSRC_RE, (_match, path) => `url(${proxyAssetUrl(`https://${INSTAGRAM_ASSET_HOST}/rsrc.php${path}`, prefix)})`),
     prefix,
-    secret,
   )
   return sanitizeCssUrls(scopeCss(rewritten, scopeSelector), prefix).replace(/<\/style/gi, '<\\/style')
 }
 
-export function proxyImageUrl(url: string, prefix = '/_scripts', secret?: string): string {
-  return buildProxyUrl(`${prefix}/embed/instagram-image`, { url: url.replace(AMP_RE, '&') }, secret)
+export function proxyImageUrl(url: string, prefix = '/_scripts'): string {
+  return buildProxyUrl(`${prefix}/embed/instagram-image`, { url: url.replace(AMP_RE, '&') })
 }
 
-export function proxyAssetUrl(url: string, prefix = '/_scripts', secret?: string): string {
-  return buildProxyUrl(`${prefix}/embed/instagram-asset`, { url: url.replace(AMP_RE, '&') }, secret)
+export function proxyAssetUrl(url: string, prefix = '/_scripts'): string {
+  return buildProxyUrl(`${prefix}/embed/instagram-asset`, { url: url.replace(AMP_RE, '&') })
 }
 
-export function rewriteUrl(url: string, prefix = '/_scripts', secret?: string): string {
+export function rewriteUrl(url: string, prefix = '/_scripts'): string {
   try {
     const parsed = new URL(url)
     if (parsed.hostname === INSTAGRAM_ASSET_HOST)
-      return proxyAssetUrl(url, prefix, secret)
+      return proxyAssetUrl(url, prefix)
     if (INSTAGRAM_IMAGE_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith(`.cdninstagram.com`)))
-      return proxyImageUrl(url, prefix, secret)
+      return proxyImageUrl(url, prefix)
   }
   catch {
     // Non-URL values are left unchanged by design.
@@ -248,11 +245,11 @@ export function rewriteUrl(url: string, prefix = '/_scripts', secret?: string): 
   return url
 }
 
-export function rewriteUrlsInText(text: string, prefix = '/_scripts', secret?: string): string {
+export function rewriteUrlsInText(text: string, prefix = '/_scripts'): string {
   return text
-    .replace(SCONTENT_RE, m => proxyImageUrl(m, prefix, secret))
-    .replace(STATIC_CDN_RE, m => proxyAssetUrl(m, prefix, secret))
-    .replace(LOOKASIDE_RE, m => proxyImageUrl(m, prefix, secret))
+    .replace(SCONTENT_RE, m => proxyImageUrl(m, prefix))
+    .replace(STATIC_CDN_RE, m => proxyAssetUrl(m, prefix))
+    .replace(LOOKASIDE_RE, m => proxyImageUrl(m, prefix))
 }
 
 /**

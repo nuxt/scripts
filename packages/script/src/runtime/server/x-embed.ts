@@ -1,8 +1,6 @@
 import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
-import { useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteTweetImages } from './utils/embed-rewriters'
-import { withSigning } from './utils/withSigning'
 
 interface TweetData {
   id_str: string
@@ -68,7 +66,7 @@ const cachedTweetFetch = createCachedJsonFetch<TweetData>(
   },
 )
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const tweetId = query.id as string
 
@@ -99,21 +97,18 @@ export default withSigning(defineEventHandler(async (event) => {
     })
   })
 
-  // Rewrite raw CDN image URLs to proxied (and, when signing is enabled,
-  // HMAC-signed) URLs so the client can load them through the site origin
-  // without triggering the `withSigning` 403. Clone first — the cached tweet
+  // Rewrite raw CDN image URLs through the allowlisted image proxy. Clone first because the cached tweet
   // is a shared reference under the memory driver and mutation would corrupt
   // subsequent cache hits.
   const tweetData = structuredClone(tweetRaw) as TweetData
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_X_SUFFIX_RE, '') || '/_scripts'
   const imagePath = `${prefix}/embed/x-image`
-  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
-  rewriteTweetImages(tweetData, imagePath, secret)
+  rewriteTweetImages(tweetData, imagePath)
 
   // Cache for 10 minutes
   setHeader(event, 'Content-Type', 'application/json')
   setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return tweetData
-}))
+})

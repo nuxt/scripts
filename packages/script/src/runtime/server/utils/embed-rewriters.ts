@@ -2,9 +2,7 @@ import { buildProxyUrl } from './proxy-url'
 
 /**
  * Mutate a tweet (and any quoted tweet) in place so every raw CDN image URL
- * is rewritten to route through the site's `/embed/x-image` proxy. When a
- * `secret` is provided, URLs are HMAC-signed and pass `withSigning` without a
- * page token.
+ * is rewritten to route through the site's `/embed/x-image` proxy.
  *
  * Clone the input first if it came from a shared cache — this function does
  * not copy.
@@ -12,33 +10,32 @@ import { buildProxyUrl } from './proxy-url'
 export function rewriteTweetImages(
   tweet: any,
   imagePath: string,
-  secret?: string,
 ): void {
   if (!tweet)
     return
 
   if (tweet.user?.profile_image_url_https)
-    tweet.user.profile_image_url_https = buildProxyUrl(imagePath, { url: tweet.user.profile_image_url_https }, secret)
+    tweet.user.profile_image_url_https = buildProxyUrl(imagePath, { url: tweet.user.profile_image_url_https })
 
   if (tweet.photos) {
     for (const photo of tweet.photos) {
       if (photo.url)
-        photo.url = buildProxyUrl(imagePath, { url: photo.url }, secret)
+        photo.url = buildProxyUrl(imagePath, { url: photo.url })
     }
   }
 
   if (tweet.entities?.media) {
     for (const media of tweet.entities.media) {
       if (media.media_url_https)
-        media.media_url_https = buildProxyUrl(imagePath, { url: media.media_url_https }, secret)
+        media.media_url_https = buildProxyUrl(imagePath, { url: media.media_url_https })
     }
   }
 
   if (tweet.video?.poster)
-    tweet.video.poster = buildProxyUrl(imagePath, { url: tweet.video.poster }, secret)
+    tweet.video.poster = buildProxyUrl(imagePath, { url: tweet.video.poster })
 
   if (tweet.quoted_tweet)
-    rewriteTweetImages(tweet.quoted_tweet, imagePath, secret)
+    rewriteTweetImages(tweet.quoted_tweet, imagePath)
 }
 
 /**
@@ -52,13 +49,12 @@ export function rewriteTweetImages(
 export function rewriteBlueskyPostImages(
   post: any,
   imagePath: string,
-  secret?: string,
 ): void {
   if (!post)
     return
 
   const proxy = (url: string | undefined): string | undefined =>
-    url ? buildProxyUrl(imagePath, { url }, secret) : url
+    url ? buildProxyUrl(imagePath, { url }) : url
 
   if (post.author?.avatar)
     post.author.avatar = proxy(post.author.avatar)
