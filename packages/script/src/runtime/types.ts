@@ -24,8 +24,10 @@ import type { GravatarInput } from './registry/gravatar'
 import type { HotjarInput } from './registry/hotjar'
 import type { InstagramEmbedInput } from './registry/instagram-embed'
 import type { IntercomInput } from './registry/intercom'
+import type { LeafletInput } from './registry/leaflet'
 import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { LinkedInInsightInput } from './registry/linkedin-insight'
+import type { MapLibreInput } from './registry/maplibre'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
 import type { MixpanelAnalyticsInput } from './registry/mixpanel-analytics'
@@ -262,6 +264,8 @@ export interface ScriptRegistry {
   googleAdsense?: GoogleAdsenseInput
   googleAnalytics?: GoogleAnalyticsInput
   googleMaps?: GoogleMapsInput
+  leaflet?: LeafletInput
+  maplibre?: MapLibreInput
   googleRecaptcha?: GoogleRecaptchaInput
   googleSignIn?: GoogleSignInInput
   lemonSqueezy?: LemonSqueezyInput
@@ -299,7 +303,7 @@ export interface ScriptRegistry {
 export type BuiltInRegistryScriptKey
   = | 'ahrefsAnalytics' | 'bingUet' | 'blueskyEmbed' | 'calendly' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
     | 'databuddyAnalytics' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
-    | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps'
+    | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps' | 'leaflet' | 'maplibre'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
     | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'matomoAnalytics'
     | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
