@@ -8,6 +8,7 @@ useHead({
 
 const { status } = useScriptHotjar({
   id: 3925006,
+  scriptOptions: { trigger: 'client' },
 })
 
 const clickCount = ref(0)

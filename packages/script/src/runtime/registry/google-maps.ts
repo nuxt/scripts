@@ -6,34 +6,19 @@ import { GoogleMapsOptions } from './schemas'
 
 export { GoogleMapsOptions }
 
-declare namespace google {
-  export namespace maps {
-    /**
-     * @internal
-     */
-    export function __ib__(): void
-  }
-}
-
 export type GoogleMapsInput = RegistryScriptInput<typeof GoogleMapsOptions>
 
-type MapsNamespace = typeof window.google.maps
-export interface GoogleMapsApi {
-  maps: Promise<MapsNamespace>
-}
-
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        __ib__: () => void
-      }
-    }
+type MapsNamespace = typeof google.maps
+type GoogleMapsWindow = Window & {
+  google: {
+    maps: MapsNamespace & { __ib__?: () => void }
   }
+}
+export interface GoogleMapsApi {
+  maps: MapsNamespace
 }
 
 export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMapsInput) {
-  let readyPromise: Promise<void> = Promise.resolve()
   return useRegistryScript<T, typeof GoogleMapsOptions>('googleMaps', (options) => {
     const libraries = options?.libraries || ['places']
     const language = options?.language ? { language: options.language } : undefined
@@ -54,18 +39,42 @@ export function useScriptGoogleMaps<T extends GoogleMapsApi>(_options?: GoogleMa
       clientInit: import.meta.server
         ? undefined
         : () => {
-            window.google = window.google || {}
-            window.google.maps = window.google.maps || {}
-            readyPromise = new Promise((resolve) => {
-              window.google.maps.__ib__ = resolve
-            })
+            const runtimeWindow = window as unknown as Partial<GoogleMapsWindow>
+            runtimeWindow.google = runtimeWindow.google || {} as GoogleMapsWindow['google']
+            runtimeWindow.google.maps = runtimeWindow.google.maps || {} as GoogleMapsWindow['google']['maps']
           },
       schema: import.meta.dev ? GoogleMapsOptions : undefined,
       scriptOptions: {
-        use() {
-          return {
-            maps: readyPromise!.then(() => window.google.maps),
-          }
+        resolve({ waitFor }) {
+          const maps = (window as unknown as GoogleMapsWindow).google.maps
+          if (typeof maps.importLibrary === 'function')
+            return { maps } as unknown as T
+
+          return waitFor<T>((resolve) => {
+            const previousReady = maps.__ib__
+            let onReady: () => void
+            const restoreReady = () => {
+              if (maps.__ib__ !== onReady)
+                return
+              if (previousReady)
+                maps.__ib__ = previousReady
+              else
+                Reflect.deleteProperty(maps, '__ib__')
+            }
+            onReady = () => {
+              restoreReady()
+              try {
+                previousReady?.()
+              }
+              catch (error) {
+                if (import.meta.dev)
+                  console.error('[nuxt-scripts] Previous google.maps.__ib__ handler failed:', error)
+              }
+              resolve({ maps } as unknown as T)
+            }
+            maps.__ib__ = onReady
+            return restoreReady
+          })
         },
       },
     }

@@ -3,7 +3,7 @@ import { useHead, useScriptMixpanelAnalytics } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Mixpanel - First Party' })
-const { status, proxy } = useScriptMixpanelAnalytics({ token: '8fa1d44274ff7526b3788cf1c119050c' })
+const { status, proxy } = useScriptMixpanelAnalytics({ token: '8fa1d44274ff7526b3788cf1c119050c', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackEvent() {

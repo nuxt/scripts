@@ -1,7 +1,6 @@
 import type { Nuxt } from '@nuxt/schema'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ProxyConfig, RegistryScript } from './runtime/types'
-import { Buffer } from 'node:buffer'
 import { existsSync } from 'node:fs'
 import { createResolver, extendViteConfig } from '@nuxt/kit'
 
@@ -83,7 +82,7 @@ export function setupStandaloneApi(nuxt: Nuxt) {
       }
 
       if (req.method === 'POST') {
-        let chunks: Buffer[] = []
+        const chunks: Buffer[] = []
         let size = 0
         let finished = false
 
@@ -95,7 +94,7 @@ export function setupStandaloneApi(nuxt: Nuxt) {
         }
         function onAborted() {
           finished = true
-          chunks = []
+          chunks.length = 0
           cleanup()
         }
         function onData(chunk: Buffer) {
@@ -104,7 +103,7 @@ export function setupStandaloneApi(nuxt: Nuxt) {
           size += chunk.byteLength
           if (size > DEVTOOLS_API_MAX_BODY_SIZE) {
             finished = true
-            chunks = []
+            chunks.length = 0
             cleanup()
             // Drain the remainder so the keep-alive connection can be reused.
             // `cleanup()` removed the normal error handler, so keep one listener
@@ -123,7 +122,9 @@ export function setupStandaloneApi(nuxt: Nuxt) {
           finished = true
           cleanup()
           try {
-            const data = JSON.parse(Buffer.concat(chunks, size).toString('utf8'))
+            // Decode once so a multi-byte UTF-8 sequence split across chunks
+            // is not replaced with invalid characters before JSON parsing.
+            const data = JSON.parse(Buffer.concat(chunks).toString('utf8'))
             scriptsState = { ...data, updatedAt: Date.now() }
             res.statusCode = 200
             res.end('ok')
@@ -132,7 +133,7 @@ export function setupStandaloneApi(nuxt: Nuxt) {
             res.statusCode = 400
             res.end('invalid json')
           }
-          chunks = []
+          chunks.length = 0
         }
 
         req.on('data', onData)

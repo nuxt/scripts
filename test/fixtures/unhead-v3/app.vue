@@ -58,6 +58,7 @@ type FixtureModule = {
 
 const moduleResult = ref('pending')
 const moduleRuntime = ref('pending')
+const moduleIdentity = ref('pending')
 const moduleInitCount = ref(0)
 const moduleApi: FixtureModule = {
   ping: () => 'passed',
@@ -89,6 +90,7 @@ onMounted(() => {
       proxyResult.value = error instanceof Error ? error.message : String(error)
     })
   moduleRuntime.value = typeof moduleScript.remove === 'function' ? 'native' : 'fallback'
+  moduleIdentity.value = String(moduleScript.script === duplicateModuleScript.script)
   Promise.all([moduleScript.load(), duplicateModuleScript.load()])
     .then(() => {
       const result = moduleScript.proxy.ping()
@@ -108,6 +110,7 @@ onMounted(() => {
     <div id="proxy-result">{{ proxyResult }}</div>
     <div id="module-result">{{ moduleResult }}</div>
     <div id="module-runtime">{{ moduleRuntime }}</div>
+    <div id="module-identity">{{ moduleIdentity }}</div>
     <div id="module-init-count">{{ moduleInitCount }}</div>
   </div>
 </template>

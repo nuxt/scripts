@@ -3,7 +3,7 @@ import { useHead, useScriptPayPal } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'PayPal - First Party' })
-const { status, onLoaded } = useScriptPayPal({ clientId: 'test', sandbox: true })
+const { status, onLoaded } = useScriptPayPal({ clientId: 'test', sandbox: true, scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function checkSDK() {

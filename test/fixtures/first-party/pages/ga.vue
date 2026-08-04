@@ -7,6 +7,7 @@ useHead({
 
 const { proxy, status } = useScriptGoogleAnalytics({
   id: 'G-TR58L0EF8P',
+  scriptOptions: { trigger: 'client' },
 })
 
 function triggerConversion() {

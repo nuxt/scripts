@@ -1,36 +1,16 @@
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { createResolver } from '@nuxt/kit'
 import { $fetch, createPage, setup } from '@nuxt/test-utils/e2e'
 import { describe, expect, it, onTestFinished } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 
-// Skip when the workspace root already resolves @unhead/vue to v3 (e.g. an
-// ecosystem-ci v3 run): the rest of the suite then provides v3 coverage and
-// this fixture is redundant. The fixture exists to backstop v3 specifically
-// while the default install resolves to v2.
-function rootUnheadMajor(): number | null {
-  try {
-    const pkgPath = fileURLToPath(new URL('../../node_modules/@unhead/vue/package.json', import.meta.url))
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
-    return Number.parseInt(String(pkg.version).split('.')[0], 10)
-  }
-  catch {
-    return null
-  }
-}
-const skip = rootUnheadMajor() === 3
+await setup({
+  rootDir: resolve('../fixtures/unhead-v3'),
+  dev: true,
+  browser: true,
+})
 
-if (!skip) {
-  await setup({
-    rootDir: resolve('../fixtures/unhead-v3'),
-    dev: true,
-    browser: true,
-  })
-}
-
-describe.skipIf(skip)('unhead v3 compat', () => {
+describe('unhead v3', () => {
   it('sSR renders pages that exercise the v3 regression surface', async () => {
     const html = await $fetch<string>('/')
     // App rendered — proves the v3 build/SSR did not error on useScript,
@@ -54,7 +34,10 @@ describe.skipIf(skip)('unhead v3 compat', () => {
     onTestFinished(() => page.close())
     await page.waitForFunction(() => document.querySelector('#module-result')?.textContent !== 'pending')
 
-    expect(await page.textContent('#module-result')).toBe('passed')
+    expect({
+      identity: await page.textContent('#module-identity'),
+      result: await page.textContent('#module-result'),
+    }).toEqual({ identity: 'true', result: 'passed' })
     expect(await page.textContent('#module-runtime')).toBe('native')
     expect(await page.textContent('#module-init-count')).toBe('1')
   }, 15_000)

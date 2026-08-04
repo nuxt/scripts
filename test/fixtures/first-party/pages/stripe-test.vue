@@ -3,7 +3,7 @@ import { useHead, useScriptStripe } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Stripe - First Party' })
-const { status, onLoaded } = useScriptStripe()
+const { status, onLoaded } = useScriptStripe({ scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function createElements() {

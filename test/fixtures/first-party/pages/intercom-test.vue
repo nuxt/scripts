@@ -3,7 +3,7 @@ import { useHead, useScriptIntercom } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Intercom - First Party' })
-const { status, proxy } = useScriptIntercom({ app_id: 'akg5rmxb' })
+const { status, proxy } = useScriptIntercom({ app_id: 'akg5rmxb', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function showMessenger() {

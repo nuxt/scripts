@@ -7,6 +7,7 @@ useHead({
 
 const { proxy, status } = useScriptTikTokPixel({
   id: 'TEST_PIXEL_ID',
+  scriptOptions: { trigger: 'client' },
 })
 
 function trackPageView() {

@@ -3,7 +3,7 @@ import { useHead, useScriptFathomAnalytics } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Fathom - First Party' })
-const { status } = useScriptFathomAnalytics({ site: 'BRDEJWKJ' })
+const { status } = useScriptFathomAnalytics({ site: 'BRDEJWKJ', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackPageview() {

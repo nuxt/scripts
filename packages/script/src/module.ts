@@ -31,8 +31,9 @@ import {
   hasNuxtModule,
 } from '@nuxt/kit'
 import { defu } from 'defu'
-import { dirname, resolve as resolvePath_ } from 'pathe'
-import { readPackageJSON, resolvePackageJSON } from 'pkg-types'
+import { resolve as resolvePath_ } from 'pathe'
+import { readPackageJSON } from 'pkg-types'
+import { satisfies } from 'semver'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
@@ -47,7 +48,6 @@ import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytow
 import { ensureNuxtScriptsCacheStorage } from './runtime/server/utils/cache-config'
 import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
-import { hasUnheadSourceLessScriptLoaderFile } from './unhead-features'
 import { validateScriptsEnvVars } from './validate-env'
 
 export type { FirstPartyPrivacy }
@@ -60,6 +60,7 @@ export type { FirstPartyPrivacy }
 // Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
 // e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
 const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
+const UNHEAD_VERSION_RANGE = '>=3.3.1 <4'
 
 /**
  * Expand self-closing `<Script*>` component tags in page files to work around
@@ -563,7 +564,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '>=3.16',
+      nuxt: '>=4.5.1',
     },
   },
   defaults: {
@@ -607,28 +608,29 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
-    // If Unhead cannot be resolved, retain the compatibility implementation.
-    const unheadPackagePath = await resolvePackageJSON('@unhead/vue', {
-      from: nuxt.options.modulesDir,
-    }).catch(() => {
-      // @unhead/vue is optional; unresolved installs use the local compatibility path.
-      return null
-    })
-    const unheadPackage = unheadPackagePath
-      ? await readPackageJSON(unheadPackagePath).catch(() => {
-          // An unreadable optional peer cannot safely advertise loader support.
-          return null
-        })
-      : null
-    const unheadVersion = unheadPackage?.version
-    const scriptsTypesExport = (unheadPackage?.exports as any)?.['./scripts']?.types
-    const scriptsTypesPath = unheadPackagePath && typeof scriptsTypesExport === 'string'
-      ? resolvePath_(dirname(unheadPackagePath), scriptsTypesExport)
-      : null
-    const unheadSourceLessScriptLoader = hasUnheadSourceLessScriptLoaderFile(scriptsTypesPath)
-    if (unheadVersion?.startsWith('1')) {
-      logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
+    const [unheadVuePackage, unheadCorePackage] = await Promise.all([
+      readPackageJSON('@unhead/vue', { from: nuxt.options.modulesDir }).catch(() => {
+        // Missing peers are reported together below with the resolved versions.
+        return null
+      }),
+      readPackageJSON('unhead', { from: nuxt.options.modulesDir }).catch(() => {
+        // Missing peers are reported together below with the resolved versions.
+        return null
+      }),
+    ])
+    const incompatibleUnheadPackages = [
+      ['@unhead/vue', unheadVuePackage?.version],
+      ['unhead', unheadCorePackage?.version],
+    ].filter(([, dependencyVersion]) => !dependencyVersion || !satisfies(dependencyVersion, UNHEAD_VERSION_RANGE))
+    if (incompatibleUnheadPackages.length) {
+      const resolvedVersions = incompatibleUnheadPackages
+        .map(([dependency, dependencyVersion]) => `${dependency}=${dependencyVersion ? `v${dependencyVersion}` : 'missing'}`)
+        .join(', ')
+      throw new Error(
+        `[nuxt-scripts] Nuxt Scripts 2 requires @unhead/vue and unhead ${UNHEAD_VERSION_RANGE}; resolved ${resolvedVersions}. Run \`npx nuxi@latest upgrade --force\` to upgrade Nuxt and refresh its dependencies.`,
+      )
     }
+    const unheadSourceLessScriptLoader = true
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
     // Normalize registry entries to [input, scriptOptions?] tuple form

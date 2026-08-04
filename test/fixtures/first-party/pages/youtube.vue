@@ -2,7 +2,7 @@
 import { useHead, useScriptYouTubePlayer } from '#imports'
 
 useHead({ title: 'YouTube Player - First Party' })
-const { status } = useScriptYouTubePlayer()
+const { status } = useScriptYouTubePlayer({ scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>
@@ -13,8 +13,10 @@ const { status } = useScriptYouTubePlayer()
         status: {{ status }}
       </div>
     </ClientOnly>
-    <div style="margin-top: 20px;">
-      <ScriptYouTubePlayer video-id="dQw4w9WgXcQ" style="width: 640px; height: 360px;" />
-    </div>
+    <ClientOnly>
+      <div style="margin-top: 20px;">
+        <ScriptYouTubePlayer video-id="dQw4w9WgXcQ" style="width: 640px; height: 360px;" />
+      </div>
+    </ClientOnly>
   </div>
 </template>

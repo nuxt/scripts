@@ -8,6 +8,7 @@ useHead({
 
 const { status } = useScriptClarity({
   id: 'mqk2m9dr2v',
+  scriptOptions: { trigger: 'client' },
 })
 
 const clickCount = ref(0)
