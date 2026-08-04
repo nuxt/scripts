@@ -156,18 +156,14 @@ describe('template plugin file', () => {
     ])
     expect(res).toContain('useScriptStripe({"id":"test","scriptOptions":{"trigger":"onNuxtReady"}})')
   })
-  it('registry array with trigger', async () => {
+  it('registry flat object with trigger', async () => {
     const res = templatePluginNormalized({
       globals: {},
       registry: {
-        stripe: [
-          {
-            id: 'test',
-          },
-          {
-            trigger: 'onNuxtReady',
-          },
-        ],
+        stripe: {
+          id: 'test',
+          trigger: 'onNuxtReady',
+        },
       },
     }, [
       {
@@ -183,10 +179,7 @@ describe('template plugin file', () => {
     const res = templatePluginNormalized({
       globals: {},
       registry: {
-        googleAnalytics: [
-          { id: 'G-XXXXX' },
-          { partytown: true },
-        ],
+        googleAnalytics: { id: 'G-XXXXX', partytown: true },
       },
     }, [
       {
@@ -202,10 +195,7 @@ describe('template plugin file', () => {
     const res = templatePluginNormalized({
       globals: {},
       registry: {
-        googleAnalytics: [
-          { id: 'G-XXXXX' },
-          { partytown: true, trigger: 'onNuxtReady' },
-        ],
+        googleAnalytics: { id: 'G-XXXXX', partytown: true, trigger: 'onNuxtReady' },
       },
     }, [
       {
@@ -247,10 +237,7 @@ describe('template plugin file', () => {
   it('registry with idleTimeout trigger', async () => {
     const res = templatePluginNormalized({
       registry: {
-        googleAnalytics: [
-          { id: 'GA_MEASUREMENT_ID' },
-          { trigger: { idleTimeout: 5000 } },
-        ],
+        googleAnalytics: { id: 'GA_MEASUREMENT_ID', trigger: { idleTimeout: 5000 } },
       },
     }, [
       {

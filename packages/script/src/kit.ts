@@ -1,5 +1,6 @@
+import { findPackageJSON } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { logger, tryUseNuxt } from '@nuxt/kit'
-import { resolvePackageJSON } from 'pkg-types'
 import { isCI, provider } from 'std-env'
 
 const isStackblitz = provider === 'stackblitz'
@@ -11,10 +12,17 @@ interface EnsurePackageInstalledOptions {
 }
 
 async function promptToInstall(name: string, installCommand: () => Promise<void>, options: EnsurePackageInstalledOptions) {
-  if (await resolvePackageJSON(name).catch(() => {
-    // A missing package is expected here; the install prompt handles it below.
-    return null
-  })) {
+  const installed = [options.rootDir, ...(options.searchPaths || [])].some((searchPath) => {
+    try {
+      return !!findPackageJSON(name, pathToFileURL(`${searchPath.replace(/\/$/, '')}/`))
+    }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')
+        return false
+      throw error
+    }
+  })
+  if (installed) {
     return true
   }
 

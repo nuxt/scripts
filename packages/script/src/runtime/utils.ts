@@ -16,10 +16,9 @@ import { createError, useRuntimeConfig } from 'nuxt/app'
 import { parseQuery, parseURL, withQuery } from 'ufo'
 import { parse } from 'valibot'
 import { useScript } from './composables/useScript'
+import { createNpmScriptApiState } from './npm-script-api-state'
 import { createNpmScriptProxy } from './npm-script-proxy'
-import { createNpmScriptStub } from './npm-script-stub'
 import { attachGcmConsent } from './registry/_gcm-consent'
-import { isUnheadSourceLessScriptLoaderEnabled } from './unhead-features'
 
 // Dev-only: stack trace parsing for component location detection (only referenced inside import.meta.dev)
 const URL_MATCH_RE = /https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/
@@ -85,46 +84,33 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
-  // Delegate keyed client resources to Unhead when its loader API is present.
-  // Older versions retain the existing local stub and public API.
   if (options.scriptMode === 'npm') {
-    if (isUnheadSourceLessScriptLoaderEnabled()) {
-      const scriptOptions = { ...userOptions.scriptOptions, ...options.scriptOptions } as NuxtUseScriptOptions<T>
-      const resolveApi = scriptOptions.use
-      const clientUse = resolveClientUse(resolveApi)
-      delete scriptOptions.use
-      if (typeof scriptOptions.trigger === 'undefined')
-        scriptOptions.trigger = 'client'
+    const scriptOptions = { ...userOptions.scriptOptions, ...options.scriptOptions } as NuxtUseScriptOptions<T>
+    const resolveApi = scriptOptions.use
+    const clientUse = resolveClientUse(resolveApi)
+    delete scriptOptions.use
+    if (typeof scriptOptions.trigger === 'undefined')
+      scriptOptions.trigger = 'client'
 
-      let api: T | undefined
-      const instance = useScript<T>({
-        key: String(registryKey),
-        async loader({ signal }: { signal: AbortSignal }) {
-          const initialized = await options.clientInit?.({ signal })
-          if (signal.aborted)
-            throw signal.reason || new Error(`Loading ${String(registryKey)} was aborted`)
-          api = await Promise.resolve(api || resolveApi?.() || initialized || {}) as T
-          return api
-        },
-      } as any, scriptOptions) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
-
-      const sharedInstance = ((instance as any).script || instance) as UseScriptContext<T> & {
-        [NPM_SCRIPT_PROXY_DECORATED]?: boolean
-      }
-      if (!sharedInstance[NPM_SCRIPT_PROXY_DECORATED]) {
-        api = clientUse?.() as T | undefined
-        sharedInstance.proxy = createNpmScriptProxy(sharedInstance.proxy, () => api)
-        Object.defineProperty(sharedInstance, NPM_SCRIPT_PROXY_DECORATED, { value: true })
-      }
-      return instance
-    }
-
-    return createNpmScriptStub<T>({
+    const apiState = createNpmScriptApiState(clientUse as (() => T | undefined) | undefined)
+    const instance = useScript<T>({
       key: String(registryKey),
-      use: resolveClientUse(options.scriptOptions?.use),
-      clientInit: options.clientInit,
-      trigger: userOptions.scriptOptions?.trigger as any,
-    }) as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+      async loader({ signal }: { signal: AbortSignal }) {
+        const initialized = await options.clientInit?.({ signal })
+        if (signal.aborted)
+          throw signal.reason || new Error(`Loading ${String(registryKey)} was aborted`)
+        return apiState.load(resolveApi as (() => T | Promise<T> | undefined) | undefined, initialized as T | undefined)
+      },
+    } as any, scriptOptions) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+
+    const sharedInstance = ((instance as any).script || instance) as UseScriptContext<T> & {
+      [NPM_SCRIPT_PROXY_DECORATED]?: boolean
+    }
+    if (!sharedInstance[NPM_SCRIPT_PROXY_DECORATED]) {
+      sharedInstance.proxy = createNpmScriptProxy(sharedInstance.proxy, apiState.current)
+      Object.defineProperty(sharedInstance, NPM_SCRIPT_PROXY_DECORATED, { value: true })
+    }
+    return instance
   }
 
   let finalScriptInput = options.scriptInput

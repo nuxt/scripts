@@ -7,12 +7,12 @@ const { status, proxy } = useScriptRybbitAnalytics({ siteId: '874', scriptOption
 const result = ref('')
 
 function trackPageview() {
-  proxy.rybbit.pageview()
+  proxy.pageview()
   result.value = 'Pageview tracked'
 }
 
 function trackEvent() {
-  proxy.rybbit.event('test_click', { button: 'primary' })
+  proxy.event('test_click', { button: 'primary' })
   result.value = 'Event tracked'
 }
 </script>

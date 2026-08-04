@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { whenever } from '@vueuse/core'
-import { ref, useTemplateRef } from 'vue'
+import { ref } from 'vue'
 
 const isInfoWindowShown = ref(false)
 
@@ -23,10 +22,6 @@ const isRectangleShown = ref(false)
 const isPolylineShown = ref(false)
 
 const isPolygonShown = ref(false)
-
-const isHeatmapLayerShown = ref(false)
-
-const heatmapLayerData = ref<google.maps.LatLng[]>([])
 
 const isCircleShown = ref(false)
 
@@ -63,32 +58,11 @@ const overlayPopupOpen = ref(false)
 
 const zoom = ref(8)
 
-const googleMapsRef = useTemplateRef('googleMapsRef')
-
-whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
-  heatmapLayerData.value.push(...[
-    new googleMaps.LatLng(-33.8688, 151.2093),
-    new googleMaps.LatLng(-33.8690, 151.2100),
-    new googleMaps.LatLng(-33.8700, 151.2150),
-    new googleMaps.LatLng(-33.8710, 151.2200),
-    new googleMaps.LatLng(-33.8720, 151.2250),
-    new googleMaps.LatLng(-33.8730, 151.2300),
-    new googleMaps.LatLng(-33.8740, 151.2350),
-    new googleMaps.LatLng(-33.8750, 151.2400),
-    new googleMaps.LatLng(-33.8760, 151.2450),
-    new googleMaps.LatLng(-33.8770, 151.2500),
-    new googleMaps.LatLng(-33.8780, 151.2550),
-    new googleMaps.LatLng(-33.8790, 151.2600),
-    new googleMaps.LatLng(-33.8800, 151.2650),
-    new googleMaps.LatLng(-33.8810, 151.2700),
-  ])
-})
 </script>
 
 <template>
   <div>
     <ScriptGoogleMaps
-      ref="googleMapsRef"
       api-key="AIzaSyAOEIQ_xOdLx2dNwnFMzyJoswwvPCTcGzU"
       :width="1280"
       :height="720"
@@ -194,13 +168,6 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
           strokeWeight: 2,
           fillColor: '#FF0000',
           fillOpacity: 0.35,
-        }"
-      />
-
-      <ScriptGoogleMapsHeatmapLayer
-        v-if="isHeatmapLayerShown"
-        :options="{
-          data: heatmapLayerData,
         }"
       />
 
@@ -337,13 +304,6 @@ whenever(() => googleMapsRef.value?.googleMaps, (googleMaps) => {
         @click="isPolygonShown = !isPolygonShown"
       >
         {{ `${isPolygonShown ? 'Hide' : 'Show'} polygon` }}
-      </button>
-
-      <button
-        class="bg-[#ffa500] rounded-lg px-2 py-1"
-        @click="isHeatmapLayerShown = !isHeatmapLayerShown"
-      >
-        {{ `${isHeatmapLayerShown ? 'Hide' : 'Show'} heatmap layer` }}
       </button>
 
       <button

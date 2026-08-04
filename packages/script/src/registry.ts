@@ -304,7 +304,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
     def('plausibleAnalytics', {
       label: 'Plausible Analytics',
       category: 'analytics',
-      envDefaults: { domain: '' },
+      envDefaults: { scriptId: '' },
       bundle: {
         resolve: (options?: PlausibleAnalyticsInput) => {
           // Self-hosted Plausible: when a custom `scriptInput.src` is provided,
@@ -312,10 +312,9 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           const userSrc = (options as any)?.scriptInput?.src
           if (typeof userSrc === 'string' && userSrc.trim().length > 0)
             return userSrc.trim()
-          if (options?.scriptId)
-            return `https://plausible.io/js/pa-${options.scriptId}.js`
-          const extensions = Array.isArray(options?.extension) ? options.extension.join('.') : [options?.extension]
-          return options?.extension ? `https://plausible.io/js/script.${extensions}.js` : 'https://plausible.io/js/script.js'
+          if (!options?.scriptId)
+            throw new TypeError('plausibleAnalytics requires scriptId')
+          return `https://plausible.io/js/pa-${options.scriptId}.js`
         },
       },
       proxy: {

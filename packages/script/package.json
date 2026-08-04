@@ -45,14 +45,13 @@
       ]
     }
   },
-  "bin": {
-    "nuxt-scripts": "./bin/cli.mjs"
-  },
   "files": [
     "THIRD_PARTY_LICENSES.md",
-    "bin",
     "dist"
   ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "build": "nuxt-module-build build",
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare"
@@ -137,7 +136,6 @@
     "oxc-parser": "catalog:",
     "oxc-walker": "catalog:",
     "pathe": "catalog:",
-    "pkg-types": "catalog:",
     "semver": "catalog:",
     "sirv": "catalog:",
     "std-env": "catalog:",

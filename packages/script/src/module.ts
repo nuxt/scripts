@@ -14,7 +14,8 @@ import type {
   RegistryScripts,
   ResolvedProxyAutoInject,
 } from './runtime/types'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { findPackageJSON } from 'node:module'
 import {
   addBuildPlugin,
   addComponentsDir,
@@ -27,15 +28,13 @@ import {
   hasNuxtModule,
 } from '@nuxt/kit'
 import { defu } from 'defu'
-import { resolve as resolvePath_ } from 'pathe'
-import { readPackageJSON } from 'pkg-types'
 import { satisfies } from 'semver'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
 import { setupNitroRuntimeCompatibility } from './nitro-compatibility'
-import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
+import { extractRequiredFields, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
@@ -48,79 +47,25 @@ import { validateScriptsEnvVars } from './validate-env'
 
 export type { FirstPartyPrivacy }
 
-/**
- * Partytown forward config for registry scripts.
- * Scripts not listed here are likely incompatible due to DOM access requirements.
- * @see https://partytown.qwik.dev/forwarding-events
- */
-// Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
-// e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
-const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
-const UNHEAD_VERSION_RANGE = '>=3.3.1 <4'
-
-/**
- * Expand self-closing `<Script*>` component tags in page files to work around
- * a Nuxt core regex issue (nuxt `SFC_SCRIPT_RE` uses case-insensitive matching).
- */
-function fixSelfClosingScriptComponents(nuxt: any) {
-  function expandTags(content: string): string | null {
-    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
-    if (!SELF_CLOSING_SCRIPT_RE.test(content))
-      return null
-    SELF_CLOSING_SCRIPT_RE.lastIndex = 0
-    return content.replace(SELF_CLOSING_SCRIPT_RE, (_, tag, attrs) => `<${tag}${attrs.trimEnd()}></${tag}>`)
-  }
-
-  function fixFile(filePath: string) {
-    if (!existsSync(filePath))
-      return
-    const content = readFileSync(filePath, 'utf-8')
-    const fixed = expandTags(content)
-    if (fixed)
-      nuxt.vfs[filePath] = fixed
-  }
-
-  function scanDir(dir: string) {
-    if (!existsSync(dir))
-      return
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const fullPath = resolvePath_(dir, entry.name)
-      if (entry.isDirectory())
-        scanDir(fullPath)
-      else if (entry.name.endsWith('.vue'))
-        fixFile(fullPath)
-    }
-  }
-
-  const pagesDirs = new Set<string>()
-  for (const layer of nuxt.options._layers) {
-    pagesDirs.add(resolvePath_(
-      layer.config.srcDir,
-      layer.config.dir?.pages || 'pages',
-    ))
-  }
-  for (const dir of pagesDirs) scanDir(dir)
-
-  // Keep VFS entries fresh during dev HMR
-  if (nuxt.options.dev) {
-    nuxt.hook('builder:watch', (_event: string, relativePath: string) => {
-      if (!relativePath.endsWith('.vue'))
-        return
-      for (const layer of nuxt.options._layers) {
-        const fullPath = resolvePath_(layer.config.srcDir, relativePath)
-        for (const dir of pagesDirs) {
-          if (fullPath.startsWith(`${dir}/`)) {
-            fixFile(fullPath)
-            return
-          }
-        }
-      }
-    })
-  }
-}
-
 const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
+const UNHEAD_VERSION_RANGE = '>=3.3.1 <4'
+
+function readInstalledPackageVersion(name: string): string | undefined {
+  let packagePath: string | undefined
+  try {
+    packagePath = findPackageJSON(name, import.meta.url)
+  }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND')
+      return
+    throw error
+  }
+  if (!packagePath)
+    return
+  const parsed = JSON.parse(readFileSync(packagePath, 'utf8')) as { version?: unknown }
+  return typeof parsed.version === 'string' ? parsed.version : undefined
+}
 
 export function isProxyDisabled(
   registryKey: string,
@@ -368,7 +313,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(config, nuxt) {
     const { resolve: resolveModule, resolvePath } = createResolver(import.meta.url)
-    const { version, name } = await readPackageJSON(await resolvePath('../package.json'))
+    const { version, name } = JSON.parse(readFileSync(await resolvePath('../package.json'), 'utf8')) as { version: string, name: string }
     nuxt.options.alias['#nuxt-scripts'] = await resolvePath('./runtime')
     logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
@@ -389,20 +334,13 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
-    const [unheadVuePackage, unheadCorePackage] = await Promise.all([
-      readPackageJSON('@unhead/vue', { from: nuxt.options.modulesDir }).catch(() => {
-        // Missing peers are reported together below with the resolved versions.
-        return null
-      }),
-      readPackageJSON('unhead', { from: nuxt.options.modulesDir }).catch(() => {
-        // Missing peers are reported together below with the resolved versions.
-        return null
-      }),
-    ])
-    const incompatibleUnheadPackages = [
-      ['@unhead/vue', unheadVuePackage?.version],
-      ['unhead', unheadCorePackage?.version],
-    ].filter(([, dependencyVersion]) => !dependencyVersion || !satisfies(dependencyVersion, UNHEAD_VERSION_RANGE))
+    const unheadVersions = [
+      ['@unhead/vue', readInstalledPackageVersion('@unhead/vue')],
+      ['unhead', readInstalledPackageVersion('unhead')],
+    ] as const
+    const incompatibleUnheadPackages = unheadVersions.filter(([, dependencyVersion]) =>
+      !dependencyVersion || !satisfies(dependencyVersion, UNHEAD_VERSION_RANGE),
+    )
     if (incompatibleUnheadPackages.length) {
       const resolvedVersions = incompatibleUnheadPackages
         .map(([dependency, dependencyVersion]) => `${dependency}=${dependencyVersion ? `v${dependencyVersion}` : 'missing'}`)
@@ -411,15 +349,12 @@ export default defineNuxtModule<ModuleOptions>({
         `[nuxt-scripts] Nuxt Scripts 2 requires @unhead/vue and unhead ${UNHEAD_VERSION_RANGE}; resolved ${resolvedVersions}. Run \`npx nuxi@latest upgrade --force\` to upgrade Nuxt and refresh its dependencies.`,
       )
     }
-    const unheadSourceLessScriptLoader = true
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
     // Normalize registry entries to [input, scriptOptions?] tuple form
-    // Eliminates 4-shape polymorphism (true | 'mock' | object | array) for all downstream consumers
+    // Converts the public flat object form to the internal tuple form.
     if (config.registry) {
-      const componentOnlyKeys = new Set(scripts.filter(s => !s.import).map(s => s.registryKey!))
-      migrateDeprecatedRegistryKeys(config.registry as Record<string, any>, msg => logger.warn(msg))
-      normalizeRegistryConfig(config.registry as Record<string, any>, msg => logger.warn(msg), componentOnlyKeys)
+      normalizeRegistryConfig(config.registry as Record<string, any>)
       nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {}
 
       // Auto-populate env var defaults for enabled registry scripts so that
@@ -482,18 +417,15 @@ export default defineNuxtModule<ModuleOptions>({
     // Build-time constants are replaced inline so internal capability choices
     // cannot be changed through public runtime config.
     const debugConst = JSON.stringify(!!config.debug)
-    const unheadSourceLessConst = JSON.stringify(unheadSourceLessScriptLoader)
     nuxt.options.vite ||= {}
     nuxt.options.vite.define = {
       ...nuxt.options.vite.define,
       __NUXT_SCRIPTS_DEBUG__: debugConst,
-      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
     }
     nuxt.options.nitro ||= {}
     nuxt.options.nitro.replace = {
       ...nuxt.options.nitro.replace,
       __NUXT_SCRIPTS_DEBUG__: debugConst,
-      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
     }
 
     // Register proxy handler unconditionally. The handler rejects unknown domains
@@ -539,14 +471,6 @@ export default defineNuxtModule<ModuleOptions>({
       path: await resolvePath('./runtime/components'),
       pathPrefix: false,
     })
-
-    // Fix #613: Self-closing <Script*> tags break Nuxt's definePageMeta extraction.
-    // Nuxt's SFC_SCRIPT_RE regex uses case-insensitive matching, so <ScriptFoo /> is
-    // matched as a <script> opening tag. Without a closing </ScriptFoo>, the regex
-    // consumes the real </script> closing tag, losing definePageMeta. Expanding
-    // self-closing Script* tags to <ScriptFoo></ScriptFoo> provides the closing tag
-    // that the regex needs to scope its match correctly.
-    fixSelfClosingScriptComponents(nuxt)
 
     addTemplate({
       filename: 'nuxt-scripts-trigger-resolver.mjs',

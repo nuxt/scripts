@@ -81,9 +81,6 @@ export { GoogleTagManagerOptions }
 
 export type GoogleTagManagerInput = RegistryScriptInput<typeof GoogleTagManagerOptions>
 
-/** @deprecated Use {@link GcmConsentApi} from `#nuxt-scripts/types` instead. */
-export type GoogleTagManagerConsent = GcmConsentApi
-
 /**
  * Hook to use Google Tag Manager in Nuxt applications
  */

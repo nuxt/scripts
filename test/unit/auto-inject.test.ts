@@ -42,8 +42,8 @@ describe('autoInject via proxy configs', () => {
     })
 
     it('injects endpoint for plausible config object', async () => {
-      const registry: any = { plausibleAnalytics: { domain: 'example.com' } }
-      const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: 'example.com' } })
+      const registry: any = { plausibleAnalytics: { scriptId: 'test-script-id' } }
+      const rt = makeRuntimeConfig({ plausibleAnalytics: { scriptId: 'test-script-id' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -71,24 +71,15 @@ describe('autoInject via proxy configs', () => {
     })
   })
 
-  describe('array entries', () => {
-    it('injects into first element of array entry', async () => {
-      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { partytown: true }] }
+  describe('flat entries', () => {
+    it('injects with script options present', async () => {
+      const registry: any = { posthog: { apiKey: 'phc_test', partytown: true } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
       expect(registry.posthog[0].apiHost).toBe('/_proxy/us.i.posthog.com')
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
-    })
-
-    it('skips empty array entries', async () => {
-      const registry: any = { posthog: [] }
-      const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
-
-      await autoInjectAll(registry, rt, '/_proxy')
-
-      expect(rt.public.scripts.posthog.apiHost).toBeUndefined()
     })
   })
 
@@ -113,9 +104,9 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/eu.i.posthog.com')
     })
 
-    it('injects into runtimeConfig for plausibleAnalytics: {}', async () => {
-      const registry: any = { plausibleAnalytics: {} }
-      const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: '' } })
+    it('injects into runtimeConfig for plausibleAnalytics', async () => {
+      const registry: any = { plausibleAnalytics: { scriptId: 'test-script-id' } }
+      const rt = makeRuntimeConfig({ plausibleAnalytics: { scriptId: 'test-script-id' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -192,8 +183,8 @@ describe('autoInject via proxy configs', () => {
 
   describe('proxy opt-out', () => {
     it('skips auto-inject when input has proxy: false', async () => {
-      const registry: any = { plausibleAnalytics: { domain: 'example.com', proxy: false } }
-      const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: 'example.com' } })
+      const registry: any = { plausibleAnalytics: { scriptId: 'test-script-id', proxy: false } }
+      const rt = makeRuntimeConfig({ plausibleAnalytics: { scriptId: 'test-script-id' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -201,8 +192,8 @@ describe('autoInject via proxy configs', () => {
       expect(rt.public.scripts.plausibleAnalytics.endpoint).toBeUndefined()
     })
 
-    it('skips auto-inject when scriptOptions has proxy: false', async () => {
-      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { proxy: false }] }
+    it('skips auto-inject when proxy is false', async () => {
+      const registry: any = { posthog: { apiKey: 'phc_test', proxy: false } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
       await autoInjectAll(registry, rt, '/_proxy')

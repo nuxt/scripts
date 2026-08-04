@@ -1,30 +1,9 @@
-import type { UseScriptInput } from '@unhead/vue'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { any, array, boolean, literal, object, optional, record, string, union } from 'valibot'
-import { logger } from '../logger'
+import { any, array, boolean, object, optional, record, string } from 'valibot'
 import { useRegistryScript } from '../utils'
 
-// Legacy extensions (deprecated but kept for backward compatibility)
-const extensions = [
-  literal('hash'),
-  literal('outbound-links'),
-  literal('file-downloads'),
-  literal('tagged-events'),
-  literal('revenue'),
-  literal('pageview-props'),
-  literal('compat'),
-  literal('local'),
-  literal('manual'),
-]
-
 const PlausibleAnalyticsOptionsSchema = object({
-  // New October 2025: unique script ID per site (replaces domain)
-  scriptId: optional(string()),
-  // Legacy: domain-based approach (deprecated)
-  domain: optional(string()),
-  // Legacy extension support (deprecated)
-  extension: optional(union([union(extensions), array(union(extensions))])),
-  // New October 2025 init options
+  scriptId: string(),
   customProperties: optional(record(string(), any())),
   endpoint: optional(string()),
   fileDownloads: optional(object({
@@ -42,7 +21,7 @@ const PlausibleAnalyticsOptionsSchema = object({
  */
 export interface PlausibleAnalyticsOptions {
   /**
-   * Unique script ID for your site (recommended - new format as of October 2025)
+   * Unique script ID for your site.
    * Get this from your Plausible dashboard under Site Installation
    *
    * Extract it from your Plausible script URL:
@@ -53,18 +32,7 @@ export interface PlausibleAnalyticsOptions {
    * ```
    * @example 'gYyxvZhkMzdzXBAtSeSNz'
    */
-  scriptId?: string
-  /**
-   * Your site domain
-   * @deprecated Use `scriptId` instead (new October 2025 format)
-   * @example 'example.com'
-   */
-  domain?: string
-  /**
-   * Script extensions for additional features
-   * @deprecated Use init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead (new October 2025 format)
-   */
-  extension?: 'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual' | Array<'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual'>
+  scriptId: string
   /** Custom properties to track with every pageview */
   customProperties?: Record<string, any>
   /** Custom tracking endpoint URL */
@@ -99,6 +67,7 @@ export interface PlausibleInitOptions {
   hashBasedRouting?: boolean
   autoCapturePageviews?: boolean
   captureOnLocalhost?: boolean
+  trackForms?: boolean
 }
 
 export type PlausibleFunction = ((event: '404', options: Record<string, any>) => void)
@@ -120,43 +89,6 @@ declare global {
 
 export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_options?: PlausibleAnalyticsInput) {
   return useRegistryScript<T, typeof PlausibleAnalyticsOptionsSchema>('plausibleAnalytics', (options) => {
-    // Determine which script format to use
-    const useNewScript = !!options?.scriptId
-    const useLegacyScript = !!options?.extension
-
-    // Validate: don't mix deprecated and new options
-    if (import.meta.dev) {
-      // Check for missing required options
-      if (!useNewScript && !options?.domain) {
-        logger.warn('Plausible Analytics: No `scriptId` or `domain` provided. Please provide either `scriptId` or `domain` (legacy).')
-      }
-
-      // Check for mixing new and deprecated options
-      if (useNewScript && options?.domain) {
-        logger.warn('Plausible Analytics: You are using both `scriptId` (new format) and `domain` (deprecated). Please use only `scriptId` for the new format.')
-      }
-      if (useNewScript && useLegacyScript) {
-        logger.warn('Plausible Analytics: You are using both `scriptId` (new format) and `extension` (deprecated). Please use `scriptId` with init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead.')
-      }
-    }
-
-    // Build script URL
-    let scriptSrc: string
-    if (useNewScript) {
-      // New October 2025 format with unique script ID
-      scriptSrc = `https://plausible.io/js/pa-${options.scriptId}.js`
-    }
-    else if (useLegacyScript) {
-      // Legacy extension format
-      const extensions = Array.isArray(options.extension) ? options.extension.join('.') : [options.extension]
-      scriptSrc = `https://plausible.io/js/script.${extensions}.js`
-    }
-    else {
-      // Legacy basic script
-      scriptSrc = 'https://plausible.io/js/script.js'
-    }
-
-    // Build init options for new script format
     const initOptions: PlausibleInitOptions = {}
     if (options?.customProperties)
       initOptions.customProperties = options.customProperties
@@ -170,35 +102,29 @@ export function useScriptPlausibleAnalytics<T extends PlausibleAnalyticsApi>(_op
       initOptions.autoCapturePageviews = options.autoCapturePageviews
     if (options?.captureOnLocalhost !== undefined)
       initOptions.captureOnLocalhost = options.captureOnLocalhost
-
-    // Build script input
-    const scriptInput: UseScriptInput = { src: scriptSrc }
-    if (!useNewScript && options?.domain)
-      scriptInput['data-domain'] = options.domain
-    // Legacy script uses data-api attribute for custom endpoint
-    if (!useNewScript && options?.endpoint)
-      scriptInput['data-api'] = options.endpoint
+    if (options?.trackForms !== undefined)
+      initOptions.trackForms = options.trackForms
 
     return {
-      scriptInput,
+      scriptInput: { src: `https://plausible.io/js/pa-${options?.scriptId}.js` },
       schema: import.meta.dev ? PlausibleAnalyticsOptionsSchema : undefined,
       scriptOptions: {
         use() {
           return { plausible: window.plausible }
         },
-        clientInit: import.meta.server
-          ? undefined
-          : () => {
-              const w = window as any
-              w.plausible = w.plausible || function (...args: any[]) {
-                (w.plausible.q = w.plausible.q || []).push(args)
-              }
-              w.plausible.init = w.plausible.init || function (i: PlausibleInitOptions) {
-                w.plausible.o = i || {}
-              }
-              w.plausible.init(initOptions)
-            },
       },
+      clientInit: import.meta.server
+        ? undefined
+        : () => {
+            const w = window as any
+            w.plausible = w.plausible || function (...args: any[]) {
+              (w.plausible.q = w.plausible.q || []).push(args)
+            }
+            w.plausible.init = w.plausible.init || function (i: PlausibleInitOptions) {
+              w.plausible.o = i || {}
+            }
+            w.plausible.init(initOptions)
+          },
     }
   }, _options)
 }

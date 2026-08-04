@@ -77,16 +77,7 @@ export function useScriptMatomoAnalytics<T extends MatomoAnalyticsApi>(_options?
               _paq.push(['setTrackerUrl', withBase(`/matomo.php`, withHttps(normalizedCloudId))])
             }
             _paq.push(['setSiteId', String(options?.siteId) || '1'])
-            // Deprecated: trackPageView option
-            if (options?.trackPageView !== undefined) {
-              if (import.meta.dev) {
-                logger.warn('The `trackPageView` option is deprecated. Use `watch: true` (default) for automatic page view tracking, or remove this option entirely.')
-              }
-              if (options.trackPageView) {
-                _paq.push(['trackPageView'])
-              }
-            }
-            else if (options?.watch !== false) {
+            if (options?.watch !== false) {
               useScriptEventPage((payload) => {
                 window._paq.push(['setDocumentTitle', payload.title])
                 window._paq.push(['setCustomUrl', payload.path])

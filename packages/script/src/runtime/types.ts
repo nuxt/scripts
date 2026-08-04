@@ -318,7 +318,7 @@ export type RegistryScriptKey = Exclude<keyof ScriptRegistry, `${string}-npm`>
 
 type RegistryConfigInput<T> = 0 extends 1 & T ? Record<string, any> : [T] extends [true] ? Record<string, never> : T
 
-export type NuxtConfigScriptRegistryEntry<T> = true | false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'] | false, proxy?: boolean, bundle?: boolean, partytown?: boolean, privacy?: ProxyPrivacyInput })
+export type NuxtConfigScriptRegistryEntry<T> = false | 'mock' | (RegistryConfigInput<T> & { trigger?: NuxtUseScriptOptionsSerializable['trigger'] | false, proxy?: boolean, bundle?: boolean, partytown?: boolean, privacy?: ProxyPrivacyInput })
 
 // Internal mapped type: derives config entry types from ScriptRegistry.
 // Excludes the `${string}-npm` pattern since it's covered by the string index signature.

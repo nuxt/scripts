@@ -69,7 +69,7 @@ describe('module options registry', () => {
     expectTypeOf<GoogleMapsEntry>().not.toEqualTypeOf<CatchAllEntry>()
 
     // Verify specific input properties survive (not collapsed to unknown)
-    type ObjectForm<K extends keyof Registry> = Exclude<Registry[K], boolean | 'mock' | undefined>
+    type ObjectForm<K extends keyof Registry> = Exclude<Registry[K], false | 'mock' | undefined>
     expectTypeOf<ObjectForm<'googleMaps'>['apiKey']>().not.toBeNever()
     expectTypeOf<ObjectForm<'leaflet'>['injectStyles']>().not.toBeNever()
     expectTypeOf<ObjectForm<'maplibre'>['workerUrl']>().not.toBeNever()
@@ -86,7 +86,7 @@ describe('module options registry', () => {
   // This happens when Nuxt's $production/$development wraps the config in DeepPartial,
   // collapsing the interface's index signature priority and resolving all keys to `any`.
   it('NuxtConfigScriptRegistryEntry<any> allows arbitrary properties', () => {
-    type Entry = Exclude<NuxtConfigScriptRegistryEntry<any>, boolean | 'mock'>
+    type Entry = Exclude<NuxtConfigScriptRegistryEntry<any>, false | 'mock'>
     // Must not be never (would mean Record<string, never> killed the intersection)
     expectTypeOf<Entry>().not.toBeNever()
     // Arbitrary properties must be assignable, not `never`
@@ -177,34 +177,23 @@ describe('#nuxt-scripts/types exports', () => {
   })
 })
 
-describe('tiktok pixel ttq', () => {
+describe('tiktok pixel ttq methods', () => {
   type Ttq = TikTokPixelApi['ttq']
 
-  it('legacy callable form: track accepts the 4th options arg with event_id', () => {
-    expectTypeOf<Ttq>().toBeCallableWith('track', 'Purchase', { value: 10 }, { event_id: 'abc' })
-  })
-
-  it('legacy callable form: track accepts standard and custom events', () => {
-    expectTypeOf<Ttq>().toBeCallableWith('track', 'Purchase')
-    expectTypeOf<Ttq>().toBeCallableWith('track', 'StartTrial')
-    expectTypeOf<Ttq>().toBeCallableWith('track', 'CustomEvent')
-  })
-
-  it('method form: track accepts the 3rd options arg with event_id', () => {
+  it('track accepts the 3rd options arg with event_id', () => {
     expectTypeOf<Ttq['track']>().toBeCallableWith('Purchase', { value: 10 }, { event_id: 'abc' })
     expectTypeOf<Ttq['track']>().toBeCallableWith('StartTrial')
     expectTypeOf<Ttq['track']>().toBeCallableWith('CustomEvent')
   })
 
-  it('method form: ttq exposes the array-protocol deferred methods', () => {
+  it('exposes the array-protocol deferred methods', () => {
     expectTypeOf<Ttq['page']>().toBeCallableWith()
     expectTypeOf<Ttq['identify']>().toBeCallableWith({ email: 'abc' })
     expectTypeOf<Ttq['instance']>().toBeCallableWith('PIXEL_ID')
   })
 
-  it('proxy.ttq preserves both call forms', () => {
+  it('proxy.ttq preserves the method form', () => {
     type ProxyTtq = ReturnType<typeof useScriptTikTokPixel>['proxy']['ttq']
-    expectTypeOf<ProxyTtq>().toBeCallableWith('track', 'Purchase', { value: 10 }, { event_id: 'abc' })
     expectTypeOf<ProxyTtq['track']>().toBeCallableWith('StartTrial')
   })
 })

@@ -8,7 +8,6 @@ const runtimeConfig = vi.hoisted(() => ({
 }))
 
 const useScriptMock = vi.hoisted(() => vi.fn((input, options) => ({ input, options, proxy: {} })))
-const unheadFeatures = vi.hoisted(() => ({ sourceLessScriptLoader: false }))
 
 // Mock dependencies
 vi.mock('nuxt/app', () => ({
@@ -19,12 +18,7 @@ vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
   useScript: useScriptMock,
 }))
 
-vi.mock('../../packages/script/src/runtime/unhead-features', () => ({
-  isUnheadSourceLessScriptLoaderEnabled: () => unheadFeatures.sourceLessScriptLoader,
-}))
-
 afterEach(() => {
-  unheadFeatures.sourceLessScriptLoader = false
   useScriptMock.mockClear()
 })
 
@@ -68,12 +62,11 @@ describe('useRegistryScript scriptOptions', () => {
 
     const result = useRegistryScript('test', mockOptionsFunction, {})
 
-    expect(result.proxy).toEqual({})
+    expect(result.proxy).toBeTypeOf('function')
     expect(unsafeUse).not.toHaveBeenCalled()
   })
 
-  it('delegates npm mode to an Unhead source-less loader when supported', async () => {
-    unheadFeatures.sourceLessScriptLoader = true
+  it('delegates npm mode to an Unhead source-less loader', async () => {
     const api = { track: vi.fn(() => 'tracked') }
     const clientInit = vi.fn(async () => api)
     const use = vi.fn(() => api)

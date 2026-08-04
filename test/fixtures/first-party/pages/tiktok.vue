@@ -11,11 +11,11 @@ const { proxy, status } = useScriptTikTokPixel({
 })
 
 function trackPageView() {
-  proxy.ttq('page')
+  proxy.ttq.page()
 }
 
 function trackEvent() {
-  proxy.ttq('track', 'ViewContent', {
+  proxy.ttq.track('ViewContent', {
     content_type: 'product',
     content_id: 'test-123',
   })

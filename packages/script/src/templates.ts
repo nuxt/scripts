@@ -1,9 +1,6 @@
 import type { RegistryScript } from '#nuxt-scripts/types'
 import type { ModuleOptions } from './module'
 import { addTypeTemplate } from '@nuxt/kit'
-import { hash } from 'ohash'
-
-import { logger } from './logger'
 
 const TRIGGER_PLACEHOLDER_RE = /"__TRIGGER_PLACEHOLDER__"/g
 
@@ -109,11 +106,6 @@ export function resolveTriggerForTemplate(trigger: any): string | null {
 }
 
 export function templatePlugin(config: Partial<ModuleOptions>, registry: Required<RegistryScript>[]) {
-  if (Array.isArray(config.globals)) {
-    // convert to object
-    config.globals = Object.fromEntries(config.globals.map(i => [hash(i), i]))
-    logger.warn('The `globals` array option is deprecated. Convert to an object: `globals: { myScript: \'https://example.com/script.js\' }`')
-  }
   const imports = []
   const inits = []
   // Globals are split out so the resolved inputs can be collected into a mutable map,
