@@ -6,7 +6,7 @@ import { PAGE_TOKEN_PARAM, PAGE_TOKEN_TS_PARAM, SIG_PARAM } from '../../packages
 
 const { rawFetchMock } = vi.hoisted(() => ({ rawFetchMock: vi.fn() }))
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   defineCachedFunction: (handler: (...args: any[]) => any) => handler,
   useRuntimeConfig: () => ({
     'nuxt-scripts': { googleStaticMapsProxy: { apiKey: 'server-key' } },

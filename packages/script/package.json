@@ -49,6 +49,7 @@
     "nuxt-scripts": "./bin/cli.mjs"
   },
   "files": [
+    "THIRD_PARTY_LICENSES.md",
     "bin",
     "dist"
   ],
@@ -77,10 +78,13 @@
     "@paypal/paypal-js": "^8.1.2 || ^9.0.0",
     "@speedcurve/lux": "^4.4.3",
     "@stripe/stripe-js": "^7.0.0 || ^8.0.0 || ^9.0.0",
+    "@types/geojson": "^7946.0.0",
     "@types/google.maps": "^3.58.1",
+    "@types/leaflet": "^1.9.0",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
     "@unhead/vue": "^2.0.3 || ^3.0.0",
+    "maplibre-gl": "^5.24.0",
     "posthog-js": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -96,7 +100,13 @@
     "@stripe/stripe-js": {
       "optional": true
     },
+    "@types/geojson": {
+      "optional": true
+    },
     "@types/google.maps": {
+      "optional": true
+    },
+    "@types/leaflet": {
       "optional": true
     },
     "@types/vimeo__player": {
@@ -106,6 +116,9 @@
       "optional": true
     },
     "@unhead/vue": {
+      "optional": true
+    },
+    "maplibre-gl": {
       "optional": true
     },
     "posthog-js": {

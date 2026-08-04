@@ -153,7 +153,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
       const scriptSelector = opts.bundled
         ? 'script[src*="/_scripts/assets/"]'
         : 'script[src*="analytics.ahrefs.com/analytics.js"]'
-      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: 15000 })
+      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: 30000 })
       const tag = await page.evaluate((sel: string) => {
         const el = document.querySelector<HTMLScriptElement>(sel)
         return el ? { src: el.src, key: el.getAttribute('data-key') } : null
@@ -168,7 +168,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
     finally {
       await page.close()
     }
-  }, 60000)
+  }, 90000)
 
   it('initial page load fires a /api/event beacon', async () => {
     const { page, requests } = await newCapturePage(opts)

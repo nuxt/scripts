@@ -46,46 +46,49 @@ overrides:
   unhead-v3-fixture>@unhead/vue: ^3.0.0
   vitest-environment-nuxt: 2.0.0
 catalog:
-  '@antfu/eslint-config': ^9.1.0
+  '@antfu/eslint-config': ^9.2.0
   '@googlemaps/markerclusterer': ^2.6.2
-  '@nuxt/devtools-kit': ^3.2.4
+  '@nuxt/devtools-kit': ^3.4.0
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.5.0
-  '@nuxt/module-builder': ^1.0.2
-  '@nuxt/test-utils': ^4.0.3
+  '@nuxt/kit': ^4.5.1
+  '@nuxt/module-builder': ^1.0.3
+  '@nuxt/test-utils': ^4.1.0
   '@nuxt/ui': ^4.10.0
   '@nuxtjs/partytown': ^2.0.0
-  '@paypal/paypal-js': ^10.0.3
-  '@shikijs/langs': ^4.3.1
-  '@shikijs/themes': ^4.3.1
+  '@paypal/paypal-js': ^10.1.0
+  '@shikijs/langs': ^4.4.1
+  '@shikijs/themes': ^4.4.1
   '@speedcurve/lux': ^4.4.3
-  '@types/google.maps': ^3.65.2
+  '@types/geojson': ^7946.0.16
+  '@types/google.maps': ^3.65.4
   '@types/jest-image-snapshot': ^6.4.1
-  '@types/node': ^26.1.1
+  '@types/leaflet': ^1.9.21
+  '@types/node': ^26.1.2
   '@types/youtube': ^0.3.0
   '@vue/test-utils': ^2.4.11
-  '@vueuse/core': ^14.3.0
-  '@vueuse/shared': ^14.3.0
-  bumpp: ^11.1.0
+  '@vueuse/core': ^14.4.0
+  '@vueuse/shared': ^14.4.0
+  bumpp: ^12.1.1
   consola: ^3.4.2
   defu: ^6.1.7
-  eslint: ^10.7.0
-  eslint-plugin-harlanzw: ^0.17.0
+  eslint: ^10.8.0
+  eslint-plugin-harlanzw: ^0.17.1
   h3: ^1.15.11
-  happy-dom: ^20.11.0
+  happy-dom: ^20.11.1
   jest-image-snapshot: ^6.5.2
-  magic-string: ^1.0.0
-  nuxt: ^4.5.0
+  magic-string: ^1.1.0
+  maplibre-gl: ^5.24.0
+  nuxt: ^4.5.1
   ofetch: ^1.5.1
   ohash: ^2.0.11
-  oxc-parser: ^0.140.0
-  oxc-walker: ^1.0.0
+  oxc-parser: ^0.142.0
+  oxc-walker: ^1.1.1
   pathe: ^2.0.3
   pkg-types: ^2.3.1
-  playwright-core: ^1.61.1
-  posthog-js: ^1.404.1
-  rollup: ^4.62.2
-  shiki: ^4.3.1
+  playwright-core: ^1.62.1
+  posthog-js: ^1.409.5
+  rollup: ^4.62.4
+  shiki: ^4.4.1
   sirv: ^3.0.2
   std-env: ^4.2.0
   typescript: 6.0.3
@@ -93,13 +96,13 @@ catalog:
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
   undici: ^6.27.0
-  unimport: ^6.3.0
+  unimport: ^6.4.0
   unplugin: ^3.3.0
   unstorage: ^1.17.5
   valibot: ^1.4.2
   vitest: ^4.1.10
   vue: ^3.5.40
-  vue-tsc: ^3.3.7
+  vue-tsc: ^3.3.9
 trustPolicyIgnoreAfter: 262800
 
 ignoredBuiltDependencies:

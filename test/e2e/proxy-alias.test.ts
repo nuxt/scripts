@@ -26,6 +26,11 @@ describe('proxy path aliases', () => {
     expect(res.status).toBe(403)
   })
 
+  it('runs Nitro runtime helpers locally', async () => {
+    const result = await $fetch('/api/nitro-runtime')
+    expect(result).toEqual({ app: true, cached: 'ok', config: true })
+  })
+
   it('resolves the alias back to the real domain instead of 403ing', async () => {
     // `pl` resolves to plausible.io and is proxied upstream. Whatever the upstream
     // returns (or a 502 if unreachable), it must not be our allowlist 403.
@@ -33,10 +38,7 @@ describe('proxy path aliases', () => {
       method: 'POST',
       body: '{}',
       headers: { 'content-type': 'application/json' },
-    }).catch(() => null)
-    // A null here means a transport-level error reaching our own server, which is a
-    // genuine test failure; a resolved alias always yields an HTTP response.
-    expect(res).not.toBeNull()
-    expect(res!.status).not.toBe(403)
+    })
+    expect(res.status).not.toBe(403)
   }, 30000)
 })

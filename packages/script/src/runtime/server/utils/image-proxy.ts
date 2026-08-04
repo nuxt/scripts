@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
 import { createCachedBinaryFetch } from './cached-upstream'
 import { isPublicNetworkHostname } from './network-host'
 import { withSigning } from './withSigning'

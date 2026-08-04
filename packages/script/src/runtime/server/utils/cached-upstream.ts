@@ -1,8 +1,8 @@
 import type { FetchResponse } from 'ofetch'
 import { Buffer } from 'node:buffer'
-import { defineCachedFunction } from 'nitropack/runtime'
 import { createFetch } from 'ofetch'
 import { hash } from 'ohash'
+import { defineCachedFunction } from '#nuxt-scripts/nitro'
 import { createPublicNetworkDispatcher, isPublicNetworkHostname } from './network-host'
 
 /**
