@@ -16,6 +16,7 @@ function firstString(value: unknown): string | undefined {
 }
 
 const cachedGravatarFetch = createCachedBinaryFetch('nuxt-scripts-gravatar', 3600, {
+  allowContentType: contentType => contentType.startsWith('image/') && contentType !== 'image/svg+xml',
   allowUrl: url => isSafeHttpsUrl(url)
     && (url.hostname === 'gravatar.com' || url.hostname.endsWith('.gravatar.com')),
 })

@@ -31,6 +31,23 @@ export interface PublicNetworkDispatcher {
   close: () => Promise<void>
 }
 
+/** Close a dispatcher without replacing the request or stream error already in flight. */
+export async function closePublicNetworkDispatcher(
+  dispatcher: PublicNetworkDispatcher | undefined,
+  primaryError?: unknown,
+): Promise<void> {
+  if (!dispatcher)
+    return
+  await dispatcher.close().catch((cleanupError) => {
+    if (primaryError !== undefined) {
+      if (primaryError && typeof primaryError === 'object')
+        Object.assign(primaryError, { cleanupError })
+      return
+    }
+    throw cleanupError
+  })
+}
+
 function parseIPv4(hostname: string): [number, number, number, number] | undefined {
   const parts = hostname.split('.')
   if (parts.length !== 4 || parts.some(part => !/^\d{1,3}$/.test(part)))

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { cacheDefinitions, hashMock, rawFetchMock } = vi.hoisted(() => ({
+const { cacheDefinitions, closeMock, hashMock, rawFetchMock } = vi.hoisted(() => ({
   cacheDefinitions: [] as Array<{ getKey?: (...args: any[]) => string }>,
+  closeMock: vi.fn(),
   hashMock: vi.fn((value: unknown) => `hashed:${JSON.stringify(value)}`),
   rawFetchMock: vi.fn(),
 }))
@@ -28,7 +29,7 @@ vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (im
     ...actual,
     createPublicNetworkDispatcher: async () => ({
       fetch: globalThis.fetch,
-      close: async () => {},
+      close: closeMock,
     }),
   }
 })
@@ -40,6 +41,7 @@ const { createCachedBinaryFetch, createCachedJsonFetch } = await import(
 beforeEach(() => {
   cacheDefinitions.length = 0
   hashMock.mockClear()
+  closeMock.mockReset().mockResolvedValue(undefined)
   rawFetchMock.mockReset()
 })
 
@@ -97,6 +99,35 @@ describe('upstream response bounds', () => {
     await expect(fetchBinary('https://cdn.example.com/image'))
       .rejects
       .toMatchObject({ statusCode: 502, statusMessage: 'Upstream response too large' })
+  })
+
+  it('rejects invalid binary content before it reaches the cache', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('<script>unsafe</script>'),
+      headers: new Headers({ 'content-type': 'text/html' }),
+      status: 200,
+    })
+    const fetchBinary = createCachedBinaryFetch('image-content-type', 60, {
+      allowUrl: url => url.hostname === 'cdn.example.com',
+      allowContentType: contentType => contentType.startsWith('image/') && contentType !== 'image/svg+xml',
+    })
+
+    await expect(fetchBinary('https://cdn.example.com/image'))
+      .rejects
+      .toMatchObject({ statusCode: 415, statusMessage: 'Unsupported upstream content type' })
+  })
+
+  it('preserves the upstream failure when dispatcher cleanup also fails', async () => {
+    const upstreamFailure = Object.assign(new Error('upstream failed'), { statusCode: 502 })
+    const cleanupFailure = new Error('dispatcher close failed')
+    rawFetchMock.mockRejectedValueOnce(upstreamFailure)
+    closeMock.mockRejectedValueOnce(cleanupFailure)
+    const fetchBinary = createCachedBinaryFetch('cleanup-error', 60, {
+      allowUrl: url => url.hostname === 'cdn.example.com',
+    })
+
+    await expect(fetchBinary('https://cdn.example.com/image')).rejects.toBe(upstreamFailure)
+    expect(upstreamFailure).toMatchObject({ cleanupError: cleanupFailure })
   })
 
   it('rejects cached JSON over its configured byte limit', async () => {

@@ -3,7 +3,7 @@ import { Buffer } from 'node:buffer'
 import { createFetch } from 'ofetch'
 import { hash } from 'ohash'
 import { defineCachedFunction } from '#nuxt-scripts/nitro'
-import { createPublicNetworkDispatcher, isPublicNetworkHostname } from './network-host'
+import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPublicNetworkHostname } from './network-host'
 
 /**
  * Server-side caches for upstream proxy fetches.
@@ -45,6 +45,8 @@ export interface CachedBinaryFetchOptions {
 export interface CachedBinaryFetchConfig {
   /** Validate the initial URL and every redirect before requesting it. */
   allowUrl?: (url: URL) => boolean
+  /** Reject invalid payload types before reading or caching the response body. */
+  allowContentType?: (contentType: string) => boolean
   maxRedirects?: number
   /** Maximum decoded response size stored in cache. Defaults to 10 MiB. */
   maxResponseBytes?: number
@@ -75,6 +77,7 @@ interface BoundedBodyOptions {
 type RedirectPolicy = Pick<CachedBinaryFetchConfig, 'allowUrl' | 'maxRedirects'>
 
 interface BoundedUpstreamFetchOptions extends RedirectPolicy {
+  allowContentType?: (contentType: string) => boolean
   contentTypePrefixes?: string[]
   headers?: Record<string, string>
   ignoreResponseError: boolean
@@ -238,9 +241,10 @@ async function fetchBoundedUpstream(
     throw new Error('Automatic redirects require an allowUrl redirect policy')
 
   const network = await createPublicNetworkDispatcher()
-  const safeFetch = createFetch({ fetch: network.fetch })
+  let primaryError: unknown
 
   try {
+    const safeFetch = createFetch({ fetch: network.fetch })
     for (let redirectCount = 0; ; redirectCount++) {
       const response = await safeFetch.raw(currentUrl.toString(), {
         responseType: 'stream',
@@ -274,9 +278,17 @@ async function fetchBoundedUpstream(
       }
 
       const contentType = response.headers.get('content-type')
-      if (options.contentTypePrefixes?.length) {
+      const isRedirect = response.status >= 300 && response.status < 400 && response.status !== 304
+      if (!isRedirect && (options.allowContentType || options.contentTypePrefixes?.length)) {
         const normalizedContentType = contentType?.split(';', 1)[0]?.trim().toLowerCase()
-        if (!normalizedContentType || !options.contentTypePrefixes.some(prefix => normalizedContentType.startsWith(prefix))) {
+        if (options.contentTypePrefixes?.length
+          && (!normalizedContentType || !options.contentTypePrefixes.some(prefix => normalizedContentType.startsWith(prefix)))) {
+          await rejectResponse(
+            response,
+            upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type'),
+          )
+        }
+        if (options.allowContentType && (!normalizedContentType || !options.allowContentType(normalizedContentType))) {
           await rejectResponse(
             response,
             upstreamError('Upstream response content type is not allowed', 415, 'Unsupported upstream content type'),
@@ -291,8 +303,12 @@ async function fetchBoundedUpstream(
       return { contentType, data, status: response.status }
     }
   }
+  catch (error) {
+    primaryError = error
+    throw error
+  }
   finally {
-    await network.close()
+    await closePublicNetworkDispatcher(network, primaryError)
   }
 }
 
@@ -309,6 +325,7 @@ export function createCachedBinaryFetch(
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
       const response = await fetchBoundedUpstream(url, {
+        allowContentType: config.allowContentType,
         allowUrl: config.allowUrl,
         headers: opts?.headers,
         ignoreResponseError: opts?.ignoreResponseError ?? false,

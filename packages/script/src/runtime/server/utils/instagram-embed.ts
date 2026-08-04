@@ -46,8 +46,10 @@ const BLOCKED_EMBED_TAGS = new Set([
 ])
 const EMBED_URL_ATTRS = new Set(['action', 'formaction', 'href', 'xlink:href'])
 const CSS_URL_RE = /url\(([^)]*)\)/gi
+const CSS_IMAGE_SET_RE = /(?:-webkit-)?image-set\((?:[^()]|\([^)]*\))*\)/gi
 const DANGEROUS_STYLE_RE = /expression\s*\(|@import|-moz-binding|behavior\s*:/i
 const SRCSET_SPLIT_RE = /\s+/
+const MAX_INSTAGRAM_STYLESHEETS = 4
 
 const CHARSET_RE = /@charset\s[^;]+;/gi
 const IMPORT_RE = /@import\s[^;]+;/gi
@@ -101,7 +103,13 @@ function isSafeNavigationUrl(value: string): boolean {
 
 function sanitizeCssUrls(css: string, proxyPrefix: string): string {
   const allowedPrefix = `${proxyPrefix}/embed/instagram-`
-  return css.replace(CSS_URL_RE, (match, rawValue: string) => {
+  const withoutUnsafeImageSets = css.replace(CSS_IMAGE_SET_RE, (match) => {
+    const values = [...match.matchAll(/(["'])(.*?)\1/g)].map(result => result[2] || '')
+    const safe = !/https?:|data:|blob:|file:|\/\//i.test(match.replaceAll(allowedPrefix, ''))
+      && values.every(value => value.startsWith(allowedPrefix) || /^image\//i.test(value))
+    return safe ? match : 'none'
+  })
+  return withoutUnsafeImageSets.replace(CSS_URL_RE, (match, rawValue: string) => {
     const trimmed = rawValue.trim()
     const first = trimmed[0]
     const value = (first === '"' || first === '\'') && trimmed.at(-1) === first
@@ -122,7 +130,7 @@ export function sanitizeInstagramEmbedHtml(
   secret?: string,
 ): { bodyHtml: string, cssUrls: string[] } {
   const ast = parse(html)
-  const cssUrls: string[] = []
+  const cssUrls = new Set<string>()
 
   walkSync(ast, (node) => {
     if (node.type !== ELEMENT_NODE)
@@ -132,8 +140,8 @@ export function sanitizeInstagramEmbedHtml(
     if (tag === 'link' && node.attributes.rel?.toLowerCase() === 'stylesheet' && node.attributes.href) {
       try {
         const cssUrl = new URL(node.attributes.href)
-        if (isSafeInstagramCssUrl(cssUrl))
-          cssUrls.push(cssUrl.toString())
+        if (isSafeInstagramCssUrl(cssUrl) && cssUrls.size < MAX_INSTAGRAM_STYLESHEETS)
+          cssUrls.add(cssUrl.toString())
       }
       catch {
         // Invalid stylesheet URLs are removed with the link node.
@@ -200,7 +208,7 @@ export function sanitizeInstagramEmbedHtml(
     bodyHtml: bodyNode
       ? bodyNode.children.map((child: any) => renderSync(child)).join('')
       : renderSync(ast),
-    cssUrls,
+    cssUrls: [...cssUrls],
   }
 }
 

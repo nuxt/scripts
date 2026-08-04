@@ -2,7 +2,7 @@ import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
 import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, sendStream, setResponseHeader, setResponseStatus } from '#nuxt-scripts/h3'
 import { useNitroApp, useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { matchDomain } from './utils/match-domain'
-import { createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
+import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
 import {
   anonymizeIP,
   mergePrivacy,
@@ -487,7 +487,7 @@ export default defineEventHandler(async (event) => {
   }
   catch (err) {
     clearTimeout(timeoutId)
-    await network?.close()
+    await closePublicNetworkDispatcher(network, err)
     log('[proxy] Upstream error:', err)
     const blockedPrivateNetwork = isPrivateNetworkResolutionError(err)
     throw createError({
@@ -505,13 +505,14 @@ export default defineEventHandler(async (event) => {
 
   if (response.status >= 300 && response.status < 400 && response.status !== 304) {
     clearTimeout(timeoutId)
-    await response.body?.cancel()
-    await network?.close()
-    throw createError({
+    const redirectError = createError({
       statusCode: 502,
       statusMessage: 'Unsafe upstream redirect',
       message: 'Proxy upstream returned a redirect that was not followed',
     })
+    await response.body?.cancel(redirectError).catch(cancelError => Object.assign(redirectError, { cleanupError: cancelError }))
+    await closePublicNetworkDispatcher(network, redirectError)
+    throw redirectError
   }
 
   // Headers named by Connection are hop-by-hop too, including non-standard names.
@@ -538,12 +539,22 @@ export default defineEventHandler(async (event) => {
   setResponseStatus(event, response.status, response.statusText)
 
   if (!response.body) {
-    await network?.close()
+    await closePublicNetworkDispatcher(network)
     return null
   }
 
   // Stream rather than buffering potentially large upstream responses. This lowers
   // memory pressure and lets the browser receive headers and chunks immediately.
   const guardedBody = withResponseBodyIdleTimeout(response.body, UPSTREAM_TIMEOUT_MS, () => controller.abort())
-  return sendStream(event, guardedBody).finally(() => network?.close())
+  let streamError: unknown
+  try {
+    return await sendStream(event, guardedBody)
+  }
+  catch (error) {
+    streamError = error
+    throw error
+  }
+  finally {
+    await closePublicNetworkDispatcher(network, streamError)
+  }
 })

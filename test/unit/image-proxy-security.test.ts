@@ -24,8 +24,10 @@ const { createImageProxyHandler } = await import('../../packages/script/src/runt
 describe('image proxy security', () => {
   let upstreamServer: Server
   let proxyServer: Server
+  let manualProxyServer: Server
   let upstreamPort: number
   let proxyPort: number
+  let manualProxyPort: number
   let disallowedServer: Server
   let disallowedPort: number
   let disallowedRequests = 0
@@ -56,6 +58,11 @@ describe('image proxy security', () => {
         res.end('<script>globalThis.compromised = true</script>')
         return
       }
+      if (req.url === '/missing') {
+        res.writeHead(404, { 'content-type': 'image/png' })
+        res.end('missing')
+        return
+      }
       res.writeHead(200, { 'content-type': 'image/png' })
       res.end('image')
     })
@@ -77,6 +84,15 @@ describe('image proxy security', () => {
     proxyServer = createServer(toNodeListener(app))
     await new Promise<void>(resolve => proxyServer.listen(0, '127.0.0.1', resolve))
     proxyPort = (proxyServer.address() as { port: number }).port
+
+    const manualApp = createApp()
+    manualApp.use(createImageProxyHandler({
+      allowedDomains: ['cdn.example.com'],
+      followRedirects: false,
+    }))
+    manualProxyServer = createServer(toNodeListener(manualApp))
+    await new Promise<void>(resolve => manualProxyServer.listen(0, '127.0.0.1', resolve))
+    manualProxyPort = (manualProxyServer.address() as { port: number }).port
   })
 
   afterAll(async () => {
@@ -84,6 +100,7 @@ describe('image proxy security', () => {
     await Promise.all([
       new Promise<void>(resolve => upstreamServer.close(() => resolve())),
       new Promise<void>(resolve => proxyServer.close(() => resolve())),
+      new Promise<void>(resolve => manualProxyServer.close(() => resolve())),
       new Promise<void>(resolve => disallowedServer.close(() => resolve())),
     ])
   })
@@ -119,5 +136,12 @@ describe('image proxy security', () => {
     const response = await fetch(proxyUrl('/html'))
 
     expect(response.status).toBe(415)
+  })
+
+  it('preserves upstream errors when redirects are disabled', async () => {
+    const target = 'http://cdn.example.com/missing'
+    const response = await fetch(`http://127.0.0.1:${manualProxyPort}/?url=${encodeURIComponent(target)}`)
+
+    expect(response.status).toBe(404)
   })
 })

@@ -9,6 +9,7 @@ import { withSigning } from './utils/withSigning'
 // immutable; a 7-day cache drastically reduces billable map loads for the
 // common "same map on every page visit" case.
 const cachedMapFetch = createCachedBinaryFetch('nuxt-scripts-static-map', 604800, {
+  allowContentType: contentType => contentType.startsWith('image/') && contentType !== 'image/svg+xml',
   allowUrl: url => isSafeHttpsUrl(url) && url.hostname === 'maps.googleapis.com',
 })
 

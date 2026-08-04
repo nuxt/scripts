@@ -36,6 +36,9 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
   const domainAllowed = (hostname: string) => typeof config.allowedDomains === 'function'
     ? config.allowedDomains(hostname)
     : config.allowedDomains.includes(hostname)
+  const normalizedContentTypePrefixes = contentTypePrefixes.map(prefix => prefix.toLowerCase())
+  const contentTypeAllowed = (contentType: string) => contentType !== 'image/svg+xml'
+    && normalizedContentTypePrefixes.some(prefix => contentType.startsWith(prefix))
   const urlAllowed = (url: URL) => (url.protocol === 'http:' || url.protocol === 'https:')
     && !url.username
     && !url.password
@@ -43,6 +46,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     && domainAllowed(url.hostname)
 
   const cachedFetch = createCachedBinaryFetch(cacheName, cacheMaxAge, {
+    allowContentType: contentTypeAllowed,
     allowUrl: urlAllowed,
   })
 
@@ -85,7 +89,6 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     const result = await cachedFetch(url, {
       timeout: 5000,
       redirect: followRedirects ? 'follow' : 'manual',
-      ignoreResponseError: !followRedirects,
       headers,
     }).catch((error: any) => {
       throw createError({
@@ -103,10 +106,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
 
     const responseContentType = result.contentType
     const upstreamContentType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase()
-    const contentTypeAllowed = upstreamContentType
-      && upstreamContentType !== 'image/svg+xml'
-      && contentTypePrefixes.some(prefix => upstreamContentType.startsWith(prefix))
-    if (!responseContentType || !contentTypeAllowed) {
+    if (!responseContentType || !upstreamContentType || !contentTypeAllowed(upstreamContentType)) {
       throw createError({
         statusCode: 415,
         statusMessage: 'Unsupported upstream content type',

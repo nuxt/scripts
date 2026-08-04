@@ -52,6 +52,32 @@ describe('instagram-embed: active content isolation', () => {
     expect(result).not.toContain('evil.example')
     expect(result).toContain('/_scripts/embed/instagram-asset?url=')
   })
+
+  it('removes image-set references that bypass url() filtering', () => {
+    const css = '.leak { background-image: image-set("https://evil.example/pixel" 1x) }'
+    const html = '<body><div style="background-image: image-set(\'https://evil.example/pixel\' 1x)">safe</div></body>'
+
+    expect(sanitizeInstagramEmbedCss(css, '.instagram-embed-root', '/_scripts')).not.toContain('evil.example')
+    expect(sanitizeInstagramEmbedHtml(html, '/_scripts').bodyHtml).not.toContain('evil.example')
+  })
+
+  it('deduplicates and bounds upstream stylesheet fetches', () => {
+    const links = [
+      'a.css',
+      'a.css',
+      'b.css',
+      'c.css',
+      'd.css',
+      'e.css',
+    ].map(path => `<link rel="stylesheet" href="https://static.cdninstagram.com/${path}">`).join('')
+
+    expect(sanitizeInstagramEmbedHtml(`<head>${links}</head>`, '/_scripts').cssUrls).toEqual([
+      'https://static.cdninstagram.com/a.css',
+      'https://static.cdninstagram.com/b.css',
+      'https://static.cdninstagram.com/c.css',
+      'https://static.cdninstagram.com/d.css',
+    ])
+  })
 })
 
 describe('instagram-embed: URL rewriting', () => {
