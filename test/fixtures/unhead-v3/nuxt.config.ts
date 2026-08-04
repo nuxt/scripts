@@ -1,6 +1,6 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
-// Regression fixture pinned to @unhead/vue@3.3.0 via the
+// Regression fixture pinned to @unhead/vue@3.3.1 via the
 // `unhead-v3-fixture>@unhead/vue` override in pnpm-workspace.yaml.
 // Module resolution picks v3 up through the fixture's own node_modules symlink.
 export default defineNuxtConfig({

@@ -29,9 +29,9 @@ minimumReleaseAgeExclude:
   - '@nuxt/schema@4.5.0'
   - '@nuxt/vite-builder@4.5.0'
   - nuxt@4.5.0
-  - '@unhead/bundler@3.3.0'
-  - '@unhead/vue@3.3.0'
-  - unhead@3.3.0
+  - '@unhead/bundler@3.3.1'
+  - '@unhead/vue@3.3.1'
+  - unhead@3.3.1
 shellEmulator: true
 
 trustPolicy: no-downgrade
@@ -45,7 +45,7 @@ packages:
 overrides:
   '@nuxt/scripts': 'workspace:*'
   # Force the latest supported Unhead only inside its regression fixture.
-  unhead-v3-fixture>@unhead/vue: 3.3.0
+  unhead-v3-fixture>@unhead/vue: 3.3.1
   vitest-environment-nuxt: 2.0.0
 catalog:
   '@antfu/eslint-config': ^9.2.0

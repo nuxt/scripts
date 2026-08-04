@@ -7,7 +7,7 @@ const runtimeConfig = vi.hoisted(() => ({
   },
 }))
 
-const useScriptMock = vi.hoisted(() => vi.fn((input, options) => ({ input, options })))
+const useScriptMock = vi.hoisted(() => vi.fn((input, options) => ({ input, options, proxy: {} })))
 const unheadFeatures = vi.hoisted(() => ({ sourceLessScriptLoader: false }))
 
 // Mock dependencies
@@ -74,7 +74,7 @@ describe('useRegistryScript scriptOptions', () => {
 
   it('delegates npm mode to an Unhead source-less loader when supported', async () => {
     unheadFeatures.sourceLessScriptLoader = true
-    const api = { track: vi.fn() }
+    const api = { track: vi.fn(() => 'tracked') }
     const clientInit = vi.fn(async () => api)
     const use = vi.fn(() => api)
     const result = useRegistryScript('posthog', () => ({
@@ -95,6 +95,7 @@ describe('useRegistryScript scriptOptions', () => {
 
     const signal = new AbortController().signal
     await expect(result.input.loader({ signal })).resolves.toBe(api)
+    expect(result.proxy.track()).toBe('tracked')
     expect(clientInit).toHaveBeenCalledWith({ signal })
     expect(use).toHaveBeenCalledOnce()
   })

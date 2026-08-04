@@ -57,12 +57,17 @@ type FixtureModule = {
 }
 
 const moduleResult = ref('pending')
+const moduleRuntime = ref('pending')
+const moduleInitCount = ref(0)
 const moduleApi: FixtureModule = {
   ping: () => 'passed',
 }
-const moduleScript = useRegistryScript<FixtureModule>('fixture-module', () => ({
+const useFixtureModule = () => useRegistryScript<FixtureModule>('fixture-module', () => ({
   scriptMode: 'npm',
-  clientInit: async () => moduleApi,
+  clientInit: async () => {
+    moduleInitCount.value++
+    return moduleApi
+  },
   scriptOptions: {
     trigger: 'manual',
     use: () => moduleApi,
@@ -70,6 +75,8 @@ const moduleScript = useRegistryScript<FixtureModule>('fixture-module', () => ({
 }), {
   scriptOptions: { trigger: 'manual' },
 })
+const moduleScript = useFixtureModule()
+const duplicateModuleScript = useFixtureModule()
 
 onMounted(() => {
   retainedProxy.increment()
@@ -81,9 +88,13 @@ onMounted(() => {
     .catch((error: unknown) => {
       proxyResult.value = error instanceof Error ? error.message : String(error)
     })
-  moduleScript.load()
+  moduleRuntime.value = typeof moduleScript.remove === 'function' ? 'native' : 'fallback'
+  Promise.all([moduleScript.load(), duplicateModuleScript.load()])
     .then(() => {
-      moduleResult.value = moduleScript.proxy.ping()
+      const result = moduleScript.proxy.ping()
+      moduleResult.value = result === 'passed' && moduleInitCount.value === 1
+        ? 'passed'
+        : `failed:${result}:${moduleInitCount.value}`
     })
     .catch((error: unknown) => {
       moduleResult.value = error instanceof Error ? error.message : String(error)
@@ -96,5 +107,7 @@ onMounted(() => {
     <div id="probe-status">{{ status }}</div>
     <div id="proxy-result">{{ proxyResult }}</div>
     <div id="module-result">{{ moduleResult }}</div>
+    <div id="module-runtime">{{ moduleRuntime }}</div>
+    <div id="module-init-count">{{ moduleInitCount }}</div>
   </div>
 </template>

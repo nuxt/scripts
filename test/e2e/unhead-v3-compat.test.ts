@@ -49,11 +49,13 @@ describe.skipIf(skip)('unhead v3 compat', () => {
     expect(await page.textContent('#proxy-result')).toBe('passed')
   }, 15_000)
 
-  it('loads source-less registry SDKs through the compatible lifecycle', async () => {
+  it('loads and dedupes source-less registry SDKs through Unhead', async () => {
     const page = await createPage('/')
     onTestFinished(() => page.close())
-    await page.waitForFunction(() => document.querySelector('#module-result')?.textContent === 'passed')
+    await page.waitForFunction(() => document.querySelector('#module-result')?.textContent !== 'pending')
 
     expect(await page.textContent('#module-result')).toBe('passed')
+    expect(await page.textContent('#module-runtime')).toBe('native')
+    expect(await page.textContent('#module-init-count')).toBe('1')
   }, 15_000)
 })
