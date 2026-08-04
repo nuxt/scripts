@@ -31,8 +31,8 @@ import {
   hasNuxtModule,
 } from '@nuxt/kit'
 import { defu } from 'defu'
-import { resolve as resolvePath_ } from 'pathe'
-import { readPackageJSON } from 'pkg-types'
+import { dirname, resolve as resolvePath_ } from 'pathe'
+import { readPackageJSON, resolvePackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
@@ -52,6 +52,7 @@ import {
 } from './runtime/server/utils/cache-config'
 import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
+import { hasUnheadSourceLessScriptLoader } from './unhead-features'
 import { validateScriptsEnvVars } from './validate-env'
 
 export type { FirstPartyPrivacy }
@@ -611,10 +612,27 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
-    // couldn't be found for some reason, assume compatibility
-    const { version: unheadVersion } = await readPackageJSON('@unhead/vue', {
+    // If Unhead cannot be resolved, retain the compatibility implementation.
+    const unheadPackagePath = await resolvePackageJSON('@unhead/vue', {
       from: nuxt.options.modulesDir,
-    }).catch(() => ({ version: null }))
+    }).catch(() => {
+      // @unhead/vue is optional; unresolved installs use the local compatibility path.
+      return null
+    })
+    const unheadPackage = unheadPackagePath
+      ? await readPackageJSON(unheadPackagePath).catch(() => {
+          // An unreadable optional peer cannot safely advertise loader support.
+          return null
+        })
+      : null
+    const unheadVersion = unheadPackage?.version
+    const scriptsTypesExport = (unheadPackage?.exports as any)?.['./scripts']?.types
+    const scriptsTypesPath = unheadPackagePath && typeof scriptsTypesExport === 'string'
+      ? resolvePath_(dirname(unheadPackagePath), scriptsTypesExport)
+      : null
+    const unheadSourceLessScriptLoader = !!scriptsTypesPath
+      && existsSync(scriptsTypesPath)
+      && hasUnheadSourceLessScriptLoader(readFileSync(scriptsTypesPath, 'utf8'))
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
@@ -696,13 +714,22 @@ export default defineNuxtModule<ModuleOptions>({
         : undefined,
     } as any
 
-    // Build-time constant: `__NUXT_SCRIPTS_DEBUG__` is replaced inline by the
-    // bundler, so debug branches DCE away in production when `debug: false`.
+    // Build-time constants are replaced inline so internal capability choices
+    // cannot be changed through public runtime config.
     const debugConst = JSON.stringify(!!config.debug)
+    const unheadSourceLessConst = JSON.stringify(unheadSourceLessScriptLoader)
     nuxt.options.vite ||= {}
-    nuxt.options.vite.define = { ...nuxt.options.vite.define, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.vite.define = {
+      ...nuxt.options.vite.define,
+      __NUXT_SCRIPTS_DEBUG__: debugConst,
+      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
+    }
     nuxt.options.nitro ||= {}
-    nuxt.options.nitro.replace = { ...nuxt.options.nitro.replace, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.nitro.replace = {
+      ...nuxt.options.nitro.replace,
+      __NUXT_SCRIPTS_DEBUG__: debugConst,
+      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
+    }
 
     // Register proxy handler unconditionally. The handler rejects unknown domains
     // at runtime, so it's safe to register even when no scripts use proxy.

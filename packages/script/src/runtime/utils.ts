@@ -18,6 +18,7 @@ import { parse } from 'valibot'
 import { useScript } from './composables/useScript'
 import { createNpmScriptStub } from './npm-script-stub'
 import { attachGcmConsent } from './registry/_gcm-consent'
+import { isUnheadSourceLessScriptLoaderEnabled } from './unhead-features'
 
 // Dev-only: stack trace parsing for component location detection (only referenced inside import.meta.dev)
 const URL_MATCH_RE = /https?:\/\/[^/]+\/_nuxt\/(.+\.vue)(?:\?[^)]*)?:(\d+):(\d+)/
@@ -43,8 +44,8 @@ type OptionsFn<O> = (options: InferIfSchema<O>, ctx: { scriptInput?: UseScriptIn
   scriptInput?: UseScriptInput
   scriptOptions?: NuxtUseScriptOptions
   schema?: O extends ObjectSchema<any, any> | UnionSchema<any, any> ? O : undefined
-  clientInit?: () => void | Promise<any>
-  scriptMode?: 'external' | 'npm' // NEW: external = CDN script (default), npm = NPM package only
+  clientInit?: (ctx?: { signal: AbortSignal }) => any | Promise<any>
+  scriptMode?: 'external' | 'npm'
   /**
    * Opt-in: this script consumes GCMv2 Consent Mode. `useRegistryScript` auto-attaches
    * a `consent: { default, update }` API + dev validation against the canonical schema.
@@ -82,8 +83,27 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
-  // NEW: Handle NPM-only scripts differently
+  // Delegate keyed client resources to Unhead when its loader API is present.
+  // Older versions retain the existing local stub and public API.
   if (options.scriptMode === 'npm') {
+    if (isUnheadSourceLessScriptLoaderEnabled()) {
+      const scriptOptions = { ...userOptions.scriptOptions, ...options.scriptOptions } as NuxtUseScriptOptions<T>
+      const resolveApi = scriptOptions.use
+      delete scriptOptions.use
+      if (typeof scriptOptions.trigger === 'undefined')
+        scriptOptions.trigger = 'client'
+
+      return useScript<T>({
+        key: String(registryKey),
+        async loader({ signal }: { signal: AbortSignal }) {
+          const initialized = await options.clientInit?.({ signal })
+          if (signal.aborted)
+            throw signal.reason || new Error(`Loading ${String(registryKey)} was aborted`)
+          return (resolveApi?.() || initialized || {}) as T
+        },
+      } as any, scriptOptions) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
+    }
+
     return createNpmScriptStub<T>({
       key: String(registryKey),
       use: resolveClientUse(options.scriptOptions?.use),

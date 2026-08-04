@@ -75,6 +75,7 @@ vi.mock('../../packages/script/src/runtime/logger', () => {
 
 describe('consent defaults — clientInit ordering', () => {
   beforeEach(() => {
+    posthogInitImpl = undefined
     delete (window as any).dataLayer
     delete (window as any)._paq
     delete (window as any).mixpanel
@@ -540,5 +541,18 @@ describe('per-script consent object', () => {
     result.consent.optOut()
     expect(optIn).toHaveBeenCalledOnce()
     expect(optOut).toHaveBeenCalledOnce()
+  })
+
+  it('posthog: does not initialize after its source-less loader is aborted', async () => {
+    const init = vi.fn(() => ({ capture: vi.fn() }))
+    posthogInitImpl = init
+    const { useScriptPostHog } = await import('../../packages/script/src/runtime/registry/posthog')
+    const result: any = useScriptPostHog({ apiKey: 'phc_xxx' })
+    const controller = new AbortController()
+    const reason = new Error('consumer removed')
+    controller.abort(reason)
+
+    await expect(result._opts.clientInit({ signal: controller.signal })).rejects.toBe(reason)
+    expect(init).not.toHaveBeenCalled()
   })
 })

@@ -48,4 +48,12 @@ describe.skipIf(skip)('unhead v3 compat', () => {
 
     expect(await page.textContent('#proxy-result')).toBe('passed')
   }, 15_000)
+
+  it('loads source-less registry SDKs through the compatible lifecycle', async () => {
+    const page = await createPage('/')
+    onTestFinished(() => page.close())
+    await page.waitForFunction(() => document.querySelector('#module-result')?.textContent === 'passed')
+
+    expect(await page.textContent('#module-result')).toBe('passed')
+  }, 15_000)
 })

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useRegistryScript } from '#nuxt-scripts/utils'
+
 // Direct exercise of the codepaths that broke under @unhead/vue v3's stricter
 // types. Avoids registry components that surface unrelated pre-existing typing
 // issues; we want this fixture to be a clean v3 regression gate.
@@ -50,6 +52,25 @@ const { load, proxy } = useScript<FixtureApi>('/fixture-api.js', {
 })
 const retainedProxy = proxy
 
+type FixtureModule = {
+  ping: () => string
+}
+
+const moduleResult = ref('pending')
+const moduleApi: FixtureModule = {
+  ping: () => 'passed',
+}
+const moduleScript = useRegistryScript<FixtureModule>('fixture-module', () => ({
+  scriptMode: 'npm',
+  clientInit: async () => moduleApi,
+  scriptOptions: {
+    trigger: 'manual',
+    use: () => moduleApi,
+  },
+}), {
+  scriptOptions: { trigger: 'manual' },
+})
+
 onMounted(() => {
   retainedProxy.increment()
   load()
@@ -60,6 +81,13 @@ onMounted(() => {
     .catch((error: unknown) => {
       proxyResult.value = error instanceof Error ? error.message : String(error)
     })
+  moduleScript.load()
+    .then(() => {
+      moduleResult.value = moduleScript.proxy.ping()
+    })
+    .catch((error: unknown) => {
+      moduleResult.value = error instanceof Error ? error.message : String(error)
+    })
 })
 </script>
 
@@ -67,5 +95,6 @@ onMounted(() => {
   <div>
     <div id="probe-status">{{ status }}</div>
     <div id="proxy-result">{{ proxyResult }}</div>
+    <div id="module-result">{{ moduleResult }}</div>
   </div>
 </template>

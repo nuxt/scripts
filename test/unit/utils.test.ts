@@ -1,14 +1,32 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useRegistryScript } from '../../packages/script/src/runtime/utils'
+
+const runtimeConfig = vi.hoisted(() => ({
+  public: {
+    scripts: {},
+  },
+}))
+
+const useScriptMock = vi.hoisted(() => vi.fn((input, options) => ({ input, options })))
+const unheadFeatures = vi.hoisted(() => ({ sourceLessScriptLoader: false }))
 
 // Mock dependencies
 vi.mock('nuxt/app', () => ({
-  useRuntimeConfig: () => ({ public: { scripts: {} } }),
+  useRuntimeConfig: () => runtimeConfig,
 }))
 
 vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
-  useScript: vi.fn((input, options) => ({ input, options })),
+  useScript: useScriptMock,
 }))
+
+vi.mock('../../packages/script/src/runtime/unhead-features', () => ({
+  isUnheadSourceLessScriptLoaderEnabled: () => unheadFeatures.sourceLessScriptLoader,
+}))
+
+afterEach(() => {
+  unheadFeatures.sourceLessScriptLoader = false
+  useScriptMock.mockClear()
+})
 
 describe('useRegistryScript scriptOptions', () => {
   it('should not mutate user-provided scriptOptions', () => {
@@ -52,6 +70,33 @@ describe('useRegistryScript scriptOptions', () => {
 
     expect(result.proxy).toEqual({})
     expect(unsafeUse).not.toHaveBeenCalled()
+  })
+
+  it('delegates npm mode to an Unhead source-less loader when supported', async () => {
+    unheadFeatures.sourceLessScriptLoader = true
+    const api = { track: vi.fn() }
+    const clientInit = vi.fn(async () => api)
+    const use = vi.fn(() => api)
+    const result = useRegistryScript('posthog', () => ({
+      scriptMode: 'npm' as const,
+      scriptOptions: { use },
+      clientInit,
+    }), {
+      scriptOptions: { trigger: 'manual' },
+    }) as any
+
+    expect(result.input).toMatchObject({
+      key: 'posthog',
+      loader: expect.any(Function),
+    })
+    expect(result.input).not.toHaveProperty('src')
+    expect(result.options).toMatchObject({ trigger: 'manual' })
+    expect(result.options).not.toHaveProperty('use')
+
+    const signal = new AbortController().signal
+    await expect(result.input.loader({ signal })).resolves.toBe(api)
+    expect(clientInit).toHaveBeenCalledWith({ signal })
+    expect(use).toHaveBeenCalledOnce()
   })
 })
 
