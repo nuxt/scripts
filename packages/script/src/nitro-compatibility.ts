@@ -79,9 +79,13 @@ export function useRuntimeConfig(_event) { return _useRuntimeConfig() }
 function applyNitroRuntimeCompatibility(nuxt: Nuxt, compatibility: NitroRuntimeCompatibility): void {
   const nuxtOptions = nuxt.options as Nuxt['options'] & { nitro?: NitroCompatibilityOptions }
   const nitroOptions = nuxtOptions.nitro ||= {}
+  const h3Runtime = compatibility._tag === 'nitro-v3' ? compatibility.h3 : 'h3'
   nitroOptions.alias ||= {}
   nitroOptions.virtual ||= {}
-  nitroOptions.alias[H3_RUNTIME_MODULE] = compatibility._tag === 'nitro-v3' ? compatibility.h3 : 'h3'
+  const nuxtAliases = nuxtOptions.alias ||= {}
+  delete nuxtAliases[H3_RUNTIME_MODULE]
+  nuxtOptions.alias = { [H3_RUNTIME_MODULE]: h3Runtime, ...nuxtAliases }
+  nitroOptions.alias[H3_RUNTIME_MODULE] = h3Runtime
   nitroOptions.virtual[NITRO_RUNTIME_MODULE] = compatibility._tag === 'nitro-v3'
     ? renderNitroV3Runtime(compatibility)
     : nitroV2Runtime
