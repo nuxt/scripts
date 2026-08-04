@@ -4,7 +4,6 @@ import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { markRaw, ref, watch } from 'vue'
-// @ts-expect-error virtual template
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
@@ -537,4 +536,3 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   }
   return instance as any as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 }
-

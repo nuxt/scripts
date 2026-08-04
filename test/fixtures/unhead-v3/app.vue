@@ -31,10 +31,41 @@ useScript(
   { src: 'https://example.com/partytown.js', key: 'partytown-probe' },
   { partytown: true, trigger: 'manual' },
 )
+
+type FixtureApi = {
+  count: number
+  increment: () => void
+}
+
+declare global {
+  interface Window {
+    fixtureApi?: FixtureApi
+  }
+}
+
+const proxyResult = ref('pending')
+const { load, proxy } = useScript<FixtureApi>('/fixture-api.js', {
+  trigger: 'manual',
+  use: () => window.fixtureApi as FixtureApi,
+})
+const retainedProxy = proxy
+
+onMounted(() => {
+  retainedProxy.increment()
+  load()
+    .then(() => {
+      retainedProxy.increment()
+      proxyResult.value = window.fixtureApi?.count === 2 ? 'passed' : `failed:${window.fixtureApi?.count}`
+    })
+    .catch((error: unknown) => {
+      proxyResult.value = error instanceof Error ? error.message : String(error)
+    })
+})
 </script>
 
 <template>
   <div>
     <div id="probe-status">{{ status }}</div>
+    <div id="proxy-result">{{ proxyResult }}</div>
   </div>
 </template>

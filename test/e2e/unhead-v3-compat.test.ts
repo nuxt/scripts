@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createResolver } from '@nuxt/kit'
-import { $fetch, setup } from '@nuxt/test-utils/e2e'
-import { describe, expect, it } from 'vitest'
+import { $fetch, createPage, setup } from '@nuxt/test-utils/e2e'
+import { describe, expect, it, onTestFinished } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -26,7 +26,7 @@ if (!skip) {
   await setup({
     rootDir: resolve('../fixtures/unhead-v3'),
     dev: true,
-    browser: false,
+    browser: true,
   })
 }
 
@@ -40,4 +40,12 @@ describe.skipIf(skip)('unhead v3 compat', () => {
     // error from PR #795). If a regression silently drops the tag, this fails.
     expect(html).toMatch(/<link[^>]+rel="(preconnect|dns-prefetch)"[^>]+example\.com/)
   })
+
+  it('keeps a retained script proxy live across load', async () => {
+    const page = await createPage('/')
+    onTestFinished(() => page.close())
+    await page.waitForFunction(() => document.querySelector('#proxy-result')?.textContent === 'passed')
+
+    expect(await page.textContent('#proxy-result')).toBe('passed')
+  }, 15_000)
 })
