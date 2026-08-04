@@ -1,8 +1,9 @@
+import type { Page } from 'playwright-core'
 import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
 import { getBrowser, setup, url, waitForHydration } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -12,10 +13,17 @@ await setup({
   browser: true,
 })
 
+const pages: Page[] = []
+
+afterEach(async () => {
+  await Promise.all(pages.splice(0).map(page => page.close()))
+})
+
 async function createPage(path: string, options?: any) {
   const logs: { text: string, location: string }[] = []
   const browser = await getBrowser()
   const page = await browser.newPage(options)
+  pages.push(page)
   page.addListener('console', (msg) => {
     const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
     if (!location.startsWith('/_nuxt')) {
@@ -367,7 +375,7 @@ describe('third-party-capital', () => {
   })
 
   it('expect reCAPTCHA to execute and verify token', {
-    timeout: 15000,
+    timeout: 45000,
   }, async () => {
     const { page } = await createPage('/tpc/recaptcha')
     await page.waitForTimeout(500)
@@ -379,7 +387,7 @@ describe('third-party-capital', () => {
     await page.click('#execute')
 
     // wait for token + verification result
-    await page.waitForSelector('#verified', { timeout: 10000 })
+    await page.waitForSelector('#verified', { timeout: 30000 })
     const token = await page.$eval('#token', el => el.textContent?.trim())
     const verified = await page.$eval('#verified', el => el.textContent?.trim())
 
