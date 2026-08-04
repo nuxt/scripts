@@ -35,7 +35,7 @@ export const sizes = {
       <UIcon name="i-heroicons-question-mark-circle" class="size-3 text-(--color-text-subtle) hover:text-(--color-text-muted) transition-colors" />
       <template #content>
         <div class="devtools-tooltip-panel">
-          <div :class="`w-max ${sizes[size || 'md']}`">
+          <div class="w-max" :class="sizes[size || 'md']">
             <template v-if="title">
               <div class="font-semibold">{{ title }}</div>
               <div v-if="description" class="text-(--color-text-muted) text-xs">{{ description }}</div>
@@ -56,7 +56,7 @@ export const sizes = {
     <UIcon v-else name="i-heroicons-question-mark-circle" color="primary" :size="iconSize || 'md'" />
     <template #content>
       <div class="devtools-tooltip-panel">
-        <div :class="`w-max ${sizes[size || 'md']}`">
+        <div class="w-max" :class="sizes[size || 'md']">
           <slot v-if="$slots.text" name="text" />
           <template v-else-if="title">
             <div class="font-semibold">

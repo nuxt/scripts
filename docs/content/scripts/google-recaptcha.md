@@ -201,7 +201,10 @@ function onSubmit() {
           email: email.value,
           message: message.value
         }
-      }).catch(() => null)
+      }).catch((error) => {
+        console.error('Failed to submit contact form', error)
+        return null
+      })
 
       status.value = result ? 'success' : 'error'
     })

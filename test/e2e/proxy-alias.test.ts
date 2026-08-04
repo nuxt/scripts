@@ -38,10 +38,7 @@ describe('proxy path aliases', () => {
       method: 'POST',
       body: '{}',
       headers: { 'content-type': 'application/json' },
-    }).catch(() => null)
-    // A null here means a transport-level error reaching our own server, which is a
-    // genuine test failure; a resolved alias always yields an HTTP response.
-    expect(res).not.toBeNull()
-    expect(res!.status).not.toBe(403)
+    })
+    expect(res.status).not.toBe(403)
   }, 30000)
 })

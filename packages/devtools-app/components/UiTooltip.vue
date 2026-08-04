@@ -37,7 +37,7 @@ export const sizes = {
       <UIcon name="i-carbon-help" class="size-3 text-(--color-text-subtle) hover:text-(--color-text-muted) transition-colors" />
       <template #content>
         <div class="ui-tooltip-panel">
-          <div :class="`w-max ${sizes[size || 'md']}`">
+          <div class="w-max" :class="sizes[size || 'md']">
             <template v-if="title">
               <div class="font-semibold">
                 {{ title }}
@@ -66,7 +66,7 @@ export const sizes = {
     <UIcon v-else name="i-carbon-help" color="primary" :size="iconSize || 'md'" />
     <template #content>
       <div class="ui-tooltip-panel">
-        <div :class="`w-max ${sizes[size || 'md']}`">
+        <div class="w-max" :class="sizes[size || 'md']">
           <slot v-if="$slots.text" name="text" />
           <template v-else-if="title">
             <div class="font-semibold">
