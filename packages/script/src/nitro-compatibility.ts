@@ -21,9 +21,19 @@ interface NitroCompatibilityOptions {
   virtual?: Record<string, string>
 }
 
+interface NitroCompatibilityDependencies {
+  addTypeTemplate: typeof addTypeTemplate
+  getNuxtVersion: typeof getNuxtVersion
+  resolveNitroImport?: ResolveNitroImport
+}
+
 const NITRO_RUNTIME_MODULE = '#nuxt-scripts/nitro'
 const H3_RUNTIME_MODULE = '#nuxt-scripts/h3'
 const TYPE_TEMPLATE_FILENAME = 'types/nuxt-scripts-nitro.d.ts'
+const defaultDependencies: NitroCompatibilityDependencies = {
+  addTypeTemplate,
+  getNuxtVersion,
+}
 
 const nitroV2Runtime = `export {
   defineCachedFunction,
@@ -102,15 +112,15 @@ async function resolveNitroV3Compatibility(resolveNitroImport: ResolveNitroImpor
 
 export async function setupNitroRuntimeCompatibility(
   nuxt: Nuxt,
-  resolveNitroImport?: ResolveNitroImport,
+  dependencies: NitroCompatibilityDependencies = defaultDependencies,
 ): Promise<void> {
-  const compatibility: NitroRuntimeCompatibility = Number.parseInt(getNuxtVersion(nuxt), 10) >= 5
-    ? await resolveNitroV3Compatibility(resolveNitroImport || await createNuxtNitroImportResolver())
+  const compatibility: NitroRuntimeCompatibility = Number.parseInt(dependencies.getNuxtVersion(nuxt), 10) >= 5
+    ? await resolveNitroV3Compatibility(dependencies.resolveNitroImport || await createNuxtNitroImportResolver())
     : { _tag: 'nitro-v2' }
 
   applyNitroRuntimeCompatibility(nuxt, compatibility)
   nuxt.hooks.hookOnce('modules:done', () => applyNitroRuntimeCompatibility(nuxt, compatibility))
-  addTypeTemplate({
+  dependencies.addTypeTemplate({
     filename: TYPE_TEMPLATE_FILENAME,
     getContents: async () => renderRuntimeDeclarations(compatibility),
   }, { nitro: true, node: true, nuxt: true })

@@ -2,16 +2,9 @@ import type { Nuxt } from '@nuxt/schema'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { setupNitroRuntimeCompatibility } from '../../packages/script/src/nitro-compatibility'
 
-const { addTypeTemplateMock, getNuxtVersionMock, hookOnceMock } = vi.hoisted(() => ({
+const { addTypeTemplateMock, hookOnceMock } = vi.hoisted(() => ({
   addTypeTemplateMock: vi.fn(),
-  getNuxtVersionMock: vi.fn(),
   hookOnceMock: vi.fn(),
-}))
-
-vi.mock('@nuxt/kit', async importOriginal => ({
-  ...await importOriginal<typeof import('@nuxt/kit')>(),
-  addTypeTemplate: addTypeTemplateMock,
-  getNuxtVersion: getNuxtVersionMock,
 }))
 
 function createNuxt(): Nuxt {
@@ -25,18 +18,24 @@ function createNuxt(): Nuxt {
   } as Nuxt
 }
 
+function createDependencies(version: string, resolveNitroImport?: (id: string) => Promise<string>) {
+  return {
+    addTypeTemplate: addTypeTemplateMock,
+    getNuxtVersion: () => version,
+    resolveNitroImport,
+  }
+}
+
 describe('setupNitroRuntimeCompatibility', () => {
   beforeEach(() => {
     addTypeTemplateMock.mockReset()
-    getNuxtVersionMock.mockReset()
     hookOnceMock.mockReset()
   })
 
   it('registers explicit Nitro 2 runtime modules', async () => {
-    getNuxtVersionMock.mockReturnValue('4.5.0')
     const nuxt = createNuxt()
 
-    await setupNitroRuntimeCompatibility(nuxt)
+    await setupNitroRuntimeCompatibility(nuxt, createDependencies('4.5.0'))
 
     expect(nuxt.options.nitro.alias?.['#nuxt-scripts/h3']).toBe('h3')
     expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('from \'nitropack/runtime\'')
@@ -48,11 +47,10 @@ describe('setupNitroRuntimeCompatibility', () => {
   })
 
   it('normalizes resolved Nitro 3 runtime modules without package dependencies', async () => {
-    getNuxtVersionMock.mockReturnValue('5.0.0')
     const nuxt = createNuxt()
     const resolveNitroImport = vi.fn(async (id: string) => `file:///nuxt-nitro/${id.replace('/', '-')}.mjs`)
 
-    await setupNitroRuntimeCompatibility(nuxt, resolveNitroImport)
+    await setupNitroRuntimeCompatibility(nuxt, createDependencies('5.0.0', resolveNitroImport))
 
     expect(resolveNitroImport).toHaveBeenCalledTimes(4)
     expect(nuxt.options.nitro.alias?.['#nuxt-scripts/h3']).toBe('file:///nuxt-nitro/nitro-h3.mjs')
@@ -67,11 +65,10 @@ describe('setupNitroRuntimeCompatibility', () => {
   })
 
   it('reasserts compatibility after other modules finish setup', async () => {
-    getNuxtVersionMock.mockReturnValue('5.0.0')
     const nuxt = createNuxt()
     const resolveNitroImport = async (id: string) => `file:///nuxt-nitro/${id.replace('/', '-')}.mjs`
 
-    await setupNitroRuntimeCompatibility(nuxt, resolveNitroImport)
+    await setupNitroRuntimeCompatibility(nuxt, createDependencies('5.0.0', resolveNitroImport))
     nuxt.options.nitro.virtual!['#nuxt-scripts/nitro'] = 'stale'
     hookOnceMock.mock.calls[0]![1]()
 
