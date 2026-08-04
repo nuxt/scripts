@@ -95,8 +95,9 @@ describe('rewriteBlueskyPostImages', () => {
       author: { avatar: 'https://cdn.bsky.app/img/avatar.jpg' },
     }
     rewriteBlueskyPostImages(post, BSKY_PATH)
-    expect(post.author.avatar).toContain(encodeURIComponent('https://cdn.bsky.app/img/avatar.jpg'))
-    expect(post.author.avatar).toContain(BSKY_PATH)
+    expect(post.author.avatar).toBe(
+      `${BSKY_PATH}?url=${encodeURIComponent('https://cdn.bsky.app/img/avatar.jpg')}`,
+    )
   })
 
   it('rewrites thumb + fullsize on embedded images', () => {
