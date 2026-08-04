@@ -68,7 +68,13 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput):
       },
       clientInit: import.meta.server
         ? undefined
-        : async () => {
+        : async (ctx) => {
+          const throwIfAborted = () => {
+            if (ctx?.signal.aborted)
+              throw ctx.signal.reason || new Error('Loading PostHog was aborted')
+          }
+          throwIfAborted()
+
           // Use window for state to handle HMR correctly
           if (window.__posthogInitPromise || window.posthog)
             return
@@ -88,6 +94,7 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput):
 
           window.__posthogInitPromise = import('posthog-js')
             .then(({ default: posthog }) => {
+              throwIfAborted()
               const config: Partial<PostHogConfig> = {
                 api_host: apiHost,
                 ...options?.config as Partial<PostHogConfig>,
@@ -124,9 +131,11 @@ export function useScriptPostHog<T extends PostHogApi>(_options?: PostHogInput):
               return window.posthog
             })
             .catch((e) => {
-              logger.error('Failed to load posthog-js:', e)
+              if (!ctx?.signal.aborted)
+                logger.error('Failed to load posthog-js:', e)
               delete window._posthogQueue
-              return undefined
+              delete window.__posthogInitPromise
+              throw e
             })
 
           // Return the promise so NPM stub knows when initialization completes

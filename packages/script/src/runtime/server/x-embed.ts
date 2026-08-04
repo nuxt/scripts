@@ -1,6 +1,6 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
-import { createCachedJsonFetch } from './utils/cached-upstream'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { useRuntimeConfig } from '#nuxt-scripts/nitro'
+import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteTweetImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'
 
@@ -62,6 +62,10 @@ const cachedTweetFetch = createCachedJsonFetch<TweetData>(
     const match = url.match(TWEET_ID_FROM_URL_RE)
     return match?.[1] || url
   },
+  {
+    allowUrl: url => isSafeHttpsUrl(url) && url.hostname === 'cdn.syndication.twimg.com',
+    contentTypePrefixes: ['application/json'],
+  },
 )
 
 export default withSigning(defineEventHandler(async (event) => {
@@ -104,7 +108,7 @@ export default withSigning(defineEventHandler(async (event) => {
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_X_SUFFIX_RE, '') || '/_scripts'
   const imagePath = `${prefix}/embed/x-image`
-  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
+  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
   rewriteTweetImages(tweetData, imagePath, secret)
 
   // Cache for 10 minutes

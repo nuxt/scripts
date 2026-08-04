@@ -85,10 +85,6 @@ onBeforeUnmount(() => {
     scriptEl.remove()
     scriptEl = undefined
   }
-  if (carbonadsEl.value) {
-    carbonadsEl.value.remove()
-    carbonadsEl.value = null
-  }
 })
 </script>
 

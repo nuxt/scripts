@@ -16,6 +16,8 @@ import type {
 } from './runtime/types'
 import { randomBytes } from 'node:crypto'
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { open as openFile, stat, unlink } from 'node:fs/promises'
+import { setTimeout as delay } from 'node:timers/promises'
 import {
   addBuildPlugin,
   addComponentsDir,
@@ -36,18 +38,15 @@ import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
+import { setupNitroRuntimeCompatibility } from './nitro-compatibility'
 import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
-import {
-  NUXT_SCRIPTS_CACHE_BASE,
-  NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
-  NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
-  NUXT_SCRIPTS_CACHE_MAX_SIZE,
-} from './runtime/server/utils/cache-config'
+import { ensureNuxtScriptsCacheStorage } from './runtime/server/utils/cache-config'
+import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
 
@@ -61,7 +60,7 @@ export type { FirstPartyPrivacy }
 // Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
 // e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
 const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
-const UNHEAD_VERSION_RANGE = '>=3.2.0 <4'
+const UNHEAD_VERSION_RANGE = '>=3.3.1 <4'
 
 /**
  * Expand self-closing `<Script*>` component tags in page files to work around
@@ -128,8 +127,74 @@ const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
 
 const PROXY_SECRET_ENV_KEY = 'NUXT_SCRIPTS_PROXY_SECRET'
-const PROXY_SECRET_ENV_LINE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=/m
+const PROXY_SECRET_ENV_LINE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=.*$/m
 const PROXY_SECRET_ENV_VALUE_RE = /^NUXT_SCRIPTS_PROXY_SECRET=(.+)$/m
+const PROXY_SECRET_LOCK_RETRY_MS = 10
+const PROXY_SECRET_LOCK_TIMEOUT_MS = 2000
+
+async function withProxySecretFileLock<T>(envPath: string, effect: () => T): Promise<T> {
+  const lockPath = `${envPath}.nuxt-scripts.lock`
+  const deadline = Date.now() + PROXY_SECRET_LOCK_TIMEOUT_MS
+  let lockHandle: Awaited<ReturnType<typeof openFile>> | undefined
+
+  while (!lockHandle) {
+    const acquisition = await openFile(lockPath, 'wx')
+      .then(handle => ({ _tag: 'Acquired' as const, handle }))
+      .catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'EEXIST')
+          return { _tag: 'Busy' as const }
+        throw error
+      })
+
+    if (acquisition._tag === 'Acquired') {
+      lockHandle = acquisition.handle
+      break
+    }
+
+    const existingLock = await stat(lockPath)
+      .then(lockStat => ({ _tag: 'Found' as const, mtimeMs: lockStat.mtimeMs }))
+      .catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT')
+          return { _tag: 'Missing' as const }
+        throw error
+      })
+    if (existingLock._tag === 'Found' && Date.now() - existingLock.mtimeMs >= PROXY_SECRET_LOCK_TIMEOUT_MS) {
+      await unlink(lockPath).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== 'ENOENT')
+          throw error
+      })
+      continue
+    }
+    if (Date.now() >= deadline)
+      throw Object.assign(new Error('Timed out waiting for proxy secret file lock'), { code: 'ETIMEDOUT' })
+    await delay(PROXY_SECRET_LOCK_RETRY_MS)
+  }
+
+  let effectResult: { _tag: 'Success', value: T } | { _tag: 'Failure', error: unknown }
+  try {
+    effectResult = { _tag: 'Success', value: effect() }
+  }
+  catch (error) {
+    effectResult = { _tag: 'Failure', error }
+  }
+
+  const closeResult = await lockHandle.close()
+    .then(() => ({ _tag: 'Success' as const }))
+    .catch((error: Error) => ({ _tag: 'Failure' as const, error }))
+  const unlinkResult = await unlink(lockPath)
+    .then(() => ({ _tag: 'Success' as const }))
+    .catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT'
+      ? { _tag: 'Success' as const }
+      : { _tag: 'Failure' as const, error })
+
+  if (closeResult._tag === 'Failure')
+    logger.warn(`[security] Failed to close the proxy secret lock: ${closeResult.error.message}`)
+  if (unlinkResult._tag === 'Failure')
+    logger.warn(`[security] Failed to remove the proxy secret lock: ${unlinkResult.error.message}`)
+  if (effectResult._tag === 'Failure')
+    throw effectResult.error
+  return effectResult.value
+}
 
 export interface ResolvedProxySecret {
   secret: string
@@ -148,12 +213,12 @@ export interface ResolvedProxySecret {
  * 3. Dev-only auto-generation: write to `.env` (or keep in memory as last resort)
  * 4. Empty string (prod without secret; caller decides whether this is fatal)
  */
-export function resolveProxySecret(
+export async function resolveProxySecret(
   rootDir: string,
   isDev: boolean,
   configSecret?: string,
   autoGenerate: boolean = true,
-): ResolvedProxySecret | undefined {
+): Promise<ResolvedProxySecret | undefined> {
   if (configSecret)
     return { secret: configSecret, ephemeral: false, source: 'config' }
 
@@ -172,25 +237,30 @@ export function resolveProxySecret(
   const line = `${PROXY_SECRET_ENV_KEY}=${secret}\n`
 
   try {
-    if (existsSync(envPath)) {
-      const contents = readFileSync(envPath, 'utf-8')
-      // Safety: don't append if another process already wrote one between the read above
-      // and this branch. The regex check is cheap and idempotent.
-      if (PROXY_SECRET_ENV_LINE_RE.test(contents)) {
-        // Another instance already wrote it. Re-read and return that value.
-        const match = contents.match(PROXY_SECRET_ENV_VALUE_RE)
-        if (match?.[1])
-          return { secret: match[1].trim(), ephemeral: false, source: 'dotenv-generated' }
+    const persistedSecret = await withProxySecretFileLock(envPath, () => {
+      if (existsSync(envPath)) {
+        const contents = readFileSync(envPath, 'utf-8')
+        const existingSecret = contents.match(PROXY_SECRET_ENV_VALUE_RE)?.[1]?.trim()
+        if (existingSecret)
+          return existingSecret
+        if (PROXY_SECRET_ENV_LINE_RE.test(contents)) {
+          // An empty declaration suppresses dotenv fallback on future starts.
+          // Replace it in place so the generated secret remains stable.
+          writeFileSync(envPath, contents.replace(PROXY_SECRET_ENV_LINE_RE, `${PROXY_SECRET_ENV_KEY}=${secret}`))
+        }
+        else {
+          appendFileSync(envPath, contents.endsWith('\n') ? line : `\n${line}`)
+        }
       }
-      appendFileSync(envPath, contents.endsWith('\n') ? line : `\n${line}`)
-    }
-    else {
-      writeFileSync(envPath, `# Generated by @nuxt/scripts\n${line}`)
-    }
+      else {
+        writeFileSync(envPath, `# Generated by @nuxt/scripts\n${line}`)
+      }
+      return secret
+    })
     // Also populate process.env so that anything reading it later in the same
     // dev process (e.g. child workers) sees the value without a restart.
-    process.env[PROXY_SECRET_ENV_KEY] = secret
-    return { secret, ephemeral: false, source: 'dotenv-generated' }
+    process.env[PROXY_SECRET_ENV_KEY] = persistedSecret
+    return { secret: persistedSecret, ephemeral: false, source: 'dotenv-generated' }
   }
   catch {
     // Writing .env failed (read-only FS, permission denied). Fall back to
@@ -258,7 +328,10 @@ function resolveConfiguredProxyDomain(value: unknown): string | undefined {
     return
 
   try {
-    return new URL(trimmed, 'https://nuxt-scripts.local').hostname || undefined
+    const url = new URL(trimmed, 'https://nuxt-scripts.local')
+    if (url.protocol !== 'http:' && url.protocol !== 'https:')
+      return
+    return isPublicNetworkHostname(url.hostname) ? url.hostname : undefined
   }
   catch {
     // Invalid user-provided proxy domains cannot be normalized.
@@ -491,7 +564,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '>=4.5.0',
+      nuxt: '>=4.5.1',
     },
   },
   defaults: {
@@ -522,6 +595,7 @@ export default defineNuxtModule<ModuleOptions>({
       logger.debug('The module is disabled, skipping setup.')
       return
     }
+    await setupNitroRuntimeCompatibility(nuxt)
     if (nuxt.options.dev) {
       setupDevtools(nuxt, { standalone: config._standaloneDevtools })
       if (config._standaloneDevtools) {
@@ -535,8 +609,14 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
     const [unheadVuePackage, unheadCorePackage] = await Promise.all([
-      readPackageJSON('@unhead/vue', { from: nuxt.options.modulesDir }).catch(() => null),
-      readPackageJSON('unhead', { from: nuxt.options.modulesDir }).catch(() => null),
+      readPackageJSON('@unhead/vue', { from: nuxt.options.modulesDir }).catch(() => {
+        // Missing peers are reported together below with the resolved versions.
+        return null
+      }),
+      readPackageJSON('unhead', { from: nuxt.options.modulesDir }).catch(() => {
+        // Missing peers are reported together below with the resolved versions.
+        return null
+      }),
     ])
     const incompatibleUnheadPackages = [
       ['@unhead/vue', unheadVuePackage?.version],
@@ -550,6 +630,7 @@ export default defineNuxtModule<ModuleOptions>({
         `[nuxt-scripts] Nuxt Scripts 2 requires @unhead/vue and unhead ${UNHEAD_VERSION_RANGE}; resolved ${resolvedVersions}. Run \`npx nuxi@latest upgrade --force\` to upgrade Nuxt and refresh its dependencies.`,
       )
     }
+    const unheadSourceLessScriptLoader = true
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
     // Normalize registry entries to [input, scriptOptions?] tuple form
@@ -628,13 +709,22 @@ export default defineNuxtModule<ModuleOptions>({
         : undefined,
     } as any
 
-    // Build-time constant: `__NUXT_SCRIPTS_DEBUG__` is replaced inline by the
-    // bundler, so debug branches DCE away in production when `debug: false`.
+    // Build-time constants are replaced inline so internal capability choices
+    // cannot be changed through public runtime config.
     const debugConst = JSON.stringify(!!config.debug)
+    const unheadSourceLessConst = JSON.stringify(unheadSourceLessScriptLoader)
     nuxt.options.vite ||= {}
-    nuxt.options.vite.define = { ...nuxt.options.vite.define, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.vite.define = {
+      ...nuxt.options.vite.define,
+      __NUXT_SCRIPTS_DEBUG__: debugConst,
+      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
+    }
     nuxt.options.nitro ||= {}
-    nuxt.options.nitro.replace = { ...nuxt.options.nitro.replace, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.nitro.replace = {
+      ...nuxt.options.nitro.replace,
+      __NUXT_SCRIPTS_DEBUG__: debugConst,
+      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
+    }
 
     // Register proxy handler unconditionally. The handler rejects unknown domains
     // at runtime, so it's safe to register even when no scripts use proxy.
@@ -1111,19 +1201,10 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
 
-    if (Object.keys(enabledEndpoints).length > 0) {
-      const nitroOptions = nuxt.options.nitro as any
-      nitroOptions.storage ||= {}
-      // Nitro's default memory storage has no eviction policy. Keep proxy and
-      // embed caches bounded unless the application supplied a dedicated
-      // persistent/distributed mount for this namespace.
-      nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] ||= {
-        driver: 'lru-cache',
-        max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
-        maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
-        maxEntrySize: NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
-      }
-    }
+    // Nitro's default memory storage has no eviction policy. Every proxy and
+    // embed cache shares this bounded mount, including proxy-only registries
+    // without dedicated server handlers. Preserve application-supplied mounts.
+    ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any)
 
     // Publish enabled endpoints to client for component opt-in checks
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
@@ -1155,7 +1236,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Resolve the HMAC signing secret only when at least one handler needs it
     // and a server runtime can actually verify signatures.
     else if (anyHandlerRequiresSigning) {
-      const proxySecretResolved = resolveProxySecret(
+      const proxySecretResolved = await resolveProxySecret(
         nuxt.options.rootDir,
         !!nuxt.options.dev,
         config.security?.secret,

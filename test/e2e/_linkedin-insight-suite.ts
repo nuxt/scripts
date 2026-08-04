@@ -13,6 +13,7 @@ const EXPECTED_HASHED_EMAIL = '973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a
 //     for the bootstrap cookie-test before the canonical /collect fires.
 // We probe once; behavior tests skip when egress is unavailable.
 const NETWORK_PROBE_TIMEOUT_MS = 5000
+const COLD_START_TIMEOUT_MS = 30000
 async function probeLinkedInEgress(): Promise<boolean> {
   const probe = (u: string) =>
     fetch(u, { method: 'HEAD', signal: AbortSignal.timeout(NETWORK_PROBE_TIMEOUT_MS) })
@@ -128,7 +129,7 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       const scriptSelector = opts.bundled
         ? 'script[src*="/_scripts/assets/"]'
         : 'script[src*="snap.licdn.com/li.lms-analytics/insight.min.js"]'
-      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: 15000 })
+      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: COLD_START_TIMEOUT_MS })
       const scriptSrcs = await page.evaluate(() =>
         Array.from(document.querySelectorAll<HTMLScriptElement>('script[src]')).map(s => s.src),
       )
@@ -142,7 +143,7 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     finally {
       await page.close()
     }
-  }, 60000)
+  }, 90000)
 
   it('writes partner ID globals before the script loads', async () => {
     // Globals are written by clientInit before the <script> is fetched, so this
@@ -231,6 +232,7 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       await page.goto(url('/linkedin-no-spa'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
       const collectCount = () => requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      await waitFor(() => collectCount() > 0, { message: 'initial /collect beacon' })
       const before = collectCount()
       await page.click('#trigger-spa-nav')
       await page.waitForURL('**/', { timeout: 5000 })
@@ -238,7 +240,6 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       // it didn't change. Stability window catches a beacon that might fire
       // late, which is the failure mode we're guarding against.
       await waitForStable(collectCount)
-      expect(before).toBeGreaterThan(0)
       expect(collectCount()).toBe(before)
     }
     finally {

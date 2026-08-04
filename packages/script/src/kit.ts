@@ -11,8 +11,12 @@ interface EnsurePackageInstalledOptions {
 }
 
 async function promptToInstall(name: string, installCommand: () => Promise<void>, options: EnsurePackageInstalledOptions) {
-  if (await resolvePackageJSON(name).catch(() => null))
+  if (await resolvePackageJSON(name).catch(() => {
+    // A missing package is expected here; the install prompt handles it below.
+    return null
+  })) {
     return true
+  }
 
   logger.info(`Package ${name} is missing`)
   if (isCI)

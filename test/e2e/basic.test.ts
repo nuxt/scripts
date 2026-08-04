@@ -1,8 +1,9 @@
+import type { Page } from 'playwright-core'
 import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
 import { getBrowser, setup, url, waitForHydration } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -12,10 +13,17 @@ await setup({
   browser: true,
 })
 
+const pages: Page[] = []
+
+afterEach(async () => {
+  await Promise.all(pages.splice(0).map(page => page.close()))
+})
+
 async function createPage(path: string, options?: any) {
   const logs: { text: string, location: string }[] = []
   const browser = await getBrowser()
   const page = await browser.newPage(options)
+  pages.push(page)
   page.addListener('console', (msg) => {
     const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
     if (!location.startsWith('/_nuxt')) {
@@ -46,6 +54,21 @@ async function createPage(path: string, options?: any) {
       return logs
     },
   }
+}
+
+async function waitForLogCount(
+  logs: () => { text: string }[],
+  text: string,
+  expected: number,
+  timeoutMs = 10000,
+) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (logs().filter(log => log.text === text).length >= expected)
+      return
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+  throw new Error(`Timed out waiting for ${expected} "${text}" console logs`)
 }
 
 describe('basic', () => {
@@ -144,32 +167,32 @@ describe('basic', () => {
       ]
     `)
   })
-  it('reload method re-executes script', async () => {
+  it('reload method re-executes script', { timeout: 30000 }, async () => {
     const { page, logs } = await createPage('/reload-trigger')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 1)
     // Script should have loaded once
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
     // Status should be loaded
     expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
     // Click reload button
     await page.click('#reload-script')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 2)
     // Script should have loaded twice
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(2)
     // Status should still be loaded after reload
     expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
   })
-  it('reload method can be called multiple times', async () => {
+  it('reload method can be called multiple times', { timeout: 30000 }, async () => {
     const { page, logs } = await createPage('/reload-trigger')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 1)
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
     // Reload 3 times
     await page.click('#reload-script')
-    await page.waitForTimeout(300)
+    await waitForLogCount(logs, 'Script -- Loaded', 2)
     await page.click('#reload-script')
-    await page.waitForTimeout(300)
+    await waitForLogCount(logs, 'Script -- Loaded', 3)
     await page.click('#reload-script')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 4)
     // Script should have loaded 4 times total
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(4)
   })
@@ -336,7 +359,10 @@ describe('third-party-capital', () => {
       return u.includes('google-analytics.com/g/collect') || u.includes('analytics.google.com/g/collect')
     }, {
       timeout: 15000,
-    }).catch(() => null)
+    }).catch(() => {
+      // A missing network request is an allowed outcome for this optional integration.
+      return null
+    })
     await page.getByText('trigger').click()
     const result = await request
 
@@ -348,7 +374,7 @@ describe('third-party-capital', () => {
   })
 
   it('expect reCAPTCHA to execute and verify token', {
-    timeout: 15000,
+    timeout: 45000,
   }, async () => {
     const { page } = await createPage('/tpc/recaptcha')
     await page.waitForTimeout(500)
@@ -360,7 +386,7 @@ describe('third-party-capital', () => {
     await page.click('#execute')
 
     // wait for token + verification result
-    await page.waitForSelector('#verified', { timeout: 10000 })
+    await page.waitForSelector('#verified', { timeout: 30000 })
     const token = await page.$eval('#token', el => el.textContent?.trim())
     const verified = await page.$eval('#verified', el => el.textContent?.trim())
 

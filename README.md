@@ -12,9 +12,6 @@ Better Privacy, Performance, and DX for Third-Party Scripts in Nuxt Apps.
 
 - [👾 &nbsp;Playground](https://stackblitz.com/edit/nuxt-starter-pkwfkx?file=pages%2Findex.vue)
 
-> [!IMPORTANT]
-> Nuxt Scripts is in beta, use with caution as some APIs may change.
-
 ## Features
 
 - 🪨 Built on top of [Unhead Script Loading](https://unhead.unjs.io/docs/typescript/head/guides/core-concepts/loading-scripts)

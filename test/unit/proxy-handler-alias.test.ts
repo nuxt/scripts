@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
  * validating the allowlist and forwarding upstream.
  */
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
@@ -27,6 +27,17 @@ vi.mock('nitropack/runtime', () => ({
     hooks: { callHook: async () => {} },
   }),
 }))
+
+vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../packages/script/src/runtime/server/utils/network-host')>()
+  return {
+    ...actual,
+    createPublicNetworkDispatcher: async () => ({
+      fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
+      close: async () => {},
+    }),
+  }
+})
 
 describe('proxy handler - path aliases (#814)', () => {
   let proxyServer: Server

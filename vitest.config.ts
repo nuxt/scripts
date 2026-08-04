@@ -26,6 +26,8 @@ export default defineConfig({
             '@unhead/vue/scripts': new URL('./packages/script/node_modules/@unhead/vue/dist/scripts.mjs', import.meta.url).pathname,
             'unhead/scripts/triggers': new URL('./packages/script/node_modules/unhead/dist/scripts/triggers.mjs', import.meta.url).pathname,
             'unhead/scripts': new URL('./packages/script/node_modules/unhead/dist/scripts.mjs', import.meta.url).pathname,
+            '#nuxt-scripts/h3': 'h3',
+            '#nuxt-scripts/nitro': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
             // Virtual emitted by the Nuxt module at build time; unit tests
             // mock it via `vi.mock('#build/nuxt-scripts-snippets')`, but the
             // import must first resolve to *something* the bundler accepts.
@@ -53,6 +55,9 @@ export default defineConfig({
       defineProject({
         test: {
           name: 'e2e',
+          // Each file starts a Nuxt server and browser. Run them serially to
+          // avoid exhausting file watchers and starving script execution.
+          fileParallelism: false,
           include: [
             './test/e2e/**/*.test.ts',
           ],
