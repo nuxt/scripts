@@ -8,7 +8,6 @@ import {
   PAGE_TOKEN_PARAM,
   PAGE_TOKEN_TS_PARAM,
 } from '../../packages/script/src/runtime/server/utils/sign'
-import { stubNitroRuntime } from './__mocks__/stub-nitro-runtime'
 
 // Hoisted runtime config mock — swapped between tests via `runtimeConfigMock`.
 const { runtimeConfigMock } = vi.hoisted(() => ({
@@ -17,11 +16,11 @@ const { runtimeConfigMock } = vi.hoisted(() => ({
   },
 }))
 
-stubNitroRuntime({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => runtimeConfigMock.current,
-})
+}))
 
-// Import after installing the runtime config stub.
+// Import after installing the runtime config mock.
 const { withSigning } = await import('../../packages/script/src/runtime/server/utils/withSigning')
 
 const SECRET = 'with-signing-test-secret'

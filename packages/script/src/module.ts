@@ -16,7 +16,6 @@ import type {
 } from './runtime/types'
 import { randomBytes } from 'node:crypto'
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { pathToFileURL } from 'node:url'
 import {
   addBuildPlugin,
   addComponentsDir,
@@ -24,21 +23,19 @@ import {
   addPlugin,
   addPluginTemplate,
   addServerHandler,
-  addServerImports,
   addTemplate,
   createResolver,
   defineNuxtModule,
-  getNuxtVersion,
   hasNuxtModule,
-  resolvePath as resolveNuxtPath,
 } from '@nuxt/kit'
 import { defu } from 'defu'
-import { dirname, resolve as resolvePath_ } from 'pathe'
+import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
 import { logger } from './logger'
+import { setupNitroRuntimeCompatibility } from './nitro-compatibility'
 import { extractRequiredFields, migrateDeprecatedRegistryKeys, normalizeRegistryConfig } from './normalize'
 import { NuxtScriptsCheckScripts } from './plugins/check-scripts'
 import { generateInterceptPluginContents } from './plugins/intercept'
@@ -518,22 +515,7 @@ export default defineNuxtModule<ModuleOptions>({
       logger.debug('The module is disabled, skipping setup.')
       return
     }
-    if (Number.parseInt(getNuxtVersion(nuxt), 10) >= 5) {
-      const nuxtDir = dirname(await resolveNuxtPath('nuxt/package.json'))
-      const nitroDir = dirname(await resolveNuxtPath('@nuxt/nitro-server/package.json', { cwd: nuxtDir }))
-      const resolveNitroImport = async (id: string) => {
-        const resolved = await resolveNuxtPath(id, { cwd: nitroDir })
-        if (!existsSync(resolved))
-          throw new Error(`[nuxt-scripts] Could not resolve Nitro runtime helper "${id}" from "${nitroDir}".`)
-        return pathToFileURL(resolved).href
-      }
-      addServerImports([
-        { name: 'createError', from: await resolveNitroImport('nitro/h3') },
-        { name: 'useNitroApp', from: await resolveNitroImport('nitro/app') },
-        { name: 'defineCachedFunction', from: await resolveNitroImport('nitro/cache') },
-        { name: 'useRuntimeConfig', from: await resolveNitroImport('nitro/runtime-config') },
-      ])
-    }
+    await setupNitroRuntimeCompatibility(nuxt)
     if (nuxt.options.dev) {
       setupDevtools(nuxt, { standalone: config._standaloneDevtools })
       if (config._standaloneDevtools) {

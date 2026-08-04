@@ -168,7 +168,12 @@ jobs:
         run: pnpm --filter @nuxt/scripts dev:prepare
 
       - name: Nuxt prepare
-        run: pnpm exec nuxt prepare
+        run: |
+          pnpm exec nuxt prepare
+          pnpm exec nuxt prepare test/fixtures/proxy-alias
+
+      - name: Typecheck Nitro 3 compatibility
+        run: pnpm exec vue-tsc --noEmit -p test/fixtures/proxy-alias/.nuxt/tsconfig.server.json
 
       - name: Run Nitro 3 compatibility tests
         run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts

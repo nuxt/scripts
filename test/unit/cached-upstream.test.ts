@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { stubNitroRuntime } from './__mocks__/stub-nitro-runtime'
 
 const { cacheDefinitions, hashMock } = vi.hoisted(() => ({
   cacheDefinitions: [] as Array<{ getKey?: (...args: any[]) => string }>,
   hashMock: vi.fn((value: unknown) => `hashed:${JSON.stringify(value)}`),
 }))
 
-stubNitroRuntime({
+vi.mock('#nuxt-scripts/nitro', () => ({
   defineCachedFunction: vi.fn((handler, options) => {
     cacheDefinitions.push(options)
     return handler
   }),
-})
+  useRuntimeConfig: () => ({}),
+}))
 
 vi.mock('ohash', () => ({
   hash: hashMock,

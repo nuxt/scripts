@@ -1,5 +1,6 @@
-import { defineEventHandler, getQuery, setHeader } from 'h3'
 import { withQuery } from 'ufo'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { withSigning } from './utils/withSigning'
 

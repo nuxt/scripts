@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer'
 import { $fetch } from 'ofetch'
 import { hash } from 'ohash'
+import { defineCachedFunction } from '#nuxt-scripts/nitro'
 
 /**
  * Server-side caches for upstream proxy fetches.

@@ -1,5 +1,6 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, setResponseHeader, setResponseStatus } from '#nuxt-scripts/h3'
+import { useNitroApp, useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { matchDomain } from './utils/match-domain'
 import {
   anonymizeIP,
@@ -342,7 +343,7 @@ export default defineEventHandler(async (event) => {
 
   // Emit hook for E2E testing — allows capturing before/after data
   const nitro = useNitroApp()
-  await (nitro.hooks.callHook as (name: string, ctx: any) => Promise<void>)('nuxt-scripts:proxy', {
+  await (nitro.hooks?.callHook as ((name: string, ctx: any) => Promise<void>) | undefined)?.('nuxt-scripts:proxy', {
     timestamp: Date.now(),
     path: event.path,
     targetUrl,

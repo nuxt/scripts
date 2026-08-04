@@ -1,8 +1,7 @@
 import type { Server } from 'node:http'
 import { createServer, request as httpRequest } from 'node:http'
 import { createApp, toNodeListener } from 'h3'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { stubNitroRuntime } from './__mocks__/stub-nitro-runtime'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 /**
  * Tests for #791: proxy handler must strip hop-by-hop request headers per RFC 7230 §6.1.
@@ -14,7 +13,7 @@ import { stubNitroRuntime } from './__mocks__/stub-nitro-runtime'
  * Additionally, any header named in the `Connection` header value must also be stripped.
  */
 
-stubNitroRuntime({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
@@ -28,7 +27,7 @@ stubNitroRuntime({
   useNitroApp: () => ({
     hooks: { callHook: async () => {} },
   }),
-})
+}))
 
 describe('proxy handler - hop-by-hop request headers (#791)', () => {
   let proxyServer: Server
