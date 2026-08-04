@@ -92,6 +92,7 @@ catalog:
   ufo: ^1.6.4
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
+  undici: ^6.27.0
   unimport: ^6.3.0
   unplugin: ^3.3.0
   unstorage: ^1.17.5

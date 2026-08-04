@@ -130,6 +130,7 @@
     "std-env": "catalog:",
     "ufo": "catalog:",
     "ultrahtml": "catalog:",
+    "undici": "catalog:",
     "unplugin": "catalog:",
     "unstorage": "catalog:",
     "valibot": "catalog:"

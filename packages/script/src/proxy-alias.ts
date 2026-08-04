@@ -18,7 +18,7 @@ const SAFE_ALIAS_SEGMENT_RE = /^[\w.-]+$/
 
 /** Whether an explicit alias is a single URL-safe path segment. */
 export function isSafeAliasSegment(alias: string): boolean {
-  return SAFE_ALIAS_SEGMENT_RE.test(alias)
+  return alias !== '.' && alias !== '..' && SAFE_ALIAS_SEGMENT_RE.test(alias)
 }
 
 /**
@@ -42,21 +42,18 @@ export function aliasForDomain(domain: string, alias: ProxyAliasConfig): string 
 
 /** Build a `domain → alias` map for the given proxied domains. */
 export function buildDomainAliasMap(domains: Iterable<string>, alias: ProxyAliasConfig): Record<string, string> {
-  const map: Record<string, string> = {}
+  const entries: Array<[string, string]> = []
   for (const domain of domains) {
     const value = aliasForDomain(domain, alias)
     if (value)
-      map[domain] = value
+      entries.push([domain, value])
   }
-  return map
+  return Object.fromEntries(entries)
 }
 
 /** Invert a `domain → alias` map into the `alias → domain` map the proxy handler resolves with. */
 export function invertAliasMap(map: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {}
-  for (const [domain, alias] of Object.entries(map))
-    out[alias] = domain
-  return out
+  return Object.fromEntries(Object.entries(map).map(([domain, alias]) => [alias, domain]))
 }
 
 /**
