@@ -54,7 +54,6 @@ const mocks = vi.hoisted(() => {
     unheadUseScript: vi.fn(createHandle),
   }
 })
-
 vi.mock('@unhead/vue/scripts', () => ({
   useScript: mocks.unheadUseScript,
 }))
@@ -211,4 +210,3 @@ describe('useScript shared instance lifecycle', () => {
     expect(mocks.baseRemove).not.toHaveBeenCalled()
   })
 })
-
