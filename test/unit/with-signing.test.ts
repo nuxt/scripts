@@ -16,11 +16,11 @@ const { runtimeConfigMock } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => runtimeConfigMock.current,
 }))
 
-// Import AFTER vi.mock so withSigning resolves against the mocked module.
+// Import after installing the runtime config mock.
 const { withSigning } = await import('../../packages/script/src/runtime/server/utils/withSigning')
 
 const SECRET = 'with-signing-test-secret'

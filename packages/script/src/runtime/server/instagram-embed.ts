@@ -1,8 +1,8 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { defineCachedFunction, useRuntimeConfig } from 'nitropack/runtime'
 import { $fetch } from 'ofetch'
 import { hash } from 'ohash'
 import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { defineCachedFunction, useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { isEmbedShell, proxyAssetUrl, rewriteUrl, rewriteUrlsInText, RSRC_RE, scopeCss } from './utils/instagram-embed'
 import { withSigning } from './utils/withSigning'
@@ -70,7 +70,7 @@ export default withSigning(defineEventHandler(async (event) => {
   // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_INSTAGRAM_SUFFIX_RE, '') || '/_scripts'
-  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
+  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
 
   const query = getQuery(event)
   const postUrl = query.url as string

@@ -1,5 +1,5 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { rewriteTweetImages } from './utils/embed-rewriters'
 import { withSigning } from './utils/withSigning'
@@ -104,7 +104,7 @@ export default withSigning(defineEventHandler(async (event) => {
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_X_SUFFIX_RE, '') || '/_scripts'
   const imagePath = `${prefix}/embed/x-image`
-  const secret = (useRuntimeConfig(event)['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
+  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
   rewriteTweetImages(tweetData, imagePath, secret)
 
   // Cache for 10 minutes

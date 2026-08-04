@@ -13,7 +13,9 @@
  */
 export function generateInterceptPluginContents(proxyPrefix: string, options?: { testMode?: boolean, domainAliases?: Record<string, string> }): string {
   const testMode = options?.testMode ?? false
-  return `export default defineNuxtPlugin({
+  return `import { defineNuxtPlugin } from 'nuxt/app'
+
+export default defineNuxtPlugin({
   name: 'nuxt-scripts:intercept',
   enforce: 'pre',
   setup() {

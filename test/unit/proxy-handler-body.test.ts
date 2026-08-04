@@ -5,7 +5,7 @@ import { createApp, defineEventHandler, readRawBody, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import proxyHandler from '../../packages/script/src/runtime/server/proxy-handler'
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',

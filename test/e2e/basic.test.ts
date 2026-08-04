@@ -337,7 +337,10 @@ describe('third-party-capital', () => {
       return u.includes('google-analytics.com/g/collect') || u.includes('analytics.google.com/g/collect')
     }, {
       timeout: 15000,
-    }).catch(() => null)
+    }).catch(() => {
+      // A missing network request is an allowed outcome for this optional integration.
+      return null
+    })
     await page.getByText('trigger').click()
     const result = await request
 
