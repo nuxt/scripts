@@ -48,6 +48,21 @@ async function createPage(path: string, options?: any) {
   }
 }
 
+async function waitForLogCount(
+  logs: () => { text: string }[],
+  text: string,
+  expected: number,
+  timeoutMs = 10000,
+) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (logs().filter(log => log.text === text).length >= expected)
+      return
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
+  throw new Error(`Timed out waiting for ${expected} "${text}" console logs`)
+}
+
 describe('basic', () => {
   it('relative onNuxtReady', async () => {
     const { page, logs } = await createPage('/')
@@ -144,32 +159,32 @@ describe('basic', () => {
       ]
     `)
   })
-  it('reload method re-executes script', async () => {
+  it('reload method re-executes script', { timeout: 30000 }, async () => {
     const { page, logs } = await createPage('/reload-trigger')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 1)
     // Script should have loaded once
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
     // Status should be loaded
     expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
     // Click reload button
     await page.click('#reload-script')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 2)
     // Script should have loaded twice
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(2)
     // Status should still be loaded after reload
     expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
   })
-  it('reload method can be called multiple times', async () => {
+  it('reload method can be called multiple times', { timeout: 30000 }, async () => {
     const { page, logs } = await createPage('/reload-trigger')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 1)
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(1)
     // Reload 3 times
     await page.click('#reload-script')
-    await page.waitForTimeout(300)
+    await waitForLogCount(logs, 'Script -- Loaded', 2)
     await page.click('#reload-script')
-    await page.waitForTimeout(300)
+    await waitForLogCount(logs, 'Script -- Loaded', 3)
     await page.click('#reload-script')
-    await page.waitForTimeout(500)
+    await waitForLogCount(logs, 'Script -- Loaded', 4)
     // Script should have loaded 4 times total
     expect(logs().filter(l => l.text === 'Script -- Loaded').length).toBe(4)
   })
