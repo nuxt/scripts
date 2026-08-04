@@ -1,10 +1,18 @@
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import type { Dirent } from 'node:fs'
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { generateCode, parseModule } from 'magicast/core'
 import { relative, resolve } from 'pathe'
 
 export interface CliIo {
   writeStdout: (value: string) => void
   writeStderr: (value: string) => void
+}
+
+export interface CliDependencies {
+  readDirectory: (path: string) => Dirent[]
+  readFile: (path: string) => string
+  stat: (path: string) => { isDirectory: () => boolean }
+  writeFile: (path: string, source: string) => void
 }
 
 export type CliResult
@@ -68,6 +76,21 @@ const help = [
 
 const migrateUsage = 'Usage: npx @nuxt/scripts-cli migrate v2 [--dry-run] [--cwd <directory>]\n'
 
+const nodeCliDependencies: CliDependencies = {
+  readDirectory: path => readdirSync(path, { withFileTypes: true }),
+  readFile: path => readFileSync(path, 'utf8'),
+  stat: statSync,
+  writeFile: writeFileSync,
+}
+
+function resolveDependencies(overrides: Partial<CliDependencies>): CliDependencies {
+  return { ...nodeCliDependencies, ...overrides }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 function proxyType(value: unknown): unknown {
   if (typeof value !== 'object' || value === null)
     return undefined
@@ -100,14 +123,13 @@ function migrateFlatRegistryEntry(key: string, entry: StaticObject): { changes: 
   if ('scriptOptions' in entry) {
     const scriptOptions = entry.scriptOptions
     if (!isStaticObject(scriptOptions)) {
-      return {
-        changes: 0,
-        issues: [`registry.${key}.scriptOptions is dynamic and must be flattened manually`],
-      }
+      issues.push(`registry.${key}.scriptOptions is dynamic and must be flattened manually`)
     }
-    delete entry.scriptOptions
-    changes++
-    changes += copyProperties(entry, scriptOptions, false)
+    else {
+      delete entry.scriptOptions
+      changes++
+      changes += copyProperties(entry, scriptOptions, false)
+    }
   }
 
   if ('reverseProxyIntercept' in entry) {
@@ -273,12 +295,21 @@ function extension(file: string): string {
   return match?.[1] ?? ''
 }
 
-function collectSourceFiles(directory: string): string[] {
+function collectSourceFiles(directory: string, dependencies: CliDependencies, issues: MigrationIssue[]): string[] {
   const files: string[] = []
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+  let entries: Dirent[]
+  try {
+    entries = dependencies.readDirectory(directory)
+  }
+  catch (error) {
+    issues.push({ file: directory, message: `could not read directory: ${errorMessage(error)}` })
+    return files
+  }
+
+  for (const entry of entries) {
     if (entry.isDirectory()) {
       if (!ignoredDirectories.has(entry.name))
-        files.push(...collectSourceFiles(resolve(directory, entry.name)))
+        files.push(...collectSourceFiles(resolve(directory, entry.name), dependencies, issues))
       continue
     }
     if (entry.isFile() && sourceExtensions.has(extension(entry.name)))
@@ -287,13 +318,20 @@ function collectSourceFiles(directory: string): string[] {
   return files
 }
 
-function runV2Migration(cwd: string, dryRun: boolean): string {
-  const files = collectSourceFiles(cwd)
+function runV2Migration(cwd: string, dryRun: boolean, dependencies: CliDependencies): string {
   const migratedFiles: MigratedFile[] = []
   const issues: MigrationIssue[] = []
+  const files = collectSourceFiles(cwd, dependencies, issues)
 
   for (const file of files) {
-    const original = readFileSync(file, 'utf8')
+    let original: string
+    try {
+      original = dependencies.readFile(file)
+    }
+    catch (error) {
+      issues.push({ file, message: `could not read file: ${errorMessage(error)}` })
+      continue
+    }
     const configMigration = configPattern.test(file.split('/').at(-1) ?? '')
       ? migrateNuxtConfig(original)
       : { source: original, changes: 0, issues: [] }
@@ -305,8 +343,15 @@ function runV2Migration(cwd: string, dryRun: boolean): string {
 
     if (changes === 0)
       continue
-    if (!dryRun)
-      writeFileSync(file, sourceMigration.source)
+    if (!dryRun) {
+      try {
+        dependencies.writeFile(file, sourceMigration.source)
+      }
+      catch (error) {
+        issues.push({ file, message: `could not write file: ${errorMessage(error)}` })
+        continue
+      }
+    }
     migratedFiles.push({ file, changes })
   }
 
@@ -334,7 +379,7 @@ function runV2Migration(cwd: string, dryRun: boolean): string {
   return `${lines.join('\n')}\n`
 }
 
-function resolveMigration(args: string[]): CliResult {
+function resolveMigration(args: string[], dependencies: CliDependencies): CliResult {
   if (args[0] !== 'v2')
     return { _tag: 'Failure', output: migrateUsage }
 
@@ -356,19 +401,27 @@ function resolveMigration(args: string[]): CliResult {
     return { _tag: 'Failure', output: `${migrateUsage}Unknown option: ${argument}\n` }
   }
 
-  if (!existsSync(cwd))
+  let isDirectory: boolean
+  try {
+    isDirectory = dependencies.stat(cwd).isDirectory()
+  }
+  catch {
     return { _tag: 'Failure', output: `Project directory does not exist: ${cwd}\n` }
+  }
+  if (!isDirectory)
+    return { _tag: 'Failure', output: `Project path is not a directory: ${cwd}\n` }
 
   return { _tag: 'MigrateV2', output: '', cwd, dryRun }
 }
 
-export function resolveCliCommand(args: string[]): CliResult {
+export function resolveCliCommand(args: string[], dependencyOverrides: Partial<CliDependencies> = {}): CliResult {
   const command = args[0]
+  const dependencies = resolveDependencies(dependencyOverrides)
 
   if (!command || command === 'help' || command === '--help' || command === '-h')
     return { _tag: 'Success', output: help }
   if (command === 'migrate' && args.length > 1)
-    return resolveMigration(args.slice(1))
+    return resolveMigration(args.slice(1), dependencies)
 
   return {
     _tag: 'Failure',
@@ -376,15 +429,16 @@ export function resolveCliCommand(args: string[]): CliResult {
   }
 }
 
-export function runCli(args: string[], io: CliIo): 0 | 1 {
-  const result = resolveCliCommand(args)
+export function runCli(args: string[], io: CliIo, dependencyOverrides: Partial<CliDependencies> = {}): 0 | 1 {
+  const dependencies = resolveDependencies(dependencyOverrides)
+  const result = resolveCliCommand(args, dependencies)
 
   if (result._tag === 'Success') {
     io.writeStdout(result.output)
     return 0
   }
   if (result._tag === 'MigrateV2') {
-    io.writeStdout(runV2Migration(result.cwd, result.dryRun))
+    io.writeStdout(runV2Migration(result.cwd, result.dryRun, dependencies))
     return 0
   }
 
