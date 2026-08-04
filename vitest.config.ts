@@ -23,6 +23,7 @@ export default defineConfig({
       defineProject({
         resolve: {
           alias: {
+            '@unhead/vue/scripts': new URL('./packages/script/node_modules/@unhead/vue/dist/scripts.mjs', import.meta.url).pathname,
             '#nuxt-scripts/h3': 'h3',
             '#nuxt-scripts/nitro': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
             // Virtual emitted by the Nuxt module at build time; unit tests
@@ -30,6 +31,7 @@ export default defineConfig({
             // import must first resolve to *something* the bundler accepts.
             // The alias points at an empty placeholder.
             '#build/nuxt-scripts-snippets': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
+            '#build/nuxt-scripts-trigger-resolver': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
           },
         },
         test: {

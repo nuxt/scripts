@@ -1,6 +1,8 @@
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead } from '@unhead/vue'
+import { useNuxtApp } from 'nuxt/app'
 import { useRegistryScript } from '../utils'
+import { attachUsercentricsConsent } from '../utils/usercentrics-consent'
 import { UsercentricsOptions } from './schemas'
 
 export { UsercentricsOptions }
@@ -116,31 +118,8 @@ export function useScriptUsercentrics<T extends UsercentricsApi>(
     }
   }, _options) as UseScriptContext<T, UsercentricsConsent>
 
-  if (import.meta.client && !instance.consent) {
-    const whenReady = (): Promise<UsercentricsCmp> => new Promise((resolve) => {
-      // __ucCmp is present from loader bootstrap, but methods aren't callable
-      // until UC_CMP_API_READY fires. Resolve on that event (or now if it
-      // already fired and __ucCmp is bound).
-      const onReady = () => {
-        window.removeEventListener('UC_CMP_API_READY', onReady)
-        resolve(window.__ucCmp as UsercentricsCmp)
-      }
-      window.addEventListener('UC_CMP_API_READY', onReady)
-    })
-
-    instance.consent = {
-      whenReady,
-      onConsentChange(cb) {
-        const handler = (e: Event) => cb((e as CustomEvent).detail, e)
-        window.addEventListener('UC_UI_CMP_EVENT', handler)
-        return () => window.removeEventListener('UC_UI_CMP_EVENT', handler)
-      },
-      showFirstLayer: () => window.__ucCmp?.showFirstLayer?.(),
-      showSecondLayer: () => window.__ucCmp?.showSecondLayer?.(),
-      acceptAll: () => window.__ucCmp?.acceptAllConsents?.(),
-      denyAll: () => window.__ucCmp?.denyAllConsents?.(),
-    }
-  }
+  if (import.meta.client)
+    attachUsercentricsConsent(instance, window, callback => useNuxtApp().hooks.hook('app:unmount' as any, callback))
 
   return instance
 }

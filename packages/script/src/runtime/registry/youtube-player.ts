@@ -4,6 +4,7 @@ import { useHead } from '@unhead/vue'
 /// <reference types="youtube" />
 import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
+import { armYouTubeReadiness, useYouTubeReadinessState } from '../utils/youtube-readiness'
 
 export interface YouTubePlayerApi {
   YT: MaybePromise<{
@@ -35,9 +36,10 @@ declare global {
 }
 
 export type YouTubePlayerInput = RegistryScriptInput
+const cleanupDecoration = Symbol('nuxt-scripts:youtube-cleanup')
+const readinessDecoration = Symbol('nuxt-scripts:youtube-readiness')
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
-  let readyPromise: Promise<void> = Promise.resolve()
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
@@ -45,8 +47,9 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     },
     scriptOptions: {
       use() {
+        const readiness = useYouTubeReadinessState()
         return {
-          YT: window.YT || readyPromise.then(() => {
+          YT: window.YT || readiness.promise.then(() => {
             return window.YT
           }),
         }
@@ -55,11 +58,24 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     clientInit: import.meta.server
       ? undefined
       : () => {
-          readyPromise = new Promise((resolve) => {
-            window.onYouTubeIframeAPIReady = resolve
-          })
+          armYouTubeReadiness(useYouTubeReadinessState())
         },
   }), _options)
+  const clientInstance = import.meta.server || typeof window === 'undefined'
+    ? undefined
+    : instance as UseScriptContext<T> & {
+      [cleanupDecoration]?: boolean
+      [readinessDecoration]?: ReturnType<typeof useYouTubeReadinessState>
+    }
+  if (clientInstance && !clientInstance[cleanupDecoration]) {
+    clientInstance[cleanupDecoration] = true
+    clientInstance[readinessDecoration] = useYouTubeReadinessState()
+    const originalRemove = instance.remove
+    instance.remove = () => {
+      clientInstance[readinessDecoration]?.controller?.abort()
+      return originalRemove()
+    }
+  }
   // insert preconnect once we start loading the script
   if (import.meta.client) {
     const _ = watch(instance.status, (status) => {

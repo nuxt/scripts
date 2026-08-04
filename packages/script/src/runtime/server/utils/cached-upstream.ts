@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer'
 import { createFetch } from 'ofetch'
 import { hash } from 'ohash'
 import { defineCachedFunction } from '#nuxt-scripts/nitro'
+import { NUXT_SCRIPTS_CACHE_BASE } from './cache-config'
 import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPublicNetworkHostname } from './network-host'
 
 /**
@@ -341,6 +342,7 @@ export function createCachedBinaryFetch(
       }
     },
     {
+      base: NUXT_SCRIPTS_CACHE_BASE,
       name,
       maxAge,
       swr: true,
@@ -415,6 +417,7 @@ export function createCachedJsonFetch<T>(
       return data
     },
     {
+      base: NUXT_SCRIPTS_CACHE_BASE,
       name,
       maxAge,
       swr: true,

@@ -1,5 +1,5 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, readBody, readRawBody, sendStream, setResponseHeader, setResponseStatus } from '#nuxt-scripts/h3'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, sendStream, setResponseHeader, setResponseStatus } from '#nuxt-scripts/h3'
 import { useNitroApp, useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { matchDomain } from './utils/match-domain'
 import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
@@ -28,6 +28,7 @@ interface ProxyConfig {
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
+const MAX_TRANSFORM_BODY_SIZE = 2 * 1024 * 1024
 const UPSTREAM_TIMEOUT_MS = 15000
 const SKIP_RESPONSE_HEADERS = new Set([
   'alt-svc',
@@ -61,6 +62,51 @@ export const SKIP_REQUEST_HEADERS = new Set([
   'transfer-encoding',
   'upgrade',
 ])
+
+async function readTransformBody(event: Parameters<typeof getRequestWebStream>[0]): Promise<string | undefined> {
+  const contentLength = Number(getHeaders(event)['content-length'] || 0)
+  if (Number.isFinite(contentLength) && contentLength > MAX_TRANSFORM_BODY_SIZE) {
+    throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
+  }
+
+  const stream = getRequestWebStream(event)
+  if (!stream)
+    return undefined
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done)
+        break
+      if (!value)
+        continue
+      total += value.byteLength
+      if (total > MAX_TRANSFORM_BODY_SIZE) {
+        try {
+          await reader.cancel('Proxy request body too large')
+        }
+        catch {
+          // The size-limit response takes precedence over cancellation errors.
+        }
+        throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
+      }
+      chunks.push(value)
+    }
+  }
+  finally {
+    reader.releaseLock()
+  }
+
+  const body = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(body)
+}
 
 export function withResponseBodyIdleTimeout(
   body: ReadableStream<Uint8Array>,
@@ -373,7 +419,7 @@ export default defineEventHandler(async (event) => {
       passthroughBody = true
     }
     else if (transformableBodyType === 'form') {
-      const formBody = await readRawBody(event)
+      const formBody = await readTransformBody(event)
       rawBody = formBody
 
       if (formBody != null) {
@@ -408,7 +454,19 @@ export default defineEventHandler(async (event) => {
     }
     else {
       // JSON body with privacy transforms.
-      rawBody = await readBody(event)
+      const jsonBody = await readTransformBody(event)
+      if (jsonBody !== undefined) {
+        try {
+          rawBody = JSON.parse(jsonBody)
+        }
+        catch (error) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: 'Invalid JSON proxy request body',
+            cause: error,
+          })
+        }
+      }
 
       if (Array.isArray(rawBody)) {
         // JSON array body (e.g. batch payloads) — strip each element individually

@@ -50,4 +50,22 @@ describe('afterNextPaint', () => {
     outerCb!(0)
     expect(cb).not.toHaveBeenCalled()
   })
+
+  it('cancels pending frames and releases the callback', () => {
+    const callbacks: FrameRequestCallback[] = []
+    vi.mocked(window.requestAnimationFrame).mockImplementation((cb) => {
+      callbacks.push(cb)
+      return callbacks.length
+    })
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame')
+    const cb = vi.fn()
+
+    const stop = afterNextPaint(cb)
+    callbacks[0]!(0)
+    stop()
+    callbacks[1]!(0)
+
+    expect(cb).not.toHaveBeenCalled()
+    expect(cancel).toHaveBeenCalledTimes(2)
+  })
 })
