@@ -5,22 +5,13 @@ useHead({
   title: 'Plausible',
 })
 
-// composables return the underlying api as a proxy object and the script state
-// Using legacy domain format for playground - in production use scriptId instead
 const { status, proxy } = useScriptPlausibleAnalytics({
-  domain: 'scripts.nuxt.com',
-  captureOnLocalhost: true, // New October 2025 init option
+  scriptId: 'gYyxvZhkMzdzXBAtSeSNz',
+  captureOnLocalhost: true,
   scriptOptions: {
     trigger: 'onNuxtReady',
   },
 })
-// Example with new scriptId format:
-// const { status, proxy } = useScriptPlausibleAnalytics({
-//   scriptId: 'YOUR_SCRIPT_ID', // Get from Plausible dashboard
-//   captureOnLocalhost: true,
-//   scriptOptions: { trigger: 'onNuxtReady' },
-// })
-
 const clicks = ref(0)
 
 function trackPageView() {

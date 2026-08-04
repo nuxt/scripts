@@ -112,9 +112,6 @@ export { GoogleAnalyticsOptions }
 
 export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOptions>
 
-/** @deprecated Use {@link GcmConsentApi} from `#nuxt-scripts/types` instead. */
-export type GoogleAnalyticsConsent = GcmConsentApi
-
 export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput & { onBeforeGtagStart?: (gtag: GTag) => void }): UseScriptContext<T, GcmConsentApi> {
   return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', (options) => {
     const dataLayerName = options?.l ?? 'dataLayer'

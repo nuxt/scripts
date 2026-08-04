@@ -92,23 +92,8 @@ export interface TtqInstance {
   disableCookie: () => void
 }
 
-/**
- * Legacy callable signature. Pre-1.2 `useScriptTikTokPixel` exposed `ttq` as an
- * `fbq`-style callable (`ttq('page')`, `ttq('track', …)`); the adapter keeps it
- * working alongside the method form.
- */
-type TtqCallable
-  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)
-    & ((cmd: 'page') => void)
-    & ((cmd: 'identify', properties: IdentifyProperties) => void)
-    & ((cmd: (string & {}), ...args: any[]) => void)
-
-/**
- * The public `ttq` returned by the composable: a callable adapter (legacy form)
- * that also carries the deferred methods (`ttq.page()`, `ttq.track(…)`). The
- * adapter forwards to `window.ttq`, which is TikTok's real array protocol.
- */
-export type Ttq = TtqCallable & TtqInstance & {
+/** The method-based `ttq` API returned by the composable. */
+export type Ttq = TtqInstance & {
   /** Resolve the per-pixel method bag for a specific pixel id. */
   instance: (id: string) => TtqInstance
 }
@@ -166,9 +151,9 @@ function warnUnhashedIdentify(props: Record<string, unknown>): void {
 }
 
 /**
- * Build the callable adapter returned to consumers. It dispatches to the live
+ * Build the method adapter returned to consumers. It dispatches to the live
  * `window.ttq` array on every call, so it tracks `events.js` rebinding the
- * deferred methods. Supports both `ttq('page')` (legacy) and `ttq.page()`.
+ * deferred methods.
  */
 function createTtqAdapter(): Ttq {
   const dispatch = (method: string, ...args: any[]) => {
@@ -176,7 +161,7 @@ function createTtqAdapter(): Ttq {
       warnUnhashedIdentify(args[0])
     return (window.ttq as any)[method]?.(...args)
   }
-  const adapter = ((method: string, ...args: any[]) => dispatch(method, ...args)) as Ttq
+  const adapter = {} as Ttq
   for (const method of [...TTQ_METHODS, 'instance'])
     (adapter as any)[method] = (...args: any[]) => dispatch(method, ...args)
   return adapter

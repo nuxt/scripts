@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       scripts: {
-        plausibleAnalytics: { domain: 'example.com' },
+        plausibleAnalytics: { scriptId: 'test-script-id' },
       },
     },
   },
@@ -21,7 +21,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       instagramEmbed: {},
-      plausibleAnalytics: { domain: 'example.com' },
+      plausibleAnalytics: { scriptId: 'test-script-id' },
     },
     proxy: {
       alias: {

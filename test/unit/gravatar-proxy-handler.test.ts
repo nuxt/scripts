@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 const { rawFetchMock } = vi.hoisted(() => ({ rawFetchMock: vi.fn() }))
 
-vi.mock('#nuxt-scripts/nitro', () => ({
+vi.mock('nitropack/runtime', () => ({
   defineCachedFunction: (handler: (...args: any[]) => any) => handler,
   useRuntimeConfig: () => ({ public: { 'nuxt-scripts': { gravatarProxy: { cacheMaxAge: 60 } } } }),
 }))

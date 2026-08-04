@@ -40,13 +40,11 @@ trustPolicyExclude:
 packages:
   - packages/*
   - playground
-  - test/fixtures/unhead-v3
   - '!examples/**'
 overrides:
   '@nuxt/scripts': 'workspace:*'
   '@unhead/bundler@>=3': 3.3.1
   '@unhead/vue@>=3': 3.3.1
-  unhead-v3-fixture>@unhead/vue: 3.3.1
   unhead@>=3: 3.3.1
   vitest-environment-nuxt: 2.0.0
 catalog:
@@ -67,7 +65,7 @@ catalog:
   '@types/google.maps': ^3.65.4
   '@types/jest-image-snapshot': ^6.4.1
   '@types/leaflet': ^1.9.21
-  '@types/node': ^26.1.2
+  '@types/node': ^24.13.3
   '@types/semver': ^7.7.1
   '@types/youtube': ^0.3.0
   '@unhead/vue': ^3.3.1
@@ -90,7 +88,6 @@ catalog:
   oxc-parser: ^0.142.0
   oxc-walker: ^1.1.1
   pathe: ^2.0.3
-  pkg-types: ^2.3.1
   playwright-core: ^1.62.1
   posthog-js: ^1.409.5
   rollup: ^4.62.4

@@ -1,6 +1,6 @@
+import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { useRuntimeConfig } from 'nitropack/runtime'
 import { withQuery } from 'ufo'
-import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
-import { useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedBinaryFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { withSigning } from './utils/withSigning'
 

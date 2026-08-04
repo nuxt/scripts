@@ -16,24 +16,6 @@ export interface ScriptGoogleMapsProps {
    */
   apiKey?: string
   /**
-   * A latitude / longitude of where to focus the map.
-   *
-   * @deprecated Pass `center` via `mapOptions` instead. The top-level `center`
-   * prop will be removed in a future major version. When both are set,
-   * `mapOptions.center` wins.
-   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
-   */
-  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`
-  /**
-   * Zoom level for the map (0-21). Reactive: changing this will update the map.
-   *
-   * @deprecated Pass `zoom` via `mapOptions` instead. The top-level `zoom`
-   * prop will be removed in a future major version. When both are set,
-   * `mapOptions.zoom` wins.
-   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
-   */
-  zoom?: number
-  /**
    * Options for the map.
    */
   mapOptions?: google.maps.MapOptions
@@ -82,15 +64,6 @@ export interface ScriptGoogleMapsExpose {
    * `undefined` if not yet loaded.
    */
   mapsApi: ShallowRef<typeof google.maps | undefined>
-  /**
-   * A reference to the loaded Google Maps API namespace, or `undefined` if not
-   * yet loaded.
-   *
-   * @deprecated Use `mapsApi` instead. The `googleMaps` alias will be removed
-   * in a future major version.
-   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1
-   */
-  googleMaps: ShallowRef<typeof google.maps | undefined>
   /**
    * A reference to the Google Map instance, or `undefined` if not yet initialized.
    */
@@ -152,13 +125,13 @@ export interface ScriptGoogleMapsSlots {
 <script lang="ts" setup>
 import { defu } from 'defu'
 import { tryUseNuxtApp, useHead, useRuntimeConfig } from 'nuxt/app'
-import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallowRef, toRaw, useAttrs, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, provide, ref, shallowRef, toRaw, useTemplateRef, watch } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
 import { useScriptGoogleMaps } from '#nuxt-scripts/registry/google-maps'
 import { scriptRuntimeConfig, scriptsPrefix } from '#nuxt-scripts/utils'
 import { createAbortablePromise } from '../../utils/abortable-promise'
 import ScriptAriaLoadingIndicator from '../ScriptAriaLoadingIndicator.vue'
-import { defineDeprecatedAlias, MAP_INJECTION_KEY, waitForMapsReady, warnDeprecatedTopLevelMapProps } from './useGoogleMapsResource'
+import { MAP_INJECTION_KEY, waitForMapsReady } from './useGoogleMapsResource'
 
 const props = withDefaults(defineProps<ScriptGoogleMapsProps>(), {
   // @ts-expect-error untyped
@@ -203,20 +176,7 @@ let isUnmounted = false
 
 if (import.meta.dev) {
   if (!apiKey)
-    throw new Error('GoogleMaps requires an API key. Enable it in your nuxt.config:\n\n  scripts: {\n    registry: {\n      googleMaps: true\n    }\n  }\n\nThen set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env file.\n\nAlternatively, pass `api-key` directly on the <ScriptGoogleMaps> component (note: this exposes the key client-side).')
-  const attrs = useAttrs()
-  const removedProps: Record<string, string> = {
-    markers: 'Use child <ScriptGoogleMapsMarker> components instead.',
-    centerMarker: 'Use a child <ScriptGoogleMapsMarker :position="center" /> instead.',
-    placeholderOptions: 'Use <ScriptGoogleMapsStaticMap> inside the #placeholder slot instead.',
-    placeholderAttrs: 'Use <ScriptGoogleMapsStaticMap> with :img-attrs instead.',
-    aboveTheFold: 'Use <ScriptGoogleMapsStaticMap loading="eager"> inside #placeholder instead.',
-  }
-  for (const [prop, message] of Object.entries(removedProps)) {
-    if (prop in attrs)
-      console.warn(`[nuxt-scripts] <ScriptGoogleMaps> prop "${prop}" was removed in v1. ${message} See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1`)
-  }
-  warnDeprecatedTopLevelMapProps({ center: props.center, zoom: props.zoom })
+    throw new Error('GoogleMaps requires an API key. Enable it in your nuxt.config:\n\n  scripts: {\n    registry: {\n      googleMaps: {}\n    }\n  }\n\nThen set NUXT_PUBLIC_SCRIPTS_GOOGLE_MAPS_API_KEY in your .env file.\n\nAlternatively, pass `api-key` directly on the <ScriptGoogleMaps> component (note: this exposes the key client-side).')
 }
 
 const rootEl = useTemplateRef<HTMLElement>('rootEl')
@@ -244,7 +204,6 @@ const options = computed(() => {
   return defu(
     { center: centerOverride.value, mapId, colorScheme: currentColorScheme.value },
     props.mapOptions,
-    { center: props.center, zoom: props.zoom },
     { zoom: 15 },
   )
 })
@@ -262,7 +221,7 @@ function isLocationQuery(s: string | any) {
   return typeof s === 'string' && (s.split(',').length > 2 || s.includes('+'))
 }
 
-type ScriptGoogleMapsCenter = ScriptGoogleMapsProps['center'] | google.maps.MapOptions['center']
+type ScriptGoogleMapsCenter = google.maps.MapOptions['center']
 interface GoogleMapsGeocodeProxyResponse {
   results: Array<{ geometry: { location: { lat: number, lng: number } } }>
   status: string
@@ -284,7 +243,6 @@ function getCenterWatchKey(center: ScriptGoogleMapsCenter): string | undefined {
 const controlledCenterKey = computed(() => {
   return getCenterWatchKey(centerOverride.value)
     || getCenterWatchKey(props.mapOptions?.center)
-    || getCenterWatchKey(props.center)
 })
 
 function getReactiveMapOptions(options: google.maps.MapOptions): google.maps.MapOptions {
@@ -414,22 +372,9 @@ function importLibrary<T>(key: string): Promise<T> {
 
 const exposed: ScriptGoogleMapsExpose = {
   mapsApi,
-  // Plain alias for production. In dev, replaced below with a getter that
-  // emits a one-shot deprecation warning. Both forms return the same
-  // shallow ref as `mapsApi`.
-  googleMaps: mapsApi,
   map,
   resolveQueryToLatLng,
   importLibrary,
-}
-
-if (import.meta.dev) {
-  defineDeprecatedAlias(
-    exposed,
-    'googleMaps',
-    'mapsApi',
-    '[nuxt-scripts] <ScriptGoogleMaps> expose key "googleMaps" is deprecated; use "mapsApi" instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
-  )
 }
 
 defineExpose<ScriptGoogleMapsExpose>(exposed)
@@ -521,7 +466,7 @@ onMounted(() => {
   // Clear centerOverride when the controlled center prop changes so external
   // updates take effect (otherwise centerOverride, written from the user's
   // pan during re-init, would permanently win over future prop updates).
-  watch([() => getCenterWatchKey(props.center), () => getCenterWatchKey(props.mapOptions?.center)], () => {
+  watch(() => getCenterWatchKey(props.mapOptions?.center), () => {
     centerOverride.value = undefined
   })
   watch([controlledCenterKey, isMapReady, map], async (_, __, onCleanup) => {

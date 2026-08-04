@@ -77,7 +77,7 @@ const { proxy } = useScriptTikTokPixel({ id: 'YOUR_PIXEL_ID' })
 async function checkout(order: { id: string, total: number }) {
   const eventId = crypto.randomUUID()
 
-  proxy.ttq('track', 'Purchase', { value: order.total, currency: 'USD', order_id: order.id }, { event_id: eventId })
+  proxy.ttq.track('Purchase', { value: order.total, currency: 'USD', order_id: order.id }, { event_id: eventId })
 
   await $fetch('/api/tiktok/event', {
     method: 'POST',
@@ -107,7 +107,7 @@ async function sha256(value: string) {
 }
 
 const { proxy } = useScriptTikTokPixel({ id: 'YOUR_PIXEL_ID' })
-proxy.ttq('identify', {
+proxy.ttq.identify({
   email: await sha256('user@example.com'.trim().toLowerCase()),
   phone_number: await sha256('+15551234567'),
 })

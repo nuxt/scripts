@@ -62,64 +62,6 @@ export function normalizeLatLng(
 }
 
 /**
- * Defines a deprecated property alias on an exposed object. Reading the alias
- * returns the value of the canonical key and emits a one-shot
- * `console.warn` (so repeated reads don't spam the console).
- *
- * Used to provide backward-compatible renames on `defineExpose` payloads
- * without breaking existing template-ref consumers. Call sites should wrap
- * this in `if (import.meta.dev)` so production builds skip the getter
- * entirely and the alias stays a plain data property.
- */
-export function defineDeprecatedAlias<T extends object, K extends keyof T>(
-  target: T,
-  alias: string,
-  canonicalKey: K,
-  message: string,
-): T {
-  let warned = false
-  Object.defineProperty(target, alias, {
-    get() {
-      if (!warned) {
-        warned = true
-        console.warn(message)
-      }
-      return target[canonicalKey]
-    },
-    enumerable: true,
-    configurable: true,
-  })
-  return target
-}
-
-/**
- * Emits dev-mode deprecation warnings for the legacy top-level `center` and
- * `zoom` props on `<ScriptGoogleMaps>`. Both props still work, but new code
- * should pass them via `mapOptions` instead.
- *
- * Returns the number of warnings emitted (useful for tests).
- */
-export function warnDeprecatedTopLevelMapProps(props: {
-  center?: unknown
-  zoom?: unknown
-}): number {
-  let warned = 0
-  if (props.center !== undefined) {
-    warned++
-    console.warn(
-      '[nuxt-scripts] <ScriptGoogleMaps> prop "center" is deprecated; use `:map-options="{ center: ... }"` instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
-    )
-  }
-  if (props.zoom !== undefined) {
-    warned++
-    console.warn(
-      '[nuxt-scripts] <ScriptGoogleMaps> prop "zoom" is deprecated; use `:map-options="{ zoom: ... }"` instead. See https://scripts.nuxt.com/docs/migration-guide/v0-to-v1',
-    )
-  }
-  return warned
-}
-
-/**
  * Wait until the Google Maps API and a Map instance are both available.
  *
  * Triggers script loading via `load()` if not already loaded. Uses an

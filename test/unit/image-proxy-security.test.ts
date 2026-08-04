@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import { createApp, toNodeListener } from 'h3'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
-vi.mock('#nuxt-scripts/nitro', () => ({
+vi.mock('nitropack/runtime', () => ({
   defineCachedFunction: (handler: (...args: any[]) => any) => handler,
   useRuntimeConfig: () => ({}),
 }))

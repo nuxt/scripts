@@ -22,9 +22,9 @@
  * prerendered HTML for no practical gain.
  */
 
-import type { H3Event } from '#nuxt-scripts/h3'
+import type { H3Event } from 'h3'
 import { createHmac } from 'node:crypto'
-import { getQuery } from '#nuxt-scripts/h3'
+import { getQuery } from 'h3'
 import {
   PAGE_TOKEN_MAX_AGE,
   PAGE_TOKEN_PARAM,

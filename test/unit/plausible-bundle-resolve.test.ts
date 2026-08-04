@@ -16,14 +16,9 @@ describe('plausibleAnalytics bundle.resolve', () => {
     expect(resolve({ scriptId: 'abc123' } as any)).toBe('https://plausible.io/js/pa-abc123.js')
   })
 
-  it('returns default plausible.io URL with legacy extension', async () => {
+  it('rejects a missing scriptId', async () => {
     const resolve = await getPlausibleResolve()
-    expect(resolve({ extension: 'hash' } as any)).toBe('https://plausible.io/js/script.hash.js')
-  })
-
-  it('returns default basic plausible.io URL with no options', async () => {
-    const resolve = await getPlausibleResolve()
-    expect(resolve(undefined)).toBe('https://plausible.io/js/script.js')
+    expect(() => resolve(undefined)).toThrowError(/requires scriptId/)
   })
 
   it('honors user-supplied scriptInput.src for self-hosted Plausible', async () => {
@@ -32,9 +27,6 @@ describe('plausibleAnalytics bundle.resolve', () => {
     const selfHosted = 'https://my-self-hosted-plausible.io/js/script.js'
     expect(
       resolve({ scriptId: 'abc123', scriptInput: { src: selfHosted } } as any),
-    ).toBe(selfHosted)
-    expect(
-      resolve({ scriptInput: { src: selfHosted } } as any),
     ).toBe(selfHosted)
   })
 })

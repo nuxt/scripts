@@ -1,18 +1,10 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
-// trigger: 'manual' prevents the auto-generated plugin from loading all 18
-// scripts globally on every page. Pages that need the real SDK should provide
-// an explicit trigger in their composable call, keeping cross-provider noise low.
-const manual = { trigger: 'manual' as const }
-
 export default defineNuxtConfig({
   modules: [
     '@nuxt/scripts',
   ],
 
-  // The module merges registry into runtimeConfig.public.scripts via defu, but
-  // [input, options] arrays don't spread correctly. Explicit objects here ensure
-  // the bundler's registryConfig lookup gets proper {key: value} objects.
   runtimeConfig: {
     public: {
       scripts: {
@@ -26,7 +18,7 @@ export default defineNuxtConfig({
         hotjar: { id: 3925006, sv: 6 },
         tiktokPixel: { id: 'TEST_PIXEL_ID' },
         redditPixel: { id: 'a2_ilz4u0kbdr3v' },
-        plausibleAnalytics: { domain: 'scripts.nuxt.com', extension: 'local' },
+        plausibleAnalytics: { scriptId: 'gYyxvZhkMzdzXBAtSeSNz' },
         cloudflareWebAnalytics: { token: 'ade278253a19413c9bd923b079870902' },
         rybbitAnalytics: { siteId: '874' },
         umamiAnalytics: { websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c' },
@@ -61,41 +53,41 @@ export default defineNuxtConfig({
 
   scripts: {
     registry: {
-      googleAnalytics: [{ id: 'G-TR58L0EF8P' }, manual],
-      googleTagManager: [{ id: 'GTM-MWW974PF' }, manual],
-      metaPixel: [{ id: '3925006' }, manual],
-      segment: [{ writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C' }, manual],
-      xPixel: [{ id: 'ol7lz' }, manual],
-      snapchatPixel: [{ id: '2295cbcc-cb3f-4727-8c09-1133b742722c' }, manual],
-      clarity: [{ id: 'mqk2m9dr2v' }, manual],
-      hotjar: [{ id: 3925006, sv: 6 }, manual],
-      tiktokPixel: [{ id: 'TEST_PIXEL_ID' }, manual],
-      redditPixel: [{ id: 'a2_ilz4u0kbdr3v' }, manual],
-      plausibleAnalytics: [{ domain: 'scripts.nuxt.com', extension: 'local' }, manual],
-      cloudflareWebAnalytics: [{ token: 'ade278253a19413c9bd923b079870902' }, manual],
-      rybbitAnalytics: [{ siteId: '874' }, manual],
-      umamiAnalytics: [{ websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c' }, manual],
-      databuddyAnalytics: [{ clientId: 'demo-client-123' }, manual],
-      fathomAnalytics: [{ site: 'BRDEJWKJ' }, manual],
-      posthog: [{ apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W' }, manual],
-      intercom: [{ app_id: 'akg5rmxb' }, manual],
-      crisp: [{ id: 'b1021910-7ace-425a-9ef5-07f49e5ce417' }, manual],
-      vercelAnalytics: [{}, manual],
-      matomoAnalytics: [{ cloudId: 'demo.matomo.cloud', siteId: '1' }, manual],
-      mixpanelAnalytics: [{ token: '8fa1d44274ff7526b3788cf1c119050c' }, manual],
-      bingUet: [{ id: '247021147' }, manual],
-      googleAdsense: [{ client: 'ca-pub-3940256099942544' }, manual],
-      carbonAds: [{}, manual],
-      vimeoPlayer: [{}, manual],
-      youtubePlayer: [{}, manual],
-      npm: [{ packageName: 'js-confetti', file: 'dist/js-confetti.browser.js', version: '0.12.0' }, manual],
-      gravatar: [{}, manual],
-      lemonSqueezy: [{}, manual],
-      stripe: [{}, manual],
-      googleMaps: [{ apiKey: 'AIzaSyBtesttesttest' }, manual],
-      googleRecaptcha: [{ siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' }, manual],
-      googleSignIn: [{ clientId: '000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com' }, manual],
-      paypal: [{ clientId: 'test', sandbox: true }, manual],
+      googleAnalytics: { id: 'G-TR58L0EF8P', trigger: 'manual' },
+      googleTagManager: { id: 'GTM-MWW974PF', trigger: 'manual' },
+      metaPixel: { id: '3925006', trigger: 'manual' },
+      segment: { writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C', trigger: 'manual' },
+      xPixel: { id: 'ol7lz', trigger: 'manual' },
+      snapchatPixel: { id: '2295cbcc-cb3f-4727-8c09-1133b742722c', trigger: 'manual' },
+      clarity: { id: 'mqk2m9dr2v', trigger: 'manual' },
+      hotjar: { id: 3925006, sv: 6, trigger: 'manual' },
+      tiktokPixel: { id: 'TEST_PIXEL_ID', trigger: 'manual' },
+      redditPixel: { id: 'a2_ilz4u0kbdr3v', trigger: 'manual' },
+      plausibleAnalytics: { scriptId: 'gYyxvZhkMzdzXBAtSeSNz', trigger: 'manual' },
+      cloudflareWebAnalytics: { token: 'ade278253a19413c9bd923b079870902', trigger: 'manual' },
+      rybbitAnalytics: { siteId: '874', trigger: 'manual' },
+      umamiAnalytics: { websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c', trigger: 'manual' },
+      databuddyAnalytics: { clientId: 'demo-client-123', trigger: 'manual' },
+      fathomAnalytics: { site: 'BRDEJWKJ', trigger: 'manual' },
+      posthog: { apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W', trigger: 'manual' },
+      intercom: { app_id: 'akg5rmxb', trigger: 'manual' },
+      crisp: { id: 'b1021910-7ace-425a-9ef5-07f49e5ce417', trigger: 'manual' },
+      vercelAnalytics: { trigger: 'manual' },
+      matomoAnalytics: { cloudId: 'demo.matomo.cloud', siteId: '1', trigger: 'manual' },
+      mixpanelAnalytics: { token: '8fa1d44274ff7526b3788cf1c119050c', trigger: 'manual' },
+      bingUet: { id: '247021147', trigger: 'manual' },
+      googleAdsense: { client: 'ca-pub-3940256099942544', trigger: 'manual' },
+      carbonAds: { trigger: 'manual' },
+      vimeoPlayer: { trigger: 'manual' },
+      youtubePlayer: { trigger: 'manual' },
+      npm: { packageName: 'js-confetti', file: 'dist/js-confetti.browser.js', version: '0.12.0', trigger: 'manual' },
+      gravatar: { trigger: 'manual' },
+      lemonSqueezy: { trigger: 'manual' },
+      stripe: { trigger: 'manual' },
+      googleMaps: { apiKey: 'AIzaSyBtesttesttest', trigger: 'manual' },
+      googleRecaptcha: { siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', trigger: 'manual' },
+      googleSignIn: { clientId: '000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com', trigger: 'manual' },
+      paypal: { clientId: 'test', sandbox: true, trigger: 'manual' },
     },
   },
 })

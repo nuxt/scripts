@@ -10,14 +10,14 @@ const { status, proxy } = useScriptTikTokPixel({
 })
 
 function trackEvent() {
-  proxy.ttq('track', 'ViewContent', {
+  proxy.ttq.track('ViewContent', {
     content_name: 'Test Product',
     content_type: 'product',
   })
 }
 
 function trackPurchase() {
-  proxy.ttq('track', 'CompletePayment', {
+  proxy.ttq.track('CompletePayment', {
     value: 99.99,
     currency: 'USD',
   })

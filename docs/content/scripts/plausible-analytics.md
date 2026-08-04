@@ -1,6 +1,6 @@
 ---
 title: Plausible Analytics
-description: Load Plausible's site-specific or legacy tracker, including custom self-hosted endpoints.
+description: Load Plausible's site-specific tracker, including custom self-hosted endpoints.
 links:
   - label: Source
     icon: i-simple-icons-github
@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Plausible Analytics](https://plausible.io/) is a privacy-focused web analytics platform. This registry entry supports both Plausible's current site-specific script and its legacy domain-based script.
+[Plausible Analytics](https://plausible.io/) is a privacy-focused web analytics platform. This registry entry supports its current site-specific script.
 
 ::script-stats
 ::
@@ -22,6 +22,7 @@ If you use a self-hosted version of Plausible, provide both the script URL and t
 
 ```ts
 useScriptPlausibleAnalytics({
+  scriptId: 'YOUR_SCRIPT_ID',
   endpoint: 'https://my-self-hosted-plausible.io/api/event',
   scriptInput: {
     src: 'https://my-self-hosted-plausible.io/js/script.js'
@@ -29,11 +30,7 @@ useScriptPlausibleAnalytics({
 })
 ```
 
-For Plausible Cloud's current script, find the `scriptId` under **Site Installation** in your site settings. Plausible's [script update guide](https://plausible.io/docs/script-update-guide) explains the site-specific URL and the newer `plausible.init()`{lang="ts"} options.
-
-::callout{color="amber"}
-The current wrapper builds `plausible.init()`{lang="ts"} options but places its initialization hook inside `scriptOptions`, where `useRegistryScript` does not run it. With `scriptId`, options such as `customProperties`, `endpoint`, `fileDownloads`, `hashBasedRouting`, `autoCapturePageviews`, and `captureOnLocalhost` are therefore not applied; `trackForms` is not forwarded either. The legacy self-hosted example above still uses `data-api`, although development also logs a missing `scriptId`/`domain` warning for that valid custom-source setup.
-::
+For Plausible Cloud, find the `scriptId` under **Site Installation** in your site settings. Plausible's [script update guide](https://plausible.io/docs/script-update-guide) explains the site-specific URL and `plausible.init()`{lang="ts"} options.
 
 ### Extract a Script ID
 

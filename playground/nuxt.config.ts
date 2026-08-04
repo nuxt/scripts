@@ -30,7 +30,7 @@ export default defineNuxtConfig({
         hotjar: { id: 3925006, sv: 6 },
         tiktokPixel: { id: 'TEST_PIXEL_ID' },
         redditPixel: { id: 'a2_ilz4u0kbdr3v' },
-        plausibleAnalytics: { domain: 'scripts.nuxt.com' },
+        plausibleAnalytics: { scriptId: 'gYyxvZhkMzdzXBAtSeSNz' },
         cloudflareWebAnalytics: { token: 'ade278253a19413c9bd923b079870902' },
         rybbitAnalytics: { siteId: '874' },
         umamiAnalytics: { websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c' },
@@ -82,7 +82,7 @@ export default defineNuxtConfig({
       // Analytics — infrastructure only (composable driven on each page)
       googleAnalytics: { id: 'G-TR58L0EF8P', trigger: 'manual' },
       googleTagManager: { id: 'GTM-MWW974PF', trigger: 'manual' },
-      plausibleAnalytics: { domain: 'scripts.nuxt.com', trigger: 'manual' },
+      plausibleAnalytics: { scriptId: 'gYyxvZhkMzdzXBAtSeSNz', trigger: 'manual' },
       umamiAnalytics: { websiteId: 'ae15c227-67e8-434a-831f-67e6df88bd6c', trigger: 'manual' },
       fathomAnalytics: { site: 'BRDEJWKJ', trigger: 'manual' },
       cloudflareWebAnalytics: { token: 'ade278253a19413c9bd923b079870902', trigger: 'manual' },

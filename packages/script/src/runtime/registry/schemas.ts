@@ -622,11 +622,6 @@ export const MatomoAnalyticsOptions = object({
    */
   trackerUrl: optional(string()),
   /**
-   * Whether to track the initial page view on load.
-   * @deprecated Use `watch: true` (default) for automatic page view tracking.
-   */
-  trackPageView: optional(boolean()),
-  /**
    * Enable download and outlink tracking.
    */
   enableLinkTracking: optional(boolean()),

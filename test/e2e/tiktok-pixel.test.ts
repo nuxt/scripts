@@ -124,9 +124,7 @@ describe('tiktokPixel', async () => {
     }
   }, 60000)
 
-  it('proxy.ttq supports both the callable and method call forms', async () => {
-    // Backwards compatibility: `proxy.ttq('track', …)` (legacy) and
-    // `proxy.ttq.track(…)` both forward to the live `window.ttq` array.
+  it('proxy.ttq methods forward to the live queue', async () => {
     const browser = await getBrowser()
     const page = await browser.newPage()
     try {

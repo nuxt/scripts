@@ -687,7 +687,7 @@ describe('first-party privacy stripping', () => {
       'googleAnalytics', // scope-resolved AST rewrite for sendBeacon/fetch/XHR/Image
       'snapchatPixel', // scope-resolved AST rewrite for sendBeacon/XHR
       // googleTagManager — uses createElement('script') injection, not interceptable via XHR/fetch/sendBeacon
-      'plausibleAnalytics', // bundled + auto-inject endpoint, sendBeacon interception (needs extension: 'local' + __plausible flag for headless)
+      'plausibleAnalytics', // bundled + auto-inject endpoint, sendBeacon interception
       'tiktokPixel', // AST rewrite for analytics.tiktok.com, sendBeacon/fetch interception
       // databuddyAnalytics — SDK doesn't fire events with demo clientId in test window
       // intercom — SDK doesn't fire events with test app_id in headless (0 external leaks, 0 proxy requests)

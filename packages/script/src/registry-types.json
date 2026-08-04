@@ -332,11 +332,6 @@
         "name": "GoogleAnalyticsOptions",
         "kind": "const",
         "code": "export const GoogleAnalyticsOptions = object({\n  /**\n   * The GA4 measurement ID.\n   * @example 'G-XXXXXXXX'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs\n   */\n  id: optional(string()),\n  /**\n   * Global name for the dataLayer variable.\n   * @default 'dataLayer'\n   * @see https://developers.google.com/analytics/devguides/collection/gtagjs/setting-up-gtag#rename_the_data_layer\n   */\n  l: optional(string()),\n  /**\n   * Default GCMv2 consent state(s) fired as `gtag('consent', 'default', state)` before\n   * `gtag('js', ...)`. Pass an array to fire multiple defaults — for example, different\n   * defaults per `region` (more specific regions override broader ones at runtime).\n   * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior\n   */\n  defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),\n})"
-      },
-      {
-        "name": "GoogleAnalyticsConsent",
-        "kind": "type",
-        "code": "export type GoogleAnalyticsConsent = GcmConsentApi"
       }
     ],
     "google-maps": [
@@ -363,7 +358,7 @@
       {
         "name": "ScriptGoogleMapsProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   * @default ['mouseenter', 'mouseover', 'mousedown']\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * A latitude / longitude of where to focus the map.\n   *\n   * @deprecated Pass `center` via `mapOptions` instead. The top-level `center`\n   * prop will be removed in a future major version. When both are set,\n   * `mapOptions.center` wins.\n   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1\n   */\n  center?: google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`\n  /**\n   * Zoom level for the map (0-21). Reactive: changing this will update the map.\n   *\n   * @deprecated Pass `zoom` via `mapOptions` instead. The top-level `zoom`\n   * prop will be removed in a future major version. When both are set,\n   * `mapOptions.zoom` wins.\n   * @see https://scripts.nuxt.com/docs/migration-guide/v0-to-v1\n   */\n  zoom?: number\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map.\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API.\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   * @default 640\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map.\n   * @default 400\n   */\n  height?: number | string\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light' or 'dark'.\n   */\n  colorMode?: 'light' | 'dark'\n}"
+        "code": "interface ScriptGoogleMapsProps {\n  /**\n   * Defines the trigger event to load the script.\n   * @default ['mouseenter', 'mouseover', 'mousedown']\n   */\n  trigger?: ElementScriptTrigger\n  /**\n   * Defines the Google Maps API key. Must have access to the Static Maps API as well.\n   */\n  apiKey?: string\n  /**\n   * Options for the map.\n   */\n  mapOptions?: google.maps.MapOptions\n  /**\n   * Defines the region of the map.\n   */\n  region?: string\n  /**\n   * Defines the language of the map.\n   */\n  language?: string\n  /**\n   * Defines the version of google maps js API.\n   */\n  version?: string\n  /**\n   * Defines the width of the map.\n   * @default 640\n   */\n  width?: number | string\n  /**\n   * Defines the height of the map.\n   * @default 400\n   */\n  height?: number | string\n  /**\n   * Customize the root element attributes.\n   */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n  /**\n   * Map IDs for light and dark color modes.\n   * When provided, the map will automatically switch styles based on color mode.\n   * Requires @nuxtjs/color-mode or manual colorMode prop.\n   */\n  mapIds?: { light?: string, dark?: string }\n  /**\n   * Manual color mode control. When provided, overrides auto-detection from @nuxtjs/color-mode.\n   * Accepts 'light' or 'dark'.\n   */\n  colorMode?: 'light' | 'dark'\n}"
       },
       {
         "name": "ScriptGoogleMapsEvents",
@@ -394,11 +389,6 @@
         "name": "ScriptGoogleMapsGeoJsonEvents",
         "kind": "interface",
         "code": "interface ScriptGoogleMapsGeoJsonEvents {\n  click: google.maps.Data.MouseEvent\n  contextmenu: google.maps.Data.MouseEvent\n  dblclick: google.maps.Data.MouseEvent\n  mousedown: google.maps.Data.MouseEvent\n  mousemove: google.maps.Data.MouseEvent\n  mouseout: google.maps.Data.MouseEvent\n  mouseover: google.maps.Data.MouseEvent\n  mouseup: google.maps.Data.MouseEvent\n  addfeature: google.maps.Data.AddFeatureEvent\n  removefeature: google.maps.Data.RemoveFeatureEvent\n  setgeometry: google.maps.Data.SetGeometryEvent\n  setproperty: google.maps.Data.SetPropertyEvent\n  removeproperty: google.maps.Data.RemovePropertyEvent\n}"
-      },
-      {
-        "name": "ScriptGoogleMapsHeatmapLayerProps",
-        "kind": "interface",
-        "code": "interface ScriptGoogleMapsHeatmapLayerProps {\n  /**\n   * Configuration options for the heatmap layer visualization.\n   * @deprecated Google deprecated the Maps JavaScript API `HeatmapLayer` (May 2025) and removed it in v3.65 (May 2026). Consider [deck.gl HeatmapLayer](https://deck.gl/docs/api-reference/aggregation-layers/heatmap-layer) instead.\n   * @see https://developers.google.com/maps/documentation/javascript/reference/visualization#HeatmapLayerOptions\n   */\n  options?: Omit<HeatmapLayerOptions, 'map'>\n}"
       },
       {
         "name": "ScriptGoogleMapsInfoWindowProps",
@@ -595,11 +585,6 @@
         "name": "GoogleTagManagerOptions",
         "kind": "const",
         "code": "export const GoogleTagManagerOptions = object({\n  /**\n   * GTM container ID (format: GTM-XXXXXX)\n   * @see https://developers.google.com/tag-platform/tag-manager/web#install-the-container\n   */\n  id: string(),\n\n  /**\n   * Optional dataLayer variable name\n   * @default 'dataLayer'\n   * @see https://developers.google.com/tag-platform/tag-manager/web/datalayer#rename_the_data_layer\n   */\n  l: optional(string()),\n\n  /**\n   * Authentication token for environment-specific container versions\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  auth: optional(string()),\n\n  /**\n   * Preview environment name\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  preview: optional(string()),\n\n  /** Forces GTM cookies to take precedence when true */\n  cookiesWin: optional(union([boolean(), literal('x')])),\n\n  /**\n   * Enables debug mode when true\n   * @see https://support.google.com/tagmanager/answer/6107056\n   */\n  debug: optional(union([boolean(), literal('x')])),\n\n  /**\n   * No Personal Advertising - disables advertising features when true\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   */\n  npa: optional(union([boolean(), literal('1')])),\n\n  /** Custom dataLayer name (alternative to \"l\" property) */\n  dataLayer: optional(string()),\n\n  /**\n   * Environment name for environment-specific container\n   * @see https://support.google.com/tagmanager/answer/6328337\n   */\n  envName: optional(string()),\n\n  /** Referrer policy for analytics requests */\n  authReferrerPolicy: optional(string()),\n\n  /**\n   * Default GCMv2 consent state(s) fired as `['consent','default', state]` onto the dataLayer\n   * before the `gtm.js` event. Pass an array to fire multiple defaults — for example,\n   * different defaults per `region` (more specific regions override broader ones at runtime).\n   * @see https://developers.google.com/tag-platform/tag-manager/templates/consent-apis\n   * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#region-specific-behavior\n   */\n  defaultConsent: optional(union([gcmConsentState, array(gcmConsentState)])),\n})"
-      },
-      {
-        "name": "GoogleTagManagerConsent",
-        "kind": "type",
-        "code": "export type GoogleTagManagerConsent = GcmConsentApi"
       }
     ],
     "gravatar": [
@@ -872,7 +857,7 @@
       {
         "name": "MatomoAnalyticsOptions",
         "kind": "const",
-        "code": "export const MatomoAnalyticsOptions = object({\n  /**\n   * The URL of your self-hosted Matomo instance.\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'https://matomo.example.com'\n   * @see https://developer.matomo.org/guides/tracking-javascript-guide\n   */\n  matomoUrl: optional(string()),\n  /**\n   * Your Matomo site ID.\n   * @default '1'\n   */\n  siteId: optional(union([string(), number()])),\n  /**\n   * Your Matomo Cloud ID (the subdomain portion of your `*.matomo.cloud` URL).\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'mysite.matomo.cloud'\n   */\n  cloudId: optional(string()),\n  /**\n   * A custom tracker URL. Overrides the default tracker endpoint derived from `matomoUrl` or `cloudId`.\n   */\n  trackerUrl: optional(string()),\n  /**\n   * Whether to track the initial page view on load.\n   * @deprecated Use `watch: true` (default) for automatic page view tracking.\n   */\n  trackPageView: optional(boolean()),\n  /**\n   * Enable download and outlink tracking.\n   */\n  enableLinkTracking: optional(boolean()),\n  /**\n   * Disable all tracking cookies for cookieless analytics.\n   */\n  disableCookies: optional(boolean()),\n  /**\n   * Automatically track page views on route change.\n   * @default true\n   */\n  watch: optional(boolean()),\n  /**\n   * Default tracking-consent state applied BEFORE the tracker is initialised.\n   * - `'required'` — call `requireConsent` without granting (user must opt in later).\n   * - `'given'` — call `requireConsent` then `setConsentGiven`.\n   * - `'not-required'` — no consent gating (default Matomo behaviour).\n   * @see https://developer.matomo.org/guides/tracking-consent\n   */\n  defaultConsent: optional(union([literal('required'), literal('given'), literal('not-required')])),\n})"
+        "code": "export const MatomoAnalyticsOptions = object({\n  /**\n   * The URL of your self-hosted Matomo instance.\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'https://matomo.example.com'\n   * @see https://developer.matomo.org/guides/tracking-javascript-guide\n   */\n  matomoUrl: optional(string()),\n  /**\n   * Your Matomo site ID.\n   * @default '1'\n   */\n  siteId: optional(union([string(), number()])),\n  /**\n   * Your Matomo Cloud ID (the subdomain portion of your `*.matomo.cloud` URL).\n   * Either `matomoUrl` or `cloudId` is required.\n   * @example 'mysite.matomo.cloud'\n   */\n  cloudId: optional(string()),\n  /**\n   * A custom tracker URL. Overrides the default tracker endpoint derived from `matomoUrl` or `cloudId`.\n   */\n  trackerUrl: optional(string()),\n  /**\n   * Enable download and outlink tracking.\n   */\n  enableLinkTracking: optional(boolean()),\n  /**\n   * Disable all tracking cookies for cookieless analytics.\n   */\n  disableCookies: optional(boolean()),\n  /**\n   * Automatically track page views on route change.\n   * @default true\n   */\n  watch: optional(boolean()),\n  /**\n   * Default tracking-consent state applied BEFORE the tracker is initialised.\n   * - `'required'` — call `requireConsent` without granting (user must opt in later).\n   * - `'given'` — call `requireConsent` then `setConsentGiven`.\n   * - `'not-required'` — no consent gating (default Matomo behaviour).\n   * @see https://developer.matomo.org/guides/tracking-consent\n   */\n  defaultConsent: optional(union([literal('required'), literal('given'), literal('not-required')])),\n})"
       },
       {
         "name": "MatomoAnalyticsApi",
@@ -1002,12 +987,12 @@
       {
         "name": "PlausibleAnalyticsOptions",
         "kind": "interface",
-        "code": "export interface PlausibleAnalyticsOptions {\n  /**\n   * Unique script ID for your site (recommended - new format as of October 2025)\n   * Get this from your Plausible dashboard under Site Installation\n   *\n   * Extract it from your Plausible script URL:\n   * ```\n   * <script src=\"https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js\"></script>\n   *                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n   *                                       scriptId: 'gYyxvZhkMzdzXBAtSeSNz'\n   * ```\n   * @example 'gYyxvZhkMzdzXBAtSeSNz'\n   */\n  scriptId?: string\n  /**\n   * Your site domain\n   * @deprecated Use `scriptId` instead (new October 2025 format)\n   * @example 'example.com'\n   */\n  domain?: string\n  /**\n   * Script extensions for additional features\n   * @deprecated Use init options like `hashBasedRouting`, `captureOnLocalhost`, etc. instead (new October 2025 format)\n   */\n  extension?: 'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual' | Array<'hash' | 'outbound-links' | 'file-downloads' | 'tagged-events' | 'revenue' | 'pageview-props' | 'compat' | 'local' | 'manual'>\n  /** Custom properties to track with every pageview */\n  customProperties?: Record<string, any>\n  /** Custom tracking endpoint URL */\n  endpoint?: string\n  /** Configure file download tracking */\n  fileDownloads?: {\n    /** File extensions to track (default: pdf, xlsx, docx, txt, rtf, csv, exe, key, pps, ppt, pptx, 7z, pkg, rar, gz, zip, avi, mov, mp4, mpeg, wmv, midi, mp3, wav, wma, dmg) */\n    fileExtensions?: string[]\n  }\n  /** Enable hash-based routing for single-page apps */\n  hashBasedRouting?: boolean\n  /** Set to false to manually trigger pageviews */\n  autoCapturePageviews?: boolean\n  /** Enable tracking on localhost */\n  captureOnLocalhost?: boolean\n  /** Enable form submission tracking */\n  trackForms?: boolean\n}"
+        "code": "export interface PlausibleAnalyticsOptions {\n  /**\n   * Unique script ID for your site.\n   * Get this from your Plausible dashboard under Site Installation\n   *\n   * Extract it from your Plausible script URL:\n   * ```\n   * <script src=\"https://plausible.io/js/pa-gYyxvZhkMzdzXBAtSeSNz.js\"></script>\n   *                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n   *                                       scriptId: 'gYyxvZhkMzdzXBAtSeSNz'\n   * ```\n   * @example 'gYyxvZhkMzdzXBAtSeSNz'\n   */\n  scriptId: string\n  /** Custom properties to track with every pageview */\n  customProperties?: Record<string, any>\n  /** Custom tracking endpoint URL */\n  endpoint?: string\n  /** Configure file download tracking */\n  fileDownloads?: {\n    /** File extensions to track (default: pdf, xlsx, docx, txt, rtf, csv, exe, key, pps, ppt, pptx, 7z, pkg, rar, gz, zip, avi, mov, mp4, mpeg, wmv, midi, mp3, wav, wma, dmg) */\n    fileExtensions?: string[]\n  }\n  /** Enable hash-based routing for single-page apps */\n  hashBasedRouting?: boolean\n  /** Set to false to manually trigger pageviews */\n  autoCapturePageviews?: boolean\n  /** Enable tracking on localhost */\n  captureOnLocalhost?: boolean\n  /** Enable form submission tracking */\n  trackForms?: boolean\n}"
       },
       {
         "name": "PlausibleInitOptions",
         "kind": "interface",
-        "code": "export interface PlausibleInitOptions {\n  customProperties?: Record<string, any>\n  endpoint?: string\n  fileDownloads?: {\n    fileExtensions?: string[]\n  }\n  hashBasedRouting?: boolean\n  autoCapturePageviews?: boolean\n  captureOnLocalhost?: boolean\n}"
+        "code": "export interface PlausibleInitOptions {\n  customProperties?: Record<string, any>\n  endpoint?: string\n  fileDownloads?: {\n    fileExtensions?: string[]\n  }\n  hashBasedRouting?: boolean\n  autoCapturePageviews?: boolean\n  captureOnLocalhost?: boolean\n  trackForms?: boolean\n}"
       },
       {
         "name": "PlausibleFunction",
@@ -1068,7 +1053,7 @@
       {
         "name": "RybbitAnalyticsApi",
         "kind": "interface",
-        "code": "export interface RybbitAnalyticsApi {\n  /**\n   * Tracks a page view\n   */\n  pageview: () => void\n\n  /**\n   * Tracks a custom event\n   * @param name Name of the event\n   * @param properties Optional properties for the event\n   */\n  event: (name: string, properties?: Record<string, any>) => void\n\n  /**\n   * Sets a custom user ID for tracking logged-in users\n   * @param userId The user ID to set (will be stored in localStorage)\n   */\n  identify: (userId: string) => void\n\n  /**\n   * Clears the stored user ID\n   */\n  clearUserId: () => void\n\n  /**\n   * Gets the currently set user ID\n   * @returns The current user ID or null if not set\n   */\n  getUserId: () => string | null\n  /**\n   * @deprecated use top level functions instead\n   */\n  rybbit: RybbitAnalyticsApi\n}"
+        "code": "export interface RybbitAnalyticsApi {\n  /**\n   * Tracks a page view\n   */\n  pageview: () => void\n\n  /**\n   * Tracks a custom event\n   * @param name Name of the event\n   * @param properties Optional properties for the event\n   */\n  event: (name: string, properties?: Record<string, any>) => void\n\n  /**\n   * Sets a custom user ID for tracking logged-in users\n   * @param userId The user ID to set (will be stored in localStorage)\n   */\n  identify: (userId: string) => void\n\n  /**\n   * Clears the stored user ID\n   */\n  clearUserId: () => void\n\n  /**\n   * Gets the currently set user ID\n   * @returns The current user ID or null if not set\n   */\n  getUserId: () => string | null\n}"
       },
       {
         "name": "RybbitQueueState",
@@ -1196,14 +1181,9 @@
         "code": "export interface TtqInstance {\n  /** Track a page view. */\n  page: () => void\n  /** Track a standard or custom conversion event. */\n  track: (event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void\n  /** Associate advanced-matching identifiers with the current user. */\n  identify: (properties: IdentifyProperties) => void\n  /** Opt user in to tracking. Queued before the script loads; live once `events.js` binds. */\n  grantConsent: () => void\n  /** Opt user out of tracking. Queued before the script loads; live once `events.js` binds. */\n  revokeConsent: () => void\n  /** Defer consent until an explicit grant/revoke. Queued before the script loads; live once `events.js` binds. */\n  holdConsent: () => void\n  enableCookie: () => void\n  disableCookie: () => void\n}"
       },
       {
-        "name": "TtqCallable",
-        "kind": "type",
-        "code": "type TtqCallable\n  = ((cmd: 'track', event: StandardEvents | (string & {}), properties?: EventProperties, options?: TrackOptions) => void)\n    & ((cmd: 'page') => void)\n    & ((cmd: 'identify', properties: IdentifyProperties) => void)\n    & ((cmd: (string & {}), ...args: any[]) => void)"
-      },
-      {
         "name": "Ttq",
         "kind": "type",
-        "code": "export type Ttq = TtqCallable & TtqInstance & {\n  /** Resolve the per-pixel method bag for a specific pixel id. */\n  instance: (id: string) => TtqInstance\n}"
+        "code": "export type Ttq = TtqInstance & {\n  /** Resolve the per-pixel method bag for a specific pixel id. */\n  instance: (id: string) => TtqInstance\n}"
       },
       {
         "name": "TikTokPixelApi",
@@ -2161,12 +2141,6 @@
         "description": "A custom tracker URL. Overrides the default tracker endpoint derived from `matomoUrl` or `cloudId`."
       },
       {
-        "name": "trackPageView",
-        "type": "boolean",
-        "required": false,
-        "description": "Whether to track the initial page view on load."
-      },
-      {
         "name": "enableLinkTracking",
         "type": "boolean",
         "required": false,
@@ -2879,18 +2853,6 @@
         "description": "Defines the Google Maps API key. Must have access to the Static Maps API as well."
       },
       {
-        "name": "center",
-        "type": "google.maps.LatLng | google.maps.LatLngLiteral | `${string},${string}`",
-        "required": false,
-        "description": "A latitude / longitude of where to focus the map. prop will be removed in a future major version. When both are set, `mapOptions.center` wins."
-      },
-      {
-        "name": "zoom",
-        "type": "number",
-        "required": false,
-        "description": "Zoom level for the map (0-21). Reactive: changing this will update the map. prop will be removed in a future major version. When both are set, `mapOptions.zoom` wins."
-      },
-      {
         "name": "mapOptions",
         "type": "google.maps.MapOptions",
         "required": false,
@@ -3173,14 +3135,6 @@
         "type": "google.maps.Data.RemovePropertyEvent",
         "required": false,
         "description": "Fired when a feature's property is removed."
-      }
-    ],
-    "ScriptGoogleMapsHeatmapLayerProps": [
-      {
-        "name": "options",
-        "type": "Omit<HeatmapLayerOptions, 'map'>",
-        "required": false,
-        "description": "Configuration options for the heatmap layer visualization."
       }
     ],
     "ScriptGoogleMapsInfoWindowProps": [

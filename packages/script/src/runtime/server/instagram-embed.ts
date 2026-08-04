@@ -1,5 +1,5 @@
-import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
-import { useRuntimeConfig } from '#nuxt-scripts/nitro'
+import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { useRuntimeConfig } from 'nitropack/runtime'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { isEmbedShell, isSafeInstagramCssUrl, isSafeInstagramEmbedUrl, isSafeInstagramPostUrl, sanitizeInstagramEmbedCss, sanitizeInstagramEmbedHtml } from './utils/instagram-embed'
 import { withSigning } from './utils/withSigning'
