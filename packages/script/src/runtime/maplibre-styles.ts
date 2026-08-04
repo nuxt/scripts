@@ -1,11 +1,9 @@
-import type * as MapLibre from 'maplibre-gl'
-
 export const MAPLIBRE_STYLESHEET_URL = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css'
 export const MAPLIBRE_STYLESHEET_INTEGRITY = 'sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK'
 
 const MAPLIBRE_STYLE_ID = 'nuxt-scripts-maplibre-styles'
 
-export function configureMapLibreWorker(maplibre: typeof MapLibre | undefined, workerUrl?: string): void {
+export function configureMapLibreWorker(maplibre: { setWorkerUrl: (value: string) => void } | undefined, workerUrl?: string): void {
   if (maplibre && workerUrl)
     maplibre.setWorkerUrl(workerUrl)
 }
