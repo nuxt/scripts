@@ -64,15 +64,17 @@ defineExpose({
   intercom,
 })
 
-let observer: MutationObserver
+let observer: MutationObserver | undefined
 onMounted(() => {
   watch(status, (status) => {
     if (status === 'loading') {
+      observer?.disconnect()
       observer = new MutationObserver(() => {
         if (document.getElementById('intercom-frame')) {
           isReady.value = true
           emits('ready', intercom)
-          observer.disconnect()
+          observer?.disconnect()
+          observer = undefined
         }
       })
       observer.observe(document.body, { childList: true, subtree: true })
@@ -84,6 +86,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   observer?.disconnect()
+  observer = undefined
 })
 
 const rootAttrs = computed(() => {

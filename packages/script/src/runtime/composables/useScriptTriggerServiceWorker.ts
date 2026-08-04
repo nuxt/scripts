@@ -16,38 +16,42 @@ export function useScriptTriggerServiceWorker(options?: { timeout?: number }): P
       return
     }
 
-    let resolved = false
-    const done = () => {
-      if (resolved)
-        return
-      resolved = true
-      resolve(true)
+    let settled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const cleanup = () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+      if (timer !== undefined) {
+        clearTimeout(timer)
+        timer = undefined
+      }
     }
+    const done = (value: boolean) => {
+      if (settled)
+        return
+      settled = true
+      cleanup()
+      resolve(value)
+    }
+
+    function onControllerChange() {
+      done(true)
+    }
+
+    tryOnScopeDispose(() => done(false))
 
     // If SW is already controlling, we're good
     if (navigator.serviceWorker.controller) {
-      done()
+      done(true)
       return
     }
 
     // Wait for SW to take control of this page
-    const onControllerChange = () => {
-      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
-      done()
-    }
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
 
     // Fallback timeout in case SW never takes control
-    const timer = setTimeout(() => {
-      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+    timer = setTimeout(() => {
       console.warn('[nuxt-scripts] Service worker not controlling after timeout, loading scripts anyway')
-      done()
+      done(true)
     }, timeout)
-
-    tryOnScopeDispose(() => {
-      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
-      clearTimeout(timer)
-      resolve(false)
-    })
   })
 }
