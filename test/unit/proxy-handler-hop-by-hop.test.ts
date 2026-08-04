@@ -13,7 +13,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
  * Additionally, any header named in the `Connection` header value must also be stripped.
  */
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',
