@@ -32,7 +32,9 @@ import {
   HotjarOptions,
   InstagramEmbedOptions,
   IntercomOptions,
+  LeafletOptions,
   LinkedInInsightOptions,
+  MapLibreOptions,
   MatomoAnalyticsOptions,
   MetaPixelOptions,
   MixpanelAnalyticsOptions,
@@ -158,6 +160,8 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('vimeoPlayer', 'Vimeo Player', 'video', 'useScriptVimeoPlayer', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   // content
   m('googleMaps', 'Google Maps', 'content', 'useScriptGoogleMaps', {}, null),
+  m('leaflet', 'Leaflet', 'content', 'useScriptLeaflet', { bundle: true }, null),
+  m('maplibre', 'MapLibre GL JS', 'content', 'useScriptMapLibre', { bundle: true }, null),
   m('instagramEmbed', 'Instagram Embed', 'content', false, {}, null),
   m('xEmbed', 'X Embed', 'content', false, {}, null),
   m('blueskyEmbed', 'Bluesky Embed', 'content', false, {}, null),
@@ -695,6 +699,21 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         { route: '/_scripts/proxy/google-maps-geocode', handler: './runtime/server/google-maps-geocode-proxy', requiresSigning: true },
       ],
     }),
+    def('leaflet', {
+      schema: LeafletOptions,
+      label: 'Leaflet',
+      src: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+      category: 'content',
+      bundle: true,
+    }),
+    def('maplibre', {
+      composableName: 'useScriptMapLibre',
+      schema: MapLibreOptions,
+      label: 'MapLibre GL JS',
+      src: 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js',
+      category: 'content',
+      bundle: true,
+    }),
     def('blueskyEmbed', {
       composableName: false,
       schema: BlueskyEmbedOptions,
@@ -882,8 +901,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
  */
 export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: Record<string, string> = {}): string {
   return `function(url, location, type) {
-  if (url.origin !== location.origin) {
-    var aliases = ${JSON.stringify(domainAliases)};
+  if ((url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== location.origin) {
+    var aliases = Object.assign(Object.create(null), ${JSON.stringify(domainAliases)});
     var seg = aliases[url.host] || url.host;
     return new URL(${JSON.stringify(proxyPrefix)} + '/' + seg + url.pathname + url.search, location.origin);
   }

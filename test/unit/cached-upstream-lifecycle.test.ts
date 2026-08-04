@@ -23,7 +23,9 @@ describe('upstream cache storage ownership', () => {
   })
 
   it('puts JSON proxy payloads in the same bounded cache mount', () => {
-    createCachedJsonFetch('json-test', 60, url => url)
+    createCachedJsonFetch('json-test', 60, url => url, {
+      allowUrl: () => true,
+    })
 
     expect(defineCachedFunction).toHaveBeenCalledWith(
       expect.any(Function),
