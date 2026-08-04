@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
  * validating the allowlist and forwarding upstream.
  */
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
       proxyPrefix: '/_scripts/p',

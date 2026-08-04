@@ -10,7 +10,7 @@ const { defineCachedFunction } = vi.hoisted(() => ({
   defineCachedFunction: vi.fn((fn: (...args: any[]) => any) => fn),
 }))
 
-vi.mock('nitropack/runtime', () => ({ defineCachedFunction }))
+vi.mock('#nuxt-scripts/nitro', () => ({ defineCachedFunction }))
 
 describe('upstream cache storage ownership', () => {
   beforeEach(() => {

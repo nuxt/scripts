@@ -1,8 +1,7 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
 import { withQuery } from 'ufo'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedBinaryFetch, isSafeHttpsUrl } from './utils/cached-upstream'
-import { withSigning } from './utils/withSigning'
 
 // Gravatar avatars keyed on `hash + sizing/default/rating` are essentially
 // immutable for the hour timescale; a 1-hour cache balances freshness (users
@@ -21,7 +20,7 @@ const cachedGravatarFetch = createCachedBinaryFetch('nuxt-scripts-gravatar', 360
     && (url.hostname === 'gravatar.com' || url.hostname.endsWith('.gravatar.com')),
 })
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const proxyConfig = (runtimeConfig.public['nuxt-scripts'] as any)?.gravatarProxy
 
@@ -103,4 +102,4 @@ export default withSigning(defineEventHandler(async (event) => {
   setHeader(event, 'X-Content-Type-Options', 'nosniff')
 
   return result.body
-}))
+})

@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: lts/*
           cache: pnpm
 
       - name: Install dependencies
@@ -57,7 +57,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: lts/*
           cache: pnpm
 
       - name: Install dependencies
@@ -86,7 +86,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: lts/*
           cache: pnpm
 
       - name: Install dependencies
@@ -113,7 +113,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: lts/*
           cache: pnpm
 
       - name: Install dependencies
@@ -143,3 +143,43 @@ jobs:
           for test_file in test/e2e/*.test.ts; do
             pnpm vitest run --project e2e "$test_file"
           done
+
+  nitro-3:
+    runs-on: ubuntu-24.04-arm
+    name: Nitro 3 compatibility
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Install Nuxt 5
+        run: |
+          pnpm add --workspace-root --save-dev "nuxt@npm:nuxt-nightly@5.0.0-29745766.482f3357" "@nuxt/kit@npm:@nuxt/kit-nightly@5.0.0-29745766.482f3357"
+          pnpm --filter @nuxt/scripts add --save-dev "@nuxt/kit@npm:@nuxt/kit-nightly@5.0.0-29745766.482f3357"
+
+      - name: Dev prepare
+        run: pnpm --filter @nuxt/scripts dev:prepare
+
+      - name: Nuxt prepare
+        run: |
+          pnpm exec nuxt prepare
+          pnpm exec nuxt prepare test/fixtures/proxy-alias
+
+      - name: Typecheck Nitro 3 compatibility
+        run: pnpm exec vue-tsc --noEmit -p test/fixtures/proxy-alias/.nuxt/tsconfig.server.json
+
+      - name: Run Nitro 3 compatibility tests
+        run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts

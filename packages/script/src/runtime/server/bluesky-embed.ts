@@ -1,8 +1,6 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
 import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteBlueskyPostImages } from './utils/embed-rewriters'
-import { withSigning } from './utils/withSigning'
 
 interface PostThreadResponse {
   thread: {
@@ -52,7 +50,7 @@ const cachedPostFetch = createCachedJsonFetch<PostThreadResponse>(
   },
 )
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const postUrl = query.url as string
 
@@ -119,17 +117,15 @@ export default withSigning(defineEventHandler(async (event) => {
     })
   }
 
-  // Rewrite CDN image URLs to proxied (HMAC-signed when a secret is set) URLs
-  // so the client can render them without tripping the `withSigning` 403.
+  // Rewrite CDN image URLs through the allowlisted image proxy.
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_BSKY_SUFFIX_RE, '') || '/_scripts'
   const imagePath = `${prefix}/embed/bluesky-image`
-  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
-  rewriteBlueskyPostImages(post, imagePath, secret)
+  rewriteBlueskyPostImages(post, imagePath)
 
   // Cache for 10 minutes
   setHeader(event, 'Content-Type', 'application/json')
   setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return post
-}))
+})

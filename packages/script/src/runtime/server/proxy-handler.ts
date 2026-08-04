@@ -1,6 +1,6 @@
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, sendStream, setResponseHeader, setResponseStatus } from 'h3'
-import { useNitroApp, useRuntimeConfig } from 'nitropack/runtime'
+import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, sendStream, setResponseHeader, setResponseStatus } from '#nuxt-scripts/h3'
+import { useNitroApp, useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { matchDomain } from './utils/match-domain'
 import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
 import {

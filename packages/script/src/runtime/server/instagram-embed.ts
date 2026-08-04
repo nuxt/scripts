@@ -1,8 +1,6 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
-import { useRuntimeConfig } from 'nitropack/runtime'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { isEmbedShell, isSafeInstagramCssUrl, isSafeInstagramEmbedUrl, isSafeInstagramPostUrl, sanitizeInstagramEmbedCss, sanitizeInstagramEmbedHtml } from './utils/instagram-embed'
-import { withSigning } from './utils/withSigning'
 
 export { proxyAssetUrl, proxyImageUrl, rewriteUrl, rewriteUrlsInText, scopeCss } from './utils/instagram-embed'
 
@@ -48,12 +46,11 @@ const cachedCssFetch = createCachedJsonFetch<string>(
   },
 )
 
-export default withSigning(defineEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
   // Derive the scripts prefix from the handler's own route path.
   // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
   const handlerPath = event.path?.split('?')[0] || ''
   const prefix = handlerPath.replace(EMBED_INSTAGRAM_SUFFIX_RE, '') || '/_scripts'
-  const secret = (useRuntimeConfig()['nuxt-scripts'] as { proxySecret?: string } | undefined)?.proxySecret
 
   const query = getQuery(event)
   const postUrl = query.url as string
@@ -104,7 +101,7 @@ export default withSigning(defineEventHandler(async (event) => {
     })
   })
 
-  const { bodyHtml, cssUrls } = sanitizeInstagramEmbedHtml(html, prefix, secret)
+  const { bodyHtml, cssUrls } = sanitizeInstagramEmbedHtml(html, prefix)
 
   const cssContents = await Promise.all(
     cssUrls.map(url =>
@@ -117,7 +114,7 @@ export default withSigning(defineEventHandler(async (event) => {
     ),
   )
 
-  const combinedCss = sanitizeInstagramEmbedCss(cssContents.join('\n'), '.instagram-embed-root', prefix, secret)
+  const combinedCss = sanitizeInstagramEmbedCss(cssContents.join('\n'), '.instagram-embed-root', prefix)
 
   const baseStyles = `
     .instagram-embed-root { background: white; max-width: 540px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px; }
@@ -134,4 +131,4 @@ export default withSigning(defineEventHandler(async (event) => {
   setHeader(event, 'X-Content-Type-Options', 'nosniff')
 
   return result
-}))
+})

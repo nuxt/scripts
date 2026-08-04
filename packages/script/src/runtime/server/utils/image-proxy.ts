@@ -1,7 +1,6 @@
-import { createError, defineEventHandler, getQuery, setHeader } from 'h3'
+import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
 import { createCachedBinaryFetch } from './cached-upstream'
 import { isPublicNetworkHostname } from './network-host'
-import { withSigning } from './withSigning'
 
 const AMP_RE = /&amp;/g
 
@@ -50,7 +49,7 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     allowUrl: urlAllowed,
   })
 
-  return withSigning(defineEventHandler(async (event) => {
+  return defineEventHandler(async (event) => {
     const query = getQuery(event)
     let url = query.url as string
 
@@ -119,5 +118,5 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     setHeader(event, 'X-Content-Type-Options', 'nosniff')
 
     return result.body
-  }))
+  })
 }
