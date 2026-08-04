@@ -23,6 +23,8 @@ export default defineConfig({
       defineProject({
         resolve: {
           alias: {
+            '#nuxt-scripts/h3': 'h3',
+            '#nuxt-scripts/nitro': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
             // Virtual emitted by the Nuxt module at build time; unit tests
             // mock it via `vi.mock('#build/nuxt-scripts-snippets')`, but the
             // import must first resolve to *something* the bundler accepts.

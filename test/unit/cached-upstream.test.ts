@@ -5,11 +5,12 @@ const { cacheDefinitions, hashMock } = vi.hoisted(() => ({
   hashMock: vi.fn((value: unknown) => `hashed:${JSON.stringify(value)}`),
 }))
 
-vi.mock('nitropack/runtime', () => ({
+vi.mock('#nuxt-scripts/nitro', () => ({
   defineCachedFunction: vi.fn((handler, options) => {
     cacheDefinitions.push(options)
     return handler
   }),
+  useRuntimeConfig: () => ({}),
 }))
 
 vi.mock('ohash', () => ({

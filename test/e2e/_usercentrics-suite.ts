@@ -86,7 +86,10 @@ export function defineUsercentricsSuite() {
   // integration breaks even though the stubbed behavioural tests above still
   // pass. Skipped on offline CI (network failure is tolerated, not asserted).
   it('live loader URL still serves a body that wires __ucCmp + UC_CMP_API_READY', async () => {
-    const res = await fetch('https://web.cmp.usercentrics.eu/ui/loader.js').catch(() => null)
+    const res = await fetch('https://web.cmp.usercentrics.eu/ui/loader.js').catch((error) => {
+      console.warn('[usercentrics] live-loader contract request failed', error)
+      return null
+    })
     if (!res || !res.ok) {
       console.warn('[usercentrics] skipping live-loader contract check; fetch failed')
       return
