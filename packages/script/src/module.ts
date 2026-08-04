@@ -841,7 +841,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (proxyStaticPresets.includes(proxyPreset)) {
           logger.warn(
             `Proxy collection endpoints require a server runtime (detected: ${proxyPreset || 'static'}).\n`
-            + 'Scripts will be bundled, but collection requests will not be proxied and URL signing will be unavailable.\n'
+            + 'Scripts will be bundled, but collection requests will not be proxied.\n'
             + 'Options: configure platform rewrites, switch to server-rendered mode, or disable with proxy: false.',
           )
         }

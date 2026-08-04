@@ -71,11 +71,11 @@ const props = withDefaults(defineProps<{
    */
   region?: string
   /**
-   * Digital signature for requests without an API key.
+   * Google Maps digital signature for the complete request URL. Requires an API key.
    */
   signature?: string
   /**
-   * API key override. When the proxy is enabled, this is ignored and the server-side key is used instead.
+   * Public API key override. Falls back to the Google Maps registry key.
    */
   apiKey?: string
   /**
@@ -212,8 +212,8 @@ const src = computed(() => {
     style: resolveStyle(props.style),
     language: props.language,
     region: props.region,
-    signature: props.signature,
     key: apiKey,
+    signature: props.signature,
   }
 
   // Remove undefined values

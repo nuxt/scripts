@@ -18,7 +18,7 @@ describe('issue-783 proxy token payload', () => {
   it('renders a direct Google URL with no proxy credential', async () => {
     const html = await $fetch<string>('/')
     expect(html).toContain('https://maps.googleapis.com/maps/api/staticmap')
-    expect(html).toContain('key=test-key')
+    expect(html).toContain('key=test-key&amp;signature=test-signature')
     expect(html).not.toContain('/_scripts/proxy/google-static-maps')
     expect(html).not.toContain('_pt=')
     expect(html).not.toContain('_ts=')
