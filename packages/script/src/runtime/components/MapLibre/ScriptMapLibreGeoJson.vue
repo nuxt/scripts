@@ -8,6 +8,7 @@ export type ScriptMapLibreGeoJsonLayer = Omit<MapLibre.LayerSpecification, 'sour
 
 export interface ScriptMapLibreGeoJsonResource {
   map: MapLibre.Map
+  onLoad: () => void
   onStyleLoad: () => void
 }
 </script>
@@ -77,11 +78,17 @@ function syncResources(map: MapLibreGl.Map): void {
 const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
   create({ map }) {
     const onStyleLoad = () => syncResources(map)
+    const onLoad = () => {
+      if (!ownedSourceId)
+        syncResources(map)
+    }
     map.on('style.load', onStyleLoad)
+    map.on('load', onLoad)
     syncResources(map)
-    return { map, onStyleLoad }
+    return { map, onLoad, onStyleLoad }
   },
   cleanup(resource) {
+    resource.map.off('load', resource.onLoad)
     resource.map.off('style.load', resource.onStyleLoad)
     removeOwnedResources(resource.map)
   },

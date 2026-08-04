@@ -259,6 +259,29 @@ describe('mapLibre components', () => {
     expect(mocks.map.removeSource).toHaveBeenLastCalledWith('greater-melbourne')
   })
 
+  it('adds GeoJSON resources when the initial map load finishes', async () => {
+    const mocks = createMapLibreMock()
+    mocks.map.isStyleLoaded.mockReturnValue(false)
+    mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'delivery-route',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'delivery-progress', type: 'line' }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    expect(mocks.map.addSource).not.toHaveBeenCalled()
+    mocks.map.isStyleLoaded.mockReturnValue(true)
+    mocks.styleEvents.get('load')?.()
+
+    expect(mocks.map.addSource).toHaveBeenCalledWith('delivery-route', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+    })
+  })
+
   it('rolls back a partially created GeoJSON resource', async () => {
     const mocks = createMapLibreMock()
     const creationFailure = new Error('Invalid style layer')
