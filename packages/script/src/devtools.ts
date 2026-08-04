@@ -55,7 +55,7 @@ export async function setupDevtools(nuxt: Nuxt, options: DevtoolsOptions = {}) {
   })
 }
 
-function setupStandaloneApi(nuxt: Nuxt) {
+export function setupStandaloneApi(nuxt: Nuxt) {
   // In-memory store for serialized script state
   let scriptsState: { scripts: Record<string, any>, version?: string, firstPartyData?: any, updatedAt: number } = {
     scripts: {},

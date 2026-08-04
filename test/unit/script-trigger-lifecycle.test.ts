@@ -8,6 +8,7 @@ import { useScriptTriggerInteraction } from '../../packages/script/src/runtime/c
 import { useScriptTriggerServiceWorker } from '../../packages/script/src/runtime/composables/useScriptTriggerServiceWorker'
 
 const readyCallbacks: Array<() => void> = []
+let serviceWorkerDescriptor: PropertyDescriptor | undefined
 
 vi.mock('nuxt/app', () => ({
   onNuxtReady: (callback: () => void) => readyCallbacks.push(callback),
@@ -16,10 +17,15 @@ vi.mock('nuxt/app', () => ({
 describe('script trigger lifecycle cleanup', () => {
   beforeEach(() => {
     readyCallbacks.length = 0
+    serviceWorkerDescriptor = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker')
     vi.useFakeTimers()
   })
 
   afterEach(() => {
+    if (serviceWorkerDescriptor)
+      Object.defineProperty(navigator, 'serviceWorker', serviceWorkerDescriptor)
+    else
+      delete (navigator as any).serviceWorker
     vi.useRealTimers()
     vi.restoreAllMocks()
   })

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment happy-dom
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { useScriptYouTubePlayer } from '../../packages/script/src/runtime/registry/youtube-player'
 
@@ -36,6 +36,11 @@ describe('youtube player lifecycle', () => {
     mocks.useRegistryScript.mockImplementation(() => mocks.createHandle() as any)
   })
 
+  afterEach(() => {
+    delete (window as any).YT
+    delete (window as any).onYouTubeIframeAPIReady
+  })
+
   it('decorates the shared remove method only once across Vue proxies', () => {
     const first = useScriptYouTubePlayer({})
     const decoratedRemove = mocks.shared.remove
@@ -50,5 +55,22 @@ describe('youtube player lifecycle', () => {
 
     const afterRemove = useScriptYouTubePlayer({})
     expect(afterRemove.remove).toBe(decoratedRemove)
+  })
+
+  it('cleans readiness installed by repeated calls through the shared instance', () => {
+    mocks.useRegistryScript.mockImplementation((_key: string, createOptions: () => any) => {
+      const options = createOptions()
+      options.clientInit?.()
+      return mocks.createHandle() as any
+    })
+
+    const first = useScriptYouTubePlayer({})
+    const firstReadyHandler = window.onYouTubeIframeAPIReady
+    useScriptYouTubePlayer({})
+
+    expect(window.onYouTubeIframeAPIReady).not.toBe(firstReadyHandler)
+    first.remove()
+
+    expect(window.onYouTubeIframeAPIReady).toBeUndefined()
   })
 })
