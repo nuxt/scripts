@@ -232,6 +232,7 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       await page.goto(url('/linkedin-no-spa'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
       const collectCount = () => requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      await waitFor(() => collectCount() > 0, { message: 'initial /collect beacon' })
       const before = collectCount()
       await page.click('#trigger-spa-nav')
       await page.waitForURL('**/', { timeout: 5000 })
@@ -239,7 +240,6 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
       // it didn't change. Stability window catches a beacon that might fire
       // late, which is the failure mode we're guarding against.
       await waitForStable(collectCount)
-      expect(before).toBeGreaterThan(0)
       expect(collectCount()).toBe(before)
     }
     finally {

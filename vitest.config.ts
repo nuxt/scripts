@@ -51,6 +51,9 @@ export default defineConfig({
       defineProject({
         test: {
           name: 'e2e',
+          // Each file starts a Nuxt server and browser. Run them serially to
+          // avoid exhausting file watchers and starving script execution.
+          fileParallelism: false,
           include: [
             './test/e2e/**/*.test.ts',
           ],
