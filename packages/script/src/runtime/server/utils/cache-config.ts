@@ -8,3 +8,17 @@ export const NUXT_SCRIPTS_CACHE_BASE = 'nuxt-scripts-cache'
 export const NUXT_SCRIPTS_CACHE_MAX_ENTRIES = 500
 export const NUXT_SCRIPTS_CACHE_MAX_SIZE = 32 * 1024 * 1024
 export const NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE = 8 * 1024 * 1024
+
+interface NitroOptionsWithStorage {
+  storage?: Record<string, unknown>
+}
+
+export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage): void {
+  nitroOptions.storage ||= {}
+  nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] ||= {
+    driver: 'lru-cache',
+    max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
+    maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
+    maxEntrySize: NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
+  }
+}

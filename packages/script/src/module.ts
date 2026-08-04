@@ -44,15 +44,10 @@ import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
-import {
-  NUXT_SCRIPTS_CACHE_BASE,
-  NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
-  NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
-  NUXT_SCRIPTS_CACHE_MAX_SIZE,
-} from './runtime/server/utils/cache-config'
+import { ensureNuxtScriptsCacheStorage } from './runtime/server/utils/cache-config'
 import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
-import { hasUnheadSourceLessScriptLoader } from './unhead-features'
+import { hasUnheadSourceLessScriptLoaderFile } from './unhead-features'
 import { validateScriptsEnvVars } from './validate-env'
 
 export type { FirstPartyPrivacy }
@@ -630,9 +625,7 @@ export default defineNuxtModule<ModuleOptions>({
     const scriptsTypesPath = unheadPackagePath && typeof scriptsTypesExport === 'string'
       ? resolvePath_(dirname(unheadPackagePath), scriptsTypesExport)
       : null
-    const unheadSourceLessScriptLoader = !!scriptsTypesPath
-      && existsSync(scriptsTypesPath)
-      && hasUnheadSourceLessScriptLoader(readFileSync(scriptsTypesPath, 'utf8'))
+    const unheadSourceLessScriptLoader = hasUnheadSourceLessScriptLoaderFile(scriptsTypesPath)
     if (unheadVersion?.startsWith('1')) {
       logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
     }
@@ -1206,19 +1199,10 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
 
-    if (Object.keys(enabledEndpoints).length > 0) {
-      const nitroOptions = nuxt.options.nitro as any
-      nitroOptions.storage ||= {}
-      // Nitro's default memory storage has no eviction policy. Keep proxy and
-      // embed caches bounded unless the application supplied a dedicated
-      // persistent/distributed mount for this namespace.
-      nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] ||= {
-        driver: 'lru-cache',
-        max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
-        maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
-        maxEntrySize: NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
-      }
-    }
+    // Nitro's default memory storage has no eviction policy. Every proxy and
+    // embed cache shares this bounded mount, including proxy-only registries
+    // without dedicated server handlers. Preserve application-supplied mounts.
+    ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any)
 
     // Publish enabled endpoints to client for component opt-in checks
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(

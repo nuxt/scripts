@@ -73,4 +73,19 @@ describe('youtube player lifecycle', () => {
 
     expect(window.onYouTubeIframeAPIReady).toBeUndefined()
   })
+
+  it('preserves the receiver of a previous readiness callback', () => {
+    const previousReady = vi.fn()
+    window.onYouTubeIframeAPIReady = previousReady
+    mocks.useRegistryScript.mockImplementation((_key: string, createOptions: () => any) => {
+      const options = createOptions()
+      options.clientInit?.()
+      return mocks.createHandle() as any
+    })
+
+    useScriptYouTubePlayer({})
+    window.onYouTubeIframeAPIReady?.()
+
+    expect(previousReady.mock.contexts[0]).toBe(window)
+  })
 })

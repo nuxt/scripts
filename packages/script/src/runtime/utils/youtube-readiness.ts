@@ -35,7 +35,7 @@ export function armYouTubeReadiness(state: YouTubeReadinessState) {
     onReady = () => {
       restoreReady()
       try {
-        previousReady?.()
+        previousReady?.call(target)
       }
       catch (error) {
         if (import.meta.dev)
