@@ -60,6 +60,14 @@ describe('normalizeRegistryConfig', () => {
     expect(() => normalizeRegistryConfig(registry)).toThrowError(/registry\.plausible.*invalid/i)
   })
 
+  it.each(['scriptOptions', 'reverseProxyIntercept'])('rejects the removed %s field', (field) => {
+    const registry: Record<string, any> = {
+      calendly: { [field]: { bundle: false } },
+    }
+
+    expect(() => normalizeRegistryConfig(registry)).toThrowError(`registry.calendly.${field} is no longer supported`)
+  })
+
   it('deletes falsy entries', () => {
     const registry: Record<string, any> = { plausible: false, ga: null, gtm: undefined }
     normalizeRegistryConfig(registry)

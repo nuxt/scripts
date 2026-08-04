@@ -138,6 +138,7 @@ describe('@nuxt/scripts-cli', () => {
     writeFileSync(pagePath, `<script setup lang="ts">
 proxy.rybbit.pageview('/pricing')
 proxy.ttq('track', 'ViewContent', { value: 10 })
+proxy.ttq('page')
 </script>
 <template>
   <ScriptGoogleMapsAdvancedMarkerElement />
@@ -150,6 +151,7 @@ proxy.ttq('track', 'ViewContent', { value: 10 })
     expect(result.exitCode).toBe(0)
     expect(migrated).toContain('proxy.pageview(\'/pricing\')')
     expect(migrated).toContain('proxy.ttq.track(\'ViewContent\', { value: 10 })')
+    expect(migrated).toContain('proxy.ttq.page()')
     expect(migrated).toContain('<ScriptGoogleMapsMarker />')
     expect(migrated).not.toContain('AdvancedMarkerElement')
   })

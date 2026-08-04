@@ -48,6 +48,11 @@ export function normalizeRegistryConfig(registry: Record<string, unknown>): void
       const scriptOptions: Record<string, unknown> = {}
 
       for (const [k, v] of Object.entries(entry)) {
+        if (k === 'scriptOptions' || k === 'reverseProxyIntercept') {
+          throw new TypeError(
+            `[nuxt-scripts] registry.${key}.${k} is no longer supported.`,
+          )
+        }
         if ((SCRIPT_OPTION_KEYS as readonly string[]).includes(k))
           scriptOptions[k] = v
         else

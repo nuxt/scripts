@@ -16,6 +16,7 @@ import { createError, useRuntimeConfig } from 'nuxt/app'
 import { parseQuery, parseURL, withQuery } from 'ufo'
 import { parse } from 'valibot'
 import { useScript } from './composables/useScript'
+import { createNpmScriptApiState } from './npm-script-api-state'
 import { createNpmScriptProxy } from './npm-script-proxy'
 import { attachGcmConsent } from './registry/_gcm-consent'
 
@@ -91,15 +92,14 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
     if (typeof scriptOptions.trigger === 'undefined')
       scriptOptions.trigger = 'client'
 
-    let api: T | undefined
+    const apiState = createNpmScriptApiState(clientUse as (() => T | undefined) | undefined)
     const instance = useScript<T>({
       key: String(registryKey),
       async loader({ signal }: { signal: AbortSignal }) {
         const initialized = await options.clientInit?.({ signal })
         if (signal.aborted)
           throw signal.reason || new Error(`Loading ${String(registryKey)} was aborted`)
-        api = await Promise.resolve(api || resolveApi?.() || initialized || {}) as T
-        return api
+        return apiState.load(resolveApi as (() => T | Promise<T> | undefined) | undefined, initialized as T | undefined)
       },
     } as any, scriptOptions) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
@@ -107,8 +107,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       [NPM_SCRIPT_PROXY_DECORATED]?: boolean
     }
     if (!sharedInstance[NPM_SCRIPT_PROXY_DECORATED]) {
-      api = clientUse?.() as T | undefined
-      sharedInstance.proxy = createNpmScriptProxy(sharedInstance.proxy, () => api)
+      sharedInstance.proxy = createNpmScriptProxy(sharedInstance.proxy, apiState.current)
       Object.defineProperty(sharedInstance, NPM_SCRIPT_PROXY_DECORATED, { value: true })
     }
     return instance

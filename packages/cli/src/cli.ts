@@ -249,6 +249,7 @@ function migrateSource(source: string): SourceMigration {
   const replacements: Array<[string | RegExp, string]> = [
     [/\bScriptGoogleMapsAdvancedMarkerElement\b/g, 'ScriptGoogleMapsMarker'],
     [/\bproxy\.rybbit\.pageview\b/g, 'proxy.pageview'],
+    [/\bproxy\.ttq\(\s*(['"])page\1\s*\)/g, 'proxy.ttq.page()'],
     [/\bproxy\.ttq\(\s*(['"])track\1\s*,\s*/g, 'proxy.ttq.track('],
   ]
 
