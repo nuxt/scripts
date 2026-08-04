@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { attachUsercentricsConsent } from '../../packages/script/src/runtime/registry/usercentrics'
+import { attachUsercentricsConsent } from '../../packages/script/src/runtime/utils/usercentrics-consent'
 
 vi.mock('@unhead/vue', () => ({ useHead: vi.fn() }))
 vi.mock('nuxt/app', () => ({ useNuxtApp: vi.fn() }))

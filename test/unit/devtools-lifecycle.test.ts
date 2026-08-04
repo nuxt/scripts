@@ -4,10 +4,12 @@ import { EventEmitter } from 'node:events'
 import { describe, expect, it, vi } from 'vitest'
 import { setupStandaloneApi } from '../../packages/script/src/devtools'
 
-const createRequest = (method: string): IncomingMessage => Object.assign(new EventEmitter(), {
-  method,
-  resume: vi.fn(),
-}) as IncomingMessage
+function createRequest(method: string): IncomingMessage {
+  return Object.assign(new EventEmitter(), {
+    method,
+    resume: vi.fn(),
+  }) as IncomingMessage
+}
 
 function createResponse() {
   let body: unknown

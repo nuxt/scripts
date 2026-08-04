@@ -4,7 +4,7 @@ import { useHead } from '@unhead/vue'
 /// <reference types="youtube" />
 import { watch } from 'vue'
 import { useRegistryScript } from '../utils'
-import { createAbortablePromise } from '../utils/abortable-promise'
+import { armYouTubeReadiness, useYouTubeReadinessState } from '../utils/youtube-readiness'
 
 export interface YouTubePlayerApi {
   YT: MaybePromise<{
@@ -37,10 +37,9 @@ declare global {
 
 export type YouTubePlayerInput = RegistryScriptInput
 const cleanupDecoration = Symbol('nuxt-scripts:youtube-cleanup')
+const readinessDecoration = Symbol('nuxt-scripts:youtube-readiness')
 
 export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: YouTubePlayerInput): UseScriptContext<T> {
-  let readyPromise: Promise<void> = Promise.resolve()
-  let readyController: AbortController | undefined
   const instance = useRegistryScript<T>('youtubePlayer', () => ({
     scriptInput: {
       src: 'https://www.youtube.com/iframe_api',
@@ -48,8 +47,9 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     },
     scriptOptions: {
       use() {
+        const readiness = useYouTubeReadinessState()
         return {
-          YT: window.YT || readyPromise.then(() => {
+          YT: window.YT || readiness.promise.then(() => {
             return window.YT
           }),
         }
@@ -58,49 +58,21 @@ export function useScriptYouTubePlayer<T extends YouTubePlayerApi>(_options: You
     clientInit: import.meta.server
       ? undefined
       : () => {
-          readyController?.abort()
-          readyController = new AbortController()
-          readyPromise = createAbortablePromise((resolve) => {
-            const previousReady = window.onYouTubeIframeAPIReady
-            let onReady: () => void
-            const restoreReady = () => {
-              if (window.onYouTubeIframeAPIReady !== onReady)
-                return
-              if (previousReady)
-                window.onYouTubeIframeAPIReady = previousReady
-              else
-                delete (window as any).onYouTubeIframeAPIReady
-            }
-            onReady = () => {
-              restoreReady()
-              try {
-                previousReady?.()
-              }
-              catch (error) {
-                if (import.meta.dev)
-                  console.error('[nuxt-scripts] Previous onYouTubeIframeAPIReady handler failed:', error)
-              }
-              finally {
-                resolve()
-              }
-            }
-            window.onYouTubeIframeAPIReady = onReady
-            return restoreReady
-          }, {
-            signal: readyController.signal,
-            abortMessage: 'YouTube API readiness wait was aborted',
-          })
-          // Removal can reject readiness before any caller has requested YT.
-          // Mark the internal promise handled while preserving rejection for
-          // consumers that do await the promise returned by `use()`.
-          void readyPromise.then(undefined, () => undefined)
+          armYouTubeReadiness(useYouTubeReadinessState())
         },
   }), _options)
-  if (import.meta.client && !(instance as any)[cleanupDecoration]) {
-    ;(instance as any)[cleanupDecoration] = true
+  const clientInstance = import.meta.server || typeof window === 'undefined'
+    ? undefined
+    : instance as UseScriptContext<T> & {
+      [cleanupDecoration]?: boolean
+      [readinessDecoration]?: ReturnType<typeof useYouTubeReadinessState>
+    }
+  if (clientInstance && !clientInstance[cleanupDecoration]) {
+    clientInstance[cleanupDecoration] = true
+    clientInstance[readinessDecoration] = useYouTubeReadinessState()
     const originalRemove = instance.remove
     instance.remove = () => {
-      readyController?.abort()
+      clientInstance[readinessDecoration]?.controller?.abort()
       return originalRemove()
     }
   }

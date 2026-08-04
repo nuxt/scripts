@@ -1,6 +1,6 @@
 import type { VueWrapper } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ScriptCarbonAds from '../../packages/script/src/runtime/components/ScriptCarbonAds.vue'
 import ScriptLemonSqueezy from '../../packages/script/src/runtime/components/ScriptLemonSqueezy.vue'
 
@@ -52,8 +52,14 @@ describe('script component lifecycle', () => {
   })
 
   it('fans Lemon Squeezy events out to every live component', () => {
-    const first = mount(ScriptLemonSqueezy)
-    const second = mount(ScriptLemonSqueezy)
+    const firstEvent = vi.fn()
+    const secondEvent = vi.fn()
+    const first = mount(ScriptLemonSqueezy, {
+      props: { onLemonSqueezyEvent: firstEvent } as any,
+    })
+    const second = mount(ScriptLemonSqueezy, {
+      props: { onLemonSqueezyEvent: secondEvent } as any,
+    })
     wrappers.push(first, second)
     const installedHandlers: Array<(event: any) => void> = []
     const api = {
@@ -69,13 +75,13 @@ describe('script component lifecycle', () => {
     mocks.loadedCallbacks[1]!(api)
     installedHandlers.at(-1)!({ event: 'Checkout.Success', data: { order: 1 } })
 
-    expect(first.emitted('lemonSqueezyEvent')).toHaveLength(1)
-    expect(second.emitted('lemonSqueezyEvent')).toHaveLength(1)
+    expect(firstEvent).toHaveBeenCalledTimes(1)
+    expect(secondEvent).toHaveBeenCalledTimes(1)
 
     second.unmount()
     installedHandlers.at(-1)!({ event: 'Checkout.Success', data: { order: 2 } })
 
-    expect(first.emitted('lemonSqueezyEvent')).toHaveLength(2)
-    expect(second.emitted('lemonSqueezyEvent')).toHaveLength(1)
+    expect(firstEvent).toHaveBeenCalledTimes(2)
+    expect(secondEvent).toHaveBeenCalledTimes(1)
   })
 })
