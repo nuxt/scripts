@@ -3,7 +3,7 @@ import { useHead, useScriptBingUet } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Bing UET - First Party' })
-const { status, proxy } = useScriptBingUet({ id: '247021147' })
+const { status, proxy } = useScriptBingUet({ id: '247021147', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackEvent() {

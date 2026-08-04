@@ -2,7 +2,7 @@
 import { useHead, useScriptVimeoPlayer } from '#imports'
 
 useHead({ title: 'Vimeo Player - First Party' })
-const { status } = useScriptVimeoPlayer()
+const { status } = useScriptVimeoPlayer({ scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>
@@ -13,8 +13,10 @@ const { status } = useScriptVimeoPlayer()
         status: {{ status }}
       </div>
     </ClientOnly>
-    <div style="margin-top: 20px;">
-      <ScriptVimeoPlayer :id="331567154" style="width: 640px; height: 360px;" />
-    </div>
+    <ClientOnly>
+      <div style="margin-top: 20px;">
+        <ScriptVimeoPlayer :id="331567154" style="width: 640px; height: 360px;" />
+      </div>
+    </ClientOnly>
   </div>
 </template>

@@ -3,7 +3,7 @@ import { useHead, useScriptPlausibleAnalytics } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Plausible - First Party' })
-const { status } = useScriptPlausibleAnalytics({ domain: 'scripts.nuxt.com', extension: 'local' })
+const { status } = useScriptPlausibleAnalytics({ domain: 'scripts.nuxt.com', extension: 'local', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackCustomEvent() {

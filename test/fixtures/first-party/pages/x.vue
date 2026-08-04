@@ -3,7 +3,7 @@ import { useHead, useScriptXPixel } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'X Pixel - First Party' })
-const { status, proxy } = useScriptXPixel({ id: 'ol7lz' })
+const { status, proxy } = useScriptXPixel({ id: 'ol7lz', scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function trackPageView() {

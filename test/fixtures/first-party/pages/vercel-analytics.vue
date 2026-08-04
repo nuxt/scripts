@@ -6,7 +6,7 @@ useHead({
   title: 'Vercel Analytics - First Party',
 })
 
-const { status } = useScriptVercelAnalytics()
+const { status } = useScriptVercelAnalytics({ scriptOptions: { trigger: 'client' } })
 
 const clickCount = ref(0)
 </script>

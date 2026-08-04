@@ -2,7 +2,7 @@
 import { useHead, useScriptGoogleAdsense } from '#imports'
 
 useHead({ title: 'Google AdSense - First Party' })
-const { status } = useScriptGoogleAdsense({ client: 'ca-pub-3940256099942544' })
+const { status } = useScriptGoogleAdsense({ client: 'ca-pub-3940256099942544', scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>

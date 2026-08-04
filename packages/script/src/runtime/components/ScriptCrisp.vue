@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ElementScriptTrigger } from '#nuxt-scripts/types'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useMutationObserver } from '@vueuse/core'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptCrisp } from '../registry/crisp'
 
@@ -58,26 +59,31 @@ defineExpose({
   crisp,
 })
 
-let observer: MutationObserver
+const observerTarget = shallowRef<HTMLElement | null>(null)
+function markReady() {
+  if (isReady.value)
+    return true
+  if (!document.getElementById('crisp-chatbox'))
+    return false
+  isReady.value = true
+  observerTarget.value = null
+  emits('ready', crisp)
+  return true
+}
+useMutationObserver(observerTarget, markReady, { childList: true, subtree: true })
+
 onMounted(() => {
   watch(status, (status) => {
     if (status === 'loaded') {
-      observer = new MutationObserver(() => {
-        if (document.getElementById('crisp-chatbox')) {
-          isReady.value = true
-          emits('ready', crisp)
-          observer.disconnect()
-        }
-      })
-      observer.observe(document.body, { childList: true, subtree: true })
+      if (!markReady())
+        observerTarget.value = document.body
     }
     else if (status === 'error') {
+      observerTarget.value = null
+      isReady.value = false
       emits('error')
     }
-  })
-})
-onBeforeUnmount(() => {
-  observer?.disconnect()
+  }, { immediate: true })
 })
 
 const rootAttrs = computed(() => {
@@ -95,7 +101,7 @@ const rootAttrs = computed(() => {
   >
     <slot :ready="isReady" />
     <slot v-if="status === 'awaitingLoad'" name="awaitingLoad" />
-    <slot v-else-if="status === 'loading' || !isReady" name="loading" />
     <slot v-else-if="status === 'error'" name="error" />
+    <slot v-else-if="status === 'loading' || !isReady" name="loading" />
   </div>
 </template>

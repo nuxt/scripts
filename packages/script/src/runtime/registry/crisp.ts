@@ -31,7 +31,7 @@ export interface CrispApi {
 
 declare global {
   interface Window {
-    CRISP_READY_TRIGGER: () => void
+    CRISP_READY_TRIGGER?: () => void
     CRISP_WEBSITE_ID: string
     CRISP_RUNTIME_CONFIG?: { locale?: string }
     CRISP_COOKIE_DOMAIN?: string
@@ -42,34 +42,50 @@ declare global {
 }
 
 export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {
-  let readyPromise: Promise<void> = Promise.resolve()
   return useRegistryScript<T, typeof CrispOptions>('crisp', options => ({
     scriptInput: {
       src: 'https://client.crisp.chat/l.js', // can't be bundled
     },
     schema: import.meta.dev ? CrispOptions : undefined,
     scriptOptions: {
-      use() {
-        const wrapFn = (fn: any) => window.$crisp?.[fn] || ((...args: any[]) => {
-          readyPromise.then(() => window.$crisp[fn](...args))
+      resolve({ waitFor }) {
+        if (typeof window.$crisp?.is === 'function')
+          return window.$crisp as T
+
+        return waitFor<T>((resolve, reject) => {
+          const previousReady = window.CRISP_READY_TRIGGER
+          let onReady: () => void
+          const restoreReady = () => {
+            if (window.CRISP_READY_TRIGGER !== onReady)
+              return
+            if (previousReady)
+              window.CRISP_READY_TRIGGER = previousReady
+            else
+              delete window.CRISP_READY_TRIGGER
+          }
+          onReady = () => {
+            restoreReady()
+            try {
+              previousReady?.()
+            }
+            catch (error) {
+              if (import.meta.dev)
+                console.error('[nuxt-scripts] Previous CRISP_READY_TRIGGER handler failed:', error)
+            }
+            if (typeof window.$crisp?.is === 'function')
+              resolve(window.$crisp as T)
+            else
+              reject(new Error('[nuxt-scripts] Crisp reported ready without exposing window.$crisp'))
+          }
+          window.CRISP_READY_TRIGGER = onReady
+          return restoreReady
         })
-        return {
-          push: window.$crisp.push,
-          do: wrapFn('do'),
-          set: wrapFn('set'),
-          get: wrapFn('get'),
-          on: wrapFn('on'),
-          off: wrapFn('off'),
-          config: wrapFn('config'),
-          help: wrapFn('help'),
-        }
       },
     },
     clientInit: import.meta.server
       ? undefined
       : () => {
-        // @ts-expect-error untyped
-          window.$crisp = []
+          window.$crisp = window.$crisp || []
           window.CRISP_WEBSITE_ID = options.id
           if (options.runtimeConfig?.locale)
             window.CRISP_RUNTIME_CONFIG = { locale: options.runtimeConfig.locale }
@@ -79,9 +95,6 @@ export function useScriptCrisp<T extends CrispApi>(_options?: CrispInput) {
             window.CRISP_COOKIE_EXPIRATION = options.cookieExpiry
           if (options.tokenId)
             window.CRISP_TOKEN_ID = options.tokenId
-          readyPromise = new Promise((resolve) => {
-            window.CRISP_READY_TRIGGER = resolve
-          })
         },
   }), _options)
 }

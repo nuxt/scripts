@@ -2,7 +2,7 @@
 import { useHead, useScriptGoogleMaps } from '#imports'
 
 useHead({ title: 'Google Maps - First Party' })
-const { status } = useScriptGoogleMaps({ apiKey: 'AIzaSyBtesttesttest' })
+const { status } = useScriptGoogleMaps({ apiKey: 'AIzaSyBtesttesttest', scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>

@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 import type { NuxtUseScriptOptions } from './types'
-import { ref } from 'vue'
+import { onNuxtReady } from 'nuxt/app'
+import { onScopeDispose, ref } from 'vue'
 import { logger } from './logger'
 
 export interface NpmScriptStubOptions {
@@ -11,9 +12,14 @@ export interface NpmScriptStubOptions {
 }
 
 export interface NpmScriptStub<T = any> {
-  status: Ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>
+  id: string
+  status: Ref<'awaitingLoad' | 'loading' | 'loaded' | 'error' | 'removed'>
+  signal: AbortSignal
+  readonly script: NpmScriptStub<T>
+  dispose: () => void
+  remove: () => boolean
   load: () => Promise<void>
-  onLoaded: (callback: (api: T) => void) => void
+  onLoaded: (callback: (api: T) => void) => () => void
   proxy: T
   $script?: any
 }
@@ -25,21 +31,48 @@ export interface NpmScriptStub<T = any> {
 export function createNpmScriptStub<T = any>(
   options: NpmScriptStubOptions,
 ): NpmScriptStub<T> {
-  const status = ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>('awaitingLoad')
+  const status = ref<'awaitingLoad' | 'loading' | 'loaded' | 'error' | 'removed'>('awaitingLoad')
+  const lifecycleController = new AbortController()
   const loadedCallbacks: Array<(api: T) => void> = []
-  let initPromise: Promise<any> | null = null
+  const triggerCleanups = new Set<() => void>()
   let hasInitialized = false
+  let disposed = false
 
   // Get the proxy/API from use() function
   const proxy = (options.use?.() || {}) as T
 
   const stub: NpmScriptStub<T> = {
-    status: status as Ref<'awaitingLoad' | 'loading' | 'loaded' | 'error'>,
+    id: options.key,
+    status,
+    signal: lifecycleController.signal,
     proxy,
+
+    get script() {
+      return stub
+    },
+
+    dispose() {
+      if (disposed)
+        return
+      disposed = true
+      lifecycleController.abort()
+      loadedCallbacks.splice(0)
+      for (const cleanup of triggerCleanups)
+        cleanup()
+      triggerCleanups.clear()
+      status.value = 'removed'
+    },
+
+    remove() {
+      if (disposed)
+        return false
+      stub.dispose()
+      return true
+    },
 
     async load() {
       // Prevent multiple initialization
-      if (hasInitialized || status.value !== 'awaitingLoad')
+      if (disposed || hasInitialized || status.value !== 'awaitingLoad')
         return
 
       hasInitialized = true
@@ -50,16 +83,21 @@ export function createNpmScriptStub<T = any>(
         if (options.clientInit) {
           // eslint-disable-next-line no-console
           console.log(`[NpmScriptStub] Initializing ${options.key}...`)
-          initPromise = Promise.resolve(options.clientInit())
-          await initPromise
+          await options.clientInit()
+          if (disposed)
+            return
           // eslint-disable-next-line no-console
           console.log(`[NpmScriptStub] ${options.key} initialized successfully`)
         }
 
+        if (disposed)
+          return
         status.value = 'loaded'
 
         // Fire all onLoaded callbacks with the proxy
-        loadedCallbacks.forEach((cb) => {
+        // Release callback closures as soon as they have fired. Registry stubs
+        // can live for the app lifetime, while their callers may not.
+        loadedCallbacks.splice(0).forEach((cb) => {
           try {
             cb(proxy)
           }
@@ -69,6 +107,9 @@ export function createNpmScriptStub<T = any>(
         })
       }
       catch (error) {
+        loadedCallbacks.splice(0)
+        if (disposed)
+          return
         logger.error(`[NpmScriptStub] Failed to initialize ${options.key}:`, error)
         status.value = 'error'
       }
@@ -78,10 +119,16 @@ export function createNpmScriptStub<T = any>(
       if (status.value === 'loaded') {
         // Already loaded, call immediately
         callback(proxy)
+        return () => {}
       }
-      else {
+      else if (status.value !== 'error' && status.value !== 'removed') {
         // Queue for when load completes
         loadedCallbacks.push(callback)
+      }
+      return () => {
+        const index = loadedCallbacks.indexOf(callback)
+        if (index !== -1)
+          loadedCallbacks.splice(index, 1)
       }
     },
 
@@ -94,22 +141,29 @@ export function createNpmScriptStub<T = any>(
     },
   }
 
+  onScopeDispose(stub.dispose, true)
+
   // Auto-trigger based on trigger option
   if (options.trigger) {
     if (typeof options.trigger === 'function') {
       // Custom trigger function (e.g., onNuxtReady)
       const res = (options.trigger as any)(() => stub.load())
-      if (res && typeof res === 'object' && 'then' in res)
-        res.then(() => stub.load())
+      if (typeof res === 'function') {
+        triggerCleanups.add(res)
+      }
+      else if (res && typeof res === 'object' && 'then' in res) {
+        void Promise.resolve(res)
+          .then(() => stub.load())
+          .catch((error) => {
+            logger.error(`[NpmScriptStub] Trigger failed for ${options.key}:`, error)
+          })
+      }
     }
     else if (options.trigger === 'manual') {
       // Manual trigger - do nothing, user calls load()
     }
     else if (options.trigger === 'onNuxtReady') {
-      // onNuxtReady string - import and use onNuxtReady
-      import('nuxt/app').then(({ onNuxtReady }) => {
-        onNuxtReady(() => stub.load())
-      })
+      onNuxtReady(() => stub.load())
     }
     else if (options.trigger === 'client') {
       // Load immediately on client

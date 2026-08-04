@@ -38,6 +38,8 @@ const { onLoaded, status } = instance
 const pricingTable = ref<HTMLElement | undefined>()
 onMounted(() => {
   onLoaded(() => {
+    if (!rootEl.value)
+      return
     const StripePricingTable = window.customElements.get('stripe-pricing-table')!
     const stripePricingTable = new StripePricingTable()
     stripePricingTable.setAttribute('publishable-key', props.publishableKey)
@@ -49,7 +51,7 @@ onMounted(() => {
     if (props.customerSessionClientSecret)
       stripePricingTable.setAttribute('customer-session-client-secret', props.customerSessionClientSecret)
     pricingTable.value = stripePricingTable
-    rootEl.value!.appendChild(stripePricingTable)
+    rootEl.value.appendChild(stripePricingTable)
     emit('ready', instance)
   })
   watch(status, (status) => {

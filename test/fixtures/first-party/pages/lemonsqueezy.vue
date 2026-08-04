@@ -3,7 +3,7 @@ import { useHead, useScriptLemonSqueezy } from '#imports'
 import { ref } from 'vue'
 
 useHead({ title: 'Lemon Squeezy - First Party' })
-const { status, proxy } = useScriptLemonSqueezy()
+const { status, proxy } = useScriptLemonSqueezy({ scriptOptions: { trigger: 'client' } })
 const result = ref('')
 
 function openCheckout() {

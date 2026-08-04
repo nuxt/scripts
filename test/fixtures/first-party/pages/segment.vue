@@ -7,6 +7,7 @@ useHead({
 
 const { proxy, status } = useScriptSegment({
   writeKey: 'KBXOGxgqMFjm2mxtJDJg0iDn5AnGYb9C',
+  scriptOptions: { trigger: 'client' },
 })
 
 function trackPage() {

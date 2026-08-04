@@ -3,7 +3,7 @@ export const MAPLIBRE_STYLESHEET_INTEGRITY = 'sha384-uTttxo/aOKbdE5RlD/SPzSDoDmN
 
 const MAPLIBRE_STYLE_ID = 'nuxt-scripts-maplibre-styles'
 
-export function configureMapLibreWorker(maplibre: { setWorkerUrl: (url: string) => void } | undefined, workerUrl?: string): void {
+export function configureMapLibreWorker(maplibre: { setWorkerUrl: (value: string) => void } | undefined, workerUrl?: string): void {
   if (maplibre && workerUrl)
     maplibre.setWorkerUrl(workerUrl)
 }

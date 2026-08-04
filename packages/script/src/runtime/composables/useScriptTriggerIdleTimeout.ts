@@ -1,6 +1,6 @@
-import { useTimeoutFn } from '@vueuse/core'
-import { tryOnScopeDispose } from '@vueuse/shared'
-import { onNuxtReady } from 'nuxt/app'
+import type { UseScriptTrigger } from '@unhead/vue/scripts'
+import { createScriptTriggerTimeout } from 'unhead/scripts/triggers'
+import { createNuxtReadyScriptTrigger } from '../utils/nuxt-ready-script-trigger'
 
 export interface IdleTimeoutScriptTriggerOptions {
   /**
@@ -12,25 +12,6 @@ export interface IdleTimeoutScriptTriggerOptions {
 /**
  * Create a trigger that loads a script after an idle timeout once Nuxt is ready.
  */
-export function useScriptTriggerIdleTimeout(options: IdleTimeoutScriptTriggerOptions): Promise<boolean> {
-  if (import.meta.server) {
-    return new Promise(() => {})
-  }
-
-  const { timeout } = options
-
-  return new Promise<boolean>((resolve) => {
-    onNuxtReady(() => {
-      const { start, stop } = useTimeoutFn(() => {
-        resolve(true)
-      }, timeout, { immediate: false })
-
-      start()
-
-      tryOnScopeDispose(() => {
-        stop()
-        resolve(false)
-      })
-    })
-  })
+export function useScriptTriggerIdleTimeout(options: IdleTimeoutScriptTriggerOptions): UseScriptTrigger {
+  return createNuxtReadyScriptTrigger(createScriptTriggerTimeout(options))
 }

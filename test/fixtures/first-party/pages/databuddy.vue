@@ -2,7 +2,7 @@
 import { useHead, useScriptDatabuddyAnalytics } from '#imports'
 
 useHead({ title: 'Databuddy - First Party' })
-const { status } = useScriptDatabuddyAnalytics({ clientId: 'demo-client-123' })
+const { status } = useScriptDatabuddyAnalytics({ clientId: 'demo-client-123', scriptOptions: { trigger: 'client' } })
 </script>
 
 <template>

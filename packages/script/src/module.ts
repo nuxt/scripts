@@ -29,6 +29,7 @@ import {
 import { defu } from 'defu'
 import { resolve as resolvePath_ } from 'pathe'
 import { readPackageJSON } from 'pkg-types'
+import { satisfies } from 'semver'
 import { setupPublicAssetStrategy } from './assets'
 import { buildDevtoolsData, buildDevtoolsEntry, setupDevtools } from './devtools'
 import { installNuxtModule } from './kit'
@@ -40,6 +41,7 @@ import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
+import { ensureNuxtScriptsCacheStorage } from './runtime/server/utils/cache-config'
 import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
@@ -54,6 +56,7 @@ export type { FirstPartyPrivacy }
 // Matches self-closing PascalCase or kebab-case tags starting with "Script"/"script-"
 // e.g. <ScriptYouTubePlayer video-id="x" /> or <script-youtube-player />
 const SELF_CLOSING_SCRIPT_RE = /<((?:Script[A-Z]|script-)\w[\w-]*)\b([^>]*?)\/\s*>/g
+const UNHEAD_VERSION_RANGE = '>=3.3.1 <4'
 
 /**
  * Expand self-closing `<Script*>` component tags in page files to work around
@@ -346,7 +349,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '>=3.16',
+      nuxt: '>=4.5.1',
     },
   },
   defaults: {
@@ -386,13 +389,29 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
-    // couldn't be found for some reason, assume compatibility
-    const { version: unheadVersion } = await readPackageJSON('@unhead/vue', {
-      from: nuxt.options.modulesDir,
-    }).catch(() => ({ version: null }))
-    if (unheadVersion?.startsWith('1')) {
-      logger.error(`Nuxt Scripts requires Unhead >= 2, you are using v${unheadVersion}. Please run \`nuxi upgrade --clean\` to upgrade...`)
+    const [unheadVuePackage, unheadCorePackage] = await Promise.all([
+      readPackageJSON('@unhead/vue', { from: nuxt.options.modulesDir }).catch(() => {
+        // Missing peers are reported together below with the resolved versions.
+        return null
+      }),
+      readPackageJSON('unhead', { from: nuxt.options.modulesDir }).catch(() => {
+        // Missing peers are reported together below with the resolved versions.
+        return null
+      }),
+    ])
+    const incompatibleUnheadPackages = [
+      ['@unhead/vue', unheadVuePackage?.version],
+      ['unhead', unheadCorePackage?.version],
+    ].filter(([, dependencyVersion]) => !dependencyVersion || !satisfies(dependencyVersion, UNHEAD_VERSION_RANGE))
+    if (incompatibleUnheadPackages.length) {
+      const resolvedVersions = incompatibleUnheadPackages
+        .map(([dependency, dependencyVersion]) => `${dependency}=${dependencyVersion ? `v${dependencyVersion}` : 'missing'}`)
+        .join(', ')
+      throw new Error(
+        `[nuxt-scripts] Nuxt Scripts 2 requires @unhead/vue and unhead ${UNHEAD_VERSION_RANGE}; resolved ${resolvedVersions}. Run \`npx nuxi@latest upgrade --force\` to upgrade Nuxt and refresh its dependencies.`,
+      )
     }
+    const unheadSourceLessScriptLoader = true
     const scripts = await registry(resolvePath) as (RegistryScript & { _importRegistered?: boolean })[]
 
     // Normalize registry entries to [input, scriptOptions?] tuple form
@@ -460,13 +479,22 @@ export default defineNuxtModule<ModuleOptions>({
       defaultScriptOptions: config.defaultScriptOptions as any,
     } as any
 
-    // Build-time constant: `__NUXT_SCRIPTS_DEBUG__` is replaced inline by the
-    // bundler, so debug branches DCE away in production when `debug: false`.
+    // Build-time constants are replaced inline so internal capability choices
+    // cannot be changed through public runtime config.
     const debugConst = JSON.stringify(!!config.debug)
+    const unheadSourceLessConst = JSON.stringify(unheadSourceLessScriptLoader)
     nuxt.options.vite ||= {}
-    nuxt.options.vite.define = { ...nuxt.options.vite.define, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.vite.define = {
+      ...nuxt.options.vite.define,
+      __NUXT_SCRIPTS_DEBUG__: debugConst,
+      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
+    }
     nuxt.options.nitro ||= {}
-    nuxt.options.nitro.replace = { ...nuxt.options.nitro.replace, __NUXT_SCRIPTS_DEBUG__: debugConst }
+    nuxt.options.nitro.replace = {
+      ...nuxt.options.nitro.replace,
+      __NUXT_SCRIPTS_DEBUG__: debugConst,
+      __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
+    }
 
     // Register proxy handler unconditionally. The handler rejects unknown domains
     // at runtime, so it's safe to register even when no scripts use proxy.
@@ -929,6 +957,11 @@ export default defineNuxtModule<ModuleOptions>({
         ) as any
       }
     }
+
+    // Nitro's default memory storage has no eviction policy. Every proxy and
+    // embed cache shares this bounded mount, including proxy-only registries
+    // without dedicated server handlers. Preserve application-supplied mounts.
+    ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any)
 
     // Publish enabled endpoints to client for component opt-in checks
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
