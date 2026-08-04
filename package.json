@@ -14,9 +14,9 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
+    "build": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm --filter @nuxt/scripts-cli build && pnpm devtools:build",
     "generate:types": "node scripts/generate-registry-types.ts",
-    "prepack": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm devtools:build",
+    "prepack": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm --filter @nuxt/scripts-cli build && pnpm devtools:build",
     "devtools": "nuxt dev packages/devtools-app --port 3030",
     "devtools:build": "nuxt generate packages/devtools-app",
     "dev": "nuxt dev playground",

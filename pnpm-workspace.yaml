@@ -81,6 +81,7 @@ catalog:
   happy-dom: ^20.11.1
   jest-image-snapshot: ^6.5.2
   magic-string: ^1.1.0
+  magicast: ^0.5.3
   maplibre-gl: ^5.24.0
   nuxt: ^4.5.1
   ofetch: ^1.5.1

@@ -45,12 +45,8 @@
       ]
     }
   },
-  "bin": {
-    "nuxt-scripts": "./bin/cli.mjs"
-  },
   "files": [
     "THIRD_PARTY_LICENSES.md",
-    "bin",
     "dist"
   ],
   "engines": {
