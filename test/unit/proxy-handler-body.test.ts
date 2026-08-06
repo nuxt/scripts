@@ -40,6 +40,8 @@ describe('proxy handler request bodies (#836)', () => {
   let capturedBody = Buffer.alloc(0)
   let capturedContentLength: string | undefined
   let capturedContentType: string | undefined
+  let capturedFetchBody: BodyInit | null | undefined
+  let capturedFetchDuplex: 'half' | undefined
   let capturedUrl = ''
   let releaseStream: (() => void) | undefined
   const realFetch = globalThis.fetch
@@ -81,6 +83,8 @@ describe('proxy handler request bodies (#836)', () => {
       const requestUrl = input instanceof Request ? input.url : String(input)
       const url = new URL(requestUrl)
       if (url.hostname === 'upstream.test') {
+        capturedFetchBody = init?.body
+        capturedFetchDuplex = (init as RequestInit & { duplex?: 'half' } | undefined)?.duplex
         const redirected = `http://127.0.0.1:${upstreamPort}${url.pathname}${url.search}`
         return realFetch(redirected, init)
       }
@@ -98,6 +102,8 @@ describe('proxy handler request bodies (#836)', () => {
     capturedBody = Buffer.alloc(0)
     capturedContentLength = undefined
     capturedContentType = undefined
+    capturedFetchBody = undefined
+    capturedFetchDuplex = undefined
     capturedUrl = ''
     releaseStream = undefined
   })
@@ -120,8 +126,26 @@ describe('proxy handler request bodies (#836)', () => {
     })
 
     expect(response.status).toBe(200)
+    expect(capturedFetchBody).toBeInstanceOf(ReadableStream)
+    expect(capturedFetchDuplex).toBe('half')
     expect(capturedBody.equals(compressed)).toBe(true)
     expect(capturedContentType).toBe('text/plain')
+  })
+
+  it('forwards an explicitly empty opaque POST without a body stream (#853)', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/measurement/conversion`, {
+      method: 'POST',
+      headers: {
+        'content-length': '0',
+        'content-type': 'text/plain;charset=UTF-8',
+      },
+    })
+
+    expect(response.status).toBe(200)
+    expect(capturedFetchBody).toBeUndefined()
+    expect(capturedFetchDuplex).toBeUndefined()
+    expect(capturedBody).toHaveLength(0)
+    expect(capturedContentLength).toBe('0')
   })
 
   it('rejects an allowlisted local network target before the upstream fetch', async () => {
