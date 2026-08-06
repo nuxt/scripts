@@ -374,7 +374,7 @@ export default defineEventHandler(async (event) => {
 
   // Resolve the fetch body: passthrough streams the raw request, otherwise serialize
   let fetchBody: BodyInit | undefined
-  if (passthroughBody) {
+  if (passthroughBody && originalHeaders['content-length'] !== '0') {
     fetchBody = getRequestWebStream(event) as BodyInit | undefined
   }
   else if (body !== undefined) {
@@ -390,7 +390,7 @@ export default defineEventHandler(async (event) => {
       credentials: 'omit', // Don't send cookies to third parties
       signal: controller.signal,
       // @ts-expect-error Node fetch supports duplex for streaming request bodies
-      duplex: passthroughBody ? 'half' : undefined,
+      duplex: fetchBody instanceof ReadableStream ? 'half' : undefined,
     })
   }
   catch (err) {
