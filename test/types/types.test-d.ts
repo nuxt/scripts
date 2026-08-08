@@ -1,6 +1,6 @@
 import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
-import type { DeskCrewApi } from '../../packages/script/src/runtime/registry/deskcrew'
+import type { DeskCrewApi, DeskCrewEmbedOptions } from '../../packages/script/src/runtime/registry/deskcrew'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
 import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseFunctionType, UseScriptContext } from '../../packages/script/src/runtime/types'
@@ -104,9 +104,12 @@ describe('registry api types', () => {
     expectTypeOf<DeskCrewApi['close']>().toMatchTypeOf<() => void>()
     expectTypeOf<DeskCrewApi['identify']>().toMatchTypeOf<(i: { token: string }) => void>()
     expectTypeOf<DeskCrewApi['captureError']>().parameter(0).not.toBeAny()
-    // embed requires a target: calling it with nothing is a type error, because a
-    // portal with no host element silently renders nowhere.
-    expectTypeOf<DeskCrewApi['embed']>().parameter(0).not.toBeAny()
+    // embed requires a target, and asserting the FULL signature rather than just
+    // "parameter 0 is not any" is deliberate: the weaker form still passes if the
+    // parameter later becomes optional, and a portal with no host element renders
+    // nowhere at all, silently.
+    expectTypeOf<DeskCrewApi['embed']>().toMatchTypeOf<(options: DeskCrewEmbedOptions) => void>()
+    expectTypeOf<DeskCrewApi['embed']>().parameter(0).toEqualTypeOf<DeskCrewEmbedOptions>()
   })
 
   it('CrispApi preserves literal unions for autocomplete', () => {

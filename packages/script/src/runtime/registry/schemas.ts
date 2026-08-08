@@ -296,7 +296,10 @@ export const DeskCrewOptions = object({
    * Rendered as the `data-key` attribute. Find it in the DeskCrew dashboard under Install.
    * @see https://deskcrew.io/integrations/nuxt
    */
-  widgetKey: string(),
+  // minLength(1) rather than a bare string(): envDefaults resolves an unset key to '',
+  // which would validate happily and render data-key="" onto the tag, booting a keyless
+  // widget that silently talks to no workspace. Failing loudly in dev is the point.
+  widgetKey: pipe(string(), minLength(1)),
   /**
    * The workspace board slug, lowercase letters, numbers and dashes only.
    * Rendered as the `data-board` attribute. Required for the help centre, changelog and
