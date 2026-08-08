@@ -1,5 +1,6 @@
 import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
+import type { DeskCrewApi } from '../../packages/script/src/runtime/registry/deskcrew'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
 import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseFunctionType, UseScriptContext } from '../../packages/script/src/runtime/types'
@@ -18,6 +19,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['calendly']>().not.toBeAny()
     expectTypeOf<Registry['carbonAds']>().not.toBeAny()
     expectTypeOf<Registry['crisp']>().not.toBeAny()
+    expectTypeOf<Registry['deskcrew']>().not.toBeAny()
     expectTypeOf<Registry['clarity']>().not.toBeAny()
     expectTypeOf<Registry['cloudflareWebAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['databuddyAnalytics']>().not.toBeAny()
@@ -95,6 +97,18 @@ describe('module options registry', () => {
 })
 
 describe('registry api types', () => {
+  it('DeskCrewApi exposes the documented surface with usable signatures', () => {
+    // The registry hands this object straight to callers, so a regression to `any`
+    // here would compile fine and silently remove every bit of autocomplete.
+    expectTypeOf<DeskCrewApi['open']>().toMatchTypeOf<() => void>()
+    expectTypeOf<DeskCrewApi['close']>().toMatchTypeOf<() => void>()
+    expectTypeOf<DeskCrewApi['identify']>().toMatchTypeOf<(i: { token: string }) => void>()
+    expectTypeOf<DeskCrewApi['captureError']>().parameter(0).not.toBeAny()
+    // embed requires a target: calling it with nothing is a type error, because a
+    // portal with no host element silently renders nowhere.
+    expectTypeOf<DeskCrewApi['embed']>().parameter(0).not.toBeAny()
+  })
+
   it('CrispApi preserves literal unions for autocomplete', () => {
     type IsName = Parameters<CrispApi['is']>[0]
     // Should be assignable to string

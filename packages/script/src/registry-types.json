@@ -238,6 +238,38 @@
         "code": "export interface DatabuddyAnalyticsApi {\n  /**\n   * Track a custom event.\n   * @param eventName Name of the event (use snake_case)\n   * @param properties Optional event properties\n   */\n  track: (eventName: string, properties?: Record<string, any>) => Promise<any> | any | void\n\n  /**\n   * Manually record a page / screen view. Useful for SPA route changes.\n   * @param path Optional path to record (defaults to current location)\n   * @param properties Optional additional properties for the screen view\n   */\n  screenView: (path?: string, properties?: Record<string, any>) => void\n\n  /**\n   * Set properties that will be attached to all future events (e.g. user_id).\n   * @param properties Key/value map of properties to attach globally\n   */\n  setGlobalProperties: (properties: Record<string, any>) => void\n\n  /**\n   * Track a custom event alias (compatibility helper present on the global)\n   * @param eventName Name of the event\n   * @param properties Optional event properties\n   */\n  trackCustomEvent: (eventName: string, properties?: Record<string, any>) => void\n\n  /**\n   * Clears session and anonymous identifiers (useful on logout).\n   */\n  clear: () => void\n\n  /**\n   * Force immediate sending of any queued/batched events.\n   */\n  flush: () => void\n}"
       }
     ],
+    "deskcrew": [
+      {
+        "name": "DeskCrewOptions",
+        "kind": "const",
+        "code": "export const DeskCrewOptions = object({\n  /**\n   * The DeskCrew public widget key, for example `pub_xxxxxxxx`.\n   * Rendered as the `data-key` attribute. Find it in the DeskCrew dashboard under Install.\n   * @see https://deskcrew.io/integrations/nuxt\n   */\n  widgetKey: string(),\n  /**\n   * The workspace board slug, lowercase letters, numbers and dashes only.\n   * Rendered as the `data-board` attribute. Required for the help centre, changelog and\n   * embedded portal surfaces; the chat launcher works without it.\n   */\n  board: optional(string()),\n  /**\n   * Accent colour as a 6 digit hex value, for example `#4f46e5`.\n   * Rendered as the `data-color` attribute. Overrides the accent configured on the workspace.\n   */\n  color: optional(string()),\n  /**\n   * Which side of the viewport the launcher sits on.\n   * Rendered as the `data-position` attribute.\n   * @default 'right'\n   */\n  position: optional(union([literal('left'), literal('right')])),\n  /**\n   * Greeting text shown in the widget header, overriding the workspace default.\n   * Rendered as the `data-greeting` attribute.\n   */\n  greeting: optional(string()),\n  /**\n   * Render the workspace logo in the launcher bubble instead of the default icon.\n   * Rendered as the `data-launcher` attribute.\n   */\n  launcher: optional(literal('logo')),\n})"
+      },
+      {
+        "name": "DeskCrewIdentity",
+        "kind": "interface",
+        "code": "export interface DeskCrewIdentity {\n  /** A signed identity token minted by your backend. */\n  token: string\n}"
+      },
+      {
+        "name": "DeskCrewEmbedOptions",
+        "kind": "interface",
+        "code": "export interface DeskCrewEmbedOptions {\n  /** Target element, or a selector for it. */\n  el: string | HTMLElement\n  /** Board slug, defaults to the `board` option. */\n  board?: string\n  /** Path the portal is mounted under, defaults to the current pathname. */\n  basePath?: string\n  /** Which portal view to open first. */\n  view?: string\n  theme?: 'light' | 'dark'\n}"
+      },
+      {
+        "name": "DeskCrewChangelogOptions",
+        "kind": "interface",
+        "code": "export interface DeskCrewChangelogOptions {\n  /** `'inline'` requires `selector`. */\n  mode?: 'inline' | 'floating'\n  selector?: string\n  basePath?: string\n  position?: 'left' | 'right'\n}"
+      },
+      {
+        "name": "DeskCrewSurveyOptions",
+        "kind": "interface",
+        "code": "export interface DeskCrewSurveyOptions {\n  /** Reserved. Surveys are opt in and may only be invoked once per page. */\n  [key: string]: unknown\n}"
+      },
+      {
+        "name": "DeskCrewApi",
+        "kind": "interface",
+        "code": "export interface DeskCrewApi {\n  /** Open the support panel. */\n  open: () => void\n  /** Close the support panel. */\n  close: () => void\n  /** Attach a signed identity token to the current session. */\n  identify: (identity: DeskCrewIdentity) => void\n  /** Mount the embedded support portal into an element. May only be called once per page. */\n  embed: (options: DeskCrewEmbedOptions) => void\n  /** Mount the changelog widget. May only be called once per page. */\n  changelog: (options?: DeskCrewChangelogOptions) => void\n  /** Show an eligible survey. Opt in, may only be called once per page. */\n  surveys: (options?: DeskCrewSurveyOptions) => void\n  /** Report an error to Signals. No-op unless the workspace has error capture enabled. */\n  captureError: (error: unknown, context?: Record<string, any>) => void\n}"
+      }
+    ],
     "fathom-analytics": [
       {
         "name": "FathomAnalyticsOptions",
@@ -1761,6 +1793,45 @@
         "type": "boolean",
         "required": false,
         "description": "Enable error tracking via observability."
+      }
+    ],
+    "DeskCrewOptions": [
+      {
+        "name": "widgetKey",
+        "type": "string",
+        "required": true,
+        "description": "The DeskCrew public widget key, for example `pub_xxxxxxxx`. Rendered as the `data-key` attribute. Find it in the DeskCrew dashboard under Install."
+      },
+      {
+        "name": "board",
+        "type": "string",
+        "required": false,
+        "description": "The workspace board slug, lowercase letters, numbers and dashes only. Rendered as the `data-board` attribute. Required for the help centre, changelog and embedded portal surfaces; the chat launcher works without it."
+      },
+      {
+        "name": "color",
+        "type": "string",
+        "required": false,
+        "description": "Accent colour as a 6 digit hex value, for example `#4f46e5`. Rendered as the `data-color` attribute. Overrides the accent configured on the workspace."
+      },
+      {
+        "name": "position",
+        "type": "'left' | 'right'",
+        "required": false,
+        "description": "Which side of the viewport the launcher sits on. Rendered as the `data-position` attribute.",
+        "defaultValue": "'right'"
+      },
+      {
+        "name": "greeting",
+        "type": "string",
+        "required": false,
+        "description": "Greeting text shown in the widget header, overriding the workspace default. Rendered as the `data-greeting` attribute."
+      },
+      {
+        "name": "launcher",
+        "type": "'logo'",
+        "required": false,
+        "description": "Render the workspace logo in the launcher bubble instead of the default icon. Rendered as the `data-launcher` attribute."
       }
     ],
     "FathomAnalyticsOptions": [
