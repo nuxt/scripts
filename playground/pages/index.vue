@@ -39,6 +39,7 @@ function getPlaygroundPath(script: any): string | null {
     'hotjar': '/third-parties/hotjar',
     'intercom': '/third-parties/intercom/facade',
     'crisp': '/third-parties/crisp/facade',
+    'deskcrew': '/third-parties/deskcrew/facade',
     'stripe': '/third-parties/stripe/nuxt-scripts',
     'paypal': '/third-parties/paypal/nuxt-scripts',
     'lemon-squeezy': '/third-parties/lemon-squeezy/component',
@@ -129,6 +130,12 @@ const support = registryScripts
       name: 'Crisp (Default)',
       path: '/third-parties/crisp/default',
       logo: registryScripts.find(s => s.label === 'Crisp')?.logo,
+      registryScript: null,
+    },
+    {
+      name: 'DeskCrew (Default)',
+      path: '/third-parties/deskcrew/default',
+      logo: registryScripts.find(s => s.label === 'DeskCrew')?.logo,
       registryScript: null,
     },
   ])

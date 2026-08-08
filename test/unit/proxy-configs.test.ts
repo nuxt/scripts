@@ -393,6 +393,14 @@ describe('proxy configs', () => {
       expect(config).toBeUndefined()
     })
 
+    it('does not return proxy config for deskcrew (script derives its API origin from its own src)', async () => {
+      // Proxying would put the consuming site's server in the path of live chat
+      // polling, and the widget resolves its API origin from the executing
+      // script's src, so a proxied URL would repoint every call at the wrong host.
+      const config = (await getProxyConfigs()).deskcrew
+      expect(config).toBeUndefined()
+    })
+
     it('returns proxy config for calendly', async () => {
       const config = (await getProxyConfigs()).calendly
       expect(config).toBeDefined()
@@ -446,6 +454,7 @@ describe('proxy configs', () => {
       expect(configs).not.toHaveProperty('fathomAnalytics')
       expect(configs).toHaveProperty('intercom')
       expect(configs).not.toHaveProperty('crisp')
+      expect(configs).not.toHaveProperty('deskcrew')
       expect(configs).toHaveProperty('vercelAnalytics')
       expect(configs).toHaveProperty('gravatar')
       expect(configs).toHaveProperty('calendly')

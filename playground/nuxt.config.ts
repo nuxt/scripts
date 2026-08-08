@@ -39,6 +39,7 @@ export default defineNuxtConfig({
         posthog: { apiKey: 'phc_CkMaDU6dr11eJoQdAiSJb1rC324dogk3T952gJ6fD9W' },
         intercom: { app_id: 'akg5rmxb' },
         crisp: { id: 'b1021910-7ace-425a-9ef5-07f49e5ce417' },
+        deskcrew: { widgetKey: 'pub_deskcrewdemo', board: 'demo' },
       },
     },
   },
@@ -107,6 +108,7 @@ export default defineNuxtConfig({
       hotjar: { id: 3925006, sv: 6, trigger: 'manual' },
       intercom: { app_id: 'akg5rmxb', trigger: 'manual' },
       crisp: { id: 'b1021910-7ace-425a-9ef5-07f49e5ce417', trigger: 'manual' },
+      deskcrew: { widgetKey: 'pub_deskcrewdemo', board: 'demo', trigger: 'manual' },
 
       // Media
       youtubePlayer: { trigger: 'manual' },

@@ -2,16 +2,19 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick } from 'vue'
 import ScriptCrisp from '../../packages/script/src/runtime/components/ScriptCrisp.vue'
+import ScriptDeskCrew from '../../packages/script/src/runtime/components/ScriptDeskCrew.vue'
 import ScriptIntercom from '../../packages/script/src/runtime/components/ScriptIntercom.vue'
 import ScriptLemonSqueezy from '../../packages/script/src/runtime/components/ScriptLemonSqueezy.vue'
 
 const mocks = vi.hoisted(() => ({
   crispStatus: { __v_isRef: true, value: 'loaded' },
+  deskcrewStatus: { __v_isRef: true, value: 'loaded' },
   intercomStatus: { __v_isRef: true, value: 'loaded' },
   lemonLoadedCallbacks: [] as Array<(api: any) => void>,
   lemonRefresh: vi.fn(),
   lemonSetup: vi.fn(),
   useScriptCrisp: vi.fn(),
+  useScriptDeskCrew: vi.fn(),
   useScriptIntercom: vi.fn(),
   useScriptLemonSqueezy: vi.fn(),
   useScriptTriggerElement: vi.fn(() => () => {}),
@@ -23,6 +26,10 @@ vi.mock('../../packages/script/src/runtime/composables/useScriptTriggerElement',
 
 vi.mock('../../packages/script/src/runtime/registry/crisp', () => ({
   useScriptCrisp: mocks.useScriptCrisp,
+}))
+
+vi.mock('../../packages/script/src/runtime/registry/deskcrew', () => ({
+  useScriptDeskCrew: mocks.useScriptDeskCrew,
 }))
 
 vi.mock('../../packages/script/src/runtime/registry/intercom', () => ({
@@ -39,6 +46,11 @@ describe('chat component lifecycle', () => {
     mocks.intercomStatus.value = 'loaded'
     mocks.useScriptCrisp.mockReturnValue({
       status: mocks.crispStatus,
+      onLoaded: vi.fn(),
+    })
+    mocks.deskcrewStatus.value = 'loaded'
+    mocks.useScriptDeskCrew.mockReturnValue({
+      status: mocks.deskcrewStatus,
       onLoaded: vi.fn(),
     })
     mocks.useScriptIntercom.mockReturnValue({
@@ -58,6 +70,7 @@ describe('chat component lifecycle', () => {
 
   afterEach(() => {
     document.getElementById('crisp-chatbox')?.remove()
+    document.getElementById('deskcrew-root')?.remove()
     document.getElementById('intercom-frame')?.remove()
     delete (window as any).LemonSqueezy
     vi.clearAllMocks()
@@ -70,6 +83,26 @@ describe('chat component lifecycle', () => {
 
     const wrapper = await mountSuspended(ScriptCrisp, {
       props: { id: 'website-id', trigger: 'visible' },
+      slots: {
+        loading: () => h('span', { 'data-testid': 'loading' }),
+      },
+    })
+    await nextTick()
+
+    expect(wrapper.emitted('ready')).toHaveLength(1)
+    expect(wrapper.find('[data-testid="loading"]').exists()).toBe(false)
+  })
+
+  it('recognizes DeskCrew when mounting after the widget host exists', async () => {
+    // The widget mounts a Shadow DOM host with this id, so its presence is the only
+    // reliable readiness signal: script load alone fires before anything is rendered,
+    // which would hide the facade while the screen is still empty.
+    const host = document.createElement('div')
+    host.id = 'deskcrew-root'
+    document.body.append(host)
+
+    const wrapper = await mountSuspended(ScriptDeskCrew, {
+      props: { widgetKey: 'pub_deskcrewdemo', trigger: 'visible' },
       slots: {
         loading: () => h('span', { 'data-testid': 'loading' }),
       },
