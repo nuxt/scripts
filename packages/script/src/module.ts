@@ -608,14 +608,19 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
     // If Unhead cannot be resolved, retain the compatibility implementation.
-    const unheadPackagePath = await resolvePackageJSON('@unhead/vue', {
-      // Match the package instance imported by the built runtime. An app can
-      // contain another Unhead version with different loader capabilities.
-      from: [resolveModule('./runtime')],
-    }).catch(() => {
-      // @unhead/vue is optional; unresolved installs use the local compatibility path.
-      return null
-    })
+    const unheadScriptsAlias = nuxt.options.alias['@unhead/vue/scripts']
+    const unheadPackagePath = await (typeof unheadScriptsAlias === 'string'
+      ? resolvePackageJSON(unheadScriptsAlias)
+      : Promise.reject(new Error('No Unhead scripts alias')))
+      .catch(() => resolvePackageJSON('@unhead/vue', {
+        // Match the package instance imported by the built runtime. An app can
+        // contain another Unhead version with different loader capabilities.
+        from: [resolveModule('./runtime')],
+      }))
+      .catch(() => {
+        // @unhead/vue is optional; unresolved installs use the local compatibility path.
+        return null
+      })
     const unheadPackage = unheadPackagePath
       ? await readPackageJSON(unheadPackagePath).catch(() => {
           // An unreadable optional peer cannot safely advertise loader support.
