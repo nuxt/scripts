@@ -609,7 +609,9 @@ export default defineNuxtModule<ModuleOptions>({
     }
     // If Unhead cannot be resolved, retain the compatibility implementation.
     const unheadPackagePath = await resolvePackageJSON('@unhead/vue', {
-      from: nuxt.options.modulesDir,
+      // Match the package instance imported by the built runtime. An app can
+      // contain another Unhead version with different loader capabilities.
+      from: [resolveModule('./runtime')],
     }).catch(() => {
       // @unhead/vue is optional; unresolved installs use the local compatibility path.
       return null
