@@ -10,7 +10,7 @@ export default defineNuxtConfig({
 
   scripts: false,
 
-  css: [resolve(__dirname, 'assets/css/global.css')],
+  css: [resolve(import.meta.dirname, 'assets/css/global.css')],
 
   fonts: {
     families: [
@@ -38,7 +38,7 @@ export default defineNuxtConfig({
       ],
     },
     output: {
-      publicDir: resolve(__dirname, '../script/dist/devtools-client'),
+      publicDir: resolve(import.meta.dirname, '../script/dist/devtools-client'),
     },
   },
 
