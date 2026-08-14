@@ -1,10 +1,11 @@
-import { ELEMENT_NODE, parse, renderSync, TEXT_NODE, walkSync } from 'ultrahtml'
+import { ELEMENT_NODE, parse, renderSync, walkSync } from 'ultrahtml'
 import { describe, expect, it } from 'vitest'
 import {
   isEmbedShell,
   proxyImageUrl,
   rewriteUrl,
   rewriteUrlsInText,
+  sanitizeInstagramEmbedHtml,
   scopeCss,
 } from '../../packages/script/src/runtime/server/utils/instagram-embed'
 
@@ -109,68 +110,124 @@ describe('instagram-embed: srcset rewriting', () => {
   })
 })
 
-describe('instagram-embed: node removal', () => {
-  it('does not produce broken HTML from removed script tags', () => {
-    const html = '<div><script type="text/javascript" nonce="abc123">alert(1)</script><p>content</p></div>'
-    const ast = parse(html)
+describe('instagram-embed: HTML sanitization', () => {
+  it('drops active markup, unsafe attributes, and untrusted URLs', () => {
+    const html = `
+      <html>
+        <head>
+          <link rel="stylesheet" href="https://static.cdninstagram.com/rsrc.php/embed.css">
+          <link rel="stylesheet" href="https://attacker.example/embed.css">
+          <script nonce="abc123">alert(1)</script>
+          <style>:root { --color: red; }</style>
+        </head>
+        <body>
+          <iframe src="https://attacker.example/frame"></iframe>
+          <object data="https://attacker.example/plugin"></object>
+          <form action="https://attacker.example/collect"><input name="password"></form>
+          <custom-widget onclick="alert(1)">unsafe custom element</custom-widget>
+          <img src="javascript:alert(1)" alt="  " onerror="alert(1)" data-log-event="track">
+          <a class="Likes" href="javascript:alert(1)" target="_self" onclick="alert(1)"><i></i></a>
+          <p style="background-image: url(https://attacker.example/pixel); padding-bottom: 50%">Safe text</p>
+        </body>
+      </html>
+    `
 
-    walkSync(ast, (node) => {
-      if (node.type === ELEMENT_NODE && node.name === 'script') {
-        node.type = TEXT_NODE
-        node.value = ''
-        node.name = undefined as any
-        node.attributes = {}
-        node.children = []
-      }
-    })
+    const result = sanitizeInstagramEmbedHtml(html)
 
-    const result = renderSync(ast)
-    expect(result).not.toContain('nonce')
-    expect(result).not.toContain('text/javascript')
-    expect(result).not.toContain('<script')
-    expect(result).toContain('<p>content</p>')
+    expect(result.cssUrls).toEqual(['https://static.cdninstagram.com/rsrc.php/embed.css'])
+    expect(result.bodyHtml).not.toMatch(/<(?:script|style|iframe|object|form|input|custom-widget)\b/)
+    expect(result.bodyHtml).not.toContain('javascript:')
+    expect(result.bodyHtml).not.toContain('onclick')
+    expect(result.bodyHtml).not.toContain('onerror')
+    expect(result.bodyHtml).not.toContain('attacker.example')
+    expect(result.bodyHtml).not.toContain('data-log-event')
+    expect(result.bodyHtml).toContain('alt="Instagram post image"')
+    expect(result.bodyHtml).toContain('style="padding-bottom: 50%"')
+    expect(result.bodyHtml).toContain('Safe text')
   })
 
-  it('does not produce broken HTML from removed link tags', () => {
-    const html = '<head><link rel="stylesheet" href="https://example.com/style.css" nonce="xyz"/></head>'
-    const ast = parse(html)
+  it('keeps expected Instagram content while proxying media and hardening links', () => {
+    const html = `
+      <body>
+        <div class="Content EmbedFrame" style="padding-bottom: 125%; position: fixed" data-media-id="123">
+          <a class="EmbeddedMedia" href="https://www.instagram.com/p/ABC123/" target="_self" rel="opener">
+            <img class="EmbeddedMediaImage" src="https://scontent-lax3-1.cdninstagram.com/post.jpg" alt="A sunset" onload="track()">
+          </a>
+        </div>
+      </body>
+    `
 
-    walkSync(ast, (node) => {
-      if (node.type === ELEMENT_NODE && node.name === 'link') {
-        node.type = TEXT_NODE
-        node.value = ''
-        node.name = undefined as any
-        node.attributes = {}
-        node.children = []
-      }
-    })
+    const { bodyHtml } = sanitizeInstagramEmbedHtml(html)
 
-    const result = renderSync(ast)
-    expect(result).not.toContain('nonce')
-    expect(result).not.toContain('stylesheet')
-    expect(result).not.toContain('<link')
-    // Should just have the head tags
-    expect(result).toContain('<head>')
+    expect(bodyHtml).toContain('class="Content EmbedFrame"')
+    expect(bodyHtml).toContain('style="padding-bottom: 125%"')
+    expect(bodyHtml).not.toContain('position: fixed')
+    expect(bodyHtml).not.toContain('data-media-id')
+    expect(bodyHtml).toContain('href="https://www.instagram.com/p/ABC123/"')
+    expect(bodyHtml).toContain('target="_blank"')
+    expect(bodyHtml).toContain('rel="noopener noreferrer"')
+    expect(bodyHtml).toContain('/_scripts/embed/instagram-image?url=')
+    expect(bodyHtml).toContain('alt="A sunset"')
+    expect(bodyHtml).not.toContain('onload')
   })
 
-  it('removes style tags containing global CSS', () => {
-    const html = '<div><style>:root { --color: red; } p { color: blue; }</style><p>text</p></div>'
-    const ast = parse(html)
+  it('gives every image a non-empty alt and names Instagram action links', () => {
+    const html = `
+      <body>
+        <img src="https://lookaside.instagram.com/profile.jpg">
+        <img src="https://lookaside.instagram.com/post.jpg" alt="  ">
+        <img src="https://lookaside.instagram.com/named.jpg" alt="Existing description">
+        <a class="Likes" href="https://www.instagram.com/p/ABC123/"><i></i></a>
+        <a class="Comments" href="https://www.instagram.com/p/ABC123/"><i></i></a>
+        <a class="Share" href="https://www.instagram.com/p/ABC123/"><i></i></a>
+        <a class="Save" href="https://www.instagram.com/p/ABC123/"><i></i></a>
+        <a class="Likes" href="https://www.instagram.com/p/ABC123/" aria-label="Custom likes label"><i></i></a>
+      </body>
+    `
 
+    const { bodyHtml } = sanitizeInstagramEmbedHtml(html)
+    const ast = parse(bodyHtml)
+    const imageAlts: string[] = []
+    const linkLabels: string[] = []
     walkSync(ast, (node) => {
-      if (node.type === ELEMENT_NODE && node.name === 'style') {
-        node.type = TEXT_NODE
-        node.value = ''
-        node.name = undefined as any
-        node.attributes = {}
-        node.children = []
-      }
+      if (node.type !== ELEMENT_NODE)
+        return
+      if (node.name === 'img')
+        imageAlts.push(node.attributes.alt)
+      if (node.name === 'a')
+        linkLabels.push(node.attributes['aria-label'])
     })
 
-    const result = renderSync(ast)
-    expect(result).not.toContain(':root')
-    expect(result).not.toContain('<style')
-    expect(result).toContain('<p>text</p>')
+    expect(imageAlts).toEqual([
+      'Instagram post image',
+      'Instagram post image',
+      'Existing description',
+    ])
+    expect(linkLabels).toEqual([
+      'View likes on Instagram',
+      'Comment on Instagram',
+      'Share this post on Instagram',
+      'Save this post on Instagram',
+      'Custom likes label',
+    ])
+  })
+
+  it('keeps only valid Instagram media entries in srcset', () => {
+    const html = `
+      <img
+        srcset="https://scontent-a.cdninstagram.com/a.jpg 320w, https://attacker.example/b.jpg 640w, javascript:alert(1) 1280w"
+        src="https://scontent-a.cdninstagram.com/a.jpg"
+      >
+    `
+
+    const { bodyHtml } = sanitizeInstagramEmbedHtml(html)
+
+    expect(bodyHtml.match(/\/_scripts\/embed\/instagram-image/g)).toHaveLength(2)
+    expect(bodyHtml).toContain('320w')
+    expect(bodyHtml).not.toContain('640w')
+    expect(bodyHtml).not.toContain('1280w')
+    expect(bodyHtml).not.toContain('attacker.example')
+    expect(bodyHtml).not.toContain('javascript:')
   })
 })
 
