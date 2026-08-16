@@ -1,21 +1,15 @@
 import type { LookupFunction } from 'node:net'
-import { runtime } from 'std-env'
+import { createNetworkDispatcher } from '#nuxt-scripts/network-dispatcher'
+import { isPublicNetworkHostname } from './network-hostname'
 
-const LOCAL_HOST_SUFFIXES = [
-  'home',
-  'internal',
-  'lan',
-  'local',
-  'localdomain',
-  'localhost',
-]
+export { isPublicNetworkHostname } from './network-hostname'
 
-interface NetworkAddress {
+export interface NetworkAddress {
   address: string
   family: 4 | 6
 }
 
-type ResolveNetworkHostname = (
+export type ResolveNetworkHostname = (
   hostname: string,
   callback: (error: Error | null, addresses: NetworkAddress[]) => void,
 ) => void
@@ -30,6 +24,11 @@ export interface PublicNetworkDispatcher {
   fetch: typeof globalThis.fetch
   close: () => Promise<void>
 }
+
+export type CreateNetworkDispatcher = (
+  createLookup: (resolveHostname: ResolveNetworkHostname) => LookupFunction,
+  resolveHostnameOverride?: ResolveNetworkHostname,
+) => Promise<PublicNetworkDispatcher>
 
 /** Close a dispatcher without replacing the request or stream error already in flight. */
 export async function closePublicNetworkDispatcher(
@@ -46,68 +45,6 @@ export async function closePublicNetworkDispatcher(
     }
     throw cleanupError
   })
-}
-
-function parseIPv4(hostname: string): [number, number, number, number] | undefined {
-  const parts = hostname.split('.')
-  if (parts.length !== 4 || parts.some(part => !/^\d{1,3}$/.test(part)))
-    return
-  const octets = parts.map(Number)
-  return octets.every(octet => octet >= 0 && octet <= 255)
-    ? octets as [number, number, number, number]
-    : undefined
-}
-
-function isPublicIPv4([a, b, c]: [number, number, number, number]): boolean {
-  return a !== 0
-    && a !== 10
-    && a !== 127
-    && !(a === 100 && b >= 64 && b <= 127)
-    && !(a === 169 && b === 254)
-    && !(a === 172 && b >= 16 && b <= 31)
-    && !(a === 192 && b === 0 && c === 0)
-    && !(a === 192 && b === 0 && c === 2)
-    && !(a === 192 && b === 88 && c === 99)
-    && !(a === 192 && b === 168)
-    && !(a === 198 && (b === 18 || b === 19))
-    && !(a === 198 && b === 51 && c === 100)
-    && !(a === 203 && b === 0 && c === 113)
-    && a < 224
-}
-
-function isPublicIPv6(hostname: string): boolean {
-  const groups = hostname.split(':')
-  const firstGroup = Number.parseInt(groups[0] || '0', 16)
-  if (!Number.isInteger(firstGroup) || firstGroup < 0x2000 || firstGroup > 0x3FFF)
-    return false
-  // Documentation, Teredo, and 6to4 ranges can encode or route to non-public targets.
-  const secondGroup = Number.parseInt(groups[1] || '0', 16)
-  return !(firstGroup === 0x2001 && (secondGroup === 0 || secondGroup === 0xDB8))
-    && firstGroup !== 0x2002
-}
-
-/** Reject hostnames that directly address local, private, link-local, or reserved networks. */
-export function isPublicNetworkHostname(input: string): boolean {
-  const hostname = input
-    .trim()
-    .toLowerCase()
-    .replace(/^\[|\]$/g, '')
-    .split('%', 1)[0]!
-    .replace(/\.$/, '')
-  if (!hostname)
-    return false
-
-  const ipv4 = parseIPv4(hostname)
-  if (ipv4)
-    return isPublicIPv4(ipv4)
-  if (hostname.includes(':'))
-    return isPublicIPv6(hostname)
-
-  const labels = hostname.split('.')
-  if (labels.length < 2)
-    return false
-  const suffix = labels.at(-1)!
-  return !LOCAL_HOST_SUFFIXES.includes(suffix)
 }
 
 /** Resolve once inside the socket connection, reject mixed/private answers, then pin the selected address. */
@@ -142,44 +79,9 @@ export function createPublicNetworkLookup(resolveHostname: ResolveNetworkHostnam
   return networkLookup as LookupFunction
 }
 
-/** Create a Node fetch dispatcher whose socket lookup validates and pins every DNS answer. */
+/** Create a host fetch implementation that validates and pins every DNS answer when Node permits it. */
 export async function createPublicNetworkDispatcher(resolveHostnameOverride?: ResolveNetworkHostname): Promise<PublicNetworkDispatcher> {
-  if (runtime !== 'node')
-    return { fetch: globalThis.fetch, close: async () => {} }
-
-  // Loaded only on Node. Other runtimes keep their platform fetch behavior;
-  // call sites still reject direct non-public hostnames before fetching.
-  // The root `undici` entry eagerly loads its mock formatter, which imports
-  // `node:console`. Workerd then installs a Console whose createTask method
-  // throws. Load its dispatcher and fetch-only entry so Worker bundles stay
-  // clear of that Node module.
-  // @ts-expect-error Undici does not publish declarations for internal modules.
-  const { default: Agent } = await import('undici/lib/dispatcher/agent.js') as {
-    default: typeof import('undici').Agent
-  }
-  // @ts-expect-error Undici does not publish declarations for its fetch-only entry.
-  const { fetch } = await import('undici/index-fetch.js') as {
-    fetch: typeof import('undici').fetch
-  }
-  let resolveHostname = resolveHostnameOverride
-  if (!resolveHostname) {
-    const { lookup } = await import('node:dns')
-    resolveHostname = (hostname, callback) => lookup(hostname, { all: true, verbatim: true }, (error, addresses) => {
-      callback(error, addresses as NetworkAddress[])
-    })
-  }
-  const dispatcher = new Agent({
-    connect: {
-      lookup: createPublicNetworkLookup(resolveHostname),
-    },
-  })
-  return {
-    fetch: ((input, init) => fetch(input as string | URL, {
-      ...(init as unknown as NonNullable<Parameters<typeof fetch>[1]>),
-      dispatcher,
-    }) as unknown as Promise<Response>) as typeof globalThis.fetch,
-    close: () => dispatcher.close(),
-  }
+  return createNetworkDispatcher(createPublicNetworkLookup, resolveHostnameOverride)
 }
 
 /** Detect the tagged DNS policy error through fetch/ofetch cause wrappers. */

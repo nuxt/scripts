@@ -41,7 +41,7 @@ import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
 import { ensureNuxtScriptsCacheStorage } from './runtime/server/utils/cache-config'
-import { isPublicNetworkHostname } from './runtime/server/utils/network-host'
+import { isPublicNetworkHostname } from './runtime/server/utils/network-hostname'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
 
@@ -321,6 +321,15 @@ export default defineNuxtModule<ModuleOptions>({
       logger.debug('The module is disabled, skipping setup.')
       return
     }
+    const networkDispatcherAlias = '#nuxt-scripts/network-dispatcher'
+    const nodeNetworkDispatcherPath = await resolvePath('./runtime/server/utils/network-dispatcher.node')
+    const platformNetworkDispatcherPath = await resolvePath('./runtime/server/utils/network-dispatcher.platform')
+    nuxt.options.alias[networkDispatcherAlias] = nodeNetworkDispatcherPath
+    nuxt.hook('nitro:init', (nitro) => {
+      nitro.options.alias[networkDispatcherAlias] = nitro.options.node
+        ? nodeNetworkDispatcherPath
+        : platformNetworkDispatcherPath
+    })
     await setupNitroRuntimeCompatibility(nuxt)
     if (nuxt.options.dev) {
       setupDevtools(nuxt, { standalone: config._standaloneDevtools })

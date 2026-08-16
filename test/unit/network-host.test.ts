@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createNetworkDispatcher as createPlatformNetworkDispatcher } from '../../packages/script/src/runtime/server/utils/network-dispatcher.platform'
 import { createPublicNetworkDispatcher, createPublicNetworkLookup, isPrivateNetworkResolutionError, isPublicNetworkHostname } from '../../packages/script/src/runtime/server/utils/network-host'
 
 describe('public network hostname boundary', () => {
@@ -65,31 +66,11 @@ describe('public network hostname boundary', () => {
     expect(error).toMatchObject({ code: 'ERR_NUXT_SCRIPTS_PRIVATE_ADDRESS' })
   })
 
-  it('creates the Node dispatcher without loading node:console', async () => {
-    const { default: moduleRuntime } = await import('node:module') as typeof import('node:module') & {
-      default: typeof import('node:module') & {
-        _load: (request: string, parent: unknown, isMain: boolean) => unknown
-      }
-    }
-    const mutableModuleRuntime = moduleRuntime as typeof moduleRuntime & {
-      _load: (request: string, parent: unknown, isMain: boolean) => unknown
-    }
-    const originalLoad = mutableModuleRuntime._load
-    mutableModuleRuntime._load = (request, parent, isMain) => {
-      if (request === 'node:console')
-        throw new Error('The Console.createTask method is not implemented')
-      return originalLoad(request, parent, isMain)
-    }
+  it('uses the runtime fetch on platforms without Node dispatchers', async () => {
+    const network = await createPlatformNetworkDispatcher()
 
-    try {
-      const network = await createPublicNetworkDispatcher((_hostname, callback) => callback(null, [
-        { address: '1.1.1.1', family: 4 },
-      ]))
-      await network.close()
-    }
-    finally {
-      mutableModuleRuntime._load = originalLoad
-    }
+    expect(network.fetch).toBe(globalThis.fetch)
+    await expect(network.close()).resolves.toBeUndefined()
   })
 
   it('uses the validated lookup for the actual Node fetch connection', async () => {
