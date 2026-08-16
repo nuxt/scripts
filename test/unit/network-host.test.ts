@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createNetworkDispatcher as createPlatformNetworkDispatcher } from '../../packages/script/src/runtime/server/utils/network-dispatcher.platform'
 import { createPublicNetworkDispatcher, createPublicNetworkLookup, isPrivateNetworkResolutionError, isPublicNetworkHostname } from '../../packages/script/src/runtime/server/utils/network-host'
 
 describe('public network hostname boundary', () => {
@@ -63,6 +64,13 @@ describe('public network hostname boundary', () => {
     })
 
     expect(error).toMatchObject({ code: 'ERR_NUXT_SCRIPTS_PRIVATE_ADDRESS' })
+  })
+
+  it('uses the runtime fetch on platforms without Node dispatchers', async () => {
+    const network = await createPlatformNetworkDispatcher()
+
+    expect(network.fetch).toBe(globalThis.fetch)
+    await expect(network.close()).resolves.toBeUndefined()
   })
 
   it('uses the validated lookup for the actual Node fetch connection', async () => {
