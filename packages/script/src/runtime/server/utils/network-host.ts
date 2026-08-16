@@ -149,7 +149,18 @@ export async function createPublicNetworkDispatcher(resolveHostnameOverride?: Re
 
   // Loaded only on Node. Other runtimes keep their platform fetch behavior;
   // call sites still reject direct non-public hostnames before fetching.
-  const { Agent, fetch } = await import('undici')
+  // The root `undici` entry eagerly loads its mock formatter, which imports
+  // `node:console`. Workerd then installs a Console whose createTask method
+  // throws. Load its dispatcher and fetch-only entry so Worker bundles stay
+  // clear of that Node module.
+  // @ts-expect-error Undici does not publish declarations for internal modules.
+  const { default: Agent } = await import('undici/lib/dispatcher/agent.js') as {
+    default: typeof import('undici').Agent
+  }
+  // @ts-expect-error Undici does not publish declarations for its fetch-only entry.
+  const { fetch } = await import('undici/index-fetch.js') as {
+    fetch: typeof import('undici').fetch
+  }
   let resolveHostname = resolveHostnameOverride
   if (!resolveHostname) {
     const { lookup } = await import('node:dns')
