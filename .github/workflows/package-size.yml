@@ -1,0 +1,104 @@
+name: Package Size Analysis
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/README.md'
+      - 'docs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout base commit
+        uses: actions/checkout@v7
+        with:
+          path: .benchmark/base
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Test the report script
+        run: node --test .github/actions/package-size-report/report.test.mjs
+
+      # Only the published packages are measured. `pnpm build` also generates
+      # the DevTools app, which is slow and not part of what a user imports.
+      - name: Build base commit
+        id: base-build
+        continue-on-error: true
+        working-directory: .benchmark/base
+        run: |
+          pnpm i --frozen-lockfile
+          pnpm dev:prepare
+          pnpm generate:types
+          pnpm --filter @nuxt/scripts build
+          pnpm --filter @nuxt/scripts-cli build
+
+      - name: Warn when the base build is unavailable
+        if: ${{ steps.base-build.outcome != 'success' }}
+        run: echo "::warning::The base build failed; pull request output will be reported as new."
+
+      - name: Build pull request
+        run: |
+          pnpm i --frozen-lockfile
+          pnpm dev:prepare
+          pnpm generate:types
+          pnpm --filter @nuxt/scripts build
+          pnpm --filter @nuxt/scripts-cli build
+
+      - name: Resolve baseline label
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          short_sha=$(git rev-parse --short "$BASE_SHA")
+          date=$(git show -s --format=%cs "$BASE_SHA")
+          echo "BASE_LABEL=$BASE_REF @ $short_sha · $date" >> "$GITHUB_ENV"
+
+      - name: Generate package size report
+        uses: ./.github/actions/package-size-report
+        with:
+          base-available: ${{ steps.base-build.outcome == 'success' }}
+          base-directory: ${{ github.workspace }}/.benchmark/base
+          base-label: ${{ env.BASE_LABEL }}
+          head-directory: ${{ github.workspace }}
+          report-path: ${{ runner.temp }}/package-size-report/report.md
+
+      - name: Prepare package size artifact
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPORT_DIR: ${{ runner.temp }}/package-size-report
+        run: |
+          cat "$REPORT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' "$PR_NUMBER" > "$REPORT_DIR/pr-number.txt"
+          printf '%s\n' "$HEAD_SHA" > "$REPORT_DIR/head-sha.txt"
+
+      - name: Upload package size report
+        uses: actions/upload-artifact@v7
+        with:
+          name: package-size-report
+          path: ${{ runner.temp }}/package-size-report
+          if-no-files-found: error
+          retention-days: 1
