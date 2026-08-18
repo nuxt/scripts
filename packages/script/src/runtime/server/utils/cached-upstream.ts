@@ -88,6 +88,11 @@ interface BoundedUpstreamResponse {
 
 const DEFAULT_BINARY_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 const DEFAULT_JSON_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+const TIMEOUT_ERROR_NAMES = new Set(['AbortError', 'BodyTimeoutError', 'HeadersTimeoutError', 'TimeoutError'])
+const MAX_TRACKED_FAILURES = 512
+
+/** How long a failed upstream fetch is replayed before the upstream is tried again. */
+export const UPSTREAM_FAILURE_MAX_AGE = 60
 
 export function isSafeHttpsUrl(url: URL): boolean {
   return url.protocol === 'https:'
@@ -102,6 +107,71 @@ function upstreamError(message: string, statusCode: number, statusMessage: strin
     statusCode,
     statusMessage,
   })
+}
+
+/**
+ * Transport failures (DNS, reset connection, timeout) carry no status, so they
+ * would surface as a 500 and read as a defect in the app hosting the proxy.
+ */
+function asUpstreamError(error: unknown): Error {
+  if (typeof (error as { statusCode?: unknown } | null)?.statusCode === 'number')
+    return error as Error
+  const timedOut = isTimeoutError(error)
+  return upstreamError(
+    `Upstream request failed: ${(error as Error | null)?.message || 'unknown error'}`,
+    timedOut ? 504 : 502,
+    timedOut ? 'Gateway Timeout' : 'Upstream request failed',
+    error,
+  )
+}
+
+function isTimeoutError(error: unknown): boolean {
+  const candidate = error as { name?: string, cause?: { name?: string, code?: string } } | null
+  const code = candidate?.cause?.code
+  return TIMEOUT_ERROR_NAMES.has(candidate?.name || '')
+    || TIMEOUT_ERROR_NAMES.has(candidate?.cause?.name || '')
+    || (typeof code === 'string' && code.includes('TIMEOUT'))
+}
+
+/**
+ * Short-lived replay of the last failure for a cache key.
+ *
+ * Nitro stores nothing when the resolver throws, so an upstream that keeps
+ * refusing a resource (rate limit, login wall, deleted post) is re-fetched on
+ * every request. Each attempt raises a server error, and the retries deepen the
+ * rate limit that caused them. Stale-while-revalidate already covers a resource
+ * that was fetched successfully once, so this only gates the cold path.
+ */
+function createFailureGate(maxAge: number) {
+  const failures = new Map<string, { until: number, error: { message: string, statusCode: number, statusMessage: string } }>()
+  const failureWindow = Math.min(UPSTREAM_FAILURE_MAX_AGE, maxAge) * 1000
+
+  return {
+    replay(key: string): void {
+      const failure = failures.get(key)
+      if (!failure)
+        return
+      if (Date.now() >= failure.until) {
+        failures.delete(key)
+        return
+      }
+      throw upstreamError(failure.error.message, failure.error.statusCode, failure.error.statusMessage)
+    },
+    record(key: string, error: unknown): void {
+      const failure = error as Error & { statusCode?: number, statusMessage?: string }
+      // Insertion order is eviction order; the oldest key is the least useful.
+      if (failures.size >= MAX_TRACKED_FAILURES)
+        failures.delete(failures.keys().next().value!)
+      failures.set(key, {
+        until: Date.now() + failureWindow,
+        error: {
+          message: failure?.message || 'Upstream request failed',
+          statusCode: failure?.statusCode ?? 502,
+          statusMessage: failure?.statusMessage || 'Upstream request failed',
+        },
+      })
+    },
+  }
 }
 
 function resolveMaxResponseBytes(value: number | undefined, fallback: number): number {
@@ -264,10 +334,13 @@ async function fetchBoundedUpstream(
       }
 
       if (!options.ignoreResponseError && response.status >= 400 && response.status < 600) {
+        // An upstream 5xx is the upstream's fault, not ours. Mirroring it would
+        // report the app hosting this proxy as broken, so it becomes a 502.
+        const upstreamFault = response.status >= 500
         await rejectResponse(response, upstreamError(
           `Upstream request failed with status ${response.status}`,
-          response.status,
-          response.statusText || 'Upstream request failed',
+          upstreamFault ? 502 : response.status,
+          upstreamFault ? 'Upstream request failed' : (response.statusText || 'Upstream request failed'),
         ))
       }
 
@@ -298,8 +371,8 @@ async function fetchBoundedUpstream(
     }
   }
   catch (error) {
-    primaryError = error
-    throw error
+    primaryError = asUpstreamError(error)
+    throw primaryError
   }
   finally {
     await closePublicNetworkDispatcher(network, primaryError)
@@ -316,6 +389,24 @@ export function createCachedBinaryFetch(
   config: CachedBinaryFetchConfig = {},
 ): (url: string, opts?: CachedBinaryFetchOptions) => Promise<CachedBinaryResult> {
   const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_BINARY_MAX_RESPONSE_BYTES)
+  const failureGate = createFailureGate(maxAge)
+  const cacheKey = (url: string, opts?: CachedBinaryFetchOptions) => {
+    if (!opts)
+      return hash(url)
+    // Vary on headers + redirect mode — callers with different user agents
+    // or redirect policies may get different upstream responses.
+    const parts = [url]
+    if (opts.headers) {
+      const entries = Object.entries(opts.headers).sort(([a], [b]) => a.localeCompare(b))
+      for (const [k, v] of entries)
+        parts.push(`${k}=${v}`)
+    }
+    if (opts.redirect)
+      parts.push(`redirect=${opts.redirect}`)
+    if (opts.ignoreResponseError !== undefined)
+      parts.push(`ignoreResponseError=${opts.ignoreResponseError}`)
+    return hash(parts)
+  }
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
       const response = await fetchBoundedUpstream(url, {
@@ -340,27 +431,16 @@ export function createCachedBinaryFetch(
       maxAge,
       swr: true,
       staleMaxAge: maxAge,
-      getKey: (url: string, opts?: CachedBinaryFetchOptions) => {
-        if (!opts)
-          return hash(url)
-        // Vary on headers + redirect mode — callers with different user agents
-        // or redirect policies may get different upstream responses.
-        const parts = [url]
-        if (opts.headers) {
-          const entries = Object.entries(opts.headers).sort(([a], [b]) => a.localeCompare(b))
-          for (const [k, v] of entries)
-            parts.push(`${k}=${v}`)
-        }
-        if (opts.redirect)
-          parts.push(`redirect=${opts.redirect}`)
-        if (opts.ignoreResponseError !== undefined)
-          parts.push(`ignoreResponseError=${opts.ignoreResponseError}`)
-        return hash(parts)
-      },
+      getKey: cacheKey,
     },
   )
   return async (url, opts) => {
-    const result = await cached(url, opts)
+    const key = cacheKey(url, opts)
+    failureGate.replay(key)
+    const result = await cached(url, opts).catch((error) => {
+      failureGate.record(key, error)
+      throw error
+    })
     return {
       ...result,
       body: result.base64 ? Buffer.from(result.base64, 'base64') : Buffer.alloc(0),
@@ -381,7 +461,9 @@ export function createCachedJsonFetch<T>(
   config: CachedJsonFetchConfig<T>,
 ): (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => Promise<T> {
   const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_JSON_MAX_RESPONSE_BYTES)
-  return defineCachedFunction(
+  const failureGate = createFailureGate(maxAge)
+  const cacheKey = (url: string, opts?: { headers?: Record<string, string> }) => hash(getKey(url, opts))
+  const cached = defineCachedFunction(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
       const response = await fetchBoundedUpstream(url, {
         allowUrl: config.allowUrl,
@@ -415,7 +497,15 @@ export function createCachedJsonFetch<T>(
       maxAge,
       swr: true,
       staleMaxAge: maxAge,
-      getKey: (url, opts) => hash(getKey(url, opts)),
+      getKey: cacheKey,
     },
   )
+  return async (url, opts) => {
+    const key = cacheKey(url, opts)
+    failureGate.replay(key)
+    return cached(url, opts).catch((error) => {
+      failureGate.record(key, error)
+      throw error
+    })
+  }
 }
