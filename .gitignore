@@ -37,3 +37,6 @@ test/fixtures/**/sw-status.json
 
 # Skilld references (recreated by `skilld install`)
 .skilld
+
+# Package size analysis base checkout
+.benchmark
