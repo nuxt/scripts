@@ -263,9 +263,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
           },
         },
         async handler(code, id) {
-          if (!isVue(id, { type: ['template', 'script'] }) && !isJS(id))
-            return
+          // Cheapest check first: the id filter above still lets every JS and Vue module in the
+          // graph reach this handler, and `isVue`/`isJS` each parse the id as a URL.
           if (!code.includes('useScript')) // all integrations should start with useScriptX
+            return
+          if (!isVue(id, { type: ['template', 'script'] }) && !isJS(id))
             return
 
           const s = new MagicString(code)
