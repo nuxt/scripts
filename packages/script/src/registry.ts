@@ -21,6 +21,7 @@ import {
   CloudflareWebAnalyticsOptions,
   CrispOptions,
   DatabuddyAnalyticsOptions,
+  DeskCrewOptions,
   FathomAnalyticsOptions,
   GoogleAdsenseOptions,
   GoogleAnalyticsOptions,
@@ -168,6 +169,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // support
   m('intercom', 'Intercom', 'support', 'useScriptIntercom', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('crisp', 'Crisp', 'support', 'useScriptCrisp', { bundle: true }, null),
+  m('deskcrew', 'DeskCrew', 'support', 'useScriptDeskCrew', {}, null),
   // cdn
   m('npm', 'NPM', 'cdn', 'useScriptNpm', { bundle: true }, null),
   // utility
@@ -748,6 +750,18 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'support',
       envDefaults: { id: '' },
       bundle: true,
+    }),
+    // DeskCrew serves one mutable bundle from its own origin and derives its API
+    // origin from the executing script's own `src`. Bundling to /_scripts/assets
+    // would repoint every widget API call at the consuming site's origin, and
+    // proxying would put the consuming site's server in the path of live chat
+    // polling. Both capabilities are therefore intentionally absent.
+    def('deskcrew', {
+      schema: DeskCrewOptions,
+      label: 'DeskCrew',
+      category: 'support',
+      composableName: 'useScriptDeskCrew',
+      envDefaults: { widgetKey: '', board: '' },
     }),
     // cdn
     def('npm', {
