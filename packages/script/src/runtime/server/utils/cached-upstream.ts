@@ -89,6 +89,7 @@ interface BoundedUpstreamResponse {
 const DEFAULT_BINARY_MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 const DEFAULT_JSON_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 const TIMEOUT_ERROR_NAMES = new Set(['AbortError', 'BodyTimeoutError', 'HeadersTimeoutError', 'TimeoutError'])
+const DEFAULT_UPSTREAM_TIMEOUT_MS = 10000
 const MAX_TRACKED_FAILURES = 512
 
 /** How long a failed upstream fetch is replayed before the upstream is tried again. */
@@ -410,9 +411,15 @@ export function createCachedBinaryFetch(
       parts.push(`ignoreResponseError=${opts.ignoreResponseError}`)
     return hash(parts)
   }
+  // The gate replays a failure, and a timeout is one. A caller that allows the
+  // upstream longer must not inherit a shorter caller's 504, so the gate keys
+  // on the timeout as well. The cache key stays as it is: a stored response is
+  // just as valid however long the caller was willing to wait for it.
+  const gateKey = (url: string, opts?: CachedBinaryFetchOptions) =>
+    `${cacheKey(url, opts)}:${opts?.timeout ?? DEFAULT_UPSTREAM_TIMEOUT_MS}`
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
-      const key = cacheKey(url, opts)
+      const key = gateKey(url, opts)
       failureGate.replay(key)
       const response = await fetchBoundedUpstream(url, {
         allowContentType: config.allowContentType,
@@ -422,7 +429,7 @@ export function createCachedBinaryFetch(
         maxRedirects: config.maxRedirects,
         maxResponseBytes,
         redirect: opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual'),
-        timeoutMs: opts?.timeout ?? 10000,
+        timeoutMs: opts?.timeout ?? DEFAULT_UPSTREAM_TIMEOUT_MS,
       }).catch((error) => {
         failureGate.record(key, error)
         throw error
@@ -466,9 +473,12 @@ export function createCachedJsonFetch<T>(
   const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_JSON_MAX_RESPONSE_BYTES)
   const failureGate = createFailureGate(maxAge)
   const cacheKey = (url: string, opts?: { headers?: Record<string, string> }) => hash(getKey(url, opts))
+  // See `createCachedBinaryFetch`: the gate keys on the timeout, the cache does not.
+  const gateKey = (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) =>
+    `${cacheKey(url, opts)}:${opts?.timeout ?? DEFAULT_UPSTREAM_TIMEOUT_MS}`
   return defineCachedFunction(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
-      const key = cacheKey(url, opts)
+      const key = gateKey(url, opts)
       failureGate.replay(key)
       const response = await fetchBoundedUpstream(url, {
         allowUrl: config.allowUrl,
@@ -478,7 +488,7 @@ export function createCachedJsonFetch<T>(
         maxRedirects: config.maxRedirects,
         maxResponseBytes,
         redirect: 'follow',
-        timeoutMs: opts?.timeout ?? 10000,
+        timeoutMs: opts?.timeout ?? DEFAULT_UPSTREAM_TIMEOUT_MS,
       }).catch((error) => {
         failureGate.record(key, error)
         throw error

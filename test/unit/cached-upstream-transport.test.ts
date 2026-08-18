@@ -151,6 +151,22 @@ describe('real upstream transport failures', () => {
     expect(requests).toHaveLength(2)
   })
 
+  it('does not replay a short caller\'s timeout to one that waits longer', async () => {
+    await startServer((_url, res) => {
+      setTimeout(() => {
+        res.writeHead(200, { 'content-type': 'application/json' })
+        res.end('{"ok":true}')
+      }, 300)
+    })
+    const fetchProfile = jsonFetch()
+
+    await expect(fetchProfile(`${origin}/profile`, { timeout: 100 }))
+      .rejects
+      .toMatchObject({ statusCode: 504 })
+
+    await expect(fetchProfile(`${origin}/profile`, { timeout: 2000 })).resolves.toEqual({ ok: true })
+  })
+
   it('does not gate a resource the upstream still serves', async () => {
     await startServer((url, res) => {
       if (url.startsWith('/missing')) {
