@@ -1,15 +1,32 @@
-export const MAPLIBRE_STYLESHEET_URL = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css'
-export const MAPLIBRE_STYLESHEET_INTEGRITY = 'sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK'
-
 const MAPLIBRE_STYLE_ID = 'nuxt-scripts-maplibre-styles'
 
-export function configureMapLibreWorker(maplibre: { setWorkerUrl: (value: string) => void } | undefined, workerUrl?: string): void {
-  if (maplibre && workerUrl)
-    maplibre.setWorkerUrl(workerUrl)
+interface MapLibreWorkerApi {
+  setWorkerUrl: (value: string) => void
 }
 
-/** Injects MapLibre's required control and marker stylesheet once. */
-export function ensureMapLibreStyles(stylesheetUrl = MAPLIBRE_STYLESHEET_URL): void {
+/**
+ * Points MapLibre at its worker.
+ *
+ * MapLibre v6 resolves the worker from `import.meta.url`, which does not
+ * survive bundling, so the URL has to be set explicitly. `?worker&url` is
+ * required over plain `?url`: the worker imports its sibling
+ * `maplibre-gl-shared.mjs`.
+ *
+ * @see https://maplibre.org/maplibre-gl-js/docs/#installation
+ */
+export async function configureMapLibreWorker(maplibre: MapLibreWorkerApi | undefined, workerUrl?: string): Promise<void> {
+  if (!maplibre)
+    return
+  if (workerUrl) {
+    maplibre.setWorkerUrl(workerUrl)
+    return
+  }
+  const { default: bundledWorkerUrl } = await import('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url')
+  maplibre.setWorkerUrl(bundledWorkerUrl)
+}
+
+/** Injects a custom MapLibre control and marker stylesheet once. */
+export function ensureMapLibreStyles(stylesheetUrl: string): void {
   if (typeof document === 'undefined')
     return
 
@@ -24,11 +41,6 @@ export function ensureMapLibreStyles(stylesheetUrl = MAPLIBRE_STYLESHEET_URL): v
   const injectedStylesheets = document.querySelectorAll('[data-nuxt-scripts-maplibre]')
   link.id = injectedStylesheets.length ? `${MAPLIBRE_STYLE_ID}-${injectedStylesheets.length + 1}` : MAPLIBRE_STYLE_ID
   link.dataset.nuxtScriptsMaplibre = '1'
-
-  if (stylesheetUrl === MAPLIBRE_STYLESHEET_URL) {
-    link.integrity = MAPLIBRE_STYLESHEET_INTEGRITY
-    link.crossOrigin = 'anonymous'
-  }
 
   document.head.append(link)
 }

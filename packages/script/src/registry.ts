@@ -162,7 +162,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // content
   m('googleMaps', 'Google Maps', 'content', 'useScriptGoogleMaps', {}, null),
   m('leaflet', 'Leaflet', 'content', 'useScriptLeaflet', { bundle: true }, null),
-  m('maplibre', 'MapLibre GL JS', 'content', 'useScriptMapLibre', { bundle: true }, null),
+  m('maplibre', 'MapLibre GL JS', 'content', 'useScriptMapLibre', {}, null),
   m('instagramEmbed', 'Instagram Embed', 'content', false, {}, null),
   m('xEmbed', 'X Embed', 'content', false, {}, null),
   m('blueskyEmbed', 'Bluesky Embed', 'content', false, {}, null),
@@ -708,9 +708,10 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       composableName: 'useScriptMapLibre',
       schema: MapLibreOptions,
       label: 'MapLibre GL JS',
-      src: 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js',
+      // MapLibre GL JS v6 is ESM-only, so it loads from the `maplibre-gl`
+      // package rather than a CDN script tag.
+      src: false,
       category: 'content',
-      bundle: true,
     }),
     def('blueskyEmbed', {
       composableName: false,

@@ -30,19 +30,19 @@ export const LeafletOptions = object({
 
 export const MapLibreOptions = object({
   /**
-   * Inject the MapLibre GL JS 5.24.0 stylesheet when the script begins
-   * loading. Disable this when supplying the stylesheet through Nuxt.
+   * Inject the MapLibre stylesheet when the script begins loading. Disable
+   * this when supplying the stylesheet through Nuxt.
    * @default true
    */
   injectStyles: optional(boolean()),
   /**
-   * Stylesheet URL used when `injectStyles` is enabled.
-   * @default 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css'
+   * Stylesheet URL used when `injectStyles` is enabled. Defaults to the
+   * stylesheet shipped in the `maplibre-gl` package.
    */
   stylesheetUrl: optional(string()),
   /**
-   * Worker URL for the CSP-compatible MapLibre build. Pair this with a custom
-   * `scriptInput.src` that loads `maplibre-gl-csp.js`.
+   * Worker URL passed to `maplibregl.setWorkerUrl()`. Set this when serving
+   * the MapLibre worker from your own origin.
    */
   workerUrl: optional(string()),
 })

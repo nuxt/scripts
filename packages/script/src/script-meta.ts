@@ -188,7 +188,8 @@ export const scriptMeta = {
     trackedData: [],
   },
   maplibre: {
-    urls: ['https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'],
+    // Loaded from the `maplibre-gl` package, not a CDN.
+    urls: [],
     trackedData: [],
   },
 

@@ -14,14 +14,14 @@ links:
 
 [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/) is an open-source WebGL renderer for interactive vector maps. It renders the map and handles interaction; you choose the style, tile source, attribution, geocoding, and routing services separately.
 
-Nuxt Scripts supports MapLibre GL JS 5.24 through the [`useScriptMapLibre()`{lang="ts"}](/scripts/maplibre/api/use-script-maplibre) composable and declarative components for common map resources. First-party mode can bundle the JavaScript SDK. Nuxt Scripts loads the required MapLibre stylesheet separately by default.
+Nuxt Scripts supports MapLibre GL JS v6 through the [`useScriptMapLibre()`{lang="ts"}](/scripts/maplibre/api/use-script-maplibre) composable and declarative components for common map resources. MapLibre v6 is ESM-only, so Nuxt Scripts loads it from the `maplibre-gl` package rather than a CDN script tag. The stylesheet comes from the same package.
 
 ::script-types{exclude-components}
 ::
 
 ## Setup
 
-Install MapLibre for its TypeScript definitions, then enable the registry entry:
+Install MapLibre v6, then enable the registry entry:
 
 ```bash
 pnpm add -D maplibre-gl

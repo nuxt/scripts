@@ -69,6 +69,7 @@
       "unimport",
       "#nuxt-scripts/types",
       "posthog-js",
+      "maplibre-gl",
       "@nuxt/devtools-kit",
       "sirv"
     ]
@@ -84,7 +85,7 @@
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
     "@unhead/vue": "^3.3.1",
-    "maplibre-gl": "^5.24.0",
+    "maplibre-gl": "^6.0.0",
     "posthog-js": "^1.0.0",
     "unhead": "^3.3.1"
   },
