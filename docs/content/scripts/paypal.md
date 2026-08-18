@@ -44,7 +44,7 @@ Install `@paypal/paypal-js` for full TypeScript support.
 pnpm add -D @paypal/paypal-js
 ```
 
-The v6 types are available from `@paypal/paypal-js/sdk-v6`.
+Nuxt Scripts requires `@paypal/paypal-js` v10 or later. The v6 SDK types are available from `@paypal/paypal-js/sdk-v6`.
 
 ### Demo
 
