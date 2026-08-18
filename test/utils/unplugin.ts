@@ -1,5 +1,7 @@
-/** Mirrors unplugin's `StringFilter`. Declared here because `unplugin` is a dependency of
- * the module package, not of the test root. */
+/**
+ * Mirrors unplugin's `StringFilter`. Declared here because `unplugin` is a dependency of
+ * the module package, not of the test root.
+ */
 type FilterPattern = string | RegExp | Array<string | RegExp>
 type StringFilter = FilterPattern | { include?: FilterPattern, exclude?: FilterPattern }
 
