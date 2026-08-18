@@ -162,9 +162,6 @@ catalogs:
     unbuild:
       specifier: ^3.6.1
       version: 3.6.1
-    undici:
-      specifier: ^8.10.0
-      version: 8.10.0
     unhead:
       specifier: ^3.3.1
       version: 3.3.1
@@ -460,9 +457,6 @@ importers:
       ultrahtml:
         specifier: 'catalog:'
         version: 1.7.0
-      undici:
-        specifier: 'catalog:'
-        version: 8.10.0
       unplugin:
         specifier: 'catalog:'
         version: 3.3.0(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.4)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
@@ -6716,10 +6710,6 @@ packages:
 
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
-
-  undici@8.10.0:
-    resolution: {integrity: sha512-HvltHd7avK13QIw/oLe4qoOLyoVSoafqJ2jYOrtMRBkbYT31eiBQ8O0ehRKZiEZCMEyLFQNIADpgCWC5fALvYQ==}
-    engines: {node: '>=22.19.0'}
 
   undici@8.9.0:
     resolution: {integrity: sha512-aWZpUj7XoGonMClx4gdDRfgBjqeA+F473aDmROQQbM9n6PRfK/u1q/a0X4wMTgcHfT8H6fpbt98PFuDUwFg2YA==}
@@ -15015,8 +15005,6 @@ snapshots:
       unplugin: 3.3.0(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.4)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
 
   undici-types@8.3.0: {}
-
-  undici@8.10.0: {}
 
   undici@8.9.0: {}
 
