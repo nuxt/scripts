@@ -828,9 +828,11 @@ export default defineNuxtModule<ModuleOptions>({
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
 
-      addBuildPlugin(NuxtScriptsCheckScripts(), {
-        dev: true,
-      })
+      // Only guards against `await $script` in dev. `addBuildPlugin`'s `dev` option cannot
+      // express "dev builds only": it skips on `dev: false`, and `nuxt.options.build` is
+      // always truthy, so the check has to happen here.
+      if (nuxt.options.dev)
+        addBuildPlugin(NuxtScriptsCheckScripts())
       addBuildPlugin(NuxtScriptBundleTransformer({
         nuxt,
         scripts: registryScriptsWithImport,

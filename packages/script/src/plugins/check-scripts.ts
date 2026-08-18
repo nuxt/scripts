@@ -3,7 +3,10 @@ import { parseAndWalk } from 'oxc-walker'
 import { createUnplugin } from 'unplugin'
 import { isVue } from './util'
 
-const VUE_RE = /\.vue/
+const VUE_RE = /\.vue(?:\?|$)/
+// `$script` is only reachable through a `useScript` call, so the bundler can skip
+// every other module before the hook runs.
+const USE_SCRIPT_CODE_MARKER = 'useScript'
 
 export function NuxtScriptsCheckScripts() {
   return createUnplugin(() => {
@@ -12,11 +15,10 @@ export function NuxtScriptsCheckScripts() {
       transform: {
         filter: {
           id: VUE_RE,
+          code: USE_SCRIPT_CODE_MARKER,
         },
         handler(code, id) {
           if (!isVue(id, { type: ['script'] }))
-            return
-          if (!code.includes('useScript')) // all integrations should start with useScript*
             return
 
           let nameNode: Node | undefined
