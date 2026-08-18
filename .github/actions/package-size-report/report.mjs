@@ -303,9 +303,13 @@ function packagePayloadFiles(directory, packageJson) {
     .filter(path => existsSync(path) && statSync(path).isFile() && isPayloadFile(path))
 }
 
-function dependencyPackage(pkg, name) {
-  const packagePath = resolve(pkg.directory, 'node_modules', name, 'package.json')
-  if (!existsSync(packagePath))
+function dependencyPackage(pkg, name, root) {
+  const candidates = [
+    resolve(pkg.directory, 'node_modules', name, 'package.json'),
+    resolve(root, 'node_modules', name, 'package.json'),
+  ]
+  const packagePath = candidates.find(path => existsSync(path))
+  if (!packagePath)
     return null
   const realPackagePath = realpathSync(packagePath)
   return {
@@ -344,7 +348,7 @@ function collectDependencies(pkg, metrics, catalog, root) {
   const total = { gzipSize: 0, size: 0 }
   for (const [name, declaredRange] of Object.entries(pkg.packageJson.dependencies || {}).sort()) {
     const range = dependencyRange(name, declaredRange, catalog)
-    const dependency = dependencyPackage(pkg, name)
+    const dependency = dependencyPackage(pkg, name, root)
     const providedVersion = nuxtDependencyVersion(provider, name)
     const free = Boolean(providedVersion && satisfiesVersion(providedVersion, range))
     const measured = free || !dependency

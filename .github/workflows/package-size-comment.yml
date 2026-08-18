@@ -180,7 +180,14 @@ jobs:
                 per_page: 100,
               }),
             )
-            const existing = comments.find(comment => comment.body?.includes(marker))
+            // Anyone can post a comment carrying the marker. Only update one
+            // this workflow wrote, otherwise the update call fails on a
+            // comment the token cannot edit.
+            const existing = comments.find(comment =>
+              comment.body?.includes(marker)
+              && comment.user?.login === 'github-actions[bot]'
+              && comment.user?.type === 'Bot',
+            )
 
             if (!existing) {
               await withRetry('issues.createComment', () =>
