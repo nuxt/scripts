@@ -6,6 +6,7 @@ import { hash } from 'ohash'
 import { hasProtocol, joinURL, withBase } from 'ufo'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
+import { runTransform } from '../utils/unplugin'
 
 const ohash = (await vi.importActual<typeof import('ohash')>('ohash')).hash
 vi.mock('ohash', async (og) => {
@@ -63,7 +64,9 @@ vi.mocked(hash).mockImplementation(src => src.pathname)
 
 async function transformId(id: string, code: string, options?: AssetBundlerTransformerOptions) {
   const plugin = NuxtScriptBundleTransformer({ ...options, nuxt: mockNuxt }).vite() as any
-  const res = await plugin.transform.handler.call({}, code, id)
+  // Goes through the declared filter, so a filter regression fails here rather than silently
+  // shipping a plugin that never sees the files it should.
+  const res = await runTransform(plugin, { id, code })
   return res?.code
 }
 
