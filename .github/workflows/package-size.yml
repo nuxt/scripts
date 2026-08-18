@@ -50,6 +50,7 @@ jobs:
         working-directory: .benchmark/base
         run: |
           pnpm i --frozen-lockfile
+          pnpm dev:prepare
           pnpm generate:types
           pnpm --filter @nuxt/scripts build
           pnpm --filter @nuxt/scripts-cli build
@@ -61,6 +62,7 @@ jobs:
       - name: Build pull request
         run: |
           pnpm i --frozen-lockfile
+          pnpm dev:prepare
           pnpm generate:types
           pnpm --filter @nuxt/scripts build
           pnpm --filter @nuxt/scripts-cli build
