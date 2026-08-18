@@ -1,0 +1,201 @@
+name: Package Size Comment
+
+on:
+  workflow_run:
+    workflows:
+      - Package Size Analysis
+    types:
+      - completed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_repository.id }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  comment:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    permissions:
+      actions: read
+      pull-requests: write
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Resolve pull request
+        id: pull-request
+        uses: actions/github-script@v9
+        with:
+          script: |
+            // The GitHub API returns transient 5xx / 429 / network errors.
+            // Retry those with backoff. Any other error fails the step at once.
+            async function withRetry(label, fn) {
+              for (let attempt = 1; ; attempt++) {
+                try {
+                  return await fn()
+                }
+                catch (error) {
+                  const status = error.status
+                  const transient = status === undefined || status === 429 || status >= 500
+                  if (!transient || attempt >= 5)
+                    throw error
+                  const wait = Math.min(2000 * 2 ** (attempt - 1), 30000)
+                  core.warning(`${label} failed with a transient error (${error.message}). Retrying in ${wait}ms.`)
+                  await new Promise(resolve => setTimeout(resolve, wait))
+                }
+              }
+            }
+
+            const run = context.payload.workflow_run
+            const headOwner = run.head_repository?.owner?.login
+            if (!headOwner || !run.head_branch) {
+              core.setFailed('The workflow run is missing its head repository or branch')
+              return
+            }
+
+            const pullRequests = await withRetry('pulls.list', () => github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${headOwner}:${run.head_branch}`,
+              per_page: 100,
+            }))
+            const expectedHeadRepository = run.head_repository.full_name
+            const expectedBaseRepository = `${context.repo.owner}/${context.repo.repo}`
+            const matches = pullRequests.filter(pullRequest =>
+              pullRequest.state === 'open'
+              && pullRequest.head.sha === run.head_sha
+              && pullRequest.head.repo?.full_name === expectedHeadRepository
+              && pullRequest.base.repo.full_name === expectedBaseRepository,
+            )
+
+            if (matches.length !== 1) {
+              core.setFailed(`Expected one open pull request for ${run.head_sha}, found ${matches.length}`)
+              return
+            }
+
+            core.setOutput('number', matches[0].number)
+
+      - name: Download package size report
+        uses: actions/download-artifact@v8
+        with:
+          name: package-size-report
+          path: ${{ runner.temp }}/package-size-report
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # The artifact comes from a workflow run that may be a fork pull request.
+      # Treat it as untrusted input and check it before it becomes a comment.
+      - name: Validate package size report
+        env:
+          COMMENT_PATH: ${{ runner.temp }}/package-size-comment.md
+          EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_PR_NUMBER: ${{ steps.pull-request.outputs.number }}
+          REPORT_DIR: ${{ runner.temp }}/package-size-report
+        run: |
+          report="$REPORT_DIR/report.md"
+          pr_number="$REPORT_DIR/pr-number.txt"
+          head_sha="$REPORT_DIR/head-sha.txt"
+
+          for file in "$report" "$pr_number" "$head_sha"; do
+            if [ ! -f "$file" ] || [ -L "$file" ]; then
+              echo "::error::Missing or invalid report file: $file"
+              exit 1
+            fi
+          done
+
+          if [ "$(wc -c < "$pr_number")" -gt 16 ] || [ "$(wc -c < "$head_sha")" -gt 64 ]; then
+            echo "::error::Artifact metadata is too large"
+            exit 1
+          fi
+
+          artifact_pr_number=$(tr -d '\r\n' < "$pr_number")
+          if ! echo "$artifact_pr_number" | grep -Eq '^[0-9]+$' \
+            || [ "$artifact_pr_number" != "$EXPECTED_PR_NUMBER" ]; then
+            echo "::error::Artifact pull request number does not match the workflow run"
+            exit 1
+          fi
+
+          if [ "$(tr -d '\r\n' < "$head_sha")" != "$EXPECTED_HEAD_SHA" ]; then
+            echo "::error::Artifact head SHA does not match the workflow run"
+            exit 1
+          fi
+
+          report_size=$(wc -c < "$report")
+          if [ "$report_size" -lt 1 ] || [ "$report_size" -gt 131072 ]; then
+            echo "::error::Package size report must be between 1 byte and 128 KiB"
+            exit 1
+          fi
+
+          if [ "$(head -n 1 "$report")" != '### 📦 Package Size' ]; then
+            echo "::error::Package size report has an unexpected format"
+            exit 1
+          fi
+
+          if [ -e "$COMMENT_PATH" ] || [ -L "$COMMENT_PATH" ]; then
+            echo "::error::Refusing to overwrite the validated comment path"
+            exit 1
+          fi
+          sed 's/@/@<!-- -->/g' "$report" > "$COMMENT_PATH"
+
+      - name: Post comment on pull request
+        uses: actions/github-script@v9
+        env:
+          COMMENT_PATH: ${{ runner.temp }}/package-size-comment.md
+          PR_NUMBER: ${{ steps.pull-request.outputs.number }}
+        with:
+          script: |
+            const { readFileSync } = require('node:fs')
+
+            // The GitHub API returns transient 5xx / 429 / network errors.
+            // Retry those with backoff. Any other error fails the step at once.
+            async function withRetry(label, fn) {
+              for (let attempt = 1; ; attempt++) {
+                try {
+                  return await fn()
+                }
+                catch (error) {
+                  const status = error.status
+                  const transient = status === undefined || status === 429 || status >= 500
+                  if (!transient || attempt >= 5)
+                    throw error
+                  const wait = Math.min(2000 * 2 ** (attempt - 1), 30000)
+                  core.warning(`${label} failed with a transient error (${error.message}). Retrying in ${wait}ms.`)
+                  await new Promise(resolve => setTimeout(resolve, wait))
+                }
+              }
+            }
+
+            const { owner, repo } = context.repo
+            const issueNumber = Number(process.env.PR_NUMBER)
+            const marker = '<!-- package-size-report -->'
+            const body = `${readFileSync(process.env.COMMENT_PATH, 'utf8')}\n${marker}`
+
+            const comments = await withRetry('issues.listComments', () =>
+              github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: issueNumber,
+                per_page: 100,
+              }),
+            )
+            const existing = comments.find(comment => comment.body?.includes(marker))
+
+            if (!existing) {
+              await withRetry('issues.createComment', () =>
+                github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body }),
+              )
+              core.info(`Created the package size comment on pull request #${issueNumber}`)
+              return
+            }
+
+            if (existing.body === body) {
+              core.info('The package size comment is unchanged. Skipping the update.')
+              return
+            }
+
+            await withRetry('issues.updateComment', () =>
+              github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body }),
+            )
+            core.info(`Updated the package size comment on pull request #${issueNumber}`)
