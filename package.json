@@ -60,7 +60,6 @@
     "nuxt": "catalog:",
     "ofetch": "catalog:",
     "ohash": "catalog:",
-    "oxc-parser": "catalog:",
     "oxc-walker": "catalog:",
     "playwright-core": "catalog:",
     "posthog-js": "catalog:",
@@ -68,6 +67,7 @@
     "ufo": "catalog:",
     "ultrahtml": "catalog:",
     "unhead": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:",
     "vue": "catalog:",
     "vue-tsc": "catalog:"

@@ -33,6 +33,9 @@ catalogs:
     '@nuxtjs/partytown':
       specifier: ^2.0.0
       version: 2.0.0
+    '@oxc-project/types':
+      specifier: ^0.143.0
+      version: 0.143.0
     '@paypal/paypal-js':
       specifier: ^10.1.0
       version: 10.1.0
@@ -120,9 +123,6 @@ catalogs:
     ohash:
       specifier: ^2.0.11
       version: 2.0.11
-    oxc-parser:
-      specifier: ^0.143.0
-      version: 0.143.0
     oxc-walker:
       specifier: ^1.1.1
       version: 1.1.1
@@ -180,6 +180,9 @@ catalogs:
     valibot:
       specifier: ^1.4.2
       version: 1.4.2
+    vite:
+      specifier: ^8.1.5
+      version: 8.1.5
     vitest:
       specifier: ^4.1.10
       version: 4.1.10
@@ -282,9 +285,6 @@ importers:
       ohash:
         specifier: 'catalog:'
         version: 2.0.11
-      oxc-parser:
-        specifier: 'catalog:'
-        version: 0.143.0
       oxc-walker:
         specifier: 'catalog:'
         version: 1.1.1(@oxc-project/types@0.143.0)(oxc-parser@0.143.0)(rolldown@1.2.0)
@@ -306,6 +306,9 @@ importers:
       unhead:
         specifier: 'catalog:'
         version: 3.3.1(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.4)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(happy-dom@20.11.1)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
@@ -385,6 +388,9 @@ importers:
       '@nuxt/devtools-kit':
         specifier: 'catalog:'
         version: 3.4.1(magic-string@1.1.0)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.0)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.4)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)))(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
+      '@oxc-project/types':
+        specifier: 'catalog:'
+        version: 0.143.0
       '@paypal/paypal-js':
         specifier: ^10.0.0
         version: 10.1.0
@@ -433,9 +439,6 @@ importers:
       ohash:
         specifier: 'catalog:'
         version: 2.0.11
-      oxc-parser:
-        specifier: 'catalog:'
-        version: 0.143.0
       oxc-walker:
         specifier: 'catalog:'
         version: 1.1.1(@oxc-project/types@0.143.0)(oxc-parser@0.143.0)(rolldown@1.2.0)
@@ -5384,10 +5387,6 @@ packages:
   murmurhash-js@1.0.0:
     resolution: {integrity: sha512-TvmkNhkv8yct0SVBSy+o8wYzXjE4Zz3PCesbfs8HiCXXdcTuocApFv11UWlNFWKYsP2okqrhb7JNlSm9InBhIw==}
 
-  nanoid@3.3.15:
-    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-
   nanoid@3.3.16:
     resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -6017,10 +6016,6 @@ packages:
 
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
-
-  postcss@8.5.19:
-    resolution: {integrity: sha512-Mz8SaolMd8nB+G13WkORcxQKHZ/NE4xXevtkJHVuG+guo9/wYKlIMTKAqGdEmYOXR2ijPjTYNHssizdaVSUNdQ==}
-    engines: {node: ^10 || ^12 || >=14}
 
   postcss@8.5.25:
     resolution: {integrity: sha512-DTPx3RWSSnWyzLxQnlH0rJP+EW5ekl16ZU4/psbIhA0e53kJfdgaN5vKM+xP7yJtXVu+nfdVFmlgFDEKAe4Pyw==}
@@ -10031,7 +10026,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.3.2
       '@tailwindcss/oxide': 4.3.2
-      postcss: 8.5.19
+      postcss: 8.5.25
       tailwindcss: 4.3.2
 
   '@tailwindcss/vite@4.3.2(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))':
@@ -13234,8 +13229,6 @@ snapshots:
 
   murmurhash-js@1.0.0: {}
 
-  nanoid@3.3.15: {}
-
   nanoid@3.3.16: {}
 
   nanotar@0.3.0: {}
@@ -13761,6 +13754,7 @@ snapshots:
       '@oxc-parser/binding-win32-arm64-msvc': 0.143.0
       '@oxc-parser/binding-win32-ia32-msvc': 0.143.0
       '@oxc-parser/binding-win32-x64-msvc': 0.143.0
+    optional: true
 
   oxc-walker@1.0.0(esbuild@0.28.1)(oxc-parser@0.143.0)(rolldown@1.2.0)(rollup@4.62.4)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)):
     dependencies:
@@ -14187,12 +14181,6 @@ snapshots:
       postcss-selector-parser: 7.1.4
 
   postcss-value-parser@4.2.0: {}
-
-  postcss@8.5.19:
-    dependencies:
-      nanoid: 3.3.15
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
 
   postcss@8.5.25:
     dependencies:

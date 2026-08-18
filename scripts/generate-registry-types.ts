@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { parseSync } from 'oxc-parser'
 import { walk } from 'oxc-walker'
+import { parseSync } from 'vite'
 
 const registryDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'registry')
 const componentsDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'components')
@@ -430,7 +430,7 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
         if (init?.type === 'TSAsExpression' && init.expression?.type === 'ArrayExpression') {
           const names: string[] = []
           for (const el of init.expression.elements || []) {
-            // oxc-parser uses 'Literal' (not 'StringLiteral')
+            // the oxc AST uses 'Literal' (not 'StringLiteral')
             if ((el.type === 'StringLiteral' || el.type === 'Literal') && typeof el.value === 'string')
               names.push(el.value)
           }

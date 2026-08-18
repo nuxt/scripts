@@ -1,4 +1,4 @@
-import type { Node } from 'oxc-parser'
+import type { Node } from '@oxc-project/types'
 import { parseAndWalk } from 'oxc-walker'
 import { createUnplugin } from 'unplugin'
 import { isVue } from './util'
