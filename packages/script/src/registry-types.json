@@ -822,7 +822,7 @@
       {
         "name": "MapLibreOptions",
         "kind": "const",
-        "code": "export const MapLibreOptions = object({\n  /**\n   * Inject the MapLibre GL JS 5.24.0 stylesheet when the script begins\n   * loading. Disable this when supplying the stylesheet through Nuxt.\n   * @default true\n   */\n  injectStyles: optional(boolean()),\n  /**\n   * Stylesheet URL used when `injectStyles` is enabled.\n   * @default 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css'\n   */\n  stylesheetUrl: optional(string()),\n  /**\n   * Worker URL for the CSP-compatible MapLibre build. Pair this with a custom\n   * `scriptInput.src` that loads `maplibre-gl-csp.js`.\n   */\n  workerUrl: optional(string()),\n})"
+        "code": "export const MapLibreOptions = object({\n  /**\n   * Inject the MapLibre stylesheet when the script begins loading. Disable\n   * this when supplying the stylesheet through Nuxt.\n   * @default true\n   */\n  injectStyles: optional(boolean()),\n  /**\n   * Stylesheet URL used when `injectStyles` is enabled. Defaults to the\n   * stylesheet shipped in the `maplibre-gl` package.\n   */\n  stylesheetUrl: optional(string()),\n  /**\n   * Worker URL passed to `maplibregl.setWorkerUrl()`. Set this when serving\n   * the MapLibre worker from your own origin.\n   */\n  workerUrl: optional(string()),\n})"
       },
       {
         "name": "MapLibreApi",
@@ -837,7 +837,7 @@
       {
         "name": "ScriptMapLibreMapProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibreMapProps {\n  /**\n   * Defines when the MapLibre script loads.\n   * @default 'visible'\n   */\n  trigger?: ElementScriptTrigger\n  /** MapLibre style URL or inline style specification. */\n  mapStyle: string | MapLibre.StyleSpecification\n  /** Initial and reactively controlled map center. */\n  center: MapLibre.LngLatLike\n  /** Initial and reactively controlled zoom level. @default 12 */\n  zoom?: number\n  /** Initial and reactively controlled bearing in degrees. @default 0 */\n  bearing?: number\n  /** Initial and reactively controlled pitch in degrees. @default 0 */\n  pitch?: number\n  /** Options passed to `new maplibregl.Map()`. Dedicated props take precedence. */\n  options?: Omit<MapLibre.MapOptions, 'container'>\n  /** Inject MapLibre's stylesheet when the script begins loading. @default true */\n  injectStyles?: boolean\n  /** Custom MapLibre stylesheet URL. */\n  stylesheetUrl?: string\n  /** Worker URL used with MapLibre's CSP-compatible build. */\n  workerUrl?: string\n  /** Width reserved before the map loads. @default 640 */\n  width?: number | string\n  /** Height reserved before the map loads. @default 400 */\n  height?: number | string\n  /** Accessible name for an interactive map. @default 'Interactive map' */\n  ariaLabel?: string\n  /** Disable map input and remove it from the accessibility tree when decorative. @default true */\n  interactive?: boolean\n  /** Attributes applied to the outer layout container. */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n}"
+        "code": "interface ScriptMapLibreMapProps {\n  /**\n   * Defines when the MapLibre script loads.\n   * @default 'visible'\n   */\n  trigger?: ElementScriptTrigger\n  /** MapLibre style URL or inline style specification. */\n  mapStyle: string | MapLibre.StyleSpecification\n  /** Initial and reactively controlled map center. */\n  center: MapLibre.LngLatLike\n  /** Initial and reactively controlled zoom level. @default 12 */\n  zoom?: number\n  /** Initial and reactively controlled bearing in degrees. @default 0 */\n  bearing?: number\n  /** Initial and reactively controlled pitch in degrees. @default 0 */\n  pitch?: number\n  /** Options passed to `new maplibregl.Map()`. Dedicated props take precedence. */\n  options?: Omit<MapLibre.MapOptions, 'container'>\n  /** Inject MapLibre's stylesheet when the script begins loading. @default true */\n  injectStyles?: boolean\n  /** Custom MapLibre stylesheet URL. */\n  stylesheetUrl?: string\n  /** Worker URL passed to `maplibregl.setWorkerUrl()`. */\n  workerUrl?: string\n  /** Width reserved before the map loads. @default 640 */\n  width?: number | string\n  /** Height reserved before the map loads. @default 400 */\n  height?: number | string\n  /** Accessible name for an interactive map. @default 'Interactive map' */\n  ariaLabel?: string\n  /** Disable map input and remove it from the accessibility tree when decorative. @default true */\n  interactive?: boolean\n  /** Attributes applied to the outer layout container. */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n}"
       },
       {
         "name": "ScriptMapLibreMapEvents",
@@ -1482,21 +1482,20 @@
         "name": "injectStyles",
         "type": "boolean",
         "required": false,
-        "description": "Inject the MapLibre GL JS 5.24.0 stylesheet when the script begins loading. Disable this when supplying the stylesheet through Nuxt.",
+        "description": "Inject the MapLibre stylesheet when the script begins loading. Disable this when supplying the stylesheet through Nuxt.",
         "defaultValue": "true"
       },
       {
         "name": "stylesheetUrl",
         "type": "string",
         "required": false,
-        "description": "Stylesheet URL used when `injectStyles` is enabled.",
-        "defaultValue": "'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css'"
+        "description": "Stylesheet URL used when `injectStyles` is enabled. Defaults to the stylesheet shipped in the `maplibre-gl` package."
       },
       {
         "name": "workerUrl",
         "type": "string",
         "required": false,
-        "description": "Worker URL for the CSP-compatible MapLibre build. Pair this with a custom `scriptInput.src` that loads `maplibre-gl-csp.js`."
+        "description": "Worker URL passed to `maplibregl.setWorkerUrl()`. Set this when serving the MapLibre worker from your own origin."
       }
     ],
     "AhrefsAnalyticsOptions": [

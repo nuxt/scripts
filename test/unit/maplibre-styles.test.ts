@@ -5,8 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   configureMapLibreWorker,
   ensureMapLibreStyles,
-  MAPLIBRE_STYLESHEET_INTEGRITY,
-  MAPLIBRE_STYLESHEET_URL,
 } from '../../packages/script/src/runtime/maplibre-styles'
 
 describe('mapLibre styles', () => {
@@ -27,23 +25,13 @@ describe('mapLibre styles', () => {
     return { append, styles }
   }
 
-  it('injects the pinned stylesheet once with integrity metadata', () => {
+  it('injects a custom stylesheet once', () => {
     const { append, styles } = mockStylesheetInsertion()
 
-    ensureMapLibreStyles()
-    ensureMapLibreStyles()
-
-    expect(append).toHaveBeenCalledOnce()
-    expect(styles[0]?.href).toBe(MAPLIBRE_STYLESHEET_URL)
-    expect(styles[0]?.integrity).toBe(MAPLIBRE_STYLESHEET_INTEGRITY)
-    expect(styles[0]?.crossOrigin).toBe('anonymous')
-  })
-
-  it('does not apply pinned integrity metadata to a custom stylesheet', () => {
-    const { styles } = mockStylesheetInsertion()
-
+    ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
     ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
 
+    expect(append).toHaveBeenCalledOnce()
     expect(styles[0]?.href).toBe('https://cdn.example.com/maplibre.css')
     expect(styles[0]?.integrity).toBeFalsy()
   })
@@ -51,14 +39,14 @@ describe('mapLibre styles', () => {
   it('injects distinct stylesheet URLs once each', () => {
     const { append, styles } = mockStylesheetInsertion()
 
-    ensureMapLibreStyles()
-    ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
-    ensureMapLibreStyles('https://cdn.example.com/maplibre.css')
+    ensureMapLibreStyles('https://cdn.example.com/a.css')
+    ensureMapLibreStyles('https://cdn.example.com/b.css')
+    ensureMapLibreStyles('https://cdn.example.com/b.css')
 
     expect(append).toHaveBeenCalledTimes(2)
     expect(styles.map(style => style.href)).toEqual([
-      MAPLIBRE_STYLESHEET_URL,
-      'https://cdn.example.com/maplibre.css',
+      'https://cdn.example.com/a.css',
+      'https://cdn.example.com/b.css',
     ])
   })
 

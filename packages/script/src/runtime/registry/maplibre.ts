@@ -1,6 +1,6 @@
 import type * as MapLibre from 'maplibre-gl'
 import type { RegistryScriptInput } from '#nuxt-scripts/types'
-import { configureMapLibreWorker, ensureMapLibreStyles, MAPLIBRE_STYLESHEET_URL } from '../maplibre-styles'
+import { configureMapLibreWorker, ensureMapLibreStyles } from '../maplibre-styles'
 import { useRegistryScript } from '../utils'
 import { MapLibreOptions } from './schemas'
 
@@ -13,34 +13,53 @@ export interface MapLibreApi {
 }
 
 declare global {
-  interface Window extends MapLibreApi {}
+  interface Window {
+    maplibregl?: typeof MapLibre
+  }
 }
 
+/**
+ * MapLibre GL JS v6 is an ESM-only distribution. It has no UMD build, and its
+ * worker resolves against `import.meta.url`, so it is loaded from the
+ * `maplibre-gl` package instead of a CDN script tag.
+ */
 export function useScriptMapLibre<T extends MapLibreApi>(_options?: MapLibreInput) {
-  return useRegistryScript<T, typeof MapLibreOptions>('maplibre', (options, context) => {
+  return useRegistryScript<T, typeof MapLibreOptions>('maplibre', (options) => {
     const injectStyles = options?.injectStyles !== false
-    const stylesheetUrl = options?.stylesheetUrl || MAPLIBRE_STYLESHEET_URL
-    const usesDefaultSource = !context.scriptInput?.src
+    const stylesheetUrl = options?.stylesheetUrl
 
     return {
-      scriptInput: {
-        src: 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js',
-        ...(usesDefaultSource
-          ? {
-              integrity: 'sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp',
-              crossorigin: 'anonymous',
-            }
-          : {}),
-      },
-      clientInit: injectStyles ? () => ensureMapLibreStyles(stylesheetUrl) : undefined,
+      scriptMode: 'npm',
       schema: import.meta.dev ? MapLibreOptions : undefined,
       scriptOptions: {
         use() {
-          const maplibregl = window.maplibregl
-          configureMapLibreWorker(maplibregl, options?.workerUrl)
-          return { maplibregl }
+          return import.meta.client && window.maplibregl
+            ? { maplibregl: window.maplibregl }
+            : undefined
         },
       },
+      clientInit: import.meta.server
+        ? undefined
+        : async (ctx) => {
+          const throwIfAborted = () => {
+            if (ctx?.signal.aborted)
+              throw ctx.signal.reason || new Error('Loading MapLibre was aborted')
+          }
+          throwIfAborted()
+
+          if (injectStyles) {
+            if (stylesheetUrl)
+              ensureMapLibreStyles(stylesheetUrl)
+            else
+              await import('maplibre-gl/dist/maplibre-gl.css')
+          }
+
+          const maplibregl = window.maplibregl || await import('maplibre-gl')
+          throwIfAborted()
+          await configureMapLibreWorker(maplibregl, options?.workerUrl)
+          window.maplibregl = maplibregl
+          return { maplibregl }
+        },
     }
   }, _options)
 }
