@@ -139,8 +139,11 @@ function isTimeoutError(error: unknown): boolean {
  * Nitro stores nothing when the resolver throws, so an upstream that keeps
  * refusing a resource (rate limit, login wall, deleted post) is re-fetched on
  * every request. Each attempt raises a server error, and the retries deepen the
- * rate limit that caused them. Stale-while-revalidate already covers a resource
- * that was fetched successfully once, so this only gates the cold path.
+ * rate limit that caused them.
+ *
+ * The gate sits inside the cached resolver, so a replayed failure leaves the
+ * cache untouched. A resource that was fetched successfully once is still
+ * served stale by stale-while-revalidate while its upstream is down.
  */
 function createFailureGate(maxAge: number) {
   const failures = new Map<string, { until: number, error: { message: string, statusCode: number, statusMessage: string } }>()
@@ -409,6 +412,8 @@ export function createCachedBinaryFetch(
   }
   const cached = defineCachedFunction(
     async (url: string, opts?: CachedBinaryFetchOptions): Promise<CachedBinaryResponse & { status: number }> => {
+      const key = cacheKey(url, opts)
+      failureGate.replay(key)
       const response = await fetchBoundedUpstream(url, {
         allowContentType: config.allowContentType,
         allowUrl: config.allowUrl,
@@ -418,6 +423,9 @@ export function createCachedBinaryFetch(
         maxResponseBytes,
         redirect: opts?.redirect ?? (config.allowUrl ? 'follow' : 'manual'),
         timeoutMs: opts?.timeout ?? 10000,
+      }).catch((error) => {
+        failureGate.record(key, error)
+        throw error
       })
       return {
         base64: response.data.byteLength ? Buffer.from(response.data).toString('base64') : '',
@@ -435,12 +443,7 @@ export function createCachedBinaryFetch(
     },
   )
   return async (url, opts) => {
-    const key = cacheKey(url, opts)
-    failureGate.replay(key)
-    const result = await cached(url, opts).catch((error) => {
-      failureGate.record(key, error)
-      throw error
-    })
+    const result = await cached(url, opts)
     return {
       ...result,
       body: result.base64 ? Buffer.from(result.base64, 'base64') : Buffer.alloc(0),
@@ -463,8 +466,10 @@ export function createCachedJsonFetch<T>(
   const maxResponseBytes = resolveMaxResponseBytes(config.maxResponseBytes, DEFAULT_JSON_MAX_RESPONSE_BYTES)
   const failureGate = createFailureGate(maxAge)
   const cacheKey = (url: string, opts?: { headers?: Record<string, string> }) => hash(getKey(url, opts))
-  const cached = defineCachedFunction(
+  return defineCachedFunction(
     async (url: string, opts?: { headers?: Record<string, string>, timeout?: number }) => {
+      const key = cacheKey(url, opts)
+      failureGate.replay(key)
       const response = await fetchBoundedUpstream(url, {
         allowUrl: config.allowUrl,
         contentTypePrefixes: config.contentTypePrefixes,
@@ -474,6 +479,9 @@ export function createCachedJsonFetch<T>(
         maxResponseBytes,
         redirect: 'follow',
         timeoutMs: opts?.timeout ?? 10000,
+      }).catch((error) => {
+        failureGate.record(key, error)
+        throw error
       })
       const text = new TextDecoder().decode(response.data)
       let data: T
@@ -488,7 +496,13 @@ export function createCachedJsonFetch<T>(
           throw upstreamError('Upstream response is not valid JSON', 502, 'Invalid upstream response', cause)
         }
       }
-      config.validateResponse?.(data)
+      try {
+        config.validateResponse?.(data)
+      }
+      catch (error) {
+        failureGate.record(key, error)
+        throw error
+      }
       return data
     },
     {
@@ -500,12 +514,4 @@ export function createCachedJsonFetch<T>(
       getKey: cacheKey,
     },
   )
-  return async (url, opts) => {
-    const key = cacheKey(url, opts)
-    failureGate.replay(key)
-    return cached(url, opts).catch((error) => {
-      failureGate.record(key, error)
-      throw error
-    })
-  }
 }
