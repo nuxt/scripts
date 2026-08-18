@@ -126,8 +126,67 @@ describe('upstream response bounds', () => {
       allowUrl: url => url.hostname === 'cdn.example.com',
     })
 
-    await expect(fetchBinary('https://cdn.example.com/image')).rejects.toBe(upstreamFailure)
+    await expect(fetchBinary('https://cdn.example.com/image'))
+      .rejects
+      .toMatchObject({ statusCode: 502, message: 'upstream failed' })
     expect(upstreamFailure).toMatchObject({ cleanupError: cleanupFailure })
+  })
+
+  it('reports an upstream 5xx as a gateway failure instead of its own', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('upstream is down'),
+      headers: new Headers({ 'content-type': 'application/json' }),
+      status: 503,
+      statusText: 'Service Unavailable',
+    })
+    const fetchJson = createCachedJsonFetch('profile', 60, url => url, {
+      allowUrl: url => url.hostname === 'public.api.bsky.app',
+    })
+
+    await expect(fetchJson('https://public.api.bsky.app/profile'))
+      .rejects
+      .toMatchObject({ statusCode: 502, statusMessage: 'Upstream request failed' })
+  })
+
+  it('keeps an upstream 4xx as the client error it is', async () => {
+    rawFetchMock.mockResolvedValueOnce({
+      _data: responseStream('slow down'),
+      headers: new Headers({ 'content-type': 'application/json' }),
+      status: 429,
+      statusText: 'Too Many Requests',
+    })
+    const fetchJson = createCachedJsonFetch('profile', 60, url => url, {
+      allowUrl: url => url.hostname === 'public.api.bsky.app',
+    })
+
+    await expect(fetchJson('https://public.api.bsky.app/profile'))
+      .rejects
+      .toMatchObject({ statusCode: 429, statusMessage: 'Too Many Requests' })
+  })
+
+  it('reports a transport failure as a gateway failure', async () => {
+    rawFetchMock.mockRejectedValueOnce(Object.assign(new Error('connect ECONNREFUSED'), { name: 'FetchError' }))
+    const fetchJson = createCachedJsonFetch('profile', 60, url => url, {
+      allowUrl: url => url.hostname === 'public.api.bsky.app',
+    })
+
+    await expect(fetchJson('https://public.api.bsky.app/profile'))
+      .rejects
+      .toMatchObject({ statusCode: 502, statusMessage: 'Upstream request failed' })
+  })
+
+  it('reports an aborted upstream request as a gateway timeout', async () => {
+    rawFetchMock.mockRejectedValueOnce(Object.assign(new Error('request aborted'), {
+      name: 'FetchError',
+      cause: Object.assign(new Error('timed out'), { name: 'TimeoutError' }),
+    }))
+    const fetchJson = createCachedJsonFetch('profile', 60, url => url, {
+      allowUrl: url => url.hostname === 'public.api.bsky.app',
+    })
+
+    await expect(fetchJson('https://public.api.bsky.app/profile'))
+      .rejects
+      .toMatchObject({ statusCode: 504, statusMessage: 'Gateway Timeout' })
   })
 
   it('rejects cached JSON over its configured byte limit', async () => {
