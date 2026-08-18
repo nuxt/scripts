@@ -72,9 +72,17 @@ export interface GoogleTagManagerApi {
 
 /**
  * Enhanced window type with GTM
+ *
+ * `dataLayer` is deliberately NOT declared globally. Its name is configurable through the
+ * `l` / `dataLayer` options, so `window.dataLayer` is not guaranteed to exist, and declaring it
+ * here makes this package irreconcilable with any other package that declares `Window.dataLayer`
+ * (for example `@gtm-support/core`, used by `@gtm-support/vue-gtm`): the two declarations cannot
+ * merge, so consumers of both get an unsuppressable TS2430 at every one of their own `Window`
+ * augmentations. Read it through the typed proxy returned by `useScriptGoogleTagManager()`
+ * instead, which is also the only access path that respects a custom dataLayer name.
  */
 declare global {
-  interface Window extends GoogleTagManagerApi {}
+  interface Window extends Pick<GoogleTagManagerApi, 'google_tag_manager'> {}
 }
 
 export { GoogleTagManagerOptions }
