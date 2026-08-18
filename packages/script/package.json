@@ -126,6 +126,7 @@
   },
   "dependencies": {
     "@nuxt/devtools-kit": "catalog:",
+    "@oxc-project/types": "catalog:",
     "@vueuse/core": "catalog:",
     "@vueuse/shared": "catalog:",
     "consola": "catalog:",
@@ -134,7 +135,6 @@
     "magic-string": "catalog:",
     "ofetch": "catalog:",
     "ohash": "catalog:",
-    "oxc-parser": "catalog:",
     "oxc-walker": "catalog:",
     "pathe": "catalog:",
     "semver": "catalog:",
