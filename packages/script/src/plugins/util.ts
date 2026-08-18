@@ -34,11 +34,3 @@ export function isVue(id: string, opts: { type?: Array<'template' | 'script' | '
   // Query `?vue&type=template` (in Webpack or external template)
   return true
 }
-
-const JS_RE = /\.(?:[cm]?j|t)sx?$/
-
-export function isJS(id: string) {
-  // JavaScript files
-  const { pathname } = parseURL(decodeURIComponent(pathToFileURL(id).href))
-  return JS_RE.test(pathname)
-}

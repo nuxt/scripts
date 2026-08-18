@@ -61,14 +61,14 @@ vi.mocked(hasProtocol).mockImplementation(() => true)
 // hash receive a URL object, we want to mock it to return the pathname by default
 vi.mocked(hash).mockImplementation(src => src.pathname)
 
-async function transform(code: string | string[], options?: AssetBundlerTransformerOptions) {
+async function transformId(id: string, code: string, options?: AssetBundlerTransformerOptions) {
   const plugin = NuxtScriptBundleTransformer({ ...options, nuxt: mockNuxt }).vite() as any
-  const res = await plugin.transform.handler.call(
-    {},
-    Array.isArray(code) ? code.join('\n') : code,
-    'file.js',
-  )
+  const res = await plugin.transform.handler.call({}, code, id)
   return res?.code
+}
+
+async function transform(code: string | string[], options?: AssetBundlerTransformerOptions) {
+  return transformId('file.js', Array.isArray(code) ? code.join('\n') : code, options)
 }
 
 describe('nuxtScriptTransformer', () => {
@@ -1312,6 +1312,31 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         })"
       `)
       expect(code).toContain('bundle.js')
+    })
+  })
+
+  describe('module scope', () => {
+    const bundled = `const instance = useScript('https://example.com/s.js', { bundle: true })`
+
+    it.each([
+      'file.ts',
+      'file.mts',
+      'file.cts',
+      'file.mjs',
+      'file.jsx',
+      'file.vue',
+      'file.vue?vue&type=script&setup=true&lang.ts',
+      'file.ts?t=1699999999999',
+    ])('transforms %s', async (id) => {
+      vi.mocked(hash).mockImplementationOnce(() => 's')
+      expect(await transformId(id, bundled)).toContain('/_scripts/')
+    })
+
+    it.each([
+      'file.vue?vue&type=style&index=0&lang.css',
+      'file.vue?nuxt_component=async',
+    ])('leaves %s alone', async (id) => {
+      expect(await transformId(id, bundled)).toBeUndefined()
     })
   })
 })

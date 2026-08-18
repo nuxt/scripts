@@ -18,14 +18,19 @@ import { bundleStorage } from '../assets'
 import { logger } from '../logger'
 import { getBundleResolve } from '../registry'
 import { rewriteScriptUrlsAST } from './rewrite-ast'
-import { isJS, isVue } from './util'
+import { isVue } from './util'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
 const PROTOCOL_RELATIVE_RE = /^\/\//
-const VUE_RE = /\.vue/
-const JS_RE = /\.[cm]?[jt]sx?$/
+// Ids carry a query in dev and for SFC blocks, so every extension match allows one.
+const VUE_RE = /\.vue(?:\?|$)/
+const JS_RE = /\.[cm]?[jt]sx?(?:\?|$)/
 const TEST_RE = /\.(?:test|spec)\./
+// Every integration is called through `useScript` or `useScriptX`, so a module without
+// that substring can never need this transform. The bundler applies it, natively where
+// it can, so the hook is not called at all for the rest of the graph.
+const USE_SCRIPT_CODE_MARKER = 'useScript'
 const UPPERCASE_RE = /^[A-Z]$/
 const USE_SCRIPT_RE = /^useScript/
 
@@ -261,13 +266,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
             include: [VUE_RE, JS_RE],
             exclude: [TEST_RE],
           },
+          code: USE_SCRIPT_CODE_MARKER,
         },
         async handler(code, id) {
-          // Cheapest check first: the id filter above still lets every JS and Vue module in the
-          // graph reach this handler, and `isVue`/`isJS` each parse the id as a URL.
-          if (!code.includes('useScript')) // all integrations should start with useScriptX
-            return
-          if (!isVue(id, { type: ['template', 'script'] }) && !isJS(id))
+          // A `.vue` id reaches us once per SFC block. Only script and template are ours.
+          if (VUE_RE.test(id) && !isVue(id, { type: ['template', 'script'] }))
             return
 
           const s = new MagicString(code)
