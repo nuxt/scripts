@@ -33,6 +33,12 @@ describe('google adsense component', () => {
       },
     })
 
-    expect(wrapper.get('ins').attributes('data-ad-layout-key')).toBe('-6t+ed+2i-1n-4w')
+    expect({
+      adUnit: wrapper.get('ins').attributes('data-ad-layout-key'),
+      wrapper: wrapper.attributes('data-ad-layout-key'),
+    }).toEqual({
+      adUnit: '-6t+ed+2i-1n-4w',
+      wrapper: undefined,
+    })
   })
 })
