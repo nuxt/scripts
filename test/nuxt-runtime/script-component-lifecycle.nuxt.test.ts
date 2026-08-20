@@ -33,6 +33,8 @@ describe('script component lifecycle', () => {
   afterEach(() => {
     for (const wrapper of wrappers.splice(0))
       wrapper.unmount()
+    for (const el of document.querySelectorAll('#_carbonads_js'))
+      el.remove()
     if (lemonSqueezyDescriptor)
       Object.defineProperty(window, 'LemonSqueezy', lemonSqueezyDescriptor)
     else
@@ -49,6 +51,37 @@ describe('script component lifecycle', () => {
     wrapper.unmount()
 
     expect(removeRoot).not.toHaveBeenCalled()
+  })
+
+  // carbon.js reads `document.getElementById('_carbonads_js').src` from its own
+  // async ad callback, unguarded, so the id must outlive the component.
+  it('keeps the carbon script resolvable by id after unmount', () => {
+    const wrapper = mount(ScriptCarbonAds, {
+      attachTo: document.body,
+      props: { serve: 'CW7DTKJL', placement: 'unlighthousedev', format: 'cover' },
+    })
+    wrappers.push(wrapper)
+
+    wrapper.unmount()
+
+    const readServe = () => new URL(document.getElementById('_carbonads_js')!.getAttribute('src')!, 'https://x.test').searchParams.get('serve')
+    expect(readServe()).toBe('CW7DTKJL')
+  })
+
+  it('replaces the parked script when a new instance mounts', () => {
+    const first = mount(ScriptCarbonAds, {
+      attachTo: document.body,
+      props: { serve: 'CW7DTKJL', placement: 'first', format: 'cover' },
+    })
+    first.unmount()
+    const second = mount(ScriptCarbonAds, {
+      attachTo: document.body,
+      props: { serve: 'CW7DTKJL', placement: 'second', format: 'cover' },
+    })
+    wrappers.push(second)
+
+    expect(document.querySelectorAll('#_carbonads_js')).toHaveLength(1)
+    expect(document.getElementById('_carbonads_js')!.getAttribute('src')).toContain('placement=second')
   })
 
   it('fans Lemon Squeezy events out to every live component', () => {
