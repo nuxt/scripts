@@ -2,6 +2,16 @@
   "types": {
     "_gcm-consent": [
       {
+        "name": "AssertNever",
+        "kind": "type",
+        "code": "type AssertNever<T extends never> = T"
+      },
+      {
+        "name": "_ConsentKeysChecked",
+        "kind": "type",
+        "code": "type _ConsentKeysChecked = AssertNever<Exclude<keyof ConsentState, typeof CONSENT_CATEGORIES[number] | 'wait_for_update' | 'region'>>"
+      },
+      {
         "name": "GcmConsentContract",
         "kind": "interface",
         "code": "export interface GcmConsentContract {\n  /** Forward a `consent`,`<action>`, `<state>` call to the script's transport (dataLayer or gtag). */\n  push: (proxy: any, action: 'default' | 'update', state: ConsentState) => void\n}"
@@ -1157,6 +1167,26 @@
         "name": "SpeedCurveApi",
         "kind": "interface",
         "code": "export interface SpeedCurveApi {\n  LUX: LuxGlobal\n}"
+      },
+      {
+        "name": "ComposableOnlyKey",
+        "kind": "type",
+        "code": "type ComposableOnlyKey = 'id' | 'spaMode' | 'autoTrackSpaNavigations'"
+      },
+      {
+        "name": "ForwardedKey",
+        "kind": "type",
+        "code": "type ForwardedKey = Exclude<keyof InferInput<typeof SpeedCurveOptions>, ComposableOnlyKey>"
+      },
+      {
+        "name": "AssertNever",
+        "kind": "type",
+        "code": "type AssertNever<T extends never> = T"
+      },
+      {
+        "name": "_AllForwardedKeysListed",
+        "kind": "type",
+        "code": "type _AllForwardedKeysListed = AssertNever<Exclude<ForwardedKey, typeof LUX_USER_CONFIG_KEYS[number]>>"
       }
     ],
     "stripe": [
