@@ -29,7 +29,10 @@ export interface LinkedInInsightApi {
 }
 
 declare global {
-  interface Window extends LinkedInInsightApi {
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    lintrk: LinkedInInsightApi['lintrk']
     _linkedin_partner_id?: string
     _linkedin_data_partner_ids?: string[]
     _linkedin_event_id?: string

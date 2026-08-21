@@ -82,7 +82,11 @@ export interface GoogleTagManagerApi {
  * instead, which is also the only access path that respects a custom dataLayer name.
  */
 declare global {
-  interface Window extends Pick<GoogleTagManagerApi, 'google_tag_manager'> {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    google_tag_manager: GoogleTagManagerApi['google_tag_manager']
+  }
 }
 
 export { GoogleTagManagerOptions }
