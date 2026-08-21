@@ -76,7 +76,11 @@ export interface CalendlyApi {
 }
 
 declare global {
-  interface Window extends CalendlyApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    Calendly: CalendlyApi['Calendly']
+  }
 }
 
 const CALENDLY_CSS_KEY = 'nuxt-scripts-calendly-css'
