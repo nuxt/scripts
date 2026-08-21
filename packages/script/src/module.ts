@@ -89,28 +89,37 @@ export function isProxyDisabled(
 /**
  * Nitro presets with no server runtime: `/_scripts/p/**` cannot be served, so
  * proxy URLs written into bundled scripts would 404/405 in production.
+ * Nitro accepts each name in hyphen, underscore, and camelCase form.
  */
 export const STATIC_PROXY_PRESETS = [
   'static',
   'github-pages',
+  'gitlab-pages',
   'cloudflare-pages-static',
   'netlify-static',
-  'azure-static',
-  'firebase-static',
   'vercel-static',
   'zeabur-static',
   'zerops-static',
 ]
 
 /**
+ * Normalize a preset id the way Nitro resolves it: camelCase and underscore
+ * spellings (`githubPages`, `github_pages`) map to the hyphen form (`github-pages`).
+ */
+export function normalizeNitroPreset(preset: string): string {
+  return preset.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`).replace(/_/g, '-')
+}
+
+/**
  * Whether the build targets static output with no Nitro server runtime.
  * `nuxi generate` and `nuxt build --prerender` set `_generate` and `nitro.static`
- * through CLI overrides; explicit static presets arrive via `NITRO_PRESET` / `SERVER_PRESET`.
+ * through CLI overrides; static presets arrive via `nitro.preset`, `NITRO_PRESET`,
+ * or `SERVER_PRESET` in any of Nitro's accepted spellings.
  */
 export function isStaticProxyTarget(options: { generate?: boolean, nitroStatic?: boolean, preset?: string }): boolean {
   return !!options.generate
     || options.nitroStatic === true
-    || STATIC_PROXY_PRESETS.includes(options.preset || '')
+    || STATIC_PROXY_PRESETS.includes(normalizeNitroPreset(options.preset || ''))
 }
 
 export function applyAutoInject(
@@ -475,10 +484,11 @@ export default defineNuxtModule<ModuleOptions>({
     // Static targets (nuxi generate, static presets) have no server runtime to
     // serve the proxy: skip the route so the proxy is fully opt-in for them.
     const staticProxyTarget = isStaticProxyTarget({
-      // `_generate` arrives untyped through the nuxi generate CLI override.
+      // `_generate` arrives untyped through the nuxi generate CLI override. Nitro's
+      // preset option already merges CLI args, env, and nuxt.config by module setup.
       generate: (nuxt.options as { _generate?: boolean })._generate,
       nitroStatic: (nuxt.options.nitro as any)?.static,
-      preset: process.env.NITRO_PRESET || process.env.SERVER_PRESET,
+      preset: (nuxt.options.nitro as any)?.preset || process.env.NITRO_PRESET || process.env.SERVER_PRESET,
     })
     if (!staticProxyTarget) {
       addServerHandler({ route: `${proxyPrefix}/**`, handler: proxyHandlerPath })
@@ -861,7 +871,7 @@ export default defineNuxtModule<ModuleOptions>({
       else if (anyNeedsProxy) {
         logger.warn(
           `[nuxt-scripts] Static output detected (nuxi generate or a static Nitro preset); the scripts proxy requires a server runtime.\n`
-          + `Proxying is disabled for: ${proxyConfiguredKeys.join(', ')}. Scripts still bundle, and their requests go directly to their third-party origins.\n`
+          + `Proxying and its privacy anonymization are disabled for: ${proxyConfiguredKeys.join(', ')}. Scripts still bundle, and their requests go directly to their third-party origins.\n`
           + `Deploy the Nuxt server output (nuxt build) to enable proxying.`,
         )
       }
