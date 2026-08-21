@@ -1277,10 +1277,7 @@ export default defineNuxtModule<ModuleOptions>({
     ) as any
 
     // Signing requires a server runtime to verify HMACs. Skip setup entirely
-    // for SPA mode or static presets where no Nitro server exists at runtime.
-    const staticPresets = ['static', 'github-pages', 'cloudflare-pages-static', 'netlify-static', 'azure-static', 'firebase-static']
-    const nitroPreset = process.env.NITRO_PRESET || ''
-    const isStaticTarget = staticPresets.includes(nitroPreset)
+    // for SPA mode or static output where no Nitro server exists at runtime.
     const isSpa = nuxt.options.ssr === false
 
     // Proxy security explicitly disabled: skip secret resolution and the page
@@ -1290,11 +1287,11 @@ export default defineNuxtModule<ModuleOptions>({
         logger.info('[security] Proxy security disabled via `security: false`. Proxy endpoints will pass requests through without signature verification.')
       }
     }
-    else if (anyHandlerRequiresSigning && (isSpa || isStaticTarget)) {
+    else if (anyHandlerRequiresSigning && (isSpa || staticProxyTarget)) {
       logger.warn(
-        `[security] URL signing requires a server runtime${isStaticTarget ? ` (detected preset: ${nitroPreset})` : ' (ssr: false)'}.\n`
-        + '  Proxy endpoints will work without signature verification.\n'
-        + '  To enable signing, deploy with a server-rendered target or configure platform-level rewrites.',
+        `[security] URL signing requires a server runtime${staticProxyTarget ? ' (static output)' : ' (ssr: false)'}.`
+        + '\n  Proxy endpoints will work without signature verification.'
+        + '\n  To enable signing, deploy with a server-rendered target or configure platform-level rewrites.',
       )
     }
     // Resolve the HMAC signing secret only when at least one handler needs it
