@@ -47,7 +47,13 @@ export interface SnapPixelApi {
 }
 
 declare global {
-  interface Window extends SnapPixelApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    snaptr: SnapPixelApi['snaptr']
+    _snaptr: SnapPixelApi['_snaptr']
+    handleRequest?: SnapPixelApi['handleRequest']
+  }
 }
 export type SnapTrPixelInput = RegistryScriptInput<typeof SnapTrPixelOptions, true, false>
 

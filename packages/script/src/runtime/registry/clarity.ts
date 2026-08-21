@@ -25,7 +25,11 @@ export interface ClarityApi {
 }
 
 declare global {
-  interface Window extends ClarityApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    clarity: ClarityApi['clarity']
+  }
 }
 
 export type ClarityInput = RegistryScriptInput<typeof ClarityOptions>
