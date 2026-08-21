@@ -288,6 +288,42 @@ export function isProxyDisabled(
   return false
 }
 
+/**
+ * Nitro presets with no server runtime: `/_scripts/p/**` cannot be served, so
+ * proxy URLs written into bundled scripts would 404/405 in production.
+ * Nitro accepts each name in hyphen, underscore, and camelCase form.
+ */
+export const STATIC_PROXY_PRESETS = [
+  'static',
+  'github-pages',
+  'gitlab-pages',
+  'cloudflare-pages-static',
+  'netlify-static',
+  'vercel-static',
+  'zeabur-static',
+  'zerops-static',
+]
+
+/**
+ * Normalize a preset id the way Nitro resolves it: camelCase and underscore
+ * spellings (`githubPages`, `github_pages`) map to the hyphen form (`github-pages`).
+ */
+export function normalizeNitroPreset(preset: string): string {
+  return preset.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`).replace(/_/g, '-')
+}
+
+/**
+ * Whether the build targets static output with no Nitro server runtime.
+ * `nuxi generate` and `nuxt build --prerender` set `_generate` and `nitro.static`
+ * through CLI overrides; static presets arrive via `nitro.preset`, `NITRO_PRESET`,
+ * or `SERVER_PRESET` in any of Nitro's accepted spellings.
+ */
+export function isStaticProxyTarget(options: { generate?: boolean, nitroStatic?: boolean, preset?: string }): boolean {
+  return !!options.generate
+    || options.nitroStatic === true
+    || STATIC_PROXY_PRESETS.includes(normalizeNitroPreset(options.preset || ''))
+}
+
 export function applyAutoInject(
   registry: NuxtConfigScriptRegistry,
   runtimeConfig: Record<string, any>,
@@ -740,15 +776,26 @@ export default defineNuxtModule<ModuleOptions>({
       __NUXT_SCRIPTS_UNHEAD_SOURCELESS__: unheadSourceLessConst,
     }
 
-    // Register proxy handler unconditionally. The handler rejects unknown domains
-    // at runtime, so it's safe to register even when no scripts use proxy.
+    // Register the proxy handler for server targets. The handler rejects unknown
+    // domains at runtime, so it's safe to register even when no scripts use proxy.
     const scriptsBase = config.prefix || '/_scripts'
     const proxyPrefix = `${scriptsBase}/p`
     const assetsPrefix = `${scriptsBase}/assets`
     const proxyConfigs: Partial<Record<RegistryScriptKey, ProxyConfig>> = {}
 
     const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
-    addServerHandler({ route: `${proxyPrefix}/**`, handler: proxyHandlerPath })
+    // Static targets (nuxi generate, static presets) have no server runtime to
+    // serve the proxy: skip the route so the proxy is fully opt-in for them.
+    const staticProxyTarget = isStaticProxyTarget({
+      // `_generate` arrives untyped through the nuxi generate CLI override. Nitro's
+      // preset option already merges CLI args, env, and nuxt.config by module setup.
+      generate: (nuxt.options as { _generate?: boolean })._generate,
+      nitroStatic: (nuxt.options.nitro as any)?.static,
+      preset: (nuxt.options.nitro as any)?.preset || process.env.NITRO_PRESET || process.env.SERVER_PRESET,
+    })
+    if (!staticProxyTarget) {
+      addServerHandler({ route: `${proxyPrefix}/**`, handler: proxyHandlerPath })
+    }
 
     // In dev, sink Vercel Analytics insight POSTs to `/_vercel/insights/*` so
     // they don't 404. Vercel's edge serves this path in production; locally
@@ -960,6 +1007,7 @@ export default defineNuxtModule<ModuleOptions>({
       const partytownScripts = new Set<string>()
 
       let anyNeedsProxy = false
+      const proxyConfiguredKeys: string[] = []
       const registryKeys = Object.keys(config.registry || {})
       for (const key of registryKeys) {
         const script = scriptByKey.get(key)
@@ -975,8 +1023,10 @@ export default defineNuxtModule<ModuleOptions>({
 
         const resolved = resolveCapabilities(script, mergedOverrides)
 
-        if (resolved.proxy)
+        if (resolved.proxy) {
           anyNeedsProxy = true
+          proxyConfiguredKeys.push(key)
+        }
 
         if (resolved.partytown) {
           partytownScripts.add(key)
@@ -999,8 +1049,12 @@ export default defineNuxtModule<ModuleOptions>({
       const proxyAlias = config.proxy?.alias
       let domainAliases: Record<string, string> = {}
 
-      // Finalize proxy setup: build configs, register intercept plugin, wire devtools
-      if (anyNeedsProxy) {
+      // Finalize proxy setup: build configs, register intercept plugin, wire devtools.
+      // Static targets (nuxi generate, static presets) have no server runtime to
+      // serve `/_scripts/p/**`: skip every proxy integration (AST rewrites, intercept
+      // plugin, auto-injected endpoints, URL signing) so collection requests keep
+      // their original third-party URLs and work on static hosting.
+      if (anyNeedsProxy && !staticProxyTarget) {
         const builtConfigs = buildProxyConfigsFromRegistry(registryScripts, scriptByKey)
         Object.assign(proxyConfigs, builtConfigs)
 
@@ -1108,17 +1162,6 @@ export default defineNuxtModule<ModuleOptions>({
           logger.success(`Proxy mode enabled for ${registryKeys.length} script(s), ${totalDomains} domain(s) proxied (privacy: ${privacyLabel})`)
         }
 
-        // Warn for static presets
-        const proxyStaticPresets = ['static', 'github-pages', 'cloudflare-pages-static', 'netlify-static', 'azure-static', 'firebase-static']
-        const proxyPreset = process.env.NITRO_PRESET || ''
-        if (proxyStaticPresets.includes(proxyPreset)) {
-          logger.warn(
-            `Proxy collection endpoints require a server runtime (detected: ${proxyPreset || 'static'}).\n`
-            + 'Scripts will be bundled, but collection requests will not be proxied and URL signing will be unavailable.\n'
-            + 'Options: configure platform rewrites, switch to server-rendered mode, or disable with proxy: false.',
-          )
-        }
-
         // Expose devtools data
         if (nuxt.options.dev) {
           nuxt.options.runtimeConfig.public['nuxt-scripts-devtools'] = buildDevtoolsData(proxyPrefix, privacyLabel, devtoolsScripts, aliasToDomain) as any
@@ -1136,6 +1179,13 @@ export default defineNuxtModule<ModuleOptions>({
             logger.warn('[partytown] Custom resolveUrl already set. Add proxy rules to your resolveUrl manually.')
           }
         }
+      }
+      else if (anyNeedsProxy) {
+        logger.warn(
+          `[nuxt-scripts] Static output detected (nuxi generate or a static Nitro preset); the scripts proxy requires a server runtime.\n`
+          + `Proxying, its privacy anonymization, and proxy URL signing are disabled for: ${proxyConfiguredKeys.join(', ')}. Scripts still bundle, and their requests go directly to their third-party origins.\n`
+          + `Deploy the Nuxt server output (nuxt build) to enable proxying.`,
+        )
       }
 
       const moduleInstallPromises: Map<string, () => Promise<boolean> | undefined> = new Map()
