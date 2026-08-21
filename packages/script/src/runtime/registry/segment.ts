@@ -31,7 +31,16 @@ interface AnalyticsApi {
 export type SegmentApi = Pick<AnalyticsApi, 'track' | 'page' | 'identify' | 'group' | 'alias' | 'reset'>
 
 declare global {
-  interface Window extends SegmentApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    track: SegmentApi['track']
+    page: SegmentApi['page']
+    identify: SegmentApi['identify']
+    group: SegmentApi['group']
+    alias: SegmentApi['alias']
+    reset: SegmentApi['reset']
+  }
 }
 
 const methods = ['track', 'page', 'identify', 'group', 'alias', 'reset']
