@@ -523,8 +523,9 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
+    const runtimeComponentsDir = await resolvePath('./runtime/components')
     addComponentsDir({
-      path: await resolvePath('./runtime/components'),
+      path: runtimeComponentsDir,
       pathPrefix: false,
     })
 
@@ -885,6 +886,7 @@ export default defineNuxtModule<ModuleOptions>({
         addBuildPlugin(NuxtScriptsCheckScripts())
       addBuildPlugin(NuxtScriptBundleTransformer({
         nuxt,
+        componentDir: runtimeComponentsDir,
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         proxyConfigs,

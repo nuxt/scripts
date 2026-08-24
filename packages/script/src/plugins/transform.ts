@@ -1,6 +1,7 @@
 import type { Nuxt } from '@nuxt/schema'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
+import type { VitePlugin } from 'unplugin'
 import type { InferInput } from 'valibot'
 import type { ProxyConfig, ProxyRewrite, RegistryScript } from '../runtime/types'
 import { createHash } from 'node:crypto'
@@ -65,6 +66,11 @@ export interface RenderedScriptMeta {
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
   assetsBaseURL?: string
+  /**
+   * Runtime component directory. Bundling waits until the final module graph
+   * proves that an auto-registered component has a real importer.
+   */
+  componentDir?: string
   scripts?: Required<RegistryScript>[]
   /**
    * Merged configuration from both scripts.registry and runtimeConfig.public.scripts
@@ -127,7 +133,8 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts/ass
   }
   return { url: src }
 }
-async function downloadScript(opts: {
+
+interface DownloadScriptOptions {
   src: string
   url: string
   filename?: string
@@ -138,7 +145,16 @@ async function downloadScript(opts: {
   skipApiRewrites?: boolean
   neutralizeCanvas?: boolean
   assetsBaseURL?: string
-}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
+}
+
+interface PendingComponentBundle {
+  componentId: string
+  downloadOptions: DownloadScriptOptions
+  placeholderIntegrity?: string
+  placeholderUrl: string
+}
+
+async function downloadScript(opts: DownloadScriptOptions, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
   const { src, url, filename, forceDownload, integrity, proxyRewrites, sdkPatches, skipApiRewrites, neutralizeCanvas, assetsBaseURL } = opts
   if (src === url || !filename) {
     return
@@ -223,6 +239,55 @@ async function downloadScript(opts: {
   return { url: publicUrl, filename: publicFilename }
 }
 
+async function resolveScriptBundle(
+  downloadOptions: DownloadScriptOptions,
+  renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>,
+  options: Pick<AssetBundlerTransformerOptions, 'cacheMaxAge' | 'fallbackOnSrcOnBundleFail' | 'fetchOptions'>,
+): Promise<{ integrity?: string, url: string }> {
+  const { src } = downloadOptions
+  let { url } = downloadOptions
+  const result = await downloadScript(downloadOptions, renderedScript, options.fetchOptions, options.cacheMaxAge).catch((error: any) => {
+    if (options.fallbackOnSrcOnBundleFail) {
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
+      return undefined
+    }
+
+    const errorMessage = error?.message || 'Unknown error'
+    if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('certificate')) {
+      logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
+      logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
+    }
+    throw error
+  })
+
+  if (result)
+    url = result.url
+  else if (options.fallbackOnSrcOnBundleFail)
+    url = src
+
+  if (src === url) {
+    if (src.startsWith('/'))
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
+    else
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
+  }
+
+  const scriptMeta = renderedScript.get(url)
+  return {
+    integrity: scriptMeta instanceof Error ? undefined : scriptMeta?.integrity,
+    url,
+  }
+}
+
+function getComponentId(id: string, componentDir?: string): string | undefined {
+  if (!componentDir)
+    return
+  const queryIndex = id.indexOf('?')
+  const componentId = queryIndex === -1 ? id : id.slice(0, queryIndex)
+  if (componentId === componentDir || componentId.startsWith(`${componentDir}/`))
+    return componentId
+}
+
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
   renderedScript: new Map(),
 }) {
@@ -257,8 +322,57 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
   })
 
   return createUnplugin(() => {
+    const pendingComponentBundles: PendingComponentBundle[] = []
+    const bundleReplacements = new Map<string, string>()
+
+    const outputHooks: Pick<VitePlugin, 'renderChunk' | 'renderStart'> = {
+      async renderStart() {
+        for (const pending of pendingComponentBundles) {
+          const componentInfo = this.getModuleInfo(pending.componentId)
+          const isUnusedComponent = componentInfo
+            && componentInfo.importers.length === 0
+            && componentInfo.dynamicImporters.length === 0
+
+          if (isUnusedComponent) {
+            bundleReplacements.set(pending.placeholderUrl, pending.downloadOptions.src)
+            if (pending.placeholderIntegrity)
+              bundleReplacements.set(pending.placeholderIntegrity, '')
+            continue
+          }
+
+          const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
+          bundleReplacements.set(pending.placeholderUrl, result.url)
+          if (pending.placeholderIntegrity)
+            bundleReplacements.set(pending.placeholderIntegrity, result.integrity ?? '')
+        }
+        pendingComponentBundles.length = 0
+      },
+
+      renderChunk(code, chunk) {
+        const s = new MagicString(code)
+        for (const [placeholder, replacement] of bundleReplacements) {
+          let offset = 0
+          while (offset < code.length) {
+            const index = code.indexOf(placeholder, offset)
+            if (index === -1)
+              break
+            s.overwrite(index, index + placeholder.length, replacement)
+            offset = index + placeholder.length
+          }
+        }
+        if (s.hasChanged()) {
+          return {
+            code: s.toString(),
+            map: s.generateMap({ includeContent: true, source: chunk.fileName }) as SourceMapInput,
+          }
+        }
+      },
+    }
+
     return {
       name: 'nuxt:scripts:bundler-transformer',
+
+      vite: outputHooks,
 
       transform: {
         filter: {
@@ -503,42 +617,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       ? (proxyConfig.privacy.hardware ?? true)
                       : true
 
-                    // Defer async download + MagicString operations
-                    deferredOps.push(async () => {
-                      let url = _url
-                      try {
-                        const result = await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, sdkPatches, integrity: options.integrity, skipApiRewrites, neutralizeCanvas, assetsBaseURL: options.assetsBaseURL }, renderedScript, options.fetchOptions, options.cacheMaxAge)
-                        if (result) {
-                          url = result.url
-                        }
-                      }
-                      catch (e: any) {
-                        if (options.fallbackOnSrcOnBundleFail) {
-                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
-                          url = src as string
-                        }
-                        else {
-                        // Provide more helpful error message, especially for Docker/network issues
-                          const errorMessage = e?.message || 'Unknown error'
-                          if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('certificate')) {
-                            logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
-                            logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
-                          }
-                          throw e
-                        }
-                      }
-
-                      if (src === url) {
-                        if (src && (src as string).startsWith('/'))
-                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
-                        else
-                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
-                      }
-
-                      // Get the integrity hash from rendered script
-                      const scriptMeta = renderedScript.get(url)
-                      const integrityHash = scriptMeta instanceof Error ? undefined : scriptMeta?.integrity
-
+                    const rewriteScriptCall = (url: string, integrityHash?: string) => {
                       if (scriptSrcNode) {
                       // For useScript('src') pattern, we need to convert to object form to add integrity
                         if (integrityHash && fnName === 'useScript' && node.arguments[0]?.type === 'Literal') {
@@ -589,7 +668,40 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                           s.overwrite(node.callee.end, node.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
                         }
                       }
-                    })
+                    }
+
+                    const downloadOptions: DownloadScriptOptions = {
+                      src: src as string,
+                      url: _url,
+                      filename,
+                      forceDownload,
+                      proxyRewrites,
+                      sdkPatches,
+                      integrity: options.integrity,
+                      skipApiRewrites,
+                      neutralizeCanvas,
+                      assetsBaseURL: options.assetsBaseURL,
+                    }
+                    const componentId = nuxt.options.dev || nuxt.options.builder !== '@nuxt/vite-builder'
+                      ? undefined
+                      : getComponentId(id, options.componentDir)
+
+                    // Nuxt emits every auto-registered component as an entry before it
+                    // knows which components the application imports. Wait for the final
+                    // graph so unused widgets do not trigger third-party downloads.
+                    if (componentId) {
+                      const token = createHash('sha256').update(`${id}:${node.start}:${src}`).digest('hex').slice(0, 16)
+                      const placeholderUrl = `__NUXT_SCRIPT_BUNDLE_${token}__`
+                      const placeholderIntegrity = options.integrity ? `__NUXT_SCRIPT_INTEGRITY_${token}__` : undefined
+                      pendingComponentBundles.push({ componentId, downloadOptions, placeholderIntegrity, placeholderUrl })
+                      deferredOps.push(async () => rewriteScriptCall(placeholderUrl, placeholderIntegrity))
+                    }
+                    else {
+                      deferredOps.push(async () => {
+                        const result = await resolveScriptBundle(downloadOptions, renderedScript, options)
+                        rewriteScriptCall(result.url, result.integrity)
+                      })
+                    }
                   }
                 }
               }
