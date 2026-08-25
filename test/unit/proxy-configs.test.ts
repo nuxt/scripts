@@ -401,6 +401,15 @@ describe('proxy configs', () => {
       expect(config).toBeUndefined()
     })
 
+    it('does not return proxy config for tawkTo (runtime network behavior unverified)', async () => {
+      // Unlike deskcrew/crisp above, this isn't a confirmed technical reason —
+      // Tawk's embed script hasn't been tested for self-derived API origins or
+      // secondary dynamic scripts the way those two were, so bundle/proxy are
+      // left off rather than guessed at.
+      const config = (await getProxyConfigs()).tawkTo
+      expect(config).toBeUndefined()
+    })
+
     it('returns proxy config for calendly', async () => {
       const config = (await getProxyConfigs()).calendly
       expect(config).toBeDefined()
@@ -455,6 +464,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('intercom')
       expect(configs).not.toHaveProperty('crisp')
       expect(configs).not.toHaveProperty('deskcrew')
+      expect(configs).not.toHaveProperty('tawkTo')
       expect(configs).toHaveProperty('vercelAnalytics')
       expect(configs).toHaveProperty('gravatar')
       expect(configs).toHaveProperty('calendly')

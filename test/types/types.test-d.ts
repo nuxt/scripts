@@ -47,6 +47,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['redditPixel']>().not.toBeAny()
     expectTypeOf<Registry['segment']>().not.toBeAny()
     expectTypeOf<Registry['stripe']>().not.toBeAny()
+    expectTypeOf<Registry['tawkTo']>().not.toBeAny()
     expectTypeOf<Registry['tiktokPixel']>().not.toBeAny()
     expectTypeOf<Registry['xEmbed']>().not.toBeAny()
     expectTypeOf<Registry['xPixel']>().not.toBeAny()

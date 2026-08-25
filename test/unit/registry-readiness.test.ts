@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { useScriptCrisp } from '../../packages/script/src/runtime/registry/crisp'
 import { useScriptGoogleMaps } from '../../packages/script/src/runtime/registry/google-maps'
+import { useScriptTawkTo } from '../../packages/script/src/runtime/registry/tawk-to'
 import { useScriptUsercentrics } from '../../packages/script/src/runtime/registry/usercentrics'
 
 const mocks = vi.hoisted(() => ({
@@ -45,12 +46,14 @@ describe('registry script readiness resolvers', () => {
     delete (window as any).$crisp
     delete window.CRISP_READY_TRIGGER
     delete window.__ucCmp
+    delete window.Tawk_API
     mocks.useRegistryScript.mockImplementation((key, factory) => {
       const options = {
         crisp: { id: 'website-id' },
         googleMaps: { apiKey: 'maps-key' },
         usercentrics: { rulesetId: 'ruleset-id' },
-      }[key as 'crisp' | 'googleMaps' | 'usercentrics']
+        tawkTo: { propertyId: 'test-property', widgetId: 'test-widget' },
+      }[key as 'crisp' | 'googleMaps' | 'usercentrics' | 'tawkTo']
       const definition = factory(options || {})
       mocks.definitions.set(key, definition)
       return {
@@ -107,5 +110,32 @@ describe('registry script readiness resolvers', () => {
 
     await expect(apiPromise).resolves.toEqual({ ucCmp: api })
     expect(removeEventListener).toHaveBeenCalledWith('UC_CMP_API_READY', expect.any(Function))
+  })
+
+  it('resolves Tawk.to from the tawkLoad window event', async () => {
+    const api = {
+      onLoaded: undefined,
+      isChatHidden: vi.fn(() => false),
+      isChatMinimized: vi.fn(() => false),
+      isChatMaximized: vi.fn(() => false),
+      getStatus: vi.fn(() => 'online'),
+    } as any
+    window.Tawk_API = api
+    useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+    const resolver = createResolverWait()
+    const apiPromise = mocks.definitions.get('tawkTo').scriptOptions.resolve(resolver)
+
+    window.dispatchEvent(new CustomEvent('tawkLoad'))
+
+    await expect(apiPromise).resolves.toBe(api)
+  })
+
+  it('resolves Tawk.to immediately when already loaded (onLoaded === 1)', async () => {
+    const api = { onLoaded: 1 } as any
+    window.Tawk_API = api
+    useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+    const result = mocks.definitions.get('tawkTo').scriptOptions.resolve(createResolverWait())
+
+    expect(result).toBe(api)
   })
 })
