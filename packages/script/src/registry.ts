@@ -766,11 +766,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       composableName: 'useScriptDeskCrew',
       envDefaults: { widgetKey: '', board: '' },
     }),
-    // Tawk's runtime network behaviour (whether the embed script derives its
-    // own API origin from its `src`, whether it opens live-chat polling
-    // connections a proxy would sit in front of) hasn't been verified the way
-    // it was for DeskCrew/Crisp above, so bundle/proxy are left off rather
-    // than guessed at.
+    // Bundle/proxy: unverified for Tawk, left off rather than guessed at.
     def('tawkTo', {
       schema: TawkToOptions,
       label: 'Tawk.to',

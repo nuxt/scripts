@@ -402,10 +402,6 @@ describe('proxy configs', () => {
     })
 
     it('does not return proxy config for tawkTo (runtime network behavior unverified)', async () => {
-      // Unlike deskcrew/crisp above, this isn't a confirmed technical reason —
-      // Tawk's embed script hasn't been tested for self-derived API origins or
-      // secondary dynamic scripts the way those two were, so bundle/proxy are
-      // left off rather than guessed at.
       const config = (await getProxyConfigs()).tawkTo
       expect(config).toBeUndefined()
     })
