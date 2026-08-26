@@ -130,8 +130,10 @@ describe('registry script readiness resolvers', () => {
     await expect(apiPromise).resolves.toBe(api)
   })
 
-  it('resolves Tawk.to immediately when already loaded (onLoaded === 1)', async () => {
-    const api = { onLoaded: 1 } as any
+  // The shipped embed script writes `window.Tawk_API.onLoaded = !0` (boolean
+  // true), not the number 1 - the fast path must honor the real value.
+  it('resolves Tawk.to immediately when already loaded (onLoaded === true)', () => {
+    const api = { onLoaded: true } as any
     window.Tawk_API = api
     useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
     const result = mocks.definitions.get('tawkTo').scriptOptions.resolve(createResolverWait())
@@ -139,9 +141,9 @@ describe('registry script readiness resolvers', () => {
     expect(result).toBe(api)
   })
 
-  it('warns when setVisitor is called after the widget has loaded', () => {
+  it('warns when setVisitor is called after the widget has loaded (onLoaded === true)', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const api = { onLoaded: 1 } as any
+    const api = { onLoaded: true } as any
     window.Tawk_API = api
     const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
 
@@ -150,5 +152,14 @@ describe('registry script readiness resolvers', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('setVisitor'))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('before the widget loads'))
     warn.mockRestore()
+  })
+
+  it('creates the Tawk_API stub and assigns visitor when setVisitor is called before clientInit', () => {
+    const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+
+    instance.setVisitor({ name: 'Jane' })
+
+    expect(window.Tawk_API).toBeDefined()
+    expect(window.Tawk_API!.visitor).toEqual({ name: 'Jane' })
   })
 })

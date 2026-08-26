@@ -49,10 +49,10 @@ export interface TawkToApi {
   isChatHidden: () => boolean
   isChatOngoing: () => boolean
   isVisitorEngaged: () => boolean
-  /** Set by Tawk once the widget has finished loading. */
-  onLoaded?: 1
+  /** Set by Tawk once the widget has finished loading. The embed writes a boolean (`!0`), not a number. */
+  onLoaded?: boolean
   /** Set by Tawk before the widget begins loading. */
-  onBeforeLoaded?: 1
+  onBeforeLoaded?: boolean
   widgetPosition: () => TawkToWidgetPosition
 
   visitor?: TawkToVisitor
@@ -195,7 +195,7 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
     schema: import.meta.dev ? TawkToOptions : undefined,
     scriptOptions: {
       resolve({ waitFor }) {
-        if (window.Tawk_API?.onLoaded === 1)
+        if (window.Tawk_API?.onLoaded)
           return window.Tawk_API as TawkToProxyApi as T
 
         return waitFor<T>((resolve, reject) => {
@@ -260,11 +260,14 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
   instance.isVisitorEngaged = () => !import.meta.server && !!window.Tawk_API?.isVisitorEngaged()
   instance.widgetPosition = () => import.meta.server ? undefined : window.Tawk_API?.widgetPosition()
   instance.setVisitor = (data) => {
-    if (import.meta.server || !window.Tawk_API)
+    if (import.meta.server)
       return
+    // Before clientInit creates the stub, create or reuse it so the visitor is
+    // not silently dropped - Tawk honors `Tawk_API.visitor` set pre-load.
+    window.Tawk_API = window.Tawk_API || {} as TawkToApi
     // Tawk only honors `Tawk_API.visitor` before the embed script loads; after
     // `onLoaded`, identity changes must go through `setAttributes()` instead.
-    if (window.Tawk_API.onLoaded === 1) {
+    if (window.Tawk_API.onLoaded) {
       console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget loads. Tawk ignores it once onLoaded is set - use window.Tawk_API.setAttributes({ name, email, hash }) instead.')
       return
     }
