@@ -138,4 +138,17 @@ describe('registry script readiness resolvers', () => {
 
     expect(result).toBe(api)
   })
+
+  it('warns when setVisitor is called after the widget has loaded', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const api = { onLoaded: 1 } as any
+    window.Tawk_API = api
+    const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+
+    instance.setVisitor({ name: 'Jane Doe' })
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('setVisitor'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('before the widget loads'))
+    warn.mockRestore()
+  })
 })

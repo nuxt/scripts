@@ -10,7 +10,7 @@ export { TawkToOptions }
 export type TawkToInput = RegistryScriptInput<typeof TawkToOptions, false, false>
 
 export type TawkToStatus = 'online' | 'away' | 'offline'
-export type TawkToWindowType = 'inline' | 'widget'
+export type TawkToWindowType = 'inline' | 'embed'
 export type TawkToWidgetPosition = 'br' | 'bl' | 'cr' | 'cl' | 'tr' | 'tl'
 
 export interface TawkToVisitor {
@@ -71,12 +71,13 @@ declare global {
 }
 
 /**
- * The subset of `TawkToApi` that `proxy` actually exposes: the getters and
- * `visitor` are omitted since neither works through the fire-and-forget
- * proxy (see `TawkToApi`'s doc comment). They're still real members of the
- * underlying `window.Tawk_API` object, just not reachable via `proxy`.
+ * The subset of `TawkToApi` that `proxy` actually exposes: the getters, the
+ * `visitor` setter and the `onLoaded`/`onBeforeLoaded` flags are omitted since
+ * none of them work through the fire-and-forget proxy (see `TawkToApi`'s doc
+ * comment). They're still real members of the underlying `window.Tawk_API`
+ * object, just not reachable via `proxy`.
  */
-export type TawkToProxyApi = Omit<TawkToApi, 'getWindowType' | 'getStatus' | 'isChatMaximized' | 'isChatMinimized' | 'isChatHidden' | 'isChatOngoing' | 'isVisitorEngaged' | 'widgetPosition' | 'visitor'>
+export type TawkToProxyApi = Omit<TawkToApi, 'getWindowType' | 'getStatus' | 'isChatMaximized' | 'isChatMinimized' | 'isChatHidden' | 'isChatOngoing' | 'isVisitorEngaged' | 'widgetPosition' | 'visitor' | 'onLoaded' | 'onBeforeLoaded'>
 
 /**
  * Reactive state and typed event listeners bridged from the `window`
@@ -105,7 +106,12 @@ export interface TawkToEvents {
   isVisitorEngaged: () => boolean
   widgetPosition: () => TawkToWidgetPosition | undefined
 
-  /** Sets `Tawk_API.visitor` directly - assigning through `proxy.visitor` is a no-op (no `set` trap). */
+  /**
+   * Sets `Tawk_API.visitor` directly - assigning through `proxy.visitor` is a no-op
+   * (no `set` trap). Pre-load only: Tawk honors `Tawk_API.visitor` before the embed
+   * script loads, so a call after `onLoaded` warns and does nothing - use
+   * `window.Tawk_API.setAttributes()` for post-load identity changes.
+   */
   setVisitor: (data: TawkToVisitor) => void
 
   onLoad: (cb: () => void) => () => void
@@ -254,8 +260,15 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
   instance.isVisitorEngaged = () => !import.meta.server && !!window.Tawk_API?.isVisitorEngaged()
   instance.widgetPosition = () => import.meta.server ? undefined : window.Tawk_API?.widgetPosition()
   instance.setVisitor = (data) => {
-    if (!import.meta.server && window.Tawk_API)
-      window.Tawk_API.visitor = data
+    if (import.meta.server || !window.Tawk_API)
+      return
+    // Tawk only honors `Tawk_API.visitor` before the embed script loads; after
+    // `onLoaded`, identity changes must go through `setAttributes()` instead.
+    if (window.Tawk_API.onLoaded === 1) {
+      console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget loads. Tawk ignores it once onLoaded is set - use window.Tawk_API.setAttributes({ name, email, hash }) instead.')
+      return
+    }
+    window.Tawk_API.visitor = data
   }
 
   return instance

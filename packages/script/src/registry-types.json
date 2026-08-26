@@ -1200,7 +1200,7 @@
       {
         "name": "TawkToWindowType",
         "kind": "type",
-        "code": "export type TawkToWindowType = 'inline' | 'widget'"
+        "code": "export type TawkToWindowType = 'inline' | 'embed'"
       },
       {
         "name": "TawkToWidgetPosition",
@@ -1220,7 +1220,7 @@
       {
         "name": "TawkToProxyApi",
         "kind": "type",
-        "code": "export type TawkToProxyApi = Omit<TawkToApi, 'getWindowType' | 'getStatus' | 'isChatMaximized' | 'isChatMinimized' | 'isChatHidden' | 'isChatOngoing' | 'isVisitorEngaged' | 'widgetPosition' | 'visitor'>"
+        "code": "export type TawkToProxyApi = Omit<TawkToApi, 'getWindowType' | 'getStatus' | 'isChatMaximized' | 'isChatMinimized' | 'isChatHidden' | 'isChatOngoing' | 'isVisitorEngaged' | 'widgetPosition' | 'visitor' | 'onLoaded' | 'onBeforeLoaded'>"
       },
       {
         "name": "TawkToEvents",
