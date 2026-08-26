@@ -154,6 +154,16 @@ interface PendingComponentBundle {
   placeholderUrl: string
 }
 
+/**
+ * Every rewrite emits `, integrity: '<placeholder>', crossorigin: 'anonymous'` as one
+ * unit, so dropping an unresolved hash must remove that whole span: replacing only the
+ * placeholder would leave `integrity: ''` plus crossorigin, which forces CORS request
+ * mode and breaks origins serving scripts without CORS headers.
+ */
+function integrityPlaceholderRemoval(placeholderIntegrity: string): string {
+  return `, integrity: '${placeholderIntegrity}', crossorigin: 'anonymous'`
+}
+
 async function downloadScript(opts: DownloadScriptOptions, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
   const { src, url, filename, forceDownload, integrity, proxyRewrites, sdkPatches, skipApiRewrites, neutralizeCanvas, assetsBaseURL } = opts
   if (src === url || !filename) {
@@ -336,14 +346,20 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
           if (isUnusedComponent) {
             bundleReplacements.set(pending.placeholderUrl, pending.downloadOptions.src)
             if (pending.placeholderIntegrity)
-              bundleReplacements.set(pending.placeholderIntegrity, '')
+              bundleReplacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
             continue
           }
 
           const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
           bundleReplacements.set(pending.placeholderUrl, result.url)
-          if (pending.placeholderIntegrity)
-            bundleReplacements.set(pending.placeholderIntegrity, result.integrity ?? '')
+          if (pending.placeholderIntegrity) {
+            bundleReplacements.set(
+              result.integrity
+                ? pending.placeholderIntegrity
+                : integrityPlaceholderRemoval(pending.placeholderIntegrity),
+              result.integrity ?? '',
+            )
+          }
         }
         pendingComponentBundles.length = 0
       },
