@@ -1,6 +1,7 @@
-// Regression: deferred component bundle downloads in renderStart must overlap.
-// A sequential `for...of` + `await` makes the build wall-clock time the sum of
-// every used component's script latency instead of the slowest one.
+// Regression: deferred component bundle downloads must overlap while they resolve
+// during output generation. A sequential `for...of` + `await` makes the build
+// wall-clock time the sum of every used component's script latency instead of the
+// slowest one.
 import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
 import { describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
@@ -20,6 +21,7 @@ const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
 const COMPONENT_DIR = '/app/components'
+const APP_IMPORTER = '/app/pages/index.vue'
 
 function makeNuxt() {
   return {
@@ -54,7 +56,20 @@ async function registerComponent(plugin: any, file: string, src: string) {
   return transformed.code
 }
 
-describe('renderStart concurrent deferred downloads', () => {
+/**
+ * Run the deferred pipeline the way the bundler does at emit time: an awaited hook
+ * with the final module graph, then patches applied to every emitted chunk.
+ */
+async function emitChunks(plugin: any, codes: Record<string, string>) {
+  const getModuleInfo = () => ({ importers: [APP_IMPORTER], dynamicImporters: [] })
+  const bundle = Object.fromEntries(
+    Object.entries(codes).map(([name, code]) => [name, { type: 'chunk', code } as any]),
+  )
+  await plugin.generateBundle.call({ getModuleInfo }, {}, bundle)
+  return bundle as Record<string, { type: 'chunk', code: string }>
+}
+
+describe('deferred component downloads stay concurrent', () => {
   it('starts every used-component download before the first one resolves', async () => {
     const calls: string[] = []
     const gates: Array<() => void> = []
@@ -77,9 +92,9 @@ describe('renderStart concurrent deferred downloads', () => {
     await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
     await registerComponent(plugin, 'Beta.vue', 'https://example.com/beta.js')
 
-    const running = plugin.renderStart.call({
-      getModuleInfo: () => ({ importers: ['entry'], dynamicImporters: [] }),
-    })
+    const running = plugin.generateBundle.call({
+      getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }),
+    }, {}, {})
     expect(running).toBeInstanceOf(Promise)
 
     // First download started; the response is still pending.
@@ -108,19 +123,17 @@ describe('renderStart concurrent deferred downloads', () => {
     const codeA = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
     const codeB = await registerComponent(plugin, 'Beta.vue', 'https://example.com/beta.js')
 
-    await plugin.renderStart.call({
-      getModuleInfo: () => ({ importers: ['entry'], dynamicImporters: [] }),
-    })
+    const bundle = await emitChunks(plugin, { 'chunk-alpha.js': codeA, 'chunk-beta.js': codeB })
 
-    for (const [code, original] of [[codeA, 'alpha'], [codeB, 'beta']] as const) {
-      const chunk = await plugin.renderChunk.call({}, code, { fileName: `chunk-${original}.js` })
-      expect(chunk?.code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
-      expect(chunk?.code).not.toContain('__NUXT_SCRIPT_BUNDLE_')
-      expect(chunk?.code).not.toContain('https://example.com')
+    for (const fileName of ['chunk-alpha.js', 'chunk-beta.js'] as const) {
+      const code = bundle[fileName]!.code
+      expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
+      expect(code).not.toContain('__NUXT_SCRIPT_BUNDLE_')
+      expect(code).not.toContain('https://example.com')
     }
   })
 
-  it('fatal download failure still rejects renderStart when fallback is disabled', async () => {
+  it('fatal download failure still rejects generateBundle when fallback is disabled', async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.includes('broken')) {
         return Promise.resolve({ ok: false, status: 500, headers: { get: () => null }, _data: undefined, arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)) })
@@ -136,8 +149,8 @@ describe('renderStart concurrent deferred downloads', () => {
     await registerComponent(plugin, 'Good.vue', 'https://example.com/good.js')
     await registerComponent(plugin, 'Broken.vue', 'https://example.com/broken.js')
 
-    await expect(plugin.renderStart.call({
-      getModuleInfo: () => ({ importers: ['entry'], dynamicImporters: [] }),
-    })).rejects.toThrow(/broken\.js/)
+    await expect(plugin.generateBundle.call({
+      getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }),
+    }, {}, {})).rejects.toThrow(/broken\.js/)
   })
 })

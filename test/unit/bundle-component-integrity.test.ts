@@ -37,6 +37,8 @@ vi.stubGlobal('fetch', fetchMock)
 
 const COMPONENT_ID = '/app/components/BuyWidget.vue'
 const COMPONENT_DIR = '/app/components'
+// An importer path must exit the runtime components dir for the component to count as used.
+const APP_IMPORTER = '/app/pages/index.vue'
 
 function makeNuxt() {
   return {
@@ -66,19 +68,17 @@ async function buildComponentChunk(options: Partial<AssetBundlerTransformerOptio
   const transformed = await plugin.transform.handler.call({}, code, `${COMPONENT_ID}?vue&type=script&setup=true&lang.ts`)
   expect(transformed?.code).toBeTruthy()
 
-  // Simulate rollup's final module graph before chunk rendering.
-  await plugin.renderStart.call({
-    getModuleInfo: () => ({ importers, dynamicImporters: [] }),
-  })
-
-  const chunk = await plugin.renderChunk.call({}, transformed.code, { fileName: 'entry.js' })
-  return (chunk?.code ?? transformed.code) as string
+  // Simulate rollup's final module graph before files are written.
+  const getModuleInfo = () => ({ importers, dynamicImporters: [] })
+  const bundle = { 'entry.js': { type: 'chunk', code: transformed.code } as any }
+  await plugin.generateBundle.call({ getModuleInfo }, {}, bundle)
+  return bundle['entry.js'].code as string
 }
 
 describe('deferred component bundling integrity placeholders', () => {
   it('bundle falls back to remote src -> no empty integrity and no crossorigin', async () => {
     fetchMock.mockRejectedValue(new Error('network down'))
-    const code = await buildComponentChunk({}, [`${COMPONENT_ID}:importer`])
+    const code = await buildComponentChunk({}, [APP_IMPORTER])
 
     expect(code).toContain('https://example.com/widget.js')
     expect(code).not.toContain(`crossorigin`)
@@ -102,7 +102,7 @@ describe('deferred component bundling integrity placeholders', () => {
       headers: { get: () => null },
       _data: body,
     })
-    const code = await buildComponentChunk({}, [`${COMPONENT_ID}:importer`])
+    const code = await buildComponentChunk({}, [APP_IMPORTER])
 
     const expected = `sha384-${createHash('sha384').update(body).digest('base64')}`
     expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)

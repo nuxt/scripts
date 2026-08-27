@@ -155,13 +155,21 @@ interface PendingComponentBundle {
 }
 
 /**
- * Every rewrite emits `, integrity: '<placeholder>', crossorigin: 'anonymous'` as one
- * unit, so dropping an unresolved hash must remove that whole span: replacing only the
- * placeholder would leave `integrity: ''` plus crossorigin, which forces CORS request
- * mode and breaks origins serving scripts without CORS headers.
+ * Dropping an unresolved hash must remove the whole `, integrity: ..., crossorigin: 'anonymous'`
+ * span: replacing only the placeholder would leave `integrity: ''` plus crossorigin, which
+ * forces CORS request mode and breaks origins serving scripts without CORS headers.
+ *
+ * The patch runs against final minified chunk code, where quote style and whitespace are
+ * not ours to choose (oxc renders every literal as a template literal), so match the two
+ * properties structurally instead of comparing exact source text.
  */
-function integrityPlaceholderRemoval(placeholderIntegrity: string): string {
-  return `, integrity: '${placeholderIntegrity}', crossorigin: 'anonymous'`
+function integrityPlaceholderRemoval(placeholderIntegrity: string): RegExp {
+  const token = escapeRegExp(placeholderIntegrity)
+  return new RegExp(`,\\s*integrity\\s*:\\s*["'\`]${token}["'\`]\\s*,\\s*crossorigin\\s*:\\s*["'\`][^"'\`]*["'\`]`, 'g')
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 async function downloadScript(opts: DownloadScriptOptions, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
@@ -333,64 +341,104 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
   return createUnplugin(() => {
     const pendingComponentBundles: PendingComponentBundle[] = []
-    const bundleReplacements = new Map<string, string>()
+    const replacements = new Map<string | RegExp, string>()
 
-    const outputHooks: Pick<VitePlugin, 'renderChunk' | 'renderStart'> = {
-      async renderStart() {
-        // Downloads must overlap: awaiting inside the loop would make the build
-        // wall-clock time the sum of every script's latency. Each item keeps its
-        // own catch/rethrow semantics (fallback or fatal) via resolveScriptBundle;
-        // Promise.all preserves fatal-error propagation.
-        const settled = await Promise.all(pendingComponentBundles.map(async (pending): Promise<
-          { pending: PendingComponentBundle, result?: { integrity?: string, url: string } }
-        > => {
-          const componentInfo = this.getModuleInfo(pending.componentId)
-          const isUnusedComponent = componentInfo
-            && componentInfo.importers.length === 0
-            && componentInfo.dynamicImporters.length === 0
+    /**
+     * A pending component is unused unless some importer path reaches a module outside
+     * the runtime components dir. Direct importers alone miss nested widgets: an
+     * auto-registered parent that nothing references can still make its children look
+     * used. Cycles (A imports B imports A) are guarded by the visited set.
+     */
+    function reachesOutsideComponentDir(componentId: string, getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): boolean {
+      if (!options.componentDir)
+        return true
+      const stack = [componentId]
+      const visited = new Set<string>()
+      while (stack.length > 0) {
+        const id = stack.pop()!
+        if (visited.has(id))
+          continue
+        visited.add(id)
+        if (getComponentId(id, options.componentDir) === undefined)
+          return true
+        const info = getModuleInfo(id)
+        if (!info)
+          continue
+        stack.push(...(info.importers ?? []), ...(info.dynamicImporters ?? []))
+      }
+      return false
+    }
 
-          if (isUnusedComponent)
-            return { pending }
+    function applyReplacements(code: string): string {
+      let result: MagicString | undefined
+      for (const [placeholder, replacement] of replacements) {
+        if (placeholder instanceof RegExp) {
+          placeholder.lastIndex = 0
+          for (let match = placeholder.exec(code); match; match = placeholder.exec(code)) {
+            result ??= new MagicString(code)
+            result.remove(match.index, match.index + match[0].length)
+            if (match[0].length === 0)
+              break
+          }
+          continue
+        }
+        let offset = 0
+        while (offset < code.length) {
+          const index = code.indexOf(placeholder, offset)
+          if (index === -1)
+            break
+          result ??= new MagicString(code)
+          result.overwrite(index, index + placeholder.length, replacement)
+          offset = index + placeholder.length
+        }
+      }
+      return result ? result.toString() : code
+    }
 
-          return { pending, result: await resolveScriptBundle(pending.downloadOptions, renderedScript, options) }
-        }))
-        for (const { pending, result } of settled) {
-          if (!result) {
-            bundleReplacements.set(pending.placeholderUrl, pending.downloadOptions.src)
+    const outputHooks: Pick<VitePlugin, 'generateBundle'> = {
+      async generateBundle(_outputOptions, bundle) {
+        if (pendingComponentBundles.length === 0)
+          return
+
+        // Bundling has finished handing us the final module graph here and the bundler
+        // awaits this hook before writing files, so classification, downloads and patching
+        // land in a single deterministic point. An awaited renderStart cannot do this job:
+        // rolldown renders chunks without waiting for it, which shipped unresolved
+        // placeholders whenever a download outlived rendering.
+        await Promise.all(pendingComponentBundles.map(async (pending) => {
+          const isUnusedComponent = !reachesOutsideComponentDir(pending.componentId, id => this.getModuleInfo(id))
+
+          if (isUnusedComponent) {
+            replacements.set(pending.placeholderUrl, pending.downloadOptions.src)
             if (pending.placeholderIntegrity)
-              bundleReplacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
-            continue
+              replacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
+            return
           }
 
-          bundleReplacements.set(pending.placeholderUrl, result.url)
+          // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
+          // (only falling back when explicitly configured), and Promise.all preserves that.
+          const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
+
+          replacements.set(pending.placeholderUrl, result.url)
           if (pending.placeholderIntegrity) {
-            bundleReplacements.set(
-              result.integrity
-                ? pending.placeholderIntegrity
-                : integrityPlaceholderRemoval(pending.placeholderIntegrity),
+            replacements.set(
+              result.integrity ? pending.placeholderIntegrity : integrityPlaceholderRemoval(pending.placeholderIntegrity),
               result.integrity ?? '',
             )
           }
-        }
+        }))
         pendingComponentBundles.length = 0
-      },
 
-      renderChunk(code, chunk) {
-        const s = new MagicString(code)
-        for (const [placeholder, replacement] of bundleReplacements) {
-          let offset = 0
-          while (offset < code.length) {
-            const index = code.indexOf(placeholder, offset)
-            if (index === -1)
-              break
-            s.overwrite(index, index + placeholder.length, replacement)
-            offset = index + placeholder.length
-          }
-        }
-        if (s.hasChanged()) {
-          return {
-            code: s.toString(),
-            map: s.generateMap({ includeContent: true, source: chunk.fileName }) as SourceMapInput,
+        // Mutating `bundle` entries is honored on write (rollup contract); renderChunk-based
+        // patching was not: rolldown may render before any map entry existed.
+        for (const file of Object.values(bundle)) {
+          if (file.type !== 'chunk')
+            continue
+          const patched = applyReplacements(file.code)
+          if (patched !== file.code) {
+            // Edits only touch token spans inserted at transform time, so the existing
+            // sourcemap stays usable; regenerating one here would lose all chunk mappings.
+            file.code = patched
           }
         }
       },
