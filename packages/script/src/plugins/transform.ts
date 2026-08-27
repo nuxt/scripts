@@ -397,37 +397,47 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
     const outputHooks: Pick<VitePlugin, 'generateBundle'> = {
       async generateBundle(_outputOptions, bundle) {
-        if (pendingComponentBundles.length === 0)
+        // Watch rebuilds re-emit chunks from cached transformed modules whose code still
+        // carries placeholder tokens, while replacements persist across emissions. So
+        // resolution and patching are independent steps: resolve a consumed snapshot of
+        // the pendings when one exists, then always re-patch emitted chunks whenever we
+        // hold any replacement.
+        if (pendingComponentBundles.length > 0) {
+          // Splice before awaiting: transforms still running while these downloads
+          // resolve must not have their freshly registered pendings wiped here.
+          const batch = pendingComponentBundles.splice(0, pendingComponentBundles.length)
+
+          // Bundling has finished handing us the final module graph here and the bundler
+          // awaits this hook before writing files, so classification, downloads and patching
+          // land in a single deterministic point. An awaited renderStart cannot do this job:
+          // rolldown renders chunks without waiting for it, which shipped unresolved
+          // placeholders whenever a download outlived rendering.
+          await Promise.all(batch.map(async (pending) => {
+            const isUnusedComponent = !reachesOutsideComponentDir(pending.componentId, id => this.getModuleInfo(id))
+
+            if (isUnusedComponent) {
+              replacements.set(pending.placeholderUrl, pending.downloadOptions.src)
+              if (pending.placeholderIntegrity)
+                replacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
+              return
+            }
+
+            // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
+            // (only falling back when explicitly configured), and Promise.all preserves that.
+            const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
+
+            replacements.set(pending.placeholderUrl, result.url)
+            if (pending.placeholderIntegrity) {
+              replacements.set(
+                result.integrity ? pending.placeholderIntegrity : integrityPlaceholderRemoval(pending.placeholderIntegrity),
+                result.integrity ?? '',
+              )
+            }
+          }))
+        }
+
+        if (replacements.size === 0)
           return
-
-        // Bundling has finished handing us the final module graph here and the bundler
-        // awaits this hook before writing files, so classification, downloads and patching
-        // land in a single deterministic point. An awaited renderStart cannot do this job:
-        // rolldown renders chunks without waiting for it, which shipped unresolved
-        // placeholders whenever a download outlived rendering.
-        await Promise.all(pendingComponentBundles.map(async (pending) => {
-          const isUnusedComponent = !reachesOutsideComponentDir(pending.componentId, id => this.getModuleInfo(id))
-
-          if (isUnusedComponent) {
-            replacements.set(pending.placeholderUrl, pending.downloadOptions.src)
-            if (pending.placeholderIntegrity)
-              replacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
-            return
-          }
-
-          // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
-          // (only falling back when explicitly configured), and Promise.all preserves that.
-          const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
-
-          replacements.set(pending.placeholderUrl, result.url)
-          if (pending.placeholderIntegrity) {
-            replacements.set(
-              result.integrity ? pending.placeholderIntegrity : integrityPlaceholderRemoval(pending.placeholderIntegrity),
-              result.integrity ?? '',
-            )
-          }
-        }))
-        pendingComponentBundles.length = 0
 
         // Mutating `bundle` entries is honored on write (rollup contract); renderChunk-based
         // patching was not: rolldown may render before any map entry existed.

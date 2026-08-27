@@ -133,6 +133,34 @@ describe('deferred component downloads stay concurrent', () => {
     }
   })
 
+  // Regression: during `nuxt build --watch` the bundler module cache persists, so every
+  // rebuild re-renders chunk code straight from the transform output, which still holds
+  // the deferred placeholder tokens. Placeholder resolution must keep applying to those
+  // later emissions instead of stopping after the first one consumed its pendings.
+  it('resolves leftover placeholders in re-rendered chunks across watch rebuilds', async () => {
+    fetchMock.mockImplementation((url: string) => Promise.resolve({
+      ok: true,
+      headers: { get: () => null },
+      _data: Buffer.from(`/* ${url} */`),
+    }))
+
+    const plugin = makePlugin()
+    const codeA = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+    const codeB = await registerComponent(plugin, 'Beta.vue', 'https://example.com/beta.js')
+
+    // First emission consumes the pendings.
+    await emitChunks(plugin, { 'chunk-1.js': codeA })
+
+    // Rebuild: rollup re-renders the cached transformed module into a fresh chunk,
+    // so the placeholder tokens are back even though no new pendings registered.
+    const rebuildBundle = await emitChunks(plugin, { 'chunk-1.js': codeB })
+
+    const code = rebuildBundle['chunk-1.js']!.code
+    expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
+    expect(code).not.toContain('__NUXT_SCRIPT_BUNDLE_')
+    expect(code).not.toMatch(/__NUXT_SCRIPT_INTEGRITY_[a-f0-9]{16}__/)
+  })
+
   it('fatal download failure still rejects generateBundle when fallback is disabled', async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.includes('broken')) {
