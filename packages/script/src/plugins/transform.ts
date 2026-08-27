@@ -337,20 +337,31 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
     const outputHooks: Pick<VitePlugin, 'renderChunk' | 'renderStart'> = {
       async renderStart() {
-        for (const pending of pendingComponentBundles) {
+        // Downloads must overlap: awaiting inside the loop would make the build
+        // wall-clock time the sum of every script's latency. Each item keeps its
+        // own catch/rethrow semantics (fallback or fatal) via resolveScriptBundle;
+        // Promise.all preserves fatal-error propagation.
+        const settled = await Promise.all(pendingComponentBundles.map(async (pending): Promise<
+          { pending: PendingComponentBundle, result?: { integrity?: string, url: string } }
+        > => {
           const componentInfo = this.getModuleInfo(pending.componentId)
           const isUnusedComponent = componentInfo
             && componentInfo.importers.length === 0
             && componentInfo.dynamicImporters.length === 0
 
-          if (isUnusedComponent) {
+          if (isUnusedComponent)
+            return { pending }
+
+          return { pending, result: await resolveScriptBundle(pending.downloadOptions, renderedScript, options) }
+        }))
+        for (const { pending, result } of settled) {
+          if (!result) {
             bundleReplacements.set(pending.placeholderUrl, pending.downloadOptions.src)
             if (pending.placeholderIntegrity)
               bundleReplacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
             continue
           }
 
-          const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
           bundleReplacements.set(pending.placeholderUrl, result.url)
           if (pending.placeholderIntegrity) {
             bundleReplacements.set(
