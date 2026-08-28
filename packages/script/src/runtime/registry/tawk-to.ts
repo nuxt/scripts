@@ -314,7 +314,7 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
     // widget has fully loaded) the write would be dropped - warn and do nothing;
     // use `setAttributes()` for post-load identity changes.
     if (embedRequested || window.Tawk_API.onLoaded) {
-      console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget script is inserted. Tawk drops visitor data written after that - set it before the widget loads, or use window.Tawk_API.setAttributes({ name, email, hash }) afterwards.')
+      console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget script is inserted. Tawk drops visitor data written after that - set it before the widget loads, or use window.Tawk_API.setAttributes({ name, email, phone, hash }) afterwards.')
       return
     }
     window.Tawk_API.visitor = data

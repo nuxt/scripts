@@ -152,6 +152,8 @@ describe('registry script readiness resolvers', () => {
 
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('setVisitor'))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('before the widget script is inserted'))
+    // The warning must recommend the full TawkToVisitor surface, including phone.
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('phone'))
     expect(api.visitor).toBeUndefined()
     warn.mockRestore()
   })
