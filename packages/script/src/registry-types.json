@@ -1240,7 +1240,7 @@
       {
         "name": "TawkToVisitor",
         "kind": "interface",
-        "code": "export interface TawkToVisitor {\n  name?: string\n  email?: string\n  /** HMAC-SHA256 signature for Tawk's Secure Mode, generated server-side by the consumer. */\n  hash?: string\n}"
+        "code": "export interface TawkToVisitor {\n  name?: string\n  email?: string\n  /** Visitor phone number in E.164 format (e.g. `+15551234567`). */\n  phone?: string\n  /** HMAC-SHA256 signature for Tawk's Secure Mode, generated server-side by the consumer. */\n  hash?: string\n}"
       },
       {
         "name": "TawkToApi",

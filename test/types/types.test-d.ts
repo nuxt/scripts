@@ -2,7 +2,7 @@ import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DeskCrewApi, DeskCrewEmbedOptions } from '../../packages/script/src/runtime/registry/deskcrew'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
-import type { TawkToProxyApi } from '../../packages/script/src/runtime/registry/tawk-to'
+import type { TawkToProxyApi, TawkToVisitor } from '../../packages/script/src/runtime/registry/tawk-to'
 import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseFunctionType, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
@@ -218,6 +218,12 @@ describe('tiktok pixel ttq methods', () => {
 })
 
 describe('tawk-to proxy api', () => {
+  it('visitor accepts the documented optional phone field', () => {
+    expectTypeOf<TawkToVisitor>().toHaveProperty('phone')
+    expectTypeOf<TawkToVisitor['phone']>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<TawkToVisitor>().toExtend<{ name?: string, email?: string, phone?: string, hash?: string }>()
+  })
+
   it('omits the load flags the fire-and-forget proxy cannot carry', () => {
     // `onLoaded`/`onBeforeLoaded` are plain data properties Tawk writes itself;
     // the proxy has no set trap and discards values, so a typed read of them

@@ -16,6 +16,8 @@ export type TawkToWidgetPosition = 'br' | 'bl' | 'cr' | 'cl' | 'tr' | 'tl'
 export interface TawkToVisitor {
   name?: string
   email?: string
+  /** Visitor phone number in E.164 format (e.g. `+15551234567`). */
+  phone?: string
   /** HMAC-SHA256 signature for Tawk's Secure Mode, generated server-side by the consumer. */
   hash?: string
 }
