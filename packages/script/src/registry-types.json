@@ -2,6 +2,16 @@
   "types": {
     "_gcm-consent": [
       {
+        "name": "AssertNever",
+        "kind": "type",
+        "code": "type AssertNever<T extends never> = T"
+      },
+      {
+        "name": "_ConsentKeysChecked",
+        "kind": "type",
+        "code": "type _ConsentKeysChecked = AssertNever<Exclude<keyof ConsentState, typeof CONSENT_CATEGORIES[number] | 'wait_for_update' | 'region'>>"
+      },
+      {
         "name": "GcmConsentContract",
         "kind": "interface",
         "code": "export interface GcmConsentContract {\n  /** Forward a `consent`,`<action>`, `<state>` call to the script's transport (dataLayer or gtag). */\n  push: (proxy: any, action: 'default' | 'update', state: ConsentState) => void\n}"
@@ -1157,6 +1167,26 @@
         "name": "SpeedCurveApi",
         "kind": "interface",
         "code": "export interface SpeedCurveApi {\n  LUX: LuxGlobal\n}"
+      },
+      {
+        "name": "ComposableOnlyKey",
+        "kind": "type",
+        "code": "type ComposableOnlyKey = 'id' | 'spaMode' | 'autoTrackSpaNavigations'"
+      },
+      {
+        "name": "ForwardedKey",
+        "kind": "type",
+        "code": "type ForwardedKey = Exclude<keyof InferInput<typeof SpeedCurveOptions>, ComposableOnlyKey>"
+      },
+      {
+        "name": "AssertNever",
+        "kind": "type",
+        "code": "type AssertNever<T extends never> = T"
+      },
+      {
+        "name": "_AllForwardedKeysListed",
+        "kind": "type",
+        "code": "type _AllForwardedKeysListed = AssertNever<Exclude<ForwardedKey, typeof LUX_USER_CONFIG_KEYS[number]>>"
       }
     ],
     "stripe": [
@@ -1215,7 +1245,7 @@
       {
         "name": "TawkToApi",
         "kind": "interface",
-        "code": "export interface TawkToApi {\n  start: () => void\n  shutdown: () => void\n  maximize: () => void\n  minimize: () => void\n  toggle: () => void\n  popup: () => void\n  showWidget: () => void\n  hideWidget: () => void\n  toggleVisibility: () => void\n  endChat: () => void\n\n  getWindowType: () => TawkToWindowType\n  getStatus: () => TawkToStatus\n  isChatMaximized: () => boolean\n  isChatMinimized: () => boolean\n  isChatHidden: () => boolean\n  isChatOngoing: () => boolean\n  isVisitorEngaged: () => boolean\n  /** Set by Tawk once the widget has finished loading. */\n  onLoaded?: 1\n  /** Set by Tawk before the widget begins loading. */\n  onBeforeLoaded?: boolean\n  widgetPosition: () => TawkToWidgetPosition\n\n  visitor?: TawkToVisitor\n  setAttributes: (attributes: Record<string, string>, callback?: (error: Error | null) => void) => void\n  addEvent: (event: string, metadata?: Record<string, unknown>, callback?: (error: Error | null) => void) => void\n  addTags: (tags: string[], callback?: (error: Error | null) => void) => void\n  removeTags: (tags: string[], callback?: (error: Error | null) => void) => void\n  switchWidget: (data: { propertyId: string, widgetId: string }, callback?: () => void) => void\n}"
+        "code": "export interface TawkToApi {\n  /** Starts the chat. Pass `{ showWidget: true }` to also show the widget. */\n  start: (options?: { showWidget?: boolean }) => void\n  shutdown: () => void\n  maximize: () => void\n  minimize: () => void\n  toggle: () => void\n  popup: () => void\n  showWidget: () => void\n  hideWidget: () => void\n  toggleVisibility: () => void\n  endChat: () => void\n\n  getWindowType: () => TawkToWindowType\n  getStatus: () => TawkToStatus\n  isChatMaximized: () => boolean\n  isChatMinimized: () => boolean\n  isChatHidden: () => boolean\n  isChatOngoing: () => boolean\n  isVisitorEngaged: () => boolean\n  /** Set by Tawk once the widget has finished loading. The embed writes a boolean (`!0`), not a number. */\n  onLoaded?: boolean\n  /** Set by Tawk before the widget begins loading. */\n  onBeforeLoaded?: boolean\n  widgetPosition: () => TawkToWidgetPosition\n\n  visitor?: TawkToVisitor\n  setAttributes: (attributes: Record<string, string>, callback?: (error: Error | null) => void) => void\n  addEvent: (event: string, metadata?: Record<string, unknown>, callback?: (error: Error | null) => void) => void\n  addTags: (tags: string[], callback?: (error: Error | null) => void) => void\n  removeTags: (tags: string[], callback?: (error: Error | null) => void) => void\n  switchWidget: (data: { propertyId: string, widgetId: string }, callback?: (error: Error | null) => void) => void\n}"
       },
       {
         "name": "TawkToProxyApi",
@@ -1225,7 +1255,7 @@
       {
         "name": "TawkToEvents",
         "kind": "interface",
-        "code": "export interface TawkToEvents {\n  isHidden: Readonly<Ref<boolean>>\n  isMinimized: Readonly<Ref<boolean>>\n  isMaximized: Readonly<Ref<boolean>>\n  /** The operator status Tawk reports (`getStatus()`) — not to be confused with `status`, the script's own load state. */\n  chatStatus: Readonly<Ref<TawkToStatus>>\n  unreadCount: Readonly<Ref<number>>\n\n  // Getters, called directly against `window.Tawk_API` (see `TawkToProxyApi`'s\n  // doc comment for why `proxy` can't carry these). `undefined` before the\n  // widget has loaded; the four `isXxx` booleans default to `false` instead\n  // since a definite \"no\" is a safe, honest answer before load.\n  getWindowType: () => TawkToWindowType | undefined\n  getStatus: () => TawkToStatus | undefined\n  isChatMaximized: () => boolean\n  isChatMinimized: () => boolean\n  isChatHidden: () => boolean\n  isChatOngoing: () => boolean\n  isVisitorEngaged: () => boolean\n  widgetPosition: () => TawkToWidgetPosition | undefined\n\n  /** Sets `Tawk_API.visitor` directly - assigning through `proxy.visitor` is a no-op (no `set` trap). */\n  setVisitor: (data: TawkToVisitor) => void\n\n  onLoad: (cb: () => void) => () => void\n  onBeforeLoad: (cb: () => void) => () => void\n  onStatusChange: (cb: (status: TawkToStatus) => void) => () => void\n  onChatMaximized: (cb: () => void) => () => void\n  onChatMinimized: (cb: () => void) => () => void\n  onChatHidden: (cb: () => void) => () => void\n  onChatStarted: (cb: () => void) => () => void\n  onChatEnded: (cb: () => void) => () => void\n  onPrechatSubmit: (cb: (data: Record<string, unknown>) => void) => () => void\n  onOfflineSubmit: (cb: (data: Record<string, unknown>) => void) => () => void\n  onChatMessageVisitor: (cb: (message: string) => void) => () => void\n  onChatMessageAgent: (cb: (message: string) => void) => () => void\n  onChatMessageSystem: (cb: (message: string) => void) => () => void\n  onAgentJoinChat: (cb: (data: Record<string, unknown>) => void) => () => void\n  onAgentLeaveChat: (cb: (data: Record<string, unknown>) => void) => () => void\n  onChatSatisfaction: (cb: (satisfaction: number) => void) => () => void\n  onVisitorNameChanged: (cb: (visitorName: string) => void) => () => void\n  onFileUpload: (cb: (link: string) => void) => () => void\n  onTagsUpdated: (cb: (data: Record<string, unknown>) => void) => () => void\n  onUnreadCountChanged: (cb: (count: number) => void) => () => void\n}"
+        "code": "export interface TawkToEvents {\n  isHidden: Readonly<Ref<boolean>>\n  isMinimized: Readonly<Ref<boolean>>\n  isMaximized: Readonly<Ref<boolean>>\n  /** The operator status Tawk reports (`getStatus()`) — not to be confused with `status`, the script's own load state. */\n  chatStatus: Readonly<Ref<TawkToStatus>>\n  unreadCount: Readonly<Ref<number>>\n\n  // Getters, called directly against `window.Tawk_API` (see `TawkToProxyApi`'s\n  // doc comment for why `proxy` can't carry these). `undefined` before the\n  // widget has loaded; the four `isXxx` booleans default to `false` instead\n  // since a definite \"no\" is a safe, honest answer before load.\n  getWindowType: () => TawkToWindowType | undefined\n  getStatus: () => TawkToStatus | undefined\n  isChatMaximized: () => boolean\n  isChatMinimized: () => boolean\n  isChatHidden: () => boolean\n  isChatOngoing: () => boolean\n  isVisitorEngaged: () => boolean\n  widgetPosition: () => TawkToWidgetPosition | undefined\n\n  /**\n   * Sets `Tawk_API.visitor` directly - assigning through `proxy.visitor` is a no-op\n   * (no `set` trap). Pre-insertion only: Tawk honors `Tawk_API.visitor` until the\n   * embed script is inserted, so a call after that warns and does nothing - use\n   * `window.Tawk_API.setAttributes()` for post-load identity changes.\n   */\n  setVisitor: (data: TawkToVisitor) => void\n\n  onLoad: (cb: () => void) => () => void\n  onBeforeLoad: (cb: () => void) => () => void\n  onStatusChange: (cb: (status: TawkToStatus) => void) => () => void\n  onChatMaximized: (cb: () => void) => () => void\n  onChatMinimized: (cb: () => void) => () => void\n  onChatHidden: (cb: () => void) => () => void\n  onChatStarted: (cb: () => void) => () => void\n  onChatEnded: (cb: () => void) => () => void\n  onPrechatSubmit: (cb: (data: Record<string, unknown>) => void) => () => void\n  onOfflineSubmit: (cb: (data: Record<string, unknown>) => void) => () => void\n  onChatMessageVisitor: (cb: (message: string) => void) => () => void\n  onChatMessageAgent: (cb: (message: string) => void) => () => void\n  onChatMessageSystem: (cb: (message: string) => void) => () => void\n  onAgentJoinChat: (cb: (data: Record<string, unknown>) => void) => () => void\n  onAgentLeaveChat: (cb: (data: Record<string, unknown>) => void) => () => void\n  onChatSatisfaction: (cb: (satisfaction: number) => void) => () => void\n  onVisitorNameChanged: (cb: (visitorName: string) => void) => () => void\n  onFileUpload: (cb: (link: string) => void) => () => void\n  onTagsUpdated: (cb: (data: Record<string, unknown>) => void) => () => void\n  onUnreadCountChanged: (cb: (count: number) => void) => () => void\n}"
       }
     ],
     "tiktok-pixel": [

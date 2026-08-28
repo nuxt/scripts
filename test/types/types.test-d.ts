@@ -225,4 +225,16 @@ describe('tawk-to proxy api', () => {
     type Flags = Extract<keyof TawkToProxyApi, 'onLoaded' | 'onBeforeLoaded'>
     expectTypeOf<Flags>().toBeNever()
   })
+
+  it('start accepts its documented optional configuration object', () => {
+    expectTypeOf<TawkToProxyApi['start']>().toBeCallableWith()
+    expectTypeOf<TawkToProxyApi['start']>().toBeCallableWith({ showWidget: true })
+  })
+
+  it('switchWidget callback receives the error argument Tawk passes', () => {
+    expectTypeOf<TawkToProxyApi['switchWidget']>().toBeCallableWith(
+      { propertyId: 'property-id', widgetId: 'widget-id' },
+      (_error: Error | null) => {},
+    )
+  })
 })

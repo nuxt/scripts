@@ -60,6 +60,7 @@ describe('registry script readiness resolvers', () => {
         status: ref('awaitingLoad'),
         signal: new AbortController().signal,
         load: vi.fn(),
+        proxy: new Proxy({}, { get: () => () => {} }),
       }
     })
   })
@@ -150,7 +151,8 @@ describe('registry script readiness resolvers', () => {
     instance.setVisitor({ name: 'Jane Doe' })
 
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('setVisitor'))
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('before the widget loads'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('before the widget script is inserted'))
+    expect(api.visitor).toBeUndefined()
     warn.mockRestore()
   })
 
@@ -161,5 +163,51 @@ describe('registry script readiness resolvers', () => {
 
     expect(window.Tawk_API).toBeDefined()
     expect(window.Tawk_API!.visitor).toEqual({ name: 'Jane' })
+  })
+
+  // clientInit installs a bare `{}` Tawk_API stub; the getters must degrade to
+  // undefined/false instead of throwing TypeError on the missing methods.
+  it('returns undefined/false from every getter while only the Tawk_API stub exists', () => {
+    window.Tawk_API = {} as any
+    const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+
+    expect(instance.getWindowType()).toBeUndefined()
+    expect(instance.getStatus()).toBeUndefined()
+    expect(instance.isChatMaximized()).toBe(false)
+    expect(instance.isChatMinimized()).toBe(false)
+    expect(instance.isChatHidden()).toBe(false)
+    expect(instance.isChatOngoing()).toBe(false)
+    expect(instance.isVisitorEngaged()).toBe(false)
+    expect(instance.widgetPosition()).toBeUndefined()
+  })
+
+  // Tawk fires `tawkChatHidden` on hide but no matching event on show, so the
+  // ref must resynchronize when a visibility command runs.
+  it('resets isHidden when a visibility command runs after the widget was hidden', () => {
+    window.Tawk_API = { isChatHidden: vi.fn(() => false) } as any
+    const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+
+    window.dispatchEvent(new CustomEvent('tawkChatHidden'))
+    expect(instance.isHidden.value).toBe(true)
+
+    instance.proxy.showWidget()
+    expect(instance.isHidden.value).toBe(false)
+  })
+
+  // Runs last: clientInit flips the module-level embed-requested cutoff that
+  // setVisitor warns past, and no code resets it within a page (or test file).
+  it('warns and drops setVisitor once the embed script has been inserted, even before onLoaded', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+    // clientInit runs immediately before the embed script tag is injected;
+    // after it, Tawk no longer honors `Tawk_API.visitor` writes.
+    mocks.definitions.get('tawkTo').clientInit?.()
+    expect(window.Tawk_API!.onLoaded).toBeUndefined()
+
+    instance.setVisitor({ name: 'Jane Doe' })
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('setVisitor'))
+    expect(window.Tawk_API!.visitor).toBeUndefined()
+    warn.mockRestore()
   })
 })

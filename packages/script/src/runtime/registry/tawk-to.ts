@@ -31,7 +31,8 @@ export interface TawkToVisitor {
  * @see https://developer.tawk.to/jsapi/
  */
 export interface TawkToApi {
-  start: () => void
+  /** Starts the chat. Pass `{ showWidget: true }` to also show the widget. */
+  start: (options?: { showWidget?: boolean }) => void
   shutdown: () => void
   maximize: () => void
   minimize: () => void
@@ -60,7 +61,7 @@ export interface TawkToApi {
   addEvent: (event: string, metadata?: Record<string, unknown>, callback?: (error: Error | null) => void) => void
   addTags: (tags: string[], callback?: (error: Error | null) => void) => void
   removeTags: (tags: string[], callback?: (error: Error | null) => void) => void
-  switchWidget: (data: { propertyId: string, widgetId: string }, callback?: () => void) => void
+  switchWidget: (data: { propertyId: string, widgetId: string }, callback?: (error: Error | null) => void) => void
 }
 
 declare global {
@@ -108,8 +109,8 @@ export interface TawkToEvents {
 
   /**
    * Sets `Tawk_API.visitor` directly - assigning through `proxy.visitor` is a no-op
-   * (no `set` trap). Pre-load only: Tawk honors `Tawk_API.visitor` before the embed
-   * script loads, so a call after `onLoaded` warns and does nothing - use
+   * (no `set` trap). Pre-insertion only: Tawk honors `Tawk_API.visitor` until the
+   * embed script is inserted, so a call after that warns and does nothing - use
    * `window.Tawk_API.setAttributes()` for post-load identity changes.
    */
   setVisitor: (data: TawkToVisitor) => void
@@ -156,15 +157,19 @@ function listen<D = void>(event: string, cb: (detail: D) => void): () => void {
 // Bridges the window CustomEvents into the refs above. Guarded so it only
 // wires up once no matter how many times useScriptTawkTo() is called.
 let stateBridged = false
+// Set once the embed script has been requested (clientInit), i.e. the script
+// tag is about to be inserted. Tawk drops `Tawk_API.visitor` writes from this
+// point on - only `onLoaded` being unset does not mean the write still lands.
+let embedRequested = false
 function ensureStateBridge() {
   if (stateBridged)
     return
   stateBridged = true
   listen('tawkLoad', () => {
-    isHidden.value = !!window.Tawk_API?.isChatHidden()
-    isMinimized.value = !!window.Tawk_API?.isChatMinimized()
-    isMaximized.value = !!window.Tawk_API?.isChatMaximized()
-    chatStatus.value = window.Tawk_API?.getStatus() ?? 'offline'
+    isHidden.value = !!window.Tawk_API?.isChatHidden?.()
+    isMinimized.value = !!window.Tawk_API?.isChatMinimized?.()
+    isMaximized.value = !!window.Tawk_API?.isChatMaximized?.()
+    chatStatus.value = window.Tawk_API?.getStatus?.() ?? 'offline'
   })
   listen<TawkToStatus>('tawkStatusChange', (detail) => {
     chatStatus.value = detail
@@ -184,6 +189,20 @@ function ensureStateBridge() {
     unreadCount.value = detail
   })
 }
+
+// Tawk fires `tawkChatHidden` when the widget hides but no matching event when
+// it is shown again, so the ref would stick true forever after hideWidget() ->
+// showWidget(). Resynchronise it from the API whenever a visibility command runs.
+function resyncHiddenState() {
+  if (import.meta.server)
+    return
+  isHidden.value = !!window.Tawk_API?.isChatHidden?.()
+}
+
+// Proxy commands that change widget visibility; reading through the wrapped
+// proxy stays transparent.
+const visibilityCommands = new Set(['hideWidget', 'showWidget', 'toggleVisibility'])
+const wrappedProxies = new WeakSet<object>()
 
 export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput): UseScriptContext<T> & TawkToEvents {
   const instance = useRegistryScript<T, typeof TawkToOptions>('tawkTo', options => ({
@@ -213,13 +232,33 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
     clientInit: import.meta.server
       ? undefined
       : () => {
+          // Runs inside beforeInit, immediately before the embed script tag is
+          // injected - the last point where `Tawk_API.visitor` writes are honored.
+          embedRequested = true
           window.Tawk_API = window.Tawk_API || {} as TawkToApi
           window.Tawk_LoadStart = new Date()
         },
   }), _options) as UseScriptContext<T> & TawkToEvents
 
-  if (!import.meta.server)
+  if (!import.meta.server) {
     ensureStateBridge()
+
+    const proxy = instance.proxy as unknown
+    if (proxy && !wrappedProxies.has(proxy)) {
+      wrappedProxies.add(proxy)
+      instance.proxy = new Proxy(instance.proxy, {
+        get(target, prop, receiver) {
+          const value = Reflect.get(target, prop, receiver)
+          if (!(typeof prop === 'string' && visibilityCommands.has(prop)) || typeof value !== 'function')
+            return value
+          return (...args: unknown[]) => {
+            ;(value as (...a: unknown[]) => void)(...args)
+            resyncHiddenState()
+          }
+        },
+      }) as typeof instance.proxy
+    }
+  }
 
   // The refs are module-level singletons (see above); consumers only get the
   // Readonly<Ref<T>> view so mutation stays confined to the state bridge.
@@ -251,24 +290,29 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
 
   // Called directly against window.Tawk_API rather than through `proxy`,
   // which discards every return value (see TawkToProxyApi's doc comment).
-  instance.getWindowType = () => import.meta.server ? undefined : window.Tawk_API?.getWindowType()
-  instance.getStatus = () => import.meta.server ? undefined : window.Tawk_API?.getStatus()
-  instance.isChatMaximized = () => !import.meta.server && !!window.Tawk_API?.isChatMaximized()
-  instance.isChatMinimized = () => !import.meta.server && !!window.Tawk_API?.isChatMinimized()
-  instance.isChatHidden = () => !import.meta.server && !!window.Tawk_API?.isChatHidden()
-  instance.isChatOngoing = () => !import.meta.server && !!window.Tawk_API?.isChatOngoing()
-  instance.isVisitorEngaged = () => !import.meta.server && !!window.Tawk_API?.isVisitorEngaged()
-  instance.widgetPosition = () => import.meta.server ? undefined : window.Tawk_API?.widgetPosition()
+  // The method access is optional (`?.()`) because clientInit only installs a
+  // bare `{}` stub until the embed script adds the real methods - the contract
+  // is undefined/false before load, never a TypeError.
+  instance.getWindowType = () => import.meta.server ? undefined : window.Tawk_API?.getWindowType?.()
+  instance.getStatus = () => import.meta.server ? undefined : window.Tawk_API?.getStatus?.()
+  instance.isChatMaximized = () => !import.meta.server && !!window.Tawk_API?.isChatMaximized?.()
+  instance.isChatMinimized = () => !import.meta.server && !!window.Tawk_API?.isChatMinimized?.()
+  instance.isChatHidden = () => !import.meta.server && !!window.Tawk_API?.isChatHidden?.()
+  instance.isChatOngoing = () => !import.meta.server && !!window.Tawk_API?.isChatOngoing?.()
+  instance.isVisitorEngaged = () => !import.meta.server && !!window.Tawk_API?.isVisitorEngaged?.()
+  instance.widgetPosition = () => import.meta.server ? undefined : window.Tawk_API?.widgetPosition?.()
   instance.setVisitor = (data) => {
     if (import.meta.server)
       return
     // Before clientInit creates the stub, create or reuse it so the visitor is
     // not silently dropped - Tawk honors `Tawk_API.visitor` set pre-load.
     window.Tawk_API = window.Tawk_API || {} as TawkToApi
-    // Tawk only honors `Tawk_API.visitor` before the embed script loads; after
-    // `onLoaded`, identity changes must go through `setAttributes()` instead.
-    if (window.Tawk_API.onLoaded) {
-      console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget loads. Tawk ignores it once onLoaded is set - use window.Tawk_API.setAttributes({ name, email, hash }) instead.')
+    // Tawk only honors `Tawk_API.visitor` before the embed script is inserted.
+    // clientInit runs immediately before injection, so once it has run (or the
+    // widget has fully loaded) the write would be dropped - warn and do nothing;
+    // use `setAttributes()` for post-load identity changes.
+    if (embedRequested || window.Tawk_API.onLoaded) {
+      console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget script is inserted. Tawk drops visitor data written after that - set it before the widget loads, or use window.Tawk_API.setAttributes({ name, email, hash }) afterwards.')
       return
     }
     window.Tawk_API.visitor = data
