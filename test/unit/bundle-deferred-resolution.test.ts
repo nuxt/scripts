@@ -5,6 +5,7 @@
 // - a build that failed leaves its registrations intact for the next attempt
 import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { logger } from '../../packages/script/src/logger'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
 
 const mockBundleStorage: any = {
@@ -235,7 +236,8 @@ describe('deferred resolution guards', () => {
     await plugin.renderStart.call(ctx, {}, {})
 
     await expect(plugin.renderChunk.call(ctx, split, { fileName: 'entry.js' }, { sourcemap: false }))
-      .rejects.toThrow(/unresolved script placeholder.*Alpha\.vue.*alpha\.js/s)
+      .rejects
+      .toThrow(/unresolved script placeholder.*Alpha\.vue.*alpha\.js/s)
   })
 
   it('reaches a separate verdict per build environment', async () => {
@@ -256,5 +258,75 @@ describe('deferred resolution guards', () => {
 
     expect(clientChunk.code, 'the used client verdict must survive the ssr resolution').toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
     expect(ssrChunk.code).toContain('https://example.com/alpha.js')
+  })
+})
+
+describe('alwaysBundle escape hatch', () => {
+  beforeEach(() => {
+    fetchMock.mockReset()
+  })
+
+  it('bundles a named component the module graph cannot prove is used', async () => {
+    mockDownload()
+    const plugin = makePlugin({ alwaysBundle: ['Alpha'] })
+    const code = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    // No importer leaves the components dir, which is what a `nuxt-client` island looks
+    // like in the client graph.
+    const result = await render(plugin, code, [])
+
+    expect(result.code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
+    expect(result.code).not.toContain('https://example.com/alpha.js')
+  })
+
+  it('leaves components it does not name alone', async () => {
+    mockDownload()
+    const plugin = makePlugin({ alwaysBundle: ['SomethingElse'] })
+    const code = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    const result = await render(plugin, code, [])
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(result.code).toContain('https://example.com/alpha.js')
+  })
+
+  it('true bundles every component regardless of reachability', async () => {
+    mockDownload()
+    const plugin = makePlugin({ alwaysBundle: true })
+    const code = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    const result = await render(plugin, code, [])
+
+    expect(result.code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
+  })
+
+  it('warns when one environment proves a component another environment missed', async () => {
+    mockDownload()
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    const plugin = makePlugin()
+    await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    const client = { environment: { name: 'client' }, getModuleInfo: () => ({ importers: [], dynamicImporters: [] }) }
+    const ssr = { environment: { name: 'ssr' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    await plugin.renderStart.call(client, {}, {})
+    await plugin.renderStart.call(ssr, {}, {})
+
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/Alpha is used, but the client build could not prove it.*alwaysBundle/s))
+    warn.mockRestore()
+  })
+
+  it('stays quiet when every environment agrees', async () => {
+    mockDownload()
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    const plugin = makePlugin()
+    await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    const client = { environment: { name: 'client' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    const ssr = { environment: { name: 'ssr' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    await plugin.renderStart.call(client, {}, {})
+    await plugin.renderStart.call(ssr, {}, {})
+
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
   })
 })

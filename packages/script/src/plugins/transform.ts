@@ -71,6 +71,12 @@ export interface AssetBundlerTransformerOptions {
    * proves that an auto-registered component has a real importer.
    */
   componentDir?: string
+  /**
+   * Bundle a component's script even when the module graph cannot prove the component is
+   * used. `true` skips the reachability check for every component; an array names the
+   * components it applies to.
+   */
+  alwaysBundle?: boolean | string[]
   scripts?: Required<RegistryScript>[]
   /**
    * Merged configuration from both scripts.registry and runtimeConfig.public.scripts
@@ -366,6 +372,20 @@ async function resolveScriptBundle(
   }
 }
 
+/**
+ * The reachability check reads the client module graph, where a component used only
+ * through `nuxt-client` inside a server component has no importer. Naming that component
+ * here bundles it regardless.
+ */
+function isAlwaysBundled(componentId: string, alwaysBundle: boolean | string[] | undefined): boolean {
+  if (typeof alwaysBundle === 'boolean')
+    return alwaysBundle
+  if (!alwaysBundle?.length)
+    return false
+  const name = componentId.slice(componentId.lastIndexOf('/') + 1).replace(VUE_RE, '')
+  return alwaysBundle.includes(name)
+}
+
 function getComponentId(id: string, componentDir?: string): string | undefined {
   if (!componentDir)
     return
@@ -420,6 +440,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     // patch set from the promise they await, never from a field another environment can
     // replace mid-render.
     const resolutions = new Map<string, Promise<PlaceholderPatch[]>>()
+    // Which environments judged a component unused. The client graph builds first and
+    // cannot see a component used only through `nuxt-client`, so a later environment
+    // finding the same component reachable is what exposes the miss.
+    const unusedIn = new Map<string, Set<string>>()
+    const warnedComponents = new Set<string>()
 
     /**
      * A pending component is unused unless some importer path reaches a module outside
@@ -453,18 +478,22 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
      * rebuild can add or drop the importer that makes a widget used, so a decision cached
      * from an earlier build would ship the wrong src.
      */
-    async function resolvePendingBundles(getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): Promise<PlaceholderPatch[]> {
+    async function resolvePendingBundles(environment: string, getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): Promise<PlaceholderPatch[]> {
       const pendings = [...componentBundles.values()].flat()
       const resolved: PlaceholderPatch[] = []
       // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
       // (only falling back when explicitly configured), and Promise.all preserves that.
       await Promise.all(pendings.map(async (pending) => {
-        if (!reachesOutsideComponentDir(pending.componentId, getModuleInfo)) {
+        const used = isAlwaysBundled(pending.componentId, options.alwaysBundle)
+          || reachesOutsideComponentDir(pending.componentId, getModuleInfo)
+        if (!used) {
+          (unusedIn.get(pending.componentId) ?? unusedIn.set(pending.componentId, new Set()).get(pending.componentId)!).add(environment)
           resolved.push(urlPatch(pending.placeholderUrl, pending.downloadOptions.src))
           if (pending.placeholderIntegrity)
             resolved.push(integrityRemovalPatch(pending.placeholderIntegrity))
           return
         }
+        warnWhenAnotherEnvironmentMissedIt(pending)
 
         const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
 
@@ -478,6 +507,21 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       // Return only once every download settled, so a rejected build never hands a
       // half-built patch set to the chunks awaiting it.
       return resolved
+    }
+
+    /**
+     * One environment finding a component reachable after another judged it unused means
+     * the earlier build shipped the third-party src. The client build cannot see a
+     * component used only through `nuxt-client` inside a server component, and it writes
+     * its chunks before the ssr graph exists, so this is reported rather than repaired.
+     */
+    function warnWhenAnotherEnvironmentMissedIt(pending: PendingComponentBundle): void {
+      const missed = unusedIn.get(pending.componentId)
+      if (!missed?.size || warnedComponents.has(pending.componentId))
+        return
+      warnedComponents.add(pending.componentId)
+      const name = pending.componentId.slice(pending.componentId.lastIndexOf('/') + 1).replace(VUE_RE, '')
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] ${name} is used, but the ${[...missed].join(' and ')} build could not prove it. Its script was not bundled there and loads from ${pending.downloadOptions.src}. To bundle it, add '${name}' to \`scripts.assets.alwaysBundle\` in your Nuxt config.`)
     }
 
     /**
@@ -515,7 +559,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       const key = ctx.environment?.name ?? 'default'
       let resolution = restart ? undefined : resolutions.get(key)
       if (!resolution) {
-        resolution = resolvePendingBundles(id => ctx.getModuleInfo(id))
+        resolution = resolvePendingBundles(key, id => ctx.getModuleInfo(id))
         resolutions.set(key, resolution)
       }
       return resolution
