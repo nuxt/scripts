@@ -147,6 +147,11 @@ export const scriptMeta = {
     trackedData: ['user-identity', 'events', 'errors'],
     testId: 'pub_deskcrewdemo',
   },
+  tawkTo: {
+    urls: ['https://embed.tawk.to/68496650ddf9cd19094b4530/1itfbfagd'],
+    trackedData: ['user-identity', 'events'],
+    testId: '68496650ddf9cd19094b4530',
+  },
 
   crisp: {
     urls: ['https://client.crisp.chat/l.js'],

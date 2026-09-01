@@ -40,6 +40,7 @@ function getPlaygroundPath(script: any): string | null {
     'intercom': '/third-parties/intercom/facade',
     'crisp': '/third-parties/crisp/facade',
     'deskcrew': '/third-parties/deskcrew/facade',
+    'tawk.to': '/third-parties/tawk-to/use-script',
     'stripe': '/third-parties/stripe/nuxt-scripts',
     'paypal': '/third-parties/paypal/nuxt-scripts',
     'lemon-squeezy': '/third-parties/lemon-squeezy/component',

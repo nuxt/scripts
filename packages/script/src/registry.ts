@@ -47,6 +47,7 @@ import {
   SnapTrPixelOptions,
   SpeedCurveOptions,
   StripeOptions,
+  TawkToOptions,
   TikTokPixelOptions,
   UmamiAnalyticsOptions,
   UsercentricsOptions,
@@ -170,6 +171,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('intercom', 'Intercom', 'support', 'useScriptIntercom', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('crisp', 'Crisp', 'support', 'useScriptCrisp', { bundle: true }, null),
   m('deskcrew', 'DeskCrew', 'support', 'useScriptDeskCrew', {}, null),
+  m('tawkTo', 'Tawk.to', 'support', 'useScriptTawkTo', {}, null),
   // cdn
   m('npm', 'NPM', 'cdn', 'useScriptNpm', { bundle: true }, null),
   // utility
@@ -763,6 +765,13 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'support',
       composableName: 'useScriptDeskCrew',
       envDefaults: { widgetKey: '', board: '' },
+    }),
+    // Bundle/proxy: unverified for Tawk, left off rather than guessed at.
+    def('tawkTo', {
+      schema: TawkToOptions,
+      label: 'Tawk.to',
+      category: 'support',
+      envDefaults: { propertyId: '', widgetId: '' },
     }),
     // cdn
     def('npm', {
