@@ -156,6 +156,12 @@ interface PendingComponentBundle {
 
 /** A chunk patch: every `pattern` match is replaced by `value`. */
 interface PlaceholderPatch {
+  /**
+   * The literal token `pattern` needs in order to match. Every registered component
+   * contributes a pattern, so without this the cost of patching one chunk grows with the
+   * number of widgets in the app. `indexOf` rules a pattern out far faster than running it.
+   */
+  token: string
   pattern: RegExp
   value: string
 }
@@ -172,9 +178,13 @@ const PLACEHOLDER_PREFIX = '__NUXT_SCRIPT_'
  * not ours to choose (oxc renders every literal as a template literal), so match the two
  * properties structurally instead of comparing exact source text.
  */
-function integrityPlaceholderRemoval(placeholderIntegrity: string): RegExp {
+function integrityRemovalPatch(placeholderIntegrity: string): PlaceholderPatch {
   const token = escapeRegExp(placeholderIntegrity)
-  return new RegExp(`,\\s*integrity\\s*:\\s*["'\`]${token}["'\`]\\s*,\\s*crossorigin\\s*:\\s*["'\`][^"'\`]*["'\`]`, 'g')
+  return {
+    token: placeholderIntegrity,
+    pattern: new RegExp(`,\\s*integrity\\s*:\\s*["'\`]${token}["'\`]\\s*,\\s*crossorigin\\s*:\\s*["'\`][^"'\`]*["'\`]`, 'g'),
+    value: '',
+  }
 }
 
 /**
@@ -184,8 +194,12 @@ function integrityPlaceholderRemoval(placeholderIntegrity: string): RegExp {
  * broken or injected JavaScript. Swapping the complete literal lets the value be
  * serialized safely with `JSON.stringify`.
  */
-function quotedPlaceholder(token: string): RegExp {
-  return new RegExp(`(["'\`])${escapeRegExp(token)}\\1`, 'g')
+function urlPatch(placeholder: string, value: string): PlaceholderPatch {
+  return {
+    token: placeholder,
+    pattern: new RegExp(`(["'\`])${escapeRegExp(placeholder)}\\1`, 'g'),
+    value: JSON.stringify(value),
+  }
 }
 
 function escapeRegExp(value: string): string {
@@ -202,7 +216,9 @@ function escapeRegExp(value: string): string {
  */
 function applyPlaceholderPatches(code: string, patches: PlaceholderPatch[]): MagicString | undefined {
   const edits: { start: number, end: number, value: string }[] = []
-  for (const { pattern, value } of patches) {
+  for (const { token, pattern, value } of patches) {
+    if (!code.includes(token))
+      continue
     for (const match of code.matchAll(new RegExp(pattern.source, pattern.flags))) {
       if (match[0].length === 0)
         break
@@ -439,19 +455,19 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       // (only falling back when explicitly configured), and Promise.all preserves that.
       await Promise.all(pendings.map(async (pending) => {
         if (!reachesOutsideComponentDir(pending.componentId, getModuleInfo)) {
-          resolved.push({ pattern: quotedPlaceholder(pending.placeholderUrl), value: JSON.stringify(pending.downloadOptions.src) })
+          resolved.push(urlPatch(pending.placeholderUrl, pending.downloadOptions.src))
           if (pending.placeholderIntegrity)
-            resolved.push({ pattern: integrityPlaceholderRemoval(pending.placeholderIntegrity), value: '' })
+            resolved.push(integrityRemovalPatch(pending.placeholderIntegrity))
           return
         }
 
         const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
 
-        resolved.push({ pattern: quotedPlaceholder(pending.placeholderUrl), value: JSON.stringify(result.url) })
+        resolved.push(urlPatch(pending.placeholderUrl, result.url))
         if (pending.placeholderIntegrity) {
           resolved.push(result.integrity
-            ? { pattern: quotedPlaceholder(pending.placeholderIntegrity), value: JSON.stringify(result.integrity) }
-            : { pattern: integrityPlaceholderRemoval(pending.placeholderIntegrity), value: '' })
+            ? urlPatch(pending.placeholderIntegrity, result.integrity)
+            : integrityRemovalPatch(pending.placeholderIntegrity))
         }
       }))
       // Publish only once every download settled, so a rejected build never leaves a

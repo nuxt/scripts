@@ -174,6 +174,39 @@ describe('deferred component bundle resolution', () => {
     expect(retry.code).not.toContain('__NUXT_SCRIPT_')
   })
 
+  it('patches only the placeholders a chunk actually holds', async () => {
+    // Every auto-registered widget contributes patches, but a chunk carries the tokens of
+    // one or two of them. Skipping the rest must not skip one that does match, and must
+    // not leak another widget's resolved value into this chunk.
+    mockDownload()
+    const plugin = makePlugin({ integrity: true })
+    const names = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo']
+    const codes: Record<string, string> = {}
+    for (const name of names)
+      codes[name] = await registerComponent(plugin, `${name}.vue`, `https://example.com/${name.toLowerCase()}.js`)
+
+    // Charlie is used, so it bundles; the rest are unreachable and keep their remote src.
+    const ctx = {
+      getModuleInfo: (id: string) => ({
+        importers: id === `${COMPONENT_DIR}/Charlie.vue` ? [APP_IMPORTER] : [],
+        dynamicImporters: [],
+      }),
+    }
+    await plugin.renderStart.call(ctx, {}, {})
+    const patched = await plugin.renderChunk.call(ctx, codes.Charlie!, { fileName: 'charlie.js' }, { sourcemap: false })
+
+    expect(patched.code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
+    expect(patched.code).not.toContain('__NUXT_SCRIPT_')
+    for (const name of names.filter(n => n !== 'Charlie'))
+      expect(patched.code, `${name} must not bleed into Charlie's chunk`).not.toContain(`${name.toLowerCase()}.js`)
+
+    // A sibling chunk still resolves against the same shared patch set.
+    const sibling = await plugin.renderChunk.call(ctx, codes.Echo!, { fileName: 'echo.js' }, { sourcemap: false })
+    expect(evaluateScriptArg(sibling.code)).toEqual({ src: 'https://example.com/echo.js' })
+    expect(sibling.code).not.toContain('__NUXT_SCRIPT_')
+    expect(sibling.code).not.toContain('crossorigin')
+  })
+
   it('drops a stale registration when the component changes its src', async () => {
     mockDownload()
     const plugin = makePlugin()
