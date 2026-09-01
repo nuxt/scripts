@@ -1,6 +1,7 @@
 import type { Nuxt } from '@nuxt/schema'
 import type { FetchOptions } from 'ofetch'
 import type { SourceMapInput } from 'rollup'
+import type { VitePlugin } from 'unplugin'
 import type { InferInput } from 'valibot'
 import type { ProxyConfig, ProxyRewrite, RegistryScript } from '../runtime/types'
 import { createHash } from 'node:crypto'
@@ -65,6 +66,17 @@ export interface RenderedScriptMeta {
 export interface AssetBundlerTransformerOptions {
   moduleDetected?: (module: string) => void
   assetsBaseURL?: string
+  /**
+   * Runtime component directory. Bundling waits until the final module graph
+   * proves that an auto-registered component has a real importer.
+   */
+  componentDir?: string
+  /**
+   * Bundle a component's script even when the module graph cannot prove the component is
+   * used. `true` skips the reachability check for every component; an array names the
+   * components it applies to.
+   */
+  alwaysBundle?: boolean | string[]
   scripts?: Required<RegistryScript>[]
   /**
    * Merged configuration from both scripts.registry and runtimeConfig.public.scripts
@@ -127,7 +139,8 @@ function normalizeScriptData(src: string, assetsBaseURL: string = '/_scripts/ass
   }
   return { url: src }
 }
-async function downloadScript(opts: {
+
+interface DownloadScriptOptions {
   src: string
   url: string
   filename?: string
@@ -138,7 +151,103 @@ async function downloadScript(opts: {
   skipApiRewrites?: boolean
   neutralizeCanvas?: boolean
   assetsBaseURL?: string
-}, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
+}
+
+interface PendingComponentBundle {
+  componentId: string
+  downloadOptions: DownloadScriptOptions
+  placeholderIntegrity?: string
+  placeholderUrl: string
+}
+
+/** A chunk patch: every `pattern` match is replaced by `value`. */
+interface PlaceholderPatch {
+  /**
+   * The literal token `pattern` needs in order to match. Every registered component
+   * contributes a pattern, so without this the cost of patching one chunk grows with the
+   * number of widgets in the app. `indexOf` rules a pattern out far faster than running it.
+   */
+  token: string
+  pattern: RegExp
+  value: string
+}
+
+// Every placeholder token shares this prefix, so a chunk without it needs no patching.
+const PLACEHOLDER_PREFIX = '__NUXT_SCRIPT_'
+const PLACEHOLDER_TOKEN_RE = /__NUXT_SCRIPT_(?:BUNDLE|INTEGRITY)_[a-f0-9]+__/g
+
+/**
+ * Dropping an unresolved hash must remove the whole `, integrity: ..., crossorigin: 'anonymous'`
+ * span: replacing only the placeholder would leave `integrity: ''` plus crossorigin, which
+ * forces CORS request mode and breaks origins serving scripts without CORS headers.
+ *
+ * The patch runs against final minified chunk code, where quote style and whitespace are
+ * not ours to choose (oxc renders every literal as a template literal), so match the two
+ * properties structurally instead of comparing exact source text.
+ */
+function integrityRemovalPatch(placeholderIntegrity: string): PlaceholderPatch {
+  const token = escapeRegExp(placeholderIntegrity)
+  return {
+    token: placeholderIntegrity,
+    pattern: new RegExp(`,\\s*integrity\\s*:\\s*["'\`]${token}["'\`]\\s*,\\s*crossorigin\\s*:\\s*["'\`][^"'\`]*["'\`]`, 'g'),
+    value: '',
+  }
+}
+
+/**
+ * Match the whole quoted literal, not the bare token. The replacement value is a URL we
+ * do not control (a registry or user `src` can hold a quote, a backslash or `${`), and the
+ * minifier picks the quote style, so splicing raw text into an existing literal can emit
+ * broken or injected JavaScript. Swapping the complete literal lets the value be
+ * serialized safely with `JSON.stringify`.
+ */
+function urlPatch(placeholder: string, value: string): PlaceholderPatch {
+  return {
+    token: placeholder,
+    pattern: new RegExp(`(["'\`])${escapeRegExp(placeholder)}\\1`, 'g'),
+    value: JSON.stringify(value),
+  }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Apply every patch to `code` in a single pass. Matches are collected first, then
+ * applied in source order, because MagicString throws when two edits overlap and an
+ * integrity removal can swallow a span another patch also matched.
+ *
+ * Each pattern is re-instantiated per call: the patch set is shared, chunks render
+ * concurrently, and a global RegExp carries `lastIndex` between matches.
+ */
+function applyPlaceholderPatches(code: string, patches: PlaceholderPatch[]): MagicString | undefined {
+  const edits: { start: number, end: number, value: string }[] = []
+  for (const { token, pattern, value } of patches) {
+    if (!code.includes(token))
+      continue
+    for (const match of code.matchAll(new RegExp(pattern.source, pattern.flags))) {
+      if (match[0].length === 0)
+        break
+      edits.push({ start: match.index, end: match.index + match[0].length, value })
+    }
+  }
+  if (!edits.length)
+    return
+  edits.sort((a, b) => a.start - b.start)
+  let s: MagicString | undefined
+  let appliedEnd = -1
+  for (const edit of edits) {
+    if (edit.start < appliedEnd)
+      continue
+    s ??= new MagicString(code)
+    s.overwrite(edit.start, edit.end, edit.value)
+    appliedEnd = edit.end
+  }
+  return s
+}
+
+async function downloadScript(opts: DownloadScriptOptions, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
   const { src, url, filename, forceDownload, integrity, proxyRewrites, sdkPatches, skipApiRewrites, neutralizeCanvas, assetsBaseURL } = opts
   if (src === url || !filename) {
     return
@@ -223,6 +332,69 @@ async function downloadScript(opts: {
   return { url: publicUrl, filename: publicFilename }
 }
 
+async function resolveScriptBundle(
+  downloadOptions: DownloadScriptOptions,
+  renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>,
+  options: Pick<AssetBundlerTransformerOptions, 'cacheMaxAge' | 'fallbackOnSrcOnBundleFail' | 'fetchOptions'>,
+): Promise<{ integrity?: string, url: string }> {
+  const { src } = downloadOptions
+  let { url } = downloadOptions
+  const result = await downloadScript(downloadOptions, renderedScript, options.fetchOptions, options.cacheMaxAge).catch((error: any) => {
+    if (options.fallbackOnSrcOnBundleFail) {
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
+      return undefined
+    }
+
+    const errorMessage = error?.message || 'Unknown error'
+    if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('certificate')) {
+      logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
+      logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
+    }
+    throw error
+  })
+
+  if (result)
+    url = result.url
+  else if (options.fallbackOnSrcOnBundleFail)
+    url = src
+
+  if (src === url) {
+    if (src.startsWith('/'))
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
+    else
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
+  }
+
+  const scriptMeta = renderedScript.get(url)
+  return {
+    integrity: scriptMeta instanceof Error ? undefined : scriptMeta?.integrity,
+    url,
+  }
+}
+
+/**
+ * The reachability check reads the client module graph, where a component used only
+ * through `nuxt-client` inside a server component has no importer. Naming that component
+ * here bundles it regardless.
+ */
+function isAlwaysBundled(componentId: string, alwaysBundle: boolean | string[] | undefined): boolean {
+  if (typeof alwaysBundle === 'boolean')
+    return alwaysBundle
+  if (!alwaysBundle?.length)
+    return false
+  const name = componentId.slice(componentId.lastIndexOf('/') + 1).replace(VUE_RE, '')
+  return alwaysBundle.includes(name)
+}
+
+function getComponentId(id: string, componentDir?: string): string | undefined {
+  if (!componentDir)
+    return
+  const queryIndex = id.indexOf('?')
+  const componentId = queryIndex === -1 ? id : id.slice(0, queryIndex)
+  if (componentId === componentDir || componentId.startsWith(`${componentDir}/`))
+    return componentId
+}
+
 export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOptions = {
   renderedScript: new Map(),
 }) {
@@ -257,8 +429,172 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
   })
 
   return createUnplugin(() => {
+    // Keyed by module id so a rebuild of one module replaces its own registrations
+    // instead of appending stale duplicates. Entries survive every emission: a watch
+    // rebuild re-renders cached chunks that still carry the placeholder tokens, and a
+    // build that failed must be able to resolve the same components again.
+    const componentBundles = new Map<string, PendingComponentBundle[]>()
+    // Vite builds the client and ssr environments from one config, so this factory runs
+    // once and both share the state here. Each environment has its own module graph and
+    // reaches its own verdict, so resolution is keyed by environment. Chunks read their
+    // patch set from the promise they await, never from a field another environment can
+    // replace mid-render.
+    const resolutions = new Map<string, Promise<PlaceholderPatch[]>>()
+    // Which environments judged a component unused. The client graph builds first and
+    // cannot see a component used only through `nuxt-client`, so a later environment
+    // finding the same component reachable is what exposes the miss.
+    const unusedIn = new Map<string, Set<string>>()
+    const warnedComponents = new Set<string>()
+
+    /**
+     * A pending component is unused unless some importer path reaches a module outside
+     * the runtime components dir. Direct importers alone miss nested widgets: an
+     * auto-registered parent that nothing references can still make its children look
+     * used. Cycles (A imports B imports A) are guarded by the visited set.
+     */
+    function reachesOutsideComponentDir(componentId: string, getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): boolean {
+      if (!options.componentDir)
+        return true
+      const stack = [componentId]
+      const visited = new Set<string>()
+      while (stack.length > 0) {
+        const id = stack.pop()!
+        if (visited.has(id))
+          continue
+        visited.add(id)
+        if (getComponentId(id, options.componentDir) === undefined)
+          return true
+        const info = getModuleInfo(id)
+        if (!info)
+          continue
+        stack.push(...(info.importers ?? []), ...(info.dynamicImporters ?? []))
+      }
+      return false
+    }
+
+    /**
+     * Classify every registered component against the final module graph and turn the
+     * outcome into chunk patches. Reachability is decided fresh on each build: a watch
+     * rebuild can add or drop the importer that makes a widget used, so a decision cached
+     * from an earlier build would ship the wrong src.
+     */
+    async function resolvePendingBundles(environment: string, getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): Promise<PlaceholderPatch[]> {
+      const pendings = [...componentBundles.values()].flat()
+      const resolved: PlaceholderPatch[] = []
+      // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
+      // (only falling back when explicitly configured), and Promise.all preserves that.
+      await Promise.all(pendings.map(async (pending) => {
+        const used = isAlwaysBundled(pending.componentId, options.alwaysBundle)
+          || reachesOutsideComponentDir(pending.componentId, getModuleInfo)
+        if (!used) {
+          (unusedIn.get(pending.componentId) ?? unusedIn.set(pending.componentId, new Set()).get(pending.componentId)!).add(environment)
+          resolved.push(urlPatch(pending.placeholderUrl, pending.downloadOptions.src))
+          if (pending.placeholderIntegrity)
+            resolved.push(integrityRemovalPatch(pending.placeholderIntegrity))
+          return
+        }
+        warnWhenAnotherEnvironmentMissedIt(pending)
+
+        const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
+
+        resolved.push(urlPatch(pending.placeholderUrl, result.url))
+        if (pending.placeholderIntegrity) {
+          resolved.push(result.integrity
+            ? urlPatch(pending.placeholderIntegrity, result.integrity)
+            : integrityRemovalPatch(pending.placeholderIntegrity))
+        }
+      }))
+      // Return only once every download settled, so a rejected build never hands a
+      // half-built patch set to the chunks awaiting it.
+      return resolved
+    }
+
+    /**
+     * One environment finding a component reachable after another judged it unused means
+     * the earlier build shipped the third-party src. The client build cannot see a
+     * component used only through `nuxt-client` inside a server component, and it writes
+     * its chunks before the ssr graph exists, so this is reported rather than repaired.
+     */
+    function warnWhenAnotherEnvironmentMissedIt(pending: PendingComponentBundle): void {
+      const missed = unusedIn.get(pending.componentId)
+      if (!missed?.size || warnedComponents.has(pending.componentId))
+        return
+      warnedComponents.add(pending.componentId)
+      const name = pending.componentId.slice(pending.componentId.lastIndexOf('/') + 1).replace(VUE_RE, '')
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] ${name} is used, but the ${[...missed].join(' and ')} build could not prove it. Its script was not bundled there and loads from ${pending.downloadOptions.src}. To bundle it, add '${name}' to \`scripts.assets.alwaysBundle\` in your Nuxt config.`)
+    }
+
+    /**
+     * A surviving token would ship as a script `src` or an SRI hash and break at runtime,
+     * where it is far harder to trace than here. Every token this transform emits is
+     * quoted, so a miss means the emitted shape stopped matching what the patch expects.
+     */
+    function assertNoPlaceholders(code: string, fileName: string): void {
+      const survivors = [...new Set(code.match(PLACEHOLDER_TOKEN_RE) ?? [])]
+      if (!survivors.length)
+        return
+      const details = survivors.map((token) => {
+        for (const pendings of componentBundles.values()) {
+          for (const pending of pendings) {
+            if (token === pending.placeholderUrl || token === pending.placeholderIntegrity)
+              return `${token} (${pending.componentId}, ${pending.downloadOptions.src})`
+          }
+        }
+        return token
+      })
+      throw new Error(`[Nuxt Scripts: Bundle Transformer] Chunk ${fileName} still holds an unresolved script placeholder: ${details.join(', ')}. This is a bug in the bundle transformer. Please report it at https://github.com/nuxt/scripts/issues.`)
+    }
+
+    /**
+     * Patching in `renderChunk` keeps the chunk content hash and the sourcemap honest:
+     * the bundler computes both after this hook. `generateBundle` is too late, since file
+     * names are already fixed there, so an upstream script change would ship new code
+     * under an old cache-busted name.
+     *
+     * Resolution is awaited here rather than only in `renderStart` because rolldown can
+     * render chunks before an awaited `renderStart` settles, which shipped unresolved
+     * placeholders whenever a download outlived rendering.
+     */
+    function resolveFor(ctx: { environment?: { name?: string }, getModuleInfo: (id: string) => any }, restart: boolean): Promise<PlaceholderPatch[]> {
+      const key = ctx.environment?.name ?? 'default'
+      let resolution = restart ? undefined : resolutions.get(key)
+      if (!resolution) {
+        resolution = resolvePendingBundles(key, id => ctx.getModuleInfo(id))
+        resolutions.set(key, resolution)
+      }
+      return resolution
+    }
+
+    const outputHooks: Pick<VitePlugin, 'renderStart' | 'renderChunk'> = {
+      async renderStart() {
+        // Restart here so a rebuild reaches its verdict against the graph it just built.
+        await resolveFor(this as any, true)
+      },
+
+      async renderChunk(code, chunk, outputOptions) {
+        const patches = await resolveFor(this as any, false)
+
+        if (!code.includes(PLACEHOLDER_PREFIX))
+          return
+        const s = applyPlaceholderPatches(code, patches)
+        const patched = s ? s.toString() : code
+        assertNoPlaceholders(patched, chunk.fileName)
+        if (!s)
+          return
+        // A replacement rarely matches the length of its token, so every later mapping in
+        // the chunk shifts. Hand the bundler a map of the edit instead of letting it keep
+        // the pre-patch offsets.
+        return {
+          code: patched,
+          map: outputOptions.sourcemap ? s.generateMap({ hires: 'boundary', source: chunk.fileName }) as SourceMapInput : undefined,
+        }
+      },
+    }
+
     return {
       name: 'nuxt:scripts:bundler-transformer',
+
+      vite: outputHooks,
 
       transform: {
         filter: {
@@ -275,6 +611,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
           const s = new MagicString(code)
           const deferredOps: (() => Promise<void>)[] = []
+          // Registrations for this module, replacing any from an earlier build. A changed
+          // `src` retires its old token, so a stale entry can never download a script the
+          // module no longer asks for.
+          const registered: PendingComponentBundle[] = []
+          componentBundles.delete(id)
           parseAndWalk(code, id, (_node) => {
             const calleeName = (_node as any).callee?.name
             if (!calleeName)
@@ -503,42 +844,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       ? (proxyConfig.privacy.hardware ?? true)
                       : true
 
-                    // Defer async download + MagicString operations
-                    deferredOps.push(async () => {
-                      let url = _url
-                      try {
-                        const result = await downloadScript({ src: src as string, url, filename, forceDownload, proxyRewrites, sdkPatches, integrity: options.integrity, skipApiRewrites, neutralizeCanvas, assetsBaseURL: options.assetsBaseURL }, renderedScript, options.fetchOptions, options.cacheMaxAge)
-                        if (result) {
-                          url = result.url
-                        }
-                      }
-                      catch (e: any) {
-                        if (options.fallbackOnSrcOnBundleFail) {
-                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}. Fallback to remote loading.`)
-                          url = src as string
-                        }
-                        else {
-                        // Provide more helpful error message, especially for Docker/network issues
-                          const errorMessage = e?.message || 'Unknown error'
-                          if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('certificate')) {
-                            logger.error(`[Nuxt Scripts: Bundle Transformer] Network issue while bundling ${src}: ${errorMessage}`)
-                            logger.error(`[Nuxt Scripts: Bundle Transformer] Tip: Set 'fallbackOnSrcOnBundleFail: true' in module options or disable bundling in Docker environments`)
-                          }
-                          throw e
-                        }
-                      }
-
-                      if (src === url) {
-                        if (src && (src as string).startsWith('/'))
-                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Relative scripts are already bundled. Skipping bundling for \`${src}\`.`)
-                        else
-                          logger.warn(`[Nuxt Scripts: Bundle Transformer] Failed to bundle ${src}.`)
-                      }
-
-                      // Get the integrity hash from rendered script
-                      const scriptMeta = renderedScript.get(url)
-                      const integrityHash = scriptMeta instanceof Error ? undefined : scriptMeta?.integrity
-
+                    const rewriteScriptCall = (url: string, integrityHash?: string) => {
                       if (scriptSrcNode) {
                       // For useScript('src') pattern, we need to convert to object form to add integrity
                         if (integrityHash && fnName === 'useScript' && node.arguments[0]?.type === 'Literal') {
@@ -589,7 +895,40 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                           s.overwrite(node.callee.end, node.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
                         }
                       }
-                    })
+                    }
+
+                    const downloadOptions: DownloadScriptOptions = {
+                      src: src as string,
+                      url: _url,
+                      filename,
+                      forceDownload,
+                      proxyRewrites,
+                      sdkPatches,
+                      integrity: options.integrity,
+                      skipApiRewrites,
+                      neutralizeCanvas,
+                      assetsBaseURL: options.assetsBaseURL,
+                    }
+                    const componentId = nuxt.options.dev || nuxt.options.builder !== '@nuxt/vite-builder'
+                      ? undefined
+                      : getComponentId(id, options.componentDir)
+
+                    // Nuxt emits every auto-registered component as an entry before it
+                    // knows which components the application imports. Wait for the final
+                    // graph so unused widgets do not trigger third-party downloads.
+                    if (componentId) {
+                      const token = createHash('sha256').update(`${id}:${node.start}:${src}`).digest('hex').slice(0, 16)
+                      const placeholderUrl = `${PLACEHOLDER_PREFIX}BUNDLE_${token}__`
+                      const placeholderIntegrity = options.integrity ? `${PLACEHOLDER_PREFIX}INTEGRITY_${token}__` : undefined
+                      registered.push({ componentId, downloadOptions, placeholderIntegrity, placeholderUrl })
+                      deferredOps.push(async () => rewriteScriptCall(placeholderUrl, placeholderIntegrity))
+                    }
+                    else {
+                      deferredOps.push(async () => {
+                        const result = await resolveScriptBundle(downloadOptions, renderedScript, options)
+                        rewriteScriptCall(result.url, result.integrity)
+                      })
+                    }
                   }
                 }
               }
@@ -599,6 +938,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
           for (const op of deferredOps) {
             await op()
           }
+
+          if (registered.length)
+            componentBundles.set(id, registered)
 
           if (s.hasChanged()) {
             return {

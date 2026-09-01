@@ -1,0 +1,9 @@
+<template>
+  <div>
+    <ScriptCalendlyInlineWidget
+      url="https://calendly.com/example/30min"
+      trigger="onNuxtReady"
+      nuxt-client
+    />
+  </div>
+</template>

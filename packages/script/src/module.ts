@@ -295,6 +295,20 @@ export interface ModuleOptions {
      * @default false
      */
     integrity?: boolean | 'sha256' | 'sha384' | 'sha512'
+    /**
+     * Bundle a component's script even when the build cannot prove the component is used.
+     *
+     * Auto-registered components are only bundled once the module graph shows a real
+     * importer, so an unused widget never downloads its SDK. A component used only
+     * through `nuxt-client` inside a server component has no importer in the client
+     * graph, so it falls back to loading from the third-party origin. Name it here to
+     * bundle it anyway, or pass `true` to bundle every component's script.
+     *
+     * Values are component names, for example `'ScriptCalendlyInlineWidget'`.
+     *
+     * @default false
+     */
+    alwaysBundle?: boolean | string[]
   }
   /**
    * Enable standalone devtools mode.
@@ -523,8 +537,9 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
+    const runtimeComponentsDir = await resolvePath('./runtime/components')
     addComponentsDir({
-      path: await resolvePath('./runtime/components'),
+      path: runtimeComponentsDir,
       pathPrefix: false,
     })
 
@@ -885,6 +900,7 @@ export default defineNuxtModule<ModuleOptions>({
         addBuildPlugin(NuxtScriptsCheckScripts())
       addBuildPlugin(NuxtScriptBundleTransformer({
         nuxt,
+        componentDir: runtimeComponentsDir,
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         proxyConfigs,
@@ -900,6 +916,7 @@ export default defineNuxtModule<ModuleOptions>({
         fetchOptions: config.assets?.fetchOptions,
         cacheMaxAge: config.assets?.cacheMaxAge,
         integrity: config.assets?.integrity,
+        alwaysBundle: config.assets?.alwaysBundle,
         renderedScript,
       }))
 
