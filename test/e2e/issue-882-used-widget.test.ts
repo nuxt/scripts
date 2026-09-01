@@ -30,7 +30,7 @@ function attrValueRe(name: string, value: string): RegExp {
  * dynamically loaded island chunk is reachable by walking module specifiers
  * over HTTP — so read the files Nitro copied into its public dir directly.
  */
-async function readClientChunks(): Promise<string[]> {
+async function readClientChunks(): Promise<{ name: string, dir: string, code: string }[]> {
   const ctx = useTestContext()
   const nitroOutputDir = ctx.nuxt
     ? ctx.nuxt.options.nitro.output.dir
@@ -39,7 +39,11 @@ async function readClientChunks(): Promise<string[]> {
   const clientChunkDir = join(nitroOutputDir!, 'public', '_nuxt')
   const entries = await readdir(clientChunkDir)
   return Promise.all(
-    entries.filter(name => name.endsWith('.js')).map(name => readFile(join(clientChunkDir, name), 'utf-8')),
+    entries.filter(name => name.endsWith('.js')).map(async name => ({
+      name,
+      dir: clientChunkDir,
+      code: await readFile(join(clientChunkDir, name), 'utf-8'),
+    })),
   )
 }
 
@@ -63,15 +67,21 @@ describe('used script widget (deferred component path)', () => {
     // chunk that drives the runtime script injection.
     const clientChunks = await readClientChunks()
     expect(clientChunks.length, 'expected built client chunks on disk').toBeGreaterThan(0)
-    const widgetChunk = clientChunks.find(code => code.includes(assetUrl!))
+    const widgetChunk = clientChunks.find(chunk => chunk.code.includes(assetUrl!))
     expect(widgetChunk, 'expected a built client chunk referencing the bundled asset').toBeTruthy()
-    expect(widgetChunk!).toMatch(attrValueRe('integrity', expectedIntegrity))
-    expect(widgetChunk!).toMatch(attrValueRe('crossorigin', 'anonymous'))
+    expect(widgetChunk!.code).toMatch(attrValueRe('integrity', expectedIntegrity))
+    expect(widgetChunk!.code).toMatch(attrValueRe('crossorigin', 'anonymous'))
+
+    // The fixture builds with client sourcemaps on. Rewriting the chunk shifts every
+    // later offset, so the rewrite must hand the bundler a map rather than let it keep
+    // the pre-patch one.
+    const map = JSON.parse(await readFile(join(widgetChunk!.dir, `${widgetChunk!.name}.map`), 'utf-8'))
+    expect(map.mappings, 'the rewritten chunk must still ship a populated sourcemap').toBeTruthy()
 
     // Unused auto-registered widgets fall back to their remote src; their unresolved
     // integrity placeholders must not ship into any production chunk either.
-    for (const code of clientChunks) {
-      expect(code, 'a client chunk still contains a placeholder token').not.toContain('__NUXT_SCRIPT_')
+    for (const chunk of clientChunks) {
+      expect(chunk.code, 'a client chunk still contains a placeholder token').not.toContain('__NUXT_SCRIPT_')
     }
   })
 })

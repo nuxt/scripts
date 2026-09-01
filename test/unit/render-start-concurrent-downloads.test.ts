@@ -57,16 +57,19 @@ async function registerComponent(plugin: any, file: string, src: string) {
 }
 
 /**
- * Run the deferred pipeline the way the bundler does at emit time: an awaited hook
- * with the final module graph, then patches applied to every emitted chunk.
+ * Run the deferred pipeline the way the bundler does while rendering: an awaited
+ * `renderStart` with the final module graph, then `renderChunk` per emitted chunk.
+ * Patching before the chunk hash is computed is what keeps cache-busting names honest.
  */
-async function emitChunks(plugin: any, codes: Record<string, string>) {
-  const getModuleInfo = () => ({ importers: [APP_IMPORTER], dynamicImporters: [] })
-  const bundle = Object.fromEntries(
-    Object.entries(codes).map(([name, code]) => [name, { type: 'chunk', code } as any]),
-  )
-  await plugin.generateBundle.call({ getModuleInfo }, {}, bundle)
-  return bundle as Record<string, { type: 'chunk', code: string }>
+async function emitChunks(plugin: any, codes: Record<string, string>, importers: string[] = [APP_IMPORTER]) {
+  const ctx = { getModuleInfo: () => ({ importers, dynamicImporters: [] }) }
+  await plugin.renderStart.call(ctx, {}, {})
+  const out: Record<string, string> = {}
+  for (const [name, code] of Object.entries(codes)) {
+    const result = await plugin.renderChunk.call(ctx, code, { fileName: name }, { sourcemap: false })
+    out[name] = (result?.code ?? code) as string
+  }
+  return out
 }
 
 describe('deferred component downloads stay concurrent', () => {
@@ -92,7 +95,7 @@ describe('deferred component downloads stay concurrent', () => {
     await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
     await registerComponent(plugin, 'Beta.vue', 'https://example.com/beta.js')
 
-    const running = plugin.generateBundle.call({
+    const running = plugin.renderStart.call({
       getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }),
     }, {}, {})
     expect(running).toBeInstanceOf(Promise)
@@ -126,7 +129,7 @@ describe('deferred component downloads stay concurrent', () => {
     const bundle = await emitChunks(plugin, { 'chunk-alpha.js': codeA, 'chunk-beta.js': codeB })
 
     for (const fileName of ['chunk-alpha.js', 'chunk-beta.js'] as const) {
-      const code = bundle[fileName]!.code
+      const code = bundle[fileName]!
       expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
       expect(code).not.toContain('__NUXT_SCRIPT_BUNDLE_')
       expect(code).not.toContain('https://example.com')
@@ -155,7 +158,7 @@ describe('deferred component downloads stay concurrent', () => {
     // so the placeholder tokens are back even though no new pendings registered.
     const rebuildBundle = await emitChunks(plugin, { 'chunk-1.js': codeB })
 
-    const code = rebuildBundle['chunk-1.js']!.code
+    const code = rebuildBundle['chunk-1.js']!
     expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
     expect(code).not.toContain('__NUXT_SCRIPT_BUNDLE_')
     expect(code).not.toMatch(/__NUXT_SCRIPT_INTEGRITY_[a-f0-9]{16}__/)
@@ -177,7 +180,7 @@ describe('deferred component downloads stay concurrent', () => {
     await registerComponent(plugin, 'Good.vue', 'https://example.com/good.js')
     await registerComponent(plugin, 'Broken.vue', 'https://example.com/broken.js')
 
-    await expect(plugin.generateBundle.call({
+    await expect(plugin.renderStart.call({
       getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }),
     }, {}, {})).rejects.toThrow(/broken\.js/)
   })

@@ -154,6 +154,15 @@ interface PendingComponentBundle {
   placeholderUrl: string
 }
 
+/** A chunk patch: every `pattern` match is replaced by `value`. */
+interface PlaceholderPatch {
+  pattern: RegExp
+  value: string
+}
+
+// Every placeholder token shares this prefix, so a chunk without it needs no patching.
+const PLACEHOLDER_PREFIX = '__NUXT_SCRIPT_'
+
 /**
  * Dropping an unresolved hash must remove the whole `, integrity: ..., crossorigin: 'anonymous'`
  * span: replacing only the placeholder would leave `integrity: ''` plus crossorigin, which
@@ -168,8 +177,51 @@ function integrityPlaceholderRemoval(placeholderIntegrity: string): RegExp {
   return new RegExp(`,\\s*integrity\\s*:\\s*["'\`]${token}["'\`]\\s*,\\s*crossorigin\\s*:\\s*["'\`][^"'\`]*["'\`]`, 'g')
 }
 
+/**
+ * Match the whole quoted literal, not the bare token. The replacement value is a URL we
+ * do not control (a registry or user `src` can hold a quote, a backslash or `${`), and the
+ * minifier picks the quote style, so splicing raw text into an existing literal can emit
+ * broken or injected JavaScript. Swapping the complete literal lets the value be
+ * serialized safely with `JSON.stringify`.
+ */
+function quotedPlaceholder(token: string): RegExp {
+  return new RegExp(`(["'\`])${escapeRegExp(token)}\\1`, 'g')
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Apply every patch to `code` in a single pass. Matches are collected first, then
+ * applied in source order, because MagicString throws when two edits overlap and an
+ * integrity removal can swallow a span another patch also matched.
+ *
+ * Each pattern is re-instantiated per call: the patch set is shared, chunks render
+ * concurrently, and a global RegExp carries `lastIndex` between matches.
+ */
+function applyPlaceholderPatches(code: string, patches: PlaceholderPatch[]): MagicString | undefined {
+  const edits: { start: number, end: number, value: string }[] = []
+  for (const { pattern, value } of patches) {
+    for (const match of code.matchAll(new RegExp(pattern.source, pattern.flags))) {
+      if (match[0].length === 0)
+        break
+      edits.push({ start: match.index, end: match.index + match[0].length, value })
+    }
+  }
+  if (!edits.length)
+    return
+  edits.sort((a, b) => a.start - b.start)
+  let s: MagicString | undefined
+  let appliedEnd = -1
+  for (const edit of edits) {
+    if (edit.start < appliedEnd)
+      continue
+    s ??= new MagicString(code)
+    s.overwrite(edit.start, edit.end, edit.value)
+    appliedEnd = edit.end
+  }
+  return s
 }
 
 async function downloadScript(opts: DownloadScriptOptions, renderedScript: NonNullable<AssetBundlerTransformerOptions['renderedScript']>, fetchOptions?: FetchOptions, cacheMaxAge?: number): Promise<{ url: string, filename?: string } | undefined> {
@@ -340,8 +392,13 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
   })
 
   return createUnplugin(() => {
-    const pendingComponentBundles: PendingComponentBundle[] = []
-    const replacements = new Map<string | RegExp, string>()
+    // Keyed by module id so a rebuild of one module replaces its own registrations
+    // instead of appending stale duplicates. Entries survive every emission: a watch
+    // rebuild re-renders cached chunks that still carry the placeholder tokens, and a
+    // build that failed must be able to resolve the same components again.
+    const componentBundles = new Map<string, PendingComponentBundle[]>()
+    let patches: PlaceholderPatch[] = []
+    let resolution: Promise<void> | undefined
 
     /**
      * A pending component is unused unless some importer path reaches a module outside
@@ -369,87 +426,70 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
       return false
     }
 
-    function applyReplacements(code: string): string {
-      let result: MagicString | undefined
-      for (const [placeholder, replacement] of replacements) {
-        if (placeholder instanceof RegExp) {
-          placeholder.lastIndex = 0
-          for (let match = placeholder.exec(code); match; match = placeholder.exec(code)) {
-            result ??= new MagicString(code)
-            result.remove(match.index, match.index + match[0].length)
-            if (match[0].length === 0)
-              break
-          }
-          continue
+    /**
+     * Classify every registered component against the final module graph and turn the
+     * outcome into chunk patches. Reachability is decided fresh on each build: a watch
+     * rebuild can add or drop the importer that makes a widget used, so a decision cached
+     * from an earlier build would ship the wrong src.
+     */
+    async function resolvePendingBundles(getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): Promise<void> {
+      const pendings = [...componentBundles.values()].flat()
+      const resolved: PlaceholderPatch[] = []
+      // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
+      // (only falling back when explicitly configured), and Promise.all preserves that.
+      await Promise.all(pendings.map(async (pending) => {
+        if (!reachesOutsideComponentDir(pending.componentId, getModuleInfo)) {
+          resolved.push({ pattern: quotedPlaceholder(pending.placeholderUrl), value: JSON.stringify(pending.downloadOptions.src) })
+          if (pending.placeholderIntegrity)
+            resolved.push({ pattern: integrityPlaceholderRemoval(pending.placeholderIntegrity), value: '' })
+          return
         }
-        let offset = 0
-        while (offset < code.length) {
-          const index = code.indexOf(placeholder, offset)
-          if (index === -1)
-            break
-          result ??= new MagicString(code)
-          result.overwrite(index, index + placeholder.length, replacement)
-          offset = index + placeholder.length
+
+        const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
+
+        resolved.push({ pattern: quotedPlaceholder(pending.placeholderUrl), value: JSON.stringify(result.url) })
+        if (pending.placeholderIntegrity) {
+          resolved.push(result.integrity
+            ? { pattern: quotedPlaceholder(pending.placeholderIntegrity), value: JSON.stringify(result.integrity) }
+            : { pattern: integrityPlaceholderRemoval(pending.placeholderIntegrity), value: '' })
         }
-      }
-      return result ? result.toString() : code
+      }))
+      // Publish only once every download settled, so a rejected build never leaves a
+      // half-built patch set behind for the next emission to apply.
+      patches = resolved
     }
 
-    const outputHooks: Pick<VitePlugin, 'generateBundle'> = {
-      async generateBundle(_outputOptions, bundle) {
-        // Watch rebuilds re-emit chunks from cached transformed modules whose code still
-        // carries placeholder tokens, while replacements persist across emissions. So
-        // resolution and patching are independent steps: resolve a consumed snapshot of
-        // the pendings when one exists, then always re-patch emitted chunks whenever we
-        // hold any replacement.
-        if (pendingComponentBundles.length > 0) {
-          // Splice before awaiting: transforms still running while these downloads
-          // resolve must not have their freshly registered pendings wiped here.
-          const batch = pendingComponentBundles.splice(0, pendingComponentBundles.length)
+    /**
+     * Patching in `renderChunk` keeps the chunk content hash and the sourcemap honest:
+     * the bundler computes both after this hook. `generateBundle` is too late, since file
+     * names are already fixed there, so an upstream script change would ship new code
+     * under an old cache-busted name.
+     *
+     * Resolution is awaited here rather than only in `renderStart` because rolldown can
+     * render chunks before an awaited `renderStart` settles, which shipped unresolved
+     * placeholders whenever a download outlived rendering.
+     */
+    const outputHooks: Pick<VitePlugin, 'renderStart' | 'renderChunk'> = {
+      async renderStart() {
+        resolution = resolvePendingBundles(id => this.getModuleInfo(id))
+        await resolution
+      },
 
-          // Bundling has finished handing us the final module graph here and the bundler
-          // awaits this hook before writing files, so classification, downloads and patching
-          // land in a single deterministic point. An awaited renderStart cannot do this job:
-          // rolldown renders chunks without waiting for it, which shipped unresolved
-          // placeholders whenever a download outlived rendering.
-          await Promise.all(batch.map(async (pending) => {
-            const isUnusedComponent = !reachesOutsideComponentDir(pending.componentId, id => this.getModuleInfo(id))
+      async renderChunk(code, chunk, outputOptions) {
+        resolution ??= resolvePendingBundles(id => this.getModuleInfo(id))
+        await resolution
 
-            if (isUnusedComponent) {
-              replacements.set(pending.placeholderUrl, pending.downloadOptions.src)
-              if (pending.placeholderIntegrity)
-                replacements.set(integrityPlaceholderRemoval(pending.placeholderIntegrity), '')
-              return
-            }
-
-            // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
-            // (only falling back when explicitly configured), and Promise.all preserves that.
-            const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
-
-            replacements.set(pending.placeholderUrl, result.url)
-            if (pending.placeholderIntegrity) {
-              replacements.set(
-                result.integrity ? pending.placeholderIntegrity : integrityPlaceholderRemoval(pending.placeholderIntegrity),
-                result.integrity ?? '',
-              )
-            }
-          }))
-        }
-
-        if (replacements.size === 0)
+        if (!patches.length || !code.includes(PLACEHOLDER_PREFIX))
           return
-
-        // Mutating `bundle` entries is honored on write (rollup contract); renderChunk-based
-        // patching was not: rolldown may render before any map entry existed.
-        for (const file of Object.values(bundle)) {
-          if (file.type !== 'chunk')
-            continue
-          const patched = applyReplacements(file.code)
-          if (patched !== file.code) {
-            // Edits only touch token spans inserted at transform time, so the existing
-            // sourcemap stays usable; regenerating one here would lose all chunk mappings.
-            file.code = patched
-          }
+        const s = applyPlaceholderPatches(code, patches)
+        if (!s)
+          return
+        // A replacement rarely matches the length of its token, so every later mapping in
+        // the chunk shifts. Hand the bundler a map of the edit instead of letting it keep
+        // the pre-patch offsets.
+        return {
+          code: s.toString(),
+          map: outputOptions.sourcemap ? s.generateMap({ hires: 'boundary', source: chunk.fileName }) as SourceMapInput : undefined,
         }
       },
     }
@@ -474,6 +514,11 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
 
           const s = new MagicString(code)
           const deferredOps: (() => Promise<void>)[] = []
+          // Registrations for this module, replacing any from an earlier build. A changed
+          // `src` retires its old token, so a stale entry can never download a script the
+          // module no longer asks for.
+          const registered: PendingComponentBundle[] = []
+          componentBundles.delete(id)
           parseAndWalk(code, id, (_node) => {
             const calleeName = (_node as any).callee?.name
             if (!calleeName)
@@ -776,9 +821,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // graph so unused widgets do not trigger third-party downloads.
                     if (componentId) {
                       const token = createHash('sha256').update(`${id}:${node.start}:${src}`).digest('hex').slice(0, 16)
-                      const placeholderUrl = `__NUXT_SCRIPT_BUNDLE_${token}__`
-                      const placeholderIntegrity = options.integrity ? `__NUXT_SCRIPT_INTEGRITY_${token}__` : undefined
-                      pendingComponentBundles.push({ componentId, downloadOptions, placeholderIntegrity, placeholderUrl })
+                      const placeholderUrl = `${PLACEHOLDER_PREFIX}BUNDLE_${token}__`
+                      const placeholderIntegrity = options.integrity ? `${PLACEHOLDER_PREFIX}INTEGRITY_${token}__` : undefined
+                      registered.push({ componentId, downloadOptions, placeholderIntegrity, placeholderUrl })
                       deferredOps.push(async () => rewriteScriptCall(placeholderUrl, placeholderIntegrity))
                     }
                     else {
@@ -796,6 +841,9 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
           for (const op of deferredOps) {
             await op()
           }
+
+          if (registered.length)
+            componentBundles.set(id, registered)
 
           if (s.hasChanged()) {
             return {

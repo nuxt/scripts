@@ -68,11 +68,11 @@ async function buildComponentChunk(options: Partial<AssetBundlerTransformerOptio
   const transformed = await plugin.transform.handler.call({}, code, `${COMPONENT_ID}?vue&type=script&setup=true&lang.ts`)
   expect(transformed?.code).toBeTruthy()
 
-  // Simulate rollup's final module graph before files are written.
-  const getModuleInfo = () => ({ importers, dynamicImporters: [] })
-  const bundle = { 'entry.js': { type: 'chunk', code: transformed.code } as any }
-  await plugin.generateBundle.call({ getModuleInfo }, {}, bundle)
-  return bundle['entry.js'].code as string
+  // Simulate rollup's final module graph before chunk hashes are computed.
+  const ctx = { getModuleInfo: () => ({ importers, dynamicImporters: [] }) }
+  await plugin.renderStart.call(ctx, {}, {})
+  const result = await plugin.renderChunk.call(ctx, transformed.code, { fileName: 'entry.js' }, { sourcemap: false })
+  return (result?.code ?? transformed.code) as string
 }
 
 describe('deferred component bundling integrity placeholders', () => {
@@ -105,8 +105,10 @@ describe('deferred component bundling integrity placeholders', () => {
     const code = await buildComponentChunk({}, [APP_IMPORTER])
 
     const expected = `sha384-${createHash('sha384').update(body).digest('base64')}`
+    const escaped = expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     expect(code).toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
-    expect(code).toContain(`integrity: '${expected}'`)
-    expect(code).toContain(`crossorigin: 'anonymous'`)
+    // The bundler picks the quote style for every emitted literal, so assert on the value.
+    expect(code).toMatch(new RegExp(`integrity:\\s*["'\`]${escaped}["'\`]`))
+    expect(code).toMatch(/crossorigin:\s*["'`]anonymous["'`]/)
   })
 })

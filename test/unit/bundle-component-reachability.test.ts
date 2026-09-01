@@ -65,9 +65,10 @@ async function emit(plugin: any, transformedCode: string, graph: Record<string, 
     const entry = graph[cleanId]
     return entry ? { importers: entry.importers ?? [], dynamicImporters: entry.dynamicImporters ?? [] } : undefined
   }
-  const bundle = { 'entry.js': { type: 'chunk', code: transformedCode } as any }
-  await plugin.generateBundle.call({ getModuleInfo }, {}, bundle)
-  return bundle['entry.js'].code as string
+  const ctx = { getModuleInfo }
+  await plugin.renderStart.call(ctx, {}, {})
+  const result = await plugin.renderChunk.call(ctx, transformedCode, { fileName: 'entry.js' }, { sourcemap: false })
+  return (result?.code ?? transformedCode) as string
 }
 
 describe('nested unreachable components skip their scripts', () => {

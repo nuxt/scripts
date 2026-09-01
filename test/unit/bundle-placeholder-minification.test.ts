@@ -22,6 +22,7 @@ vi.stubGlobal('fetch', fetchMock)
 const COMPONENT_ID = '/app/node_modules/@nuxt/scripts/dist/runtime/components/BuyWidget.vue'
 const COMPONENT_DIR = '/app/node_modules/@nuxt/scripts/dist/runtime/components'
 const REMOTE_SRC = 'https://example.com/widget.js'
+const APP_IMPORTER = '/app/pages/index.vue'
 
 function makeNuxt() {
   return {
@@ -36,7 +37,7 @@ function makeNuxt() {
   } as any
 }
 
-async function deferAndMinify(options?: Partial<AssetBundlerTransformerOptions>, graph: Record<string, never> | undefined = undefined) {
+async function deferAndMinify(options?: Partial<AssetBundlerTransformerOptions>, importers: string[] = []) {
   const code = `const instance = useScript('${REMOTE_SRC}', { bundle: true })`
   const plugin = NuxtScriptBundleTransformer({
     renderedScript: new Map(),
@@ -54,10 +55,10 @@ async function deferAndMinify(options?: Partial<AssetBundlerTransformerOptions>,
   // squeezed out and every string literal re-quoted with backticks.
   const minified = transformed.code.replace(/\s+/g, '').replace(/'/g, '`')
 
-  const getModuleInfo = (id: string) => (graph?.[id] ? { importers: [], dynamicImporters: [] } : undefined)
-  const bundle = { 'entry.js': { type: 'chunk', code: minified } as any }
-  await plugin.generateBundle.call({ getModuleInfo }, {}, bundle)
-  return bundle['entry.js'].code as string
+  const ctx = { getModuleInfo: (id: string) => (id === COMPONENT_ID ? { importers, dynamicImporters: [] } : { importers: [], dynamicImporters: [] }) }
+  await plugin.renderStart.call(ctx, {}, {})
+  const result = await plugin.renderChunk.call(ctx, minified, { fileName: 'entry.js' }, { sourcemap: false })
+  return (result?.code ?? minified) as string
 }
 
 describe('integrity placeholders under minified rendering', () => {
@@ -69,9 +70,13 @@ describe('integrity placeholders under minified rendering', () => {
     expect(code).not.toContain('crossorigin')
   })
 
-  it('fallback bundle leaves no integrity token or crossorigin in the chunk', async () => {
-    const imported = await deferAndMinify(undefined, { [COMPONENT_ID]: {} })
+  it('used component whose download fails falls back to the remote src without crossorigin', async () => {
+    // A used component takes the download path; the failed fetch resolves no integrity
+    // hash, so the whole integrity + crossorigin span has to go.
+    fetchMock.mockRejectedValue(new Error('network down'))
+    const imported = await deferAndMinify(undefined, [APP_IMPORTER])
 
+    expect(fetchMock, 'the used component must attempt its download').toHaveBeenCalled()
     expect(imported).toContain(REMOTE_SRC)
     expect(imported).not.toContain('__NUXT_SCRIPT_INTEGRITY_')
     expect(imported).not.toContain('crossorigin')

@@ -12,5 +12,10 @@ export default defineNuxtConfig({
       selectiveClient: true,
     },
   },
+  // Placeholder resolution rewrites emitted chunks, so build with client sourcemaps on
+  // to prove the rewrite hands the bundler a usable map instead of stale offsets.
+  sourcemap: {
+    client: true,
+  },
   compatibilityDate: '2024-07-05',
 })
