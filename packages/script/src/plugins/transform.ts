@@ -168,6 +168,7 @@ interface PlaceholderPatch {
 
 // Every placeholder token shares this prefix, so a chunk without it needs no patching.
 const PLACEHOLDER_PREFIX = '__NUXT_SCRIPT_'
+const PLACEHOLDER_TOKEN_RE = /__NUXT_SCRIPT_(?:BUNDLE|INTEGRITY)_[a-f0-9]+__/g
 
 /**
  * Dropping an unresolved hash must remove the whole `, integrity: ..., crossorigin: 'anonymous'`
@@ -413,8 +414,12 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     // rebuild re-renders cached chunks that still carry the placeholder tokens, and a
     // build that failed must be able to resolve the same components again.
     const componentBundles = new Map<string, PendingComponentBundle[]>()
-    let patches: PlaceholderPatch[] = []
-    let resolution: Promise<void> | undefined
+    // Vite builds the client and ssr environments from one config, so this factory runs
+    // once and both share the state here. Each environment has its own module graph and
+    // reaches its own verdict, so resolution is keyed by environment. Chunks read their
+    // patch set from the promise they await, never from a field another environment can
+    // replace mid-render.
+    const resolutions = new Map<string, Promise<PlaceholderPatch[]>>()
 
     /**
      * A pending component is unused unless some importer path reaches a module outside
@@ -448,7 +453,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
      * rebuild can add or drop the importer that makes a widget used, so a decision cached
      * from an earlier build would ship the wrong src.
      */
-    async function resolvePendingBundles(getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): Promise<void> {
+    async function resolvePendingBundles(getModuleInfo: (id: string) => { importers?: string[], dynamicImporters?: string[] } | undefined | null): Promise<PlaceholderPatch[]> {
       const pendings = [...componentBundles.values()].flat()
       const resolved: PlaceholderPatch[] = []
       // Downloads overlap across pendings: resolveScriptBundle rethrows fatal failures
@@ -470,9 +475,30 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
             : integrityRemovalPatch(pending.placeholderIntegrity))
         }
       }))
-      // Publish only once every download settled, so a rejected build never leaves a
-      // half-built patch set behind for the next emission to apply.
-      patches = resolved
+      // Return only once every download settled, so a rejected build never hands a
+      // half-built patch set to the chunks awaiting it.
+      return resolved
+    }
+
+    /**
+     * A surviving token would ship as a script `src` or an SRI hash and break at runtime,
+     * where it is far harder to trace than here. Every token this transform emits is
+     * quoted, so a miss means the emitted shape stopped matching what the patch expects.
+     */
+    function assertNoPlaceholders(code: string, fileName: string): void {
+      const survivors = [...new Set(code.match(PLACEHOLDER_TOKEN_RE) ?? [])]
+      if (!survivors.length)
+        return
+      const details = survivors.map((token) => {
+        for (const pendings of componentBundles.values()) {
+          for (const pending of pendings) {
+            if (token === pending.placeholderUrl || token === pending.placeholderIntegrity)
+              return `${token} (${pending.componentId}, ${pending.downloadOptions.src})`
+          }
+        }
+        return token
+      })
+      throw new Error(`[Nuxt Scripts: Bundle Transformer] Chunk ${fileName} still holds an unresolved script placeholder: ${details.join(', ')}. This is a bug in the bundle transformer. Please report it at https://github.com/nuxt/scripts/issues.`)
     }
 
     /**
@@ -485,26 +511,37 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
      * render chunks before an awaited `renderStart` settles, which shipped unresolved
      * placeholders whenever a download outlived rendering.
      */
+    function resolveFor(ctx: { environment?: { name?: string }, getModuleInfo: (id: string) => any }, restart: boolean): Promise<PlaceholderPatch[]> {
+      const key = ctx.environment?.name ?? 'default'
+      let resolution = restart ? undefined : resolutions.get(key)
+      if (!resolution) {
+        resolution = resolvePendingBundles(id => ctx.getModuleInfo(id))
+        resolutions.set(key, resolution)
+      }
+      return resolution
+    }
+
     const outputHooks: Pick<VitePlugin, 'renderStart' | 'renderChunk'> = {
       async renderStart() {
-        resolution = resolvePendingBundles(id => this.getModuleInfo(id))
-        await resolution
+        // Restart here so a rebuild reaches its verdict against the graph it just built.
+        await resolveFor(this as any, true)
       },
 
       async renderChunk(code, chunk, outputOptions) {
-        resolution ??= resolvePendingBundles(id => this.getModuleInfo(id))
-        await resolution
+        const patches = await resolveFor(this as any, false)
 
-        if (!patches.length || !code.includes(PLACEHOLDER_PREFIX))
+        if (!code.includes(PLACEHOLDER_PREFIX))
           return
         const s = applyPlaceholderPatches(code, patches)
+        const patched = s ? s.toString() : code
+        assertNoPlaceholders(patched, chunk.fileName)
         if (!s)
           return
         // A replacement rarely matches the length of its token, so every later mapping in
         // the chunk shifts. Hand the bundler a map of the edit instead of letting it keep
         // the pre-patch offsets.
         return {
-          code: s.toString(),
+          code: patched,
           map: outputOptions.sourcemap ? s.generateMap({ hires: 'boundary', source: chunk.fileName }) as SourceMapInput : undefined,
         }
       },

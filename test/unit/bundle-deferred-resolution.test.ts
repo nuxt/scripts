@@ -218,3 +218,43 @@ describe('deferred component bundle resolution', () => {
     expect(fetchMock.mock.calls.map(call => call[0])).toEqual(['https://example.com/new.js'])
   })
 })
+
+describe('deferred resolution guards', () => {
+  beforeEach(() => {
+    fetchMock.mockReset()
+  })
+
+  it('fails the build when a placeholder survives patching', async () => {
+    mockDownload()
+    const plugin = makePlugin()
+    const code = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+    // A minifier that splits the literal leaves the token unquoted, so no patch matches.
+    const split = code.replace(/(["'`])(__NUXT_SCRIPT_BUNDLE_[a-f0-9]+__)\1/, '$1$2')
+
+    const ctx = makeContext([APP_IMPORTER])
+    await plugin.renderStart.call(ctx, {}, {})
+
+    await expect(plugin.renderChunk.call(ctx, split, { fileName: 'entry.js' }, { sourcemap: false }))
+      .rejects.toThrow(/unresolved script placeholder.*Alpha\.vue.*alpha\.js/s)
+  })
+
+  it('reaches a separate verdict per build environment', async () => {
+    mockDownload()
+    const plugin = makePlugin()
+    const code = await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    // One plugin instance serves both environments. A chunk must read the patch set of
+    // its own environment, not whichever one resolved most recently.
+    const client = { environment: { name: 'client' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    const ssr = { environment: { name: 'ssr' }, getModuleInfo: () => ({ importers: [], dynamicImporters: [] }) }
+
+    await plugin.renderStart.call(client, {}, {})
+    await plugin.renderStart.call(ssr, {}, {})
+
+    const clientChunk = await plugin.renderChunk.call(client, code, { fileName: 'client.js' }, { sourcemap: false })
+    const ssrChunk = await plugin.renderChunk.call(ssr, code, { fileName: 'ssr.js' }, { sourcemap: false })
+
+    expect(clientChunk.code, 'the used client verdict must survive the ssr resolution').toMatch(/\/_scripts\/assets\/[a-f0-9]{16}\.js/)
+    expect(ssrChunk.code).toContain('https://example.com/alpha.js')
+  })
+})
