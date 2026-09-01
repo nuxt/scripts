@@ -101,7 +101,7 @@ isChatHidden() // boolean, false before the widget has loaded
 
 `proxy.visitor = {...}` doesn't work for the same reason: unhead's script proxy has no `set` trap, so a property assignment through it never reaches the real `Tawk_API`. Use `setVisitor()`{lang="ts"} instead:
 
-`setVisitor()`{lang="ts"} is pre-load only. Tawk honors `Tawk_API.visitor` before the embed script loads and ignores it afterwards. If the widget is already loaded (`onLoaded` is set), it warns and does nothing. For post-load identity changes, use `window.Tawk_API.setAttributes({ name, email, phone, hash })`{lang="ts"}:
+`setVisitor()`{lang="ts"} is pre-load only. Tawk honors `Tawk_API.visitor` before the embed script loads and ignores it afterwards. If the embed script has already been requested (the widget is loading or loaded), it warns and does nothing. For post-load identity changes, use `window.Tawk_API.setAttributes({ name, email, phone, hash })`{lang="ts"}:
 
 ```ts
 const { proxy, setVisitor } = useScriptTawkTo({

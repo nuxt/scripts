@@ -112,7 +112,7 @@ export interface TawkToEvents {
   /**
    * Sets `Tawk_API.visitor` directly - assigning through `proxy.visitor` is a no-op
    * (no `set` trap). Pre-insertion only: Tawk honors `Tawk_API.visitor` until the
-   * embed script is inserted, so a call after that warns and does nothing - use
+   * embed script is requested, so a call after that warns and does nothing - use
    * `window.Tawk_API.setAttributes()` for post-load identity changes.
    */
   setVisitor: (data: TawkToVisitor) => void
@@ -159,10 +159,6 @@ function listen<D = void>(event: string, cb: (detail: D) => void): () => void {
 // Bridges the window CustomEvents into the refs above. Guarded so it only
 // wires up once no matter how many times useScriptTawkTo() is called.
 let stateBridged = false
-// Set once the embed script has been requested (clientInit), i.e. the script
-// tag is about to be inserted. Tawk drops `Tawk_API.visitor` writes from this
-// point on - only `onLoaded` being unset does not mean the write still lands.
-let embedRequested = false
 function ensureStateBridge() {
   if (stateBridged)
     return
@@ -234,9 +230,12 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
     clientInit: import.meta.server
       ? undefined
       : () => {
-          // Runs inside beforeInit, immediately before the embed script tag is
-          // injected - the last point where `Tawk_API.visitor` writes are honored.
-          embedRequested = true
+          // Installs the `Tawk_API` stub and `Tawk_LoadStart` the same way
+          // Tawk's own embed snippet does before its script tag. unhead runs
+          // this via beforeInit during the composable call - before the embed
+          // script is requested - so it must not close setVisitor's
+          // pre-insertion window (that is derived from the script's `status`,
+          // see setVisitor below).
           window.Tawk_API = window.Tawk_API || {} as TawkToApi
           window.Tawk_LoadStart = new Date()
         },
@@ -309,11 +308,14 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
     // Before clientInit creates the stub, create or reuse it so the visitor is
     // not silently dropped - Tawk honors `Tawk_API.visitor` set pre-load.
     window.Tawk_API = window.Tawk_API || {} as TawkToApi
-    // Tawk only honors `Tawk_API.visitor` before the embed script is inserted.
-    // clientInit runs immediately before injection, so once it has run (or the
-    // widget has fully loaded) the write would be dropped - warn and do nothing;
-    // use `setAttributes()` for post-load identity changes.
-    if (embedRequested || window.Tawk_API.onLoaded) {
+    // Tawk only honors `Tawk_API.visitor` before the embed script is requested.
+    // unhead runs clientInit during the composable call, so the cutoff cannot
+    // be derived from it - it reads the script's own lifecycle instead: once
+    // `status` leaves `awaitingLoad` the embed has been requested and
+    // insertion is in flight (and `onLoaded` means the widget finished
+    // loading). Past that point the write would be dropped - warn and do
+    // nothing; use `setAttributes()` for post-load identity changes.
+    if (instance.status.value !== 'awaitingLoad' || window.Tawk_API.onLoaded) {
       console.warn('[nuxt-scripts] Tawk.to: setVisitor() only works before the widget script is inserted. Tawk drops visitor data written after that - set it before the widget loads, or use window.Tawk_API.setAttributes({ name, email, phone, hash }) afterwards.')
       return
     }

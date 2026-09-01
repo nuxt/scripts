@@ -11,12 +11,32 @@ import { useScriptUsercentrics } from '../../packages/script/src/runtime/registr
 const mocks = vi.hoisted(() => ({
   definitions: new Map<string, any>(),
   useRegistryScript: vi.fn(),
+  useScript: vi.fn(),
+  resolveScriptKey: (input: any) => input.key || input.src || (typeof input.innerHTML === 'string' ? input.innerHTML : ''),
+  createError: vi.fn(),
+  useRuntimeConfig: vi.fn(() => ({
+    public: {
+      'scripts': {},
+      'nuxt-scripts': { defaultScriptOptions: {} },
+      'nuxt-scripts-devtools': {},
+    },
+  })),
 }))
 
 vi.mock('@unhead/vue', () => ({ useHead: vi.fn() }))
 
+vi.mock('nuxt/app', () => ({
+  createError: mocks.createError,
+  useRuntimeConfig: mocks.useRuntimeConfig,
+}))
+
 vi.mock('../../packages/script/src/runtime/utils', () => ({
   useRegistryScript: mocks.useRegistryScript,
+}))
+
+vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
+  useScript: mocks.useScript,
+  resolveScriptKey: mocks.resolveScriptKey,
 }))
 
 function createResolverWait() {
@@ -167,6 +187,57 @@ describe('registry script readiness resolvers', () => {
     expect(window.Tawk_API!.visitor).toEqual({ name: 'Jane' })
   })
 
+  // Regression: unhead invokes the wrapped beforeInit (which runs clientInit)
+  // synchronously during the composable call. The setVisitor pre-insertion
+  // window must not be derived from that moment, or the documented pre-load
+  // path becomes unreachable (every call warns and silently drops the data).
+  // It stays open until the embed script is actually requested (status leaves
+  // `awaitingLoad`), which happens at the trigger (default: onMounted), not at
+  // composable-call time. This exercises the real useRegistryScript wiring by
+  // only mocking the `useScript` composable.
+  it('keeps setVisitor working after the composable call until the embed script is actually requested', async () => {
+    vi.resetModules()
+    vi.doUnmock('../../packages/script/src/runtime/utils')
+    const { useScriptTawkTo: useScriptTawkToRealRegistry } = await import('../../packages/script/src/runtime/registry/tawk-to')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const scriptStatus = ref('awaitingLoad')
+    // Mimic unhead's _useScript: beforeInit (and therefore clientInit) runs
+    // synchronously inside the composable call, before any script request.
+    mocks.useScript.mockImplementation((_input: any, options: any) => {
+      options?.beforeInit?.()
+      return {
+        id: 'tawkTo',
+        status: scriptStatus,
+        signal: new AbortController().signal,
+        load: vi.fn(),
+        proxy: new Proxy({}, { get: () => () => {} }),
+      }
+    })
+
+    try {
+      const instance = useScriptTawkToRealRegistry({ propertyId: 'test-property', widgetId: 'test-widget' })
+
+      instance.setVisitor({ name: 'Jane Doe' })
+
+      expect(warn).not.toHaveBeenCalled()
+      expect(window.Tawk_API!.visitor).toEqual({ name: 'Jane Doe' })
+
+      // unhead flips the status when it actually requests the embed script;
+      // from that point Tawk drops the write.
+      scriptStatus.value = 'loading'
+      warn.mockClear()
+
+      instance.setVisitor({ name: 'Other' })
+
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('setVisitor'))
+      expect(window.Tawk_API!.visitor).toEqual({ name: 'Jane Doe' })
+    }
+    finally {
+      warn.mockRestore()
+      mocks.useScript.mockReset()
+    }
+  })
+
   // clientInit installs a bare `{}` Tawk_API stub; the getters must degrade to
   // undefined/false instead of throwing TypeError on the missing methods.
   it('returns undefined/false from every getter while only the Tawk_API stub exists', () => {
@@ -196,15 +267,15 @@ describe('registry script readiness resolvers', () => {
     expect(instance.isHidden.value).toBe(false)
   })
 
-  // Runs last: clientInit flips the module-level embed-requested cutoff that
-  // setVisitor warns past, and no code resets it within a page (or test file).
-  it('warns and drops setVisitor once the embed script has been inserted, even before onLoaded', () => {
+  // Runs last: once unhead actually requests the embed script (status leaves
+  // `awaitingLoad`), Tawk no longer honors `Tawk_API.visitor` writes - even
+  // before `onLoaded` is set.
+  it('warns and drops setVisitor once the embed script has been requested, even before onLoaded', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const instance = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
-    // clientInit runs immediately before the embed script tag is injected;
-    // after it, Tawk no longer honors `Tawk_API.visitor` writes.
-    mocks.definitions.get('tawkTo').clientInit?.()
-    expect(window.Tawk_API!.onLoaded).toBeUndefined()
+    // unhead flips the status when the trigger fires and the embed is requested.
+    instance.status.value = 'loading'
+    expect(window.Tawk_API?.onLoaded).toBeUndefined()
 
     instance.setVisitor({ name: 'Jane Doe' })
 
