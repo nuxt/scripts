@@ -52,7 +52,7 @@ catalog:
   '@googlemaps/markerclusterer': ^2.6.2
   '@nuxt/devtools-kit': ^3.4.1
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.5.1
+  '@nuxt/kit': ^4.5.2
   '@nuxt/module-builder': ^1.0.3
   '@nuxt/test-utils': ^4.1.0
   '@nuxt/ui': ^4.10.0
@@ -84,7 +84,7 @@ catalog:
   magic-string: ^1.1.0
   magicast: ^0.5.4
   maplibre-gl: ^6.1.0
-  nuxt: ^4.5.1
+  nuxt: ^4.5.2
   ofetch: ^1.5.1
   ohash: ^2.0.11
   oxc-walker: ^1.1.1
