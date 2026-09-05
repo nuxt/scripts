@@ -43,72 +43,72 @@ packages:
   - '!examples/**'
 overrides:
   '@nuxt/scripts': 'workspace:*'
-  '@unhead/bundler@>=3': 3.3.1
-  '@unhead/vue@>=3': 3.3.1
-  unhead@>=3: 3.3.1
+  '@unhead/bundler@>=3': 3.4.0
+  '@unhead/vue@>=3': 3.4.0
+  unhead@>=3: 3.4.0
   vitest-environment-nuxt: 2.0.0
 catalog:
-  '@antfu/eslint-config': ^9.2.0
+  '@antfu/eslint-config': ^9.5.1
   '@googlemaps/markerclusterer': ^2.6.2
-  '@nuxt/devtools-kit': ^3.4.1
+  '@nuxt/devtools-kit': ^3.4.2
   '@nuxt/fonts': ^0.14.0
   '@nuxt/kit': ^4.5.1
   '@nuxt/module-builder': ^1.0.3
-  '@nuxt/test-utils': ^4.1.0
-  '@nuxt/ui': ^4.10.0
+  '@nuxt/test-utils': ^4.2.0
+  '@nuxt/ui': ^4.11.0
   '@nuxtjs/partytown': ^2.0.0
-  '@oxc-project/types': ^0.143.0
+  '@oxc-project/types': ^0.148.0
   '@paypal/paypal-js': ^10.1.0
-  '@shikijs/langs': ^4.4.2
-  '@shikijs/themes': ^4.4.2
-  '@speedcurve/lux': ^4.4.3
+  '@shikijs/langs': ^4.4.3
+  '@shikijs/themes': ^4.4.3
+  '@speedcurve/lux': ^4.5.2
   '@types/geojson': ^7946.0.16
-  '@types/google.maps': ^3.65.4
+  '@types/google.maps': ^3.66.2
   '@types/jest-image-snapshot': ^6.4.1
   '@types/leaflet': ^1.9.22
-  '@types/node': ^26.1.2
+  '@types/node': ^26.4.1
   '@types/semver': ^7.8.0
   '@types/youtube': ^0.3.0
-  '@unhead/vue': ^3.3.1
-  '@vue/test-utils': ^2.4.11
+  '@unhead/vue': ^3.4.0
+  '@vue/test-utils': ^2.5.0
   '@vueuse/core': ^14.4.0
   '@vueuse/shared': ^14.4.0
-  bumpp: ^12.1.1
+  bumpp: ^12.3.0
   consola: ^3.4.2
   defu: ^6.1.7
-  eslint: ^10.8.0
-  eslint-plugin-harlanzw: ^0.17.1
+  eslint: ^10.10.0
+  eslint-plugin-harlanzw: ^0.21.1
   h3: ^1.15.11
-  happy-dom: ^20.11.1
+  happy-dom: ^20.14.0
   jest-image-snapshot: ^6.5.2
-  magic-string: ^1.1.0
+  magic-string: ^1.2.3
   magicast: ^0.5.4
-  maplibre-gl: ^6.1.0
+  maplibre-gl: ^6.7.0
   nuxt: ^4.5.1
   ofetch: ^1.5.1
-  ohash: ^2.0.11
+  ohash: ^2.0.12
   oxc-walker: ^1.1.1
   pathe: ^2.0.3
   playwright-core: ^1.62.1
-  posthog-js: ^1.413.0
-  rollup: ^4.62.4
+  posthog-js: ^1.427.2
+  rollup: ^4.63.1
   semver: ^7.8.5
-  shiki: ^4.4.2
+  shiki: ^4.4.3
   sirv: ^3.0.2
   std-env: ^4.2.0
   typescript: 6.0.3
   ufo: ^1.6.4
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
-  unhead: ^3.3.1
+  unhead: ^3.4.0
   unimport: ^6.4.0
   unplugin: ^3.3.0
   unstorage: ^1.17.5
   valibot: ^1.4.2
-  vite: ^8.1.5
-  vitest: ^4.1.10
-  vue: ^3.5.41
-  vue-tsc: ^3.3.9
+  vite: ^8.2.2
+  vitest: ^4.1.11
+  vue: ^3.5.42
+  vue-tsc: ^3.3.11
 trustPolicyIgnoreAfter: 262800
 
 ignoredBuiltDependencies:
