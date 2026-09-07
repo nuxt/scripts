@@ -112,14 +112,10 @@ catalog:
   vue-tsc: ^3.3.9
 trustPolicyIgnoreAfter: 262800
 
-ignoredBuiltDependencies:
-  - esbuild
-onlyBuiltDependencies:
-  - workerd
-
 allowBuilds:
   '@parcel/watcher': true
   core-js: true
   esbuild: true
   protobufjs: true
   vue-demi: true
+  workerd: true
