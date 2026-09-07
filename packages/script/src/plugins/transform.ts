@@ -557,6 +557,20 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
      */
     function resolveFor(ctx: { environment?: { name?: string }, getModuleInfo: (id: string) => any }, restart: boolean): Promise<PlaceholderPatch[]> {
       const key = ctx.environment?.name ?? 'default'
+      if (restart) {
+        // A restart is a new build for this environment, so verdicts it recorded in an
+        // earlier build are void: a build that died before every environment resolved
+        // would otherwise make this build's fresh `used` verdict warn about a miss that
+        // no longer exists. Verdicts of other environments survive — within one build
+        // they may belong to the graph this warning exists to compare against.
+        for (const [componentId, missed] of unusedIn) {
+          if (!missed.delete(key))
+            continue
+          if (!missed.size)
+            unusedIn.delete(componentId)
+        }
+        warnedComponents.clear()
+      }
       let resolution = restart ? undefined : resolutions.get(key)
       if (!resolution) {
         resolution = resolvePendingBundles(key, id => ctx.getModuleInfo(id))

@@ -315,6 +315,27 @@ describe('alwaysBundle escape hatch', () => {
     warn.mockRestore()
   })
 
+  it('does not warn a rebuild about a verdict left by an earlier build', async () => {
+    mockDownload()
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    const plugin = makePlugin()
+    await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    // Build one: the client graph cannot reach Alpha, then the build dies before any
+    // other environment runs.
+    const failed = { environment: { name: 'client' }, getModuleInfo: () => ({ importers: [], dynamicImporters: [] }) }
+    await plugin.renderStart.call(failed, {}, {})
+
+    // Build two (a watch rebuild): the same client environment now reaches the page
+    // using Alpha and bundles it. The stale verdict must not call this build's proof
+    // into question.
+    const rebuilt = { environment: { name: 'client' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    await plugin.renderStart.call(rebuilt, {}, {})
+
+    expect(warn).not.toHaveBeenCalledWith(expect.stringMatching(/could not prove it/))
+    warn.mockRestore()
+  })
+
   it('stays quiet when every environment agrees', async () => {
     mockDownload()
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
