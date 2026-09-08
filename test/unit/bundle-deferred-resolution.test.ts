@@ -336,6 +336,36 @@ describe('alwaysBundle escape hatch', () => {
     warn.mockRestore()
   })
 
+  it('does not warn a rebuild about a verdict left by another environment', async () => {
+    mockDownload()
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    const plugin = makePlugin()
+    await registerComponent(plugin, 'Alpha.vue', 'https://example.com/alpha.js')
+
+    // Build one: the client graph proves Alpha while the ssr graph cannot reach it,
+    // so the ssr environment records a miss. Nothing warns: the ssr build never
+    // found the component used.
+    const client = { environment: { name: 'client' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    const ssrMiss = { environment: { name: 'ssr' }, getModuleInfo: () => ({ importers: [], dynamicImporters: [] }) }
+    await plugin.renderStart.call(client, {}, {})
+    await plugin.renderStart.call(ssrMiss, {}, {})
+    expect(warn).not.toHaveBeenCalled()
+
+    // Build two (a watch rebuild) makes the ssr graph reach Alpha too. The client
+    // environment restarts and re-resolves first, while the ssr miss verdict is
+    // still queued from build one: it must not call this build's proof into
+    // question.
+    await plugin.renderStart.call(client, {}, {})
+    expect(warn).not.toHaveBeenCalledWith(expect.stringMatching(/could not prove it/))
+
+    // The ssr environment restarts into the same rebuild and also proves Alpha, so
+    // the rebuild ends without any alwaysBundle recommendation.
+    const ssrHit = { environment: { name: 'ssr' }, getModuleInfo: () => ({ importers: [APP_IMPORTER], dynamicImporters: [] }) }
+    await plugin.renderStart.call(ssrHit, {}, {})
+    expect(warn).not.toHaveBeenCalledWith(expect.stringMatching(/could not prove it/))
+    warn.mockRestore()
+  })
+
   it('stays quiet when every environment agrees', async () => {
     mockDownload()
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})

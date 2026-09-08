@@ -440,10 +440,17 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     // patch set from the promise they await, never from a field another environment can
     // replace mid-render.
     const resolutions = new Map<string, Promise<PlaceholderPatch[]>>()
-    // Which environments judged a component unused. The client graph builds first and
-    // cannot see a component used only through `nuxt-client`, so a later environment
-    // finding the same component reachable is what exposes the miss.
-    const unusedIn = new Map<string, Set<string>>()
+    // Which environments judged a component unused, and the build generation each
+    // verdict was recorded in. The client graph builds first and cannot see a
+    // component used only through `nuxt-client`, so a later environment finding the
+    // same component reachable is what exposes the miss. Stamping the build
+    // generation keeps a watch rebuild from reading a verdict that belongs to an
+    // earlier build: environments building together share a generation, so a verdict
+    // stamped with a different one describes a graph that no longer exists.
+    const unusedIn = new Map<string, Map<string, number>>()
+    // How many builds each environment has started. A renderStart restart begins a
+    // new build for its environment and bumps its generation.
+    const buildGenerations = new Map<string, number>()
     const warnedComponents = new Set<string>()
 
     /**
@@ -487,13 +494,13 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
         const used = isAlwaysBundled(pending.componentId, options.alwaysBundle)
           || reachesOutsideComponentDir(pending.componentId, getModuleInfo)
         if (!used) {
-          (unusedIn.get(pending.componentId) ?? unusedIn.set(pending.componentId, new Set()).get(pending.componentId)!).add(environment)
+          (unusedIn.get(pending.componentId) ?? unusedIn.set(pending.componentId, new Map()).get(pending.componentId)!).set(environment, buildGenerations.get(environment) ?? 0)
           resolved.push(urlPatch(pending.placeholderUrl, pending.downloadOptions.src))
           if (pending.placeholderIntegrity)
             resolved.push(integrityRemovalPatch(pending.placeholderIntegrity))
           return
         }
-        warnWhenAnotherEnvironmentMissedIt(pending)
+        warnWhenAnotherEnvironmentMissedIt(pending, environment)
 
         const result = await resolveScriptBundle(pending.downloadOptions, renderedScript, options)
 
@@ -514,14 +521,28 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
      * the earlier build shipped the third-party src. The client build cannot see a
      * component used only through `nuxt-client` inside a server component, and it writes
      * its chunks before the ssr graph exists, so this is reported rather than repaired.
+     *
+     * Only verdicts recorded by environments building alongside this one are read: a
+     * verdict stamped with any other generation belongs to an earlier build and is
+     * dropped, so a rebuild that restarts one environment ahead of the other never
+     * warns about a miss the other environment is about to overturn.
      */
-    function warnWhenAnotherEnvironmentMissedIt(pending: PendingComponentBundle): void {
+    function warnWhenAnotherEnvironmentMissedIt(pending: PendingComponentBundle, environment: string): void {
       const missed = unusedIn.get(pending.componentId)
       if (!missed?.size || warnedComponents.has(pending.componentId))
         return
+      const generation = buildGenerations.get(environment) ?? 0
+      for (const [missedIn, verdictGeneration] of missed) {
+        if (verdictGeneration !== generation)
+          missed.delete(missedIn)
+      }
+      if (!missed.size) {
+        unusedIn.delete(pending.componentId)
+        return
+      }
       warnedComponents.add(pending.componentId)
       const name = pending.componentId.slice(pending.componentId.lastIndexOf('/') + 1).replace(VUE_RE, '')
-      logger.warn(`[Nuxt Scripts: Bundle Transformer] ${name} is used, but the ${[...missed].join(' and ')} build could not prove it. Its script was not bundled there and loads from ${pending.downloadOptions.src}. To bundle it, add '${name}' to \`scripts.assets.alwaysBundle\` in your Nuxt config.`)
+      logger.warn(`[Nuxt Scripts: Bundle Transformer] ${name} is used, but the ${[...missed.keys()].join(' and ')} build could not prove it. Its script was not bundled there and loads from ${pending.downloadOptions.src}. To bundle it, add '${name}' to \`scripts.assets.alwaysBundle\` in your Nuxt config.`)
     }
 
     /**
@@ -558,11 +579,12 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
     function resolveFor(ctx: { environment?: { name?: string }, getModuleInfo: (id: string) => any }, restart: boolean): Promise<PlaceholderPatch[]> {
       const key = ctx.environment?.name ?? 'default'
       if (restart) {
-        // A restart is a new build for this environment, so verdicts it recorded in an
-        // earlier build are void: a build that died before every environment resolved
-        // would otherwise make this build's fresh `used` verdict warn about a miss that
-        // no longer exists. Verdicts of other environments survive — within one build
-        // they may belong to the graph this warning exists to compare against.
+        // A restart is a new build for this environment: its own earlier verdicts are
+        // void, and the generation bump marks every verdict recorded before this
+        // point as belonging to an earlier build. Other environments' verdicts stay
+        // queued for the read-side generation check, which drops the ones no longer
+        // of this build.
+        buildGenerations.set(key, (buildGenerations.get(key) ?? 0) + 1)
         for (const [componentId, missed] of unusedIn) {
           if (!missed.delete(key))
             continue
