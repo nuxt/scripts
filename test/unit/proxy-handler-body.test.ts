@@ -59,6 +59,11 @@ describe('proxy handler request bodies (#836)', () => {
         return sendRedirect(event, '/final', 302)
       if (getRequestURL(event).pathname === '/redirect-307')
         return sendRedirect(event, '/final', 307)
+      if (getRequestURL(event).pathname === '/redirect-300') {
+        setResponseStatus(event, 300)
+        setHeader(event, 'Location', '/final')
+        return null
+      }
       if (getRequestURL(event).pathname === '/redirect-cross-host')
         return sendRedirect(event, 'https://redirect.test/final', 302)
       if (getRequestURL(event).pathname === '/redirect-unallowed-host')
@@ -279,6 +284,19 @@ describe('proxy handler request bodies (#836)', () => {
     expect(capturedMethod).toBe('POST')
     expect(capturedBody.toString()).toBe('track=1')
     expect(capturedContentLength).toBe('7')
+  })
+
+  it('replays the original method and body when upstream answers 300 with a Location', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-300`, {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      body: 'track=1',
+    })
+
+    expect(response.status).toBe(200)
+    expect(capturedUrl).toBe('/final')
+    expect(capturedMethod).toBe('POST')
+    expect(capturedBody.toString()).toBe('track=1')
   })
 
   it('follows an absolute redirect to another allowlisted host', async () => {

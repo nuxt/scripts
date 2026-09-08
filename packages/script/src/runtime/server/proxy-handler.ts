@@ -222,8 +222,8 @@ interface ProxyRedirectState {
 
 /**
  * Resolve an upstream redirect into the next request state, mirroring the
- * fetch spec: 300/301/302 replay a POST as a GET without a body, 303 replays
- * every non-idempotent method as a GET, 307/308 preserve method and body.
+ * fetch spec: 301/302 replay a POST as a GET without a body, 303 replays
+ * every non-idempotent method as a GET, 300/307/308 preserve method and body.
  * The hop is only returned after it passes the initial target's checks.
  */
 function resolveProxyRedirect(
@@ -269,7 +269,7 @@ function resolveProxyRedirect(
   }
 
   const switchToGet = (response.status === 303 && state.method !== 'GET' && state.method !== 'HEAD')
-    || ((response.status === 300 || response.status === 301 || response.status === 302) && state.method === 'POST')
+    || ((response.status === 301 || response.status === 302) && state.method === 'POST')
   if (!switchToGet)
     return { ...state, url: nextUrl }
 
