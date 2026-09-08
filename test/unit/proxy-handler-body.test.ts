@@ -1,7 +1,7 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
-import { createApp, defineEventHandler, getRequestURL, readRawBody, sendRedirect, setHeader, toNodeListener } from 'h3'
+import { createApp, defineEventHandler, getRequestURL, readRawBody, sendRedirect, setHeader, setResponseStatus, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import proxyHandler, { withResponseBodyIdleTimeout } from '../../packages/script/src/runtime/server/proxy-handler'
 
@@ -12,6 +12,7 @@ vi.mock('#nuxt-scripts/nitro', () => ({
       domainPrivacy: {
         '127.0.0.1': true,
         'upstream.test': true,
+        'redirect.test': true,
       },
       debug: false,
     },
@@ -40,9 +41,11 @@ describe('proxy handler request bodies (#836)', () => {
   let capturedBody = Buffer.alloc(0)
   let capturedContentLength: string | undefined
   let capturedContentType: string | undefined
+  let capturedMethod: string | undefined
   let capturedFetchBody: BodyInit | null | undefined
   let capturedFetchDuplex: 'half' | undefined
   let capturedUrl = ''
+  let capturedRequests: { method: string, url: string }[] = []
   let releaseStream: (() => void) | undefined
   const realFetch = globalThis.fetch
 
@@ -52,6 +55,22 @@ describe('proxy handler request bodies (#836)', () => {
       capturedUrl = getRequestURL(event).pathname + getRequestURL(event).search
       if (getRequestURL(event).pathname === '/redirect')
         return sendRedirect(event, '/redirected', 302)
+      if (getRequestURL(event).pathname === '/redirect-post')
+        return sendRedirect(event, '/final', 302)
+      if (getRequestURL(event).pathname === '/redirect-307')
+        return sendRedirect(event, '/final', 307)
+      if (getRequestURL(event).pathname === '/redirect-cross-host')
+        return sendRedirect(event, 'https://redirect.test/final', 302)
+      if (getRequestURL(event).pathname === '/redirect-unallowed-host')
+        return sendRedirect(event, 'https://evil.test/steal', 302)
+      if (getRequestURL(event).pathname === '/redirect-local-host')
+        return sendRedirect(event, 'http://localhost/steal', 302)
+      if (getRequestURL(event).pathname === '/redirect-no-location') {
+        setResponseStatus(event, 302)
+        return null
+      }
+      if (getRequestURL(event).pathname === '/redirect-loop')
+        return sendRedirect(event, '/redirect-loop', 302)
       if (getRequestURL(event).pathname === '/response-hop-headers') {
         setHeader(event, 'Connection', 'x-upstream-hop')
         setHeader(event, 'Clear-Site-Data', '"*"')
@@ -72,6 +91,8 @@ describe('proxy handler request bodies (#836)', () => {
       capturedBody = rawBody ? Buffer.from(rawBody) : Buffer.alloc(0)
       capturedContentLength = event.headers.get('content-length') ?? undefined
       capturedContentType = event.headers.get('content-type') ?? undefined
+      capturedMethod = event.method
+      capturedRequests.push({ method: event.method, url: getRequestURL(event).pathname + getRequestURL(event).search })
       return { status: 1 }
     }))
 
@@ -82,7 +103,7 @@ describe('proxy handler request bodies (#836)', () => {
     globalThis.fetch = (input, init) => {
       const requestUrl = input instanceof Request ? input.url : String(input)
       const url = new URL(requestUrl)
-      if (url.hostname === 'upstream.test') {
+      if (url.hostname === 'upstream.test' || url.hostname === 'redirect.test') {
         capturedFetchBody = init?.body
         capturedFetchDuplex = (init as RequestInit & { duplex?: 'half' } | undefined)?.duplex
         const redirected = `http://127.0.0.1:${upstreamPort}${url.pathname}${url.search}`
@@ -102,9 +123,11 @@ describe('proxy handler request bodies (#836)', () => {
     capturedBody = Buffer.alloc(0)
     capturedContentLength = undefined
     capturedContentType = undefined
+    capturedMethod = undefined
     capturedFetchBody = undefined
     capturedFetchDuplex = undefined
     capturedUrl = ''
+    capturedRequests = []
     releaseStream = undefined
   })
 
@@ -126,8 +149,9 @@ describe('proxy handler request bodies (#836)', () => {
     })
 
     expect(response.status).toBe(200)
-    expect(capturedFetchBody).toBeInstanceOf(ReadableStream)
-    expect(capturedFetchDuplex).toBe('half')
+    expect(capturedFetchBody).toBeInstanceOf(Uint8Array)
+    expect(capturedFetchDuplex).toBeUndefined()
+    expect(Buffer.from(capturedFetchBody as Uint8Array).equals(compressed)).toBe(true)
     expect(capturedBody.equals(compressed)).toBe(true)
     expect(capturedContentType).toBe('text/plain')
   })
@@ -229,11 +253,67 @@ describe('proxy handler request bodies (#836)', () => {
     expect(capturedUrl).toBe('/collect?tag=a&tag=b&hardwareConcurrency=16')
   })
 
-  it('rejects upstream redirects instead of following an unchecked target', async () => {
-    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect`)
+  it('follows a redirect and re-validates the hop against the allowlist (#885)', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-post`, {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      body: 'track=1',
+    })
+
+    expect(response.status).toBe(200)
+    expect(capturedUrl).toBe('/final')
+    // A 302 replays as GET without a body, the same as a browser fetch would.
+    expect(capturedMethod).toBe('GET')
+    expect(capturedBody).toHaveLength(0)
+  })
+
+  it('replays the buffered body when a 307 preserves the method', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-307`, {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      body: 'track=1',
+    })
+
+    expect(response.status).toBe(200)
+    expect(capturedUrl).toBe('/final')
+    expect(capturedMethod).toBe('POST')
+    expect(capturedBody.toString()).toBe('track=1')
+    expect(capturedContentLength).toBe('7')
+  })
+
+  it('follows an absolute redirect to another allowlisted host', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-cross-host`)
+
+    expect(response.status).toBe(200)
+    expect(capturedUrl).toBe('/final')
+  })
+
+  it('rejects a redirect to a host outside the allowlist', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-unallowed-host`)
 
     expect(response.status).toBe(502)
-    expect(capturedUrl).toBe('/redirect')
+    expect(response.statusText).toBe('Unsafe upstream redirect')
+    expect(capturedRequests.every(request => !request.url.includes('steal'))).toBe(true)
+  })
+
+  it('rejects a redirect to a local network host', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-local-host`)
+
+    expect(response.status).toBe(502)
+    expect(response.statusText).toBe('Unsafe upstream redirect')
+  })
+
+  it('rejects a redirect without a Location header', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-no-location`)
+
+    expect(response.status).toBe(502)
+  })
+
+  it('rejects a redirect chain that exceeds the limit', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-loop`)
+
+    expect(response.status).toBe(502)
+    expect(response.statusText).toBe('Too many upstream redirects')
   })
 
   it('strips response headers named by the upstream Connection header', async () => {
