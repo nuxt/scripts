@@ -264,7 +264,7 @@
       {
         "name": "ScriptGoogleAdsenseProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article'\n  dataAdLayoutKey?: string\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+        "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article' | 'image-top' | 'image-side' | 'text-only'\n  dataAdLayoutKey?: string\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
       },
       {
         "name": "ScriptGoogleAdsenseEvents",
@@ -3443,7 +3443,7 @@
       },
       {
         "name": "dataAdLayout",
-        "type": "'in-article'",
+        "type": "'in-article' | 'image-top' | 'image-side' | 'text-only'",
         "required": false
       },
       {

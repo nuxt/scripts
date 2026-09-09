@@ -10,7 +10,7 @@ const props = withDefaults(defineProps<{
   dataAdClient: string
   dataAdSlot: string
   dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'
-  dataAdLayout?: 'in-article'
+  dataAdLayout?: 'in-article' | 'image-top' | 'image-side' | 'text-only'
   dataAdLayoutKey?: string
   dataFullWidthResponsive?: boolean
   /**

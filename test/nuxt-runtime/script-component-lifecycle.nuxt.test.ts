@@ -84,6 +84,23 @@ describe('script component lifecycle', () => {
     expect(document.getElementById('_carbonads_js')!.getAttribute('src')).toContain('placement=second')
   })
 
+  it('leaves a newer instance\'s script alone when an older instance unmounts', () => {
+    const first = mount(ScriptCarbonAds, {
+      attachTo: document.body,
+      props: { serve: 'CW7DTKJL', placement: 'first', format: 'cover' },
+    })
+    const second = mount(ScriptCarbonAds, {
+      attachTo: document.body,
+      props: { serve: 'CW7DTKJL', placement: 'second', format: 'cover' },
+    })
+    wrappers.push(second)
+
+    first.unmount()
+
+    expect(document.querySelectorAll('#_carbonads_js')).toHaveLength(1)
+    expect(document.getElementById('_carbonads_js')!.getAttribute('src')).toContain('placement=second')
+  })
+
   it('fans Lemon Squeezy events out to every live component', () => {
     const firstEvent = vi.fn()
     const secondEvent = vi.fn()
