@@ -26,7 +26,7 @@ defineSlots<{
 }>()
 
 const attrId = `_carbonads_js`
-const carbonadsEl = ref<HTMLElement | null>(import.meta.client ? document.getElementById(attrId) : null)
+const carbonadsEl = ref<HTMLElement | null>(null)
 // syncs to useScript status
 const status = ref('awaitingLoad')
 let scriptEl: HTMLScriptElement | undefined
@@ -56,6 +56,8 @@ function loadCarbon() {
       emit('ready', script)
     }
   }
+  // carbon.js resolves #_carbonads_js by id, so only one may exist at a time
+  document.getElementById(attrId)?.remove()
   carbonadsEl.value.appendChild(script)
 }
 
@@ -82,7 +84,12 @@ onBeforeUnmount(() => {
   if (scriptEl) {
     scriptEl.onload = null
     scriptEl.onerror = null
-    scriptEl.remove()
+    // a pending carbon.js ad callback reads #_carbonads_js.src unguarded, so park
+    // the already-executed script in <head> rather than removing it. When a newer
+    // instance already owns the id, parking would restore a stale placement.
+    const owner = document.getElementById(attrId)
+    if (!owner || owner === scriptEl)
+      document.head.appendChild(scriptEl)
     scriptEl = undefined
   }
 })

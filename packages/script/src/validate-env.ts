@@ -1,5 +1,8 @@
-import type { ConsolaInstance } from 'consola'
 import type { RegistryScript } from './runtime/types'
+
+interface WarnLogger {
+  warn: (message: string) => void
+}
 
 const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
@@ -39,7 +42,7 @@ function levenshtein(a: string, b: string): number {
 export function validateScriptsEnvVars(
   scripts: RegistryScript[],
   enabledRegistryKeys: Set<string>,
-  logger: ConsolaInstance,
+  logger: WarnLogger,
   globalsKeys: string[] = [],
 ): void {
   // Configured `scripts.globals` keys — env vars NUXT_PUBLIC_SCRIPTS_GLOBALS_<KEY>_*
