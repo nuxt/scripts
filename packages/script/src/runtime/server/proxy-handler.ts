@@ -31,6 +31,10 @@ const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
 const MAX_TRANSFORM_BODY_SIZE = 2 * 1024 * 1024
 const UPSTREAM_TIMEOUT_MS = 15000
 const MAX_UPSTREAM_REDIRECTS = 5
+/** Redirect statuses a fetch follows. Other 3xx responses reach the client unchanged. */
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
+/** Fetch request-body-header names, removed when a redirect drops the body. */
+const REQUEST_BODY_HEADERS = ['content-encoding', 'content-language', 'content-length', 'content-location', 'content-type']
 const SKIP_RESPONSE_HEADERS = new Set([
   'alt-svc',
   'clear-site-data',
@@ -195,7 +199,7 @@ function stripQueryFingerprinting(
  */
 
 function isUpstreamRedirect(status: number): boolean {
-  return status >= 300 && status < 400 && status !== 304
+  return REDIRECT_STATUSES.has(status)
 }
 
 /** Map a transport failure to the gateway error the client should see. */
@@ -223,7 +227,7 @@ interface ProxyRedirectState {
 /**
  * Resolve an upstream redirect into the next request state, mirroring the
  * fetch spec: 301/302 replay a POST as a GET without a body, 303 replays
- * every non-idempotent method as a GET, 300/307/308 preserve method and body.
+ * every non-idempotent method as a GET, 307/308 preserve method and body.
  * The hop is only returned after it passes the initial target's checks.
  */
 function resolveProxyRedirect(
@@ -274,7 +278,7 @@ function resolveProxyRedirect(
     return { ...state, url: nextUrl }
 
   const headers = { ...state.headers }
-  for (const header of ['content-type', 'content-encoding', 'content-length'])
+  for (const header of REQUEST_BODY_HEADERS)
     delete headers[header]
   return { url: nextUrl, method: 'GET', body: undefined, headers }
 }

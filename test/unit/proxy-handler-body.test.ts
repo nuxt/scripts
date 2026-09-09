@@ -45,7 +45,7 @@ describe('proxy handler request bodies (#836)', () => {
   let capturedFetchBody: BodyInit | null | undefined
   let capturedFetchDuplex: 'half' | undefined
   let capturedUrl = ''
-  let capturedRequests: { method: string, url: string }[] = []
+  let capturedRequests: { method: string, url: string, headers: Record<string, string> }[] = []
   let releaseStream: (() => void) | undefined
   const realFetch = globalThis.fetch
 
@@ -53,6 +53,7 @@ describe('proxy handler request bodies (#836)', () => {
     const upstreamApp = createApp()
     upstreamApp.use('/', defineEventHandler(async (event) => {
       capturedUrl = getRequestURL(event).pathname + getRequestURL(event).search
+      capturedRequests.push({ method: event.method, url: capturedUrl, headers: Object.fromEntries(event.headers) })
       if (getRequestURL(event).pathname === '/redirect')
         return sendRedirect(event, '/redirected', 302)
       if (getRequestURL(event).pathname === '/redirect-post')
@@ -97,7 +98,6 @@ describe('proxy handler request bodies (#836)', () => {
       capturedContentLength = event.headers.get('content-length') ?? undefined
       capturedContentType = event.headers.get('content-type') ?? undefined
       capturedMethod = event.method
-      capturedRequests.push({ method: event.method, url: getRequestURL(event).pathname + getRequestURL(event).search })
       return { status: 1 }
     }))
 
@@ -261,7 +261,11 @@ describe('proxy handler request bodies (#836)', () => {
   it('follows a redirect and re-validates the hop against the allowlist (#885)', async () => {
     const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-post`, {
       method: 'POST',
-      headers: { 'content-type': 'text/plain' },
+      headers: {
+        'content-type': 'text/plain',
+        'content-language': 'en',
+        'content-location': 'https://example.com/track',
+      },
       body: 'track=1',
     })
 
@@ -270,6 +274,10 @@ describe('proxy handler request bodies (#836)', () => {
     // A 302 replays as GET without a body, the same as a browser fetch would.
     expect(capturedMethod).toBe('GET')
     expect(capturedBody).toHaveLength(0)
+    // The fetch spec drops every request-body header with the body.
+    const replayHeaders = capturedRequests.at(-1)!.headers
+    for (const header of ['content-type', 'content-encoding', 'content-language', 'content-length', 'content-location'])
+      expect(replayHeaders).not.toHaveProperty(header)
   })
 
   it('replays the buffered body when a 307 preserves the method', async () => {
@@ -286,17 +294,16 @@ describe('proxy handler request bodies (#836)', () => {
     expect(capturedContentLength).toBe('7')
   })
 
-  it('replays the original method and body when upstream answers 300 with a Location', async () => {
+  it('passes a 300 through unchanged instead of replaying the request', async () => {
     const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/redirect-300`, {
       method: 'POST',
       headers: { 'content-type': 'text/plain' },
       body: 'track=1',
     })
 
-    expect(response.status).toBe(200)
-    expect(capturedUrl).toBe('/final')
-    expect(capturedMethod).toBe('POST')
-    expect(capturedBody.toString()).toBe('track=1')
+    // 300 is not a fetch redirect status, so a browser fetch would surface it as-is.
+    expect(response.status).toBe(300)
+    expect(capturedRequests.map(request => request.url)).toEqual(['/redirect-300'])
   })
 
   it('follows an absolute redirect to another allowlisted host', async () => {
@@ -311,7 +318,7 @@ describe('proxy handler request bodies (#836)', () => {
 
     expect(response.status).toBe(502)
     expect(response.statusText).toBe('Unsafe upstream redirect')
-    expect(capturedRequests.every(request => !request.url.includes('steal'))).toBe(true)
+    expect(capturedRequests.map(request => request.url)).toEqual(['/redirect-unallowed-host'])
   })
 
   it('rejects a redirect to a local network host', async () => {
@@ -332,6 +339,8 @@ describe('proxy handler request bodies (#836)', () => {
 
     expect(response.status).toBe(502)
     expect(response.statusText).toBe('Too many upstream redirects')
+    // The initial request plus five followed hops; the sixth redirect is refused.
+    expect(capturedRequests).toHaveLength(6)
   })
 
   it('strips response headers named by the upstream Connection header', async () => {
