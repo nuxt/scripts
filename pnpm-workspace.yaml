@@ -58,7 +58,7 @@ catalog:
   '@nuxt/ui': ^4.10.0
   '@nuxtjs/partytown': ^2.0.0
   '@oxc-project/types': ^0.143.0
-  '@paypal/paypal-js': ^10.1.0
+  '@paypal/paypal-js': ^11.0.0
   '@shikijs/langs': ^4.4.2
   '@shikijs/themes': ^4.4.2
   '@speedcurve/lux': ^4.4.3
