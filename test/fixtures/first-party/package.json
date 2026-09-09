@@ -2,6 +2,6 @@
   "name": "first-party-fixture",
   "private": true,
   "devDependencies": {
-    "posthog-js": "^1.309.1"
+    "posthog-js": "^1.428.7"
   }
 }

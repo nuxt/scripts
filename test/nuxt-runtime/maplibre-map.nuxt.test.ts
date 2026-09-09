@@ -154,6 +154,32 @@ describe('scriptMapLibreMap', () => {
     expect(wrapper.get('[aria-hidden="true"]').attributes()).toHaveProperty('inert')
   })
 
+  it.each([
+    new Error('MapLibre tile request failed'),
+    { message: 'MapLibre tile request failed', status: 503 },
+  ])('emits map errors as Error instances: %j', async (error) => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreMap, {
+      props: {
+        mapStyle: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+      },
+    })
+    await nextTick()
+    scriptState.callbacks[0]!({ maplibregl: mocks.maplibregl })
+
+    mocks.events.get('error')!({ error })
+
+    const emitted = wrapper.emitted('error')?.[0]?.[0]
+    expect(emitted).toBeInstanceOf(Error)
+    expect(emitted).toHaveProperty('message', error.message)
+    if (error instanceof Error)
+      expect(emitted).toBe(error)
+    else
+      expect(emitted).toHaveProperty('cause', error)
+    wrapper.unmount()
+  })
+
   it('surfaces synchronous map initialization failures', async () => {
     const mocks = createMapLibreMock()
     const initializationFailure = new Error('Invalid MapLibre options')

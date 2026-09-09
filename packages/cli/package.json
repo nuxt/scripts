@@ -31,6 +31,7 @@
   "scripts": {
     "build": "unbuild",
     "dev:prepare": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@typescript/native": "catalog:",
     "unbuild": "catalog:",
     "vitest": "catalog:"
   }
