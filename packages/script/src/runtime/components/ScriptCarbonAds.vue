@@ -85,8 +85,11 @@ onBeforeUnmount(() => {
     scriptEl.onload = null
     scriptEl.onerror = null
     // a pending carbon.js ad callback reads #_carbonads_js.src unguarded, so park
-    // the already-executed script in <head> rather than removing it
-    document.head.appendChild(scriptEl)
+    // the already-executed script in <head> rather than removing it. When a newer
+    // instance already owns the id, parking would restore a stale placement.
+    const owner = document.getElementById(attrId)
+    if (!owner || owner === scriptEl)
+      document.head.appendChild(scriptEl)
     scriptEl = undefined
   }
 })
