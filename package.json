@@ -57,6 +57,7 @@
     "happy-dom": "catalog:",
     "jest-image-snapshot": "catalog:",
     "maplibre-gl": "catalog:",
+    "miniflare": "catalog:",
     "nuxt": "catalog:",
     "ofetch": "catalog:",
     "ohash": "catalog:",

@@ -84,6 +84,7 @@ catalog:
   magic-string: ^1.1.0
   magicast: ^0.5.4
   maplibre-gl: ^6.1.0
+  miniflare: ^4.20260730.0
   nuxt: ^4.5.1
   ofetch: ^1.5.1
   ohash: ^2.0.11
@@ -111,12 +112,10 @@ catalog:
   vue-tsc: ^3.3.9
 trustPolicyIgnoreAfter: 262800
 
-ignoredBuiltDependencies:
-  - esbuild
-
 allowBuilds:
   '@parcel/watcher': true
   core-js: true
   esbuild: true
   protobufjs: true
   vue-demi: true
+  workerd: true
