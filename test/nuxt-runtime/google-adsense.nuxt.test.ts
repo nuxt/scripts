@@ -29,14 +29,17 @@ describe('google adsense component', () => {
         dataAdClient: 'ca-pub-123',
         dataAdSlot: '456',
         dataAdFormat: 'fluid',
+        dataAdLayout: 'image-top',
         dataAdLayoutKey: '-6t+ed+2i-1n-4w',
       },
     })
 
     expect({
+      layout: wrapper.get('ins').attributes('data-ad-layout'),
       adUnit: wrapper.get('ins').attributes('data-ad-layout-key'),
       wrapper: wrapper.attributes('data-ad-layout-key'),
     }).toEqual({
+      layout: 'image-top',
       adUnit: '-6t+ed+2i-1n-4w',
       wrapper: undefined,
     })
