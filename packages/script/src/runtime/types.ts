@@ -42,6 +42,7 @@ import type { SegmentInput } from './registry/segment'
 import type { SnapTrPixelInput } from './registry/snapchat-pixel'
 import type { SpeedCurveInput } from './registry/speedcurve'
 import type { StripeInput } from './registry/stripe'
+import type { TawkToInput } from './registry/tawk-to'
 import type { TikTokPixelInput } from './registry/tiktok-pixel'
 import type { UmamiAnalyticsInput } from './registry/umami-analytics'
 import type { UsercentricsInput } from './registry/usercentrics'
@@ -284,6 +285,7 @@ export interface ScriptRegistry {
   segment?: SegmentInput
   speedcurve?: SpeedCurveInput
   stripe?: StripeInput
+  tawkTo?: TawkToInput
   tiktokPixel?: TikTokPixelInput
   xEmbed?: XEmbedInput
   xPixel?: XPixelInput
@@ -308,7 +310,7 @@ export type BuiltInRegistryScriptKey
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps' | 'leaflet' | 'maplibre'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
     | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'matomoAnalytics'
-    | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tiktokPixel'
+    | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'stripe' | 'tawkTo' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'speedcurve' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'usercentrics' | 'gravatar' | 'npm'
 

@@ -1174,6 +1174,19 @@ export const StripeOptions = object({
   version: optional(union([literal('v3'), literal('acacia'), literal('basil'), literal('clover'), literal('dahlia'), string()])),
 })
 
+export const TawkToOptions = object({
+  /**
+   * Your Tawk.to property ID.
+   * @see https://nuxt-tawk-to.atlaxt.me/getting-started/installation#register-module
+   */
+  propertyId: pipe(string(), minLength(1)),
+  /**
+   * Your Tawk.to widget ID.
+   * @see https://nuxt-tawk-to.atlaxt.me/getting-started/installation#register-module
+   */
+  widgetId: pipe(string(), minLength(1)),
+})
+
 export const TikTokPixelOptions = object({
   /**
    * Your TikTok Pixel ID.
