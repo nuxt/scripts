@@ -41,7 +41,7 @@ useScriptPulseAnalytics({
 - Pageviews, SPA route changes, scroll depth, outbound links and file downloads are recorded automatically. Set `trackScroll`, `trackOutbound` or `trackDownloads` to `false` to switch one off.
 - Do Not Track and Global Privacy Control are honoured by the tracker itself.
 
-Use the composable's `proxy` object for `track` calls. Calls made before the script has loaded are queued and sent once it has.
+Use the composable's `proxy` object for `track` calls. Calls made before the script has loaded are queued and sent once it has. When the visitor has opted out (Do Not Track, Global Privacy Control), the tracker does not run and the queue is discarded.
 
 ::code-group
 

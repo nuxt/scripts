@@ -27,6 +27,11 @@ export interface PulseAnalyticsApi {
 declare global {
   interface Window {
     pulse: PulseAnalyticsApi
+    /**
+     * Set by the tracker before its opt-out checks run. Present without
+     * `pulse.track` means the tracker ran and declined to record.
+     */
+    __pulseInstalled?: boolean
   }
 }
 
@@ -35,32 +40,54 @@ declare global {
 // This is deliberately not a stub on window.pulse: the tracker runs
 // `window.pulse = window.pulse || {}` and then assigns `track`, so a stub's
 // queue would be overwritten and lost.
+//
+// The queue is bounded. The tracker exits without defining `window.pulse` when
+// the visitor has opted out (Do Not Track, Global Privacy Control, the
+// `?pulse-ignore` toggle, automation), so readiness can legitimately never come:
+// once the tracker has run and declined, the queue is dropped and later calls
+// are no-ops; if the script never runs at all (blocked, offline) the queue stops
+// growing at MAX_QUEUED_EVENTS.
 const PULSE_QUEUE_KEY = Symbol.for('nuxt-scripts.pulse-queue')
+const MAX_QUEUED_EVENTS = 100
 
 interface PulseQueueState {
   queue: Array<Parameters<PulseAnalyticsApi['track']>>
   flushed: boolean
+  /** The tracker ran but declined to record: nothing will ever consume the queue. */
+  declined: boolean
 }
 
 function getPulseState(): PulseQueueState | undefined {
-  if (!import.meta.client)
+  if (typeof window === 'undefined')
     return
   const g = globalThis as any
   if (!g[PULSE_QUEUE_KEY]) {
-    g[PULSE_QUEUE_KEY] = { queue: [], flushed: false }
+    g[PULSE_QUEUE_KEY] = { queue: [], flushed: false, declined: false }
   }
   return g[PULSE_QUEUE_KEY]
 }
 
-export function useScriptPulseAnalytics<T extends PulseAnalyticsApi>(_options?: PulseAnalyticsInput) {
-  const isPulseReady = () => import.meta.client
-    && typeof window !== 'undefined'
-    && typeof window.pulse?.track === 'function'
+function isPulseReady() {
+  return typeof window !== 'undefined' && typeof window.pulse?.track === 'function'
+}
 
-  // Replay queued calls once the real tracker is present
+function hasPulseDeclined() {
+  return typeof window !== 'undefined' && window.__pulseInstalled === true && !isPulseReady()
+}
+
+export function useScriptPulseAnalytics<T extends PulseAnalyticsApi>(_options?: PulseAnalyticsInput) {
+  // Replay queued calls once the real tracker is present; drop them once it
+  // is known that it never will be.
   const flushQueue = () => {
     const state = getPulseState()
-    if (!state || state.flushed || !isPulseReady())
+    if (!state || state.flushed || state.declined)
+      return
+    if (hasPulseDeclined()) {
+      state.declined = true
+      state.queue.length = 0
+      return
+    }
+    if (!isPulseReady())
       return
     state.flushed = true
     while (state.queue.length > 0) {
@@ -70,10 +97,20 @@ export function useScriptPulseAnalytics<T extends PulseAnalyticsApi>(_options?: 
   }
 
   const track: PulseAnalyticsApi['track'] = (name, props, revenue) => {
-    if (isPulseReady())
+    if (isPulseReady()) {
       window.pulse.track(name, props, revenue)
-    else
-      getPulseState()?.queue.push([name, props, revenue])
+      return
+    }
+    const state = getPulseState()
+    if (!state || state.declined)
+      return
+    if (hasPulseDeclined()) {
+      state.declined = true
+      state.queue.length = 0
+      return
+    }
+    if (state.queue.length < MAX_QUEUED_EVENTS)
+      state.queue.push([name, props, revenue])
   }
 
   return useRegistryScript<T, typeof PulseAnalyticsOptions>('pulseAnalytics', options => ({

@@ -1078,7 +1078,7 @@
       {
         "name": "PulseQueueState",
         "kind": "interface",
-        "code": "interface PulseQueueState {\n  queue: Array<Parameters<PulseAnalyticsApi['track']>>\n  flushed: boolean\n}"
+        "code": "interface PulseQueueState {\n  queue: Array<Parameters<PulseAnalyticsApi['track']>>\n  flushed: boolean\n  /** The tracker ran but declined to record: nothing will ever consume the queue. */\n  declined: boolean\n}"
       }
     ],
     "reddit-pixel": [
