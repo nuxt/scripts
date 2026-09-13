@@ -41,6 +41,7 @@ import {
   MixpanelAnalyticsOptions,
   NpmOptions,
   PostHogOptions,
+  PulseAnalyticsOptions,
   RedditPixelOptions,
   RybbitAnalyticsOptions,
   SegmentOptions,
@@ -140,6 +141,14 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('vercelAnalytics', 'Vercel Analytics', 'analytics', 'useScriptVercelAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('mixpanelAnalytics', 'Mixpanel', 'analytics', 'useScriptMixpanelAnalytics', { bundle: true, partytown: true }, null),
   m('ahrefsAnalytics', 'Ahrefs Web Analytics', 'analytics', 'useScriptAhrefsAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  // proxy intentionally off: Pulse identifies visitors server-side from the
+  // connecting IP + user agent, so proxied beacons — all arriving from the Nuxt
+  // server's IP — would collapse every visitor into one identity. Its bot
+  // filtering also counts a datacenter origin as a signal
+  // (docs.ciphera.net/pulse/bot-filtering). Same family as Fathom (#720).
+  // Bundle is safe: the tracker reads its config from the script element and
+  // posts to its own API origin wherever it was served from.
+  m('pulseAnalytics', 'Pulse Analytics', 'analytics', 'useScriptPulseAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -461,6 +470,18 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       partytown: { forwards: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register', 'mixpanel.opt_in_tracking', 'mixpanel.opt_out_tracking'] },
+    }),
+    def('pulseAnalytics', {
+      schema: PulseAnalyticsOptions,
+      label: 'Pulse Analytics',
+      src: 'https://js.ciphera.net/script.js',
+      category: 'analytics',
+      envDefaults: { domain: '' },
+      // Bundle without proxy: the tracker takes its config from the script
+      // element's data-* attributes and always posts to `data-api` (default
+      // pulse-api.ciphera.net), so serving it from /_scripts/assets needs no
+      // SDK patch. Proxying is unsupported — see the registryMeta note.
+      bundle: true,
     }),
     // ad
     def('bingUet', {

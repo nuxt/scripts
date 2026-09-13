@@ -24,6 +24,7 @@ function getPlaygroundPath(script: any): string | null {
     'matomo-analytics': '/third-parties/matomo-analytics/nuxt-scripts',
     'ahrefs-analytics': '/third-parties/ahrefs-analytics/nuxt-scripts',
     'rybbit-analytics': '/third-parties/rybbit-analytics',
+    'pulse-analytics': '/third-parties/pulse-analytics',
     'databuddy-analytics': '/third-parties/databuddy-analytics',
     'umami-analytics': '/third-parties/umami-analytics',
     'segment': '/third-parties/segment',

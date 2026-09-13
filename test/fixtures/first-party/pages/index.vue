@@ -8,6 +8,7 @@
       <li><NuxtLink to="/plausible">Plausible Analytics</NuxtLink></li>
       <li><NuxtLink to="/cfwa">Cloudflare Web Analytics</NuxtLink></li>
       <li><NuxtLink to="/fathom">Fathom Analytics</NuxtLink></li>
+      <li><NuxtLink to="/pulse">Pulse Analytics</NuxtLink></li>
       <li><NuxtLink to="/umami">Umami Analytics</NuxtLink></li>
       <li><NuxtLink to="/posthog">PostHog</NuxtLink></li>
       <li><NuxtLink to="/rybbit">Rybbit Analytics</NuxtLink></li>
@@ -20,7 +21,7 @@
       <li><NuxtLink to="/hotjar">Hotjar</NuxtLink></li>
     </ol>
     <h2>Ads / Pixels</h2>
-    <ol start="16">
+    <ol start="17">
       <li><NuxtLink to="/meta">Meta Pixel</NuxtLink></li>
       <li><NuxtLink to="/x">X Pixel</NuxtLink></li>
       <li><NuxtLink to="/tiktok">TikTok Pixel</NuxtLink></li>
@@ -31,23 +32,23 @@
       <li><NuxtLink to="/carbon">Carbon Ads</NuxtLink></li>
     </ol>
     <h2>Support</h2>
-    <ol start="24">
+    <ol start="25">
       <li><NuxtLink to="/intercom-test">Intercom</NuxtLink></li>
       <li><NuxtLink to="/crisp-test">Crisp</NuxtLink></li>
     </ol>
     <h2>Payments</h2>
-    <ol start="26">
+    <ol start="27">
       <li><NuxtLink to="/stripe-test">Stripe</NuxtLink></li>
       <li><NuxtLink to="/paypal-test">PayPal</NuxtLink></li>
       <li><NuxtLink to="/lemonsqueezy">Lemon Squeezy</NuxtLink></li>
     </ol>
     <h2>Video</h2>
-    <ol start="29">
+    <ol start="30">
       <li><NuxtLink to="/vimeo">Vimeo Player</NuxtLink></li>
       <li><NuxtLink to="/youtube">YouTube Player</NuxtLink></li>
     </ol>
     <h2>Utility</h2>
-    <ol start="31">
+    <ol start="32">
       <li><NuxtLink to="/npm-test">NPM (js-confetti)</NuxtLink></li>
       <li><NuxtLink to="/gravatar-test">Gravatar</NuxtLink></li>
       <li><NuxtLink to="/recaptcha-test">Google reCAPTCHA</NuxtLink></li>
