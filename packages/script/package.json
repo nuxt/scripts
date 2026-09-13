@@ -76,17 +76,17 @@
   },
   "peerDependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
-    "@paypal/paypal-js": "^11.0.0",
+    "@paypal/paypal-js": "^11.0.1",
     "@speedcurve/lux": "^4.5.2",
-    "@stripe/stripe-js": "^9.15.0",
+    "@stripe/stripe-js": "^9.16.0",
     "@types/geojson": "^7946.0.16",
     "@types/google.maps": "^3.66.2",
     "@types/leaflet": "^1.9.22",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.3.0",
     "@unhead/vue": "^3.4.0",
-    "maplibre-gl": "^6.8.0",
-    "posthog-js": "^1.428.7",
+    "maplibre-gl": "^6.9.0",
+    "posthog-js": "^1.430.2",
     "unhead": "^3.4.0"
   },
   "peerDependenciesMeta": {
