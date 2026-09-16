@@ -45,6 +45,10 @@ let appliedSourceOptions: SourceOptions | undefined
 let appliedRebuildSignature: string | undefined
 /** Increases on each cluster update and each removal, so a superseded update is ignored. */
 let clusterUpdateId = 0
+/** Runs one cluster update at a time, so a failure belongs to exactly one update. */
+let clusterUpdateQueue: Promise<void> = Promise.resolve()
+/** Collects this source's map errors while a cluster update runs in the worker. */
+let clusterUpdateErrors: Error[] | undefined
 let layerSubscriptions: MapLibreGl.Subscription[] = []
 let restoreCursor: string | undefined
 let isPointerOverLayer = false
@@ -109,6 +113,12 @@ function onMapError(event: MapErrorEvent): void {
     return
   }
   const isOwnSource = ownedSourceId !== undefined && event.sourceId === ownedSourceId
+  // A failed cluster update fires this event and still resolves its promise.
+  // The update reports it, so a superseded update can drop it.
+  if (isOwnSource && clusterUpdateErrors) {
+    clusterUpdateErrors.push(toError(event))
+    return
+  }
   const isOwnLayer = event.layer?.id !== undefined && ownedLayerIds.includes(event.layer.id)
   if (isOwnSource || isOwnLayer)
     reportMapLibreResourceError(toError(event), failure => emit('error', failure))
@@ -294,7 +304,9 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   appliedStyles = []
   appliedSourceOptions = undefined
   appliedRebuildSignature = undefined
+  // A running update no longer owns the source, so its errors stop collecting.
   clusterUpdateId++
+  clusterUpdateErrors = undefined
 }
 
 function syncResources(map: MapLibreGl.Map, carryHover = false): void {
@@ -366,21 +378,45 @@ function planClusterUpdate(map: MapLibreGl.Map): { source: MapLibreGl.GeoJSONSou
  * the layers stay on the map.
  *
  * The new values count as applied at once, so a later change compares against
- * them. A failure clears the applied structure, so the next change rebuilds.
- * A failure from a superseded call is ignored, because a newer call owns the source.
+ * them. Updates run one at a time. An update that a newer change or a rebuild
+ * supersedes before it starts is skipped, because the newer update carries every
+ * live cluster option.
  */
 function updateClusterOptions(source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions): Promise<void> {
   const updateId = ++clusterUpdateId
   appliedStructure = structureSignature()
   appliedSourceOptions = detachSourceOptions()
+  clusterUpdateQueue = clusterUpdateQueue.then(() => runClusterUpdate(updateId, source, options))
+  return clusterUpdateQueue
+}
+
+/**
+ * Runs one cluster update and reports its failure once.
+ *
+ * MapLibre catches a worker failure, fires a map `error` event with this source ID
+ * and resolves the promise. The update collects that event while it runs. A
+ * failure clears the applied structure, so the next change rebuilds the source.
+ * A failure of a superseded update is ignored, because a newer update or a
+ * rebuild owns the source.
+ */
+async function runClusterUpdate(updateId: number, source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions): Promise<void> {
+  if (updateId !== clusterUpdateId)
+    return
+  const errors: Error[] = []
+  clusterUpdateErrors = errors
   // The executor also turns a synchronous throw into a rejection.
-  return new Promise<void>(resolve => resolve(source.setClusterOptions(options)))
+  await new Promise<void>(resolve => resolve(source.setClusterOptions(options)))
     .catch((error: unknown) => {
-      if (updateId !== clusterUpdateId)
-        return
-      appliedStructure = undefined
-      reportMapLibreResourceError(error, failure => emit('error', failure))
+      errors.push(error instanceof Error ? error : new Error('MapLibre cluster update failed', { cause: error }))
     })
+  clusterUpdateErrors = undefined
+  if (updateId !== clusterUpdateId || !errors.length)
+    return
+  appliedStructure = undefined
+  const failure = errors.length === 1
+    ? errors[0]
+    : new AggregateError(errors, errors.map(error => error.message).join('\n'))
+  reportMapLibreResourceError(failure, error => emit('error', error))
 }
 
 /** Applies every changed entry of one paint or layout block to a live layer. */

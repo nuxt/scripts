@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ScriptMapLibreGeoJsonLayer, ScriptMapLibreMapExpose } from '@nuxt/scripts'
-import { computed, nextTick, reactive, shallowRef } from 'vue'
+import { useRoute } from 'nuxt/app'
+import { computed, nextTick, reactive, shallowRef, unref, useTemplateRef, watch } from 'vue'
 
 const style = blankStyle('#ffffff')
 
@@ -14,6 +15,11 @@ const data = points(groups.flatMap(([lng, lat], group) => offsets.map(([dx, dy],
   kind: 'site',
   position: [lng + dx, lat + dy] as [number, number],
 }))))
+
+// `?data=missing` points the source at a URL that returns 404. The worker never
+// builds a cluster index, so a later cluster update fails inside the worker.
+const route = useRoute()
+const sourceData = route.query.data === 'missing' ? '/missing-points.geojson' : data
 
 const layers: ScriptMapLibreGeoJsonLayer[] = [
   { id: 'clusters', type: 'circle', filter: ['has', 'point_count'], paint: { 'circle-radius': 12, 'circle-color': '#dc2626' } },
@@ -30,8 +36,16 @@ const sourceOptions = computed(() => ({
 
 const log = reactive({ addSource: 0, removeSource: 0, errors: [] as string[] })
 
-function onReady({ map }: ScriptMapLibreMapExpose): void {
-  const instance = map.value!
+const mapComponent = useTemplateRef<ScriptMapLibreMapExpose>('mapComponent')
+
+/**
+ * Runs once the map instance exists. A source whose data fails to load can keep
+ * MapLibre from firing `load`, so this page does not wait for `ready`.
+ */
+// A template ref unwraps the exposed refs, so `map` may already be the instance.
+watch(() => unref(mapComponent.value?.map), (instance) => {
+  if (!instance || (window as any).__ready)
+    return
   // Count every source rebuild the component performs from here on.
   const addSource = instance.addSource.bind(instance)
   const removeSource = instance.removeSource.bind(instance)
@@ -45,7 +59,7 @@ function onReady({ map }: ScriptMapLibreMapExpose): void {
   }
   exposeMap(instance)
   ;(window as any).__ready = true
-}
+})
 
 /** Sends a second radius while MapLibre's worker still runs the first. */
 async function burst(): Promise<void> {
@@ -58,17 +72,17 @@ async function burst(): Promise<void> {
 <template>
   <div>
     <ScriptMapLibreMap
+      ref="mapComponent"
       trigger="immediate"
       :map-style="style"
       :center="[0, 0]"
       :zoom="4"
       :width="400"
       :height="300"
-      @ready="onReady"
     >
       <ScriptMapLibreGeoJson
         source-id="places"
-        :data="data"
+        :data="sourceData"
         :layers="layers"
         :source-options="sourceOptions"
         @error="error => log.errors.push(error.message)"

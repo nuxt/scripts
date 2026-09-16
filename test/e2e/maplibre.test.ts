@@ -221,6 +221,19 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
       expect(camera.center[0]).toBeCloseTo(0, 3)
       expect(camera.center[1]).toBeCloseTo(0, 3)
     })
+
+    it('fits again when removed bounds come back with the same coordinates', async () => {
+      const page = await openMap('/bounds')
+      await page.evaluate(() => (window as any).__maps.both.jumpTo({ center: [60, 20] }))
+
+      await page.click('#remove-bounds')
+      await page.waitForTimeout(200)
+      // Removing bounds keeps the camera where it is.
+      expect((await readCamera(page, 'both')).center[0]).toBeCloseTo(60, 3)
+
+      await page.click('#restore-bounds')
+      await expect.poll(() => readCamera(page, 'both').then(camera => camera.center[0])).toBeCloseTo(-15, 0)
+    })
   })
 
   describe('cluster options', () => {
@@ -268,34 +281,49 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
       expect(after.errors).toEqual([])
     })
 
-    it('ignores a failure from a superseded cluster update', async () => {
-      const { page, readLog } = await openClusters()
-      // The first call fails after the second call starts. Only the second call counts.
-      await page.evaluate(() => {
-        const source = (window as any).__map.getSource('places')
-        const setClusterOptions = source.setClusterOptions.bind(source)
-        source.setClusterOptions = (options: { clusterRadius?: number }) => options.clusterRadius === 400
-          ? new Promise((_resolve, reject) => setTimeout(() => reject(new Error('stale update failed')), 200))
-          : setClusterOptions(options)
-      })
+    /**
+     * A 404 data URL leaves the worker without a cluster index. MapLibre then
+     * fails the cluster update inside the worker, fires a map `error` event and
+     * resolves the `setClusterOptions()` promise. It does not reject.
+     */
+    async function openBrokenClusters(): Promise<{ page: Page, readLog: () => Promise<ClusterLog> }> {
+      const page = await openMap('/cluster?data=missing')
+      const readLog = async () => JSON.parse(await page.locator('#log').textContent() ?? '{}') as ClusterLog
+      // The failed data load reports its own error first.
+      await expect.poll(() => readLog().then(log => log.errors.length)).toBeGreaterThan(0)
+      await page.waitForTimeout(300)
+      return { page, readLog }
+    }
 
-      await page.click('#radius-burst')
-      await waitForRenderedFeatures(page, clusterLayers, 3)
-      await page.waitForTimeout(400)
-
-      expect((await readLog()).errors).toEqual([])
-    })
-
-    it('emits error when the current cluster update fails', async () => {
-      const { page, readLog } = await openClusters()
-      await page.evaluate(() => {
-        const source = (window as any).__map.getSource('places')
-        source.setClusterOptions = () => Promise.reject(new Error('cluster update failed'))
-      })
+    it('emits a worker failure once and rebuilds on the next change', async () => {
+      const { page, readLog } = await openBrokenClusters()
+      const before = await readLog()
 
       await page.click('#radius-merge')
+      await expect.poll(() => readLog().then(log => log.errors.length)).toBe(before.errors.length + 1)
+      await page.waitForTimeout(300)
+      const failed = await readLog()
+      expect(failed.errors.length).toBe(before.errors.length + 1)
+      expect(failed.errors.at(-1)).toMatch(/updateClusterOptions/)
+      expect(failed.addSource).toBe(before.addSource)
 
-      await expect.poll(() => readLog().then(log => log.errors)).toEqual(['cluster update failed'])
+      // The failed options never applied, so the next change rebuilds the source.
+      await page.click('#radius-split')
+      await expect.poll(() => readLog().then(log => log.addSource)).toBe(before.addSource + 1)
+    })
+
+    it('ignores the worker failure of a superseded cluster update', async () => {
+      const { page, readLog } = await openBrokenClusters()
+      const before = await readLog()
+
+      // 400 starts in the worker. 50 arrives before it fails, so only 50 may report.
+      await page.click('#radius-burst')
+      await expect.poll(() => readLog().then(log => log.errors.length)).toBeGreaterThan(before.errors.length)
+      await page.waitForTimeout(500)
+
+      const after = await readLog()
+      expect(after.errors.length).toBe(before.errors.length + 1)
+      expect(after.addSource).toBe(before.addSource)
     })
 
     it('rebuilds the source for a cluster option MapLibre cannot update in place', async () => {
