@@ -161,6 +161,68 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     expect(center[0]).toBeCloseTo(-1.2, 3)
   })
 
+  describe('bounds', () => {
+    interface Camera { center: [number, number], zoom: number, bearing: number, bounds: [number, number, number, number] }
+
+    function readCamera(page: Page, name: 'framed' | 'both'): Promise<Camera> {
+      return page.evaluate((key) => {
+        const map = (window as any).__maps[key]
+        const bounds = map.getBounds()
+        return {
+          center: map.getCenter().toArray(),
+          zoom: map.getZoom(),
+          bearing: map.getBearing(),
+          bounds: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+        }
+      }, name)
+    }
+
+    /**
+     * True when the visible area contains the box `[west, south, east, north]`.
+     * A fit without padding touches the box edge, so the check allows float error.
+     */
+    function contains(visible: Camera['bounds'], box: Camera['bounds']): boolean {
+      const error = 1e-6
+      return visible[0] <= box[0] + error && visible[1] <= box[1] + error
+        && visible[2] >= box[2] - error && visible[3] >= box[3] - error
+    }
+
+    it('frames the initial camera on bounds without a center', async () => {
+      const page = await openMap('/bounds')
+      const camera = await readCamera(page, 'framed')
+
+      expect(contains(camera.bounds, [10, 10, 20, 20])).toBe(true)
+      expect(camera.center[0]).toBeCloseTo(15, 0)
+      // The fit keeps the bearing prop. MapLibre's own fit resets it to 0.
+      expect(camera.bearing).toBe(30)
+    })
+
+    it('lets bounds override the initial center and zoom', async () => {
+      const page = await openMap('/bounds')
+      const camera = await readCamera(page, 'both')
+
+      expect(contains(camera.bounds, [-20, -10, -10, 0])).toBe(true)
+      expect(camera.center[0]).toBeCloseTo(-15, 0)
+      expect(camera.zoom).toBeGreaterThan(2)
+    })
+
+    it('fits again only when the bounds coordinates change', async () => {
+      const page = await openMap('/bounds')
+
+      await page.click('#move-bounds')
+      await expect.poll(() => readCamera(page, 'framed').then(camera => camera.center[0])).toBeCloseTo(35, 0)
+      expect(contains((await readCamera(page, 'framed')).bounds, [30, 30, 40, 40])).toBe(true)
+
+      // The user moves the camera away. A new array with the same coordinates keeps it there.
+      await page.evaluate(() => (window as any).__maps.framed.jumpTo({ center: [0, 0] }))
+      await page.click('#same-bounds')
+      await page.waitForTimeout(200)
+      const camera = await readCamera(page, 'framed')
+      expect(camera.center[0]).toBeCloseTo(0, 3)
+      expect(camera.center[1]).toBeCloseTo(0, 3)
+    })
+  })
+
   describe('cluster options', () => {
     interface ClusterLog { addSource: number, removeSource: number, errors: string[] }
     const clusterLayers = ['clusters', 'points']

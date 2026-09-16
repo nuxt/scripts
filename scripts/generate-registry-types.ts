@@ -390,6 +390,53 @@ function extractPropsFields(typeNode: any, source: string): SchemaFieldMeta[] {
   return fields
 }
 
+type TypeNodeResolver = (typeNode: any) => { node: any, source: string }
+
+/**
+ * Reads the props fields of a props type built from references, intersections
+ * and unions. A union field is required only when every member requires it, so
+ * the table matches the props a consumer must pass.
+ */
+function collectPropsFields(typeNode: any, source: string, resolveTypeNode: TypeNodeResolver): SchemaFieldMeta[] {
+  if (typeNode?.type === 'TSParenthesizedType')
+    return collectPropsFields(typeNode.typeAnnotation, source, resolveTypeNode)
+  if (typeNode?.type === 'TSTypeReference') {
+    const resolved = resolveTypeNode(typeNode)
+    return resolved.node === typeNode ? [] : collectPropsFields(resolved.node, resolved.source, resolveTypeNode)
+  }
+  if (typeNode?.type !== 'TSIntersectionType' && typeNode?.type !== 'TSUnionType')
+    return extractPropsFields(typeNode, source)
+
+  const members = typeNode.types.map((member: any) => collectPropsFields(member, source, resolveTypeNode))
+  const fields = new Map<string, SchemaFieldMeta>()
+  for (const field of members.flat()) {
+    const existing = fields.get(field.name)
+    if (!existing) {
+      fields.set(field.name, { ...field })
+      continue
+    }
+    const types = new Set([...existing.type.split(' | '), ...field.type.split(' | ')])
+    existing.type = [...types].join(' | ')
+    existing.required = existing.required || field.required
+    existing.description ??= field.description
+    existing.defaultValue ??= field.defaultValue
+  }
+  if (typeNode.type === 'TSUnionType') {
+    for (const field of fields.values())
+      field.required = members.every((member: SchemaFieldMeta[]) => member.some(entry => entry.name === field.name && entry.required))
+  }
+  return [...fields.values()]
+}
+
+/** Writes merged props fields as an interface body, for a props type that is not a literal. */
+function fieldsToInterfaceBody(fields: SchemaFieldMeta[]): string {
+  const lines = fields.map((field) => {
+    const doc = [field.description, field.defaultValue && `@default ${field.defaultValue}`].filter(Boolean).join(' ')
+    return `${doc ? `  /** ${doc} */\n` : ''}  ${field.name}${field.required ? '' : '?'}: ${field.type}`
+  })
+  return `{\n${lines.join('\n')}\n}`
+}
+
 function extractComponentMeta(scriptSource: string, fileName: string, namedTypes = new Map<string, NamedTypeDeclaration>()): ComponentMeta | null {
   const { program } = parseSync(fileName, scriptSource)
   let propsResult: { code: string, defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
@@ -625,8 +672,10 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
         return
       const { node: typeArg, source: typeSource } = resolveTypeNode(rawTypeArg)
 
-      const code = typeSource.slice(typeArg.start, typeArg.end)
-      const fields = extractPropsFields(typeArg, typeSource)
+      const isLiteral = typeArg.type === 'TSTypeLiteral' || typeArg.type === 'TSInterfaceBody'
+      const fields = isLiteral
+        ? extractPropsFields(typeArg, typeSource)
+        : collectPropsFields(typeArg, typeSource, resolveTypeNode)
 
       const defaults: Record<string, string> = {}
       if (defaultsObj?.type === 'ObjectExpression') {
@@ -645,6 +694,7 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
           field.defaultValue = defaults[field.name]
       }
 
+      const code = isLiteral ? typeSource.slice(typeArg.start, typeArg.end) : fieldsToInterfaceBody(fields)
       propsResult = { code, defaults, fields }
     },
   })
