@@ -7,7 +7,7 @@ export type ScriptMapLibreGeoJsonLayer = Omit<MapLibre.LayerSpecification, 'sour
 }
 
 export interface ScriptMapLibreGeoJsonEmits {
-  /** A source or layer could not be created. The map keeps its previous state. */
+  /** A source or layer could not be created. The component removed its own source and layers. */
   error: [error: Error]
 }
 
