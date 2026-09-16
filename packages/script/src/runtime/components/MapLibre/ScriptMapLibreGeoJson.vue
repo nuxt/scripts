@@ -6,6 +6,11 @@ export type ScriptMapLibreGeoJsonLayer = Omit<MapLibre.LayerSpecification, 'sour
   source?: string
 }
 
+export interface ScriptMapLibreGeoJsonEmits {
+  /** A source or layer could not be created. The map keeps its previous state. */
+  error: [error: Error]
+}
+
 export interface ScriptMapLibreGeoJsonResource {
   map: MapLibre.Map
   onLoad: () => void
@@ -17,7 +22,7 @@ export interface ScriptMapLibreGeoJsonResource {
 import type { GeoJSON } from 'geojson'
 import type * as MapLibreGl from 'maplibre-gl'
 import { toRaw, watch } from 'vue'
-import { useMapLibreResource } from './useMapLibreResource'
+import { reportMapLibreResourceError, useMapLibreResource } from './useMapLibreResource'
 
 const props = defineProps<{
   /** MapLibre source ID. Changing it rebuilds the owned source and layers. */
@@ -32,8 +37,20 @@ const props = defineProps<{
   beforeId?: string
 }>()
 
+const emit = defineEmits<ScriptMapLibreGeoJsonEmits>()
+
 let ownedLayerIds: string[] = []
 let ownedSourceId: string | undefined
+let appliedSignature: string | undefined
+
+/**
+ * Content signature of every prop that forces a source and layer rebuild.
+ * An inline array or object literal changes identity on each parent render, so
+ * the component compares content instead of identity.
+ */
+function resourceSignature(): string {
+  return JSON.stringify([props.sourceId, props.sourceOptions ?? null, props.layers, props.beforeId ?? null])
+}
 
 function removeOwnedResources(map: MapLibreGl.Map): void {
   for (const layerId of [...ownedLayerIds].reverse()) {
@@ -44,6 +61,7 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   if (ownedSourceId && map.getSource(ownedSourceId))
     map.removeSource(ownedSourceId)
   ownedSourceId = undefined
+  appliedSignature = undefined
 }
 
 function syncResources(map: MapLibreGl.Map): void {
@@ -68,6 +86,7 @@ function syncResources(map: MapLibreGl.Map): void {
       map.addLayer(nextLayer, props.beforeId)
       ownedLayerIds.push(nextLayer.id)
     }
+    appliedSignature = resourceSignature()
   }
   catch (error) {
     removeOwnedResources(map)
@@ -75,18 +94,31 @@ function syncResources(map: MapLibreGl.Map): void {
   }
 }
 
+/** Runs a rebuild outside the initial creation, where no caller can catch it. */
+function trySyncResources(map: MapLibreGl.Map): void {
+  try {
+    syncResources(map)
+  }
+  catch (error) {
+    reportMapLibreResourceError(error, failure => emit('error', failure))
+  }
+}
+
 const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
   create({ map }) {
-    const onStyleLoad = () => syncResources(map)
+    const onStyleLoad = () => trySyncResources(map)
     const onLoad = () => {
       if (!ownedSourceId)
-        syncResources(map)
+        trySyncResources(map)
     }
     map.on('style.load', onStyleLoad)
     map.on('load', onLoad)
-    syncResources(map)
+    // A failed first sync must not discard the resource. The style and prop
+    // listeners stay registered, so a corrected layer rebuilds without a remount.
+    trySyncResources(map)
     return { map, onLoad, onStyleLoad }
   },
+  onError: error => emit('error', error),
   cleanup(resource) {
     resource.map.off('load', resource.onLoad)
     resource.map.off('style.load', resource.onStyleLoad)
@@ -100,10 +132,10 @@ watch(() => props.data, (data) => {
     (source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
 }, { deep: 2 })
 
-watch(() => [props.sourceId, props.layers, props.sourceOptions, props.beforeId] as const, () => {
-  if (geoJson.value)
-    syncResources(geoJson.value.map)
-}, { deep: 3 })
+watch(resourceSignature, (signature) => {
+  if (geoJson.value && signature !== appliedSignature)
+    trySyncResources(geoJson.value.map)
+})
 
 defineExpose({ geoJson })
 </script>
