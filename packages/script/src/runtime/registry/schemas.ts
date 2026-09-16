@@ -1203,6 +1203,21 @@ export const StripeOptions = object({
   version: optional(union([literal('v3'), literal('acacia'), literal('basil'), literal('clover'), literal('dahlia'), string()])),
 })
 
+export const TawkToOptions = object({
+  /**
+   * Your Tawk.to property ID: the first path segment of the widget embed URL
+   * `https://embed.tawk.to/<propertyId>/<widgetId>`.
+   * @see https://dashboard.tawk.to/
+   */
+  propertyId: pipe(string(), minLength(1)),
+  /**
+   * Your Tawk.to widget ID: the second path segment of the widget embed URL
+   * `https://embed.tawk.to/<propertyId>/<widgetId>`.
+   * @see https://dashboard.tawk.to/
+   */
+  widgetId: pipe(string(), minLength(1)),
+})
+
 export const TikTokPixelOptions = object({
   /**
    * Your TikTok Pixel ID.

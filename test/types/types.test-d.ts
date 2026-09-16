@@ -2,6 +2,7 @@ import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DeskCrewApi, DeskCrewEmbedOptions } from '../../packages/script/src/runtime/registry/deskcrew'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
+import type { TawkToApi, TawkToProxyApi, TawkToVisitor, TawkToWindowType } from '../../packages/script/src/runtime/registry/tawk-to'
 import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseFunctionType, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
@@ -48,6 +49,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['redditPixel']>().not.toBeAny()
     expectTypeOf<Registry['segment']>().not.toBeAny()
     expectTypeOf<Registry['stripe']>().not.toBeAny()
+    expectTypeOf<Registry['tawkTo']>().not.toBeAny()
     expectTypeOf<Registry['tiktokPixel']>().not.toBeAny()
     expectTypeOf<Registry['xEmbed']>().not.toBeAny()
     expectTypeOf<Registry['xPixel']>().not.toBeAny()
@@ -213,5 +215,41 @@ describe('tiktok pixel ttq methods', () => {
   it('proxy.ttq preserves the method form', () => {
     type ProxyTtq = ReturnType<typeof useScriptTikTokPixel>['proxy']['ttq']
     expectTypeOf<ProxyTtq['track']>().toBeCallableWith('StartTrial')
+  })
+})
+
+describe('tawk-to proxy api', () => {
+  it('visitor accepts the documented optional phone field', () => {
+    expectTypeOf<TawkToVisitor>().toHaveProperty('phone')
+    expectTypeOf<TawkToVisitor['phone']>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<TawkToVisitor>().toExtend<{ name?: string, email?: string, phone?: string, hash?: string }>()
+  })
+
+  it('omits the load flags the fire-and-forget proxy cannot carry', () => {
+    // `onLoaded`/`onBeforeLoaded` are plain data properties Tawk writes itself;
+    // the proxy has no set trap and discards values, so a typed read of them
+    // through `proxy` would always be wrong.
+    type Flags = Extract<keyof TawkToProxyApi, 'onLoaded' | 'onBeforeLoaded'>
+    expectTypeOf<Flags>().toBeNever()
+  })
+
+  it('window type uses the documented inline/embed literals', () => {
+    expectTypeOf<TawkToWindowType>().toEqualTypeOf<'inline' | 'embed'>()
+  })
+
+  it('onLoaded is a boolean, matching the embed that writes `!0`', () => {
+    expectTypeOf<TawkToApi['onLoaded']>().toEqualTypeOf<boolean | undefined>()
+  })
+
+  it('start accepts its documented optional configuration object', () => {
+    expectTypeOf<TawkToProxyApi['start']>().toBeCallableWith()
+    expectTypeOf<TawkToProxyApi['start']>().toBeCallableWith({ showWidget: true })
+  })
+
+  it('switchWidget callback receives the error argument Tawk passes', () => {
+    expectTypeOf<TawkToProxyApi['switchWidget']>().toBeCallableWith(
+      { propertyId: 'property-id', widgetId: 'widget-id' },
+      (_error: Error | null) => {},
+    )
   })
 })
