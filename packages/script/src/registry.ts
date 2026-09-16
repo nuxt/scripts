@@ -41,6 +41,7 @@ import {
   MixpanelAnalyticsOptions,
   NpmOptions,
   PostHogOptions,
+  PulseAnalyticsOptions,
   RedditPixelOptions,
   RybbitAnalyticsOptions,
   SegmentOptions,
@@ -140,6 +141,9 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('vercelAnalytics', 'Vercel Analytics', 'analytics', 'useScriptVercelAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('mixpanelAnalytics', 'Mixpanel', 'analytics', 'useScriptMixpanelAnalytics', { bundle: true, partytown: true }, null),
   m('ahrefsAnalytics', 'Ahrefs Web Analytics', 'analytics', 'useScriptAhrefsAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
+  // No proxy: Pulse derives visitor identity from the connecting IP, so proxied
+  // beacons collapse every visitor into one. Same family as Fathom (#720).
+  m('pulseAnalytics', 'Pulse Analytics', 'analytics', 'useScriptPulseAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -461,6 +465,16 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         },
       },
       partytown: { forwards: ['mixpanel', 'mixpanel.init', 'mixpanel.track', 'mixpanel.identify', 'mixpanel.people.set', 'mixpanel.reset', 'mixpanel.register', 'mixpanel.opt_in_tracking', 'mixpanel.opt_out_tracking'] },
+    }),
+    def('pulseAnalytics', {
+      schema: PulseAnalyticsOptions,
+      label: 'Pulse Analytics',
+      src: 'https://js.ciphera.net/script.js',
+      category: 'analytics',
+      envDefaults: { domain: '' },
+      // Bundling needs no SDK patch: the tracker reads data-* from its own
+      // script element and posts to `data-api` wherever it is served from.
+      bundle: true,
     }),
     // ad
     def('bingUet', {
