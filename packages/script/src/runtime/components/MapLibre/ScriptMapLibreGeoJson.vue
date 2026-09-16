@@ -276,6 +276,9 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
     removeOwnedResources(map)
     throw error
   }
+  // Emitted outside the style change, so a map error from the consumer's handler
+  // is never attributed to this component.
+  emit('sourceready', { map, sourceId })
 }
 
 /** Applies every changed entry of one paint or layout block to a live layer. */

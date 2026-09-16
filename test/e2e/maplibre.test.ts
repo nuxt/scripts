@@ -162,4 +162,23 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     const center = await page.evaluate(() => (window as any).__map.getCenter().toArray() as [number, number])
     expect(center[0]).toBeCloseTo(-1.2, 3)
   })
+
+  it.each(['diff', 'full'])('emits sourceready after a %s style swap so feature state can be restored', async (mode) => {
+    const page = await openMap('/style-swap')
+    const readLog = async () => JSON.parse(await page.locator('#log').textContent() ?? '{}') as { styleload: boolean[], sourceready: string[] }
+    await expect.poll(() => readLog().then(log => log.sourceready.length)).toBeGreaterThan(0)
+    const before = (await readLog()).sourceready.length
+
+    await page.click(`#swap-${mode}`)
+
+    await expect.poll(() => readLog().then(log => log.sourceready.length)).toBe(before + 1)
+    const log = await readLog()
+    expect(log.sourceready.at(-1)).toBe('{"selected":true}')
+    // `styleload` fires before the component re-adds its source.
+    expect(log.styleload.at(-1)).toBe(false)
+
+    await page.waitForFunction(() => (window as any).__map.loaded())
+    const state = await page.evaluate(() => (window as any).__map.getFeatureState({ source: 'points', id: 2 }))
+    expect(state).toEqual({ selected: true })
+  })
 })

@@ -160,6 +160,12 @@ export interface ScriptMapLibreGeoJsonEmits {
   mousemove: [event: MapLibre.MapLayerMouseEvent]
   /** The pointer left every feature in this component's layers. */
   mouseleave: [event: MapLibre.MapLayerMouseEvent]
+  /**
+   * The source and layers exist on the map.
+   * Fires after the first add and after every re-add, such as after a style swap.
+   * A re-add clears feature state, so restore it here.
+   */
+  sourceready: [payload: { map: MapLibre.Map, sourceId: string }]
 }
 
 export interface ScriptMapLibreGeoJsonResource {
