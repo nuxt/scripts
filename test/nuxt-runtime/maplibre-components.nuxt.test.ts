@@ -305,6 +305,99 @@ describe('mapLibre components', () => {
     wrapper.unmount()
   })
 
+  it('emits an error when GeoJSON resource creation fails', async () => {
+    const mocks = createMapLibreMock()
+    const creationFailure = new Error('Invalid paint expression')
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.map.addLayer.mockImplementationOnce(() => {
+      throw creationFailure
+    })
+
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'invalid-layer', type: 'fill', paint: { 'fill-color': 'not-a-colour' } }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    expect(wrapper.emitted('error')?.[0]).toEqual([creationFailure])
+
+    // correcting the layer recovers without a remount
+    await wrapper.setProps({
+      layers: [{ id: 'invalid-layer', type: 'fill', paint: { 'fill-color': '#396cb2' } }],
+    })
+    expect(mocks.map.addLayer).toHaveBeenCalledTimes(2)
+    expect(wrapper.emitted('error')).toHaveLength(1)
+
+    error.mockRestore()
+    wrapper.unmount()
+  })
+
+  it('keeps the GeoJSON source when layers and source options keep their content', async () => {
+    const mocks = createMapLibreMock()
+    const data = { type: 'FeatureCollection', features: [] } as const
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data,
+        sourceOptions: { cluster: true, clusterRadius: 50 },
+        layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#396cb2' } }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    // an inline array literal in a parent template gets a fresh identity on
+    // every re-render, but its content is unchanged
+    await wrapper.setProps({
+      sourceOptions: { cluster: true, clusterRadius: 50 },
+      layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#396cb2' } }],
+    })
+
+    expect(mocks.map.removeSource).not.toHaveBeenCalled()
+    expect(mocks.map.removeLayer).not.toHaveBeenCalled()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    // a real content change still rebuilds
+    await wrapper.setProps({
+      layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#b23939' } }],
+    })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
+
+    wrapper.unmount()
+  })
+
+  it('rebuilds after a skipped sync even when the layers return to the last applied value', async () => {
+    const mocks = createMapLibreMock()
+    const melbourne = [{ id: 'melbourne-circle', type: 'circle' as const }]
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: melbourne,
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    // a style swap drops every source and layer, and the style is not loaded yet
+    mocks.map.isStyleLoaded.mockReturnValue(false)
+    await wrapper.setProps({ layers: [{ id: 'melbourne-heat', type: 'heatmap' }] })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    mocks.map.isStyleLoaded.mockReturnValue(true)
+    await wrapper.setProps({ layers: [{ id: 'melbourne-circle', type: 'circle' }] })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
+    expect(mocks.map.addLayer).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'melbourne-circle' }), undefined)
+
+    wrapper.unmount()
+  })
+
   it('adds and removes a navigation control', async () => {
     const mocks = createMapLibreMock()
     const wrapper = mount(ScriptMapLibreNavigationControl, {
