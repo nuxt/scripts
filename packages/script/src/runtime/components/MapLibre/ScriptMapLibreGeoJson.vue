@@ -66,8 +66,11 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
 /**
  * Binds the component's events to the layers it owns. MapLibre treats the layer
  * array as one group, so `mouseenter` and `mouseleave` fire once per group.
+ *
+ * `carryHover` is true only for a style reload, where the props are unchanged
+ * and the same features sit under the pointer.
  */
-function bindLayerEvents(map: MapLibreGl.Map): void {
+function bindLayerEvents(map: MapLibreGl.Map, carryHover: boolean): void {
   unbindLayerEvents(map)
   const carriedHoverKey = pendingHoverKey
   pendingHoverKey = ''
@@ -90,9 +93,9 @@ function bindLayerEvents(map: MapLibreGl.Map): void {
     }),
   ]
   // A style reload re-adds the same layers under a stationary pointer, and
-  // MapLibre does not fire `mouseenter` again. Different layers may not sit
-  // under the pointer, so only an identical set keeps the hover cursor.
-  if (carriedHoverKey === layerKey) {
+  // MapLibre does not fire `mouseenter` again. A prop change may move the
+  // features, so only a style reload of the same layers keeps the cursor.
+  if (carryHover && carriedHoverKey === layerKey) {
     isPointerOverLayer = true
     applyCursor(map, props.cursor || undefined)
   }
@@ -111,7 +114,7 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   appliedSignature = undefined
 }
 
-function syncResources(map: MapLibreGl.Map): void {
+function syncResources(map: MapLibreGl.Map, carryHover = false): void {
   if (!map.isStyleLoaded()) {
     // The style is mid-swap, so nothing was applied. Clear the signature, or a
     // later flip back to the last applied value would skip the rebuild.
@@ -138,7 +141,7 @@ function syncResources(map: MapLibreGl.Map): void {
       ownedLayerIds.push(nextLayer.id)
     }
     appliedSignature = resourceSignature()
-    bindLayerEvents(map)
+    bindLayerEvents(map, carryHover)
   }
   catch (error) {
     removeOwnedResources(map)
@@ -147,9 +150,9 @@ function syncResources(map: MapLibreGl.Map): void {
 }
 
 /** Runs a rebuild outside the initial creation, where no caller can catch it. */
-function trySyncResources(map: MapLibreGl.Map): void {
+function trySyncResources(map: MapLibreGl.Map, carryHover = false): void {
   try {
-    syncResources(map)
+    syncResources(map, carryHover)
   }
   catch (error) {
     reportMapLibreResourceError(error, failure => emit('error', failure))
@@ -158,7 +161,7 @@ function trySyncResources(map: MapLibreGl.Map): void {
 
 const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
   create({ map }) {
-    const onStyleLoad = () => trySyncResources(map)
+    const onStyleLoad = () => trySyncResources(map, true)
     const onLoad = () => {
       if (!ownedSourceId)
         trySyncResources(map)

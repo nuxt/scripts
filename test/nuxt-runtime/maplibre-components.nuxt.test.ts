@@ -553,6 +553,32 @@ describe('mapLibre components', () => {
     wrapper.unmount()
   })
 
+  it('drops the hover cursor when a prop change rebuilds the same layer IDs', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle', filter: ['has', 'point_count'] }],
+        cursor: 'pointer',
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    // the layer ID is unchanged but the filter is not, so the pointer may no
+    // longer sit over a rendered feature
+    await wrapper.setProps({
+      layers: [{ id: 'melbourne-circle', type: 'circle', filter: ['!', ['has', 'point_count']] }],
+    })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+    wrapper.unmount()
+  })
+
   it('drops the hover cursor when a rebuild replaces the layers', async () => {
     const mocks = createMapLibreMock()
     mocks.canvas.style.cursor = 'grab'
