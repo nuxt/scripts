@@ -39,63 +39,23 @@ export interface RybbitAnalyticsApi {
 
 declare global {
   interface Window {
-    rybbit: RybbitAnalyticsApi
+    rybbit?: RybbitAnalyticsApi
   }
 }
 
-// Queue state stored on globalThis to persist across module instances
-// Using Symbol to avoid conflicts - don't use window.rybbit as stub
-// because Rybbit's script checks for it and skips init if it exists
-const RYBBIT_QUEUE_KEY = Symbol.for('nuxt-scripts.rybbit-queue')
-
-interface RybbitQueueState {
-  queue: Array<[string, ...any[]]>
-  flushed: boolean
-}
-
-function getRybbitState(): RybbitQueueState | undefined {
-  if (!import.meta.client)
-    return
-  const g = globalThis as any
-  if (!g[RYBBIT_QUEUE_KEY]) {
-    g[RYBBIT_QUEUE_KEY] = { queue: [], flushed: false }
-  }
-  return g[RYBBIT_QUEUE_KEY]
+// The script proxy records calls made before the script loads and replays them
+// once it resolves, so buffering them here too would send every event twice.
+function isRybbitReady() {
+  return typeof window !== 'undefined' && typeof window.rybbit?.event === 'function'
 }
 
 export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?: RybbitAnalyticsInput) {
-  // Check if real Rybbit is loaded
-  const isRybbitReady = () => import.meta.client
-    && typeof window !== 'undefined'
-    && window.rybbit
-    && typeof window.rybbit.event === 'function'
-
-  // Flush queued calls to real implementation
-  const flushQueue = () => {
-    const state = getRybbitState()
-    if (!state || state.flushed || !isRybbitReady())
+  const call = (method: string, ...args: any[]) => {
+    if (!isRybbitReady())
       return
-    state.flushed = true
-    while (state.queue.length > 0) {
-      const [method, ...args] = state.queue.shift()!
-      const fn = (window.rybbit as any)[method]
-      if (typeof fn === 'function') {
-        fn.apply(window.rybbit, args)
-      }
-    }
-  }
-
-  // Wrapper that queues or calls directly
-  const callOrQueue = (method: string, ...args: any[]) => {
-    if (isRybbitReady()) {
-      const fn = (window.rybbit as any)[method]
-      if (typeof fn === 'function') {
-        fn.apply(window.rybbit, args)
-      }
-    }
-    else {
-      getRybbitState()?.queue.push([method, ...args])
-    }
+    const fn = (window.rybbit as any)[method]
+    if (typeof fn === 'function')
+      fn.apply(window.rybbit, args)
   }
 
   return useRegistryScript<T, typeof RybbitAnalyticsOptions>('rybbitAnalytics', (options) => {
@@ -118,14 +78,11 @@ export function useScriptRybbitAnalytics<T extends RybbitAnalyticsApi>(_options?
       schema: import.meta.dev ? RybbitAnalyticsOptions : undefined,
       scriptOptions: {
         use() {
-          // Flush queue when use() is called (happens on status changes)
-          flushQueue()
-          // Return wrappers that queue if not ready
           return {
-            pageview: () => callOrQueue('pageview'),
-            event: (name: string, properties?: Record<string, any>) => callOrQueue('event', name, properties),
-            identify: (userId: string) => callOrQueue('identify', userId),
-            clearUserId: () => callOrQueue('clearUserId'),
+            pageview: () => call('pageview'),
+            event: (name: string, properties?: Record<string, any>) => call('event', name, properties),
+            identify: (userId: string) => call('identify', userId),
+            clearUserId: () => call('clearUserId'),
             getUserId: () => window.rybbit?.getUserId?.() ?? null,
           } as RybbitAnalyticsApi
         },
