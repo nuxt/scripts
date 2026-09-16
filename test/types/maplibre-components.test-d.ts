@@ -1,11 +1,11 @@
 import type {
-  ScriptMapLibreGeoJsonLayer as RuntimeLayer,
-} from '#nuxt-scripts/types'
-import type {
   ScriptMapLibreGeoJsonEmits,
   ScriptMapLibreGeoJsonLayer,
   ScriptMapLibreMapExpose,
-} from '../../packages/script/src/module'
+} from '@nuxt/scripts'
+import type {
+  ScriptMapLibreGeoJsonLayer as RuntimeLayer,
+} from '#nuxt-scripts/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
 /**
@@ -45,9 +45,26 @@ describe('mapLibre component types', () => {
       },
     ]
 
+    expectTypeOf<ScriptMapLibreGeoJsonLayer>().not.toBeAny()
     expectTypeOf(layers[0]!.id).toEqualTypeOf<string>()
     // the component supplies the source, so it must stay optional
     expectTypeOf(layers[0]!.source).toEqualTypeOf<string | undefined>()
+  })
+
+  it('accepts a source-less layer only when a GeoJSON source can render it', () => {
+    // MapLibre's own style validation rejects these three on a GeoJSON source:
+    // `hillshade` and `color-relief` need a `raster-dem` source and `raster`
+    // needs raster tiles. `background` takes no source at all.
+    // @ts-expect-error a hillshade layer must name its own raster-dem source
+    const hillshade: ScriptMapLibreGeoJsonLayer = { id: 'terrain', type: 'hillshade' }
+    // @ts-expect-error a background layer never belongs to a source
+    const background: ScriptMapLibreGeoJsonLayer = { id: 'backdrop', type: 'background' }
+    // an explicit external source stays valid
+    const raster: ScriptMapLibreGeoJsonLayer = { id: 'satellite', type: 'raster', source: 'imagery' }
+
+    expectTypeOf(hillshade).not.toBeAny()
+    expectTypeOf(background).not.toBeAny()
+    expectTypeOf(raster).not.toBeAny()
   })
 
   it('exposes the same layer type from `#nuxt-scripts/types`', () => {

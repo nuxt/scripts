@@ -90,17 +90,29 @@ export interface ScriptMapLibreMapSlots {
 }
 
 /**
- * A style layer without its `source`, which the component supplies.
+ * Layer kinds a GeoJSON source can render. MapLibre's own style validation
+ * rejects the rest: `hillshade` and `color-relief` need a `raster-dem` source,
+ * `raster` needs raster tiles, and `background` takes no source at all.
+ */
+type GeoJsonLayerType = 'circle' | 'fill' | 'fill-extrusion' | 'heatmap' | 'line' | 'symbol'
+
+/**
+ * A style layer for this component's source.
  *
  * `LayerSpecification` is a union and a plain `Omit` is not distributive, so it
  * collapses the union to its common keys and drops `filter`. MapLibre's own
  * `DistributiveOmit` keeps each member, so `type` narrows `filter`, `paint` and
  * `layout` for that layer kind.
+ *
+ * Only a GeoJSON-compatible layer may leave `source` out. A `raster`,
+ * `hillshade` or `color-relief` layer must name its own source.
  */
-export type ScriptMapLibreGeoJsonLayer = MapLibre.DistributiveOmit<MapLibre.LayerSpecification, 'source'> & {
-  /** Override the component's source ID for this layer. */
-  source?: string
-}
+export type ScriptMapLibreGeoJsonLayer
+  = | (MapLibre.DistributiveOmit<Extract<MapLibre.LayerSpecification, { type: GeoJsonLayerType }>, 'source'> & {
+    /** Override the component's source ID for this layer. */
+    source?: string
+  })
+  | Extract<MapLibre.LayerSpecification, { type: 'color-relief' | 'hillshade' | 'raster' }>
 
 export interface ScriptMapLibreGeoJsonProps {
   /** MapLibre source ID. Changing it rebuilds the owned source and layers. */
