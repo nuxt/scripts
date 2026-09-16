@@ -12,6 +12,11 @@ interface ScriptLeafletTileLayerEmits {
   tileerror: [event: Leaflet.TileErrorEvent]
 }
 
+// Renders no DOM of its own. A render function that returns `null` gives a
+// comment node on the server and the client. A template that holds only a
+// comment, or nothing, renders nothing on the server, so hydration mismatches.
+defineOptions({ render: () => null })
+
 const props = defineProps<{
   /** Tile URL template, for example `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. */
   url: string
@@ -50,7 +55,3 @@ watch(() => props.options, (options) => {
 
 defineExpose({ tileLayer })
 </script>
-
-<template>
-  <!-- nuxt-scripts: Leaflet tile layer -->
-</template>

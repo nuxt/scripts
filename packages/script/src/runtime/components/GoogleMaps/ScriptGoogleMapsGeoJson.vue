@@ -2,6 +2,11 @@
 import { watch } from 'vue'
 import { bindGoogleMapsEvents, useGoogleMapsResource } from './useGoogleMapsResource'
 
+// Renders no DOM of its own. A render function that returns `null` gives a
+// comment node on the server and the client. A template that holds only a
+// comment, or nothing, renders nothing on the server, so hydration mismatches.
+defineOptions({ render: () => null })
+
 const props = defineProps<{
   /**
    * The GeoJSON source. Can be a URL string or a GeoJSON object.
@@ -132,6 +137,3 @@ watch(() => props.style, (style) => {
     dataLayer.value.setStyle(style ?? {})
 }, { deep: true })
 </script>
-
-<template>
-</template>
