@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Pulse](https://pulse.ciphera.net/) is cookie-free web analytics by [Ciphera](https://ciphera.net/). The tracker sets no cookies and stores no client-side identifier: Pulse identifies visitors server-side with rotating hashes. The [script reference](https://docs.ciphera.net/pulse/script-installation) documents every attribute the composable maps.
+[Pulse](https://pulse.ciphera.net/) is cookie-free web analytics by [Ciphera](https://ciphera.net/). The tracker leaves nothing in the browser, no cookie and no stored identifier; Pulse works out who a visitor is on its own servers, from rotating hashes. The [script reference](https://docs.ciphera.net/pulse/script-installation) lists every attribute this composable maps.
 
 ::script-stats
 ::
@@ -20,9 +20,9 @@ links:
 
 Pulse **cannot** be proxied (`proxy: true`).
 
-Pulse derives visitor identity on the server from the connecting IP address and user agent. Beacons routed through your Nuxt server would all arrive from that server's IP, so every visitor would collapse into one identity per user agent. Pulse's [bot filtering](https://docs.ciphera.net/pulse/bot-filtering) also counts a datacenter or hosting-provider origin as one of its signals, which is where a proxied server sits. Because identity never reaches the browser, there is nothing for a first-party proxy to protect.
+Pulse builds visitor identity on its server from the connecting IP address and user agent. Route the beacons through your Nuxt server and they all arrive from one IP, so every visitor on the same user agent collapses into a single identity. Its [bot filtering](https://docs.ciphera.net/pulse/bot-filtering) counts a datacenter or hosting-provider origin as a signal too, which is where a proxied server sits. The tracker keeps no identifier in the browser either, so a first-party proxy has nothing client-side to shield.
 
-Bundling (`bundle: true`) **is** supported: the tracker is served from your origin, and the browser sends its beacons directly to the Pulse API.
+Bundling (`bundle: true`) **is** supported: the tracker is served from your origin, and the browser sends its beacons straight to the Pulse API.
 
 ## Self-hosted or proxied API
 
@@ -30,7 +30,7 @@ Bundling (`bundle: true`) **is** supported: the tracker is served from your orig
 
 ```ts
 useScriptPulseAnalytics({
-  domain: 'example.com',
+  domain: 'YOUR_DOMAIN',
   apiUrl: 'https://pulse-api.example.com',
 })
 ```
@@ -38,10 +38,10 @@ useScriptPulseAnalytics({
 ## Defaults
 
 - **Trigger: `onNuxtReady`** The script loads when the Nuxt app is ready.
-- Pageviews, SPA route changes, scroll depth, outbound links and file downloads are recorded automatically. Set `trackScroll`, `trackOutbound` or `trackDownloads` to `false` to switch one off.
-- Do Not Track and Global Privacy Control are honoured by the tracker itself.
+- The tracker records pageviews, SPA route changes, scroll depth, outbound links and file downloads on its own. Set `trackScroll`, `trackOutbound` or `trackDownloads` to `false` to turn one off.
+- The tracker honours Do Not Track and Global Privacy Control itself.
 
-Use the composable's `proxy` object for `track` calls. Calls made before the script has loaded are queued and sent once it has. When the visitor has opted out (Do Not Track, Global Privacy Control), the tracker does not run and the queue is discarded.
+Use the composable's `proxy` object for `track` calls. Call it before the script has loaded and Nuxt Scripts holds the call, then replays it once the tracker is in. If the visitor has opted out, the tracker never runs and the queue is dropped.
 
 ::code-group
 
@@ -73,7 +73,7 @@ The default trigger waits until Nuxt is ready:
 ```vue [app.vue]
 <script setup lang="ts">
 useScriptPulseAnalytics({
-  domain: 'example.com',
+  domain: 'YOUR_DOMAIN',
 })
 </script>
 ```
