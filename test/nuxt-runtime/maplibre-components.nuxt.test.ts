@@ -576,6 +576,16 @@ describe('mapLibre components', () => {
       layers: [{ id: 'melbourne-circle', type: 'circle', filter: ['!', ['has', 'point_count']] }],
     })
     expect(mocks.canvas.style.cursor).toBe('grab')
+    // the component never invents a pointer event it did not receive
+    expect(wrapper.emitted('mouseleave')).toBeUndefined()
+
+    // MapLibre re-evaluates on the next pointer move, whether the pointer is
+    // still over a feature or over a spot the new filter emptied
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    mocks.layerBinding('mouseleave').listener({ type: 'mouseleave' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
     wrapper.unmount()
   })
 
