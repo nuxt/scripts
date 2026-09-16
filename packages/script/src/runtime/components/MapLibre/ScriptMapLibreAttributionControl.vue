@@ -11,7 +11,7 @@ const props = defineProps<ScriptMapLibreAttributionControlProps>()
  * map shows attribution once. Unmounting restores the replaced control, so
  * required attribution never disappears.
  */
-let replaced: MapLibre.IControl[] = []
+let replaced: MapLibre.AttributionControl[] = []
 
 function restore(map: MapLibre.Map): void {
   for (const existing of replaced) {
@@ -23,9 +23,15 @@ function restore(map: MapLibre.Map): void {
 
 const control = useMapLibreResource<MapLibre.AttributionControl>({
   create({ maplibre, map }) {
-    const instance = new maplibre.AttributionControl(props.options)
     // `_controls` is the list that `hasControl()` reads. `filter` copies it before removal.
-    replaced = map._controls.filter(existing => existing instanceof maplibre.AttributionControl)
+    replaced = map._controls.filter((existing): existing is MapLibre.AttributionControl => existing instanceof maplibre.AttributionControl)
+    // The component options override the map's `attributionControl` options.
+    // Credits the map already configured stay unless the component sets its own.
+    const inherited = replaced[0]?.options
+    const options = inherited || props.options
+      ? { ...inherited, ...props.options, customAttribution: props.options?.customAttribution ?? inherited?.customAttribution }
+      : undefined
+    const instance = new maplibre.AttributionControl(options)
     for (const existing of replaced)
       map.removeControl(existing)
     try {
@@ -38,13 +44,13 @@ const control = useMapLibreResource<MapLibre.AttributionControl>({
     return instance
   },
   cleanup(instance, { map }) {
+    if (map.hasControl(instance))
+      map.removeControl(instance)
     // A removed map has already dropped every control, and adding to it throws.
-    if (!map.hasControl(instance)) {
+    if (map._removed)
       replaced = []
-      return
-    }
-    map.removeControl(instance)
-    restore(map)
+    else
+      restore(map)
   },
 })
 

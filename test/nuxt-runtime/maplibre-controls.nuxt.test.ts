@@ -43,6 +43,7 @@ function createMap() {
   const positions = new Map<unknown, string | undefined>()
   const map = {
     _controls: [] as FakeControl[],
+    _removed: false,
     addControl: vi.fn((control: FakeControl, position?: string) => {
       map._controls.push(control)
       positions.set(control, position)
@@ -55,6 +56,7 @@ function createMap() {
     hasControl: (control: FakeControl) => map._controls.includes(control),
     remove: () => {
       map._controls = []
+      map._removed = true
     },
     positionOf: (control: unknown) => positions.get(control),
   }
@@ -239,9 +241,9 @@ describe('mapLibre geolocate control', () => {
 })
 
 describe('mapLibre attribution control', () => {
-  function mapWithDefaultAttribution(maplibre: ReturnType<typeof createMapLibre>) {
+  function mapWithDefaultAttribution(maplibre: ReturnType<typeof createMapLibre>, options: Record<string, unknown> = { compact: true }) {
     const map = createMap()
-    const builtIn = new (maplibre.AttributionControl as any)({ compact: true }) as FakeControl
+    const builtIn = new (maplibre.AttributionControl as any)(options) as FakeControl
     map.addControl(builtIn)
     map.addControl.mockClear()
     return { map, builtIn }
@@ -259,7 +261,7 @@ describe('mapLibre attribution control', () => {
     const mounted = controlsOf(map, 'attribution')
     expect(mounted).toHaveLength(1)
     expect(mounted[0]).not.toBe(builtIn)
-    expect(mounted[0]!.options).toEqual({ compact: false })
+    expect(mounted[0]!.options).toMatchObject({ compact: false })
     expect(map.positionOf(mounted[0])).toBe('bottom-left')
 
     wrapper.unmount()
@@ -294,6 +296,39 @@ describe('mapLibre attribution control', () => {
     expect(controlsOf(map, 'attribution')).toEqual([builtIn])
     expect(consoleError).toHaveBeenCalledWith('[nuxt-scripts] MapLibre resource creation failed:', failure)
     consoleError.mockRestore()
+  })
+
+  it('keeps credits the map default configured unless the component sets its own', async () => {
+    const maplibre = createMapLibre()
+    const { map } = mapWithDefaultAttribution(maplibre, { compact: true, customAttribution: 'Data: Hobart City Council' })
+    const inheriting = mount(ScriptMapLibreAttributionControl, {
+      props: { options: { compact: false } },
+      global: provideMap(maplibre, map),
+    })
+    await nextTick()
+    expect(controlsOf(map, 'attribution')[0]!.options).toEqual({ compact: false, customAttribution: 'Data: Hobart City Council' })
+    inheriting.unmount()
+
+    const overriding = mount(ScriptMapLibreAttributionControl, {
+      props: { options: { customAttribution: 'Data: Tasmania' } },
+      global: provideMap(maplibre, map),
+    })
+    await nextTick()
+    expect(controlsOf(map, 'attribution')[0]!.options).toEqual({ compact: true, customAttribution: 'Data: Tasmania' })
+    overriding.unmount()
+  })
+
+  it('restores the map default after consumer code removed the component control', async () => {
+    const maplibre = createMapLibre()
+    const { map, builtIn } = mapWithDefaultAttribution(maplibre)
+    const wrapper = mount(ScriptMapLibreAttributionControl, {
+      global: provideMap(maplibre, map),
+    })
+    await nextTick()
+
+    map.removeControl(controlsOf(map, 'attribution')[0]!)
+    wrapper.unmount()
+    expect(controlsOf(map, 'attribution')).toEqual([builtIn])
   })
 
   it('does not restore onto a map that was already removed', async () => {
