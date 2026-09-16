@@ -386,6 +386,34 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     })
   })
 
+  it('shows the default attribution once on a map without an attribution control', async () => {
+    const page = await openMap('/style-swap')
+    const readAttribution = () => page.evaluate(() => [...document.querySelectorAll('.maplibregl-ctrl-attrib')].map(control => control.textContent!.trim()))
+    await expect.poll(readAttribution).toEqual([expect.stringContaining('MapLibre')])
+  })
+
+  it('shows attribution exactly once while the attribution control mounts, unmounts and remounts', async () => {
+    const page = await openMap('/attribution')
+    const readAttribution = () => page.evaluate(() => [...document.querySelectorAll('.maplibregl-ctrl-attrib')].map(control => ({
+      corner: [...control.parentElement!.classList].find(name => name.startsWith('maplibregl-ctrl-bottom') || name.startsWith('maplibregl-ctrl-top')),
+      text: control.textContent!.trim(),
+    })))
+    const toggle = () => page.click('#toggle-control')
+    // The component inherits the credits of the map default, and the style source adds its own.
+    const credits = expect.stringMatching(/^(?=.*Map credits)(?=.*Source credits)/)
+
+    await expect.poll(readAttribution).toEqual([{ corner: 'maplibregl-ctrl-bottom-left', text: credits }])
+
+    await toggle()
+    await expect.poll(readAttribution).toEqual([{ corner: 'maplibregl-ctrl-bottom-right', text: credits }])
+
+    await toggle()
+    await expect.poll(readAttribution).toEqual([{ corner: 'maplibregl-ctrl-bottom-left', text: credits }])
+
+    await toggle()
+    await expect.poll(readAttribution).toEqual([{ corner: 'maplibregl-ctrl-bottom-right', text: credits }])
+  })
+
   it.each(['diff', 'full'])('emits sourceready after a %s style swap so feature state can be restored', async (mode) => {
     const page = await openMap('/style-swap')
     const readLog = async () => JSON.parse(await page.locator('#log').textContent() ?? '{}') as { styleload: boolean[], sourceready: string[] }
