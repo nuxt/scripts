@@ -44,9 +44,12 @@ let isStyleMutable = false
 /** A sync was skipped because the style was mid-swap. The next ready signal runs it. */
 let hasPendingSync = false
 
-/** Layer keys the component cannot update in place. A change rebuilds the source. */
+/**
+ * Layer keys the component cannot update in place. A change rebuilds the source.
+ * The layer is read through its reactive proxy, so a deep change is tracked.
+ */
 function layerStructure(layer: ScriptMapLibreGeoJsonLayer): Record<string, unknown> {
-  const structure = { ...toRaw(layer) } as Record<string, unknown>
+  const structure = { ...layer } as Record<string, unknown>
   delete structure.paint
   delete structure.layout
   delete structure.filter
@@ -67,14 +70,17 @@ function structureSignature(): string {
   ])
 }
 
-/** Reads the paint, layout and filter values of every layer, in prop order. */
+/**
+ * Reads the paint, layout and filter values of every layer, in prop order.
+ * The layer is read through its reactive proxy, so a deep change is tracked.
+ */
 function readLayerStyles(): LayerStyle[] {
   return props.layers.map((layer) => {
-    const raw = toRaw(layer) as Record<string, unknown>
+    const source = layer as Record<string, unknown>
     return {
-      paint: (raw.paint ?? {}) as Record<string, unknown>,
-      layout: (raw.layout ?? {}) as Record<string, unknown>,
-      filter: raw.filter,
+      paint: (source.paint ?? {}) as Record<string, unknown>,
+      layout: (source.layout ?? {}) as Record<string, unknown>,
+      filter: source.filter,
     }
   })
 }
@@ -82,6 +88,11 @@ function readLayerStyles(): LayerStyle[] {
 /** Content signature of the layer values the component can update in place. */
 function styleSignature(): string {
   return JSON.stringify(readLayerStyles())
+}
+
+/** Detaches the read values from the props, so MapLibre never holds a proxy. */
+function detachLayerStyles(signature: string): LayerStyle[] {
+  return JSON.parse(signature) as LayerStyle[]
 }
 
 /** Applies the `cursor` prop while the pointer is over an owned layer. */
@@ -195,8 +206,8 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
       ownedLayerIds.push(nextLayer.id)
     }
     appliedStructure = structureSignature()
-    appliedStyles = readLayerStyles()
-    appliedStyleSignature = JSON.stringify(appliedStyles)
+    appliedStyleSignature = styleSignature()
+    appliedStyles = detachLayerStyles(appliedStyleSignature)
     bindLayerEvents(map, carryHover)
   }
   catch (error) {
@@ -222,7 +233,8 @@ function applyStyleBlock(
  * keeps its data and, for a clustered source, its cluster index.
  */
 function updateLayerStyles(map: MapLibreGl.Map): void {
-  const nextStyles = readLayerStyles()
+  const signature = styleSignature()
+  const nextStyles = detachLayerStyles(signature)
   nextStyles.forEach((next, index) => {
     const before = appliedStyles[index]
     const layerId = ownedLayerIds[index]
@@ -248,7 +260,7 @@ function updateLayerStyles(map: MapLibreGl.Map): void {
   }
   // Only a complete pass records the new values, so a failed update is retried.
   appliedStyles = nextStyles
-  appliedStyleSignature = JSON.stringify(nextStyles)
+  appliedStyleSignature = signature
 }
 
 /** Runs a rebuild outside the initial creation, where no caller can catch it. */

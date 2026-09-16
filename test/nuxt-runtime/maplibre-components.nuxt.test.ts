@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { h, nextTick, shallowRef } from 'vue'
+import { h, nextTick, reactive, shallowRef } from 'vue'
 import ScriptMapLibreGeoJson from '../../packages/script/src/runtime/components/MapLibre/ScriptMapLibreGeoJson.vue'
 import ScriptMapLibreMarker from '../../packages/script/src/runtime/components/MapLibre/ScriptMapLibreMarker.vue'
 import ScriptMapLibreNavigationControl from '../../packages/script/src/runtime/components/MapLibre/ScriptMapLibreNavigationControl.vue'
@@ -529,6 +529,30 @@ describe('mapLibre components', () => {
     expect(mocks.map.setLayoutProperty).toHaveBeenCalledWith('melbourne-circle', 'visibility', 'none')
     expect(mocks.map.setFilter).toHaveBeenCalledWith('melbourne-circle', ['!', ['has', 'point_count']])
     expect(mocks.map.removeSource).not.toHaveBeenCalled()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    wrapper.unmount()
+  })
+
+  it('applies a paint value changed in place on a reactive layer array', async () => {
+    const mocks = createMapLibreMock()
+    const layers = reactive([
+      { id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#396cb2' } },
+    ])
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers,
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    layers[0]!.paint['circle-color'] = '#b23939'
+    await nextTick()
+
+    expect(mocks.map.setPaintProperty).toHaveBeenCalledWith('melbourne-circle', 'circle-color', '#b23939')
     expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
 
     wrapper.unmount()
