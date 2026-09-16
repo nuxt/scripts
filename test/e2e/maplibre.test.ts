@@ -1,5 +1,4 @@
 import type { Page } from 'playwright-core'
-import { appendFileSync } from 'node:fs'
 import { createResolver } from '@nuxt/kit'
 import { createPage, setup } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
@@ -38,10 +37,9 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
       const info = gl.getExtension('WEBGL_debug_renderer_info')
       return info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : String(gl.getParameter(gl.RENDERER))
     })
-    // Record which GL implementation ran the suite. CI has no GPU, so it shows in the job summary.
+    // Record which GL implementation ran the suite. CI has no GPU, so the log shows the fallback.
     await annotate(`WebGL renderer: ${renderer}`)
-    if (process.env.GITHUB_STEP_SUMMARY)
-      appendFileSync(process.env.GITHUB_STEP_SUMMARY, `MapLibre e2e WebGL renderer: \`${renderer}\`\n`)
+    console.warn(`[maplibre e2e] WebGL renderer: ${renderer}`)
     expect(renderer).toBeTruthy()
   })
 
