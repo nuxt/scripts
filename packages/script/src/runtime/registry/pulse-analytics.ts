@@ -83,7 +83,13 @@ export function useScriptPulseAnalytics<T extends PulseAnalyticsApi>(_options?: 
     state.flushed = true
     while (state.queue.length > 0) {
       const args = state.queue.shift()!
-      window.pulse.track(...args)
+      try {
+        window.pulse.track(...args)
+      }
+      catch {
+        // One rejected event must not strand the ones queued after it: the
+        // flag is already set, so nothing would ever drain them again.
+      }
     }
   }
 
