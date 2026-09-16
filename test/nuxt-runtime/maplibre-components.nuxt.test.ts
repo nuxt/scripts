@@ -467,6 +467,82 @@ describe('mapLibre components', () => {
     expect(liveClick.subscription.unsubscribe).toHaveBeenCalledOnce()
   })
 
+  it('tracks the cursor prop while the pointer stays over a layer', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+        cursor: 'pointer',
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    // changing the prop applies without a mouseleave
+    await wrapper.setProps({ cursor: 'crosshair' })
+    expect(mocks.canvas.style.cursor).toBe('crosshair')
+
+    // clearing the prop restores the canvas default
+    await wrapper.setProps({ cursor: undefined })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+
+    // setting it again while still hovering applies it
+    await wrapper.setProps({ cursor: 'zoom-in' })
+    expect(mocks.canvas.style.cursor).toBe('zoom-in')
+
+    mocks.layerBinding('mouseleave').listener({ type: 'mouseleave' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+    wrapper.unmount()
+  })
+
+  it('applies a cursor added after the pointer entered a layer', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+
+    await wrapper.setProps({ cursor: 'pointer' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    mocks.layerBinding('mouseleave').listener({ type: 'mouseleave' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+    wrapper.unmount()
+  })
+
+  it('leaves the cursor alone while the pointer is away from every layer', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    await wrapper.setProps({ cursor: 'pointer' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+    wrapper.unmount()
+  })
+
   it('leaves the cursor alone without a cursor prop', async () => {
     const mocks = createMapLibreMock()
     mocks.canvas.style.cursor = 'grab'

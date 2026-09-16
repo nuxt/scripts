@@ -22,6 +22,7 @@ let ownedSourceId: string | undefined
 let appliedSignature: string | undefined
 let layerSubscriptions: MapLibreGl.Subscription[] = []
 let restoreCursor: string | undefined
+let isPointerOverLayer = false
 
 /**
  * Content signature of every prop that forces a source and layer rebuild.
@@ -51,6 +52,7 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
   for (const subscription of layerSubscriptions)
     subscription.unsubscribe()
   layerSubscriptions = []
+  isPointerOverLayer = false
   if (restoreCursor !== undefined)
     applyCursor(map, undefined)
 }
@@ -67,11 +69,12 @@ function bindLayerEvents(map: MapLibreGl.Map): void {
   layerSubscriptions = [
     map.on('click', layerIds, event => emit('click', event)),
     map.on('mouseenter', layerIds, (event) => {
-      if (props.cursor)
-        applyCursor(map, props.cursor)
+      isPointerOverLayer = true
+      applyCursor(map, props.cursor || undefined)
       emit('mouseenter', event)
     }),
     map.on('mouseleave', layerIds, (event) => {
+      isPointerOverLayer = false
       applyCursor(map, undefined)
       emit('mouseleave', event)
     }),
@@ -163,6 +166,13 @@ watch(() => props.data, (data) => {
   if (source?.type === 'geojson')
     (source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
 }, { deep: 2 })
+
+// The cursor is a presentation prop, so it stays out of the resource signature.
+// Applying it here keeps it reactive without rebuilding the source and layers.
+watch(() => props.cursor, (cursor) => {
+  if (isPointerOverLayer && geoJson.value)
+    applyCursor(geoJson.value.map, cursor || undefined)
+})
 
 watch(resourceSignature, (signature) => {
   if (geoJson.value && signature !== appliedSignature)
