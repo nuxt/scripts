@@ -1,11 +1,11 @@
 import type {
+  ScriptMapLibreGeoJsonLayer as RuntimeLayer,
+} from '#nuxt-scripts/types'
+import type {
   ScriptMapLibreGeoJsonEmits,
   ScriptMapLibreGeoJsonLayer,
   ScriptMapLibreMapExpose,
 } from '../../packages/script/src/module'
-import type {
-  ScriptMapLibreGeoJsonLayer as RuntimeLayer,
-} from '#nuxt-scripts/types'
 import { describe, expectTypeOf, it } from 'vitest'
 
 /**
