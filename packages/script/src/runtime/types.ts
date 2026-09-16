@@ -57,6 +57,23 @@ import type { ProxyPrivacyInput } from './server/utils/privacy'
 export type { Cluster, ClusterStats, MarkerClustererContext, MarkerClustererInstance, MarkerClustererOptions } from './components/GoogleMaps/types'
 export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
+// MapLibre component types (re-exported for easy user access)
+export type {
+  ScriptMapLibreGeoJsonEmits,
+  ScriptMapLibreGeoJsonLayer,
+  ScriptMapLibreGeoJsonProps,
+  ScriptMapLibreGeoJsonResource,
+  ScriptMapLibreMapEmits,
+  ScriptMapLibreMapExpose,
+  ScriptMapLibreMapProps,
+  ScriptMapLibreMapSlots,
+  ScriptMapLibreMarkerEmits,
+  ScriptMapLibreMarkerProps,
+  ScriptMapLibreNavigationControlProps,
+  ScriptMapLibrePopupEmits,
+  ScriptMapLibrePopupProps,
+} from './components/MapLibre/types'
+
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'
 
 // -- Consent types --

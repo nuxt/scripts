@@ -61,15 +61,33 @@ function createMapLibreMock() {
 
   const control = { id: 'navigation' }
   const styleEvents = new Map<string, () => void>()
+  const canvas = document.createElement('canvas')
+  const layerBindings: Array<{
+    type: string
+    layerIds: string[]
+    listener: (event: any) => void
+    subscription: { unsubscribe: ReturnType<typeof vi.fn> }
+  }> = []
   const source = { type: 'geojson', setData: vi.fn() }
   const layers = new Set<string>()
   const sources = new Set<string>()
   const map: Record<string, any> = {
-    on: vi.fn((name: string, callback: () => void) => {
-      styleEvents.set(name, callback)
-      return map
+    on: vi.fn((name: string, layerIdsOrCallback: any, layerCallback?: (event: any) => void) => {
+      if (typeof layerIdsOrCallback === 'function') {
+        styleEvents.set(name, layerIdsOrCallback)
+        return map
+      }
+      const subscription = { unsubscribe: vi.fn() }
+      layerBindings.push({
+        type: name,
+        layerIds: layerIdsOrCallback,
+        listener: layerCallback!,
+        subscription,
+      })
+      return subscription
     }),
     off: vi.fn(() => map),
+    getCanvas: vi.fn(() => canvas),
     isStyleLoaded: vi.fn(() => true),
     addSource: vi.fn((id: string) => {
       sources.add(id)
@@ -111,7 +129,22 @@ function createMapLibreMock() {
     Popup: vi.fn(PopupConstructor),
     NavigationControl: vi.fn(NavigationControlConstructor),
   }
-  return { maplibre, map, marker, markerElement, popup, control, source, styleEvents }
+  return {
+    maplibre,
+    map,
+    marker,
+    markerElement,
+    popup,
+    control,
+    source,
+    styleEvents,
+    canvas,
+    layerBindings,
+    /** The most recent binding for an event type. */
+    layerBinding(type: string) {
+      return layerBindings.filter(binding => binding.type === type).at(-1)!
+    },
+  }
 }
 
 function provideMap(maplibre: any, map: any) {
@@ -368,6 +401,64 @@ describe('mapLibre components', () => {
     })
     expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
 
+    wrapper.unmount()
+  })
+
+  it('emits layer events, applies the hover cursor and rebinds after a rebuild', async () => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+        cursor: 'pointer',
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    expect(mocks.layerBinding('click').layerIds).toEqual(['melbourne-circle'])
+
+    const clickEvent = { type: 'click', features: [{ id: 1 }] }
+    mocks.layerBinding('click').listener(clickEvent)
+    expect(wrapper.emitted('click')?.[0]).toEqual([clickEvent])
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+    expect(wrapper.emitted('mouseenter')).toHaveLength(1)
+
+    mocks.layerBinding('mouseleave').listener({ type: 'mouseleave' })
+    expect(mocks.canvas.style.cursor).toBe('')
+    expect(wrapper.emitted('mouseleave')).toHaveLength(1)
+
+    const staleClick = mocks.layerBinding('click')
+    await wrapper.setProps({ layers: [{ id: 'melbourne-heat', type: 'heatmap' }] })
+    expect(staleClick.subscription.unsubscribe).toHaveBeenCalledOnce()
+    expect(mocks.layerBinding('click').layerIds).toEqual(['melbourne-heat'])
+
+    const liveClick = mocks.layerBinding('click')
+    wrapper.unmount()
+    expect(liveClick.subscription.unsubscribe).toHaveBeenCalledOnce()
+  })
+
+  it('leaves the cursor alone without a cursor prop', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+
+    mocks.layerBinding('mouseleave').listener({ type: 'mouseleave' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
     wrapper.unmount()
   })
 

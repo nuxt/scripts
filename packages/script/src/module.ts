@@ -2,6 +2,21 @@ import type { FetchOptions } from 'ofetch'
 import type { ProxyDevtoolsScript } from './devtools'
 import type { NormalizedRegistryEntry } from './normalize'
 import type { ProxyAliasConfig } from './proxy-alias'
+import type {
+  ScriptMapLibreGeoJsonEmits,
+  ScriptMapLibreGeoJsonLayer,
+  ScriptMapLibreGeoJsonProps,
+  ScriptMapLibreGeoJsonResource,
+  ScriptMapLibreMapEmits,
+  ScriptMapLibreMapExpose,
+  ScriptMapLibreMapProps,
+  ScriptMapLibreMapSlots,
+  ScriptMapLibreMarkerEmits,
+  ScriptMapLibreMarkerProps,
+  ScriptMapLibreNavigationControlProps,
+  ScriptMapLibrePopupEmits,
+  ScriptMapLibrePopupProps,
+} from './runtime/components/MapLibre/types'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type {
   FirstPartyPrivacy,
@@ -46,6 +61,22 @@ import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from '
 import { validateScriptsEnvVars } from './validate-env'
 
 export type { FirstPartyPrivacy }
+
+export type {
+  ScriptMapLibreGeoJsonEmits,
+  ScriptMapLibreGeoJsonLayer,
+  ScriptMapLibreGeoJsonProps,
+  ScriptMapLibreGeoJsonResource,
+  ScriptMapLibreMapEmits,
+  ScriptMapLibreMapExpose,
+  ScriptMapLibreMapProps,
+  ScriptMapLibreMapSlots,
+  ScriptMapLibreMarkerEmits,
+  ScriptMapLibreMarkerProps,
+  ScriptMapLibreNavigationControlProps,
+  ScriptMapLibrePopupEmits,
+  ScriptMapLibrePopupProps,
+}
 
 const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
@@ -526,6 +557,9 @@ export default defineNuxtModule<ModuleOptions>({
     addComponentsDir({
       path: await resolvePath('./runtime/components'),
       pathPrefix: false,
+      // Only `.vue` files are components. The sibling `types.ts` and
+      // `use*Resource.ts` helpers must not register as global components.
+      extensions: ['vue'],
     })
 
     addTemplate({

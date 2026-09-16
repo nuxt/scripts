@@ -1,82 +1,18 @@
 <script lang="ts">
-import type * as MapLibre from 'maplibre-gl'
-import type { CSSProperties, HTMLAttributes, ReservedProps, ShallowRef, ShallowRef as VueShallowRef } from 'vue'
-import type { ElementScriptTrigger } from '#nuxt-scripts/types'
+export type {
+  ScriptMapLibreMapEmits,
+  ScriptMapLibreMapExpose,
+  ScriptMapLibreMapProps,
+  ScriptMapLibreMapSlots,
+} from './types'
 
 export { MAPLIBRE_MAP_INJECTION_KEY } from './useMapLibreResource'
-
-export interface ScriptMapLibreMapProps {
-  /**
-   * Defines when the MapLibre script loads.
-   * @default 'visible'
-   */
-  trigger?: ElementScriptTrigger
-  /** MapLibre style URL or inline style specification. */
-  mapStyle: string | MapLibre.StyleSpecification
-  /** Initial and reactively controlled map center. */
-  center: MapLibre.LngLatLike
-  /** Initial and reactively controlled zoom level. @default 12 */
-  zoom?: number
-  /** Initial and reactively controlled bearing in degrees. @default 0 */
-  bearing?: number
-  /** Initial and reactively controlled pitch in degrees. @default 0 */
-  pitch?: number
-  /** Options passed to `new maplibregl.Map()`. Dedicated props take precedence. */
-  options?: Omit<MapLibre.MapOptions, 'container'>
-  /** Inject MapLibre's stylesheet when the script begins loading. @default true */
-  injectStyles?: boolean
-  /** Custom MapLibre stylesheet URL. */
-  stylesheetUrl?: string
-  /** Worker URL passed to `maplibregl.setWorkerUrl()`. */
-  workerUrl?: string
-  /** Width reserved before the map loads. @default 640 */
-  width?: number | string
-  /** Height reserved before the map loads. @default 400 */
-  height?: number | string
-  /** Accessible name for an interactive map. @default 'Interactive map' */
-  ariaLabel?: string
-  /** Disable map input and remove it from the accessibility tree when decorative. @default true */
-  interactive?: boolean
-  /** Attributes applied to the outer layout container. */
-  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
-}
-
-export interface ScriptMapLibreMapExpose {
-  maplibre: ShallowRef<typeof MapLibre | undefined>
-  map: ShallowRef<MapLibre.Map | undefined>
-  load: () => Promise<unknown> | unknown
-}
-
-export interface ScriptMapLibreMapEmits {
-  'ready': [payload: ScriptMapLibreMapExpose]
-  'error': [error: Error]
-  'click': [event: MapLibre.MapEventType['click']]
-  'move': [event: MapLibre.MapEventType['move']]
-  'moveend': [event: MapLibre.MapEventType['moveend']]
-  'zoom': [event: MapLibre.MapEventType['zoom']]
-  'zoomend': [event: MapLibre.MapEventType['zoomend']]
-  'rotate': [event: MapLibre.MapEventType['rotate']]
-  'rotateend': [event: MapLibre.MapEventType['rotateend']]
-  'pitch': [event: MapLibre.MapEventType['pitch']]
-  'pitchend': [event: MapLibre.MapEventType['pitchend']]
-  'update:center': [center: MapLibre.LngLat]
-  'update:zoom': [zoom: number]
-  'update:bearing': [bearing: number]
-  'update:pitch': [pitch: number]
-}
-
-export interface ScriptMapLibreMapSlots {
-  default?: () => any
-  loading?: () => any
-  awaitingLoad?: () => any
-  error?: (props: { error: Error }) => any
-  placeholder?: () => any
-  /** Text or links that expose the canvas map's essential information to assistive technology. */
-  description?: () => any
-}
 </script>
 
 <script setup lang="ts">
+import type * as MapLibre from 'maplibre-gl'
+import type { CSSProperties, HTMLAttributes, ShallowRef as VueShallowRef } from 'vue'
+import type { ScriptMapLibreMapEmits, ScriptMapLibreMapExpose, ScriptMapLibreMapProps, ScriptMapLibreMapSlots } from './types'
 import type { MapLibreMapContext } from './useMapLibreResource'
 import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, shallowRef, toRaw, useId, useTemplateRef, watch } from 'vue'
 import { useScriptTriggerElement } from '#nuxt-scripts/composables/useScriptTriggerElement'
@@ -122,7 +58,22 @@ onError((error?: Error) => {
   emit('error', loadError.value)
 })
 
-const exposed: ScriptMapLibreMapExpose = { maplibre, map, load }
+/** Moves the camera so the bounds fit the viewport. */
+function fitBounds(bounds: MapLibre.LngLatBoundsLike, options?: MapLibre.FitBoundsOptions): void {
+  map.value?.fitBounds(bounds, options)
+}
+
+/** Animates the camera along a straight path. */
+function easeTo(options: MapLibre.EaseToOptions): void {
+  map.value?.easeTo(options)
+}
+
+/** Animates the camera along a curved flight path. */
+function flyTo(options: MapLibre.FlyToOptions): void {
+  map.value?.flyTo(options)
+}
+
+const exposed: ScriptMapLibreMapExpose = { maplibre, map, load, fitBounds, easeTo, flyTo }
 defineExpose<ScriptMapLibreMapExpose>(exposed)
 provide(MAPLIBRE_MAP_INJECTION_KEY, {
   maplibre: maplibre as unknown as MapLibreMapContext['maplibre'],
@@ -130,6 +81,10 @@ provide(MAPLIBRE_MAP_INJECTION_KEY, {
 })
 
 function bindMapEvents(instance: MapLibre.Map): void {
+  instance.on('load', event => emit('load', event))
+  // MapLibre drops every source and layer on `setStyle`. Anything added on the
+  // raw map must be added again when this fires.
+  instance.on('style.load', event => emit('styleload', event))
   instance.on('click', event => emit('click', event))
   instance.on('move', event => emit('move', event))
   instance.on('moveend', (event) => {

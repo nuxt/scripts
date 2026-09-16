@@ -842,7 +842,12 @@
       {
         "name": "ScriptMapLibreGeoJsonProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>\n  /** Style layers backed by this source. */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n}"
+        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>\n  /** Style layers backed by this source. */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n  /** CSS cursor applied while the pointer is over one of these layers. */\n  cursor?: string\n}"
+      },
+      {
+        "name": "ScriptMapLibreGeoJsonEvents",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreGeoJsonEvents {\n  error: Error\n  click: MapLibre.MapLayerMouseEvent\n  mouseenter: MapLibre.MapLayerMouseEvent\n  mouseleave: MapLibre.MapLayerMouseEvent\n}"
       },
       {
         "name": "ScriptMapLibreMapProps",
@@ -852,7 +857,7 @@
       {
         "name": "ScriptMapLibreMapEvents",
         "kind": "interface",
-        "code": "interface ScriptMapLibreMapEvents {\n  ready: ScriptMapLibreMapExpose\n  error: Error\n  click: MapLibre.MapEventType['click']\n  move: MapLibre.MapEventType['move']\n  moveend: MapLibre.MapEventType['moveend']\n  zoom: MapLibre.MapEventType['zoom']\n  zoomend: MapLibre.MapEventType['zoomend']\n  rotate: MapLibre.MapEventType['rotate']\n  rotateend: MapLibre.MapEventType['rotateend']\n  pitch: MapLibre.MapEventType['pitch']\n  pitchend: MapLibre.MapEventType['pitchend']\n  update:center: MapLibre.LngLat\n  update:zoom: number\n  update:bearing: number\n  update:pitch: number\n}"
+        "code": "interface ScriptMapLibreMapEvents {\n  ready: ScriptMapLibreMapExpose\n  error: Error\n  load: MapLibre.MapEventType['load']\n  styleload: MapLibre.MapEventType['style.load']\n  click: MapLibre.MapEventType['click']\n  move: MapLibre.MapEventType['move']\n  moveend: MapLibre.MapEventType['moveend']\n  zoom: MapLibre.MapEventType['zoom']\n  zoomend: MapLibre.MapEventType['zoomend']\n  rotate: MapLibre.MapEventType['rotate']\n  rotateend: MapLibre.MapEventType['rotateend']\n  pitch: MapLibre.MapEventType['pitch']\n  pitchend: MapLibre.MapEventType['pitchend']\n  update:center: MapLibre.LngLat\n  update:zoom: number\n  update:bearing: number\n  update:pitch: number\n}"
       },
       {
         "name": "ScriptMapLibreMapSlots",
@@ -4117,7 +4122,7 @@
       },
       {
         "name": "sourceOptions",
-        "type": "Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>",
+        "type": "Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>",
         "required": false
       },
       {
@@ -4128,6 +4133,33 @@
       {
         "name": "beforeId",
         "type": "string",
+        "required": false
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "ScriptMapLibreGeoJsonEvents": [
+      {
+        "name": "error",
+        "type": "Error",
+        "required": false
+      },
+      {
+        "name": "click",
+        "type": "MapLibre.MapLayerMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseenter",
+        "type": "MapLibre.MapLayerMouseEvent",
+        "required": false
+      },
+      {
+        "name": "mouseleave",
+        "type": "MapLibre.MapLayerMouseEvent",
         "required": false
       }
     ],
@@ -4219,6 +4251,16 @@
       {
         "name": "error",
         "type": "Error",
+        "required": false
+      },
+      {
+        "name": "load",
+        "type": "MapLibre.MapEventType['load']",
+        "required": false
+      },
+      {
+        "name": "styleload",
+        "type": "MapLibre.MapEventType['style.load']",
         "required": false
       },
       {

@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { walk } from 'oxc-walker'
 import { parseSync } from 'vite'
 
@@ -705,6 +705,15 @@ for (const filePath of componentFiles) {
   for (const [name, declaration] of extractNamedTypeDeclarations(scriptSetup, fileName.replace('.vue', '.setup-types.ts'))) {
     if (!namedTypes.has(name))
       namedTypes.set(name, declaration)
+  }
+  // Types shared by a vendor's components live in a sibling `types.ts`, so a
+  // component can declare its props and emits there and stay documented.
+  const sharedTypesPath = join(dirname(filePath), 'types.ts')
+  if (existsSync(sharedTypesPath)) {
+    for (const [name, declaration] of extractNamedTypeDeclarations(readFileSync(sharedTypesPath, 'utf-8'), 'types.ts')) {
+      if (!namedTypes.has(name))
+        namedTypes.set(name, declaration)
+    }
   }
   const meta = extractComponentMeta(scriptSetup, fileName.replace('.vue', '.ts'), namedTypes)
   if (meta) {

@@ -1,47 +1,27 @@
 <script lang="ts">
-import type * as MapLibre from 'maplibre-gl'
-
-export type ScriptMapLibreGeoJsonLayer = Omit<MapLibre.LayerSpecification, 'source'> & {
-  /** Override the component's source ID for this layer. */
-  source?: string
-}
-
-export interface ScriptMapLibreGeoJsonEmits {
-  /** A source or layer could not be created. The map keeps its previous state. */
-  error: [error: Error]
-}
-
-export interface ScriptMapLibreGeoJsonResource {
-  map: MapLibre.Map
-  onLoad: () => void
-  onStyleLoad: () => void
-}
+export type {
+  ScriptMapLibreGeoJsonEmits,
+  ScriptMapLibreGeoJsonLayer,
+  ScriptMapLibreGeoJsonProps,
+  ScriptMapLibreGeoJsonResource,
+} from './types'
 </script>
 
 <script setup lang="ts">
-import type { GeoJSON } from 'geojson'
 import type * as MapLibreGl from 'maplibre-gl'
+import type { ScriptMapLibreGeoJsonEmits, ScriptMapLibreGeoJsonProps, ScriptMapLibreGeoJsonResource } from './types'
 import { toRaw, watch } from 'vue'
 import { reportMapLibreResourceError, useMapLibreResource } from './useMapLibreResource'
 
-const props = defineProps<{
-  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */
-  sourceId: string
-  /** Inline GeoJSON data or a URL returning GeoJSON. */
-  data: GeoJSON | string
-  /** GeoJSON source options. `type` and `data` are supplied by the component. */
-  sourceOptions?: Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>
-  /** Style layers backed by this source. */
-  layers: ScriptMapLibreGeoJsonLayer[]
-  /** Existing layer ID before which the layers are inserted. */
-  beforeId?: string
-}>()
+const props = defineProps<ScriptMapLibreGeoJsonProps>()
 
 const emit = defineEmits<ScriptMapLibreGeoJsonEmits>()
 
 let ownedLayerIds: string[] = []
 let ownedSourceId: string | undefined
 let appliedSignature: string | undefined
+let layerSubscriptions: MapLibreGl.Subscription[] = []
+let restoreCursor: string | undefined
 
 /**
  * Content signature of every prop that forces a source and layer rebuild.
@@ -52,7 +32,54 @@ function resourceSignature(): string {
   return JSON.stringify([props.sourceId, props.sourceOptions ?? null, props.layers, props.beforeId ?? null])
 }
 
+/** Applies the `cursor` prop while the pointer is over an owned layer. */
+function applyCursor(map: MapLibreGl.Map, cursor: string | undefined): void {
+  const canvas = map.getCanvas()
+  if (!canvas)
+    return
+  if (cursor === undefined) {
+    if (restoreCursor !== undefined)
+      canvas.style.cursor = restoreCursor
+    restoreCursor = undefined
+    return
+  }
+  restoreCursor ??= canvas.style.cursor
+  canvas.style.cursor = cursor
+}
+
+function unbindLayerEvents(map: MapLibreGl.Map): void {
+  for (const subscription of layerSubscriptions)
+    subscription.unsubscribe()
+  layerSubscriptions = []
+  if (restoreCursor !== undefined)
+    applyCursor(map, undefined)
+}
+
+/**
+ * Binds the component's events to the layers it owns. MapLibre treats the layer
+ * array as one group, so `mouseenter` and `mouseleave` fire once per group.
+ */
+function bindLayerEvents(map: MapLibreGl.Map): void {
+  unbindLayerEvents(map)
+  if (!ownedLayerIds.length)
+    return
+  const layerIds = [...ownedLayerIds]
+  layerSubscriptions = [
+    map.on('click', layerIds, event => emit('click', event)),
+    map.on('mouseenter', layerIds, (event) => {
+      if (props.cursor)
+        applyCursor(map, props.cursor)
+      emit('mouseenter', event)
+    }),
+    map.on('mouseleave', layerIds, (event) => {
+      applyCursor(map, undefined)
+      emit('mouseleave', event)
+    }),
+  ]
+}
+
 function removeOwnedResources(map: MapLibreGl.Map): void {
+  unbindLayerEvents(map)
   for (const layerId of [...ownedLayerIds].reverse()) {
     if (map.getLayer(layerId))
       map.removeLayer(layerId)
@@ -87,6 +114,7 @@ function syncResources(map: MapLibreGl.Map): void {
       ownedLayerIds.push(nextLayer.id)
     }
     appliedSignature = resourceSignature()
+    bindLayerEvents(map)
   }
   catch (error) {
     removeOwnedResources(map)
