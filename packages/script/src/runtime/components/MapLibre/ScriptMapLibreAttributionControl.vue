@@ -27,15 +27,20 @@ function restore(map: MapLibre.Map): void {
   replaced = []
 }
 
+function mergeCredits(controls: MapLibre.AttributionControl[]): string[] | undefined {
+  const credits = [...new Set(controls.flatMap(existing => existing.options.customAttribution ?? []))]
+  return credits.length ? credits : undefined
+}
+
 const control = useMapLibreResource<MapLibre.AttributionControl>({
   create({ maplibre, map }) {
     // `_controls` is the list that `hasControl()` reads. `filter` copies it before removal.
     replaced = map._controls.filter((existing): existing is MapLibre.AttributionControl => existing instanceof maplibre.AttributionControl)
     // The component options override the map's `attributionControl` options.
-    // Credits the map already configured stay unless the component sets its own.
+    // Credits from every replaced control stay unless the component sets its own.
     const inherited = replaced[0]?.options
     const options = inherited || props.options
-      ? { ...inherited, ...props.options, customAttribution: props.options?.customAttribution ?? inherited?.customAttribution }
+      ? { ...inherited, ...props.options, customAttribution: props.options?.customAttribution ?? mergeCredits(replaced) }
       : undefined
     const instance = new maplibre.AttributionControl(options)
     for (const existing of replaced)
