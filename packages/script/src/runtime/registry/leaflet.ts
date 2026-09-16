@@ -13,7 +13,11 @@ export interface LeafletApi {
 }
 
 declare global {
-  interface Window extends LeafletApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    L: LeafletApi['L']
+  }
 }
 
 export function useScriptLeaflet<T extends LeafletApi>(_options?: LeafletInput) {

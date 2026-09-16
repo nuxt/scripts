@@ -1,7 +1,7 @@
 {
   "name": "@nuxt/scripts-cli",
   "type": "module",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.6",
   "description": "Migration tools for Nuxt Scripts.",
   "license": "MIT",
   "repository": {
@@ -31,6 +31,7 @@
   "scripts": {
     "build": "unbuild",
     "dev:prepare": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@typescript/native": "catalog:",
     "unbuild": "catalog:",
     "vitest": "catalog:"
   }

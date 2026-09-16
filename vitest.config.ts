@@ -15,6 +15,7 @@ export default defineConfig({
           ],
           typecheck: {
             enabled: true,
+            checker: 'vue-tsc',
             include: ['./test/types/**/*.test-d.ts'],
           },
         },

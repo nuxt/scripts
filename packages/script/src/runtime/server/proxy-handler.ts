@@ -30,6 +30,11 @@ const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
 const MAX_TRANSFORM_BODY_SIZE = 2 * 1024 * 1024
 const UPSTREAM_TIMEOUT_MS = 15000
+const MAX_UPSTREAM_REDIRECTS = 5
+/** Redirect statuses a fetch follows. Other 3xx responses reach the client unchanged. */
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
+/** Fetch request-body-header names, removed when a redirect drops the body. */
+const REQUEST_BODY_HEADERS = ['content-encoding', 'content-language', 'content-length', 'content-location', 'content-type']
 const SKIP_RESPONSE_HEADERS = new Set([
   'alt-svc',
   'clear-site-data',
@@ -63,7 +68,11 @@ export const SKIP_REQUEST_HEADERS = new Set([
   'upgrade',
 ])
 
-async function readTransformBody(event: Parameters<typeof getRequestWebStream>[0]): Promise<string | undefined> {
+/**
+ * Read the raw request body bytes, bounded by MAX_TRANSFORM_BODY_SIZE.
+ * Buffering lets privacy transforms and redirect hops replay the same bytes.
+ */
+async function readBodyBytes(event: Parameters<typeof getRequestWebStream>[0]): Promise<Uint8Array<ArrayBuffer> | undefined> {
   const contentLength = Number(getHeaders(event)['content-length'] || 0)
   if (Number.isFinite(contentLength) && contentLength > MAX_TRANSFORM_BODY_SIZE) {
     throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
@@ -105,7 +114,7 @@ async function readTransformBody(event: Parameters<typeof getRequestWebStream>[0
     body.set(chunk, offset)
     offset += chunk.byteLength
   }
-  return new TextDecoder().decode(body)
+  return body
 }
 
 export function withResponseBodyIdleTimeout(
@@ -188,6 +197,92 @@ function stripQueryFingerprinting(
  * Privacy-aware proxy handler for first-party script collection endpoints.
  * Routes requests to third-party analytics while protecting user privacy.
  */
+
+function isUpstreamRedirect(status: number): boolean {
+  return REDIRECT_STATUSES.has(status)
+}
+
+/** Map a transport failure to the gateway error the client should see. */
+function upstreamFetchError(err: unknown, timedOut: boolean) {
+  const blockedPrivateNetwork = isPrivateNetworkResolutionError(err)
+  return createError({
+    statusCode: blockedPrivateNetwork ? 403 : timedOut ? 504 : 502,
+    statusMessage: blockedPrivateNetwork ? 'Local network targets are not allowed' : timedOut ? 'Gateway Timeout' : 'Bad Gateway',
+    message: 'Proxy upstream request failed',
+    cause: err,
+    data: {
+      errorName: (err as Error)?.name,
+      errorCode: timedOut ? 'TIMEOUT' : (err as { code?: string })?.code,
+    },
+  })
+}
+
+interface ProxyRedirectState {
+  url: URL
+  method: string
+  body: BodyInit | undefined
+  headers: Record<string, string>
+}
+
+/**
+ * Resolve an upstream redirect into the next request state, mirroring the
+ * fetch spec: 301/302 replay a POST as a GET without a body, 303 replays
+ * every non-idempotent method as a GET, 307/308 preserve method and body.
+ * The hop is only returned after it passes the initial target's checks.
+ */
+function resolveProxyRedirect(
+  response: Pick<Response, 'status' | 'headers'>,
+  state: ProxyRedirectState,
+  redirectCount: number,
+  urlAllowed: (url: URL) => boolean,
+): ProxyRedirectState {
+  const location = response.headers.get('location')
+  if (!location) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Invalid upstream redirect',
+      message: 'Upstream redirect has no Location header',
+    })
+  }
+  if (redirectCount >= MAX_UPSTREAM_REDIRECTS) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Too many upstream redirects',
+      message: 'Upstream redirect limit exceeded',
+    })
+  }
+
+  let nextUrl: URL
+  try {
+    nextUrl = new URL(location, state.url)
+  }
+  catch (cause) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Invalid upstream redirect',
+      message: 'Upstream redirect URL is invalid',
+      cause,
+    })
+  }
+  if (!urlAllowed(nextUrl)) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Unsafe upstream redirect',
+      message: `Upstream redirect target is not allowed: ${nextUrl.origin}`,
+    })
+  }
+
+  const switchToGet = (response.status === 303 && state.method !== 'GET' && state.method !== 'HEAD')
+    || ((response.status === 301 || response.status === 302) && state.method === 'POST')
+  if (!switchToGet)
+    return { ...state, url: nextUrl }
+
+  const headers = { ...state.headers }
+  for (const header of REQUEST_BODY_HEADERS)
+    delete headers[header]
+  return { url: nextUrl, method: 'GET', body: undefined, headers }
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const proxyConfig = config['nuxt-scripts-proxy'] as unknown as ProxyConfig | undefined
@@ -407,19 +502,22 @@ export default defineEventHandler(async (event) => {
       .join(', ')
   }
 
-  // Process request body: either stream through raw or read + transform
+  // Process request body: buffer the raw bytes once so privacy transforms can
+  // decode them and redirect hops can replay the exact body upstream.
   let body: string | Record<string, unknown> | unknown[] | number | boolean | null | undefined
   let rawBody: unknown
-  // When true, body is not read — the raw request stream is piped directly to upstream
+  let rawBodyBytes: Uint8Array<ArrayBuffer> | undefined
+  // When true, no safe transforms are available — the buffered bytes are forwarded as-is
   let passthroughBody = false
 
   if (isWriteMethod) {
+    rawBodyBytes = await readBodyBytes(event)
     if (!shouldTransformBody) {
-      // No safe transforms available or needed. Stream the original bytes directly.
+      // No safe transforms available or needed. Forward the original bytes.
       passthroughBody = true
     }
     else if (transformableBodyType === 'form') {
-      const formBody = await readTransformBody(event)
+      const formBody = rawBodyBytes === undefined ? undefined : new TextDecoder().decode(rawBodyBytes)
       rawBody = formBody
 
       if (formBody != null) {
@@ -454,7 +552,7 @@ export default defineEventHandler(async (event) => {
     }
     else {
       // JSON body with privacy transforms.
-      const jsonBody = await readTransformBody(event)
+      const jsonBody = rawBodyBytes === undefined ? undefined : new TextDecoder().decode(rawBodyBytes)
       if (jsonBody !== undefined) {
         try {
           rawBody = JSON.parse(jsonBody)
@@ -518,60 +616,83 @@ export default defineEventHandler(async (event) => {
     controller.abort()
   }, UPSTREAM_TIMEOUT_MS)
 
-  // Resolve the fetch body: passthrough streams the raw request, otherwise serialize
+  // Resolve the fetch body from the buffered request bytes so redirect hops
+  // can replay it.
   let fetchBody: BodyInit | undefined
-  if (passthroughBody && originalHeaders['content-length'] !== '0') {
-    fetchBody = getRequestWebStream(event) as BodyInit | undefined
+  if (passthroughBody) {
+    if (rawBodyBytes && rawBodyBytes.byteLength > 0)
+      fetchBody = rawBodyBytes
   }
   else if (body !== undefined) {
     fetchBody = transformableBodyType === 'json' ? JSON.stringify(body) : String(body)
   }
 
+  // A redirect hop must pass the same checks as the initial target: HTTPS on
+  // the default port, no embedded credentials, a public hostname, and the
+  // domain allowlist.
+  const hopAllowed = (url: URL): boolean =>
+    url.protocol === 'https:'
+    && !url.username
+    && !url.password
+    && (!url.port || url.port === '443')
+    && isPublicNetworkHostname(url.hostname)
+    && Object.keys(domainPrivacy).some(configDomain => matchDomain(url.hostname, configDomain))
+
   let response: Response
   let network: Awaited<ReturnType<typeof createPublicNetworkDispatcher>> | undefined
   try {
     network = await createPublicNetworkDispatcher()
-    const requestInit: RequestInit & { duplex?: 'half' } = {
+    let state: ProxyRedirectState = {
+      url: new URL(targetUrl),
       method: method || 'GET',
-      headers,
       body: fetchBody,
-      credentials: 'omit', // Don't send cookies to third parties
-      signal: controller.signal,
-      redirect: 'manual',
-      duplex: fetchBody instanceof ReadableStream ? 'half' : undefined,
+      headers,
     }
-    response = await network.fetch(targetUrl, requestInit)
+    for (let redirectCount = 0; ; redirectCount++) {
+      let hop: Response
+      try {
+        hop = await network.fetch(state.url.toString(), {
+          method: state.method,
+          headers: state.headers,
+          body: state.body,
+          credentials: 'omit', // Don't send cookies to third parties
+          signal: controller.signal,
+          redirect: 'manual',
+        })
+      }
+      catch (err) {
+        log('[proxy] Upstream error:', err)
+        throw upstreamFetchError(err, timedOut)
+      }
+      log('[proxy] Response:', hop.status, hop.statusText)
+
+      if (!isUpstreamRedirect(hop.status)) {
+        response = hop
+        break
+      }
+
+      // Follow the redirect only after the hop passes the initial target's checks.
+      let next: ProxyRedirectState
+      try {
+        next = resolveProxyRedirect(hop, state, redirectCount, hopAllowed)
+      }
+      catch (err) {
+        await hop.body?.cancel(err as Error).catch(cancelError => Object.assign(err as Error, { cleanupError: cancelError }))
+        throw err
+      }
+      const redirectDiscarded = new Error('Upstream redirect response body discarded')
+      await hop.body?.cancel(redirectDiscarded).catch(cancelError => Object.assign(redirectDiscarded, { cause: cancelError }))
+      log('[proxy] Following redirect:', next.url.toString())
+      state = next
+    }
     clearTimeout(timeoutId)
   }
   catch (err) {
     clearTimeout(timeoutId)
     await closePublicNetworkDispatcher(network, err)
-    log('[proxy] Upstream error:', err)
-    const blockedPrivateNetwork = isPrivateNetworkResolutionError(err)
-    throw createError({
-      statusCode: blockedPrivateNetwork ? 403 : timedOut ? 504 : 502,
-      statusMessage: blockedPrivateNetwork ? 'Local network targets are not allowed' : timedOut ? 'Gateway Timeout' : 'Bad Gateway',
-      message: 'Proxy upstream request failed',
-      cause: err,
-      data: {
-        errorName: (err as Error)?.name,
-        errorCode: timedOut ? 'TIMEOUT' : (err as { code?: string })?.code,
-      },
-    })
+    throw err
   }
-  log('[proxy] Response:', response.status, response.statusText)
-
-  if (response.status >= 300 && response.status < 400 && response.status !== 304) {
-    clearTimeout(timeoutId)
-    const redirectError = createError({
-      statusCode: 502,
-      statusMessage: 'Unsafe upstream redirect',
-      message: 'Proxy upstream returned a redirect that was not followed',
-    })
-    await response.body?.cancel(redirectError).catch(cancelError => Object.assign(redirectError, { cleanupError: cancelError }))
-    await closePublicNetworkDispatcher(network, redirectError)
-    throw redirectError
-  }
+  log('[proxy] Upstream settled:', response.status)
 
   // Headers named by Connection are hop-by-hop too, including non-standard names.
   const responseConnectionHeaders = new Set(

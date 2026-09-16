@@ -20,7 +20,11 @@ export interface CloudflareWebAnalyticsApi {
 }
 
 declare global {
-  interface Window extends CloudflareWebAnalyticsApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    __cfBeacon: CloudflareWebAnalyticsApi['__cfBeacon']
+  }
 }
 
 export type CloudflareWebAnalyticsInput = RegistryScriptInput<typeof CloudflareWebAnalyticsOptions>

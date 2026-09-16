@@ -459,6 +459,75 @@
       }
     ]
   },
+  "pulseAnalytics": {
+    "totalTransferKb": 3.5,
+    "totalDecodedKb": 6.4,
+    "loadTimeMs": 510,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "doNotTrack": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": true,
+      "languages": true,
+      "screen": true,
+      "timezone": false,
+      "platform": true,
+      "vendor": false,
+      "connection": false,
+      "maxTouchPoints": true,
+      "devicePixelRatio": false,
+      "mediaDevices": false,
+      "getBattery": false,
+      "referrer": true,
+      "windowName": false,
+      "rtcPeerConnection": false,
+      "geolocation": false,
+      "serviceWorker": false,
+      "cacheApi": false,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "js.ciphera.net"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 3586,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 31,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 726
+    },
+    "scripts": [
+      {
+        "url": "https://js.ciphera.net/script.js",
+        "transferKb": 3.5,
+        "decodedKb": 6.4,
+        "encoding": "zstd",
+        "durationMs": 510,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
   "databuddyAnalytics": {
     "totalTransferKb": 10.8,
     "totalDecodedKb": 29.4,

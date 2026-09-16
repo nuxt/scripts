@@ -19,7 +19,11 @@ export interface GoogleRecaptchaApi {
 }
 
 declare global {
-  interface Window extends GoogleRecaptchaApi {}
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    grecaptcha: GoogleRecaptchaApi['grecaptcha']
+  }
 }
 
 export function useScriptGoogleRecaptcha<T extends GoogleRecaptchaApi>(_options?: GoogleRecaptchaInput) {

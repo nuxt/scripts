@@ -306,7 +306,7 @@
       {
         "name": "ScriptGoogleAdsenseProps",
         "kind": "interface",
-        "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article' | 'in-feed' | 'fixed'\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
+        "code": "interface ScriptGoogleAdsenseProps {\n  dataAdClient: string\n  dataAdSlot: string\n  dataAdFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal' | 'fluid' | 'autorelaxed'\n  dataAdLayout?: 'in-article' | 'image-top' | 'image-side' | 'text-only'\n  dataAdLayoutKey?: string\n  dataFullWidthResponsive?: boolean\n  /**\n   * Defines the trigger event to load the script.\n   */\n  trigger?: ElementScriptTrigger\n}"
       },
       {
         "name": "ScriptGoogleAdsenseEvents",
@@ -1062,6 +1062,23 @@
         "name": "PostHogConsent",
         "kind": "interface",
         "code": "export interface PostHogConsent {\n  /** Call `posthog.opt_in_capturing()`. */\n  optIn: () => void\n  /** Call `posthog.opt_out_capturing()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */\n  optOut: () => void\n}"
+      }
+    ],
+    "pulse-analytics": [
+      {
+        "name": "PulseAnalyticsOptions",
+        "kind": "const",
+        "code": "export const PulseAnalyticsOptions = object({\n  /**\n   * The site domain as registered in Pulse.\n   * @see https://docs.ciphera.net/pulse/script-installation\n   */\n  domain: string(),\n  /**\n   * The API origin the tracker posts events to. Only needed for a self-hosted\n   * or reverse-proxied Pulse API.\n   * @default 'https://pulse-api.ciphera.net'\n   */\n  apiUrl: optional(string()),\n  /**\n   * Record scroll depth.\n   * @default true\n   */\n  trackScroll: optional(boolean()),\n  /**\n   * Record outbound link clicks as `outbound_link` events.\n   * @default true\n   */\n  trackOutbound: optional(boolean()),\n  /**\n   * Record file download clicks as `file_download` events.\n   * @default true\n   */\n  trackDownloads: optional(boolean()),\n})"
+      },
+      {
+        "name": "PulseAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface PulseAnalyticsApi {\n  /**\n   * Records a custom event.\n   * @param name Event name: letters, numbers and underscores, up to 64 characters.\n   * Trimmed and lowercased before storage.\n   * @param props Optional properties. Values must be strings; a number or boolean\n   * rejects the whole event.\n   * @param revenue Optional monetary value, zero or greater.\n   * @see https://docs.ciphera.net/pulse/custom-events\n   */\n  track: (name: string, props?: Record<string, string>, revenue?: number) => void\n  /**\n   * The current pathname as Pulse records it: trailing slash stripped, root kept\n   * as `/`. Returns `null` until the tracker has loaded.\n   */\n  cleanPath: () => string | null\n}"
+      },
+      {
+        "name": "PulseQueueState",
+        "kind": "interface",
+        "code": "interface PulseQueueState {\n  queue: Array<Parameters<PulseAnalyticsApi['track']>>\n  flushed: boolean\n  /** The tracker ran but declined to record: nothing will ever consume the queue. */\n  declined: boolean\n}"
       }
     ],
     "reddit-pixel": [
@@ -2416,6 +2433,42 @@
         "type": "string",
         "required": true,
         "description": "Your Reddit Pixel advertiser ID."
+      }
+    ],
+    "PulseAnalyticsOptions": [
+      {
+        "name": "domain",
+        "type": "string",
+        "required": true,
+        "description": "The site domain as registered in Pulse."
+      },
+      {
+        "name": "apiUrl",
+        "type": "string",
+        "required": false,
+        "description": "The API origin the tracker posts events to. Only needed for a self-hosted or reverse-proxied Pulse API.",
+        "defaultValue": "'https://pulse-api.ciphera.net'"
+      },
+      {
+        "name": "trackScroll",
+        "type": "boolean",
+        "required": false,
+        "description": "Record scroll depth.",
+        "defaultValue": "true"
+      },
+      {
+        "name": "trackOutbound",
+        "type": "boolean",
+        "required": false,
+        "description": "Record outbound link clicks as `outbound_link` events.",
+        "defaultValue": "true"
+      },
+      {
+        "name": "trackDownloads",
+        "type": "boolean",
+        "required": false,
+        "description": "Record file download clicks as `file_download` events.",
+        "defaultValue": "true"
       }
     ],
     "RybbitAnalyticsOptions": [
@@ -4601,7 +4654,12 @@
       },
       {
         "name": "dataAdLayout",
-        "type": "'in-article' | 'in-feed' | 'fixed'",
+        "type": "'in-article' | 'image-top' | 'image-side' | 'text-only'",
+        "required": false
+      },
+      {
+        "name": "dataAdLayoutKey",
+        "type": "string",
         "required": false
       },
       {

@@ -34,7 +34,10 @@ export interface IntercomApi {
 }
 
 declare global {
-  interface Window extends IntercomApi {
+  // Declared inline rather than via `extends`: an `extends` clause on the global `Window`
+  // surfaces as an unsuppressable TS2430 in consumer code when another package declares it (#852).
+  interface Window {
+    Intercom: IntercomApi['Intercom']
     intercomSettings?: any
   }
 }

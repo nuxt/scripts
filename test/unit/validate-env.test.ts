@@ -1,4 +1,3 @@
-import type { ConsolaInstance } from 'consola'
 import type { RegistryScript } from '../../packages/script/src/runtime/types'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { validateScriptsEnvVars } from '../../packages/script/src/validate-env'
@@ -10,7 +9,7 @@ const scripts = [
 ] as unknown as RegistryScript[]
 
 function makeLogger() {
-  return { warn: vi.fn() } as unknown as ConsolaInstance
+  return { warn: vi.fn() }
 }
 
 describe('validateScriptsEnvVars', () => {

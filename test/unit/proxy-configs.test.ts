@@ -378,6 +378,14 @@ describe('proxy configs', () => {
       expect(config).toBeUndefined()
     })
 
+    it('does not return proxy config for pulseAnalytics (server-side visitor identity needs the real client IP)', async () => {
+      // Pulse hashes the connecting IP + user agent into its visitor identity, so
+      // beacons routed through the Nuxt server would merge every visitor into one;
+      // its bot filtering also counts a datacenter origin as a signal.
+      const config = (await getProxyConfigs()).pulseAnalytics
+      expect(config).toBeUndefined()
+    })
+
     it('returns proxy config for intercom', async () => {
       const config = (await getProxyConfigs()).intercom
       expect(config).toBeDefined()
@@ -457,6 +465,7 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('databuddyAnalytics')
       expect(configs).toHaveProperty('ahrefsAnalytics')
       expect(configs).not.toHaveProperty('fathomAnalytics')
+      expect(configs).not.toHaveProperty('pulseAnalytics')
       expect(configs).toHaveProperty('intercom')
       expect(configs).not.toHaveProperty('crisp')
       expect(configs).not.toHaveProperty('deskcrew')

@@ -48,6 +48,10 @@ export const scriptMeta = {
     urls: ['https://app.rybbit.io/api/script.js'],
     trackedData: ['page-views', 'events'],
   },
+  pulseAnalytics: {
+    urls: ['https://js.ciphera.net/script.js'],
+    trackedData: ['page-views', 'events', 'conversions', 'scrolls'],
+  },
   databuddyAnalytics: {
     urls: ['https://cdn.databuddy.cc/databuddy.js'],
     trackedData: ['page-views', 'events'],
