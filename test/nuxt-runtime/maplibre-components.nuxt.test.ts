@@ -525,6 +525,57 @@ describe('mapLibre components', () => {
     wrapper.unmount()
   })
 
+  it('keeps the hover cursor when a style reload rebuilds the same layers', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+        cursor: 'pointer',
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    // a style reload re-adds the same layers, and MapLibre does not fire
+    // mouseenter again while the pointer stays still
+    mocks.styleEvents.get('style.load')?.()
+    await nextTick()
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    mocks.layerBinding('mouseleave').listener({ type: 'mouseleave' })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+    wrapper.unmount()
+  })
+
+  it('drops the hover cursor when a rebuild replaces the layers', async () => {
+    const mocks = createMapLibreMock()
+    mocks.canvas.style.cursor = 'grab'
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+        cursor: 'pointer',
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.layerBinding('mouseenter').listener({ type: 'mouseenter' })
+    expect(mocks.canvas.style.cursor).toBe('pointer')
+
+    // different layers may not sit under the pointer, so the cursor resets
+    await wrapper.setProps({ layers: [{ id: 'melbourne-heat', type: 'heatmap' }] })
+    expect(mocks.canvas.style.cursor).toBe('grab')
+    wrapper.unmount()
+  })
+
   it('leaves the cursor alone while the pointer is away from every layer', async () => {
     const mocks = createMapLibreMock()
     mocks.canvas.style.cursor = 'grab'

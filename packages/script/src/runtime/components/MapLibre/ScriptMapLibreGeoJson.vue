@@ -23,6 +23,8 @@ let appliedSignature: string | undefined
 let layerSubscriptions: MapLibreGl.Subscription[] = []
 let restoreCursor: string | undefined
 let isPointerOverLayer = false
+let hoveredLayerKey = ''
+let pendingHoverKey = ''
 
 /**
  * Content signature of every prop that forces a source and layer rebuild.
@@ -52,6 +54,10 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
   for (const subscription of layerSubscriptions)
     subscription.unsubscribe()
   layerSubscriptions = []
+  // Carry the hover across an immediate rebind. `syncResources` unbinds twice,
+  // so an empty key must never overwrite a carried one.
+  if (isPointerOverLayer)
+    pendingHoverKey = hoveredLayerKey
   isPointerOverLayer = false
   if (restoreCursor !== undefined)
     applyCursor(map, undefined)
@@ -63,13 +69,17 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
  */
 function bindLayerEvents(map: MapLibreGl.Map): void {
   unbindLayerEvents(map)
+  const carriedHoverKey = pendingHoverKey
+  pendingHoverKey = ''
   if (!ownedLayerIds.length)
     return
   const layerIds = [...ownedLayerIds]
+  const layerKey = layerIds.join('\n')
   layerSubscriptions = [
     map.on('click', layerIds, event => emit('click', event)),
     map.on('mouseenter', layerIds, (event) => {
       isPointerOverLayer = true
+      hoveredLayerKey = layerKey
       applyCursor(map, props.cursor || undefined)
       emit('mouseenter', event)
     }),
@@ -79,6 +89,13 @@ function bindLayerEvents(map: MapLibreGl.Map): void {
       emit('mouseleave', event)
     }),
   ]
+  // A style reload re-adds the same layers under a stationary pointer, and
+  // MapLibre does not fire `mouseenter` again. Different layers may not sit
+  // under the pointer, so only an identical set keeps the hover cursor.
+  if (carriedHoverKey === layerKey) {
+    isPointerOverLayer = true
+    applyCursor(map, props.cursor || undefined)
+  }
 }
 
 function removeOwnedResources(map: MapLibreGl.Map): void {
