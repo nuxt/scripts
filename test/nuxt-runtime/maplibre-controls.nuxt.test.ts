@@ -306,7 +306,7 @@ describe('mapLibre attribution control', () => {
       global: provideMap(maplibre, map),
     })
     await nextTick()
-    expect(controlsOf(map, 'attribution')[0]!.options).toEqual({ compact: false, customAttribution: 'Data: Hobart City Council' })
+    expect(controlsOf(map, 'attribution')[0]!.options).toEqual({ compact: false, customAttribution: ['Data: Hobart City Council'] })
     inheriting.unmount()
 
     const overriding = mount(ScriptMapLibreAttributionControl, {
@@ -316,6 +316,22 @@ describe('mapLibre attribution control', () => {
     await nextTick()
     expect(controlsOf(map, 'attribution')[0]!.options).toEqual({ compact: true, customAttribution: 'Data: Tasmania' })
     overriding.unmount()
+  })
+
+  it('keeps the credits of every replaced attribution control', async () => {
+    const maplibre = createMapLibre()
+    const { map } = mapWithDefaultAttribution(maplibre, { compact: true, customAttribution: 'MapLibre' })
+    map.addControl(new (maplibre.AttributionControl as any)({ customAttribution: ['Data: Hobart City Council', 'MapLibre'] }))
+    const wrapper = mount(ScriptMapLibreAttributionControl, {
+      global: provideMap(maplibre, map),
+    })
+    await nextTick()
+
+    const [mounted] = controlsOf(map, 'attribution')
+    expect(controlsOf(map, 'attribution')).toHaveLength(1)
+    expect((mounted!.options as { customAttribution: unknown }).customAttribution).toEqual(['MapLibre', 'Data: Hobart City Council'])
+    wrapper.unmount()
+    expect(controlsOf(map, 'attribution')).toHaveLength(2)
   })
 
   it('restores the map default after consumer code removed the component control', async () => {
