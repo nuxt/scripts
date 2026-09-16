@@ -845,11 +845,6 @@
         "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>\n  /** Style layers backed by this source. */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n}"
       },
       {
-        "name": "ScriptMapLibreGeoJsonEvents",
-        "kind": "interface",
-        "code": "interface ScriptMapLibreGeoJsonEvents {\n  error: Error\n}"
-      },
-      {
         "name": "ScriptMapLibreMapProps",
         "kind": "interface",
         "code": "interface ScriptMapLibreMapProps {\n  /**\n   * Defines when the MapLibre script loads.\n   * @default 'visible'\n   */\n  trigger?: ElementScriptTrigger\n  /** MapLibre style URL or inline style specification. */\n  mapStyle: string | MapLibre.StyleSpecification\n  /** Initial and reactively controlled map center. */\n  center: MapLibre.LngLatLike\n  /** Initial and reactively controlled zoom level. @default 12 */\n  zoom?: number\n  /** Initial and reactively controlled bearing in degrees. @default 0 */\n  bearing?: number\n  /** Initial and reactively controlled pitch in degrees. @default 0 */\n  pitch?: number\n  /** Options passed to `new maplibregl.Map()`. Dedicated props take precedence. */\n  options?: Omit<MapLibre.MapOptions, 'container'>\n  /** Inject MapLibre's stylesheet when the script begins loading. @default true */\n  injectStyles?: boolean\n  /** Custom MapLibre stylesheet URL. */\n  stylesheetUrl?: string\n  /** Worker URL passed to `maplibregl.setWorkerUrl()`. */\n  workerUrl?: string\n  /** Width reserved before the map loads. @default 640 */\n  width?: number | string\n  /** Height reserved before the map loads. @default 400 */\n  height?: number | string\n  /** Accessible name for an interactive map. @default 'Interactive map' */\n  ariaLabel?: string\n  /** Disable map input and remove it from the accessibility tree when decorative. @default true */\n  interactive?: boolean\n  /** Attributes applied to the outer layout container. */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n}"
@@ -1079,6 +1074,11 @@
         "name": "PulseAnalyticsApi",
         "kind": "interface",
         "code": "export interface PulseAnalyticsApi {\n  /**\n   * Records a custom event.\n   * @param name Event name: letters, numbers and underscores, up to 64 characters.\n   * Trimmed and lowercased before storage.\n   * @param props Optional properties. Values must be strings; a number or boolean\n   * rejects the whole event.\n   * @param revenue Optional monetary value, zero or greater.\n   * @see https://docs.ciphera.net/pulse/custom-events\n   */\n  track: (name: string, props?: Record<string, string>, revenue?: number) => void\n  /**\n   * The current pathname as Pulse records it: trailing slash stripped, root kept\n   * as `/`. Returns `null` until the tracker has loaded.\n   */\n  cleanPath: () => string | null\n}"
+      },
+      {
+        "name": "PulseQueueState",
+        "kind": "interface",
+        "code": "interface PulseQueueState {\n  queue: Array<Parameters<PulseAnalyticsApi['track']>>\n  flushed: boolean\n  /** The tracker ran but declined to record: nothing will ever consume the queue. */\n  declined: boolean\n}"
       }
     ],
     "reddit-pixel": [
@@ -1113,6 +1113,11 @@
         "name": "RybbitAnalyticsApi",
         "kind": "interface",
         "code": "export interface RybbitAnalyticsApi {\n  /**\n   * Tracks a page view\n   */\n  pageview: () => void\n\n  /**\n   * Tracks a custom event\n   * @param name Name of the event\n   * @param properties Optional properties for the event\n   */\n  event: (name: string, properties?: Record<string, any>) => void\n\n  /**\n   * Sets a custom user ID for tracking logged-in users\n   * @param userId The user ID to set (will be stored in localStorage)\n   */\n  identify: (userId: string) => void\n\n  /**\n   * Clears the stored user ID\n   */\n  clearUserId: () => void\n\n  /**\n   * Gets the currently set user ID\n   * @returns The current user ID or null if not set\n   */\n  getUserId: () => string | null\n}"
+      },
+      {
+        "name": "RybbitQueueState",
+        "kind": "interface",
+        "code": "interface RybbitQueueState {\n  queue: Array<[string, ...any[]]>\n  flushed: boolean\n}"
       }
     ],
     "segment": [
@@ -4179,13 +4184,6 @@
       {
         "name": "beforeId",
         "type": "string",
-        "required": false
-      }
-    ],
-    "ScriptMapLibreGeoJsonEvents": [
-      {
-        "name": "error",
-        "type": "Error",
         "required": false
       }
     ],
