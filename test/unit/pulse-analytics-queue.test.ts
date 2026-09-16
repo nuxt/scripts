@@ -103,6 +103,24 @@ describe('pulse analytics', () => {
       expect(queue()).toHaveLength(0)
     })
 
+    it('keeps draining the queue when one replayed call throws', () => {
+      const { use } = setup()
+      const api = use()
+      api.track('first')
+      api.track('second')
+      api.track('third')
+
+      const track = vi.fn((name: string) => {
+        if (name === 'first')
+          throw new Error('tracker rejected the event')
+      })
+      window.__pulseInstalled = true
+      window.pulse = { track, cleanPath: () => '/' }
+      expect(() => use()).not.toThrow()
+      expect(track.mock.calls.map(call => call[0])).toEqual(['first', 'second', 'third'])
+      expect(queue()).toHaveLength(0)
+    })
+
     it('caps the queue when the tracker never runs', () => {
       const { use } = setup()
       const api = use()
