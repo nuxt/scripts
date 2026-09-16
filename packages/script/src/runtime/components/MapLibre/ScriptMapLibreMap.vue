@@ -47,6 +47,7 @@ const { load, status, onLoaded, onError } = useScriptMapLibre({
 
 const maplibre = shallowRef() as VueShallowRef<typeof MapLibre | undefined>
 const map = shallowRef<MapLibre.Map>()
+const defaultAttributionControl = shallowRef<MapLibre.AttributionControl>()
 const isMapReady = shallowRef(false)
 const loadError = shallowRef(new Error('MapLibre failed to load'))
 const initializationError = shallowRef<Error>()
@@ -78,6 +79,7 @@ defineExpose<ScriptMapLibreMapExpose>(exposed)
 provide(MAPLIBRE_MAP_INJECTION_KEY, {
   maplibre: maplibre as unknown as MapLibreMapContext['maplibre'],
   map,
+  defaultAttributionControl,
 })
 
 function bindMapEvents(instance: MapLibre.Map): void {
@@ -137,8 +139,14 @@ onMounted(() => {
     maplibre.value = instance.maplibregl
     let mapInstance: MapLibre.Map | undefined
     try {
+      const mapOptions = toRaw(props.options)
+      const attributionOptions = mapOptions?.attributionControl
       mapInstance = new instance.maplibregl.Map({
-        ...toRaw(props.options),
+        ...mapOptions,
+        // The component adds the default attribution control itself, so
+        // `<ScriptMapLibreAttributionControl>` can replace it through the public API.
+        attributionControl: false,
+        maplibreLogo: false,
         container: mapEl.value,
         style: toRaw(props.mapStyle),
         center: toRaw(props.center),
@@ -147,6 +155,16 @@ onMounted(() => {
         pitch: props.pitch,
         interactive: props.interactive,
       })
+      // MapLibre's constructor adds the attribution control first and the logo
+      // second, and a bottom corner renders its first child on top. Adding the
+      // controls in that order here keeps the native vertical order when the
+      // logo shares the attribution corner.
+      if (attributionOptions !== false) {
+        defaultAttributionControl.value = new instance.maplibregl.AttributionControl(typeof attributionOptions === 'object' ? attributionOptions : undefined)
+        mapInstance.addControl(defaultAttributionControl.value)
+      }
+      if (mapOptions?.maplibreLogo)
+        mapInstance.addControl(new instance.maplibregl.LogoControl(), mapOptions.logoPosition)
       configureCanvasAccessibility(mapInstance)
       bindMapEvents(mapInstance)
       map.value = mapInstance
@@ -160,6 +178,7 @@ onMounted(() => {
     }
     catch (error) {
       mapInstance?.remove()
+      defaultAttributionControl.value = undefined
       const cause = error instanceof Error ? error : new Error('MapLibre map initialization failed')
       initializationError.value = cause
       loadError.value = cause
