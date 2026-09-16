@@ -60,10 +60,15 @@ export { MARKER_CLUSTERER_INJECTION_KEY } from './components/GoogleMaps/types'
 
 // MapLibre component types (re-exported for easy user access)
 export type {
+  ScriptMapLibreAttributionControlProps,
+  ScriptMapLibreFullscreenControlEmits,
+  ScriptMapLibreFullscreenControlProps,
   ScriptMapLibreGeoJsonEmits,
   ScriptMapLibreGeoJsonLayer,
   ScriptMapLibreGeoJsonProps,
   ScriptMapLibreGeoJsonResource,
+  ScriptMapLibreGeolocateControlEmits,
+  ScriptMapLibreGeolocateControlProps,
   ScriptMapLibreMapEmits,
   ScriptMapLibreMapExpose,
   ScriptMapLibreMapProps,
@@ -73,6 +78,7 @@ export type {
   ScriptMapLibreNavigationControlProps,
   ScriptMapLibrePopupEmits,
   ScriptMapLibrePopupProps,
+  ScriptMapLibreScaleControlProps,
 } from './components/MapLibre/types'
 
 export type WarmupStrategy = false | 'preload' | 'preconnect' | 'dns-prefetch'

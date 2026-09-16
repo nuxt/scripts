@@ -93,6 +93,10 @@ OpenFreeMap's public instance needs no API key, but it has no SLA. Read [Styles 
 - [`<ScriptMapLibreMarker>`{lang="html"}](/scripts/maplibre/api/marker) adds an accessible, reactive marker.
 - [`<ScriptMapLibrePopup>`{lang="html"}](/scripts/maplibre/api/popup) binds slotted HTML to a marker or coordinate.
 - [`<ScriptMapLibreNavigationControl>`{lang="html"}](/scripts/maplibre/api/navigation-control) adds zoom, compass, and pitch controls.
+- [`<ScriptMapLibreScaleControl>`{lang="html"}](/scripts/maplibre/api/scale-control) adds a scale bar.
+- [`<ScriptMapLibreGeolocateControl>`{lang="html"}](/scripts/maplibre/api/geolocate-control) finds the user's location.
+- [`<ScriptMapLibreFullscreenControl>`{lang="html"}](/scripts/maplibre/api/fullscreen-control) toggles fullscreen mode.
+- [`<ScriptMapLibreAttributionControl>`{lang="html"}](/scripts/maplibre/api/attribution-control) moves or restyles the map attribution.
 - [`<ScriptMapLibreGeoJson>`{lang="html"}](/scripts/maplibre/api/geojson) manages a GeoJSON source and its style layers, including [clustering](/scripts/maplibre/api/geojson#clustering).
 
 ## Guides
