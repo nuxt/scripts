@@ -1,47 +1,30 @@
 <script lang="ts">
-import type * as MapLibre from 'maplibre-gl'
-
-export type ScriptMapLibreGeoJsonLayer = Omit<MapLibre.LayerSpecification, 'source'> & {
-  /** Override the component's source ID for this layer. */
-  source?: string
-}
-
-export interface ScriptMapLibreGeoJsonEmits {
-  /** A source or layer could not be created. The component removed its own source and layers. */
-  error: [error: Error]
-}
-
-export interface ScriptMapLibreGeoJsonResource {
-  map: MapLibre.Map
-  onLoad: () => void
-  onStyleLoad: () => void
-}
+export type {
+  ScriptMapLibreGeoJsonEmits,
+  ScriptMapLibreGeoJsonLayer,
+  ScriptMapLibreGeoJsonProps,
+  ScriptMapLibreGeoJsonResource,
+} from './types'
 </script>
 
 <script setup lang="ts">
-import type { GeoJSON } from 'geojson'
 import type * as MapLibreGl from 'maplibre-gl'
+import type { ScriptMapLibreGeoJsonEmits, ScriptMapLibreGeoJsonProps, ScriptMapLibreGeoJsonResource } from './types'
 import { toRaw, watch } from 'vue'
 import { reportMapLibreResourceError, useMapLibreResource } from './useMapLibreResource'
 
-const props = defineProps<{
-  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */
-  sourceId: string
-  /** Inline GeoJSON data or a URL returning GeoJSON. */
-  data: GeoJSON | string
-  /** GeoJSON source options. `type` and `data` are supplied by the component. */
-  sourceOptions?: Omit<MapLibreGl.GeoJSONSourceSpecification, 'type' | 'data'>
-  /** Style layers backed by this source. */
-  layers: ScriptMapLibreGeoJsonLayer[]
-  /** Existing layer ID before which the layers are inserted. */
-  beforeId?: string
-}>()
+const props = defineProps<ScriptMapLibreGeoJsonProps>()
 
 const emit = defineEmits<ScriptMapLibreGeoJsonEmits>()
 
 let ownedLayerIds: string[] = []
 let ownedSourceId: string | undefined
 let appliedSignature: string | undefined
+let layerSubscriptions: MapLibreGl.Subscription[] = []
+let restoreCursor: string | undefined
+let isPointerOverLayer = false
+let hoveredLayerKey = ''
+let pendingHoverKey = ''
 
 /**
  * Content signature of every prop that forces a source and layer rebuild.
@@ -52,7 +35,74 @@ function resourceSignature(): string {
   return JSON.stringify([props.sourceId, props.sourceOptions ?? null, props.layers, props.beforeId ?? null])
 }
 
+/** Applies the `cursor` prop while the pointer is over an owned layer. */
+function applyCursor(map: MapLibreGl.Map, cursor: string | undefined): void {
+  const canvas = map.getCanvas()
+  if (!canvas)
+    return
+  if (cursor === undefined) {
+    if (restoreCursor !== undefined)
+      canvas.style.cursor = restoreCursor
+    restoreCursor = undefined
+    return
+  }
+  restoreCursor ??= canvas.style.cursor
+  canvas.style.cursor = cursor
+}
+
+function unbindLayerEvents(map: MapLibreGl.Map): void {
+  for (const subscription of layerSubscriptions)
+    subscription.unsubscribe()
+  layerSubscriptions = []
+  // Carry the hover across an immediate rebind. `syncResources` unbinds twice,
+  // so an empty key must never overwrite a carried one.
+  if (isPointerOverLayer)
+    pendingHoverKey = hoveredLayerKey
+  isPointerOverLayer = false
+  if (restoreCursor !== undefined)
+    applyCursor(map, undefined)
+}
+
+/**
+ * Binds the component's events to the layers it owns. MapLibre treats the layer
+ * array as one group, so `mouseenter` and `mouseleave` fire once per group.
+ *
+ * `carryHover` is true only for a style reload, where the props are unchanged
+ * and the same features sit under the pointer.
+ */
+function bindLayerEvents(map: MapLibreGl.Map, carryHover: boolean): void {
+  unbindLayerEvents(map)
+  const carriedHoverKey = pendingHoverKey
+  pendingHoverKey = ''
+  if (!ownedLayerIds.length)
+    return
+  const layerIds = [...ownedLayerIds]
+  const layerKey = layerIds.join('\n')
+  layerSubscriptions = [
+    map.on('click', layerIds, event => emit('click', event)),
+    map.on('mouseenter', layerIds, (event) => {
+      isPointerOverLayer = true
+      hoveredLayerKey = layerKey
+      applyCursor(map, props.cursor || undefined)
+      emit('mouseenter', event)
+    }),
+    map.on('mouseleave', layerIds, (event) => {
+      isPointerOverLayer = false
+      applyCursor(map, undefined)
+      emit('mouseleave', event)
+    }),
+  ]
+  // A style reload re-adds the same layers under a stationary pointer, and
+  // MapLibre does not fire `mouseenter` again. A prop change may move the
+  // features, so only a style reload of the same layers keeps the cursor.
+  if (carryHover && carriedHoverKey === layerKey) {
+    isPointerOverLayer = true
+    applyCursor(map, props.cursor || undefined)
+  }
+}
+
 function removeOwnedResources(map: MapLibreGl.Map): void {
+  unbindLayerEvents(map)
   for (const layerId of [...ownedLayerIds].reverse()) {
     if (map.getLayer(layerId))
       map.removeLayer(layerId)
@@ -64,7 +114,7 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   appliedSignature = undefined
 }
 
-function syncResources(map: MapLibreGl.Map): void {
+function syncResources(map: MapLibreGl.Map, carryHover = false): void {
   if (!map.isStyleLoaded()) {
     // The style is mid-swap, so nothing was applied. Clear the signature, or a
     // later flip back to the last applied value would skip the rebuild.
@@ -91,6 +141,7 @@ function syncResources(map: MapLibreGl.Map): void {
       ownedLayerIds.push(nextLayer.id)
     }
     appliedSignature = resourceSignature()
+    bindLayerEvents(map, carryHover)
   }
   catch (error) {
     removeOwnedResources(map)
@@ -99,9 +150,9 @@ function syncResources(map: MapLibreGl.Map): void {
 }
 
 /** Runs a rebuild outside the initial creation, where no caller can catch it. */
-function trySyncResources(map: MapLibreGl.Map): void {
+function trySyncResources(map: MapLibreGl.Map, carryHover = false): void {
   try {
-    syncResources(map)
+    syncResources(map, carryHover)
   }
   catch (error) {
     reportMapLibreResourceError(error, failure => emit('error', failure))
@@ -110,7 +161,7 @@ function trySyncResources(map: MapLibreGl.Map): void {
 
 const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
   create({ map }) {
-    const onStyleLoad = () => trySyncResources(map)
+    const onStyleLoad = () => trySyncResources(map, true)
     const onLoad = () => {
       if (!ownedSourceId)
         trySyncResources(map)
@@ -135,6 +186,13 @@ watch(() => props.data, (data) => {
   if (source?.type === 'geojson')
     (source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
 }, { deep: 2 })
+
+// The cursor is a presentation prop, so it stays out of the resource signature.
+// Applying it here keeps it reactive without rebuilding the source and layers.
+watch(() => props.cursor, (cursor) => {
+  if (isPointerOverLayer && geoJson.value)
+    applyCursor(geoJson.value.map, cursor || undefined)
+})
 
 watch(resourceSignature, (signature) => {
   if (geoJson.value && signature !== appliedSignature)

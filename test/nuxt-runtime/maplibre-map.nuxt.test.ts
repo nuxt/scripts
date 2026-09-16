@@ -1,3 +1,4 @@
+import type { ScriptMapLibreMapExpose } from '../../packages/script/src/runtime/components/MapLibre/types'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
@@ -45,6 +46,9 @@ function createMapLibreMock() {
     getBearing: vi.fn(() => 0),
     getPitch: vi.fn(() => 0),
     jumpTo: vi.fn(() => map),
+    fitBounds: vi.fn(() => map),
+    easeTo: vi.fn(() => map),
+    flyTo: vi.fn(() => map),
     setStyle: vi.fn(() => map),
     resize: vi.fn(() => map),
     remove: vi.fn(),
@@ -133,6 +137,63 @@ describe('scriptMapLibreMap', () => {
 
     wrapper.unmount()
     expect(mocks.map.remove).toHaveBeenCalledOnce()
+  })
+
+  it('emits load and styleload so raw map resources can be added again', async () => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreMap, {
+      props: {
+        mapStyle: 'https://demotiles.maplibre.org/style.json',
+        center: [144.9631, -37.8136],
+      },
+    })
+    await nextTick()
+    scriptState.callbacks[0]!({ maplibregl: mocks.maplibregl })
+    await nextTick()
+
+    const loadEvent = { type: 'load' }
+    mocks.events.get('load')?.(loadEvent)
+    expect(wrapper.emitted('load')?.[0]).toEqual([loadEvent])
+
+    await wrapper.setProps({ mapStyle: 'https://demotiles.maplibre.org/dark.json' })
+    expect(mocks.map.setStyle).toHaveBeenCalledWith('https://demotiles.maplibre.org/dark.json')
+
+    const styleLoadEvent = { type: 'style.load' }
+    mocks.events.get('style.load')?.(styleLoadEvent)
+    expect(wrapper.emitted('styleload')?.[0]).toEqual([styleLoadEvent])
+
+    wrapper.unmount()
+  })
+
+  it('exposes fitBounds, easeTo and flyTo on the ready payload', async () => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreMap, {
+      props: {
+        mapStyle: 'https://demotiles.maplibre.org/style.json',
+        center: [144.9631, -37.8136],
+      },
+    })
+    await nextTick()
+    scriptState.callbacks[0]!({ maplibregl: mocks.maplibregl })
+    await nextTick()
+    mocks.onceEvents.get('load')?.({ type: 'load' })
+    await nextTick()
+
+    const ready = wrapper.emitted('ready')?.[0]?.[0] as ScriptMapLibreMapExpose
+    const bounds = [[144.5, -38.1], [145.5, -37.5]] as [[number, number], [number, number]]
+    ready.fitBounds(bounds, { padding: 32 })
+    ready.easeTo({ center: [144.9796, -37.8304], duration: 400 })
+    ready.flyTo({ center: [147.3272, -42.8821], zoom: 10 })
+
+    expect(mocks.map.fitBounds).toHaveBeenCalledWith(bounds, { padding: 32 })
+    expect(mocks.map.easeTo).toHaveBeenCalledWith({ center: [144.9796, -37.8304], duration: 400 })
+    expect(mocks.map.flyTo).toHaveBeenCalledWith({ center: [147.3272, -42.8821], zoom: 10 })
+
+    // the default camera behaviour stays `jumpTo`
+    await wrapper.setProps({ zoom: 13 })
+    expect(mocks.map.jumpTo).toHaveBeenCalledWith({ zoom: 13 })
+
+    wrapper.unmount()
   })
 
   it('renders script errors and makes decorative maps inert', async () => {

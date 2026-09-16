@@ -1,25 +1,12 @@
 <script setup lang="ts">
 import type * as MapLibre from 'maplibre-gl'
+import type { ScriptMapLibreMarkerEmits, ScriptMapLibreMarkerProps } from './types'
 import { onMounted, provide, watch } from 'vue'
 import { MAPLIBRE_MARKER_INJECTION_KEY, useMapLibreResource } from './useMapLibreResource'
 
-const props = defineProps<{
-  /** Reactive marker position in `[longitude, latitude]` order. */
-  position: MapLibre.LngLatLike
-  /** Accessible name for the marker element. */
-  ariaLabel?: string
-  /** Tooltip text for the marker element. */
-  title?: string
-  /** Options passed to `new maplibregl.Marker()`. Options with public setters also update reactively. */
-  options?: MapLibre.MarkerOptions
-}>()
+const props = defineProps<ScriptMapLibreMarkerProps>()
 
-const emit = defineEmits<{
-  click: [event: MouseEvent]
-  dragstart: [event: MapLibre.Event]
-  drag: [event: MapLibre.Event]
-  dragend: [event: MapLibre.Event]
-}>()
+const emit = defineEmits<ScriptMapLibreMarkerEmits>()
 
 defineSlots<{
   default?: () => any

@@ -1,23 +1,14 @@
 <script setup lang="ts">
 import type * as MapLibre from 'maplibre-gl'
+import type { ScriptMapLibrePopupEmits, ScriptMapLibrePopupProps } from './types'
 import { inject, useTemplateRef, watch } from 'vue'
 import { MAPLIBRE_MARKER_INJECTION_KEY, useMapLibreResource } from './useMapLibreResource'
 
-const props = withDefaults(defineProps<{
-  /** Position for a standalone popup. Omit when nested inside a marker. */
-  position?: MapLibre.LngLatLike
-  /** Whether the popup is open. @default false */
-  open?: boolean
-  /** Options passed to `new maplibregl.Popup()`. Options with public setters also update reactively. */
-  options?: MapLibre.PopupOptions
-}>(), {
+const props = withDefaults(defineProps<ScriptMapLibrePopupProps>(), {
   open: false,
 })
 
-const emit = defineEmits<{
-  open: [event: MapLibre.Event]
-  close: [event: MapLibre.Event]
-}>()
+const emit = defineEmits<ScriptMapLibrePopupEmits>()
 
 defineSlots<{
   default?: () => any
