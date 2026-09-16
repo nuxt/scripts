@@ -334,6 +334,27 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
       await expect.poll(() => readLog().then(log => log.addSource)).toBe(before.addSource + 1)
     })
 
+    it('reports a cluster failure whose round runs during tile events and rebuilds next', async () => {
+      const { page, readLog } = await openBrokenClusters()
+      const before = await readLog()
+
+      // The update fails because the source data is missing. Tile loads of the
+      // source fire their own dataloading and data events while the update's
+      // worker round is still running.
+      await page.click('#radius-merge-tile-events')
+      await expect.poll(() => readLog().then(log => log.errors.length)).toBe(before.errors.length + 1)
+      await page.waitForTimeout(300)
+      const failed = await readLog()
+      expect(failed.errors.length).toBe(before.errors.length + 1)
+      expect(failed.errors.at(-1)).toMatch(/updateClusterOptions/)
+      expect(failed.addSource).toBe(before.addSource)
+
+      // The tile events must not keep the failed options marked as applied,
+      // so the next cluster-only change rebuilds the source.
+      await page.click('#radius-split')
+      await expect.poll(() => readLog().then(log => log.addSource)).toBe(before.addSource + 1)
+    })
+
     it('ignores the worker failure of a superseded cluster update', async () => {
       const { page, readLog } = await openBrokenClusters()
       const before = await readLog()

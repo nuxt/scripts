@@ -76,12 +76,3 @@ export function parseSchemaComments(code: string): Record<string, { description?
 
   return result
 }
-
-/** Writes merged props fields as an interface body, for a props type that is not a literal. */
-export function fieldsToInterfaceBody(fields: SchemaFieldMeta[]): string {
-  const lines = fields.map((field) => {
-    const doc = [field.description, field.defaultValue && `@default ${field.defaultValue}`].filter(Boolean).join(' ')
-    return `${doc ? `  /** ${doc} */\n` : ''}  ${field.name}${field.required ? '' : '?'}: ${field.type}`
-  })
-  return `{\n${lines.join('\n')}\n}`
-}

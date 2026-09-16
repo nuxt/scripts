@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { walk } from 'oxc-walker'
 import { parseSync } from 'vite'
-import { fieldsToInterfaceBody, parseSchemaComments } from './registry-doc-comments.ts'
+import { parseSchemaComments } from './registry-doc-comments.ts'
 
 const registryDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'registry')
 const componentsDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'components')
@@ -260,7 +260,13 @@ function extractNamedTypeDeclarations(source: string | null, fileName: string): 
 }
 
 interface ComponentMeta {
+  /**
+   * The props type source, sliced verbatim from the component. A literal is
+   * emitted as an interface body, any compound type as a type alias, so a
+   * union keeps the alternatives a consumer must choose between.
+   */
   code: string
+  kind: 'interface' | 'type'
   defaults: Record<string, string>
   fields: SchemaFieldMeta[]
   events: SchemaFieldMeta[]
@@ -381,7 +387,7 @@ function collectPropsFields(typeNode: any, source: string, resolveTypeNode: Type
 
 function extractComponentMeta(scriptSource: string, fileName: string, namedTypes = new Map<string, NamedTypeDeclaration>()): ComponentMeta | null {
   const { program } = parseSync(fileName, scriptSource)
-  let propsResult: { code: string, defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
+  let propsResult: { code: string, kind: 'interface' | 'type', defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
   const events: SchemaFieldMeta[] = []
   const models: SchemaFieldMeta[] = []
   const slots: SchemaFieldMeta[] = []
@@ -636,8 +642,8 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
           field.defaultValue = defaults[field.name]
       }
 
-      const code = isLiteral ? typeSource.slice(typeArg.start, typeArg.end) : fieldsToInterfaceBody(fields)
-      propsResult = { code, defaults, fields }
+      const code = typeSource.slice(typeArg.start, typeArg.end)
+      propsResult = { code, kind: isLiteral ? 'interface' : 'type', defaults, fields }
     },
   })
 
@@ -646,6 +652,7 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
 
   return {
     code: propsResult.code,
+    kind: propsResult.kind,
     defaults: propsResult.defaults,
     fields: [...propsResult.fields, ...models],
     events,
@@ -764,11 +771,15 @@ for (const [componentName, meta] of Object.entries(componentMetas)) {
   if (!types[slug])
     types[slug] = []
 
-  const propsInterface = `interface ${componentName}Props ${meta.code}`
+  // The declaration carries the props type verbatim, so a compound type keeps
+  // the alternatives a consumer must choose between.
+  const declaration = meta.kind === 'type'
+    ? `type ${componentName}Props = ${meta.code}`
+    : `interface ${componentName}Props ${meta.code}`
   types[slug].push({
     name: `${componentName}Props`,
-    kind: 'interface',
-    code: propsInterface,
+    kind: meta.kind,
+    code: declaration,
   })
 
   if (Object.keys(meta.defaults).length) {

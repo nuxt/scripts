@@ -134,29 +134,39 @@ function onMapError(event: MapErrorEvent): void {
 }
 
 /**
- * Tags each worker round with what this component asked it to do.
+ * Tags each worker round with what this component asked MapLibre to do.
  *
  * MapLibre runs one worker round at a time and fires a source `dataloading`
- * event when the next one starts. Queued data wins over queued cluster
- * options, mirroring MapLibre's own `_pendingWorkerUpdate` order. The next
- * `error` event for this source belongs to the round that is running, so it
- * can never be blamed on a cluster update that only shares the window.
+ * event when the next one starts. Tile loads of this source fire the same
+ * event with the tile attached, and a tile load never starts a worker round,
+ * so those events are ignored. Queued data wins over queued cluster options,
+ * mirroring MapLibre's own `_pendingWorkerUpdate` order. One round runs every
+ * queued cluster call with the last call's options, so the round takes the
+ * last id and clears the queue. The next `error` event for this source
+ * belongs to the round that is running, so it can never be blamed on an
+ * operation that only shares the window.
  */
 function onSourceDataLoading(event: MapLibreGl.MapSourceDataEvent): void {
   if (ownedSourceId === undefined || event.sourceId !== ownedSourceId)
+    return
+  if (event.tile)
     return
   if (pendingDataRound) {
     pendingDataRound = false
     runningRound = { kind: 'data' }
     return
   }
-  const updateId = pendingClusterUpdateIds.pop()
+  const updateId = pendingClusterUpdateIds.at(-1)
+  pendingClusterUpdateIds = []
   runningRound = updateId === undefined ? { kind: 'foreign' } : { kind: 'cluster', updateId }
 }
 
 /** Ends the running round, so a later error is never attributed to it. */
 function onSourceData(event: MapLibreGl.MapSourceDataEvent): void {
   if (ownedSourceId === undefined || event.sourceId !== ownedSourceId)
+    return
+  // A tile load is not the end of this component's worker round.
+  if (event.tile)
     return
   runningRound = { kind: 'foreign' }
 }

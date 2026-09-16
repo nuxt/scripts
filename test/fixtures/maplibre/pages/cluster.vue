@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ScriptMapLibreGeoJsonLayer, ScriptMapLibreMapExpose } from '@nuxt/scripts'
 import { useRoute } from 'nuxt/app'
+import { MapSourceDataEvent } from 'maplibre-gl'
 import { computed, nextTick, reactive, shallowRef, unref, useTemplateRef, watch } from 'vue'
 
 const style = blankStyle('#ffffff')
@@ -80,6 +81,32 @@ async function burstData(): Promise<void> {
   await nextTick()
   clusterRadius.value = 50
 }
+
+/**
+ * Fires the source events a tile load of this source produces. MapLibre emits
+ * them per tile, with the tile attached, so a camera change during a cluster
+ * update fires them while the update's worker round is still running.
+ */
+function fireTileEvents(): void {
+  const map = unref(mapComponent.value?.map)
+  if (!map)
+    return
+  for (const type of ['sourcedataloading', 'sourcedata'] as const) {
+    map.fire(new MapSourceDataEvent(type, {
+      sourceId: 'places',
+      sourceDataType: 'content',
+      isSourceLoaded: true,
+      tile: { tileID: { key: '0/0/0' } },
+    }))
+  }
+}
+
+/** Queues a failing cluster update, then runs tile events during its round. */
+async function mergeWithTileEvents(): Promise<void> {
+  clusterRadius.value = 50
+  await nextTick()
+  fireTileEvents()
+}
 </script>
 
 <template>
@@ -109,6 +136,9 @@ async function burstData(): Promise<void> {
     </button>
     <button id="radius-burst" type="button" @click="burst">
       Change the radius twice
+    </button>
+    <button id="radius-merge-tile-events" type="button" @click="mergeWithTileEvents">
+      Merge during tile events
     </button>
     <button id="burst-data" type="button" @click="burstData">
       Radius, broken data, radius
