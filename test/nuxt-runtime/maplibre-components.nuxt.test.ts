@@ -371,6 +371,33 @@ describe('mapLibre components', () => {
     wrapper.unmount()
   })
 
+  it('rebuilds after a skipped sync even when the layers return to the last applied value', async () => {
+    const mocks = createMapLibreMock()
+    const melbourne = [{ id: 'melbourne-circle', type: 'circle' as const }]
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: melbourne,
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    // a style swap drops every source and layer, and the style is not loaded yet
+    mocks.map.isStyleLoaded.mockReturnValue(false)
+    await wrapper.setProps({ layers: [{ id: 'melbourne-heat', type: 'heatmap' }] })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    mocks.map.isStyleLoaded.mockReturnValue(true)
+    await wrapper.setProps({ layers: [{ id: 'melbourne-circle', type: 'circle' }] })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
+    expect(mocks.map.addLayer).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'melbourne-circle' }), undefined)
+
+    wrapper.unmount()
+  })
+
   it('adds and removes a navigation control', async () => {
     const mocks = createMapLibreMock()
     const wrapper = mount(ScriptMapLibreNavigationControl, {

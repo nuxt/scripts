@@ -65,8 +65,12 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
 }
 
 function syncResources(map: MapLibreGl.Map): void {
-  if (!map.isStyleLoaded())
+  if (!map.isStyleLoaded()) {
+    // The style is mid-swap, so nothing was applied. Clear the signature, or a
+    // later flip back to the last applied value would skip the rebuild.
+    appliedSignature = undefined
     return
+  }
 
   removeOwnedResources(map)
   const sourceId = props.sourceId
