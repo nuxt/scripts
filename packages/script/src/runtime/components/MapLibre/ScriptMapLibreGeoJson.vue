@@ -43,6 +43,60 @@ let pendingHoverKey = ''
 let isStyleMutable = false
 /** A sync was skipped because the style was mid-swap. The next ready signal runs it. */
 let hasPendingSync = false
+/** Collects the map errors fired while this component applies one style change. */
+let capturedErrors: Error[] | undefined
+
+/** A map `error` event. MapLibre adds `sourceId` or `layer` when a source or layer fired it. */
+interface MapErrorEvent {
+  error: Error | { message: string }
+  sourceId?: string
+  layer?: { id?: string }
+}
+
+function toError(event: MapErrorEvent): Error {
+  return event.error instanceof Error ? event.error : new Error(event.error.message, { cause: event.error })
+}
+
+/**
+ * Runs one style change and throws the errors MapLibre fired during it.
+ *
+ * MapLibre does not throw for an invalid layer, paint, layout or filter value.
+ * It fires a map `error` event and skips the change. The event fires
+ * synchronously inside the call, so an error fired during it belongs to this
+ * component. Matching the message against a layer ID would be ambiguous,
+ * because a layer ID may contain a dot.
+ */
+function applyStyleChange(change: () => void): void {
+  const errors: Error[] = []
+  capturedErrors = errors
+  try {
+    change()
+  }
+  finally {
+    capturedErrors = undefined
+  }
+  if (errors.length === 1)
+    throw errors[0]
+  if (errors.length > 1)
+    throw new AggregateError(errors, errors.map(error => error.message).join('\n'))
+}
+
+/**
+ * Handles every map error. An error from this component's own change is thrown by
+ * `applyStyleChange`. A later error is emitted only when it names this
+ * component's source or one of its layers, so basemap and tile failures stay
+ * with the map.
+ */
+function onMapError(event: MapErrorEvent): void {
+  if (capturedErrors) {
+    capturedErrors.push(toError(event))
+    return
+  }
+  const isOwnSource = ownedSourceId !== undefined && event.sourceId === ownedSourceId
+  const isOwnLayer = event.layer?.id !== undefined && ownedLayerIds.includes(event.layer.id)
+  if (isOwnSource || isOwnLayer)
+    reportMapLibreResourceError(toError(event), failure => emit('error', failure))
+}
 
 /**
  * Layer keys the component cannot update in place. A change rebuilds the source.
@@ -190,11 +244,11 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
   removeOwnedResources(map)
   const sourceId = props.sourceId
   try {
-    map.addSource(sourceId, {
+    applyStyleChange(() => map.addSource(sourceId, {
       ...toRaw(props.sourceOptions),
       type: 'geojson',
       data: toRaw(props.data),
-    })
+    }))
     ownedSourceId = sourceId
 
     for (const layer of props.layers) {
@@ -202,7 +256,9 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
         ...toRaw(layer),
         source: layer.source || sourceId,
       } as MapLibreGl.LayerSpecification
-      map.addLayer(nextLayer, props.beforeId)
+      applyStyleChange(() => map.addLayer(nextLayer, props.beforeId))
+      if (!map.getLayer(nextLayer.id))
+        throw new Error(`MapLibre did not add the layer "${nextLayer.id}".`)
       ownedLayerIds.push(nextLayer.id)
     }
     appliedStructure = structureSignature()
@@ -243,13 +299,13 @@ function updateLayerStyles(map: MapLibreGl.Map): void {
     // MapLibre keys these setters by layer type. The layer array is a union, so
     // the property name is only known as a string here.
     applyStyleBlock(before.paint, next.paint, (name, value) => {
-      map.setPaintProperty(layerId, name as keyof MapLibreGl.AllPaintProperties, value as never)
+      applyStyleChange(() => map.setPaintProperty(layerId, name as keyof MapLibreGl.AllPaintProperties, value as never))
     })
     applyStyleBlock(before.layout, next.layout, (name, value) => {
-      map.setLayoutProperty(layerId, name as keyof MapLibreGl.AllLayoutProperties, value as never)
+      applyStyleChange(() => map.setLayoutProperty(layerId, name as keyof MapLibreGl.AllLayoutProperties, value as never))
     })
     if (JSON.stringify(before.filter) !== JSON.stringify(next.filter))
-      map.setFilter(layerId, next.filter as MapLibreGl.FilterSpecification | undefined)
+      applyStyleChange(() => map.setFilter(layerId, next.filter as MapLibreGl.FilterSpecification | undefined))
   })
   // The new values may have emptied the spot under a stationary pointer, and
   // MapLibre only re-evaluates on the next pointer move. A prop-driven rebuild
@@ -313,10 +369,11 @@ const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
     map.on('load', onLoad)
     map.on('styledataloading', onStyleDataLoading)
     map.on('idle', onIdle)
+    map.on('error', onMapError)
     // A failed first sync must not discard the resource. The style and prop
     // listeners stay registered, so a corrected layer rebuilds without a remount.
     trySyncResources(map)
-    return { map, onLoad, onStyleLoad, onStyleDataLoading, onIdle }
+    return { map, onLoad, onStyleLoad, onStyleDataLoading, onIdle, onError: onMapError }
   },
   onError: error => emit('error', error),
   cleanup(resource) {
@@ -324,6 +381,7 @@ const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
     resource.map.off('style.load', resource.onStyleLoad)
     resource.map.off('styledataloading', resource.onStyleDataLoading)
     resource.map.off('idle', resource.onIdle)
+    resource.map.off('error', resource.onError)
     removeOwnedResources(resource.map)
   },
 })
