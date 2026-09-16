@@ -1,6 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { $fetch, createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { createPage, url } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -10,26 +11,15 @@ const { resolve } = createResolver(import.meta.url)
  * the server while the client expects a comment node, so hydration reports a
  * mismatch.
  *
- * `@nuxt/test-utils` builds inside the Vitest worker, where `NODE_ENV` is `test`.
- * `@vue/compiler-core` picks its development build there, and its `comments`
- * option defaults to `true`, so a comment-only template cannot fail. Setting
- * `comments: false` applies the production default. The probe test proves it.
+ * `setupFixture()` strips template comments like a production build, so this
+ * mismatch can appear. `production-compile.test.ts` proves the setting works.
  */
 const pages = ['/maplibre', '/leaflet', '/google-maps']
 
 describe('map component hydration in a production build', { timeout: 120000 }, async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/map-hydration'),
     browser: true,
-    nuxtConfig: {
-      vue: { compilerOptions: { comments: false } },
-    },
-  })
-
-  it.each(pages)('strips template comments from %s, like a production build', async (path) => {
-    const html = await $fetch<string>(path)
-    expect(html).toContain('<div id="__nuxt">')
-    expect(html).not.toContain('production-build-probe')
   })
 
   it.each(pages)('hydrates %s without a mismatch', async (path) => {

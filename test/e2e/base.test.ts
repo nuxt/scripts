@@ -1,11 +1,12 @@
 import { createResolver } from '@nuxt/kit'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
+import { createPage } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
 describe('base', async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/basic'),
     // dev: true,
     browser: true,

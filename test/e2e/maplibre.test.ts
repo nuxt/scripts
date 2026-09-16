@@ -1,7 +1,8 @@
 import type { Page } from 'playwright-core'
 import { createResolver } from '@nuxt/kit'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
+import { createPage } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -42,7 +43,7 @@ async function waitForRenderedFeatures(page: Page, layers: string[], count: numb
 }
 
 describe('maplibre in a real browser', { timeout: 60000 }, async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/maplibre'),
     browser: true,
   })

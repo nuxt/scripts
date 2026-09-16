@@ -1,6 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { $fetch, createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { createPage, url } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -9,24 +10,13 @@ const { resolve } = createResolver(import.meta.url)
  * template holds only a comment then renders nothing on the server, while the
  * client expects a comment node, so hydration reports a mismatch.
  *
- * `@nuxt/test-utils` builds inside the Vitest worker, where `NODE_ENV` is `test`.
- * `@vue/compiler-core` picks its development build there, and its `comments`
- * option defaults to `true`, so the bug cannot appear. Setting `comments: false`
- * applies the production default. The first test proves it took effect.
+ * `setupFixture()` strips template comments like a production build, so this
+ * mismatch can appear. `production-compile.test.ts` proves the setting works.
  */
 describe('maplibre hydration in a production build', { timeout: 120000 }, async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/maplibre'),
     browser: true,
-    nuxtConfig: {
-      vue: { compilerOptions: { comments: false } },
-    },
-  })
-
-  it('compiles the fixture in production mode', async () => {
-    // Guards the guard: a development compile keeps this template comment.
-    const html = await $fetch<string>('/controls')
-    expect(html).not.toContain('production-build-probe')
   })
 
   it('hydrates every control component without a mismatch', async () => {

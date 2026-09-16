@@ -1,13 +1,14 @@
 import type { Page } from 'playwright-core'
 import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
-import { getBrowser, setup, url, waitForHydration } from '@nuxt/test-utils/e2e'
+import { getBrowser, url, waitForHydration } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
 import { afterEach, describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
-await setup({
+await setupFixture({
   rootDir: resolve('../fixtures/basic'),
   // dev: true,
   browser: true,
