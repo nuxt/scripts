@@ -2,7 +2,7 @@ import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
 import type { DeskCrewApi, DeskCrewEmbedOptions } from '../../packages/script/src/runtime/registry/deskcrew'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
-import type { TawkToProxyApi, TawkToVisitor } from '../../packages/script/src/runtime/registry/tawk-to'
+import type { TawkToApi, TawkToProxyApi, TawkToVisitor, TawkToWindowType } from '../../packages/script/src/runtime/registry/tawk-to'
 import type { TikTokPixelApi, useScriptTikTokPixel } from '../../packages/script/src/runtime/registry/tiktok-pixel'
 import type { NuxtConfigScriptRegistry, NuxtConfigScriptRegistryEntry, NuxtUseScriptOptions, RegistryScriptInput, ScriptRegistry, UseFunctionType, UseScriptContext } from '../../packages/script/src/runtime/types'
 import { describe, expectTypeOf, it } from 'vitest'
@@ -231,6 +231,14 @@ describe('tawk-to proxy api', () => {
     // through `proxy` would always be wrong.
     type Flags = Extract<keyof TawkToProxyApi, 'onLoaded' | 'onBeforeLoaded'>
     expectTypeOf<Flags>().toBeNever()
+  })
+
+  it('window type uses the documented inline/embed literals', () => {
+    expectTypeOf<TawkToWindowType>().toEqualTypeOf<'inline' | 'embed'>()
+  })
+
+  it('onLoaded is a boolean, matching the embed that writes `!0`', () => {
+    expectTypeOf<TawkToApi['onLoaded']>().toEqualTypeOf<boolean | undefined>()
   })
 
   it('start accepts its documented optional configuration object', () => {
