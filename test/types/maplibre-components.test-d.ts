@@ -14,17 +14,34 @@ import { describe, expectTypeOf, it } from 'vitest'
  * template ref, so they are exported from both public type entries.
  */
 describe('mapLibre component types', () => {
-  it('types a module-level layer array from the package entry', () => {
+  it('types the standard clustering layers from the package entry', () => {
+    // PC-8: `Omit` is not distributive, so it collapsed the `LayerSpecification`
+    // union to its common keys and dropped `filter`. Every clustering example
+    // needs `filter`, and the expressions need per-layer contextual typing.
     const layers: ScriptMapLibreGeoJsonLayer[] = [
       {
         id: 'clusters',
         type: 'circle',
-        paint: { 'circle-color': '#396cb2' },
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075'],
+          'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30],
+        },
       },
       {
         id: 'cluster-count',
         type: 'symbol',
-        layout: { 'text-field': '{point_count_abbreviated}' },
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-size': 12,
+        },
+      },
+      {
+        id: 'unclustered-point',
+        type: 'circle',
+        filter: ['!', ['has', 'point_count']],
+        paint: { 'circle-color': '#396cb2' },
       },
     ]
 

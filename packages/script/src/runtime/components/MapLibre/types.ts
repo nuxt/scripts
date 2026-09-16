@@ -89,7 +89,15 @@ export interface ScriptMapLibreMapSlots {
   description?: () => any
 }
 
-export type ScriptMapLibreGeoJsonLayer = Omit<MapLibre.LayerSpecification, 'source'> & {
+/**
+ * A style layer without its `source`, which the component supplies.
+ *
+ * `LayerSpecification` is a union and a plain `Omit` is not distributive, so it
+ * collapses the union to its common keys and drops `filter`. MapLibre's own
+ * `DistributiveOmit` keeps each member, so `type` narrows `filter`, `paint` and
+ * `layout` for that layer kind.
+ */
+export type ScriptMapLibreGeoJsonLayer = MapLibre.DistributiveOmit<MapLibre.LayerSpecification, 'source'> & {
   /** Override the component's source ID for this layer. */
   source?: string
 }

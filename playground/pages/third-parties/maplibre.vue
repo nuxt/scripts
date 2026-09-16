@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ScriptMapLibreGeoJsonLayer } from '@nuxt/scripts'
 import type { Feature, FeatureCollection, LineString } from 'geojson'
 import type { LngLatLike } from 'maplibre-gl'
 import { computed, ref } from 'vue'
@@ -85,10 +86,10 @@ const routeData = computed<FeatureCollection<LineString>>(() => {
   }
 })
 
-const routeLayers = [
+const routeLayers: ScriptMapLibreGeoJsonLayer[] = [
   {
     id: 'delivery-route',
-    type: 'line' as const,
+    type: 'line',
     filter: ['==', ['get', 'progress'], 'remaining'],
     paint: {
       'line-color': '#64748b',
@@ -98,7 +99,7 @@ const routeLayers = [
   },
   {
     id: 'delivery-progress',
-    type: 'line' as const,
+    type: 'line',
     filter: ['==', ['get', 'progress'], 'completed'],
     paint: {
       'line-color': '#2563eb',
