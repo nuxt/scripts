@@ -93,10 +93,11 @@ OpenFreeMap's public instance needs no API key, but it has no SLA. Read [Styles 
 - [`<ScriptMapLibreMarker>`{lang="html"}](/scripts/maplibre/api/marker) adds an accessible, reactive marker.
 - [`<ScriptMapLibrePopup>`{lang="html"}](/scripts/maplibre/api/popup) binds slotted HTML to a marker or coordinate.
 - [`<ScriptMapLibreNavigationControl>`{lang="html"}](/scripts/maplibre/api/navigation-control) adds zoom, compass, and pitch controls.
-- [`<ScriptMapLibreGeoJson>`{lang="html"}](/scripts/maplibre/api/geojson) manages a GeoJSON source and its style layers.
+- [`<ScriptMapLibreGeoJson>`{lang="html"}](/scripts/maplibre/api/geojson) manages a GeoJSON source and its style layers, including [clustering](/scripts/maplibre/api/geojson#clustering).
 
 ## Guides
 
 - [Delivery Tracker](/scripts/maplibre/guides/delivery-tracker) builds a practical route tracker from reactive markers and styled GeoJSON.
 - [Styles & Providers](/scripts/maplibre/guides/styles-and-providers) separates the renderer, style, tile service, and map data choices.
 - [Performance, CSP & Accessibility](/scripts/maplibre/guides/performance-csp-and-accessibility) covers loading triggers, WebGL fallbacks, workers, and decorative maps.
+- [Raw Map Instance](/scripts/maplibre/guides/raw-map-instance) covers layer events, filtering, feature state, and animated camera moves.
