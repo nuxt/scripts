@@ -204,7 +204,13 @@ watch(() => props.center, (center) => {
 // coordinates, such as an inline literal on a parent render, keeps the camera
 // where the user moved it. A change to `fitBoundsOptions` alone does not fit.
 watch(() => props.bounds, (bounds) => {
-  if (!bounds || !map.value || !maplibre.value)
+  // Removing bounds keeps the camera. Forget the last fit, so bounds that come
+  // back with the same coordinates fit again.
+  if (!bounds) {
+    fittedBounds = undefined
+    return
+  }
+  if (!map.value || !maplibre.value)
     return
   const key = boundsKey(bounds, maplibre.value)
   if (key === fittedBounds)

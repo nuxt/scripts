@@ -6,6 +6,7 @@ import { reactive, shallowRef } from 'vue'
 const style = blankStyle('#ffffff')
 
 const bounds = shallowRef<[[number, number], [number, number]]>([[10, 10], [20, 20]])
+const bothBounds = shallowRef<[[number, number], [number, number]] | undefined>([[-20, -10], [-10, 0]])
 const maps: Record<string, MapLibreMap | undefined> = {}
 const ready = reactive({ framed: false, both: false })
 
@@ -36,7 +37,7 @@ function onReady(name: 'framed' | 'both', { map }: ScriptMapLibreMapExpose): voi
       :map-style="style"
       :center="[-100, -40]"
       :zoom="2"
-      :bounds="[[-20, -10], [-10, 0]]"
+      :bounds="bothBounds"
       :width="400"
       :height="300"
       @ready="payload => onReady('both', payload)"
@@ -46,6 +47,12 @@ function onReady(name: 'framed' | 'both', { map }: ScriptMapLibreMapExpose): voi
     </button>
     <button id="same-bounds" type="button" @click="bounds = [[bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]]]">
       Pass the same bounds again
+    </button>
+    <button id="remove-bounds" type="button" @click="bothBounds = undefined">
+      Remove the bounds
+    </button>
+    <button id="restore-bounds" type="button" @click="bothBounds = [[-20, -10], [-10, 0]]">
+      Restore the same bounds
     </button>
   </div>
 </template>
