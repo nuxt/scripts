@@ -118,7 +118,7 @@ export interface ScriptMapLibreGeoJsonProps {
 }
 
 export interface ScriptMapLibreGeoJsonEmits {
-  /** A source or layer could not be created. The map keeps its previous state. */
+  /** A source or layer could not be created. The component removed its own source and layers. */
   error: [error: Error]
   /** The pointer clicked one of this component's layers. */
   click: [event: MapLibre.MapLayerMouseEvent]
