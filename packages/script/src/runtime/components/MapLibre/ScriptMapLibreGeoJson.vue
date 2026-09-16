@@ -25,6 +25,15 @@ let restoreCursor: string | undefined
 let isPointerOverLayer = false
 
 /**
+ * True while the style accepts `addSource` and `addLayer`. MapLibre allows both
+ * from `style.load` onwards. `isStyleLoaded()` is a stricter signal: it also
+ * waits for every tile and the sprite, so it is still false at `style.load`.
+ */
+let isStyleMutable = false
+/** A sync was skipped because the style was mid-swap. The next ready signal runs it. */
+let hasPendingSync = false
+
+/**
  * Content signature of every prop that forces a source and layer rebuild.
  * An inline array or object literal changes identity on each parent render, so
  * the component compares content instead of identity.
@@ -95,13 +104,15 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
 }
 
 function syncResources(map: MapLibreGl.Map): void {
-  if (!map.isStyleLoaded()) {
-    // The style is mid-swap, so nothing was applied. Clear the signature, or a
+  if (!isStyleMutable && map.isStyleLoaded() !== true) {
+    // The style is mid-swap and rejects new sources. Clear the signature, or a
     // later flip back to the last applied value would skip the rebuild.
     appliedSignature = undefined
+    hasPendingSync = true
     return
   }
 
+  hasPendingSync = false
   removeOwnedResources(map)
   const sourceId = props.sourceId
   try {
@@ -141,22 +152,46 @@ function trySyncResources(map: MapLibreGl.Map): void {
 
 const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
   create({ map }) {
-    const onStyleLoad = () => trySyncResources(map)
+    isStyleMutable = map.isStyleLoaded() === true
+    // MapLibre drops every source and layer when a style loads, so the component
+    // re-adds its own. `style.load` is the first moment the new style accepts them.
+    const onStyleLoad = () => {
+      isStyleMutable = true
+      trySyncResources(map)
+    }
     const onLoad = () => {
+      isStyleMutable = true
       if (!ownedSourceId)
+        trySyncResources(map)
+    }
+    // A full style reload starts here. The new style rejects new sources until
+    // `style.load` fires.
+    const onStyleDataLoading = () => {
+      isStyleMutable = false
+      hasPendingSync = true
+    }
+    // The map only goes idle once the style reports loaded, so this is the last
+    // safety net for a sync that arrived while the style was busy.
+    const onIdle = () => {
+      isStyleMutable = true
+      if (hasPendingSync)
         trySyncResources(map)
     }
     map.on('style.load', onStyleLoad)
     map.on('load', onLoad)
+    map.on('styledataloading', onStyleDataLoading)
+    map.on('idle', onIdle)
     // A failed first sync must not discard the resource. The style and prop
     // listeners stay registered, so a corrected layer rebuilds without a remount.
     trySyncResources(map)
-    return { map, onLoad, onStyleLoad }
+    return { map, onLoad, onStyleLoad, onStyleDataLoading, onIdle }
   },
   onError: error => emit('error', error),
   cleanup(resource) {
     resource.map.off('load', resource.onLoad)
     resource.map.off('style.load', resource.onStyleLoad)
+    resource.map.off('styledataloading', resource.onStyleDataLoading)
+    resource.map.off('idle', resource.onIdle)
     removeOwnedResources(resource.map)
   },
 })

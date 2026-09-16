@@ -144,6 +144,8 @@ export interface ScriptMapLibreGeoJsonResource {
   map: MapLibre.Map
   onLoad: () => void
   onStyleLoad: () => void
+  onStyleDataLoading: () => void
+  onIdle: () => void
 }
 
 export interface ScriptMapLibreMarkerProps {

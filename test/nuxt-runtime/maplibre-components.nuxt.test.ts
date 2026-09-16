@@ -139,6 +139,13 @@ function createMapLibreMock() {
     source,
     styleEvents,
     canvas,
+    /** Drops every source and layer, the way MapLibre does on a style swap. */
+    swapStyle() {
+      sources.clear()
+      layers.clear()
+      map.isStyleLoaded.mockReturnValue(false)
+      styleEvents.get('styledataloading')?.()
+    },
     layerBindings,
     /** The most recent binding for an event type. */
     layerBinding(type: string) {
@@ -418,7 +425,7 @@ describe('mapLibre components', () => {
     expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
 
     // a style swap drops every source and layer, and the style is not loaded yet
-    mocks.map.isStyleLoaded.mockReturnValue(false)
+    mocks.swapStyle()
     await wrapper.setProps({ layers: [{ id: 'melbourne-heat', type: 'heatmap' }] })
     expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
 
@@ -426,6 +433,58 @@ describe('mapLibre components', () => {
     await wrapper.setProps({ layers: [{ id: 'melbourne-circle', type: 'circle' }] })
     expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
     expect(mocks.map.addLayer).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'melbourne-circle' }), undefined)
+
+    wrapper.unmount()
+  })
+
+  it('re-adds the GeoJSON source when style.load fires before the style reports loaded', async () => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    // a dark mode toggle swaps the basemap, which drops every source and layer
+    mocks.swapStyle()
+    expect(mocks.map.getSource('melbourne')).toBeUndefined()
+
+    // MapLibre fires style.load while isStyleLoaded() is still false, because
+    // isStyleLoaded() also waits for every tile and the sprite
+    mocks.styleEvents.get('style.load')?.()
+
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
+    expect(mocks.map.getSource('melbourne')).toBeDefined()
+    expect(mocks.map.getLayer('melbourne-circle')).toBeDefined()
+
+    wrapper.unmount()
+  })
+
+  it('retries a sync skipped by an unloaded style once the map goes idle', async () => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle' }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    mocks.swapStyle()
+    await wrapper.setProps({ sourceId: 'greater-melbourne' })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    mocks.map.isStyleLoaded.mockReturnValue(true)
+    mocks.styleEvents.get('idle')?.()
+    expect(mocks.map.addSource).toHaveBeenLastCalledWith('greater-melbourne', expect.anything())
 
     wrapper.unmount()
   })
