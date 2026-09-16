@@ -18,19 +18,16 @@ links:
 ::script-docs
 ::
 
-The composable uses these defaults:
+Bundling and proxying are both off. Nobody has verified how the embed script resolves its own API origin, or what live-chat polling connections a proxy would end up in front of, so neither capability is declared rather than guessed at.
 
-- **Trigger: `onNuxtReady`.** The script loads after Nuxt hydration, using the module-wide default.
-- **Bundle and proxy: off.** Tawk's runtime network behavior (whether the embed script derives its own API origin from its `src`, whether it opens connections a proxy would sit in front of for live-chat polling) hasn't been verified, so neither capability is declared yet.
-
-The widget needs both `propertyId` and `widgetId` to load. Find them under **Administration Settings → Channels → Chat Widget** in your Tawk.to dashboard.
+Find `propertyId` and `widgetId` under **Administration Settings → Channels → Chat Widget** in your Tawk.to dashboard.
 
 ::code-group
 
 ```ts [Proxy]
 const { proxy } = useScriptTawkTo({
-  propertyId: 'your-property-id',
-  widgetId: 'your-widget-id',
+  propertyId: 'YOUR_PROPERTY_ID',
+  widgetId: 'YOUR_WIDGET_ID',
 })
 
 function openChat() {
@@ -40,8 +37,8 @@ function openChat() {
 
 ```ts [onLoaded]
 const { onLoaded } = useScriptTawkTo({
-  propertyId: 'your-property-id',
-  widgetId: 'your-widget-id',
+  propertyId: 'YOUR_PROPERTY_ID',
+  widgetId: 'YOUR_WIDGET_ID',
 })
 
 onLoaded((Tawk_API) => {
@@ -58,8 +55,8 @@ Tawk's embed script dispatches `window` `CustomEvent`s (`tawkLoad`, `tawkStatusC
 ```vue
 <script setup lang="ts">
 const { isHidden, isMinimized, isMaximized, chatStatus, unreadCount, onChatStarted, onChatEnded } = useScriptTawkTo({
-  propertyId: 'your-property-id',
-  widgetId: 'your-widget-id',
+  propertyId: 'YOUR_PROPERTY_ID',
+  widgetId: 'YOUR_WIDGET_ID',
 })
 
 onChatStarted(() => {
@@ -89,8 +86,8 @@ The state refs are a single instance shared by every `useScriptTawkTo()`{lang="t
 
 ```ts
 const { getStatus, isChatHidden } = useScriptTawkTo({
-  propertyId: 'your-property-id',
-  widgetId: 'your-widget-id',
+  propertyId: 'YOUR_PROPERTY_ID',
+  widgetId: 'YOUR_WIDGET_ID',
 })
 
 getStatus() // 'online' | 'away' | 'offline' | undefined
@@ -99,14 +96,14 @@ isChatHidden() // boolean, false before the widget has loaded
 
 ## Identifying visitors
 
-`proxy.visitor = {...}` doesn't work for the same reason: unhead's script proxy has no `set` trap, so a property assignment through it never reaches the real `Tawk_API`. Use `setVisitor()`{lang="ts"} instead:
+`proxy.visitor = {...}` doesn't work for the same reason: unhead's script proxy has no `set` trap, so a property assignment through it never reaches the real `Tawk_API`. Use `setVisitor()`{lang="ts"} instead.
 
-`setVisitor()`{lang="ts"} is pre-load only. Tawk honors `Tawk_API.visitor` before the embed script loads and ignores it afterwards. If the embed script has already been requested (the widget is loading or loaded), it warns and does nothing. For post-load identity changes, use `window.Tawk_API.setAttributes({ name, email, phone, hash })`{lang="ts"}:
+It is pre-load only. Tawk honors `Tawk_API.visitor` before the embed script loads and ignores it afterwards, so once the embed has been requested the call warns and does nothing. Change identity after load with `window.Tawk_API.setAttributes({ name, email, phone, hash })`{lang="ts"}.
 
 ```ts
 const { proxy, setVisitor } = useScriptTawkTo({
-  propertyId: 'your-property-id',
-  widgetId: 'your-widget-id',
+  propertyId: 'YOUR_PROPERTY_ID',
+  widgetId: 'YOUR_WIDGET_ID',
 })
 
 setVisitor({
@@ -123,11 +120,11 @@ proxy.addTags(['vip'])
 
 ```ts
 const { proxy } = useScriptTawkTo({
-  propertyId: 'your-property-id',
-  widgetId: 'your-widget-id',
+  propertyId: 'YOUR_PROPERTY_ID',
+  widgetId: 'YOUR_WIDGET_ID',
 })
 
-proxy.switchWidget({ propertyId: 'other-property-id', widgetId: 'other-widget-id' })
+proxy.switchWidget({ propertyId: 'OTHER_PROPERTY_ID', widgetId: 'OTHER_WIDGET_ID' })
 ```
 
 ::script-types

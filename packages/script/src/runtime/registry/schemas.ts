@@ -1205,13 +1205,15 @@ export const StripeOptions = object({
 
 export const TawkToOptions = object({
   /**
-   * Your Tawk.to property ID.
-   * @see https://nuxt-tawk-to.atlaxt.me/getting-started/installation#register-module
+   * Your Tawk.to property ID: the first path segment of the widget embed URL
+   * `https://embed.tawk.to/<propertyId>/<widgetId>`.
+   * @see https://dashboard.tawk.to/
    */
   propertyId: pipe(string(), minLength(1)),
   /**
-   * Your Tawk.to widget ID.
-   * @see https://nuxt-tawk-to.atlaxt.me/getting-started/installation#register-module
+   * Your Tawk.to widget ID: the second path segment of the widget embed URL
+   * `https://embed.tawk.to/<propertyId>/<widgetId>`.
+   * @see https://dashboard.tawk.to/
    */
   widgetId: pipe(string(), minLength(1)),
 })
