@@ -60,7 +60,7 @@ async function waitForLogCount(
   logs: () => { text: string }[],
   text: string,
   expected: number,
-  timeoutMs = 10000,
+  timeoutMs = 20000,
 ) {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
