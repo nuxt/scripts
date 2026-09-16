@@ -135,7 +135,8 @@ export interface ScriptMapLibreGeoJsonProps {
 
 export interface ScriptMapLibreGeoJsonEmits {
   /**
-   * The component could not apply a source or layer.
+   * The component could not apply a source or layer, or MapLibre reported an error for one.
+   * MapLibre reports an invalid paint, layout or filter value this way. It does not throw.
    * A failed rebuild removes the component's own source and layers.
    * A failed paint, layout or filter update leaves them on the map.
    */
@@ -154,6 +155,7 @@ export interface ScriptMapLibreGeoJsonResource {
   onStyleLoad: () => void
   onStyleDataLoading: () => void
   onIdle: () => void
+  onError: (event: { error: Error | { message: string } }) => void
 }
 
 export interface ScriptMapLibreMarkerProps {
