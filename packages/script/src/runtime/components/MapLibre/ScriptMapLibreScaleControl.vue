@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type * as MapLibre from 'maplibre-gl'
-import type { ScriptMapLibreNavigationControlProps } from './types'
+import type { ScriptMapLibreScaleControlProps } from './types'
+import { watch } from 'vue'
 import { useMapLibreResource } from './useMapLibreResource'
 
 // Renders no DOM of its own. A render function that returns `null` gives a
@@ -9,11 +10,11 @@ import { useMapLibreResource } from './useMapLibreResource'
 // hydration reports a mismatch.
 defineOptions({ render: () => null })
 
-const props = defineProps<ScriptMapLibreNavigationControlProps>()
+const props = defineProps<ScriptMapLibreScaleControlProps>()
 
-const control = useMapLibreResource<MapLibre.NavigationControl>({
+const control = useMapLibreResource<MapLibre.ScaleControl>({
   create({ maplibre, map }) {
-    const instance = new maplibre.NavigationControl(props.options)
+    const instance = new maplibre.ScaleControl(props.options)
     map.addControl(instance, props.position)
     return instance
   },
@@ -21,6 +22,11 @@ const control = useMapLibreResource<MapLibre.NavigationControl>({
     if (map.hasControl(instance))
       map.removeControl(instance)
   },
+})
+
+watch(() => props.options?.unit, (unit) => {
+  if (control.value && unit)
+    control.value.setUnit(unit)
 })
 
 defineExpose({ control })

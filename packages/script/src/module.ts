@@ -3,10 +3,15 @@ import type { ProxyDevtoolsScript } from './devtools'
 import type { NormalizedRegistryEntry } from './normalize'
 import type { ProxyAliasConfig } from './proxy-alias'
 import type {
+  ScriptMapLibreAttributionControlProps,
+  ScriptMapLibreFullscreenControlEmits,
+  ScriptMapLibreFullscreenControlProps,
   ScriptMapLibreGeoJsonEmits,
   ScriptMapLibreGeoJsonLayer,
   ScriptMapLibreGeoJsonProps,
   ScriptMapLibreGeoJsonResource,
+  ScriptMapLibreGeolocateControlEmits,
+  ScriptMapLibreGeolocateControlProps,
   ScriptMapLibreMapEmits,
   ScriptMapLibreMapExpose,
   ScriptMapLibreMapProps,
@@ -16,6 +21,7 @@ import type {
   ScriptMapLibreNavigationControlProps,
   ScriptMapLibrePopupEmits,
   ScriptMapLibrePopupProps,
+  ScriptMapLibreScaleControlProps,
 } from './runtime/components/MapLibre/types'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type {
@@ -63,10 +69,15 @@ import { validateScriptsEnvVars } from './validate-env'
 export type { FirstPartyPrivacy }
 
 export type {
+  ScriptMapLibreAttributionControlProps,
+  ScriptMapLibreFullscreenControlEmits,
+  ScriptMapLibreFullscreenControlProps,
   ScriptMapLibreGeoJsonEmits,
   ScriptMapLibreGeoJsonLayer,
   ScriptMapLibreGeoJsonProps,
   ScriptMapLibreGeoJsonResource,
+  ScriptMapLibreGeolocateControlEmits,
+  ScriptMapLibreGeolocateControlProps,
   ScriptMapLibreMapEmits,
   ScriptMapLibreMapExpose,
   ScriptMapLibreMapProps,
@@ -76,6 +87,7 @@ export type {
   ScriptMapLibreNavigationControlProps,
   ScriptMapLibrePopupEmits,
   ScriptMapLibrePopupProps,
+  ScriptMapLibreScaleControlProps,
 }
 
 const UPPER_RE = /([A-Z])/g

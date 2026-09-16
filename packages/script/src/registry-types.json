@@ -840,6 +840,21 @@
         "code": "export interface MapLibreApi {\n  maplibregl: typeof MapLibre\n}"
       },
       {
+        "name": "ScriptMapLibreAttributionControlProps",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreAttributionControlProps {\n  /** Position of the attribution control. MapLibre places it bottom-right by default. */\n  position?: MapLibre.ControlPosition\n  /**\n   * Options passed to `new maplibregl.AttributionControl()`.\n   * Source attribution from the style and tiles always shows. `customAttribution` only adds text.\n   */\n  options?: MapLibre.AttributionControlOptions\n}"
+      },
+      {
+        "name": "ScriptMapLibreFullscreenControlProps",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreFullscreenControlProps {\n  /** Position of the fullscreen control. */\n  position?: MapLibre.ControlPosition\n  /** Options passed to `new maplibregl.FullscreenControl()`. */\n  options?: MapLibre.FullscreenControlOptions\n}"
+      },
+      {
+        "name": "ScriptMapLibreFullscreenControlEvents",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreFullscreenControlEvents {\n  fullscreenstart: MapLibre.FullscreenControlEventType['fullscreenstart']\n  fullscreenend: MapLibre.FullscreenControlEventType['fullscreenend']\n}"
+      },
+      {
         "name": "ScriptMapLibreGeoJsonProps",
         "kind": "interface",
         "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>\n  /**\n   * Style layers backed by this source.\n   * A paint, layout or filter change updates the layers in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n  /** CSS cursor applied while the pointer is over one of these layers. */\n  cursor?: string\n}"
@@ -848,6 +863,16 @@
         "name": "ScriptMapLibreGeoJsonEvents",
         "kind": "interface",
         "code": "interface ScriptMapLibreGeoJsonEvents {\n  error: Error\n  click: MapLibre.MapLayerMouseEvent\n  dblclick: MapLibre.MapLayerMouseEvent\n  mouseenter: MapLibre.MapLayerMouseEvent\n  mousemove: MapLibre.MapLayerMouseEvent\n  mouseleave: MapLibre.MapLayerMouseEvent\n  sourceready: { map: MapLibre.Map, sourceId: string }\n}"
+      },
+      {
+        "name": "ScriptMapLibreGeolocateControlProps",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreGeolocateControlProps {\n  /** Position of the geolocate control. */\n  position?: MapLibre.ControlPosition\n  /** Options passed to `new maplibregl.GeolocateControl()`. */\n  options?: MapLibre.GeolocateControlOptions\n}"
+      },
+      {
+        "name": "ScriptMapLibreGeolocateControlEvents",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreGeolocateControlEvents {\n  geolocate: MapLibre.GeolocateControlEventType['geolocate']\n  error: MapLibre.GeolocateControlEventType['error']\n  outofmaxbounds: MapLibre.GeolocateControlEventType['outofmaxbounds']\n  trackuserlocationstart: MapLibre.GeolocateControlEventType['trackuserlocationstart']\n  trackuserlocationend: MapLibre.GeolocateControlEventType['trackuserlocationend']\n  userlocationfocus: MapLibre.GeolocateControlEventType['userlocationfocus']\n  userlocationlostfocus: MapLibre.GeolocateControlEventType['userlocationlostfocus']\n  unavailable: 'unsupported' | 'permission-denied'\n}"
       },
       {
         "name": "ScriptMapLibreMapProps",
@@ -898,6 +923,11 @@
         "name": "ScriptMapLibrePopupSlots",
         "kind": "interface",
         "code": "interface ScriptMapLibrePopupSlots {\n  default?: () => any\n}"
+      },
+      {
+        "name": "ScriptMapLibreScaleControlProps",
+        "kind": "interface",
+        "code": "interface ScriptMapLibreScaleControlProps {\n  /** Position of the scale control. MapLibre places it bottom-left by default. */\n  position?: MapLibre.ControlPosition\n  /**\n   * Options passed to `new maplibregl.ScaleControl()`.\n   * `unit` also updates reactively through `setUnit()`.\n   */\n  options?: MapLibre.ScaleControlOptions\n}"
       }
     ],
     "matomo-analytics": [
@@ -4165,6 +4195,43 @@
         "required": false
       }
     ],
+    "ScriptMapLibreAttributionControlProps": [
+      {
+        "name": "position",
+        "type": "MapLibre.ControlPosition",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "MapLibre.AttributionControlOptions",
+        "required": false,
+        "description": "Options passed to `new maplibregl.AttributionControl()`. Source attribution from the style and tiles always shows. `customAttribution` only adds text."
+      }
+    ],
+    "ScriptMapLibreFullscreenControlProps": [
+      {
+        "name": "position",
+        "type": "MapLibre.ControlPosition",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "MapLibre.FullscreenControlOptions",
+        "required": false
+      }
+    ],
+    "ScriptMapLibreFullscreenControlEvents": [
+      {
+        "name": "fullscreenstart",
+        "type": "MapLibre.FullscreenControlEventType['fullscreenstart']",
+        "required": false
+      },
+      {
+        "name": "fullscreenend",
+        "type": "MapLibre.FullscreenControlEventType['fullscreenend']",
+        "required": false
+      }
+    ],
     "ScriptMapLibreGeoJsonProps": [
       {
         "name": "sourceId",
@@ -4238,6 +4305,62 @@
         "type": "{ map: MapLibre.Map, sourceId: string }",
         "required": false,
         "description": "The source and layers exist on the map. Fires after the first add and after every re-add, such as after a style swap. A re-add clears feature state, so restore it here."
+      }
+    ],
+    "ScriptMapLibreGeolocateControlProps": [
+      {
+        "name": "position",
+        "type": "MapLibre.ControlPosition",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "MapLibre.GeolocateControlOptions",
+        "required": false
+      }
+    ],
+    "ScriptMapLibreGeolocateControlEvents": [
+      {
+        "name": "geolocate",
+        "type": "MapLibre.GeolocateControlEventType['geolocate']",
+        "required": false
+      },
+      {
+        "name": "error",
+        "type": "MapLibre.GeolocateControlEventType['error']",
+        "required": false,
+        "description": "The Geolocation API returned an error. `code` 1 means the user denied permission. MapLibre then disables the button."
+      },
+      {
+        "name": "outofmaxbounds",
+        "type": "MapLibre.GeolocateControlEventType['outofmaxbounds']",
+        "required": false
+      },
+      {
+        "name": "trackuserlocationstart",
+        "type": "MapLibre.GeolocateControlEventType['trackuserlocationstart']",
+        "required": false
+      },
+      {
+        "name": "trackuserlocationend",
+        "type": "MapLibre.GeolocateControlEventType['trackuserlocationend']",
+        "required": false
+      },
+      {
+        "name": "userlocationfocus",
+        "type": "MapLibre.GeolocateControlEventType['userlocationfocus']",
+        "required": false
+      },
+      {
+        "name": "userlocationlostfocus",
+        "type": "MapLibre.GeolocateControlEventType['userlocationlostfocus']",
+        "required": false
+      },
+      {
+        "name": "unavailable",
+        "type": "'unsupported' | 'permission-denied'",
+        "required": false,
+        "description": "Geolocation cannot work in this browser. `permission-denied` means the user blocked it before the control loaded. MapLibre disables the button and fires no `error` event in both cases."
       }
     ],
     "ScriptMapLibreMapProps": [
@@ -4535,6 +4658,19 @@
         "name": "default",
         "type": "-",
         "required": false
+      }
+    ],
+    "ScriptMapLibreScaleControlProps": [
+      {
+        "name": "position",
+        "type": "MapLibre.ControlPosition",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "MapLibre.ScaleControlOptions",
+        "required": false,
+        "description": "Options passed to `new maplibregl.ScaleControl()`. `unit` also updates reactively through `setUnit()`."
       }
     ],
     "ScriptBlueskyEmbedProps": [

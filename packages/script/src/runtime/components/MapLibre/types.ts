@@ -215,3 +215,70 @@ export interface ScriptMapLibreNavigationControlProps {
   /** Options passed to `new maplibregl.NavigationControl()`. */
   options?: MapLibre.NavigationControlOptions
 }
+
+export interface ScriptMapLibreScaleControlProps {
+  /** Position of the scale control. MapLibre places it bottom-left by default. */
+  position?: MapLibre.ControlPosition
+  /**
+   * Options passed to `new maplibregl.ScaleControl()`.
+   * `unit` also updates reactively through `setUnit()`.
+   */
+  options?: MapLibre.ScaleControlOptions
+}
+
+export interface ScriptMapLibreGeolocateControlProps {
+  /** Position of the geolocate control. */
+  position?: MapLibre.ControlPosition
+  /** Options passed to `new maplibregl.GeolocateControl()`. */
+  options?: MapLibre.GeolocateControlOptions
+}
+
+export interface ScriptMapLibreGeolocateControlEmits {
+  /** The Geolocation API returned a position. */
+  geolocate: [event: MapLibre.GeolocateControlEventType['geolocate']]
+  /**
+   * The Geolocation API returned an error.
+   * `code` 1 means the user denied permission. MapLibre then disables the button.
+   */
+  error: [event: MapLibre.GeolocateControlEventType['error']]
+  /** The position is outside the map's `maxBounds`. */
+  outofmaxbounds: [event: MapLibre.GeolocateControlEventType['outofmaxbounds']]
+  /** The control entered the active lock state. Needs `trackUserLocation`. */
+  trackuserlocationstart: [event: MapLibre.GeolocateControlEventType['trackuserlocationstart']]
+  /** The control left the active lock state. Needs `trackUserLocation`. */
+  trackuserlocationend: [event: MapLibre.GeolocateControlEventType['trackuserlocationend']]
+  /** The user clicked the button in the active lock state. */
+  userlocationfocus: [event: MapLibre.GeolocateControlEventType['userlocationfocus']]
+  /** The user moved the map in the active lock state. */
+  userlocationlostfocus: [event: MapLibre.GeolocateControlEventType['userlocationlostfocus']]
+  /**
+   * Geolocation cannot work in this browser.
+   * `permission-denied` means the user blocked it before the control loaded.
+   * MapLibre disables the button and fires no `error` event in both cases.
+   */
+  unavailable: [reason: 'unsupported' | 'permission-denied']
+}
+
+export interface ScriptMapLibreFullscreenControlProps {
+  /** Position of the fullscreen control. */
+  position?: MapLibre.ControlPosition
+  /** Options passed to `new maplibregl.FullscreenControl()`. */
+  options?: MapLibre.FullscreenControlOptions
+}
+
+export interface ScriptMapLibreFullscreenControlEmits {
+  /** The map entered fullscreen mode. */
+  fullscreenstart: [event: MapLibre.FullscreenControlEventType['fullscreenstart']]
+  /** The map left fullscreen mode. */
+  fullscreenend: [event: MapLibre.FullscreenControlEventType['fullscreenend']]
+}
+
+export interface ScriptMapLibreAttributionControlProps {
+  /** Position of the attribution control. MapLibre places it bottom-right by default. */
+  position?: MapLibre.ControlPosition
+  /**
+   * Options passed to `new maplibregl.AttributionControl()`.
+   * Source attribution from the style and tiles always shows. `customAttribution` only adds text.
+   */
+  options?: MapLibre.AttributionControlOptions
+}
