@@ -1,6 +1,7 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance, VueScriptScope } from '@unhead/vue/scripts'
 import type { ScriptInstance } from 'unhead/scripts'
 import type { NuxtDevToolsNetworkRequest, NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
+import type { ServerScriptStatuses } from '../utils/hydration-status'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
@@ -10,6 +11,7 @@ import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
 import { createAbortError } from '../utils/abortable-promise'
+import { createHydrationStatus, SCRIPT_STATUS_PAYLOAD_KEY } from '../utils/hydration-status'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
   $scripts: Record<string, UseScriptContext<any> | undefined>
@@ -346,6 +348,17 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   if (sharedInstance[NUXT_SCRIPT_CONTROLLER])
     return instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
+  if (import.meta.client && nuxtApp.isHydrating && nuxtApp.payload.serverRendered) {
+    // A client trigger changes the live status during setup, before hydration
+    // compares the DOM. Render the server status until hydration ends. The
+    // trigger and the loader still run now, so load timing is unchanged.
+    const serverStatuses = nuxtApp.payload[SCRIPT_STATUS_PAYLOAD_KEY] as ServerScriptStatuses | undefined
+    const hydrationStatus = createHydrationStatus(sharedInstance.status, serverStatuses?.[id] || 'awaitingLoad')
+    // Unhead's Vue wrapper reads `_statusRef` on every `status` access and writes each update to it.
+    ;(sharedInstance as { _statusRef?: unknown })._statusRef = hydrationStatus.status
+    nuxtApp.hooks.hookOnce('app:suspense:resolve', hydrationStatus.release)
+  }
+
   const publicStatus = instance.status
   let currentScript = sharedInstance as ScriptInstance<any>
   const appInstance = Object.create(sharedInstance) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
@@ -444,6 +457,22 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     return reloadPromise
   }
   nuxtApp.$scripts[id] = appInstance
+
+  if (import.meta.server) {
+    // The client hydrates against the status the server rendered.
+    const recordServerStatus = () => {
+      if (sharedInstance.status === 'awaitingLoad')
+        return
+      const statuses = (nuxtApp.payload[SCRIPT_STATUS_PAYLOAD_KEY] ||= {}) as ServerScriptStatuses
+      statuses[id] = sharedInstance.status
+    }
+    recordServerStatus()
+    addCleanup(headHooks.hook('script:updated', ({ script }) => {
+      if (script === sharedInstance)
+        recordServerStatus()
+    }))
+  }
+
   addCleanup(nuxtApp.hooks.hook('app:unmount' as any, () => {
     sharedInstance.remove()
   }))
