@@ -180,6 +180,8 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
 /**
  * Binds the component's events to the layers it owns. MapLibre treats the layer
  * array as one group, so `mouseenter` and `mouseleave` fire once per group.
+ * `mousemove` fires on every move over any feature, so it tracks the feature
+ * under the pointer as it slides between touching features.
  *
  * `carryHover` is true only for a style reload, where the props are unchanged
  * and the same features sit under the pointer.
@@ -194,6 +196,10 @@ function bindLayerEvents(map: MapLibreGl.Map, carryHover: boolean): void {
   const layerKey = layerIds.join('\n')
   layerSubscriptions = [
     map.on('click', layerIds, event => emit('click', event)),
+    // The emit must stay synchronous, so `event.preventDefault()` still stops
+    // MapLibre's double-click zoom.
+    map.on('dblclick', layerIds, event => emit('dblclick', event)),
+    map.on('mousemove', layerIds, event => emit('mousemove', event)),
     map.on('mouseenter', layerIds, (event) => {
       isPointerOverLayer = true
       hoveredLayerKey = layerKey
@@ -270,6 +276,9 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
     removeOwnedResources(map)
     throw error
   }
+  // Emitted outside the style change, so a map error from the consumer's handler
+  // is never attributed to this component.
+  emit('sourceready', { map, sourceId })
 }
 
 /** Applies every changed entry of one paint or layout block to a live layer. */
