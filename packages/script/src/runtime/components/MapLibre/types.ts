@@ -219,6 +219,8 @@ export interface ScriptMapLibreGeoJsonResource {
   onStyleDataLoading: () => void
   onIdle: () => void
   onError: (event: { error: Error | { message: string } }) => void
+  onSourceDataLoading: (event: MapLibre.MapSourceDataEvent) => void
+  onSourceData: (event: MapLibre.MapSourceDataEvent) => void
 }
 
 export interface ScriptMapLibreMarkerProps {

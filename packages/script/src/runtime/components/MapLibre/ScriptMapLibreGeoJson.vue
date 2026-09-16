@@ -45,10 +45,12 @@ let appliedSourceOptions: SourceOptions | undefined
 let appliedRebuildSignature: string | undefined
 /** Increases on each cluster update and each removal, so a superseded update is ignored. */
 let clusterUpdateId = 0
-/** Runs one cluster update at a time, so a failure belongs to exactly one update. */
-let clusterUpdateQueue: Promise<void> = Promise.resolve()
-/** Collects this source's map errors while a cluster update runs in the worker. */
-let clusterUpdateErrors: Error[] | undefined
+/** Cluster updates waiting for a worker round. MapLibre collapses them into one round that runs the last call. */
+let pendingClusterUpdateIds: number[] = []
+/** True while a `setData` call of this component waits for a worker round. */
+let pendingDataRound = false
+/** What the worker round MapLibre is currently running was asked to do. */
+let runningRound: { kind: 'cluster', updateId: number } | { kind: 'data' } | { kind: 'foreign' } = { kind: 'foreign' }
 let layerSubscriptions: MapLibreGl.Subscription[] = []
 let restoreCursor: string | undefined
 let isPointerOverLayer = false
@@ -114,14 +116,49 @@ function onMapError(event: MapErrorEvent): void {
   }
   const isOwnSource = ownedSourceId !== undefined && event.sourceId === ownedSourceId
   // A failed cluster update fires this event and still resolves its promise.
-  // The update reports it, so a superseded update can drop it.
-  if (isOwnSource && clusterUpdateErrors) {
-    clusterUpdateErrors.push(toError(event))
+  // The running worker round attributes it: only the failure of the current
+  // update reports and drops the applied structure, so a failure of another
+  // operation, like a concurrent `setData`, keeps the plain emit path.
+  if (isOwnSource && runningRound.kind === 'cluster') {
+    const { updateId } = runningRound
+    runningRound = { kind: 'foreign' }
+    if (updateId !== clusterUpdateId)
+      return
+    appliedStructure = undefined
+    reportMapLibreResourceError(toError(event), failure => emit('error', failure))
     return
   }
   const isOwnLayer = event.layer?.id !== undefined && ownedLayerIds.includes(event.layer.id)
   if (isOwnSource || isOwnLayer)
     reportMapLibreResourceError(toError(event), failure => emit('error', failure))
+}
+
+/**
+ * Tags each worker round with what this component asked it to do.
+ *
+ * MapLibre runs one worker round at a time and fires a source `dataloading`
+ * event when the next one starts. Queued data wins over queued cluster
+ * options, mirroring MapLibre's own `_pendingWorkerUpdate` order. The next
+ * `error` event for this source belongs to the round that is running, so it
+ * can never be blamed on a cluster update that only shares the window.
+ */
+function onSourceDataLoading(event: MapLibreGl.MapSourceDataEvent): void {
+  if (ownedSourceId === undefined || event.sourceId !== ownedSourceId)
+    return
+  if (pendingDataRound) {
+    pendingDataRound = false
+    runningRound = { kind: 'data' }
+    return
+  }
+  const updateId = pendingClusterUpdateIds.pop()
+  runningRound = updateId === undefined ? { kind: 'foreign' } : { kind: 'cluster', updateId }
+}
+
+/** Ends the running round, so a later error is never attributed to it. */
+function onSourceData(event: MapLibreGl.MapSourceDataEvent): void {
+  if (ownedSourceId === undefined || event.sourceId !== ownedSourceId)
+    return
+  runningRound = { kind: 'foreign' }
 }
 
 /**
@@ -304,9 +341,11 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   appliedStyles = []
   appliedSourceOptions = undefined
   appliedRebuildSignature = undefined
-  // A running update no longer owns the source, so its errors stop collecting.
+  // A running update no longer owns the source, so its failure is ignored.
   clusterUpdateId++
-  clusterUpdateErrors = undefined
+  pendingClusterUpdateIds = []
+  pendingDataRound = false
+  runningRound = { kind: 'foreign' }
 }
 
 function syncResources(map: MapLibreGl.Map, carryHover = false): void {
@@ -378,45 +417,19 @@ function planClusterUpdate(map: MapLibreGl.Map): { source: MapLibreGl.GeoJSONSou
  * the layers stay on the map.
  *
  * The new values count as applied at once, so a later change compares against
- * them. Updates run one at a time. An update that a newer change or a rebuild
- * supersedes before it starts is skipped, because the newer update carries every
- * live cluster option.
+ * them. MapLibre collapses concurrent calls, so the update id enters the
+ * pending queue and the worker round that runs the call reports its failure.
  */
-function updateClusterOptions(source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions): Promise<void> {
+function updateClusterOptions(source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions): void {
   const updateId = ++clusterUpdateId
   appliedStructure = structureSignature()
   appliedSourceOptions = detachSourceOptions()
-  clusterUpdateQueue = clusterUpdateQueue.then(() => runClusterUpdate(updateId, source, options))
-  return clusterUpdateQueue
-}
-
-/**
- * Runs one cluster update and reports its failure once.
- *
- * MapLibre catches a worker failure, fires a map `error` event with this source ID
- * and resolves the promise. The update collects that event while it runs. A
- * failure clears the applied structure, so the next change rebuilds the source.
- * A failure of a superseded update is ignored, because a newer update or a
- * rebuild owns the source.
- */
-async function runClusterUpdate(updateId: number, source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions): Promise<void> {
-  if (updateId !== clusterUpdateId)
-    return
-  const errors: Error[] = []
-  clusterUpdateErrors = errors
-  // The executor also turns a synchronous throw into a rejection.
-  await new Promise<void>(resolve => resolve(source.setClusterOptions(options)))
-    .catch((error: unknown) => {
-      errors.push(error instanceof Error ? error : new Error('MapLibre cluster update failed', { cause: error }))
-    })
-  clusterUpdateErrors = undefined
-  if (updateId !== clusterUpdateId || !errors.length)
-    return
-  appliedStructure = undefined
-  const failure = errors.length === 1
-    ? errors[0]
-    : new AggregateError(errors, errors.map(error => error.message).join('\n'))
-  reportMapLibreResourceError(failure, error => emit('error', error))
+  pendingClusterUpdateIds.push(updateId)
+  // The failure arrives as the map `error` event attributed above.
+  void source.setClusterOptions(options).catch(() => {
+    // Unreachable: MapLibre catches a worker failure, fires a map `error`
+    // event and resolves the promise, so the failure is already reported.
+  })
 }
 
 /** Applies every changed entry of one paint or layout block to a live layer. */
@@ -517,10 +530,21 @@ const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
     map.on('styledataloading', onStyleDataLoading)
     map.on('idle', onIdle)
     map.on('error', onMapError)
+    map.on('sourcedataloading', onSourceDataLoading)
+    map.on('sourcedata', onSourceData)
     // A failed first sync must not discard the resource. The style and prop
     // listeners stay registered, so a corrected layer rebuilds without a remount.
     trySyncResources(map)
-    return { map, onLoad, onStyleLoad, onStyleDataLoading, onIdle, onError: onMapError }
+    return {
+      map,
+      onLoad,
+      onStyleLoad,
+      onStyleDataLoading,
+      onIdle,
+      onError: onMapError,
+      onSourceDataLoading,
+      onSourceData,
+    }
   },
   onError: error => emit('error', error),
   cleanup(resource) {
@@ -529,14 +553,20 @@ const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
     resource.map.off('styledataloading', resource.onStyleDataLoading)
     resource.map.off('idle', resource.onIdle)
     resource.map.off('error', resource.onError)
+    resource.map.off('sourcedataloading', resource.onSourceDataLoading)
+    resource.map.off('sourcedata', resource.onSourceData)
     removeOwnedResources(resource.map)
   },
 })
 
 watch(() => props.data, (data) => {
   const source = geoJson.value?.map.getSource(props.sourceId)
-  if (source?.type === 'geojson')
-    (source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
+  if (source?.type === 'geojson') {
+    // Set before the call, so a round that MapLibre starts synchronously
+    // already carries it.
+    pendingDataRound = true
+    ;(source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
+  }
 }, { deep: 2 })
 
 // The cursor is a presentation prop, so it stays out of the resource signature.
@@ -554,7 +584,7 @@ watch(structureSignature, (structure) => {
   // source and its data. Any other change rebuilds the source and the layers.
   const update = planClusterUpdate(map)
   if (update)
-    void updateClusterOptions(update.source, update.options)
+    updateClusterOptions(update.source, update.options)
   else
     trySyncResources(map)
 })

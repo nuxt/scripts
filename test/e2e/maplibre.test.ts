@@ -281,6 +281,28 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
       expect(after.errors).toEqual([])
     })
 
+    it('reports a data failure that fires while a superseded cluster update runs', async () => {
+      const { page, readLog } = await openClusters()
+      const before = await readLog()
+
+      // The first radius starts in the worker. The broken data and the
+      // superseding radius queue behind it, so the data failure fires while
+      // MapLibre is still running the superseded update's worker round.
+      await page.click('#burst-data')
+      await waitForRenderedFeatures(page, clusterLayers, 3)
+
+      const after = await readLog()
+      expect(after.errors.length).toBe(before.errors.length + 1)
+      expect(after.errors.at(-1)).toMatch(/missing-points\.geojson/)
+      expect(after.addSource).toBe(before.addSource)
+
+      // The data failure is not a cluster failure, so the next radius change
+      // still updates the source in place.
+      await page.click('#radius-split')
+      await waitForRenderedFeatures(page, clusterLayers, 12)
+      expect((await readLog()).addSource).toBe(before.addSource)
+    })
+
     /**
      * A 404 data URL leaves the worker without a cluster index. MapLibre then
      * fails the cluster update inside the worker, fires a map `error` event and

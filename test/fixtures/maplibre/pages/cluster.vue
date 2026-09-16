@@ -19,7 +19,7 @@ const data = points(groups.flatMap(([lng, lat], group) => offsets.map(([dx, dy],
 // `?data=missing` points the source at a URL that returns 404. The worker never
 // builds a cluster index, so a later cluster update fails inside the worker.
 const route = useRoute()
-const sourceData = route.query.data === 'missing' ? '/missing-points.geojson' : data
+const sourceData = shallowRef<typeof data | string>(route.query.data === 'missing' ? '/missing-points.geojson' : data)
 
 const layers: ScriptMapLibreGeoJsonLayer[] = [
   { id: 'clusters', type: 'circle', filter: ['has', 'point_count'], paint: { 'circle-radius': 12, 'circle-color': '#dc2626' } },
@@ -67,6 +67,19 @@ async function burst(): Promise<void> {
   await nextTick()
   clusterRadius.value = 50
 }
+
+/**
+ * Queues a failing data load behind a radius update, then supersedes that
+ * update with a second radius. All three land on the source while the first
+ * radius update still runs in MapLibre's worker.
+ */
+async function burstData(): Promise<void> {
+  clusterRadius.value = 400
+  await nextTick()
+  sourceData.value = '/missing-points.geojson'
+  await nextTick()
+  clusterRadius.value = 50
+}
 </script>
 
 <template>
@@ -96,6 +109,9 @@ async function burst(): Promise<void> {
     </button>
     <button id="radius-burst" type="button" @click="burst">
       Change the radius twice
+    </button>
+    <button id="burst-data" type="button" @click="burstData">
+      Radius, broken data, radius
     </button>
     <button id="min-points" type="button" @click="clusterMinPoints = 5">
       Require five points per cluster
