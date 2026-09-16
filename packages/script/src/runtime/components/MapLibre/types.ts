@@ -121,7 +121,11 @@ export interface ScriptMapLibreGeoJsonProps {
   data: GeoJSON | string
   /** GeoJSON source options. `type` and `data` are supplied by the component. */
   sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>
-  /** Style layers backed by this source. */
+  /**
+   * Style layers backed by this source.
+   * A paint, layout or filter change updates the layers in place.
+   * Any other change rebuilds the source and the layers.
+   */
   layers: ScriptMapLibreGeoJsonLayer[]
   /** Existing layer ID before which the layers are inserted. */
   beforeId?: string
@@ -130,7 +134,11 @@ export interface ScriptMapLibreGeoJsonProps {
 }
 
 export interface ScriptMapLibreGeoJsonEmits {
-  /** A source or layer could not be created. The component removed its own source and layers. */
+  /**
+   * The component could not apply a source or layer.
+   * A failed rebuild removes the component's own source and layers.
+   * A failed paint, layout or filter update leaves them on the map.
+   */
   error: [error: Error]
   /** The pointer clicked one of this component's layers. */
   click: [event: MapLibre.MapLayerMouseEvent]
@@ -144,6 +152,8 @@ export interface ScriptMapLibreGeoJsonResource {
   map: MapLibre.Map
   onLoad: () => void
   onStyleLoad: () => void
+  onStyleDataLoading: () => void
+  onIdle: () => void
 }
 
 export interface ScriptMapLibreMarkerProps {
