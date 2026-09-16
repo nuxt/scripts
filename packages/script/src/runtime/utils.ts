@@ -207,9 +207,8 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   scriptOptions.beforeInit = () => {
     // avoid clearing the user beforeInit
     init?.()
-    if (!import.meta.server) {
-      // validate input in dev and run registry client init (unit tests keep
-      // `import.meta.client` undefined, so branch on the server flag instead)
+    if (import.meta.client) {
+      // validate input in dev
       options.clientInit?.()
     }
   }
