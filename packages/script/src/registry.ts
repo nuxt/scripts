@@ -141,13 +141,8 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('vercelAnalytics', 'Vercel Analytics', 'analytics', 'useScriptVercelAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
   m('mixpanelAnalytics', 'Mixpanel', 'analytics', 'useScriptMixpanelAnalytics', { bundle: true, partytown: true }, null),
   m('ahrefsAnalytics', 'Ahrefs Web Analytics', 'analytics', 'useScriptAhrefsAnalytics', { bundle: true, proxy: true }, PRIVACY_IP_ONLY),
-  // proxy intentionally off: Pulse identifies visitors server-side from the
-  // connecting IP + user agent, so proxied beacons — all arriving from the Nuxt
-  // server's IP — would collapse every visitor into one identity. Its bot
-  // filtering also counts a datacenter origin as a signal
-  // (docs.ciphera.net/pulse/bot-filtering). Same family as Fathom (#720).
-  // Bundle is safe: the tracker reads its config from the script element and
-  // posts to its own API origin wherever it was served from.
+  // No proxy: Pulse derives visitor identity from the connecting IP, so proxied
+  // beacons collapse every visitor into one. Same family as Fathom (#720).
   m('pulseAnalytics', 'Pulse Analytics', 'analytics', 'useScriptPulseAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
@@ -477,10 +472,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: 'https://js.ciphera.net/script.js',
       category: 'analytics',
       envDefaults: { domain: '' },
-      // Bundle without proxy: the tracker takes its config from the script
-      // element's data-* attributes and always posts to `data-api` (default
-      // pulse-api.ciphera.net), so serving it from /_scripts/assets needs no
-      // SDK patch. Proxying is unsupported — see the registryMeta note.
+      // Bundling needs no SDK patch: the tracker reads data-* from its own
+      // script element and posts to `data-api` wherever it is served from.
       bundle: true,
     }),
     // ad

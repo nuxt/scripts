@@ -35,18 +35,9 @@ declare global {
   }
 }
 
-// Calls made before the tracker has loaded are queued on globalThis under a
-// Symbol so the queue survives across module instances, and flushed from use().
-// This is deliberately not a stub on window.pulse: the tracker runs
-// `window.pulse = window.pulse || {}` and then assigns `track`, so a stub's
-// queue would be overwritten and lost.
-//
-// The queue is bounded. The tracker exits without defining `window.pulse` when
-// the visitor has opted out (Do Not Track, Global Privacy Control, the
-// `?pulse-ignore` toggle, automation), so readiness can legitimately never come:
-// once the tracker has run and declined, the queue is dropped and later calls
-// are no-ops; if the script never runs at all (blocked, offline) the queue stops
-// growing at MAX_QUEUED_EVENTS.
+// Queued on globalThis, not on a `window.pulse` stub: the tracker runs
+// `window.pulse = window.pulse || {}` then assigns `track`, so a stub is lost.
+// Bounded because the tracker can decline (DNT, GPC, `?pulse-ignore`, automation).
 const PULSE_QUEUE_KEY = Symbol.for('nuxt-scripts.pulse-queue')
 const MAX_QUEUED_EVENTS = 100
 
@@ -118,10 +109,8 @@ export function useScriptPulseAnalytics<T extends PulseAnalyticsApi>(_options?: 
       'src': 'https://js.ciphera.net/script.js',
       'data-domain': options.domain,
       'data-api': options.apiUrl || undefined,
-      // The tracker treats these as presence flags: the feature is off whenever
-      // the attribute exists, whatever its value. `false` must therefore never
-      // be written (Unhead renders it as data-no-scroll="false", which still
-      // counts as present); an empty string mirrors the documented bare attribute.
+      // Presence flags: the tracker reads them with hasAttribute(), so a
+      // rendered `data-no-scroll="false"` would still switch scroll tracking off.
       'data-no-scroll': options.trackScroll === false ? '' : undefined,
       'data-no-outbound': options.trackOutbound === false ? '' : undefined,
       'data-no-downloads': options.trackDownloads === false ? '' : undefined,
