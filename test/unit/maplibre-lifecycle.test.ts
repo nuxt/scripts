@@ -12,7 +12,7 @@ function createProvider(immediate = true, clearBeforeChildren = false) {
 
   const Provider = defineComponent({
     setup(_, { slots }) {
-      provide(MAPLIBRE_MAP_INJECTION_KEY, { map, maplibre })
+      provide(MAPLIBRE_MAP_INJECTION_KEY, { map, maplibre, defaultAttributionControl: shallowRef() })
       if (clearBeforeChildren) {
         onBeforeUnmount(() => {
           map.value = undefined
