@@ -20,6 +20,8 @@ interface LayerStyle {
   filter: unknown
 }
 
+type SourceOptions = NonNullable<ScriptMapLibreGeoJsonProps['sourceOptions']>
+
 // Renders no DOM of its own. A render function that returns `null` gives a
 // comment node on the server and the client. A template that holds only a
 // comment, or nothing, renders nothing on the server, so hydration mismatches.
@@ -29,11 +31,20 @@ const props = defineProps<ScriptMapLibreGeoJsonProps>()
 
 const emit = defineEmits<ScriptMapLibreGeoJsonEmits>()
 
+/** Source options that MapLibre's `setClusterOptions()` updates on a live source. */
+const LIVE_CLUSTER_OPTIONS = ['cluster', 'clusterRadius', 'clusterMaxZoom'] as const
+
 let ownedLayerIds: string[] = []
 let ownedSourceId: string | undefined
 let appliedStructure: string | undefined
 let appliedStyleSignature: string | undefined
 let appliedStyles: LayerStyle[] = []
+/** Source options on the map, detached from the props. */
+let appliedSourceOptions: SourceOptions | undefined
+/** Content signature of every prop that a cluster update cannot apply in place. */
+let appliedRebuildSignature: string | undefined
+/** Increases on each cluster update and each removal, so a superseded update is ignored. */
+let clusterUpdateId = 0
 let layerSubscriptions: MapLibreGl.Subscription[] = []
 let restoreCursor: string | undefined
 let isPointerOverLayer = false
@@ -127,6 +138,48 @@ function structureSignature(): string {
     props.beforeId ?? null,
     props.layers.map(layerStructure),
   ])
+}
+
+/** Reads the source options with the live cluster options removed. */
+function withoutLiveClusterOptions(options: SourceOptions): Record<string, unknown> {
+  const rest = { ...options } as Record<string, unknown>
+  for (const name of LIVE_CLUSTER_OPTIONS)
+    delete rest[name]
+  return rest
+}
+
+/** Content signature of every prop that `setClusterOptions()` cannot apply. */
+function rebuildSignature(): string {
+  return JSON.stringify([
+    props.sourceId,
+    withoutLiveClusterOptions(props.sourceOptions ?? {}),
+    props.beforeId ?? null,
+    props.layers.map(layerStructure),
+  ])
+}
+
+function detachSourceOptions(): SourceOptions {
+  return JSON.parse(JSON.stringify(props.sourceOptions ?? {})) as SourceOptions
+}
+
+/**
+ * Builds the `setClusterOptions()` call that moves the source from `before` to
+ * `after`. Returns `undefined` when only a rebuild can apply the change.
+ *
+ * MapLibre sets `cluster` from every call, so the call always passes it. MapLibre
+ * keeps the old radius or max zoom when the call omits one, so removing either
+ * option needs a rebuild.
+ */
+function liveClusterUpdate(before: SourceOptions, after: SourceOptions): MapLibreGl.SetClusterOptions | undefined {
+  if (before.clusterRadius !== undefined && after.clusterRadius === undefined)
+    return undefined
+  if (before.clusterMaxZoom !== undefined && after.clusterMaxZoom === undefined)
+    return undefined
+  return {
+    cluster: after.cluster ?? false,
+    clusterRadius: after.clusterRadius,
+    clusterMaxZoom: after.clusterMaxZoom,
+  }
 }
 
 /**
@@ -239,6 +292,9 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   appliedStructure = undefined
   appliedStyleSignature = undefined
   appliedStyles = []
+  appliedSourceOptions = undefined
+  appliedRebuildSignature = undefined
+  clusterUpdateId++
 }
 
 function syncResources(map: MapLibreGl.Map, carryHover = false): void {
@@ -273,6 +329,8 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
       ownedLayerIds.push(nextLayer.id)
     }
     appliedStructure = structureSignature()
+    appliedSourceOptions = detachSourceOptions()
+    appliedRebuildSignature = rebuildSignature()
     appliedStyleSignature = styleSignature()
     appliedStyles = detachLayerStyles(appliedStyleSignature)
     bindLayerEvents(map, carryHover)
@@ -284,6 +342,45 @@ function syncResources(map: MapLibreGl.Map, carryHover = false): void {
   // Emitted outside the style change, so a map error from the consumer's handler
   // is never attributed to this component.
   emit('sourceready', { map, sourceId })
+}
+
+/**
+ * Returns the source and the call that apply a structure change in place.
+ * Returns `undefined` when the change needs a rebuild.
+ */
+function planClusterUpdate(map: MapLibreGl.Map): { source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions } | undefined {
+  if (!appliedStructure || !appliedSourceOptions || rebuildSignature() !== appliedRebuildSignature)
+    return undefined
+  // A style mid-swap has dropped the source. The rebuild path waits for the new style.
+  if (!isStyleMutable && map.isStyleLoaded() !== true)
+    return undefined
+  const source = ownedSourceId ? map.getSource(ownedSourceId) : undefined
+  if (source?.type !== 'geojson')
+    return undefined
+  const options = liveClusterUpdate(appliedSourceOptions, detachSourceOptions())
+  return options && { source: source as MapLibreGl.GeoJSONSource, options }
+}
+
+/**
+ * Applies cluster options to the live source. The source keeps its data, and
+ * the layers stay on the map.
+ *
+ * The new values count as applied at once, so a later change compares against
+ * them. A failure clears the applied structure, so the next change rebuilds.
+ * A failure from a superseded call is ignored, because a newer call owns the source.
+ */
+function updateClusterOptions(source: MapLibreGl.GeoJSONSource, options: MapLibreGl.SetClusterOptions): Promise<void> {
+  const updateId = ++clusterUpdateId
+  appliedStructure = structureSignature()
+  appliedSourceOptions = detachSourceOptions()
+  // The executor also turns a synchronous throw into a rejection.
+  return new Promise<void>(resolve => resolve(source.setClusterOptions(options)))
+    .catch((error: unknown) => {
+      if (updateId !== clusterUpdateId)
+        return
+      appliedStructure = undefined
+      reportMapLibreResourceError(error, failure => emit('error', failure))
+    })
 }
 
 /** Applies every changed entry of one paint or layout block to a live layer. */
@@ -414,8 +511,16 @@ watch(() => props.cursor, (cursor) => {
 })
 
 watch(structureSignature, (structure) => {
-  if (geoJson.value && structure !== appliedStructure)
-    trySyncResources(geoJson.value.map)
+  const map = geoJson.value?.map
+  if (!map || structure === appliedStructure)
+    return
+  // A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone keeps the
+  // source and its data. Any other change rebuilds the source and the layers.
+  const update = planClusterUpdate(map)
+  if (update)
+    void updateClusterOptions(update.source, update.options)
+  else
+    trySyncResources(map)
 })
 
 // Runs after the structure watcher, so a rebuild has already applied the new

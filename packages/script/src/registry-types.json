@@ -857,7 +857,7 @@
       {
         "name": "ScriptMapLibreGeoJsonProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>\n  /**\n   * Style layers backed by this source.\n   * A paint, layout or filter change updates the layers in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n  /** CSS cursor applied while the pointer is over one of these layers. */\n  cursor?: string\n}"
+        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /**\n   * GeoJSON source options. `type` and `data` are supplied by the component.\n   * A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone updates the source in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>\n  /**\n   * Style layers backed by this source.\n   * A paint, layout or filter change updates the layers in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n  /** CSS cursor applied while the pointer is over one of these layers. */\n  cursor?: string\n}"
       },
       {
         "name": "ScriptMapLibreGeoJsonEvents",
@@ -4246,7 +4246,8 @@
       {
         "name": "sourceOptions",
         "type": "Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>",
-        "required": false
+        "required": false,
+        "description": "GeoJSON source options. `type` and `data` are supplied by the component. A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone updates the source in place. Any other change rebuilds the source and the layers."
       },
       {
         "name": "layers",
@@ -4270,7 +4271,7 @@
         "name": "error",
         "type": "Error",
         "required": false,
-        "description": "The component could not apply a source or layer, or MapLibre reported an error for one. MapLibre reports an invalid paint, layout or filter value this way. It does not throw. A failed rebuild removes the component's own source and layers. A failed paint, layout or filter update leaves them on the map."
+        "description": "The component could not apply a source or layer, or MapLibre reported an error for one. MapLibre reports an invalid paint, layout or filter value this way. It does not throw. A failed rebuild removes the component's own source and layers. A failed paint, layout, filter or cluster option update leaves them on the map."
       },
       {
         "name": "click",

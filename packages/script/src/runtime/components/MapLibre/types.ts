@@ -119,7 +119,11 @@ export interface ScriptMapLibreGeoJsonProps {
   sourceId: string
   /** Inline GeoJSON data or a URL returning GeoJSON. */
   data: GeoJSON | string
-  /** GeoJSON source options. `type` and `data` are supplied by the component. */
+  /**
+   * GeoJSON source options. `type` and `data` are supplied by the component.
+   * A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone updates the source in place.
+   * Any other change rebuilds the source and the layers.
+   */
   sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>
   /**
    * Style layers backed by this source.
@@ -138,7 +142,7 @@ export interface ScriptMapLibreGeoJsonEmits {
    * The component could not apply a source or layer, or MapLibre reported an error for one.
    * MapLibre reports an invalid paint, layout or filter value this way. It does not throw.
    * A failed rebuild removes the component's own source and layers.
-   * A failed paint, layout or filter update leaves them on the map.
+   * A failed paint, layout, filter or cluster option update leaves them on the map.
    */
   error: [error: Error]
   /** The pointer clicked one of this component's layers. */

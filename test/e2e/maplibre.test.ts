@@ -161,6 +161,97 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     expect(center[0]).toBeCloseTo(-1.2, 3)
   })
 
+  describe('cluster options', () => {
+    interface ClusterLog { addSource: number, removeSource: number, errors: string[] }
+    const clusterLayers = ['clusters', 'points']
+
+    async function openClusters(): Promise<{ page: Page, readLog: () => Promise<ClusterLog> }> {
+      const page = await openMap('/cluster')
+      const readLog = async () => JSON.parse(await page.locator('#log').textContent() ?? '{}') as ClusterLog
+      // A radius of 1 pixel leaves all 12 points unclustered.
+      await waitForRenderedFeatures(page, clusterLayers, 12)
+      return { page, readLog }
+    }
+
+    it('updates the cluster radius in place without rebuilding the source', async () => {
+      const { page, readLog } = await openClusters()
+      const before = await readLog()
+
+      await page.click('#radius-merge')
+      // A radius of 50 pixels merges each group of four into one cluster.
+      await waitForRenderedFeatures(page, clusterLayers, 3)
+      expect(await page.evaluate(() => (window as any).__map.getSource('places').getClusterOptions().clusterRadius)).toBe(50)
+
+      await page.click('#radius-split')
+      await waitForRenderedFeatures(page, clusterLayers, 12)
+
+      const after = await readLog()
+      expect(after.addSource - before.addSource).toBe(0)
+      expect(after.removeSource - before.removeSource).toBe(0)
+      expect(after.errors).toEqual([])
+    })
+
+    it('applies the last radius when a second change arrives before the first finishes', async () => {
+      const { page, readLog } = await openClusters()
+      const before = await readLog()
+
+      await page.click('#radius-burst')
+      // 400 pixels would merge all three groups into one cluster. 50 wins.
+      await waitForRenderedFeatures(page, clusterLayers, 3)
+      await page.waitForTimeout(300)
+      await waitForRenderedFeatures(page, clusterLayers, 3)
+
+      const after = await readLog()
+      expect(after.addSource - before.addSource).toBe(0)
+      expect(after.errors).toEqual([])
+    })
+
+    it('ignores a failure from a superseded cluster update', async () => {
+      const { page, readLog } = await openClusters()
+      // The first call fails after the second call starts. Only the second call counts.
+      await page.evaluate(() => {
+        const source = (window as any).__map.getSource('places')
+        const setClusterOptions = source.setClusterOptions.bind(source)
+        source.setClusterOptions = (options: { clusterRadius?: number }) => options.clusterRadius === 400
+          ? new Promise((_resolve, reject) => setTimeout(() => reject(new Error('stale update failed')), 200))
+          : setClusterOptions(options)
+      })
+
+      await page.click('#radius-burst')
+      await waitForRenderedFeatures(page, clusterLayers, 3)
+      await page.waitForTimeout(400)
+
+      expect((await readLog()).errors).toEqual([])
+    })
+
+    it('emits error when the current cluster update fails', async () => {
+      const { page, readLog } = await openClusters()
+      await page.evaluate(() => {
+        const source = (window as any).__map.getSource('places')
+        source.setClusterOptions = () => Promise.reject(new Error('cluster update failed'))
+      })
+
+      await page.click('#radius-merge')
+
+      await expect.poll(() => readLog().then(log => log.errors)).toEqual(['cluster update failed'])
+    })
+
+    it('rebuilds the source for a cluster option MapLibre cannot update in place', async () => {
+      const { page, readLog } = await openClusters()
+      await page.click('#radius-merge')
+      await waitForRenderedFeatures(page, clusterLayers, 3)
+      const before = await readLog()
+
+      await page.click('#min-points')
+      // Four points no longer make a cluster, so all 12 points show again.
+      await waitForRenderedFeatures(page, clusterLayers, 12)
+
+      const after = await readLog()
+      expect(after.removeSource - before.removeSource).toBe(1)
+      expect(after.addSource - before.addSource).toBe(1)
+    })
+  })
+
   it.each(['diff', 'full'])('emits sourceready after a %s style swap so feature state can be restored', async (mode) => {
     const page = await openMap('/style-swap')
     const readLog = async () => JSON.parse(await page.locator('#log').textContent() ?? '{}') as { styleload: boolean[], sourceready: string[] }
