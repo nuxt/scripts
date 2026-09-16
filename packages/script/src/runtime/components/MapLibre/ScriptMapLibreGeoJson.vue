@@ -32,6 +32,8 @@ let appliedStyles: LayerStyle[] = []
 let layerSubscriptions: MapLibreGl.Subscription[] = []
 let restoreCursor: string | undefined
 let isPointerOverLayer = false
+let hoveredLayerKey = ''
+let pendingHoverKey = ''
 
 /**
  * True while the style accepts `addSource` and `addLayer`. MapLibre allows both
@@ -101,6 +103,10 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
   for (const subscription of layerSubscriptions)
     subscription.unsubscribe()
   layerSubscriptions = []
+  // Carry the hover across an immediate rebind. `syncResources` unbinds twice,
+  // so an empty key must never overwrite a carried one.
+  if (isPointerOverLayer)
+    pendingHoverKey = hoveredLayerKey
   isPointerOverLayer = false
   if (restoreCursor !== undefined)
     applyCursor(map, undefined)
@@ -109,16 +115,23 @@ function unbindLayerEvents(map: MapLibreGl.Map): void {
 /**
  * Binds the component's events to the layers it owns. MapLibre treats the layer
  * array as one group, so `mouseenter` and `mouseleave` fire once per group.
+ *
+ * `carryHover` is true only for a style reload, where the props are unchanged
+ * and the same features sit under the pointer.
  */
-function bindLayerEvents(map: MapLibreGl.Map): void {
+function bindLayerEvents(map: MapLibreGl.Map, carryHover: boolean): void {
   unbindLayerEvents(map)
+  const carriedHoverKey = pendingHoverKey
+  pendingHoverKey = ''
   if (!ownedLayerIds.length)
     return
   const layerIds = [...ownedLayerIds]
+  const layerKey = layerIds.join('\n')
   layerSubscriptions = [
     map.on('click', layerIds, event => emit('click', event)),
     map.on('mouseenter', layerIds, (event) => {
       isPointerOverLayer = true
+      hoveredLayerKey = layerKey
       applyCursor(map, props.cursor || undefined)
       emit('mouseenter', event)
     }),
@@ -128,6 +141,13 @@ function bindLayerEvents(map: MapLibreGl.Map): void {
       emit('mouseleave', event)
     }),
   ]
+  // A style reload re-adds the same layers under a stationary pointer, and
+  // MapLibre does not fire `mouseenter` again. A prop change may move the
+  // features, so only a style reload of the same layers keeps the cursor.
+  if (carryHover && carriedHoverKey === layerKey) {
+    isPointerOverLayer = true
+    applyCursor(map, props.cursor || undefined)
+  }
 }
 
 function removeOwnedResources(map: MapLibreGl.Map): void {
@@ -145,7 +165,7 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   appliedStyles = []
 }
 
-function syncResources(map: MapLibreGl.Map): void {
+function syncResources(map: MapLibreGl.Map, carryHover = false): void {
   if (!isStyleMutable && map.isStyleLoaded() !== true) {
     // The style is mid-swap and rejects new sources. Clear the applied values, or
     // a later flip back to the last applied value would skip the rebuild.
@@ -177,7 +197,7 @@ function syncResources(map: MapLibreGl.Map): void {
     appliedStructure = structureSignature()
     appliedStyles = readLayerStyles()
     appliedStyleSignature = JSON.stringify(appliedStyles)
-    bindLayerEvents(map)
+    bindLayerEvents(map, carryHover)
   }
   catch (error) {
     removeOwnedResources(map)
@@ -219,15 +239,22 @@ function updateLayerStyles(map: MapLibreGl.Map): void {
     if (JSON.stringify(before.filter) !== JSON.stringify(next.filter))
       map.setFilter(layerId, next.filter as MapLibreGl.FilterSpecification | undefined)
   })
+  // The new values may have emptied the spot under a stationary pointer, and
+  // MapLibre only re-evaluates on the next pointer move. A prop-driven rebuild
+  // drops the hover for the same reason.
+  if (isPointerOverLayer) {
+    isPointerOverLayer = false
+    applyCursor(map, undefined)
+  }
   // Only a complete pass records the new values, so a failed update is retried.
   appliedStyles = nextStyles
   appliedStyleSignature = JSON.stringify(nextStyles)
 }
 
 /** Runs a rebuild outside the initial creation, where no caller can catch it. */
-function trySyncResources(map: MapLibreGl.Map): void {
+function trySyncResources(map: MapLibreGl.Map, carryHover = false): void {
   try {
-    syncResources(map)
+    syncResources(map, carryHover)
   }
   catch (error) {
     reportMapLibreResourceError(error, failure => emit('error', failure))
@@ -250,7 +277,7 @@ const geoJson = useMapLibreResource<ScriptMapLibreGeoJsonResource>({
     // re-adds its own. `style.load` is the first moment the new style accepts them.
     const onStyleLoad = () => {
       isStyleMutable = true
-      trySyncResources(map)
+      trySyncResources(map, true)
     }
     const onLoad = () => {
       isStyleMutable = true
