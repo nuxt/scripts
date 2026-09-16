@@ -86,9 +86,12 @@ export function useScriptPulseAnalytics<T extends PulseAnalyticsApi>(_options?: 
       try {
         window.pulse.track(...args)
       }
-      catch {
+      catch (error) {
         // One rejected event must not strand the ones queued after it: the
-        // flag is already set, so nothing would ever drain them again.
+        // flag is already set, so nothing would ever drain them again. Name
+        // the event so the drop is visible, but never its props — they can
+        // carry user data.
+        console.warn(`[nuxt-scripts] Pulse Analytics: replaying queued track('${args[0]}') threw and the event was dropped.`, error)
       }
     }
   }

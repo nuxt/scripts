@@ -106,7 +106,7 @@ describe('pulse analytics', () => {
     it('keeps draining the queue when one replayed call throws', () => {
       const { use } = setup()
       const api = use()
-      api.track('first')
+      api.track('first', { token: 'secret' })
       api.track('second')
       api.track('third')
 
@@ -116,9 +116,15 @@ describe('pulse analytics', () => {
       })
       window.__pulseInstalled = true
       window.pulse = { track, cleanPath: () => '/' }
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       expect(() => use()).not.toThrow()
       expect(track.mock.calls.map(call => call[0])).toEqual(['first', 'second', 'third'])
       expect(queue()).toHaveLength(0)
+      // The drop is reported by event name only; props may carry user data.
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0][0]).toContain(`track('first')`)
+      expect(JSON.stringify(warn.mock.calls[0])).not.toContain('secret')
+      warn.mockRestore()
     })
 
     it('caps the queue when the tracker never runs', () => {
