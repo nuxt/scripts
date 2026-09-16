@@ -862,7 +862,7 @@
       {
         "name": "ScriptMapLibreGeoJsonEvents",
         "kind": "interface",
-        "code": "interface ScriptMapLibreGeoJsonEvents {\n  error: Error\n  click: MapLibre.MapLayerMouseEvent\n  mouseenter: MapLibre.MapLayerMouseEvent\n  mouseleave: MapLibre.MapLayerMouseEvent\n}"
+        "code": "interface ScriptMapLibreGeoJsonEvents {\n  error: Error\n  click: MapLibre.MapLayerMouseEvent\n  dblclick: MapLibre.MapLayerMouseEvent\n  mouseenter: MapLibre.MapLayerMouseEvent\n  mousemove: MapLibre.MapLayerMouseEvent\n  mouseleave: MapLibre.MapLayerMouseEvent\n  sourceready: { map: MapLibre.Map, sourceId: string }\n}"
       },
       {
         "name": "ScriptMapLibreGeolocateControlProps",
@@ -4270,7 +4270,7 @@
         "name": "error",
         "type": "Error",
         "required": false,
-        "description": "The component could not apply a source or layer. A failed rebuild removes the component's own source and layers. A failed paint, layout or filter update leaves them on the map."
+        "description": "The component could not apply a source or layer, or MapLibre reported an error for one. MapLibre reports an invalid paint, layout or filter value this way. It does not throw. A failed rebuild removes the component's own source and layers. A failed paint, layout or filter update leaves them on the map."
       },
       {
         "name": "click",
@@ -4278,14 +4278,33 @@
         "required": false
       },
       {
+        "name": "dblclick",
+        "type": "MapLibre.MapLayerMouseEvent",
+        "required": false,
+        "description": "The pointer double-clicked one of this component's layers. Call `event.preventDefault()` to stop MapLibre's double-click zoom."
+      },
+      {
         "name": "mouseenter",
         "type": "MapLibre.MapLayerMouseEvent",
-        "required": false
+        "required": false,
+        "description": "The pointer entered this component's layers as a group. It does not fire again when the pointer moves between touching features."
+      },
+      {
+        "name": "mousemove",
+        "type": "MapLibre.MapLayerMouseEvent",
+        "required": false,
+        "description": "The pointer moved over a feature in one of this component's layers. `event.features` lists the features under the pointer, topmost first."
       },
       {
         "name": "mouseleave",
         "type": "MapLibre.MapLayerMouseEvent",
         "required": false
+      },
+      {
+        "name": "sourceready",
+        "type": "{ map: MapLibre.Map, sourceId: string }",
+        "required": false,
+        "description": "The source and layers exist on the map. Fires after the first add and after every re-add, such as after a style swap. A re-add clears feature state, so restore it here."
       }
     ],
     "ScriptMapLibreGeolocateControlProps": [

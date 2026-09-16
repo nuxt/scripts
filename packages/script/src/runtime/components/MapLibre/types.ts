@@ -135,17 +135,37 @@ export interface ScriptMapLibreGeoJsonProps {
 
 export interface ScriptMapLibreGeoJsonEmits {
   /**
-   * The component could not apply a source or layer.
+   * The component could not apply a source or layer, or MapLibre reported an error for one.
+   * MapLibre reports an invalid paint, layout or filter value this way. It does not throw.
    * A failed rebuild removes the component's own source and layers.
    * A failed paint, layout or filter update leaves them on the map.
    */
   error: [error: Error]
   /** The pointer clicked one of this component's layers. */
   click: [event: MapLibre.MapLayerMouseEvent]
-  /** The pointer entered one of this component's layers. */
+  /**
+   * The pointer double-clicked one of this component's layers.
+   * Call `event.preventDefault()` to stop MapLibre's double-click zoom.
+   */
+  dblclick: [event: MapLibre.MapLayerMouseEvent]
+  /**
+   * The pointer entered this component's layers as a group.
+   * It does not fire again when the pointer moves between touching features.
+   */
   mouseenter: [event: MapLibre.MapLayerMouseEvent]
-  /** The pointer left one of this component's layers. */
+  /**
+   * The pointer moved over a feature in one of this component's layers.
+   * `event.features` lists the features under the pointer, topmost first.
+   */
+  mousemove: [event: MapLibre.MapLayerMouseEvent]
+  /** The pointer left every feature in this component's layers. */
   mouseleave: [event: MapLibre.MapLayerMouseEvent]
+  /**
+   * The source and layers exist on the map.
+   * Fires after the first add and after every re-add, such as after a style swap.
+   * A re-add clears feature state, so restore it here.
+   */
+  sourceready: [payload: { map: MapLibre.Map, sourceId: string }]
 }
 
 export interface ScriptMapLibreGeoJsonResource {
@@ -154,6 +174,7 @@ export interface ScriptMapLibreGeoJsonResource {
   onStyleLoad: () => void
   onStyleDataLoading: () => void
   onIdle: () => void
+  onError: (event: { error: Error | { message: string } }) => void
 }
 
 export interface ScriptMapLibreMarkerProps {
