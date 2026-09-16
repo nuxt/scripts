@@ -15,6 +15,11 @@ interface ScriptLeafletGeoJsonEmits {
   layerremove: [event: Leaflet.LayerEvent]
 }
 
+// Renders no DOM of its own. A render function that returns `null` gives a
+// comment node on the server and the client. A template that holds only a
+// comment, or nothing, renders nothing on the server, so hydration mismatches.
+defineOptions({ render: () => null })
+
 const props = defineProps<{
   /** GeoJSON object, feature, or feature collection. Replace it to update the layer. */
   data: GeoJsonObject | GeoJsonObject[]
@@ -59,7 +64,3 @@ watch(() => props.options?.style, (style) => {
 
 defineExpose({ geoJson })
 </script>
-
-<template>
-  <!-- nuxt-scripts: Leaflet GeoJSON layer -->
-</template>

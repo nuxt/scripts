@@ -20,6 +20,11 @@ interface LayerStyle {
   filter: unknown
 }
 
+// Renders no DOM of its own. A render function that returns `null` gives a
+// comment node on the server and the client. A template that holds only a
+// comment, or nothing, renders nothing on the server, so hydration mismatches.
+defineOptions({ render: () => null })
+
 const props = defineProps<ScriptMapLibreGeoJsonProps>()
 
 const emit = defineEmits<ScriptMapLibreGeoJsonEmits>()
@@ -429,7 +434,3 @@ watch(styleSignature, (signature) => {
 
 defineExpose({ geoJson })
 </script>
-
-<template>
-  <!-- nuxt-scripts: MapLibre GeoJSON source and layers -->
-</template>
