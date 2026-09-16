@@ -3,6 +3,12 @@ import type * as MapLibre from 'maplibre-gl'
 import type { ScriptMapLibreFullscreenControlEmits, ScriptMapLibreFullscreenControlProps } from './types'
 import { useMapLibreResource } from './useMapLibreResource'
 
+// Renders no DOM of its own. A render function that returns `null` gives a
+// comment node on the server and the client. A comment-only template does not:
+// a production build strips the comment, so the server renders nothing and
+// hydration reports a mismatch.
+defineOptions({ render: () => null })
+
 const props = defineProps<ScriptMapLibreFullscreenControlProps>()
 
 const emit = defineEmits<ScriptMapLibreFullscreenControlEmits>()
@@ -28,7 +34,3 @@ const control = useMapLibreResource<MapLibre.FullscreenControl>({
 
 defineExpose({ control })
 </script>
-
-<template>
-  <!-- nuxt-scripts: MapLibre fullscreen control -->
-</template>

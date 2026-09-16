@@ -3,6 +3,12 @@ import type * as MapLibre from 'maplibre-gl'
 import type { ScriptMapLibreGeolocateControlEmits, ScriptMapLibreGeolocateControlProps } from './types'
 import { useMapLibreResource } from './useMapLibreResource'
 
+// Renders no DOM of its own. A render function that returns `null` gives a
+// comment node on the server and the client. A comment-only template does not:
+// a production build strips the comment, so the server renders nothing and
+// hydration reports a mismatch.
+defineOptions({ render: () => null })
+
 const props = defineProps<ScriptMapLibreGeolocateControlProps>()
 
 const emit = defineEmits<ScriptMapLibreGeolocateControlEmits>()
@@ -59,7 +65,3 @@ const control = useMapLibreResource<MapLibre.GeolocateControl>({
 
 defineExpose({ control })
 </script>
-
-<template>
-  <!-- nuxt-scripts: MapLibre geolocate control -->
-</template>
