@@ -12,6 +12,7 @@ useHead({
 const {
   status,
   chatStatus,
+  load,
   proxy,
   isHidden,
   isMinimized,
@@ -37,12 +38,11 @@ const {
 } = useScriptTawkTo({
   propertyId: '68496650ddf9cd19094b4530',
   widgetId: '1itfbfagd',
-  // The playground's nuxt.config.ts defaults every registry entry to
-  // trigger: 'manual' (so nothing auto-loads on every page). Override it
-  // here so this composable-only demo actually loads on navigation, same
-  // as a real app relying on the module's own onNuxtReady default would.
+  // Loading is manual so the pre-load window stays open long enough to use.
+  // setVisitor() only works while status is awaitingLoad, and with the module's
+  // own onNuxtReady default that window closes before anyone can click.
   scriptOptions: {
-    trigger: 'onNuxtReady',
+    trigger: 'manual',
   },
 })
 
@@ -146,6 +146,14 @@ function addTag() {
               unreadCount: {{ unreadCount }}
             </UBadge>
           </div>
+          <div>
+            <UButton :disabled="status !== 'awaitingLoad'" color="primary" @click="load()">
+              Load Widget
+            </UButton>
+            <span class="text-sm text-gray-500 ml-3">
+              Set a visitor first: Tawk only honours it before the embed script is requested.
+            </span>
+          </div>
         </div>
       </UCard>
 
@@ -235,10 +243,15 @@ function addTag() {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <UInput v-model="visitorName" placeholder="Visitor name" />
             <UInput v-model="visitorEmail" placeholder="Visitor email" />
-            <UButton :disabled="status !== 'loaded'" @click="identifyVisitor">
+            <UButton :disabled="!visitorName && !visitorEmail" @click="identifyVisitor">
               Set Visitor
             </UButton>
           </div>
+          <p class="text-sm text-gray-500">
+            Before Load Widget this writes <code>Tawk_API.visitor</code> and Tawk picks it up.
+            Afterwards the same call warns and drops the data, which is what
+            <code>setAttributes()</code> is for. Try it on both sides to see each path.
+          </p>
           <div class="flex items-center gap-3">
             <UInput v-model="tagInput" placeholder="Tag name" class="flex-1" />
             <UButton :disabled="status !== 'loaded' || !tagInput" @click="addTag">
