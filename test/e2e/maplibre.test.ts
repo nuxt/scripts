@@ -25,6 +25,23 @@ async function readErrors(page: Page): Promise<ErrorLog> {
   return JSON.parse(await page.locator('#errors').textContent() ?? '{}') as ErrorLog
 }
 
+/** Page coordinates of a longitude and latitude on the exposed map. */
+async function pointOf(page: Page, lngLat: [number, number]): Promise<{ x: number, y: number }> {
+  return page.evaluate((position) => {
+    const map = (window as any).__map
+    const rect = map.getCanvas().getBoundingClientRect()
+    const point = map.project(position)
+    return { x: rect.left + point.x, y: rect.top + point.y }
+  }, lngLat)
+}
+
+async function waitForRenderedFeatures(page: Page, layers: string[], count: number): Promise<void> {
+  await page.waitForFunction(({ layers, count }) => {
+    const map = (window as any).__map
+    return map.loaded() && map.queryRenderedFeatures({ layers }).length === count
+  }, { layers, count }, { timeout: 20000 })
+}
+
 describe('maplibre in a real browser', { timeout: 60000 }, async () => {
   await setup({
     rootDir: resolve('../fixtures/maplibre'),
@@ -98,5 +115,51 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     await page.focus('#keyboard-map canvas')
     const before = await page.evaluate(() => document.querySelector('#keyboard-map canvas') === document.activeElement)
     expect(before).toBe(true)
+  })
+
+  it('follows the pointer between touching features in different layers', async () => {
+    const page = await openMap('/hover')
+    await waitForRenderedFeatures(page, ['clusters', 'sites'], 3)
+    const hovered = () => page.locator('#hovered').textContent()
+    const cursor = () => page.evaluate(() => (window as any).__map.getCanvas().style.cursor)
+
+    const west = await pointOf(page, [-1.2, 0])
+    const cluster = await pointOf(page, [0, 0])
+    const east = await pointOf(page, [1.2, 0])
+
+    await page.mouse.move(west.x, west.y, { steps: 4 })
+    await expect.poll(hovered).toBe('west')
+    expect(await cursor()).toBe('pointer')
+
+    // The circles overlap, so the pointer never leaves the group on the way.
+    await page.mouse.move(cluster.x, cluster.y, { steps: 8 })
+    await expect.poll(hovered).toBe('cluster')
+
+    await page.mouse.move(east.x, east.y, { steps: 8 })
+    await expect.poll(hovered).toBe('east')
+
+    await page.mouse.move(east.x, east.y + 80, { steps: 4 })
+    await expect.poll(hovered).toBe('none')
+    expect(await cursor()).toBe('')
+
+    const log = JSON.parse(await page.locator('#log').textContent() ?? '{}')
+    // The group edges fired once each, which is why `mousemove` has to carry the hover.
+    expect(log).toMatchObject({ mouseenter: 1, mouseleave: 1 })
+  })
+
+  it('emits dblclick and lets the consumer replace the default zoom', async () => {
+    const page = await openMap('/hover')
+    await waitForRenderedFeatures(page, ['clusters', 'sites'], 3)
+    const west = await pointOf(page, [-1.2, 0])
+
+    await page.mouse.dblclick(west.x, west.y)
+
+    await expect.poll(() => page.locator('#log').textContent()).toContain('"dblclick":1')
+    await page.waitForFunction(() => {
+      const map = (window as any).__map
+      return !map.isMoving() && map.getZoom() === 6
+    }, undefined, { timeout: 5000 })
+    const center = await page.evaluate(() => (window as any).__map.getCenter().toArray() as [number, number])
+    expect(center[0]).toBeCloseTo(-1.2, 3)
   })
 })
