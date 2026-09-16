@@ -31,6 +31,17 @@ interface CapturedRequest {
   postData: Buffer | null
 }
 
+// /collect is the page-view endpoint, but the script also fires
+// cookiesTest=true and liSync=true variants as part of its initial
+// cookie-availability dance (and its retries) — not page-views. Page-view
+// assertions must count canonical beacons only, or a dance request landing
+// late (slow networks) masquerades as an extra page-view.
+function isCanonicalCollect(r: CapturedRequest): boolean {
+  return r.url.includes('px.ads.linkedin.com/collect')
+    && !r.url.includes('cookiesTest=true')
+    && !r.url.includes('liSync=true')
+}
+
 async function newCapturePage() {
   const browser = await getBrowser()
   const page = await browser.newPage()
@@ -176,7 +187,7 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      const collectCount = () => requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      const collectCount = () => requests.filter(isCanonicalCollect).length
       const before = collectCount()
       await page.click('#trigger-spa-nav')
       await page.waitForURL('**/linkedin-spa', { timeout: 5000 })
@@ -195,19 +206,11 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     // alongside useScriptEventPage's hook, every initial page would log two
     // page-views in LinkedIn analytics. The composable sets _wait_for_lintrk
     // to suppress the built-in fire when SPA tracking is enabled.
-    //
-    // Excludes cookiesTest=true and liSync=true variants (the script fires
-    // those as part of its initial cookie-availability dance — not a
-    // duplicate page-view).
     const { page, requests } = await newCapturePage()
     try {
       await page.goto(url('/linkedin'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      const canonicalCollects = () => requests.filter(r =>
-        r.url.includes('px.ads.linkedin.com/collect')
-        && !r.url.includes('cookiesTest=true')
-        && !r.url.includes('liSync=true'),
-      )
+      const canonicalCollects = () => requests.filter(isCanonicalCollect)
       // Wait for at least one canonical /collect, then for the count to stop
       // changing — a potential double-fire would arrive within this window.
       await waitFor(() => canonicalCollects().length >= 1, { message: 'first canonical /collect' })
@@ -224,15 +227,19 @@ export function defineLinkedInInsightSuite(opts: SuiteOptions) {
     if (!networkAvailable)
       ctx.skip()
     // Navigates to / (an index page that doesn't call the composable) so we
-    // can observe a pure no-op route change. /collect is the page-view
-    // endpoint; /attribution_trigger and /wa/ may fire as bootstrap side
-    // effects regardless of SPA tracking.
+    // can observe a pure no-op route change. Counts canonical /collect
+    // page-views only (see isCanonicalCollect): the cookie dance and its
+    // retries can land seconds after load on slow networks, and counting
+    // them made this assertion fail even with no SPA tracking at all.
     const { page, requests } = await newCapturePage()
     try {
       await page.goto(url('/linkedin-no-spa'), { waitUntil: 'networkidle', timeout: 30000 })
       await page.waitForSelector('#status:has-text("loaded")', { timeout: 15000 })
-      const collectCount = () => requests.filter(r => r.url.includes('px.ads.linkedin.com/collect')).length
+      const collectCount = () => requests.filter(isCanonicalCollect).length
       await waitFor(() => collectCount() > 0, { message: 'initial /collect beacon' })
+      // Let the initial load finish firing before capturing the baseline, so
+      // late initial beacons don't get attributed to the SPA navigation.
+      await waitForStable(collectCount)
       const before = collectCount()
       await page.click('#trigger-spa-nav')
       await page.waitForURL('**/', { timeout: 5000 })
