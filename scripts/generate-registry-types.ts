@@ -1,7 +1,9 @@
+import type { SchemaFieldMeta } from './registry-doc-comments.ts'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { walk } from 'oxc-walker'
 import { parseSync } from 'vite'
+import { fieldsToInterfaceBody, parseSchemaComments } from './registry-doc-comments.ts'
 
 const registryDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'registry')
 const componentsDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'components')
@@ -32,20 +34,6 @@ function getKind(node: any): ExtractedDeclaration['kind'] {
 }
 
 // --- Schema field extraction (static AST-based) ---
-
-interface SchemaFieldMeta {
-  name: string
-  type: string
-  required: boolean
-  description?: string
-  defaultValue?: string
-}
-
-const JSDOC_START_RE = /^\s*\/\*\*/
-const JSDOC_END_RE = /^\s*\*\//
-const DOC_LINE_RE = /^\s*\*\s?(.*)/
-const DEFAULT_TAG_RE = /^@default\s*/
-const FIELD_MATCH_RE = /^\s*(\w+)\s*\??:/
 
 function resolveAstType(node: any, source: string): string {
   if (!node)
@@ -97,43 +85,6 @@ function resolveAstType(node: any, source: string): string {
 
 function isOptionalCall(node: any): boolean {
   return node?.type === 'CallExpression' && node.callee?.name === 'optional'
-}
-
-function parseSchemaComments(code: string): Record<string, { description?: string, defaultValue?: string }> {
-  const result: Record<string, { description?: string, defaultValue?: string }> = {}
-  const lines = code.split('\n')
-  let desc = ''
-  let def = ''
-
-  for (const line of lines) {
-    if (JSDOC_START_RE.test(line)) {
-      desc = ''
-      def = ''
-      continue
-    }
-    if (JSDOC_END_RE.test(line))
-      continue
-
-    const docLine = line.match(DOC_LINE_RE)
-    if (docLine) {
-      const content = docLine[1]!.trim()
-      if (content.startsWith('@default'))
-        def = content.replace(DEFAULT_TAG_RE, '')
-      else if (!content.startsWith('@') && content)
-        desc += (desc ? ' ' : '') + content
-      continue
-    }
-
-    const fieldMatch = line.match(FIELD_MATCH_RE)
-    if (fieldMatch) {
-      if (desc || def)
-        result[fieldMatch[1]!] = { description: desc || undefined, defaultValue: def || undefined }
-      desc = ''
-      def = ''
-    }
-  }
-
-  return result
 }
 
 function extractSchemaFields(node: any, source: string, code: string): SchemaFieldMeta[] | null {
@@ -426,15 +377,6 @@ function collectPropsFields(typeNode: any, source: string, resolveTypeNode: Type
       field.required = members.every((member: SchemaFieldMeta[]) => member.some(entry => entry.name === field.name && entry.required))
   }
   return [...fields.values()]
-}
-
-/** Writes merged props fields as an interface body, for a props type that is not a literal. */
-function fieldsToInterfaceBody(fields: SchemaFieldMeta[]): string {
-  const lines = fields.map((field) => {
-    const doc = [field.description, field.defaultValue && `@default ${field.defaultValue}`].filter(Boolean).join(' ')
-    return `${doc ? `  /** ${doc} */\n` : ''}  ${field.name}${field.required ? '' : '?'}: ${field.type}`
-  })
-  return `{\n${lines.join('\n')}\n}`
 }
 
 function extractComponentMeta(scriptSource: string, fileName: string, namedTypes = new Map<string, NamedTypeDeclaration>()): ComponentMeta | null {
