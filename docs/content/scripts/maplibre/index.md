@@ -100,4 +100,4 @@ OpenFreeMap's public instance needs no API key, but it has no SLA. Read [Styles 
 - [Delivery Tracker](/scripts/maplibre/guides/delivery-tracker) builds a practical route tracker from reactive markers and styled GeoJSON.
 - [Styles & Providers](/scripts/maplibre/guides/styles-and-providers) separates the renderer, style, tile service, and map data choices.
 - [Performance, CSP & Accessibility](/scripts/maplibre/guides/performance-csp-and-accessibility) covers loading triggers, WebGL fallbacks, workers, and decorative maps.
-- [Raw Map Instance](/scripts/maplibre/guides/raw-map-instance) covers layer events, filtering, feature state, feature queries, and animated camera moves.
+- [Raw Map Instance](/scripts/maplibre/guides/raw-map-instance) covers layer events, filtering, feature state, and animated camera moves.
