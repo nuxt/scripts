@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "graph",
+  "generatedAt": "2026-09-17T00:20:00.000Z",
+  "title": "Hydration-safe script status",
+  "summary": "The server records each script status that is not awaitingLoad in the payload. During hydration the client status ref reports that value, then releases to the live status. The trigger and loader still run during setup.",
+  "lenses": ["architecture", "data-flow"],
+  "provenance": {
+    "repo": { "owner": "nuxt", "name": "scripts", "host": "github.com" },
+    "base": { "sha": "713ebe0f", "ref": "main" },
+    "head": { "sha": "4f52ec89c91811a0702401a55b61b29ab24975e8", "ref": "fix/script-status-hydration" },
+    "generator": { "name": "claude", "version": "0.1.0" }
+  },
+  "lanes": [
+    { "id": "server", "label": "Server render", "subtitle": "Nitro SSR", "order": 0 },
+    { "id": "payload", "label": "Payload", "subtitle": "__NUXT_DATA__", "order": 1 },
+    { "id": "client", "label": "Client hydration", "subtitle": "browser", "order": 2 }
+  ],
+  "nodes": [
+    { "id": "use-script-server", "label": "useScript (server)", "kind": "function", "delta": "modified", "lane": "server", "summary": "Records the script status in the payload when it is not awaitingLoad, and on every later script:updated.", "files": [{ "path": "packages/script/src/runtime/composables/useScript.ts", "startLine": 461, "endLine": 474 }], "badges": [] },
+    { "id": "script-status-payload", "label": "_scriptStatus", "kind": "datastore", "delta": "added", "lane": "payload", "summary": "Map of script id to server status. Empty for pages whose scripts all wait for a client trigger.", "files": [{ "path": "packages/script/src/runtime/utils/hydration-status.ts", "startLine": 1, "endLine": 12 }], "badges": ["new"] },
+    { "id": "use-script-client", "label": "useScript (client)", "kind": "function", "delta": "modified", "lane": "client", "summary": "While hydrating, swaps Unhead's status ref for a hydration status ref seeded from the payload.", "files": [{ "path": "packages/script/src/runtime/composables/useScript.ts", "startLine": 351, "endLine": 360 }], "badges": [] },
+    { "id": "hydration-status", "label": "createHydrationStatus", "kind": "function", "delta": "added", "lane": "client", "summary": "customRef that reports the server status until release(), while the live status updates underneath.", "files": [{ "path": "packages/script/src/runtime/utils/hydration-status.ts", "startLine": 14, "endLine": 57 }], "badges": ["new"] },
+    { "id": "unhead-script", "label": "Unhead useScript", "kind": "external", "delta": "unchanged", "lane": "client", "subtitle": "trigger + loader", "summary": "Runs the trigger and load() exactly as before. A client trigger still loads during setup.", "files": [], "badges": [] },
+    { "id": "template", "label": "{{ status }}", "kind": "ui", "delta": "unchanged", "lane": "client", "summary": "Any template or watcher that reads status.", "files": [], "badges": [] }
+  ],
+  "edges": [
+    { "id": "server-to-payload", "from": "use-script-server", "to": "script-status-payload", "kind": "data", "delta": "added", "label": "record status", "emphasis": "normal", "animated": true, "files": [] },
+    { "id": "payload-to-client", "from": "script-status-payload", "to": "use-script-client", "kind": "data", "delta": "added", "label": "server status", "emphasis": "hero", "animated": true, "summary": "The first client render reads the value the server rendered.", "files": [] },
+    { "id": "client-to-hold", "from": "use-script-client", "to": "hydration-status", "kind": "call", "delta": "added", "label": "hold until app:suspense:resolve", "emphasis": "normal", "animated": false, "files": [] },
+    { "id": "client-to-unhead", "from": "use-script-client", "to": "unhead-script", "kind": "call", "delta": "unchanged", "label": "trigger runs now", "emphasis": "normal", "animated": false, "files": [] },
+    { "id": "unhead-to-hold", "from": "unhead-script", "to": "hydration-status", "kind": "event", "delta": "added", "label": "live status writes", "emphasis": "normal", "animated": false, "files": [] },
+    { "id": "hold-to-template", "from": "hydration-status", "to": "template", "kind": "data", "delta": "added", "label": "status", "emphasis": "normal", "animated": false, "files": [] }
+  ],
+  "flows": [
+    {
+      "id": "client-trigger",
+      "title": "A client trigger during hydration",
+      "summary": "trigger: 'client' loads during setup, but the first render still shows awaitingLoad.",
+      "delta": "modified",
+      "participants": [
+        { "node": "use-script-server", "label": "server" },
+        { "node": "script-status-payload", "label": "payload" },
+        { "node": "unhead-script", "label": "Unhead" },
+        { "node": "hydration-status", "label": "status ref" },
+        { "node": "template", "label": "template" }
+      ],
+      "messages": [
+        { "id": "m1", "from": "use-script-server", "to": "script-status-payload", "label": "awaitingLoad: nothing recorded", "kind": "async", "delta": "added", "animated": true, "files": [] },
+        { "id": "m2", "from": "unhead-script", "to": "hydration-status", "label": "load() → live loading", "kind": "sync", "delta": "unchanged", "animated": true, "note": "Same moment as before the fix.", "files": [] },
+        { "id": "m3", "from": "hydration-status", "to": "template", "label": "render awaitingLoad", "kind": "sync", "delta": "added", "animated": true, "note": "Matches the server HTML.", "files": [] },
+        { "id": "m4", "from": "hydration-status", "to": "template", "label": "app:suspense:resolve → loading", "kind": "async", "delta": "added", "animated": true, "files": [] },
+        { "id": "m5", "from": "unhead-script", "to": "hydration-status", "label": "loaded", "kind": "async", "delta": "unchanged", "animated": true, "files": [] }
+      ]
+    }
+  ],
+  "stats": { "filesChanged": 18, "additions": 288, "deletions": 1, "chips": [{ "label": "Load timing", "value": "unchanged", "tone": "hero" }] },
+  "views": [
+    { "id": "overview", "title": "Architecture: status across SSR and hydration", "lens": "architecture", "scope": { "kind": "all" }, "defaultOpen": true, "children": [] },
+    { "id": "client-trigger-view", "title": "Data flow: client trigger", "lens": "data-flow", "scope": { "kind": "selection", "lanes": [], "nodes": [], "edges": [], "flows": ["client-trigger"] }, "defaultOpen": false, "children": [] }
+  ],
+  "layout": { "direction": "right", "laneOrder": ["server", "payload", "client"], "rank": {} }
+}
