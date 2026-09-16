@@ -161,6 +161,21 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     expect(center[0]).toBeCloseTo(-1.2, 3)
   })
 
+  it('keeps the native vertical order when the logo shares the attribution corner', async () => {
+    const page = await openMap('/logo')
+    const readCorner = () => page.evaluate(() => {
+      const corner = document.querySelector<HTMLElement>('.maplibregl-ctrl-bottom-right')
+      const logo = corner?.querySelector<HTMLElement>('.maplibregl-ctrl-logo')?.closest<HTMLElement>('.maplibregl-ctrl')
+      const attribution = corner?.querySelector<HTMLElement>('.maplibregl-ctrl-attrib')
+      if (!corner || !logo || !attribution)
+        return null
+      // A native map renders the logo above the attribution when both sit in a
+      // bottom corner, which is the DOM order inside the corner container.
+      return Boolean(logo.compareDocumentPosition(attribution) & Node.DOCUMENT_POSITION_FOLLOWING)
+    })
+    await expect.poll(readCorner).toBe(true)
+  })
+
   it('shows the default attribution once on a map without an attribution control', async () => {
     const page = await openMap('/style-swap')
     const readAttribution = () => page.evaluate(() => [...document.querySelectorAll('.maplibregl-ctrl-attrib')].map(control => control.textContent!.trim()))

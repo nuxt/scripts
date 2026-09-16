@@ -139,12 +139,14 @@ onMounted(() => {
     maplibre.value = instance.maplibregl
     let mapInstance: MapLibre.Map | undefined
     try {
-      const attributionOptions = toRaw(props.options)?.attributionControl
+      const mapOptions = toRaw(props.options)
+      const attributionOptions = mapOptions?.attributionControl
       mapInstance = new instance.maplibregl.Map({
-        ...toRaw(props.options),
+        ...mapOptions,
         // The component adds the default attribution control itself, so
         // `<ScriptMapLibreAttributionControl>` can replace it through the public API.
         attributionControl: false,
+        maplibreLogo: false,
         container: mapEl.value,
         style: toRaw(props.mapStyle),
         center: toRaw(props.center),
@@ -153,10 +155,16 @@ onMounted(() => {
         pitch: props.pitch,
         interactive: props.interactive,
       })
+      // MapLibre's constructor adds the attribution control first and the logo
+      // second, and a bottom corner renders its first child on top. Adding the
+      // controls in that order here keeps the native vertical order when the
+      // logo shares the attribution corner.
       if (attributionOptions !== false) {
         defaultAttributionControl.value = new instance.maplibregl.AttributionControl(typeof attributionOptions === 'object' ? attributionOptions : undefined)
         mapInstance.addControl(defaultAttributionControl.value)
       }
+      if (mapOptions?.maplibreLogo)
+        mapInstance.addControl(new instance.maplibregl.LogoControl(), mapOptions.logoPosition)
       configureCanvasAccessibility(mapInstance)
       bindMapEvents(mapInstance)
       map.value = mapInstance
