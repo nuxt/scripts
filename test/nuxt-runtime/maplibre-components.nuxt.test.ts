@@ -107,6 +107,9 @@ function createMapLibreMock() {
       layers.delete(id)
       return map
     }),
+    setPaintProperty: vi.fn(() => map),
+    setLayoutProperty: vi.fn(() => map),
+    setFilter: vi.fn(() => map),
     addControl: vi.fn(() => map),
     hasControl: vi.fn(() => true),
     removeControl: vi.fn(() => map),
@@ -402,11 +405,12 @@ describe('mapLibre components', () => {
     expect(mocks.map.removeLayer).not.toHaveBeenCalled()
     expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
 
-    // a real content change still rebuilds
+    // a paint change updates the layer in place instead of rebuilding the source
     await wrapper.setProps({
       layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#b23939' } }],
     })
-    expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+    expect(mocks.map.setPaintProperty).toHaveBeenCalledWith('melbourne-circle', 'circle-color', '#b23939')
 
     wrapper.unmount()
   })
@@ -485,6 +489,108 @@ describe('mapLibre components', () => {
     mocks.map.isStyleLoaded.mockReturnValue(true)
     mocks.styleEvents.get('idle')?.()
     expect(mocks.map.addSource).toHaveBeenLastCalledWith('greater-melbourne', expect.anything())
+
+    wrapper.unmount()
+  })
+
+  it('updates paint, layout and filter in place when the layer ids and types hold', async () => {
+    const mocks = createMapLibreMock()
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        sourceOptions: { cluster: true },
+        layers: [{
+          id: 'melbourne-circle',
+          type: 'circle',
+          paint: { 'circle-color': '#396cb2', 'circle-radius': 6 },
+          layout: { visibility: 'visible' },
+          filter: ['has', 'point_count'],
+        }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    // a colour mode toggle rebuilds the layer array with a new palette
+    await wrapper.setProps({
+      layers: [{
+        id: 'melbourne-circle',
+        type: 'circle',
+        paint: { 'circle-color': '#b23939', 'circle-radius': 6 },
+        layout: { visibility: 'none' },
+        filter: ['!', ['has', 'point_count']],
+      }],
+    })
+
+    expect(mocks.map.setPaintProperty).toHaveBeenCalledWith('melbourne-circle', 'circle-color', '#b23939')
+    expect(mocks.map.setPaintProperty).toHaveBeenCalledTimes(1)
+    expect(mocks.map.setLayoutProperty).toHaveBeenCalledWith('melbourne-circle', 'visibility', 'none')
+    expect(mocks.map.setFilter).toHaveBeenCalledWith('melbourne-circle', ['!', ['has', 'point_count']])
+    expect(mocks.map.removeSource).not.toHaveBeenCalled()
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(1)
+
+    wrapper.unmount()
+  })
+
+  it('keeps the source on the map when an in-place layer update fails', async () => {
+    const mocks = createMapLibreMock()
+    const updateFailure = new Error('Invalid paint expression')
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#396cb2' } }],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    mocks.map.setPaintProperty.mockImplementationOnce(() => {
+      throw updateFailure
+    })
+    await wrapper.setProps({
+      layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': 'not-a-colour' } }],
+    })
+
+    expect(wrapper.emitted('error')?.[0]).toEqual([updateFailure])
+    expect(mocks.map.getSource('melbourne')).toBeDefined()
+    expect(mocks.map.removeSource).not.toHaveBeenCalled()
+
+    // the failed value is not recorded, so a corrected palette is applied again
+    await wrapper.setProps({
+      layers: [{ id: 'melbourne-circle', type: 'circle', paint: { 'circle-color': '#b23939' } }],
+    })
+    expect(mocks.map.setPaintProperty).toHaveBeenLastCalledWith('melbourne-circle', 'circle-color', '#b23939')
+    expect(wrapper.emitted('error')).toHaveLength(1)
+
+    error.mockRestore()
+    wrapper.unmount()
+  })
+
+  it('rebuilds the GeoJSON source when the layer structure changes', async () => {
+    const mocks = createMapLibreMock()
+    const base = { id: 'melbourne-circle', type: 'circle' } as const
+    const wrapper = mount(ScriptMapLibreGeoJson, {
+      props: {
+        sourceId: 'melbourne',
+        data: { type: 'FeatureCollection', features: [] },
+        layers: [base],
+      },
+      global: provideMap(mocks.maplibre, mocks.map),
+    })
+    await nextTick()
+
+    // a zoom range is not a diffable property, so it falls back to a rebuild
+    await wrapper.setProps({ layers: [{ ...base, minzoom: 4 }] })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(2)
+    expect(mocks.map.setPaintProperty).not.toHaveBeenCalled()
+
+    // an added layer changes the structure
+    await wrapper.setProps({ layers: [{ ...base, minzoom: 4 }, { id: 'melbourne-label', type: 'symbol' }] })
+    expect(mocks.map.addSource).toHaveBeenCalledTimes(3)
 
     wrapper.unmount()
   })
