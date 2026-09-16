@@ -267,6 +267,32 @@ describe('registry script readiness resolvers', () => {
     expect(instance.isHidden.value).toBe(false)
   })
 
+  // useScript hands every caller its own consumer scope over one shared script
+  // object, and `proxy` lives on that shared object. Decorating the scope means
+  // the second caller reads the undecorated proxy straight off the prototype.
+  it('resyncs isHidden for every caller, not only the first', () => {
+    window.Tawk_API = { isChatHidden: vi.fn(() => false) } as any
+    const sharedScript: any = { proxy: new Proxy({}, { get: () => () => {} }) }
+    mocks.useRegistryScript.mockImplementation((key: string, factory: (o: any) => any) => {
+      mocks.definitions.set(key, factory({ propertyId: 'test-property', widgetId: 'test-widget' }))
+      const scope = Object.create(sharedScript)
+      scope.status = ref('awaitingLoad')
+      scope.signal = new AbortController().signal
+      scope.load = vi.fn()
+      scope.script = sharedScript
+      return scope
+    })
+
+    useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+    const second = useScriptTawkTo({ propertyId: 'test-property', widgetId: 'test-widget' })
+
+    window.dispatchEvent(new CustomEvent('tawkChatHidden'))
+    expect(second.isHidden.value).toBe(true)
+
+    second.proxy.showWidget()
+    expect(second.isHidden.value).toBe(false)
+  })
+
   // Runs last: once unhead actually requests the embed script (status leaves
   // `awaitingLoad`), Tawk no longer honors `Tawk_API.visitor` writes - even
   // before `onLoaded` is set.

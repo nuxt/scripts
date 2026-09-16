@@ -200,7 +200,7 @@ function resyncHiddenState() {
 // Proxy commands that change widget visibility; reading through the wrapped
 // proxy stays transparent.
 const visibilityCommands = new Set(['hideWidget', 'showWidget', 'toggleVisibility'])
-const wrappedProxies = new WeakSet<object>()
+const TAWK_PROXY_DECORATED = Symbol('nuxt-scripts.tawk-proxy-decorated')
 
 export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput): UseScriptContext<T> & TawkToEvents {
   const instance = useRegistryScript<T, typeof TawkToOptions>('tawkTo', options => ({
@@ -244,10 +244,15 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
   if (!import.meta.server) {
     ensureStateBridge()
 
-    const proxy = instance.proxy as unknown
-    if (proxy && !wrappedProxies.has(proxy)) {
-      wrappedProxies.add(proxy)
-      instance.proxy = new Proxy(instance.proxy, {
+    // `proxy` lives on the shared script, and every caller gets its own consumer
+    // scope over it. Decorate the shared object so later callers inherit the
+    // wrapper instead of reading the bare proxy off the prototype.
+    const shared = ((instance as any).script || instance) as {
+      proxy: typeof instance.proxy
+      [TAWK_PROXY_DECORATED]?: boolean
+    }
+    if (shared.proxy && !shared[TAWK_PROXY_DECORATED]) {
+      shared.proxy = new Proxy(shared.proxy, {
         get(target, prop, receiver) {
           const value = Reflect.get(target, prop, receiver)
           if (!(typeof prop === 'string' && visibilityCommands.has(prop)) || typeof value !== 'function')
@@ -258,6 +263,7 @@ export function useScriptTawkTo<T extends TawkToProxyApi>(_options?: TawkToInput
           }
         },
       }) as typeof instance.proxy
+      Object.defineProperty(shared, TAWK_PROXY_DECORATED, { value: true })
     }
   }
 
