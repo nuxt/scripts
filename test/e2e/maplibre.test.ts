@@ -68,4 +68,32 @@ describe('maplibre in a real browser', { timeout: 60000 }, async () => {
     const log = await readErrors(page)
     expect(log.broken.some(message => message.startsWith('layers.valid'))).toBe(false)
   })
+
+  it('keeps a keyboard-operable canvas in the tab order without a nested landmark', async () => {
+    const page = await createPage('/a11y')
+    await page.waitForSelector('#static-map canvas.maplibregl-canvas')
+    await page.waitForSelector('#pointer-map canvas.maplibregl-canvas')
+    await page.waitForSelector('#keyboard-map canvas.maplibregl-canvas')
+
+    const read = (root: string) => page.evaluate((selector) => {
+      const canvas = document.querySelector(`${selector} canvas`)!
+      return {
+        regions: document.querySelectorAll(`${selector} [role="region"]`).length,
+        role: canvas.getAttribute('role'),
+        tabindex: canvas.getAttribute('tabindex'),
+        ariaHidden: canvas.getAttribute('aria-hidden'),
+        ariaLabel: canvas.getAttribute('aria-label'),
+      }
+    }, root)
+
+    // Keyboard panning needs focus on the canvas, so it stays a tab stop.
+    expect(await read('#keyboard-map')).toMatchObject({ regions: 1, role: null, tabindex: '0' })
+    // Without the keyboard handler the canvas has nothing to operate.
+    expect(await read('#pointer-map')).toEqual({ regions: 1, role: null, tabindex: '-1', ariaHidden: 'true', ariaLabel: null })
+    expect(await read('#static-map')).toMatchObject({ regions: 0, role: null, tabindex: '-1', ariaLabel: null })
+
+    await page.focus('#keyboard-map canvas')
+    const before = await page.evaluate(() => document.querySelector('#keyboard-map canvas') === document.activeElement)
+    expect(before).toBe(true)
+  })
 })

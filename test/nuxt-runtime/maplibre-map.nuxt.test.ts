@@ -52,6 +52,8 @@ function createMapLibreMock() {
     setStyle: vi.fn(() => map),
     resize: vi.fn(() => map),
     remove: vi.fn(),
+    getCanvas: vi.fn(() => document.createElement('canvas')),
+    keyboard: { isEnabled: vi.fn(() => true) },
   }
   let mapConstructionError: Error | undefined
 

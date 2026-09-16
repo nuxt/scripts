@@ -113,6 +113,22 @@ function bindMapEvents(instance: MapLibre.Map): void {
   })
 }
 
+/**
+ * MapLibre makes its canvas a focusable `region` named "Map". This component's
+ * container is already the labelled region, so the canvas drops its nested
+ * landmark. The keyboard handler only works while the canvas has focus, so the
+ * canvas stays a tab stop only while that handler is enabled.
+ */
+function configureCanvasAccessibility(instance: MapLibre.Map): void {
+  const canvas = instance.getCanvas()
+  canvas.removeAttribute('role')
+  if (props.interactive && instance.keyboard.isEnabled())
+    return
+  canvas.setAttribute('tabindex', '-1')
+  canvas.setAttribute('aria-hidden', 'true')
+  canvas.removeAttribute('aria-label')
+}
+
 onMounted(() => {
   onLoaded((instance: { maplibregl: typeof MapLibre }) => {
     if (isUnmounted || !mapEl.value)
@@ -131,6 +147,7 @@ onMounted(() => {
         pitch: props.pitch,
         interactive: props.interactive,
       })
+      configureCanvasAccessibility(mapInstance)
       bindMapEvents(mapInstance)
       map.value = mapInstance
       mapInstance.once('load', () => {
