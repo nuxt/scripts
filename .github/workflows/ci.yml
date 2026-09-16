@@ -40,6 +40,14 @@ jobs:
       - name: Install dependencies
         run: pnpm i
 
+      - name: Check generated registry types
+        run: |
+          pnpm generate:types
+          if ! git diff --exit-code -- packages/script/src/registry-types.json; then
+            echo "::error file=packages/script/src/registry-types.json::The generated registry types are out of date. Run \`pnpm generate:types\` and commit the result."
+            exit 1
+          fi
+
       - name: Lint
         run: pnpm lint
 
