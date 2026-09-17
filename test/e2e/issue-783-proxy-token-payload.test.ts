@@ -1,6 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { $fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -8,7 +9,7 @@ const { resolve } = createResolver(import.meta.url)
 // Proxy URL signing and the per-request page token were removed. Static Maps
 // now uses the public, application-restricted key directly, so the SSR payload
 // is identical across requests (which a response `etag` can rely on).
-await setup({
+await setupFixture({
   rootDir: resolve('../fixtures/issue-783'),
   dev: true,
   browser: false,

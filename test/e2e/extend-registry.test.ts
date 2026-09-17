@@ -1,12 +1,13 @@
 import { createResolver } from '@nuxt/kit'
-import { createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { createPage, url } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
 describe('basic', async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/extend-registry'),
   })
   it('extended registry script loads and executes function', { timeout: 30000 }, async () => {
