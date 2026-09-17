@@ -166,7 +166,7 @@ function onSourceData(event: MapLibreGl.MapSourceDataEvent): void {
   if (ownedSourceId === undefined || event.sourceId !== ownedSourceId)
     return
   // A tile load is not the end of this component's worker round.
-  if (event.tile)
+  if (event.tile || (event.sourceDataType !== 'metadata' && event.sourceDataType !== 'content'))
     return
   runningRound = { kind: 'foreign' }
 }
