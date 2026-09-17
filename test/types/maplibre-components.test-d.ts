@@ -2,6 +2,7 @@ import type {
   ScriptMapLibreGeoJsonEmits,
   ScriptMapLibreGeoJsonLayer,
   ScriptMapLibreMapExpose,
+  ScriptMapLibreMapProps,
 } from '@nuxt/scripts'
 import type {
   ScriptMapLibreGeoJsonLayer as RuntimeLayer,
@@ -75,6 +76,24 @@ describe('mapLibre component types', () => {
     expectTypeOf<ScriptMapLibreMapExpose['fitBounds']>().returns.toEqualTypeOf<void>()
     expectTypeOf<ScriptMapLibreMapExpose['easeTo']>().parameter(0).not.toBeAny()
     expectTypeOf<ScriptMapLibreMapExpose['flyTo']>().parameter(0).not.toBeAny()
+  })
+
+  it('makes center optional only when bounds frames the camera', () => {
+    // PC-16: a map framed on its data should not need a computed center.
+    const framed: ScriptMapLibreMapProps = { mapStyle: 'https://example.com/style.json', bounds: [[144, -44], [149, -39]] }
+    const centered: ScriptMapLibreMapProps = { mapStyle: 'https://example.com/style.json', center: [146, -42] }
+    const both: ScriptMapLibreMapProps = { mapStyle: 'https://example.com/style.json', center: [146, -42], bounds: [144, -44, 149, -39], fitBoundsOptions: { padding: 40 } }
+    // A maybe-missing bounds value stays valid next to a center.
+    const maybeBounds = undefined as [number, number, number, number] | undefined
+    const optionalBounds: ScriptMapLibreMapProps = { mapStyle: 'https://example.com/style.json', center: [146, -42], bounds: maybeBounds }
+    // @ts-expect-error the map needs center or bounds to frame its first camera
+    const neither: ScriptMapLibreMapProps = { mapStyle: 'https://example.com/style.json' }
+
+    expectTypeOf(framed).not.toBeAny()
+    expectTypeOf(centered).not.toBeAny()
+    expectTypeOf(both).not.toBeAny()
+    expectTypeOf(optionalBounds).not.toBeAny()
+    expectTypeOf(neither).not.toBeAny()
   })
 
   it('types the layer event payloads', () => {

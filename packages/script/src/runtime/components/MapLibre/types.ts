@@ -9,7 +9,8 @@ import type { ElementScriptTrigger } from '../../types'
  * without a deep import.
  */
 
-export interface ScriptMapLibreMapProps {
+/** Props every `<ScriptMapLibreMap>` accepts, whichever prop frames the initial camera. */
+export interface ScriptMapLibreMapSharedProps {
   /**
    * Defines when the MapLibre script loads.
    * @default 'visible'
@@ -17,9 +18,13 @@ export interface ScriptMapLibreMapProps {
   trigger?: ElementScriptTrigger
   /** MapLibre style URL or inline style specification. */
   mapStyle: string | MapLibre.StyleSpecification
-  /** Initial and reactively controlled map center. */
-  center: MapLibre.LngLatLike
-  /** Initial and reactively controlled zoom level. @default 12 */
+  /**
+   * Options for the fit to `bounds`. MapLibre applies the first fit without animation.
+   * A later `bounds` change also fits without animation.
+   * The fit keeps the `bearing` prop unless these options set `bearing`.
+   */
+  fitBoundsOptions?: MapLibre.FitBoundsOptions
+  /** Initial and reactively controlled zoom level. `bounds` overrides the initial zoom. @default 12 */
   zoom?: number
   /** Initial and reactively controlled bearing in degrees. @default 0 */
   bearing?: number
@@ -44,6 +49,41 @@ export interface ScriptMapLibreMapProps {
   /** Attributes applied to the outer layout container. */
   rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>
 }
+
+/** Frames the initial camera on `center`. `bounds` stays optional. */
+export interface ScriptMapLibreMapCenterCamera {
+  /**
+   * Initial and reactively controlled map center. Required unless `bounds` is set.
+   * `bounds` overrides the initial center.
+   */
+  center: MapLibre.LngLatLike
+  /**
+   * Area the camera fits on first render. It overrides the initial `center` and `zoom`.
+   * A change to its coordinates fits the camera again.
+   */
+  bounds?: MapLibre.LngLatBoundsLike
+}
+
+/** Frames the initial camera on `bounds`. `center` becomes optional. */
+export interface ScriptMapLibreMapBoundsCamera {
+  /**
+   * Initial and reactively controlled map center. Required unless `bounds` is set.
+   * `bounds` overrides the initial center.
+   */
+  center?: MapLibre.LngLatLike
+  /**
+   * Area the camera fits on first render. It overrides the initial `center` and `zoom`.
+   * A change to its coordinates fits the camera again.
+   */
+  bounds: MapLibre.LngLatBoundsLike
+}
+
+/**
+ * The map needs `center` or `bounds` to frame its first camera, so the type
+ * rejects a map with neither.
+ */
+export type ScriptMapLibreMapProps = ScriptMapLibreMapSharedProps
+  & (ScriptMapLibreMapCenterCamera | ScriptMapLibreMapBoundsCamera)
 
 export interface ScriptMapLibreMapExpose {
   maplibre: ShallowRef<typeof MapLibre | undefined>
@@ -119,7 +159,11 @@ export interface ScriptMapLibreGeoJsonProps {
   sourceId: string
   /** Inline GeoJSON data or a URL returning GeoJSON. */
   data: GeoJSON | string
-  /** GeoJSON source options. `type` and `data` are supplied by the component. */
+  /**
+   * GeoJSON source options. `type` and `data` are supplied by the component.
+   * A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone updates the source in place.
+   * Any other change rebuilds the source and the layers.
+   */
   sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>
   /**
    * Style layers backed by this source.
@@ -138,7 +182,7 @@ export interface ScriptMapLibreGeoJsonEmits {
    * The component could not apply a source or layer, or MapLibre reported an error for one.
    * MapLibre reports an invalid paint, layout or filter value this way. It does not throw.
    * A failed rebuild removes the component's own source and layers.
-   * A failed paint, layout or filter update leaves them on the map.
+   * A failed paint, layout, filter or cluster option update leaves them on the map.
    */
   error: [error: Error]
   /** The pointer clicked one of this component's layers. */
@@ -175,6 +219,8 @@ export interface ScriptMapLibreGeoJsonResource {
   onStyleDataLoading: () => void
   onIdle: () => void
   onError: (event: { error: Error | { message: string } }) => void
+  onSourceDataLoading: (event: MapLibre.MapSourceDataEvent) => void
+  onSourceData: (event: MapLibre.MapSourceDataEvent) => void
 }
 
 export interface ScriptMapLibreMarkerProps {

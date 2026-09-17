@@ -73,6 +73,21 @@ function flyTo(options: MapLibre.FlyToOptions): void {
   map.value?.flyTo(options)
 }
 
+/**
+ * Options for a fit to the `bounds` prop. A fit resets the bearing to 0 by
+ * default, so it keeps the `bearing` prop unless the options set one.
+ */
+function boundsFitOptions(): MapLibre.FitBoundsOptions {
+  return { bearing: props.bearing, ...toRaw(props.fitBoundsOptions) }
+}
+
+/** Coordinates of the bounds the camera last fitted, as `[[west, south], [east, north]]`. */
+let fittedBounds: string | undefined
+
+function boundsKey(bounds: MapLibre.LngLatBoundsLike, library: typeof MapLibre): string {
+  return JSON.stringify(library.LngLatBounds.convert(toRaw(bounds)).toArray())
+}
+
 const exposed: ScriptMapLibreMapExpose = { maplibre, map, load, fitBounds, easeTo, flyTo }
 defineExpose<ScriptMapLibreMapExpose>(exposed)
 provide(MAPLIBRE_MAP_INJECTION_KEY, {
@@ -137,6 +152,8 @@ onMounted(() => {
     maplibre.value = instance.maplibregl
     let mapInstance: MapLibre.Map | undefined
     try {
+      // MapLibre jumps to `center` and `zoom` first, then fits `bounds`, so
+      // `bounds` wins for the initial center and zoom.
       mapInstance = new instance.maplibregl.Map({
         ...toRaw(props.options),
         container: mapEl.value,
@@ -146,7 +163,9 @@ onMounted(() => {
         bearing: props.bearing,
         pitch: props.pitch,
         interactive: props.interactive,
+        ...(props.bounds ? { bounds: toRaw(props.bounds), fitBoundsOptions: boundsFitOptions() } : {}),
       })
+      fittedBounds = props.bounds ? boundsKey(props.bounds, instance.maplibregl) : undefined
       configureCanvasAccessibility(mapInstance)
       bindMapEvents(mapInstance)
       map.value = mapInstance
@@ -173,13 +192,33 @@ watch(() => props.mapStyle, (mapStyle) => {
 }, { deep: 2 })
 
 watch(() => props.center, (center) => {
-  if (!map.value || !maplibre.value)
+  if (!map.value || !maplibre.value || !center)
     return
   const current = map.value.getCenter()
   const next = maplibre.value.LngLat.convert(toRaw(center))
   if (current.lng !== next.lng || current.lat !== next.lat)
     map.value.jumpTo({ center: next })
 }, { deep: 1 })
+
+// A fit runs only when the coordinates change. A new array with the same
+// coordinates, such as an inline literal on a parent render, keeps the camera
+// where the user moved it. A change to `fitBoundsOptions` alone does not fit.
+watch(() => props.bounds, (bounds) => {
+  // Removing bounds keeps the camera. Forget the last fit, so bounds that come
+  // back with the same coordinates fit again.
+  if (!bounds) {
+    fittedBounds = undefined
+    return
+  }
+  if (!map.value || !maplibre.value)
+    return
+  const key = boundsKey(bounds, maplibre.value)
+  if (key === fittedBounds)
+    return
+  fittedBounds = key
+  // Camera props jump without animation, so a bounds change fits the same way.
+  map.value.fitBounds(toRaw(bounds), { ...boundsFitOptions(), duration: 0 })
+}, { deep: 2 })
 
 watch(() => props.zoom, (zoom) => {
   if (map.value && map.value.getZoom() !== zoom)

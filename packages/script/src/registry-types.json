@@ -857,7 +857,7 @@
       {
         "name": "ScriptMapLibreGeoJsonProps",
         "kind": "interface",
-        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /** GeoJSON source options. `type` and `data` are supplied by the component. */\n  sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>\n  /**\n   * Style layers backed by this source.\n   * A paint, layout or filter change updates the layers in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n  /** CSS cursor applied while the pointer is over one of these layers. */\n  cursor?: string\n}"
+        "code": "interface ScriptMapLibreGeoJsonProps {\n  /** MapLibre source ID. Changing it rebuilds the owned source and layers. */\n  sourceId: string\n  /** Inline GeoJSON data or a URL returning GeoJSON. */\n  data: GeoJSON | string\n  /**\n   * GeoJSON source options. `type` and `data` are supplied by the component.\n   * A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone updates the source in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  sourceOptions?: Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>\n  /**\n   * Style layers backed by this source.\n   * A paint, layout or filter change updates the layers in place.\n   * Any other change rebuilds the source and the layers.\n   */\n  layers: ScriptMapLibreGeoJsonLayer[]\n  /** Existing layer ID before which the layers are inserted. */\n  beforeId?: string\n  /** CSS cursor applied while the pointer is over one of these layers. */\n  cursor?: string\n}"
       },
       {
         "name": "ScriptMapLibreGeoJsonEvents",
@@ -876,8 +876,8 @@
       },
       {
         "name": "ScriptMapLibreMapProps",
-        "kind": "interface",
-        "code": "interface ScriptMapLibreMapProps {\n  /**\n   * Defines when the MapLibre script loads.\n   * @default 'visible'\n   */\n  trigger?: ElementScriptTrigger\n  /** MapLibre style URL or inline style specification. */\n  mapStyle: string | MapLibre.StyleSpecification\n  /** Initial and reactively controlled map center. */\n  center: MapLibre.LngLatLike\n  /** Initial and reactively controlled zoom level. @default 12 */\n  zoom?: number\n  /** Initial and reactively controlled bearing in degrees. @default 0 */\n  bearing?: number\n  /** Initial and reactively controlled pitch in degrees. @default 0 */\n  pitch?: number\n  /** Options passed to `new maplibregl.Map()`. Dedicated props take precedence. */\n  options?: Omit<MapLibre.MapOptions, 'container'>\n  /** Inject MapLibre's stylesheet when the script begins loading. @default true */\n  injectStyles?: boolean\n  /** Custom MapLibre stylesheet URL. */\n  stylesheetUrl?: string\n  /** Worker URL passed to `maplibregl.setWorkerUrl()`. */\n  workerUrl?: string\n  /** Width reserved before the map loads. @default 640 */\n  width?: number | string\n  /** Height reserved before the map loads. @default 400 */\n  height?: number | string\n  /** Accessible name for an interactive map. @default 'Interactive map' */\n  ariaLabel?: string\n  /** Disable map input and remove it from the accessibility tree when decorative. @default true */\n  interactive?: boolean\n  /** Attributes applied to the outer layout container. */\n  rootAttrs?: HTMLAttributes & ReservedProps & Record<string, unknown>\n}"
+        "kind": "type",
+        "code": "type ScriptMapLibreMapProps = ScriptMapLibreMapSharedProps\n  & (ScriptMapLibreMapCenterCamera | ScriptMapLibreMapBoundsCamera)"
       },
       {
         "name": "ScriptMapLibreMapEvents",
@@ -2181,7 +2181,8 @@
       {
         "name": "cookiesWin",
         "type": "boolean | 'x'",
-        "required": false
+        "required": false,
+        "description": "Forces GTM cookies to take precedence when true"
       },
       {
         "name": "debug",
@@ -2198,7 +2199,8 @@
       {
         "name": "dataLayer",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom dataLayer name (alternative to \"l\" property)"
       },
       {
         "name": "envName",
@@ -2209,7 +2211,8 @@
       {
         "name": "authReferrerPolicy",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Referrer policy for analytics requests"
       },
       {
         "name": "defaultConsent",
@@ -3856,12 +3859,14 @@
       {
         "name": "data",
         "type": "GeoJsonObject | GeoJsonObject[]",
-        "required": true
+        "required": true,
+        "description": "GeoJSON object, feature, or feature collection. Replace it to update the layer."
       },
       {
         "name": "options",
         "type": "Leaflet.GeoJSONOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `L.geoJSON`."
       }
     ],
     "ScriptLeafletGeoJsonEvents": [
@@ -3917,47 +3922,62 @@
       {
         "name": "center",
         "type": "Leaflet.LatLngExpression",
-        "required": true
+        "required": true,
+        "description": "Initial and reactively controlled map center."
       },
       {
         "name": "zoom",
         "type": "number",
-        "required": false
+        "required": false,
+        "description": "Initial and reactively controlled zoom level.",
+        "defaultValue": "13"
       },
       {
         "name": "options",
         "type": "Leaflet.MapOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `L.map`. `center` and `zoom` use their dedicated props."
       },
       {
         "name": "injectStyles",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Inject Leaflet's styles and embedded default marker images.",
+        "defaultValue": "true"
       },
       {
         "name": "width",
         "type": "number | string",
-        "required": false
+        "required": false,
+        "description": "Width reserved before the map loads.",
+        "defaultValue": "640"
       },
       {
         "name": "height",
         "type": "number | string",
-        "required": false
+        "required": false,
+        "description": "Height reserved before the map loads.",
+        "defaultValue": "400"
       },
       {
         "name": "ariaLabel",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Accessible name for an interactive map.",
+        "defaultValue": "'Interactive map'"
       },
       {
         "name": "interactive",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Disable map input and remove it from the accessibility tree when decorative.",
+        "defaultValue": "true"
       },
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false
+        "required": false,
+        "description": "Attributes applied to the outer layout container."
       }
     ],
     "ScriptLeafletMapEvents": [
@@ -4038,22 +4058,26 @@
       {
         "name": "position",
         "type": "Leaflet.LatLngExpression",
-        "required": true
+        "required": true,
+        "description": "Reactive marker position."
       },
       {
         "name": "alt",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Unique text alternative for the marker icon."
       },
       {
         "name": "title",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Tooltip text for the marker icon."
       },
       {
         "name": "options",
         "type": "Leaflet.MarkerOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `L.marker`."
       }
     ],
     "ScriptLeafletMarkerEvents": [
@@ -4119,17 +4143,21 @@
       {
         "name": "position",
         "type": "Leaflet.LatLngExpression",
-        "required": false
+        "required": false,
+        "description": "Position for a standalone popup. Omit when nested inside a marker."
       },
       {
         "name": "open",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Whether the popup is open.",
+        "defaultValue": "false"
       },
       {
         "name": "options",
         "type": "Leaflet.PopupOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `L.popup`."
       }
     ],
     "ScriptLeafletPopupEvents": [
@@ -4155,12 +4183,14 @@
       {
         "name": "url",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "Tile URL template, for example `https://tile.openstreetmap.org/{z}/{x}/{y}.png`."
       },
       {
         "name": "options",
         "type": "Leaflet.TileLayerOptions",
-        "required": false
+        "required": false,
+        "description": "Tile layer options. Include the provider's required `attribution`."
       }
     ],
     "ScriptLeafletTileLayerEvents": [
@@ -4199,7 +4229,8 @@
       {
         "name": "position",
         "type": "MapLibre.ControlPosition",
-        "required": false
+        "required": false,
+        "description": "Position of the attribution control. MapLibre places it bottom-right by default."
       },
       {
         "name": "options",
@@ -4212,41 +4243,48 @@
       {
         "name": "position",
         "type": "MapLibre.ControlPosition",
-        "required": false
+        "required": false,
+        "description": "Position of the fullscreen control."
       },
       {
         "name": "options",
         "type": "MapLibre.FullscreenControlOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `new maplibregl.FullscreenControl()`."
       }
     ],
     "ScriptMapLibreFullscreenControlEvents": [
       {
         "name": "fullscreenstart",
         "type": "MapLibre.FullscreenControlEventType['fullscreenstart']",
-        "required": false
+        "required": false,
+        "description": "The map entered fullscreen mode."
       },
       {
         "name": "fullscreenend",
         "type": "MapLibre.FullscreenControlEventType['fullscreenend']",
-        "required": false
+        "required": false,
+        "description": "The map left fullscreen mode."
       }
     ],
     "ScriptMapLibreGeoJsonProps": [
       {
         "name": "sourceId",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "MapLibre source ID. Changing it rebuilds the owned source and layers."
       },
       {
         "name": "data",
         "type": "GeoJSON | string",
-        "required": true
+        "required": true,
+        "description": "Inline GeoJSON data or a URL returning GeoJSON."
       },
       {
         "name": "sourceOptions",
         "type": "Omit<MapLibre.GeoJSONSourceSpecification, 'type' | 'data'>",
-        "required": false
+        "required": false,
+        "description": "GeoJSON source options. `type` and `data` are supplied by the component. A change to `cluster`, `clusterRadius` or `clusterMaxZoom` alone updates the source in place. Any other change rebuilds the source and the layers."
       },
       {
         "name": "layers",
@@ -4257,12 +4295,14 @@
       {
         "name": "beforeId",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Existing layer ID before which the layers are inserted."
       },
       {
         "name": "cursor",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "CSS cursor applied while the pointer is over one of these layers."
       }
     ],
     "ScriptMapLibreGeoJsonEvents": [
@@ -4270,12 +4310,13 @@
         "name": "error",
         "type": "Error",
         "required": false,
-        "description": "The component could not apply a source or layer, or MapLibre reported an error for one. MapLibre reports an invalid paint, layout or filter value this way. It does not throw. A failed rebuild removes the component's own source and layers. A failed paint, layout or filter update leaves them on the map."
+        "description": "The component could not apply a source or layer, or MapLibre reported an error for one. MapLibre reports an invalid paint, layout or filter value this way. It does not throw. A failed rebuild removes the component's own source and layers. A failed paint, layout, filter or cluster option update leaves them on the map."
       },
       {
         "name": "click",
         "type": "MapLibre.MapLayerMouseEvent",
-        "required": false
+        "required": false,
+        "description": "The pointer clicked one of this component's layers."
       },
       {
         "name": "dblclick",
@@ -4298,7 +4339,8 @@
       {
         "name": "mouseleave",
         "type": "MapLibre.MapLayerMouseEvent",
-        "required": false
+        "required": false,
+        "description": "The pointer left every feature in this component's layers."
       },
       {
         "name": "sourceready",
@@ -4311,19 +4353,22 @@
       {
         "name": "position",
         "type": "MapLibre.ControlPosition",
-        "required": false
+        "required": false,
+        "description": "Position of the geolocate control."
       },
       {
         "name": "options",
         "type": "MapLibre.GeolocateControlOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `new maplibregl.GeolocateControl()`."
       }
     ],
     "ScriptMapLibreGeolocateControlEvents": [
       {
         "name": "geolocate",
         "type": "MapLibre.GeolocateControlEventType['geolocate']",
-        "required": false
+        "required": false,
+        "description": "The Geolocation API returned a position."
       },
       {
         "name": "error",
@@ -4334,27 +4379,32 @@
       {
         "name": "outofmaxbounds",
         "type": "MapLibre.GeolocateControlEventType['outofmaxbounds']",
-        "required": false
+        "required": false,
+        "description": "The position is outside the map's `maxBounds`."
       },
       {
         "name": "trackuserlocationstart",
         "type": "MapLibre.GeolocateControlEventType['trackuserlocationstart']",
-        "required": false
+        "required": false,
+        "description": "The control entered the active lock state. Needs `trackUserLocation`."
       },
       {
         "name": "trackuserlocationend",
         "type": "MapLibre.GeolocateControlEventType['trackuserlocationend']",
-        "required": false
+        "required": false,
+        "description": "The control left the active lock state. Needs `trackUserLocation`."
       },
       {
         "name": "userlocationfocus",
         "type": "MapLibre.GeolocateControlEventType['userlocationfocus']",
-        "required": false
+        "required": false,
+        "description": "The user clicked the button in the active lock state."
       },
       {
         "name": "userlocationlostfocus",
         "type": "MapLibre.GeolocateControlEventType['userlocationlostfocus']",
-        "required": false
+        "required": false,
+        "description": "The user moved the map in the active lock state."
       },
       {
         "name": "unavailable",
@@ -4374,72 +4424,106 @@
       {
         "name": "mapStyle",
         "type": "string | MapLibre.StyleSpecification",
-        "required": true
+        "required": true,
+        "description": "MapLibre style URL or inline style specification."
       },
       {
-        "name": "center",
-        "type": "MapLibre.LngLatLike",
-        "required": true
+        "name": "fitBoundsOptions",
+        "type": "MapLibre.FitBoundsOptions",
+        "required": false,
+        "description": "Options for the fit to `bounds`. MapLibre applies the first fit without animation. A later `bounds` change also fits without animation. The fit keeps the `bearing` prop unless these options set `bearing`."
       },
       {
         "name": "zoom",
         "type": "number",
-        "required": false
+        "required": false,
+        "description": "Initial and reactively controlled zoom level. `bounds` overrides the initial zoom.",
+        "defaultValue": "12"
       },
       {
         "name": "bearing",
         "type": "number",
-        "required": false
+        "required": false,
+        "description": "Initial and reactively controlled bearing in degrees.",
+        "defaultValue": "0"
       },
       {
         "name": "pitch",
         "type": "number",
-        "required": false
+        "required": false,
+        "description": "Initial and reactively controlled pitch in degrees.",
+        "defaultValue": "0"
       },
       {
         "name": "options",
         "type": "Omit<MapLibre.MapOptions, 'container'>",
-        "required": false
+        "required": false,
+        "description": "Options passed to `new maplibregl.Map()`. Dedicated props take precedence."
       },
       {
         "name": "injectStyles",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Inject MapLibre's stylesheet when the script begins loading.",
+        "defaultValue": "true"
       },
       {
         "name": "stylesheetUrl",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Custom MapLibre stylesheet URL."
       },
       {
         "name": "workerUrl",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Worker URL passed to `maplibregl.setWorkerUrl()`."
       },
       {
         "name": "width",
         "type": "number | string",
-        "required": false
+        "required": false,
+        "description": "Width reserved before the map loads.",
+        "defaultValue": "640"
       },
       {
         "name": "height",
         "type": "number | string",
-        "required": false
+        "required": false,
+        "description": "Height reserved before the map loads.",
+        "defaultValue": "400"
       },
       {
         "name": "ariaLabel",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Accessible name for an interactive map.",
+        "defaultValue": "'Interactive map'"
       },
       {
         "name": "interactive",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Disable map input and remove it from the accessibility tree when decorative.",
+        "defaultValue": "true"
       },
       {
         "name": "rootAttrs",
         "type": "HTMLAttributes & ReservedProps & Record<string, unknown>",
-        "required": false
+        "required": false,
+        "description": "Attributes applied to the outer layout container."
+      },
+      {
+        "name": "center",
+        "type": "MapLibre.LngLatLike",
+        "required": false,
+        "description": "Initial and reactively controlled map center. Required unless `bounds` is set. `bounds` overrides the initial center."
+      },
+      {
+        "name": "bounds",
+        "type": "MapLibre.LngLatBoundsLike",
+        "required": false,
+        "description": "Area the camera fits on first render. It overrides the initial `center` and `zoom`. A change to its coordinates fits the camera again."
       }
     ],
     "ScriptMapLibreMapEvents": [
@@ -4558,29 +4642,34 @@
       {
         "name": "description",
         "type": "-",
-        "required": false
+        "required": false,
+        "description": "Text or links that expose the canvas map's essential information to assistive technology."
       }
     ],
     "ScriptMapLibreMarkerProps": [
       {
         "name": "position",
         "type": "MapLibre.LngLatLike",
-        "required": true
+        "required": true,
+        "description": "Reactive marker position in `[longitude, latitude]` order."
       },
       {
         "name": "ariaLabel",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Accessible name for the marker element."
       },
       {
         "name": "title",
         "type": "string",
-        "required": false
+        "required": false,
+        "description": "Tooltip text for the marker element."
       },
       {
         "name": "options",
         "type": "MapLibre.MarkerOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `new maplibregl.Marker()`. Options with public setters also update reactively."
       }
     ],
     "ScriptMapLibreMarkerEvents": [
@@ -4616,29 +4705,35 @@
       {
         "name": "position",
         "type": "MapLibre.ControlPosition",
-        "required": false
+        "required": false,
+        "description": "Position of the navigation control."
       },
       {
         "name": "options",
         "type": "MapLibre.NavigationControlOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `new maplibregl.NavigationControl()`."
       }
     ],
     "ScriptMapLibrePopupProps": [
       {
         "name": "position",
         "type": "MapLibre.LngLatLike",
-        "required": false
+        "required": false,
+        "description": "Position for a standalone popup. Omit when nested inside a marker."
       },
       {
         "name": "open",
         "type": "boolean",
-        "required": false
+        "required": false,
+        "description": "Whether the popup is open.",
+        "defaultValue": "false"
       },
       {
         "name": "options",
         "type": "MapLibre.PopupOptions",
-        "required": false
+        "required": false,
+        "description": "Options passed to `new maplibregl.Popup()`. Options with public setters also update reactively."
       }
     ],
     "ScriptMapLibrePopupEvents": [
@@ -4664,7 +4759,8 @@
       {
         "name": "position",
         "type": "MapLibre.ControlPosition",
-        "required": false
+        "required": false,
+        "description": "Position of the scale control. MapLibre places it bottom-left by default."
       },
       {
         "name": "options",

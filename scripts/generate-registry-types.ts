@@ -1,7 +1,9 @@
+import type { SchemaFieldMeta } from './registry-doc-comments.ts'
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { walk } from 'oxc-walker'
 import { parseSync } from 'vite'
+import { parseSchemaComments } from './registry-doc-comments.ts'
 
 const registryDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'registry')
 const componentsDir = join(import.meta.dirname, '..', 'packages', 'script', 'src', 'runtime', 'components')
@@ -32,20 +34,6 @@ function getKind(node: any): ExtractedDeclaration['kind'] {
 }
 
 // --- Schema field extraction (static AST-based) ---
-
-interface SchemaFieldMeta {
-  name: string
-  type: string
-  required: boolean
-  description?: string
-  defaultValue?: string
-}
-
-const JSDOC_START_RE = /^\s*\/\*\*/
-const JSDOC_END_RE = /^\s*\*\//
-const DOC_LINE_RE = /^\s*\*\s?(.*)/
-const DEFAULT_TAG_RE = /^@default\s*/
-const FIELD_MATCH_RE = /^\s*(\w+)\s*\??:/
 
 function resolveAstType(node: any, source: string): string {
   if (!node)
@@ -97,43 +85,6 @@ function resolveAstType(node: any, source: string): string {
 
 function isOptionalCall(node: any): boolean {
   return node?.type === 'CallExpression' && node.callee?.name === 'optional'
-}
-
-function parseSchemaComments(code: string): Record<string, { description?: string, defaultValue?: string }> {
-  const result: Record<string, { description?: string, defaultValue?: string }> = {}
-  const lines = code.split('\n')
-  let desc = ''
-  let def = ''
-
-  for (const line of lines) {
-    if (JSDOC_START_RE.test(line)) {
-      desc = ''
-      def = ''
-      continue
-    }
-    if (JSDOC_END_RE.test(line))
-      continue
-
-    const docLine = line.match(DOC_LINE_RE)
-    if (docLine) {
-      const content = docLine[1]!.trim()
-      if (content.startsWith('@default'))
-        def = content.replace(DEFAULT_TAG_RE, '')
-      else if (!content.startsWith('@') && content)
-        desc += (desc ? ' ' : '') + content
-      continue
-    }
-
-    const fieldMatch = line.match(FIELD_MATCH_RE)
-    if (fieldMatch) {
-      if (desc || def)
-        result[fieldMatch[1]!] = { description: desc || undefined, defaultValue: def || undefined }
-      desc = ''
-      def = ''
-    }
-  }
-
-  return result
 }
 
 function extractSchemaFields(node: any, source: string, code: string): SchemaFieldMeta[] | null {
@@ -309,7 +260,13 @@ function extractNamedTypeDeclarations(source: string | null, fileName: string): 
 }
 
 interface ComponentMeta {
+  /**
+   * The props type source, sliced verbatim from the component. A literal is
+   * emitted as an interface body, any compound type as a type alias, so a
+   * union keeps the alternatives a consumer must choose between.
+   */
   code: string
+  kind: 'interface' | 'type'
   defaults: Record<string, string>
   fields: SchemaFieldMeta[]
   events: SchemaFieldMeta[]
@@ -390,9 +347,47 @@ function extractPropsFields(typeNode: any, source: string): SchemaFieldMeta[] {
   return fields
 }
 
+type TypeNodeResolver = (typeNode: any) => { node: any, source: string }
+
+/**
+ * Reads the props fields of a props type built from references, intersections
+ * and unions. A union field is required only when every member requires it, so
+ * the table matches the props a consumer must pass.
+ */
+function collectPropsFields(typeNode: any, source: string, resolveTypeNode: TypeNodeResolver): SchemaFieldMeta[] {
+  if (typeNode?.type === 'TSParenthesizedType')
+    return collectPropsFields(typeNode.typeAnnotation, source, resolveTypeNode)
+  if (typeNode?.type === 'TSTypeReference') {
+    const resolved = resolveTypeNode(typeNode)
+    return resolved.node === typeNode ? [] : collectPropsFields(resolved.node, resolved.source, resolveTypeNode)
+  }
+  if (typeNode?.type !== 'TSIntersectionType' && typeNode?.type !== 'TSUnionType')
+    return extractPropsFields(typeNode, source)
+
+  const members = typeNode.types.map((member: any) => collectPropsFields(member, source, resolveTypeNode))
+  const fields = new Map<string, SchemaFieldMeta>()
+  for (const field of members.flat()) {
+    const existing = fields.get(field.name)
+    if (!existing) {
+      fields.set(field.name, { ...field })
+      continue
+    }
+    const types = new Set([...existing.type.split(' | '), ...field.type.split(' | ')])
+    existing.type = [...types].join(' | ')
+    existing.required = existing.required || field.required
+    existing.description ??= field.description
+    existing.defaultValue ??= field.defaultValue
+  }
+  if (typeNode.type === 'TSUnionType') {
+    for (const field of fields.values())
+      field.required = members.every((member: SchemaFieldMeta[]) => member.some(entry => entry.name === field.name && entry.required))
+  }
+  return [...fields.values()]
+}
+
 function extractComponentMeta(scriptSource: string, fileName: string, namedTypes = new Map<string, NamedTypeDeclaration>()): ComponentMeta | null {
   const { program } = parseSync(fileName, scriptSource)
-  let propsResult: { code: string, defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
+  let propsResult: { code: string, kind: 'interface' | 'type', defaults: Record<string, string>, fields: SchemaFieldMeta[] } | null = null
   const events: SchemaFieldMeta[] = []
   const models: SchemaFieldMeta[] = []
   const slots: SchemaFieldMeta[] = []
@@ -625,8 +620,10 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
         return
       const { node: typeArg, source: typeSource } = resolveTypeNode(rawTypeArg)
 
-      const code = typeSource.slice(typeArg.start, typeArg.end)
-      const fields = extractPropsFields(typeArg, typeSource)
+      const isLiteral = typeArg.type === 'TSTypeLiteral' || typeArg.type === 'TSInterfaceBody'
+      const fields = isLiteral
+        ? extractPropsFields(typeArg, typeSource)
+        : collectPropsFields(typeArg, typeSource, resolveTypeNode)
 
       const defaults: Record<string, string> = {}
       if (defaultsObj?.type === 'ObjectExpression') {
@@ -645,7 +642,8 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
           field.defaultValue = defaults[field.name]
       }
 
-      propsResult = { code, defaults, fields }
+      const code = typeSource.slice(typeArg.start, typeArg.end)
+      propsResult = { code, kind: isLiteral ? 'interface' : 'type', defaults, fields }
     },
   })
 
@@ -654,6 +652,7 @@ function extractComponentMeta(scriptSource: string, fileName: string, namedTypes
 
   return {
     code: propsResult.code,
+    kind: propsResult.kind,
     defaults: propsResult.defaults,
     fields: [...propsResult.fields, ...models],
     events,
@@ -772,11 +771,15 @@ for (const [componentName, meta] of Object.entries(componentMetas)) {
   if (!types[slug])
     types[slug] = []
 
-  const propsInterface = `interface ${componentName}Props ${meta.code}`
+  // The declaration carries the props type verbatim, so a compound type keeps
+  // the alternatives a consumer must choose between.
+  const declaration = meta.kind === 'type'
+    ? `type ${componentName}Props = ${meta.code}`
+    : `interface ${componentName}Props ${meta.code}`
   types[slug].push({
     name: `${componentName}Props`,
-    kind: 'interface',
-    code: propsInterface,
+    kind: meta.kind,
+    code: declaration,
   })
 
   if (Object.keys(meta.defaults).length) {
