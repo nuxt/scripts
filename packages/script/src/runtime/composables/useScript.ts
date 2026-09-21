@@ -6,7 +6,7 @@ import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { useScript as useUnheadScript } from 'unhead/scripts'
-import { markRaw, ref } from 'vue'
+import { getCurrentInstance, markRaw, onMounted, onUnmounted, ref } from 'vue'
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
@@ -348,7 +348,16 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   if (sharedInstance[NUXT_SCRIPT_CONTROLLER])
     return instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
-  if (import.meta.client && nuxtApp.isHydrating && nuxtApp.payload.serverRendered) {
+  const ownerInstance = getCurrentInstance()
+  // A lazily hydrated component (e.g. `hydrate-on-visible`) hydrates after the
+  // app suspense resolved. Nuxt no longer reports the app as hydrating, but the
+  // component still compares its own server HTML, which Vue attached to the
+  // vnode before mounting it.
+  const isHydratingServerRender = import.meta.client
+    && nuxtApp.payload.serverRendered
+    && (nuxtApp.isHydrating || (ownerInstance != null && ownerInstance.vnode.el != null))
+
+  if (isHydratingServerRender) {
     // A client trigger changes the live status during setup, before hydration
     // compares the DOM. Render the server status until hydration ends. The
     // trigger and the loader still run now, so load timing is unchanged.
@@ -356,7 +365,17 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     const hydrationStatus = createHydrationStatus(sharedInstance.status, serverStatuses?.[id] || 'awaitingLoad')
     // Unhead's Vue wrapper reads `_statusRef` on every `status` access and writes each update to it.
     ;(sharedInstance as { _statusRef?: unknown })._statusRef = hydrationStatus.status
-    nuxtApp.hooks.hookOnce('app:suspense:resolve', hydrationStatus.release)
+    if (nuxtApp.isHydrating) {
+      nuxtApp.hooks.hookOnce('app:suspense:resolve', hydrationStatus.release)
+    }
+    else if (ownerInstance) {
+      // Late hydration has no suspense resolve left to wait for. The
+      // component's own hydration ends when its `mounted` hook runs.
+      onMounted(hydrationStatus.release)
+      // A component can unmount before it mounts. Without this the hold would
+      // stick to the shared status forever.
+      onUnmounted(hydrationStatus.release)
+    }
   }
 
   const publicStatus = instance.status
