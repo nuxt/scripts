@@ -5,6 +5,11 @@ import { inject, onUnmounted, shallowRef, watch } from 'vue'
 export interface MapLibreMapContext {
   map: ShallowRef<MapLibre.Map | undefined>
   maplibre: ShallowRef<typeof MapLibre | undefined>
+  /**
+   * The attribution control that `<ScriptMapLibreMap>` adds for the
+   * `attributionControl` map option. It is `undefined` when that option is `false`.
+   */
+  defaultAttributionControl: ShallowRef<MapLibre.AttributionControl | undefined>
 }
 
 export const MAPLIBRE_MAP_INJECTION_KEY = Symbol('maplibre-map') as InjectionKey<MapLibreMapContext>

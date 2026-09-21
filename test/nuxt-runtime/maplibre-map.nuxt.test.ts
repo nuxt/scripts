@@ -52,6 +52,7 @@ function createMapLibreMock() {
     setStyle: vi.fn(() => map),
     resize: vi.fn(() => map),
     remove: vi.fn(),
+    addControl: vi.fn(() => map),
     getCanvas: vi.fn(() => document.createElement('canvas')),
     keyboard: { isEnabled: vi.fn(() => true) },
   }
@@ -65,6 +66,9 @@ function createMapLibreMock() {
 
   const maplibregl = {
     Map: vi.fn(MapConstructor),
+    AttributionControl: vi.fn(function (this: { options: unknown }, options: unknown) {
+      this.options = options
+    }),
     LngLat: { convert: vi.fn(value => ({ lng: value[0], lat: value[1] })) },
   }
   return {
@@ -261,5 +265,28 @@ describe('scriptMapLibreMap', () => {
     expect(wrapper.get('[role="alert"]').text()).toBe('The map could not be loaded.')
     expect(wrapper.emitted('error')?.[0]).toEqual([initializationFailure])
     expect(wrapper.emitted('ready')).toBeUndefined()
+  })
+
+  it.each([
+    ['omitted', undefined, [undefined]],
+    ['options', { compact: false, customAttribution: 'Data: Hobart City Council' }, [{ compact: false, customAttribution: 'Data: Hobart City Council' }]],
+    ['false', false, undefined],
+  ] as const)('adds the default attribution control itself when attributionControl is %s', async (_, attributionControl, expected) => {
+    const mocks = createMapLibreMock()
+    mount(ScriptMapLibreMap, {
+      props: {
+        mapStyle: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0],
+        options: attributionControl === undefined ? {} : { attributionControl },
+      },
+    })
+    await nextTick()
+    scriptState.callbacks[0]!({ maplibregl: mocks.maplibregl })
+    await nextTick()
+
+    // MapLibre must not add a second control of its own.
+    expect(mocks.maplibregl.Map).toHaveBeenCalledWith(expect.objectContaining({ attributionControl: false }))
+    const controls = mocks.map.addControl.mock.calls.map(([control]: [{ options: unknown }]) => control.options)
+    expect(controls).toEqual(expected ?? [])
   })
 })
