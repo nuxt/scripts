@@ -11,7 +11,6 @@ function onReady({ map }: ScriptMapLibreMapExpose): void {
 
 <template>
   <div>
-    <!-- production-build-probe: a production compile strips this comment -->
     <ScriptMapLibreMap
       trigger="immediate"
       :map-style="style"

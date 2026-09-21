@@ -4,7 +4,6 @@ const data = { type: 'FeatureCollection', features: [] } as const
 
 <template>
   <div>
-    <!-- production-build-probe: a production compile strips this comment -->
     <ScriptLeafletMap
       :trigger="false"
       :center="[0, 0]"

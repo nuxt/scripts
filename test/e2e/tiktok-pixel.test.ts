@@ -1,6 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { getBrowser, setup, url } from '@nuxt/test-utils/e2e'
+import { getBrowser, url } from '@nuxt/test-utils/e2e'
 import { beforeAll, describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -39,7 +40,7 @@ async function waitFor(
 }
 
 describe('tiktokPixel', async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/tiktok-pixel'),
     browser: true,
   })

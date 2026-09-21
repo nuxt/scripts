@@ -1,6 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { $fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -11,7 +12,7 @@ process.env.NUXT_PUBLIC_SCRIPTS_GLOBALS_TRUSTED_SHOPS_SRC = 'https://widgets.tru
 // Empty src disables the global for this instance (multi-tenant single build).
 process.env.NUXT_PUBLIC_SCRIPTS_GLOBALS_AWIN_SRC = ''
 
-await setup({
+await setupFixture({
   rootDir: resolve('../fixtures/issue-759'),
   dev: true,
   browser: false,

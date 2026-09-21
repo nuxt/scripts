@@ -35,6 +35,20 @@ export default antfu(
       'e18e/prefer-static-regex': 'off',
     },
   },
+  {
+    // `setupFixture()` builds fixtures like production. A direct `setup()` call
+    // keeps template comments and hides production-only hydration bugs.
+    files: ['test/e2e/**', 'test/e2e-dev/**'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [{
+          name: '@nuxt/test-utils/e2e',
+          importNames: ['setup'],
+          message: 'Use setupFixture() from test/utils/setup-fixture.ts. It compiles fixtures like a production build.',
+        }],
+      }],
+    },
+  },
   ...harlanzw({ link: true, nuxt: true, vue: true, content: true }),
   {
     rules: {

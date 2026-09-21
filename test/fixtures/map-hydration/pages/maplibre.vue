@@ -14,7 +14,6 @@ const layers: ScriptMapLibreGeoJsonLayer[] = [{ id: 'points', type: 'circle' }]
 
 <template>
   <div>
-    <!-- production-build-probe: a production compile strips this comment -->
     <ScriptMapLibreMap
       :trigger="false"
       :map-style="style"

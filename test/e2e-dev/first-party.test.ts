@@ -2,8 +2,9 @@ import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'no
 import { join } from 'node:path'
 import { createResolver } from '@nuxt/kit'
 import { getProxyDef, registry } from '@nuxt/scripts/registry'
-import { $fetch, getBrowser, setup, url } from '@nuxt/test-utils/e2e'
+import { $fetch, getBrowser, url } from '@nuxt/test-utils/e2e'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 const fixtureDir = resolve('../fixtures/first-party')
@@ -22,7 +23,7 @@ async function tolerateBrowserRace<T>(operation: Promise<T>): Promise<T | undefi
   }
 }
 
-await setup({
+await setupFixture({
   rootDir: fixtureDir,
   browser: true,
   build: true,

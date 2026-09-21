@@ -1,13 +1,14 @@
 import { createResolver } from '@nuxt/kit'
-import { $fetch, setup, url } from '@nuxt/test-utils/e2e'
+import { $fetch, url } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
 // End-to-end coverage for proxy path aliases (#814). Builds a real app with
 // `scripts.proxy.alias` set and verifies the full module wiring: the alias reaches
 // both the auto-injected endpoint config and the runtime proxy handler.
-await setup({
+await setupFixture({
   rootDir: resolve('../fixtures/proxy-alias'),
   build: true,
 })
