@@ -1,6 +1,7 @@
 import { createResolver } from '@nuxt/kit'
-import { $fetch, createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { $fetch, createPage, url } from '@nuxt/test-utils/e2e'
 import { describe, expect, it } from 'vitest'
+import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -20,7 +21,7 @@ const pages: { path: string, server: string, sequence: string[] }[] = [
 ]
 
 describe('script status hydration', { timeout: 120000 }, async () => {
-  await setup({
+  await setupFixture({
     rootDir: resolve('../fixtures/script-status-hydration'),
     browser: true,
   })
