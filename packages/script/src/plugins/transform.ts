@@ -32,7 +32,6 @@ const TEST_RE = /\.(?:test|spec)\./
 // it can, so the hook is not called at all for the rest of the graph.
 const USE_SCRIPT_CODE_MARKER = 'useScript'
 const UPPERCASE_RE = /^[A-Z]$/
-const USE_SCRIPT_RE = /^useScript/
 
 export type IntegrityAlgorithm = 'sha256' | 'sha384' | 'sha512'
 
@@ -109,6 +108,14 @@ function safeFilename(h: string): string {
   // Prefix hashes starting with '-' — Nitro's publicAssets handler cannot serve
   // files whose names begin with a dash (they get omitted from the asset manifest).
   return `${h.startsWith('-') ? `_${h.slice(1)}` : h}.js`
+}
+
+// Registry entries pushed through the scripts:registry hook may carry only
+// import.name (useScriptMyAnalytics), no registryKey. Their config key follows
+// the useRegistryScript convention: strip the prefix, lowercase the first char.
+function deriveRegistryKey(fnName: string): string {
+  const stripped = fnName.replace(/^useScript/, '')
+  return stripped.charAt(0).toLowerCase() + stripped.slice(1)
 }
 
 function buildAssetUrl(filename: string, assetsBaseURL: string = '/_scripts/assets'): string {
@@ -293,12 +300,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               let scriptSrcNode: { start: number, end: number, value: any } | undefined
               let src: false | string | undefined
               let registryConfig: Record<string, any> = {}
-              // Compute registryKey for proxy config lookup
+              // Registry key for config + proxy lookups, resolved from the registry node below
               let registryKey: string | undefined
-              if (fnName !== 'useScript') {
-                const baseName = fnName.replace(USE_SCRIPT_RE, '')
-                registryKey = baseName.length > 0 ? baseName.charAt(0).toLowerCase() + baseName.slice(1) : undefined
-              }
               if (fnName === 'useScript') {
               // do easy case first where first argument is a literal
                 if (node.arguments[0]?.type === 'Literal') {
@@ -318,6 +321,12 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                 // silent failure
                   return
                 }
+                // The composable name may diverge from the registry key (e.g.
+                // useScriptTikTokPixel → tiktokPixel), so always use the
+                // canonical registry key for config and proxy lookups. Entries
+                // without a registryKey (hook-registered custom scripts) fall
+                // back to the key derived from the composable name.
+                registryKey = registryNode.registryKey ?? deriveRegistryKey(fnName)
                 // this is only needed when we have a dynamic src that we need to compute
                 const bundleResolve = getBundleResolve(registryNode as RegistryScript)
                 if (!bundleResolve && !registryNode.src)
