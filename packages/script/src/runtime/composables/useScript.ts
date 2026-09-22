@@ -1,15 +1,17 @@
 import type { UseScriptInput, UseScriptOptions, VueScriptInstance, VueScriptScope } from '@unhead/vue/scripts'
 import type { ScriptInstance } from 'unhead/scripts'
 import type { NuxtDevToolsNetworkRequest, NuxtDevToolsScriptInstance, NuxtUseScriptOptions, UseFunctionType, UseScriptContext } from '../types'
+import type { ServerScriptStatuses } from '../utils/hydration-status'
 import { useScript as _useScript } from '@unhead/vue/scripts'
 import { defu } from 'defu'
 import { injectHead, onNuxtReady, useHead, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { useScript as useUnheadScript } from 'unhead/scripts'
-import { markRaw, ref } from 'vue'
+import { getCurrentInstance, markRaw, onMounted, onUnmounted, ref } from 'vue'
 import { resolveTrigger } from '#build/nuxt-scripts-trigger-resolver'
 import { debugEnabled } from '../debug'
 import { logger } from '../logger'
 import { createAbortError } from '../utils/abortable-promise'
+import { createHydrationStatus, SCRIPT_STATUS_PAYLOAD_KEY } from '../utils/hydration-status'
 
 type NuxtScriptsApp = ReturnType<typeof useNuxtApp> & {
   $scripts: Record<string, UseScriptContext<any> | undefined>
@@ -346,6 +348,36 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   if (sharedInstance[NUXT_SCRIPT_CONTROLLER])
     return instance as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
 
+  const ownerInstance = getCurrentInstance()
+  // A lazily hydrated component (e.g. `hydrate-on-visible`) hydrates after the
+  // app suspense resolved. Nuxt no longer reports the app as hydrating, but the
+  // component still compares its own server HTML, which Vue attached to the
+  // vnode before mounting it.
+  const isHydratingServerRender = import.meta.client
+    && nuxtApp.payload.serverRendered
+    && (nuxtApp.isHydrating || (ownerInstance != null && ownerInstance.vnode.el != null))
+
+  if (isHydratingServerRender) {
+    // A client trigger changes the live status during setup, before hydration
+    // compares the DOM. Render the server status until hydration ends. The
+    // trigger and the loader still run now, so load timing is unchanged.
+    const serverStatuses = nuxtApp.payload[SCRIPT_STATUS_PAYLOAD_KEY] as ServerScriptStatuses | undefined
+    const hydrationStatus = createHydrationStatus(sharedInstance.status, serverStatuses?.[id] || 'awaitingLoad')
+    // Unhead's Vue wrapper reads `_statusRef` on every `status` access and writes each update to it.
+    ;(sharedInstance as { _statusRef?: unknown })._statusRef = hydrationStatus.status
+    if (nuxtApp.isHydrating) {
+      nuxtApp.hooks.hookOnce('app:suspense:resolve', hydrationStatus.release)
+    }
+    else if (ownerInstance) {
+      // Late hydration has no suspense resolve left to wait for. The
+      // component's own hydration ends when its `mounted` hook runs.
+      onMounted(hydrationStatus.release)
+      // A component can unmount before it mounts. Without this the hold would
+      // stick to the shared status forever.
+      onUnmounted(hydrationStatus.release)
+    }
+  }
+
   const publicStatus = instance.status
   let currentScript = sharedInstance as ScriptInstance<any>
   const appInstance = Object.create(sharedInstance) as UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>>
@@ -444,6 +476,22 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
     return reloadPromise
   }
   nuxtApp.$scripts[id] = appInstance
+
+  if (import.meta.server) {
+    // The client hydrates against the status the server rendered.
+    const recordServerStatus = () => {
+      if (sharedInstance.status === 'awaitingLoad')
+        return
+      const statuses = (nuxtApp.payload[SCRIPT_STATUS_PAYLOAD_KEY] ||= {}) as ServerScriptStatuses
+      statuses[id] = sharedInstance.status
+    }
+    recordServerStatus()
+    addCleanup(headHooks.hook('script:updated', ({ script }) => {
+      if (script === sharedInstance)
+        recordServerStatus()
+    }))
+  }
+
   addCleanup(nuxtApp.hooks.hook('app:unmount' as any, () => {
     sharedInstance.remove()
   }))
