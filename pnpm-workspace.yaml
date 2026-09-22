@@ -1,40 +1,6 @@
 minimumReleaseAgeExcludePrune: true
 minimumReleaseAgeExclude:
-  - '@oxc-parser/binding-android-arm-eabi@0.134.0'
-  - '@oxc-parser/binding-android-arm64@0.134.0'
-  - '@oxc-parser/binding-darwin-arm64@0.134.0'
-  - '@oxc-parser/binding-darwin-x64@0.134.0'
-  - '@oxc-parser/binding-freebsd-x64@0.134.0'
-  - '@oxc-parser/binding-linux-arm-gnueabihf@0.134.0'
-  - '@oxc-parser/binding-linux-arm-musleabihf@0.134.0'
-  - '@oxc-parser/binding-linux-arm64-gnu@0.134.0'
-  - '@oxc-parser/binding-linux-arm64-musl@0.134.0'
-  - '@oxc-parser/binding-linux-ppc64-gnu@0.134.0'
-  - '@oxc-parser/binding-linux-riscv64-gnu@0.134.0'
-  - '@oxc-parser/binding-linux-riscv64-musl@0.134.0'
-  - '@oxc-parser/binding-linux-s390x-gnu@0.134.0'
-  - '@oxc-parser/binding-linux-x64-gnu@0.134.0'
-  - '@oxc-parser/binding-linux-x64-musl@0.134.0'
-  - '@oxc-parser/binding-openharmony-arm64@0.134.0'
-  - '@oxc-parser/binding-wasm32-wasi@0.134.0'
-  - '@oxc-parser/binding-win32-arm64-msvc@0.134.0'
-  - '@oxc-parser/binding-win32-ia32-msvc@0.134.0'
-  - '@oxc-parser/binding-win32-x64-msvc@0.134.0'
-  - '@oxc-project/types@0.134.0'
-  - '@posthog/core@1.30.2'
-  - '@posthog/types@1.378.1 || 1.409.2'
-  - oxc-parser@0.134.0
-  - posthog-js@1.378.1 || 1.428.7
-  - '@nuxt/kit@4.5.1'
-  - '@nuxt/nitro-server@4.5.1'
-  - '@nuxt/schema@4.5.1'
-  - '@nuxt/vite-builder@4.5.1'
-  - nuxt@4.5.1
-  - '@unhead/bundler@3.3.1'
-  - '@unhead/vue@3.3.1'
-  - unhead@3.3.1
   - '@types/jest-image-snapshot@6.4.2'
-  - unimport@7.0.1
 
 trustPolicy: no-downgrade
 trustPolicyIgnoreAfter: 262800

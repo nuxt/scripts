@@ -743,6 +743,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
         },
         scripts: [
           {
+            registryKey: 'googleTagManager',
             bundle: {
               resolve(options: any) {
                 if (!options?.id) {
@@ -777,6 +778,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
+              registryKey: 'googleTagManager',
               bundle: {
                 resolve(options: any) {
                   if (!options?.id) {
@@ -816,6 +818,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
+              registryKey: 'googleTagManager',
               bundle: {
                 resolve(options: any) {
                   if (!options?.id) {
@@ -959,6 +962,7 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
           },
           scripts: [
             {
+              registryKey: 'googleAnalytics',
               bundle: {
                 resolve(options: any) {
                   if (!options?.id) {
