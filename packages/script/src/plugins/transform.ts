@@ -110,6 +110,14 @@ function safeFilename(h: string): string {
   return `${h.startsWith('-') ? `_${h.slice(1)}` : h}.js`
 }
 
+// Registry entries pushed through the scripts:registry hook may carry only
+// import.name (useScriptMyAnalytics), no registryKey. Their config key follows
+// the useRegistryScript convention: strip the prefix, lowercase the first char.
+function deriveRegistryKey(fnName: string): string {
+  const stripped = fnName.replace(/^useScript/, '')
+  return stripped.charAt(0).toLowerCase() + stripped.slice(1)
+}
+
 function buildAssetUrl(filename: string, assetsBaseURL: string = '/_scripts/assets'): string {
   const nuxt = tryUseNuxt()
   const cdnURL = nuxt?.options.runtimeConfig?.app?.cdnURL || nuxt?.options.app?.cdnURL || ''
@@ -315,8 +323,10 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                 }
                 // The composable name may diverge from the registry key (e.g.
                 // useScriptTikTokPixel → tiktokPixel), so always use the
-                // canonical registry key for config and proxy lookups.
-                registryKey = registryNode.registryKey
+                // canonical registry key for config and proxy lookups. Entries
+                // without a registryKey (hook-registered custom scripts) fall
+                // back to the key derived from the composable name.
+                registryKey = registryNode.registryKey ?? deriveRegistryKey(fnName)
                 // this is only needed when we have a dynamic src that we need to compute
                 const bundleResolve = getBundleResolve(registryNode as RegistryScript)
                 if (!bundleResolve && !registryNode.src)

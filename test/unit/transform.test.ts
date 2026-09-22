@@ -763,6 +763,43 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' } })"`)
   })
 
+  it('registry config falls back to the derived key when the entry has no registryKey', async () => {
+    vi.mocked(hash).mockImplementationOnce(src => src.pathname)
+    let resolveOptions: any
+    const code = await transform(
+      `const instance = useScriptMyAnalytics({})`,
+      {
+        registryConfig: {
+          myAnalytics: {
+            id: 'X',
+          },
+        },
+        scripts: [
+          {
+            // hook-style custom registry entry: import.name only, no registryKey
+            bundle: {
+              resolve(options: any) {
+                resolveOptions = options
+                if (!options?.id) {
+                  return false
+                }
+                return `https://analytics.example.com/sdk.js?id=${options.id}`
+              },
+            },
+            import: {
+              name: 'useScriptMyAnalytics',
+              from: '',
+            },
+          } as any,
+        ],
+      },
+    )
+    expect(resolveOptions).toMatchObject({ id: 'X' })
+    // The content-addressed hash depends on shared cache-mock state, so match
+    // the bundled asset URL by pattern; the behavioural assertion is above.
+    expect(code).toMatch(/useScriptMyAnalytics\(\{ scriptInput: \{ src: '\/_scripts\/assets\/[a-f0-9]{16}\.js' \}, \}\)/)
+  })
+
   describe('configuration merging', () => {
     it('supports both scripts.registry and runtimeConfig.public.scripts - runtime config takes precedence', async () => {
       vi.mocked(hash).mockImplementationOnce(src => src.pathname)
