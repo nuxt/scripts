@@ -43,6 +43,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['paypal']>().not.toBeAny()
     expectTypeOf<Registry['posthog']>().not.toBeAny()
     expectTypeOf<Registry['pulseAnalytics']>().not.toBeAny()
+    expectTypeOf<Registry['statableAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['matomoAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['mixpanelAnalytics']>().not.toBeAny()
     expectTypeOf<Registry['rybbitAnalytics']>().not.toBeAny()

@@ -9,6 +9,7 @@
       <li><NuxtLink to="/cfwa">Cloudflare Web Analytics</NuxtLink></li>
       <li><NuxtLink to="/fathom">Fathom Analytics</NuxtLink></li>
       <li><NuxtLink to="/pulse">Pulse Analytics</NuxtLink></li>
+      <li><NuxtLink to="/statable">Statable Analytics</NuxtLink></li>
       <li><NuxtLink to="/umami">Umami Analytics</NuxtLink></li>
       <li><NuxtLink to="/posthog">PostHog</NuxtLink></li>
       <li><NuxtLink to="/rybbit">Rybbit Analytics</NuxtLink></li>

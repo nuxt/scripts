@@ -528,6 +528,75 @@
       }
     ]
   },
+  "statableAnalytics": {
+    "totalTransferKb": 3,
+    "totalDecodedKb": 4.8,
+    "loadTimeMs": 54,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": false,
+      "localStorage": true,
+      "sessionStorage": false,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": false,
+      "doNotTrack": true,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": false,
+      "screen": false,
+      "timezone": false,
+      "platform": false,
+      "vendor": false,
+      "connection": false,
+      "maxTouchPoints": false,
+      "devicePixelRatio": false,
+      "mediaDevices": false,
+      "getBattery": false,
+      "referrer": true,
+      "windowName": false,
+      "rtcPeerConnection": false,
+      "geolocation": false,
+      "serviceWorker": false,
+      "cacheApi": false,
+      "sendBeacon": false,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": false,
+      "performanceObserver": false,
+      "intersectionObserver": false
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "statable.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 3100,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 9,
+      "scriptDurationMs": 2,
+      "heapDeltaKb": 783
+    },
+    "scripts": [
+      {
+        "url": "https://statable.com/js/3078194/s.js",
+        "transferKb": 3,
+        "decodedKb": 4.8,
+        "encoding": "zstd",
+        "durationMs": 54,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
   "databuddyAnalytics": {
     "totalTransferKb": 10.8,
     "totalDecodedKb": 29.4,

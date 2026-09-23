@@ -1374,3 +1374,31 @@ export const GravatarOptions = object({
    */
   rating: optional(string()),
 })
+
+export const StatableAnalyticsOptions = object({
+  /**
+   * The numeric Site ID from Site settings, Tracking Code, in Statable.
+   * @see https://statable.com/docs/developers/tracking-script/
+   */
+  // minLength(1) rather than a bare string(): envDefaults resolves an unset siteId to '',
+  // which would validate happily and render data-id="", silently tracking nothing.
+  // Failing loudly in dev is the point.
+  siteId: pipe(string(), minLength(1)),
+  /**
+   * Origin the tracker script is served from. Only needed when you proxy
+   * Statable through your own domain.
+   * @default 'https://statable.com'
+   */
+  host: optional(string()),
+  /**
+   * Endpoint the tracker posts events to. Defaults to `/api/event` on `host`.
+   * @see https://statable.com/docs/developers/tracking-script/#data-tracking-api-optional
+   */
+  trackingApi: optional(string()),
+  /**
+   * Custom properties attached to every event from the page load, rendered
+   * as `data-statable-*` attributes on the script tag.
+   * @see https://statable.com/docs/developers/tracking-script/#data-statable-optional
+   */
+  props: optional(record(string(), string())),
+})

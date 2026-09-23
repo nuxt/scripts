@@ -1241,6 +1241,18 @@
         "code": "type _AllForwardedKeysListed = AssertNever<Exclude<ForwardedKey, typeof LUX_USER_CONFIG_KEYS[number]>>"
       }
     ],
+    "statable-analytics": [
+      {
+        "name": "StatableAnalyticsOptions",
+        "kind": "const",
+        "code": "export const StatableAnalyticsOptions = object({\n  /**\n   * The numeric Site ID from Site settings, Tracking Code, in Statable.\n   * @see https://statable.com/docs/developers/tracking-script/\n   */\n  // minLength(1) rather than a bare string(): envDefaults resolves an unset siteId to '',\n  // which would validate happily and render data-id=\"\", silently tracking nothing.\n  // Failing loudly in dev is the point.\n  siteId: pipe(string(), minLength(1)),\n  /**\n   * Origin the tracker script is served from. Only needed when you proxy\n   * Statable through your own domain.\n   * @default 'https://statable.com'\n   */\n  host: optional(string()),\n  /**\n   * Endpoint the tracker posts events to. Defaults to `/api/event` on `host`.\n   * @see https://statable.com/docs/developers/tracking-script/#data-tracking-api-optional\n   */\n  trackingApi: optional(string()),\n  /**\n   * Custom properties attached to every event from the page load, rendered\n   * as `data-statable-*` attributes on the script tag.\n   * @see https://statable.com/docs/developers/tracking-script/#data-statable-optional\n   */\n  props: optional(record(string(), string())),\n})"
+      },
+      {
+        "name": "StatableAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface StatableAnalyticsApi {\n  /**\n   * Records a custom event.\n   * @param name Event name. Title Case by convention.\n   * @param props Optional properties, merged into the event as `p.*`.\n   * Strings, numbers and booleans index best in the dashboard.\n   * @see https://statable.com/docs/developers/javascript-api/\n   */\n  t: (name: string, props?: Record<string, any>) => void\n}"
+      }
+    ],
     "stripe": [
       {
         "name": "StripeOptions",
@@ -3083,6 +3095,33 @@
         "required": false,
         "description": "Content rating filter.",
         "defaultValue": "'g'"
+      }
+    ],
+    "StatableAnalyticsOptions": [
+      {
+        "name": "siteId",
+        "type": "string",
+        "required": true,
+        "description": "The numeric Site ID from Site settings, Tracking Code, in Statable."
+      },
+      {
+        "name": "host",
+        "type": "string",
+        "required": false,
+        "description": "Origin the tracker script is served from. Only needed when you proxy Statable through your own domain.",
+        "defaultValue": "'https://statable.com'"
+      },
+      {
+        "name": "trackingApi",
+        "type": "string",
+        "required": false,
+        "description": "Endpoint the tracker posts events to. Defaults to `/api/event` on `host`."
+      },
+      {
+        "name": "props",
+        "type": "Record<string, string>",
+        "required": false,
+        "description": "Custom properties attached to every event from the page load, rendered as `data-statable-*` attributes on the script tag."
       }
     ],
     "ScriptGoogleMapsProps": [
