@@ -55,7 +55,7 @@ onLoaded(({ t }) => {
 
 ::
 
-Outbound link clicks and file downloads are recorded on their own, and an element with a `data-statable-event` attribute fires on click or submit without any code. See the [JavaScript API](https://statable.com/docs/developers/javascript-api/).
+Outbound link clicks, file downloads and elements with a `data-statable-event` attribute fire on click or submit without any code. Each needs its site module enabled under Site settings → Tracking Code. Pageviews are always on; the rest can be switched off, and the Nano preset ships pageviews and SPA navigation only. See the [JavaScript API](https://statable.com/docs/developers/javascript-api/).
 
 ## Sticky properties
 
@@ -70,7 +70,7 @@ useScriptStatableAnalytics({
 
 ## Page views in a single-page app
 
-The tracker hooks `pushState` and `replaceState` itself, so client-side navigation in Nuxt is counted as a page view without extra configuration. Engagement time and scroll depth for a page are sent when the visitor leaves it.
+The tracker hooks `pushState` and `replaceState` itself, so client-side navigation in Nuxt is counted as a page view without extra configuration. It also sends engagement time and scroll depth when the visitor leaves the page, if the site enables the engagement module.
 
 ::script-types
 ::
