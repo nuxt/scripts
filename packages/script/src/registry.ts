@@ -7,6 +7,7 @@ import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
 import type { RybbitAnalyticsInput } from './runtime/registry/rybbit-analytics'
 import type { SegmentInput } from './runtime/registry/segment'
+import type { StatableAnalyticsInput } from './runtime/registry/statable-analytics'
 import type { TikTokPixelInput } from './runtime/registry/tiktok-pixel'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
@@ -47,6 +48,7 @@ import {
   SegmentOptions,
   SnapTrPixelOptions,
   SpeedCurveOptions,
+  StatableAnalyticsOptions,
   StripeOptions,
   TawkToOptions,
   TikTokPixelOptions,
@@ -145,6 +147,10 @@ export const registryMeta: RegistryScriptMeta[] = [
   // No proxy: Pulse derives visitor identity from the connecting IP, so proxied
   // beacons collapse every visitor into one. Same family as Fathom (#720).
   m('pulseAnalytics', 'Pulse Analytics', 'analytics', 'useScriptPulseAnalytics', { bundle: true }, null),
+  // No proxy: Statable hashes the connecting IP and user agent into its
+  // visitor identity, so proxied beacons would collapse every visitor into
+  // one. Same family as Fathom (#720) and Pulse.
+  m('statableAnalytics', 'Statable Analytics', 'analytics', 'useScriptStatableAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -477,6 +483,23 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       // Bundling needs no SDK patch: the tracker reads data-* from its own
       // script element and posts to `data-api` wherever it is served from.
       bundle: true,
+    }),
+    def('statableAnalytics', {
+      schema: StatableAnalyticsOptions,
+      label: 'Statable Analytics',
+      category: 'analytics',
+      envDefaults: { siteId: '' },
+      // Bundling needs no SDK patch: the composable pins `data-id` and
+      // `data-tracking-api` on the script element, so the bundled copy keeps
+      // reporting to the right site and endpoint.
+      bundle: {
+        resolve: (options?: StatableAnalyticsInput) => {
+          if (!options?.siteId)
+            throw new TypeError('statableAnalytics requires siteId')
+          const host = (options.host || 'https://statable.com').replace(/\/+$/, '')
+          return `${host}/js/${options.siteId}/s.js`
+        },
+      },
     }),
     // ad
     def('bingUet', {
