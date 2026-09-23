@@ -1380,7 +1380,10 @@ export const StatableAnalyticsOptions = object({
    * The numeric Site ID from Site settings, Tracking Code, in Statable.
    * @see https://statable.com/docs/developers/tracking-script/
    */
-  siteId: string(),
+  // minLength(1) rather than a bare string(): envDefaults resolves an unset siteId to '',
+  // which would validate happily and render data-id="", silently tracking nothing.
+  // Failing loudly in dev is the point.
+  siteId: pipe(string(), minLength(1)),
   /**
    * Origin the tracker script is served from. Only needed when you proxy
    * Statable through your own domain.

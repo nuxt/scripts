@@ -495,7 +495,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       bundle: {
         resolve: (options?: StatableAnalyticsInput) => {
           if (!options?.siteId)
-            throw new TypeError('statableAnalytics requires siteId')
+            return false
           const host = (options.host || 'https://statable.com').replace(/\/+$/, '')
           return `${host}/js/${options.siteId}/s.js`
         },
