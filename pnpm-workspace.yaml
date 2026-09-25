@@ -55,8 +55,8 @@ catalog:
   '@typescript/native': npm:typescript@7.0.2
   '@unhead/vue': ^3.4.0
   '@vue/test-utils': ^2.5.0
-  '@vueuse/core': ^14.4.0
-  '@vueuse/shared': ^14.4.0
+  '@vueuse/core': ^15.0.0
+  '@vueuse/shared': ^15.0.0
   bumpp: ^12.3.0
   consola: ^3.4.2
   defu: ^6.1.7
