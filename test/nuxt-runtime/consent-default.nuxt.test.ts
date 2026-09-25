@@ -463,17 +463,42 @@ describe('per-script consent object', () => {
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ad_storage'))
   })
 
-  it('meta: consent.grant()/revoke() queue fbq(\'consent\', ...) calls', async () => {
+  it('meta: consent.grant()/revoke() before load keep only the latest consent at the head of the queue', async () => {
     const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
     const result: any = useScriptMetaPixel({ id: '123' })
     result._opts.clientInit()
-    ;(window as any).fbq.queue = []
     result.consent.grant()
     result.consent.revoke()
     expect((window as any).fbq.queue).toEqual([
-      ['consent', 'grant'],
       ['consent', 'revoke'],
+      ['init', '123'],
+      ['track', 'PageView'],
     ])
+  })
+
+  it('meta: consent.grant() before load replaces defaultConsent \'denied\' instead of queueing behind it', async () => {
+    const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
+    const result: any = useScriptMetaPixel({ id: '123', defaultConsent: 'denied' })
+    result._opts.clientInit()
+    ;(window as any).fbq('track', 'Lead')
+    result.consent.grant()
+    expect((window as any).fbq.queue).toEqual([
+      ['consent', 'grant'],
+      ['init', '123'],
+      ['track', 'PageView'],
+      ['track', 'Lead'],
+    ])
+  })
+
+  it('meta: consent calls go straight to fbevents once it has loaded', async () => {
+    const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
+    const result: any = useScriptMetaPixel({ id: '123', defaultConsent: 'denied' })
+    result._opts.clientInit()
+    const callMethod = vi.fn()
+    ;(window as any).fbq.callMethod = callMethod
+    result.consent.grant()
+    expect(callMethod).toHaveBeenCalledWith('consent', 'grant')
+    expect((window as any).fbq.queue[0]).toEqual(['consent', 'revoke'])
   })
 
   it('tiktok: consent.grant()/revoke()/hold() queue ttq consent actions', async () => {
