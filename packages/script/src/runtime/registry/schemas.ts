@@ -1380,7 +1380,7 @@ export const StatableAnalyticsOptions = object({
    * The numeric Site ID from Site settings, Tracking Code, in Statable.
    * @see https://statable.com/docs/developers/tracking-script/
    */
-  // The tracker parses the ID as a number. Reject empty and malformed IDs in dev.
+  // The tracker parses the site ID with parseInt.
   siteId: pipe(string(), regex(/^\d+$/)),
   /**
    * Origin used to fetch the tracker and set the default event endpoint.

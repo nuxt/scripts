@@ -13,7 +13,6 @@ const { status, proxy } = useScriptStatableAnalytics({
   },
 })
 
-// The proxy queues this call until the tracker loads.
 proxy.t('Mount', { fired_at: 'component_setup' })
 
 const clicks = ref(0)
