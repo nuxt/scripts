@@ -313,6 +313,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                 // silent failure
                   return
                 }
+                registryKey = registryNode.registryKey ?? registryKey
                 // this is only needed when we have a dynamic src that we need to compute
                 const bundleResolve = getBundleResolve(registryNode as RegistryScript)
                 if (!bundleResolve && !registryNode.src)
