@@ -981,7 +981,7 @@
       {
         "name": "MetaPixelOptions",
         "kind": "const",
-        "code": "export const MetaPixelOptions = object({\n  /**\n   * Your Meta (Facebook) Pixel ID.\n   * @see https://developers.facebook.com/docs/meta-pixel/get-started\n   */\n  id: union([string(), number()]),\n  /**\n   * Default consent state. `'granted'` fires `fbq('consent', 'grant')`,\n   * `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`.\n   * @see https://www.facebook.com/business/help/1151321516677370\n   */\n  defaultConsent: optional(union([literal('granted'), literal('denied')])),\n})"
+        "code": "export const MetaPixelOptions = object({\n  /**\n   * Your Meta (Facebook) Pixel ID.\n   * @see https://developers.facebook.com/docs/meta-pixel/get-started\n   */\n  id: union([string(), number()]),\n  /**\n   * Default consent state. `'granted'` fires `fbq('consent', 'grant')`,\n   * `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`.\n   * @see https://www.facebook.com/business/help/1151321516677370\n   */\n  defaultConsent: optional(union([literal('granted'), literal('denied')])),\n  /**\n   * Whether to automatically track a page view on initialization. Disable this\n   * to send your own `fbq('track', 'PageView', …, { eventID })`, for example\n   * for Conversions API deduplication.\n   * @default true\n   */\n  trackPageView: optional(boolean()),\n})"
       },
       {
         "name": "MetaPixelConsent",
@@ -2387,6 +2387,13 @@
         "type": "'granted' | 'denied'",
         "required": false,
         "description": "Default consent state. `'granted'` fires `fbq('consent', 'grant')`, `'denied'` fires `fbq('consent', 'revoke')`, both called before `fbq('init', id)`."
+      },
+      {
+        "name": "trackPageView",
+        "type": "boolean",
+        "required": false,
+        "description": "Whether to automatically track a page view on initialization. Disable this to send your own `fbq('track', 'PageView', …, { eventID })`, for example for Conversions API deduplication.",
+        "defaultValue": "true"
       }
     ],
     "NpmOptions": [

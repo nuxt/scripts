@@ -490,6 +490,15 @@ describe('per-script consent object', () => {
     ])
   })
 
+  it('meta: trackPageView: false skips the automatic PageView', async () => {
+    const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
+    const result: any = useScriptMetaPixel({ id: '123', trackPageView: false })
+    result._opts.clientInit()
+    expect((window as any).fbq.queue).toEqual([
+      ['init', '123'],
+    ])
+  })
+
   it('meta: consent calls go straight to fbevents once it has loaded', async () => {
     const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
     const result: any = useScriptMetaPixel({ id: '123', defaultConsent: 'denied' })
