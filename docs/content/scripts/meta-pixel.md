@@ -21,6 +21,24 @@ links:
 ::script-types
 ::
 
+## Disabling automatic page views
+
+By default, Meta Pixel tracks a page view during initialization. Disable it when you send your own `PageView` with an `eventID` for Conversions API deduplication:
+
+```ts
+useScriptMetaPixel({
+  id: 'YOUR_PIXEL_ID',
+  trackPageView: false,
+})
+```
+
+Then send the page view yourself and share the `eventID` with the Conversions API call:
+
+```ts
+const { proxy } = useScriptMetaPixel({ id: 'YOUR_PIXEL_ID', trackPageView: false })
+proxy.fbq('track', 'PageView', {}, { eventID: 'shared-with-capi' })
+```
+
 ## Consent Mode
 
 Meta Pixel exposes a binary consent toggle. Set the initial state with `defaultConsent` (fires `fbq('consent', 'grant'|'revoke')`{lang="ts"} before `fbq('init', id)`{lang="ts"}) and call `consent.grant()`{lang="ts"} / `consent.revoke()`{lang="ts"} at runtime:
