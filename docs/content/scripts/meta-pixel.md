@@ -42,3 +42,5 @@ function rejectAds() {
 ```
 
 `defaultConsent: 'denied'` queues a revoke command before pixel initialization, but it does not delay the SDK request. If your consent policy requires no request to Meta before opt-in, use a [binary load gate](/docs/guides/consent#binary-load-gate) for the script itself.
+
+Set `trackPageView: false` to skip the automatic PageView event. You can then send a PageView with your own event ID for Conversions API deduplication.

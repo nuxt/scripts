@@ -84,6 +84,14 @@ export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelI
               // @ts-expect-error untyped
               fbq.callMethod(...params)
             }
+            else if (params[0] === 'consent') {
+              // Replace queued consent before the SDK replays it, then run the latest state first.
+              for (let i = fbq.queue.length - 1; i >= 0; i--) {
+                if (fbq.queue[i][0] === 'consent')
+                  fbq.queue.splice(i, 1)
+              }
+              fbq.queue.unshift(params)
+            }
             else {
               fbq.queue.push(params)
             }
@@ -97,7 +105,8 @@ export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelI
           if (options?.defaultConsent)
             fbq('consent', options.defaultConsent === 'granted' ? 'grant' : 'revoke')
           fbq('init', options?.id)
-          fbq('track', 'PageView')
+          if (options?.trackPageView !== false)
+            fbq('track', 'PageView')
         },
   }), _options) as UseScriptContext<T, MetaPixelConsent>
 

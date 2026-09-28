@@ -463,16 +463,26 @@ describe('per-script consent object', () => {
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('ad_storage'))
   })
 
-  it('meta: consent.grant()/revoke() queue fbq(\'consent\', ...) calls', async () => {
+  it('meta: pre-load consent replaces the default and stays ahead of tracking', async () => {
     const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
-    const result: any = useScriptMetaPixel({ id: '123' })
+    const result: any = useScriptMetaPixel({ id: '123', defaultConsent: 'denied' })
     result._opts.clientInit()
-    ;(window as any).fbq.queue = []
+    ;(window as any).fbq('track', 'Lead')
     result.consent.grant()
-    result.consent.revoke()
     expect((window as any).fbq.queue).toEqual([
       ['consent', 'grant'],
-      ['consent', 'revoke'],
+      ['init', '123'],
+      ['track', 'PageView'],
+      ['track', 'Lead'],
+    ])
+  })
+
+  it('meta: trackPageView false leaves manual PageView tracking to the caller', async () => {
+    const { useScriptMetaPixel } = await import('../../packages/script/src/runtime/registry/meta-pixel')
+    const result: any = useScriptMetaPixel({ id: '123', trackPageView: false })
+    result._opts.clientInit()
+    expect((window as any).fbq.queue).toEqual([
+      ['init', '123'],
     ])
   })
 

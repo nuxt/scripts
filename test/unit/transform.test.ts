@@ -759,6 +759,24 @@ const _sfc_main = /* @__PURE__ */ _defineComponent({
     expect(code).toMatchInlineSnapshot(`"const instance = useScriptGoogleTagManager({ scriptInput: { src: '/_scripts/assets/951c324253eef4b3.js' } })"`)
   })
 
+  it('uses the registry key when the composable name differs', async () => {
+    let resolvedOptions: any
+    await transform('useScriptTikTokPixel()', {
+      registryConfig: { tiktokPixel: { id: 'PIXEL-ID' } },
+      scripts: [{
+        registryKey: 'tiktokPixel',
+        bundle: {
+          resolve(options: any) {
+            resolvedOptions = options
+            return options.id ? `https://example.com/pixel.js?id=${options.id}` : false
+          },
+        },
+        import: { name: 'useScriptTikTokPixel', from: '' },
+      }],
+    })
+    expect(resolvedOptions).toMatchObject({ id: 'PIXEL-ID' })
+  })
+
   describe('configuration merging', () => {
     it('supports both scripts.registry and runtimeConfig.public.scripts - runtime config takes precedence', async () => {
       vi.mocked(hash).mockImplementationOnce(src => src.pathname)
