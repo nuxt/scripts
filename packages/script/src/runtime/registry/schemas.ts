@@ -1,4 +1,4 @@
-import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, pipe, record, string, union } from 'valibot'
+import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, pipe, record, regex, string, union } from 'valibot'
 
 // Shared GCMv2 consent category value.
 const consentCategoryValue = union([literal('granted'), literal('denied')])
@@ -1373,4 +1373,30 @@ export const GravatarOptions = object({
    * @default 'g'
    */
   rating: optional(string()),
+})
+
+export const StatableAnalyticsOptions = object({
+  /**
+   * The numeric Site ID from Site settings, Tracking Code, in Statable.
+   * @see https://statable.com/docs/developers/tracking-script/
+   */
+  // The tracker parses the site ID with parseInt.
+  siteId: pipe(string(), regex(/^\d+$/)),
+  /**
+   * Origin used to fetch the tracker and set the default event endpoint.
+   * Bundling still serves the script from your Nuxt origin.
+   * @default 'https://statable.com'
+   */
+  host: optional(string()),
+  /**
+   * Endpoint the tracker posts events to. Defaults to `/api/event` on `host`.
+   * @see https://statable.com/docs/developers/tracking-script/#data-tracking-api-optional
+   */
+  trackingApi: optional(string()),
+  /**
+   * Custom properties attached to every event from the page load, rendered
+   * as `data-statable-*` attributes on the script tag.
+   * @see https://statable.com/docs/developers/tracking-script/#data-statable-optional
+   */
+  props: optional(record(string(), string())),
 })
