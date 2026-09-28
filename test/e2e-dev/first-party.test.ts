@@ -1238,6 +1238,12 @@ describe('first-party privacy stripping', () => {
         .catch(() => false)
       expect(loaded, `${name}: Script never reached "loaded" status`).toBe(true)
 
+      if (name === 'statableAnalytics') {
+        const script = page.locator('script[data-id="123456"][data-tracking-api="https://statable.com/api/event"]')
+        expect(await script.count()).toBe(1)
+        expect(await script.getAttribute('src')).toContain('/_scripts/assets/')
+      }
+
       // Click all buttons to trigger SDK interactions and generate proxy requests
       const buttons = await page.$$('button')
       for (const btn of buttons) {

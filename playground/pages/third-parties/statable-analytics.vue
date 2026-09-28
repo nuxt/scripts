@@ -5,9 +5,7 @@ useHead({
   title: 'Statable Analytics',
 })
 
-// `siteId` must be a site registered in Statable. 123456 is a placeholder:
-// the tracker loads and every call fires, but the API rejects the events
-// until you replace it with your own Site ID.
+// Replace this placeholder with a paid-plan Statable Site ID.
 const { status, proxy } = useScriptStatableAnalytics({
   siteId: '123456',
   scriptOptions: {
@@ -15,8 +13,7 @@ const { status, proxy } = useScriptStatableAnalytics({
   },
 })
 
-// Fired during setup, before the tracker can have loaded: the proxy holds the
-// call and replays it once the script is in. Watch the network tab for the POST.
+// The proxy queues this call until the tracker loads.
 proxy.t('Mount', { fired_at: 'component_setup' })
 
 const clicks = ref(0)
@@ -34,15 +31,15 @@ function trackClick() {
         Statable Analytics
       </h1>
       <p class="text-gray-600 mt-2">
-        Cookieless analytics with server-side visitor identity. Bundled, never proxied.
+        Cookie-free analytics. The script can be bundled; beacons go to Statable.
       </p>
       <UAlert
         icon="i-heroicons-information-circle"
         color="info"
         variant="soft"
         class="mt-4"
-        title="Demo Configuration"
-        description="This example uses 123456 as the Site ID, which Statable does not know: requests fire but the API rejects them. Use a Site ID from your Statable account."
+        title="Demo Site ID"
+        description="123456 is a placeholder. Use a Site ID from a paid Statable plan to load the tracker and send events."
       />
     </div>
 
@@ -69,8 +66,7 @@ function trackClick() {
         </UButton>
 
         <p class="text-sm text-gray-500">
-          The button calls <code>proxy.t()</code> without checking status. A call made before
-          the tracker has loaded is queued and replayed once it has.
+          <code>proxy.t()</code> queues calls until the tracker loads.
         </p>
       </div>
     </UCard>
@@ -99,10 +95,7 @@ function trackClick() {
           <h3 class="font-medium mb-2">
             Track Events
           </h3>
-          <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto"><code>// One function: a name and optional properties
-proxy.t('Sign Up', { plan: 'pro' })
-
-// Strings, numbers and booleans all work as property values
+          <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto"><code>proxy.t('Sign Up', { plan: 'pro' })
 proxy.t('Purchase', { plan: 'annual', amount: 99 })</code></pre>
         </div>
       </div>

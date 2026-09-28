@@ -494,7 +494,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       // reporting to the right site and endpoint.
       bundle: {
         resolve: (options?: StatableAnalyticsInput) => {
-          if (!options?.siteId)
+          if (!options?.siteId || !/^\d+$/.test(options.siteId))
             return false
           const host = (options.host || 'https://statable.com').replace(/\/+$/, '')
           return `${host}/js/${options.siteId}/s.js`

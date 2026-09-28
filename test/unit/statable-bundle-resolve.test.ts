@@ -22,6 +22,11 @@ describe('statableAnalytics bundle.resolve', () => {
     const resolve = await getStatableResolve()
     expect(resolve({ siteId: '3270462' })).toBe('https://statable.com/js/3270462/s.js')
   })
+
+  it.each([' ', 'abc', '3270462/other'])('skips bundling for an invalid siteId: %s', async (siteId) => {
+    const resolve = await getStatableResolve()
+    expect(resolve({ siteId })).toBe(false)
+  })
 })
 
 describe('statableAnalytics dev validation', () => {
@@ -37,5 +42,10 @@ describe('statableAnalytics dev validation', () => {
   it('accepts a non-empty siteId', () => {
     const result = validate({ siteId: '3270462' })
     expect(result.issues).toBeUndefined()
+  })
+
+  it.each([' ', 'abc', '3270462abc', '3270462/other', ' 3270462 '])('rejects a non-numeric siteId: %s', (siteId) => {
+    const result = validate({ siteId })
+    expect(result.issues?.length).toBeGreaterThan(0)
   })
 })

@@ -8,7 +8,9 @@ links:
     size: xs
 ---
 
-[Statable](https://statable.com/) is privacy-first web analytics by Key Arg B.V., a Dutch company. The tracker sets no cookies and stores nothing on the visitor's device; the one thing it reads from `localStorage` is an opt-out flag. A visitor is counted on the server from a keyed one-way hash of the site, the address, the user agent and the date, and the raw inputs are not stored. Do Not Track and Global Privacy Control are honoured without configuration. The [script reference](https://statable.com/docs/developers/tracking-script/) lists every attribute this composable maps.
+[Statable](https://statable.com/) is cookie-free web analytics. It honours Do Not Track and Global Privacy Control. The [tracking script reference](https://statable.com/docs/developers/tracking-script/) lists its options.
+
+This integration needs Statable's standalone tracking script, available on paid plans. The Hobby plan uses a widget bundle and has no separate tracker.
 
 ::script-stats
 ::
@@ -18,24 +20,25 @@ links:
 
 ## Proxying is not supported
 
-Statable derives visitor identity on its server from the connecting IP address and user agent. Beacons routed through your Nuxt server would all arrive from one address, so every visitor on the same browser would collapse into a single identity.
+Statable uses the connecting IP address and user agent to count visitors. If your Nuxt server relays beacons, Statable sees the server's IP instead.
 
-Nuxt Scripts therefore bundles the tracker and serves it from your origin, while its beacons go straight to the Statable API. The composable pins the site id and the API endpoint on the script tag, because the tracker would otherwise read both from the URL it was served from. There is no identifier in the browser for a first-party proxy to shield, so nothing is given up by leaving the beacons direct.
+You can bundle the tracker on your Nuxt origin. Beacons still go to the Statable API. The composable sets the Site ID and API endpoint on the script tag so bundling keeps both values.
 
-## Serving through your own domain
+## Custom host and API endpoint
 
-If you already proxy Statable through your own domain, `host` moves both the script and its beacons there. `trackingApi` overrides the endpoint on its own.
+`host` selects where Nuxt Scripts fetches the tracker and sets the default beacon endpoint. With bundling, browsers load the tracker from your Nuxt origin. If the custom host relays beacons, set `trackingApi` to the Statable API so Statable sees each visitor's IP.
 
 ```ts
 useScriptStatableAnalytics({
   siteId: 'YOUR_SITE_ID',
   host: 'https://stats.example.com',
+  trackingApi: 'https://statable.com/api/event',
 })
 ```
 
 ## Custom events
 
-The tracker exposes one function, `t(name, props)`. Use the composable's `proxy` object for it: a call made before the script has loaded is held and replayed once the tracker is in. Property values can be strings, numbers or booleans.
+Use `proxy.t(name, props)` to record an event. Calls made before the tracker loads run once it is ready. Properties can be strings, numbers or booleans.
 
 ::code-group
 
@@ -55,11 +58,11 @@ onLoaded(({ t }) => {
 
 ::
 
-Outbound link clicks, file downloads and elements with a `data-statable-event` attribute fire on click or submit without any code. Each needs its site module enabled under Site settings → Tracking Code. Pageviews are always on; the rest can be switched off, and the Nano preset ships pageviews and SPA navigation only. See the [JavaScript API](https://statable.com/docs/developers/javascript-api/).
+Statable can also track outbound links, downloads and elements with `data-statable-event`. Enable each module in Statable's Site settings. See the [JavaScript API](https://statable.com/docs/developers/javascript-api/).
 
 ## Sticky properties
 
-`props` attaches custom properties to every event from the page load, which is handy for a cohort, an environment or an experiment tag. They render as `data-statable-*` attributes on the script tag.
+`props` adds properties to every event. Nuxt Scripts renders them as `data-statable-*` attributes.
 
 ```ts
 useScriptStatableAnalytics({
@@ -68,9 +71,9 @@ useScriptStatableAnalytics({
 })
 ```
 
-## Page views in a single-page app
+## Page views in Nuxt
 
-The tracker hooks `pushState` and `replaceState` itself, so client-side navigation in Nuxt is counted as a page view without extra configuration. It also sends engagement time and scroll depth when the visitor leaves the page, if the site enables the engagement module.
+The tracker counts client-side navigation without extra setup. Enable Statable's engagement module to record time and scroll depth.
 
 ::script-types
 ::

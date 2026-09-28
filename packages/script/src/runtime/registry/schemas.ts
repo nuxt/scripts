@@ -1,4 +1,4 @@
-import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, pipe, record, string, union } from 'valibot'
+import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, pipe, record, regex, string, union } from 'valibot'
 
 // Shared GCMv2 consent category value.
 const consentCategoryValue = union([literal('granted'), literal('denied')])
@@ -1380,13 +1380,11 @@ export const StatableAnalyticsOptions = object({
    * The numeric Site ID from Site settings, Tracking Code, in Statable.
    * @see https://statable.com/docs/developers/tracking-script/
    */
-  // minLength(1) rather than a bare string(): envDefaults resolves an unset siteId to '',
-  // which would validate happily and render data-id="", silently tracking nothing.
-  // Failing loudly in dev is the point.
-  siteId: pipe(string(), minLength(1)),
+  // The tracker parses the ID as a number. Reject empty and malformed IDs in dev.
+  siteId: pipe(string(), regex(/^\d+$/)),
   /**
-   * Origin the tracker script is served from. Only needed when you proxy
-   * Statable through your own domain.
+   * Origin used to fetch the tracker and set the default event endpoint.
+   * Bundling still serves the script from your Nuxt origin.
    * @default 'https://statable.com'
    */
   host: optional(string()),
