@@ -84,6 +84,16 @@ export function useScriptMetaPixel<T extends MetaPixelApi>(_options?: MetaPixelI
               // @ts-expect-error untyped
               fbq.callMethod(...params)
             }
+            else if (params[0] === 'consent') {
+              // fbevents replays this queue in order and stops at a revoke, so a grant queued
+              // behind one never runs. Before it loads, consent replaces the pending state
+              // ahead of every queued command.
+              for (let i = fbq.queue.length - 1; i >= 0; i--) {
+                if (fbq.queue[i][0] === 'consent')
+                  fbq.queue.splice(i, 1)
+              }
+              fbq.queue.unshift(params)
+            }
             else {
               fbq.queue.push(params)
             }
