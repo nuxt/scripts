@@ -905,7 +905,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (partytownScripts.size && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
-            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix, domainAliases)
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix, domainAliases, Object.keys(domainPrivacy))
             ;(nuxt.options as any).partytown = partytownConfig
             logger.info('[partytown] Auto-configured resolveUrl for proxy')
           }

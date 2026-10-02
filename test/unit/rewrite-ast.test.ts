@@ -536,14 +536,8 @@ describe('rewriteScriptUrlsAST', () => {
 })
 
 describe('generatePartytownResolveUrl', () => {
-  it('generates a valid function string', () => {
-    const fn = generatePartytownResolveUrl('/_scripts/p')
-    expect(fn).toContain('function(url, location, type)')
-    expect(fn).toContain('/_scripts/p')
-  })
-
   it('returns undefined for same-origin URLs', () => {
-    const fn = generatePartytownResolveUrl('/_scripts/p')
+    const fn = generatePartytownResolveUrl('/_scripts/p', {}, ['example.com', 'www.google-analytics.com'])
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
     const url = new URL('https://mysite.com/path')
@@ -552,7 +546,7 @@ describe('generatePartytownResolveUrl', () => {
   })
 
   it('rewrites non-same-origin URLs to proxy', () => {
-    const fn = generatePartytownResolveUrl('/_scripts/p')
+    const fn = generatePartytownResolveUrl('/_scripts/p', {}, ['example.com', 'www.google-analytics.com'])
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
     const url = new URL('https://example.com/collect?v=1')
@@ -565,7 +559,7 @@ describe('generatePartytownResolveUrl', () => {
   })
 
   it('preserves host in proxy path', () => {
-    const fn = generatePartytownResolveUrl('/_scripts/p')
+    const fn = generatePartytownResolveUrl('/_scripts/p', {}, ['example.com', 'www.google-analytics.com'])
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
     const url = new URL('https://www.google-analytics.com/g/collect')
@@ -575,7 +569,7 @@ describe('generatePartytownResolveUrl', () => {
   })
 
   it('uses custom proxyPrefix', () => {
-    const fn = generatePartytownResolveUrl('/_custom')
+    const fn = generatePartytownResolveUrl('/_custom', {}, ['example.com'])
     // eslint-disable-next-line no-new-func
     const resolveUrl = new Function(`return ${fn}`)()
     const url = new URL('https://example.com/api')
