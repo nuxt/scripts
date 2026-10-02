@@ -34,6 +34,30 @@ describe('partytown integration', () => {
     }
   })
 
+  it('loads explicitly configured Google loaders directly in the worker', async () => {
+    const browser = await getBrowser()
+    const page = await browser.newPage()
+    const requests: string[] = []
+    await page.route('https://www.googletagmanager.com/**', async (route) => {
+      requests.push(route.request().url())
+      await route.fulfill({
+        contentType: 'application/javascript',
+        headers: { 'Access-Control-Allow-Origin': new URL(url('/')).origin },
+        body: 'document.documentElement.setAttribute("data-google-loaded", "yes")',
+      })
+    })
+    try {
+      await page.goto(url('/google'), { waitUntil: 'domcontentloaded' })
+      await page.waitForSelector('html[data-google-loaded="yes"]', { state: 'attached', timeout: 15000 })
+      const scriptType = await page.locator('script[src*="www.googletagmanager.com/gtag/js"]').getAttribute('type')
+      expect(scriptType?.startsWith('text/partytown')).toBe(true)
+      expect(requests).toEqual(['https://www.googletagmanager.com/gtag/js?id=G-TEST'])
+    }
+    finally {
+      await page.close()
+    }
+  })
+
   it('script tag has type="text/partytown" when partytown option is enabled', async () => {
     const browser = await getBrowser()
     const page = await browser.newPage()

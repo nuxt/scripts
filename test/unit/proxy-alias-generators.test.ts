@@ -1,5 +1,6 @@
 import { runInNewContext } from 'node:vm'
 import { describe, expect, it, vi } from 'vitest'
+import { resolveConfiguredProxyDomains } from '../../packages/script/src/module'
 import { generateInterceptPluginContents } from '../../packages/script/src/plugins/intercept'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, registry } from '../../packages/script/src/registry'
 
@@ -68,7 +69,10 @@ describe('proxy alias - generated runtime code (#814)', () => {
 
     it('keeps Google visitor loaders remote while proxying collection requests', async () => {
       const configs = buildProxyConfigsFromRegistry(await registry())
-      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, configs.googleAnalytics!.domains))
+      const configuredDomains = resolveConfiguredProxyDomains({
+        scriptInput: { src: 'https://www.googletagmanager.com/gtag/js?id=G-TEST' },
+      }, configs.googleAnalytics)
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, [...configs.googleAnalytics!.domains, ...configuredDomains]))
       const location = new URL('https://my-site.test/')
 
       expect(resolveUrl(new URL('https://www.googletagmanager.com/gtag/js?id=G-TEST'), location)).toBeUndefined()
