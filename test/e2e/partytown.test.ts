@@ -26,6 +26,8 @@ describe('partytown integration', () => {
     try {
       await page.goto(url('/tiktok'), { waitUntil: 'domcontentloaded' })
       await page.waitForSelector('html[data-tiktok-loaded="yes"]', { state: 'attached', timeout: 15000 })
+      const scriptType = await page.locator('script[src*="analytics.tiktok.com/i18n/pixel/events.js"]').getAttribute('type')
+      expect(scriptType?.startsWith('text/partytown')).toBe(true)
       expect(requests).toEqual(['https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq'])
     }
     finally {
