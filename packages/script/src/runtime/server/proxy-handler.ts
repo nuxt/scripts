@@ -507,11 +507,16 @@ export default defineEventHandler(async (event) => {
 
   // GA4 geolocates by the connecting IP (this server) and ignores X-Forwarded-For.
   // `_uip` carries the same, possibly anonymized, client IP as the header instead.
+  // With IP privacy on, a client-supplied `_uip` is replaced so it cannot bypass anonymization.
   const isGaCollect = GA_COLLECT_HOST_RE.test(domain) && GA_COLLECT_PATH_RE.test(remainingPath.split('?')[0] || '')
-  if (isGaCollect && originalQuery._uip === undefined) {
+  if (isGaCollect && (privacy.ip || originalQuery._uip === undefined)) {
     const userIP = headers['x-forwarded-for']?.split(',')[0]?.trim()
+    const queryIdx = targetUrl.indexOf('?')
+    const base = queryIdx === -1 ? targetUrl : targetUrl.slice(0, queryIdx)
+    const params = queryIdx === -1 ? [] : targetUrl.slice(queryIdx + 1).split('&').filter(p => p && p !== '_uip' && !p.startsWith('_uip='))
     if (userIP)
-      targetUrl += `${targetUrl.includes('?') ? '&' : '?'}_uip=${encodeURIComponent(userIP)}`
+      params.push(`_uip=${encodeURIComponent(userIP)}`)
+    targetUrl = params.length ? `${base}?${params.join('&')}` : base
   }
 
   // Process request body: buffer the raw bytes once so privacy transforms can

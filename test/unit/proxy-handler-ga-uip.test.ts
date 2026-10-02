@@ -118,9 +118,17 @@ describe('proxy handler - GA4 client IP (#939)', () => {
       .toBe('https://region1.google-analytics.com/g/collect?v=2&_uip=203.0.113.7')
   })
 
-  it('leaves the URL unchanged for hits with _uip and for non-GA4 endpoints', async () => {
-    expect(await post('www.google-analytics.com/g/collect?v=2&_uip=192.0.2.0'))
-      .toBe('https://www.google-analytics.com/g/collect?v=2&_uip=192.0.2.0')
+  it('replaces a client-supplied _uip with the anonymized client IP when IP privacy is on', async () => {
+    expect(await post('www.google-analytics.com/g/collect?v=2&_uip=192.0.2.55&tid=G-TEST'))
+      .toBe('https://www.google-analytics.com/g/collect?v=2&tid=G-TEST&_uip=203.0.113.0')
+  })
+
+  it('keeps a client-supplied _uip when IP privacy is off', async () => {
+    expect(await post('region1.google-analytics.com/g/collect?v=2&_uip=192.0.2.55'))
+      .toBe('https://region1.google-analytics.com/g/collect?v=2&_uip=192.0.2.55')
+  })
+
+  it('leaves non-GA4 endpoints unchanged', async () => {
     expect(await post('www.google.com/pagead/1p-conversion/123/?v=2'))
       .toBe('https://www.google.com/pagead/1p-conversion/123/?v=2')
     expect(await post('stats.g.doubleclick.net/g/collect?v=2'))
