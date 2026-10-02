@@ -259,7 +259,6 @@ describe('first-party mode', () => {
       const supportedScripts = [
         'googleAnalytics',
         'metaPixel',
-        'tiktokPixel',
         'xPixel',
         'snapchatPixel',
         'redditPixel',

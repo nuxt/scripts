@@ -7,7 +7,6 @@ import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
 import type { RybbitAnalyticsInput } from './runtime/registry/rybbit-analytics'
 import type { SegmentInput } from './runtime/registry/segment'
-import type { TikTokPixelInput } from './runtime/registry/tiktok-pixel'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
@@ -117,7 +116,7 @@ function m(key: string, label: string, category: string, composableName: string 
 /** Static registry metadata for all scripts. Importable without async resolution. */
 export const registryMeta: RegistryScriptMeta[] = [
   // analytics
-  m('googleAnalytics', 'Google Analytics', 'analytics', 'useScriptGoogleAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_HEATMAP),
+  m('googleAnalytics', 'Google Analytics', 'analytics', 'useScriptGoogleAnalytics', { proxy: true, partytown: true }, PRIVACY_HEATMAP),
   m('plausibleAnalytics', 'Plausible Analytics', 'analytics', 'useScriptPlausibleAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('cloudflareWebAnalytics', 'Cloudflare Web Analytics', 'analytics', 'useScriptCloudflareWebAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
   m('posthog', 'PostHog', 'analytics', 'useScriptPostHog', { proxy: true }, PRIVACY_IP_ONLY),
@@ -141,14 +140,14 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('xPixel', 'X Pixel', 'ad', 'useScriptXPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
-  m('tiktokPixel', 'TikTok Pixel', 'ad', 'useScriptTikTokPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
+  m('tiktokPixel', 'TikTok Pixel', 'ad', 'useScriptTikTokPixel', { partytown: true }, null),
   m('snapchatPixel', 'Snapchat Pixel', 'ad', 'useScriptSnapchatPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('redditPixel', 'Reddit Pixel', 'ad', 'useScriptRedditPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('linkedinInsight', 'LinkedIn Insight Tag', 'ad', 'useScriptLinkedInInsight', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
   m('googleAdsense', 'Google Adsense', 'ad', 'useScriptGoogleAdsense', { bundle: true, proxy: true }, PRIVACY_HEATMAP),
   m('carbonAds', 'Carbon Ads', 'ad', false, { proxy: true }, PRIVACY_IP_ONLY),
   // tag-manager
-  m('googleTagManager', 'Google Tag Manager', 'tag-manager', 'useScriptGoogleTagManager', { bundle: true }, null),
+  m('googleTagManager', 'Google Tag Manager', 'tag-manager', 'useScriptGoogleTagManager', {}, null),
   // payments
   m('stripe', 'Stripe', 'payments', 'useScriptStripe', {}, null),
   m('lemonSqueezy', 'Lemon Squeezy', 'payments', 'useScriptLemonSqueezy', { proxy: true }, PRIVACY_IP_ONLY),
@@ -499,18 +498,9 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'TikTok Pixel',
       category: 'ad',
       envDefaults: { id: '' },
-      bundle: {
-        resolve(options?: TikTokPixelInput) {
-          if (!options?.id)
-            return false
-          const host = options.region === 'us' ? 'analytics.us.tiktok.com' : 'analytics.tiktok.com'
-          return withQuery(`https://${host}/i18n/pixel/events.js`, { sdkid: options.id, lib: 'ttq' })
-        },
-      },
-      proxy: {
-        domains: ['analytics.tiktok.com', 'analytics.us.tiktok.com', 'mon.tiktok.com', 'mcs.tiktok.com'],
-        privacy: PRIVACY_FULL,
-      },
+      // events.js embeds visitor IDs and country, and sets TikTok's _ttp cookie.
+      // Fetch it from TikTok in each browser. Bundling freezes those values;
+      // proxying drops the vendor cookie and replaces the visitor's location.
       partytown: { forwards: ['ttq.track', 'ttq.page', 'ttq.identify', 'ttq.grantConsent', 'ttq.revokeConsent', 'ttq.holdConsent'] },
     }),
     def('snapchatPixel', {
@@ -778,37 +768,16 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'Google Tag Manager',
       category: 'tag-manager',
       envDefaults: { id: '' },
-      bundle: {
-        resolve(options) {
-          if (!options?.id)
-            return false
-          return withQuery('https://www.googletagmanager.com/gtm.js', {
-            id: options.id,
-            l: options.l,
-            gtm_auth: options.auth,
-            gtm_preview: options.preview,
-            gtm_cookies_win: options.cookiesWin ? 'x' : undefined,
-            gtm_debug: options.debug ? 'x' : undefined,
-            gtm_npa: options.npa ? '1' : undefined,
-            gtm_data_layer: options.dataLayer,
-            gtm_env: options.envName,
-            gtm_auth_referrer_policy: options.authReferrerPolicy,
-          })
-        },
-      },
+      // gtm.js embeds the request's country and region for consent decisions.
+      // A build-time copy would apply the build machine's region to everyone.
     }),
     def('googleAnalytics', {
       schema: GoogleAnalyticsOptions,
       label: 'Google Analytics',
       category: 'analytics',
       envDefaults: { id: '' },
-      bundle: {
-        resolve(options) {
-          if (!options?.id)
-            return false
-          return withQuery('https://www.googletagmanager.com/gtag/js', { id: options?.id, l: options?.l })
-        },
-      },
+      // gtag.js embeds the request's country and region for consent decisions.
+      // Keep the loader remote so each browser receives its own region.
       proxy: {
         // `www.google.com` covers static URLs (www.google.com/g/collect) rewritten at build time;
         // `www.google.*` covers the geo-localized ga-audiences beacon, which gtag.js dynamically

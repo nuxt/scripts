@@ -61,7 +61,7 @@ export function useScriptXPixel<T extends XPixelApi>(_options?: XPixelInput) {
               // @ts-expect-error untyped
               if (s.exe) {
                 // @ts-expect-error untyped
-                s.exe(s, args)
+                s.exe(...args)
               }
               else {
                 // @ts-expect-error untyped
