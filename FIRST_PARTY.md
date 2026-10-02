@@ -2,19 +2,26 @@
 
 ## Architecture
 
-Two distinct mechanisms for first-party routing:
+First-party routing uses bundling or SDK endpoint configuration.
 
 ### Path A: Bundle + Rewrite + Intercept (most scripts)
 1. **Build**: Downloads script, rewrites hardcoded URLs via AST using domain-to-proxy mappings derived from `proxy-configs.ts` `domains[]`, applies SDK-specific `postProcess` patches
 2. **Client**: Intercept plugin wraps `fetch`/`sendBeacon`/`XHR`/`Image.src` via `__nuxtScripts` — any non-same-origin URL is automatically proxied through `/_scripts/p/<host><path>`
 3. **Server**: Nitro handler at `/_scripts/p/**` extracts the domain from the path, reconstructs the upstream URL, and proxies with privacy transforms
 
-### Path B: Config Injection + Proxy (PostHog only)
+### Path B: Config Injection + Proxy
 1. **Build**: `autoInject` on the PostHog proxy config sets `apiHost` → `/_scripts/p/us.i.posthog.com`
 2. **Client**: SDK natively uses the injected endpoint — no interception needed
 3. **Server**: Same Nitro proxy handler
 
-PostHog is the only true Path B script — it uses npm mode (`src: false`, no script to download/rewrite).
+PostHog uses npm mode, with no loader to download or rewrite.
+Google Analytics keeps its visitor-specific loader remote.
+The module provides a collection endpoint for its initial `gtag` configuration through `server_container_url`.
+Per-script `proxy: false` and static output disable that endpoint.
+
+TikTok Pixel keeps its loader and collection requests direct to preserve visitor IDs and vendor cookies.
+It has no collection proxy or proxy anonymization.
+Google Tag Manager also keeps its visitor-specific loader remote and has no collection proxy.
 
 ### How runtime interception works
 The AST rewriter transforms API calls in downloaded third-party scripts:
@@ -51,7 +58,7 @@ Some SDKs have quirks that require targeted regex patches after AST rewriting. T
 - **Rybbit**: SDK derives API host from `document.currentScript.src.split("/script.js")[0]` — breaks when bundled to `/_scripts/assets/<hash>.js`. Regex replaces the split expression with the proxy path.
 - **Fathom**: SDK checks `src.indexOf("cdn.usefathom.com") < 0` to detect self-hosted mode and overrides the tracker URL. Regex neutralizes this check.
 
-Note: Google Analytics previously needed `postProcess` regex patches for dynamically constructed collect URLs. This is no longer needed since the runtime intercept plugin catches all non-same-origin URLs at the `sendBeacon`/`fetch` call site.
+Google Analytics uses its configured collection endpoint instead of AST rewriting or native network interception.
 
 ## Path aliases (`proxy.alias`)
 
@@ -127,19 +134,20 @@ Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 | Preset | Flags | Used by |
 |---|---|---|
 | `PRIVACY_NONE` | all false | (not currently assigned to any script) |
-| `PRIVACY_FULL` | all true | Meta, TikTok, X, Snap, Reddit, LinkedIn |
+| `PRIVACY_FULL` | all true | Meta, X, Snap, Reddit, LinkedIn |
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
 | `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo, Calendly |
 
-Note: GTM, Segment, Crisp, Mixpanel, Bing UET, and SpeedCurve have no proxy capability, so no privacy transforms are applied.
+Note: TikTok, GTM, Segment, Crisp, Mixpanel, Bing UET, and SpeedCurve have no proxy capability, so no privacy transforms are applied.
 
 ## Script Support
 
 | Config Key | Registry Scripts | Privacy | Mechanism |
 |---|---|---|---|
-| `googleAnalytics` | googleAnalytics, **googleAdsense** | `PRIVACY_HEATMAP` | Path A |
+| `googleAnalytics` | googleAnalytics | `PRIVACY_HEATMAP` | Path B, remote loader |
+| `googleAdsense` | googleAdsense | `PRIVACY_HEATMAP` | Path A, shared GA proxy config |
 | `metaPixel` | metaPixel | `PRIVACY_FULL` | Path A |
-| `tiktokPixel` | tiktokPixel | `PRIVACY_FULL` | Path A |
+| `tiktokPixel` | tiktokPixel | n/a | Direct loader and collection |
 | `xPixel` | xPixel | `PRIVACY_FULL` | Path A |
 | `snapchatPixel` | snapchatPixel | `PRIVACY_FULL` | Path A |
 | `redditPixel` | redditPixel | `PRIVACY_FULL` | Path A |
@@ -163,7 +171,7 @@ Note: GTM, Segment, Crisp, Mixpanel, Bing UET, and SpeedCurve have no proxy capa
 | `intercom` | intercom | `PRIVACY_IP_ONLY` | Path A |
 | `gravatar` | gravatar | `PRIVACY_IP_ONLY` | Path A |
 | `calendly` | calendly | `PRIVACY_IP_ONLY` | Path A |
-| `googleTagManager` | googleTagManager | n/a | Bundle only |
+| `googleTagManager` | googleTagManager | n/a | Direct loader and runtime scripts |
 | `segment` | segment | n/a | Bundle only |
 | `crisp` | crisp | n/a | Bundle only |
 | `speedcurve` | speedcurve | n/a | No proxy (ID-parameterized CDN URL) |
@@ -182,8 +190,10 @@ Note: GTM, Segment, Crisp, Mixpanel, Bing UET, and SpeedCurve have no proxy capa
 ### Domain-based proxy routing
 Each proxy config declares `domains[]` — the list of third-party domains that script communicates with. The transform plugin derives rewrite rules at build time as `{ from: domain, to: proxyPrefix/domain }`. The server handler extracts the domain from the proxy path and forwards to the upstream.
 
-### Runtime intercept: no rules needed
-The intercept plugin proxies any non-same-origin URL. No domain allowlist or rule matching is required because `__nuxtScripts` wrappers are only injected into AST-rewritten third-party scripts. Regular app code uses native `fetch`/`sendBeacon` and is unaffected.
+### Runtime interception
+Bundled SDKs call `__nuxtScripts` wrappers after AST rewriting.
+Google Analytics uses its configured collection endpoint.
+Native application requests retain their original URLs.
 
 The server handler extracts the target domain directly from the proxy path (`/_scripts/p/<host>/<path>`) and looks up privacy config by domain. Unrecognized domains default to full anonymization (fail-closed).
 
