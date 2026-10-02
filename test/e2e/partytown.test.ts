@@ -10,6 +10,28 @@ await setup({
 })
 
 describe('partytown integration', () => {
+  it('loads TikTok directly when another script enables the proxy', async () => {
+    const browser = await getBrowser()
+    const page = await browser.newPage()
+    const requests: string[] = []
+    await page.route('https://analytics.tiktok.com/**', async (route) => {
+      requests.push(route.request().url())
+      await route.fulfill({
+        contentType: 'application/javascript',
+        headers: { 'Access-Control-Allow-Origin': new URL(url('/')).origin },
+        body: 'document.documentElement.setAttribute("data-tiktok-loaded", "yes")',
+      })
+    })
+    try {
+      await page.goto(url('/tiktok'), { waitUntil: 'domcontentloaded' })
+      await page.waitForSelector('html[data-tiktok-loaded="yes"]', { state: 'attached', timeout: 15000 })
+      expect(requests).toEqual(['https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=TEST_PIXEL_ID&lib=ttq'])
+    }
+    finally {
+      await page.close()
+    }
+  })
+
   it('script tag has type="text/partytown" when partytown option is enabled', async () => {
     const browser = await getBrowser()
     const page = await browser.newPage()
