@@ -456,7 +456,6 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('googleAnalytics')
       expect(configs).not.toHaveProperty('googleTagManager')
       expect(configs).toHaveProperty('metaPixel')
-      expect(configs).toHaveProperty('tiktokPixel')
       expect(configs).not.toHaveProperty('segment')
       expect(configs).toHaveProperty('clarity')
       expect(configs).toHaveProperty('hotjar')

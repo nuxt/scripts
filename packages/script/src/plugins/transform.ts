@@ -317,8 +317,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
               else {
               // find the registry node
                 const registryNode = options.scripts?.find(i => i.import.name === fnName)
-                if (!registryNode) {
-                // silent failure
+                if (!registryNode || !registryNode.bundle) {
+                // Registry capabilities are a ceiling, including explicit bundle overrides.
                   return
                 }
                 // The composable name may diverge from the registry key (e.g.

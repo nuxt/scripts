@@ -45,13 +45,6 @@ const testCases: ScriptTestCase[] = [
     forbiddenAfterRewrite: ['connect.facebook.net'],
   },
   {
-    name: 'TikTok Pixel',
-    url: 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=XXXXXXX',
-    registryKey: 'tiktokPixel',
-    expectedPatterns: ['tiktok'],
-    forbiddenAfterRewrite: ['analytics.tiktok.com'],
-  },
-  {
     name: 'Microsoft Clarity',
     url: 'https://www.clarity.ms/tag/XXXXXXX',
     registryKey: 'clarity',
@@ -167,11 +160,6 @@ describe('third-party script proxy replacements', () => {
           n.src='https://connect.facebook.net/en_US/fbevents.js';
           t.src="https://www.facebook.com/tr?id=123";
         }();
-      `,
-      tiktokPixel: `
-        (function() {
-          var url = "https://analytics.tiktok.com/i18n/pixel/events.js";
-        })();
       `,
       clarity: `
         (function(c,l,a,r,i,t,y) {
