@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useScriptTikTokPixel({ id: 'TEST_PIXEL_ID' }, { partytown: true, trigger: 'onNuxtReady' })
+useScriptTikTokPixel({ id: 'TEST_PIXEL_ID', scriptOptions: { partytown: true, trigger: 'onNuxtReady' } })
 </script>
 
 <template>
