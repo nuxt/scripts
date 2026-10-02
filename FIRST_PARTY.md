@@ -16,7 +16,7 @@ First-party routing uses bundling or SDK endpoint configuration.
 
 PostHog uses npm mode, with no loader to download or rewrite.
 Google Analytics keeps its visitor-specific loader remote.
-The module provides a collection endpoint for its initial `gtag` configuration through `server_container_url`.
+The module provides a collection endpoint for its initial `gtag` configuration through `transport_url`.
 Per-script `proxy: false` and static output disable that endpoint.
 
 TikTok Pixel keeps its loader and collection requests direct to preserve visitor IDs and vendor cookies.
