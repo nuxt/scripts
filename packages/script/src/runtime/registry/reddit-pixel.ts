@@ -11,7 +11,7 @@ type RdtFns
 
 export interface RedditPixelApi {
   rdt: RdtFns & {
-    sendEvent: (rdt: RedditPixelApi['rdt'], args: unknown[]) => void
+    sendEvent: (command: string, ...args: unknown[]) => void
     callQueue: unknown[]
   }
 }
@@ -39,7 +39,7 @@ export function useScriptRedditPixel<T extends RedditPixelApi>(_options?: Reddit
         : () => {
             const rdt = function (...args: unknown[]) {
               if ((rdt as any).sendEvent) {
-                (rdt as any).sendEvent(rdt, args)
+                (rdt as any).sendEvent(...args)
               }
               else {
                 (rdt as any).callQueue.push(args)

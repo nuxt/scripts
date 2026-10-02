@@ -887,7 +887,7 @@
       {
         "name": "RedditPixelApi",
         "kind": "interface",
-        "code": "export interface RedditPixelApi {\n  rdt: RdtFns & {\n    sendEvent: (rdt: RedditPixelApi['rdt'], args: unknown[]) => void\n    callQueue: unknown[]\n  }\n}"
+        "code": "export interface RedditPixelApi {\n  rdt: RdtFns & {\n    sendEvent: (command: string, ...args: unknown[]) => void\n    callQueue: unknown[]\n  }\n}"
       },
       {
         "name": "RedditPixelOptions",
