@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyAutoInject } from '../../packages/script/src/module'
+import { applyAutoInject, isProxyDisabled } from '../../packages/script/src/module'
 import { normalizeRegistryConfig } from '../../packages/script/src/normalize'
 import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
 
@@ -221,5 +221,16 @@ describe('autoInject via proxy configs', () => {
 
       expect(rt.public.scripts.posthog.apiHost).toBe('/_analytics/us.i.posthog.com')
     })
+  })
+})
+
+describe('runtime proxy opt-outs', () => {
+  it.each([
+    { proxy: false },
+    { scriptOptions: { proxy: false } },
+  ])('disables collection routing for runtime input %j', (input) => {
+    const registry: any = { googleAnalytics: [{ id: 'G-TEST' }] }
+    const runtime = makeRuntimeConfig({ googleAnalytics: input })
+    expect(isProxyDisabled('googleAnalytics', registry, runtime)).toBe(true)
   })
 })

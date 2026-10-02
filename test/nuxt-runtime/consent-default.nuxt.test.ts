@@ -35,10 +35,12 @@ async function buildMockUseRegistryScript() {
 
 vi.mock('#nuxt-scripts/utils', async () => ({
   useRegistryScript: await buildMockUseRegistryScript(),
+  scriptProxyEndpoint: () => undefined,
 }))
 
 vi.mock('../../packages/script/src/runtime/utils', async () => ({
   useRegistryScript: await buildMockUseRegistryScript(),
+  scriptProxyEndpoint: () => undefined,
   scriptRuntimeConfig: () => ({}),
   scriptsPrefix: () => '/_scripts',
   requireRegistryEndpoint: () => {},

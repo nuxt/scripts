@@ -66,6 +66,16 @@ export function scriptRuntimeConfig<T extends RegistryScriptKey>(key: T): Script
   return ((useRuntimeConfig().public.scripts || {}) as ScriptRegistry)[key]
 }
 
+export function scriptProxyEndpoint(key: string, options?: NuxtUseScriptOptions): string | undefined {
+  const config = useRuntimeConfig().public['nuxt-scripts'] as {
+    defaultScriptOptions?: NuxtUseScriptOptions
+    proxyEndpoints?: Record<string, string>
+  } | undefined
+  if ((options?.proxy ?? config?.defaultScriptOptions?.proxy) === false)
+    return
+  return config?.proxyEndpoints?.[key]
+}
+
 export function scriptsPrefix(): string {
   return (useRuntimeConfig().public['nuxt-scripts'] as any)?.prefix || '/_scripts'
 }
