@@ -929,6 +929,9 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
  */
 export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: Record<string, string>, proxyDomains: string[]): string {
   return `function(url, location, type) {
+  // Google loaders require the visitor's region, even when their origin is configured explicitly.
+  if (url.hostname === 'www.googletagmanager.com')
+    return;
   var domains = ${JSON.stringify(proxyDomains)};
   var matchDomain = ${matchDomain.toString()};
   if ((url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== location.origin
