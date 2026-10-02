@@ -123,7 +123,7 @@ export function isProxyDisabled(
     return true
   if (runtimeConfig) {
     const rtEntry = (runtimeConfig.public?.scripts as Record<string, any> | undefined)?.[registryKey]
-    if (rtEntry?.proxy === false)
+    if (rtEntry?.proxy === false || rtEntry?.scriptOptions?.proxy === false)
       return true
   }
   return false
@@ -807,7 +807,7 @@ export default defineNuxtModule<ModuleOptions>({
           }
           if (!script.proxy)
             continue
-          if (isProxyDisabled(key, config.registry))
+          if (isProxyDisabled(key, config.registry, nuxt.options.runtimeConfig))
             continue
 
           const configKey = (typeof script.proxy === 'string' ? script.proxy : key) as RegistryScriptKey
@@ -875,6 +875,12 @@ export default defineNuxtModule<ModuleOptions>({
           aliasOwner.set(alias, domain)
         }
         const aliasToDomain = invertAliasMap(domainAliases)
+        if (proxyConfiguredKeys.includes('googleAnalytics') && !isProxyDisabled('googleAnalytics', config.registry, nuxt.options.runtimeConfig)) {
+          nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
+            { proxyEndpoints: { googleAnalytics: aliasProxyValue(`${proxyPrefix}/www.google-analytics.com`, proxyPrefix, proxyAlias) } },
+            nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
+          ) as any
+        }
 
         // Register intercept plugin
         addPluginTemplate({
@@ -905,7 +911,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (partytownScripts.size && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
-            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix, domainAliases)
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix, domainAliases, Object.keys(domainPrivacy))
             ;(nuxt.options as any).partytown = partytownConfig
             logger.info('[partytown] Auto-configured resolveUrl for proxy')
           }

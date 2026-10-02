@@ -1,12 +1,9 @@
-// Repro for nuxt/scripts#925. The bundler derived the registry key from the
-// composable name (`useScriptTikTokPixel` → `tikTokPixel`) instead of using the
-// registry key (`tiktokPixel`), so the first-party proxy config lookup missed
-// and bundled pixels kept talking to TikTok directly.
+// Visitor-specific loaders must stay remote, including explicit bundle overrides.
 import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
 import type { RegistryScript } from '../../packages/script/src/runtime/types'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
-import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
+import { buildProxyConfigsFromRegistry, registry, resolveCapabilities } from '../../packages/script/src/registry'
 
 const mockBundleStorage: any = {
   getItem: vi.fn(),
@@ -49,30 +46,56 @@ async function registryEntry(registryKey: string): Promise<Required<RegistryScri
   return entry as Required<RegistryScript>
 }
 
-describe('bundle transformer resolves proxy config by registry key', () => {
-  it('rewrites bundled TikTok Pixel requests through the proxy', async () => {
-    const tiktok = await registryEntry('tiktokPixel')
-    const proxyConfigs = buildProxyConfigsFromRegistry(await registry())
-    mockUpstream(Buffer.from(
-      `(function(){var e="https://analytics.tiktok.com/i18n/identify";ttq.load("C1234");})();`,
-    ))
+describe('bundle transformer preserves visitor-specific loaders', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    fetchMock.mockReset()
+  })
+
+  it.each([
+    ['tiktokPixel', 'useScriptTikTokPixel', '{ id: \'C1234\' }'],
+    ['googleAnalytics', 'useScriptGoogleAnalytics', '{ id: \'G-TEST\' }'],
+    ['googleTagManager', 'useScriptGoogleTagManager', '{ id: \'GTM-TEST\' }'],
+  ])('does not download %s at build time', async (key, composable, input) => {
+    const entry = await registryEntry(key)
     const renderedScript = new Map()
+    mockUpstream(Buffer.from('window.visitorId = "build-machine"'))
 
     await runTransform(
-      `const instance = useScriptTikTokPixel({ id: 'C1234' }, { bundle: true })`,
-      {
-        renderedScript,
-        scripts: [tiktok],
-        proxyConfigs,
-        proxyPrefix: '/_scripts/p',
-      },
+      `const instance = ${composable}(${input})`,
+      { renderedScript, scripts: [entry] },
     )
 
-    const stored = [...renderedScript.values()][0]
-    expect(stored, 'bundle was not stored').toBeDefined()
-    const content = (stored.content as Buffer).toString('utf-8')
-    expect(content).toContain('/_scripts/p/analytics.tiktok.com')
-    expect(content).not.toContain('"https://analytics.tiktok.com')
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(renderedScript.size).toBe(0)
+  })
+
+  it.each([
+    ['tiktokPixel', 'useScriptTikTokPixel', '{ id: \'C1234\', src: \'https://analytics.tiktok.com/i18n/pixel/events.js\' }'],
+    ['googleAnalytics', 'useScriptGoogleAnalytics', '{ id: \'G-TEST\', src: \'https://www.googletagmanager.com/gtag/js\' }'],
+    ['googleTagManager', 'useScriptGoogleTagManager', '{ id: \'GTM-TEST\', src: \'https://www.googletagmanager.com/gtm.js\' }'],
+    ['usercentrics', 'useScriptUsercentrics', '{ rulesetId: \'test\' }'],
+  ])('ignores forced bundling for unsupported %s', async (key, composable, input) => {
+    const entry = await registryEntry(key)
+    const renderedScript = new Map()
+    mockUpstream(Buffer.from('window.visitorId = "build-machine"'))
+
+    await runTransform(
+      `const instance = ${composable}(${input}, { bundle: 'force' })`,
+      { renderedScript, scripts: [entry] },
+    )
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(renderedScript.size).toBe(0)
+  })
+
+  it('does not enable TikTok proxy routing through user overrides', async () => {
+    const entry = await registryEntry('tiktokPixel')
+    expect(resolveCapabilities(entry, { bundle: true, proxy: true })).toEqual({
+      bundle: false,
+      proxy: false,
+      partytown: false,
+    })
   })
 
   it('rewrites bundled LinkedIn Insight requests through the proxy', async () => {

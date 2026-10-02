@@ -1,7 +1,7 @@
 import type { ConsentState, RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import type { GcmConsentApi } from './_gcm-consent'
 import { withQuery } from 'ufo'
-import { useRegistryScript } from '#nuxt-scripts/utils'
+import { scriptProxyEndpoint, useRegistryScript } from '#nuxt-scripts/utils'
 import { GoogleAnalyticsOptions } from './schemas'
 
 export type GtagCustomParams = Record<string, any>
@@ -115,6 +115,9 @@ export type GoogleAnalyticsInput = RegistryScriptInput<typeof GoogleAnalyticsOpt
 export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?: GoogleAnalyticsInput & { onBeforeGtagStart?: (gtag: GTag) => void }): UseScriptContext<T, GcmConsentApi> {
   return useRegistryScript<T, typeof GoogleAnalyticsOptions>(_options?.key || 'googleAnalytics', (options) => {
     const dataLayerName = options?.l ?? 'dataLayer'
+    const collectionEndpoint = import.meta.client
+      ? scriptProxyEndpoint('googleAnalytics', (options as GoogleAnalyticsInput)?.scriptOptions)
+      : undefined
     const w = import.meta.client ? window as any : {}
     return {
       scriptInput: {
@@ -152,7 +155,14 @@ export function useScriptGoogleAnalytics<T extends GoogleAnalyticsApi>(_options?
             _options?.onBeforeGtagStart?.(w.gtag)
             w.gtag('js', new Date())
             if (options?.id) {
-              w.gtag('config', (options?.id))
+              if (collectionEndpoint) {
+                w.gtag('config', options.id, {
+                  transport_url: new URL(collectionEndpoint, window.location.origin).href,
+                })
+              }
+              else {
+                w.gtag('config', options.id)
+              }
             }
           },
     }

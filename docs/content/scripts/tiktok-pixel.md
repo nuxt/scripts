@@ -18,6 +18,10 @@ Use [`useScriptTikTokPixel()`{lang="ts"}](/scripts/tiktok-pixel){lang="ts"} to l
 ::script-docs
 ::
 
+The loader and collection requests go directly to TikTok to preserve visitor IDs and [vendor cookies](https://ads.tiktok.com/resources/help/article/using-cookies-with-tiktok-pixel?lang=en).
+Nuxt Scripts does not bundle TikTok Pixel or apply collection proxying and IP anonymization.
+Use a [consent trigger](/docs/guides/consent#binary-load-gate) to control when requests start.
+
 ## Disabling automatic page views
 
 By default, TikTok Pixel tracks a page view during initialization. Disable it in the composable call:

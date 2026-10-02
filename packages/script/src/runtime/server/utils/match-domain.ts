@@ -26,10 +26,10 @@
  *
  * Bare patterns also match subdomains, e.g. `google.com` matches `mail.google.com`.
  */
-const TLD_WILDCARD_RE = /^(?:com|[a-z]{2}|(?:com|co)\.[a-z]{2})$/i
-const SUBDOMAIN_LABEL_RE = /^[^.]+$/
-
 export function matchDomain(domain: string, pattern: string): boolean {
+  // Keep the matcher self-contained so the Partytown resolver can serialize it.
+  const TLD_WILDCARD_RE = /^(?:com|[a-z]{2}|(?:com|co)\.[a-z]{2})$/i
+  const SUBDOMAIN_LABEL_RE = /^[^.]+$/
   if (!pattern.includes('*'))
     return domain === pattern || domain.endsWith(`.${pattern}`)
 
