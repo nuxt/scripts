@@ -1,7 +1,8 @@
 import { runInNewContext } from 'node:vm'
 import { describe, expect, it, vi } from 'vitest'
+import { resolveConfiguredProxyDomains } from '../../packages/script/src/module'
 import { generateInterceptPluginContents } from '../../packages/script/src/plugins/intercept'
-import { generatePartytownResolveUrl } from '../../packages/script/src/registry'
+import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, registry } from '../../packages/script/src/registry'
 
 const ALIASES = { 'us.i.posthog.com': 'ph' }
 
@@ -15,7 +16,7 @@ function evaluateResolveUrl(source: string) {
 describe('proxy alias - generated runtime code (#814)', () => {
   describe('generatePartytownResolveUrl', () => {
     it('rewrites a third-party host to its alias', () => {
-      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', ALIASES))
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', ALIASES, ['us.i.posthog.com']))
       const out = resolveUrl(
         new URL('https://us.i.posthog.com/e/?x=1'),
         new URL('https://my-site.test/'),
@@ -25,7 +26,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
     })
 
     it('falls back to the verbatim host when no alias is configured', () => {
-      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p'))
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, ['eu.i.posthog.com']))
       const out = resolveUrl(
         new URL('https://eu.i.posthog.com/e/'),
         new URL('https://my-site.test/'),
@@ -36,7 +37,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
     it.each(['constructor', 'toString', '__proto__'])(
       'treats inherited property name %s as an unaliased host',
       (host) => {
-        const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p'))
+        const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, [new URL(`https://${host}`).hostname]))
         const out = resolveUrl(
           new URL(`https://${host}/collect`),
           new URL('https://my-site.test/'),
@@ -46,8 +47,42 @@ describe('proxy alias - generated runtime code (#814)', () => {
       },
     )
 
+    it.each([
+      'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=test',
+      'https://analytics.us.tiktok.com/api/v2/pixel',
+      'https://mon.tiktok.com/monitor',
+      'https://example.com/unconfigured.js',
+    ])('leaves unconfigured vendor requests remote: %s', (src) => {
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, ['www.google-analytics.com']))
+      expect(resolveUrl(new URL(src), new URL('https://my-site.test/'))).toBeUndefined()
+    })
+
+    it.each([
+      ['https://a.clarity.ms/collect', '*.clarity.ms'],
+      ['https://www.google.co.jp/collect', 'www.google.*'],
+      ['https://sub.example.com/collect', 'example.com'],
+    ])('routes supported wildcard or subdomain requests: %s', (src, domain) => {
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, [domain]))
+      expect(resolveUrl(new URL(src), new URL('https://my-site.test/'))?.pathname)
+        .toBe(`/_scripts/p/${new URL(src).host}/collect`)
+    })
+
+    it('keeps Google visitor loaders remote while proxying collection requests', async () => {
+      const configs = buildProxyConfigsFromRegistry(await registry())
+      const configuredDomains = resolveConfiguredProxyDomains({
+        scriptInput: { src: 'https://www.googletagmanager.com/gtag/js?id=G-TEST' },
+      }, configs.googleAnalytics)
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, [...configs.googleAnalytics!.domains, ...configuredDomains]))
+      const location = new URL('https://my-site.test/')
+
+      expect(resolveUrl(new URL('https://www.googletagmanager.com/gtag/js?id=G-TEST'), location)).toBeUndefined()
+      expect(resolveUrl(new URL('https://www.googletagmanager.com/gtm.js?id=GTM-TEST'), location)).toBeUndefined()
+      expect(resolveUrl(new URL('https://www.google-analytics.com/g/collect?v=2'), location)?.pathname)
+        .toBe('/_scripts/p/www.google-analytics.com/g/collect')
+    })
+
     it('leaves non-HTTP protocols unresolved', () => {
-      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p'))
+      const resolveUrl = evaluateResolveUrl(generatePartytownResolveUrl('/_scripts/p', {}, []))
 
       expect(resolveUrl(new URL('data:text/plain,hello'), new URL('https://my-site.test/'))).toBeUndefined()
     })
