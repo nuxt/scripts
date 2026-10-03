@@ -28,6 +28,9 @@ interface ProxyConfig {
 
 const COMPRESSION_RE = /gzip|deflate|br|compress|base64/i
 const CLIENT_HINT_VERSION_RE = /;v="(\d+)\.[^"]*"/g
+/** GA4 collection hosts used by gtag.js, including the www.google.com copy of /g/collect. */
+const GA_COLLECT_HOST_RE = /(?:^|\.)analytics\.google\.com$|\.google-analytics\.com$|^www\.google\.com$/
+const GA_COLLECT_PATH_RE = /\/g\/(?:s\/)?collect$/
 const MAX_TRANSFORM_BODY_SIZE = 2 * 1024 * 1024
 const UPSTREAM_TIMEOUT_MS = 15000
 const MAX_UPSTREAM_REDIRECTS = 5
@@ -500,6 +503,20 @@ export default defineEventHandler(async (event) => {
       .split(',')
       .map(ip => anonymizeIP(ip.trim()))
       .join(', ')
+  }
+
+  // GA4 geolocates by the connecting IP (this server) and ignores X-Forwarded-For.
+  // `_uip` carries the same, possibly anonymized, client IP as the header instead.
+  // With IP privacy on, a client-supplied `_uip` is replaced so it cannot bypass anonymization.
+  const isGaCollect = GA_COLLECT_HOST_RE.test(domain) && GA_COLLECT_PATH_RE.test(remainingPath.split('?')[0] || '')
+  if (isGaCollect && (privacy.ip || originalQuery._uip === undefined)) {
+    const userIP = headers['x-forwarded-for']?.split(',')[0]?.trim()
+    const queryIdx = targetUrl.indexOf('?')
+    const base = queryIdx === -1 ? targetUrl : targetUrl.slice(0, queryIdx)
+    const params = queryIdx === -1 ? [] : targetUrl.slice(queryIdx + 1).split('&').filter(p => p && p !== '_uip' && !p.startsWith('_uip='))
+    if (userIP)
+      params.push(`_uip=${encodeURIComponent(userIP)}`)
+    targetUrl = params.length ? `${base}?${params.join('&')}` : base
   }
 
   // Process request body: buffer the raw bytes once so privacy transforms can
