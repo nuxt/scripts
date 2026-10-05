@@ -565,8 +565,8 @@ importers:
         specifier: ^11.0.1
         version: 11.0.1
       '@stripe/stripe-js':
-        specifier: ^9.16.0
-        version: 9.16.0
+        specifier: ^10.0.0
+        version: 10.0.0
       '@types/geojson':
         specifier: ^7946.0.16
         version: 7946.0.16
@@ -2670,8 +2670,8 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@stripe/stripe-js@9.16.0':
-    resolution: {integrity: sha512-PNZmy9hbuiuiyjAsigMlQChzJqrNEzQUtYIL/z5w0dsx27Ha69SBTYa2o8/M0Hbfiz9V2qctqX2DBd5sa57qoA==}
+  '@stripe/stripe-js@10.0.0':
+    resolution: {integrity: sha512-y5LKFTtnz1ciM+IQfrDfHcpjGlsm5Ao4onaUn4scurI/B6rNhrmV+ScTPDo+3Ges5oF8ol4tBkBAIZyVXVBIXw==}
     engines: {node: '>=12.16'}
 
   '@stylistic/eslint-plugin@5.10.0':
@@ -10264,7 +10264,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@stripe/stripe-js@9.16.0': {}
+  '@stripe/stripe-js@10.0.0': {}
 
   '@stylistic/eslint-plugin@5.10.0(eslint@10.10.0(jiti@2.7.0)(supports-color@10.2.2))':
     dependencies:
