@@ -10,6 +10,7 @@ export default defineBuildConfig({
   externals: [
     'nuxt',
     'nuxt/schema',
+    'nuxt/server',
     '@nuxt/kit',
     '@nuxt/schema',
     'nitropack',

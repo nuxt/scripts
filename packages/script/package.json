@@ -50,7 +50,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=24.0.0"
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
     "build": "nuxt-module-build build",
@@ -71,7 +71,8 @@
       "posthog-js",
       "maplibre-gl",
       "@nuxt/devtools-kit",
-      "sirv"
+      "sirv",
+      "nuxt/server"
     ]
   },
   "peerDependencies": {
@@ -84,10 +85,11 @@
     "@types/leaflet": "^1.9.22",
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.3.0",
-    "@unhead/vue": "^3.4.0",
+    "@unhead/vue": "^3.4.2",
     "maplibre-gl": "^6.9.1",
+    "nuxt": "^4.6.0 || ^5.0.0",
     "posthog-js": "^1.433.3",
-    "unhead": "^3.4.0"
+    "unhead": "^3.4.2"
   },
   "peerDependenciesMeta": {
     "@googlemaps/markerclusterer": {
@@ -125,13 +127,14 @@
     }
   },
   "dependencies": {
-    "@nuxt/devtools-kit": "catalog:",
+    "@nuxt/kit": "catalog:",
     "@oxc-project/types": "catalog:",
     "@vueuse/core": "catalog:",
     "@vueuse/shared": "catalog:",
     "consola": "catalog:",
     "defu": "catalog:",
     "h3": "catalog:",
+    "lru-cache": "catalog:",
     "magic-string": "catalog:",
     "ofetch": "catalog:",
     "ohash": "catalog:",
@@ -147,7 +150,6 @@
     "valibot": "catalog:"
   },
   "devDependencies": {
-    "@nuxt/kit": "catalog:",
     "@nuxt/module-builder": "catalog:",
     "@speedcurve/lux": "catalog:",
     "@unhead/vue": "catalog:",

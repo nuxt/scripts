@@ -8,6 +8,7 @@ export default antfu(
       'CLAUDE.md',
       '.claude/**',
       'test/fixtures/**',
+      'test/packed/fixtures/**',
       'playground/**',
       'client/**',
       'examples/**',

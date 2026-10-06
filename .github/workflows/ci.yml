@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      - '**/*.md'
       - 'docs/**'
   pull_request:
     paths-ignore:
-      - '**/README.md'
+      - '**/*.md'
       - 'docs/**'
 
 concurrency:
@@ -152,42 +152,43 @@ jobs:
             pnpm vitest run --project e2e "$test_file"
           done
 
-  nitro-3:
+  packed-consumer:
     runs-on: ubuntu-24.04-arm
-    name: Nitro 3 compatibility
+    name: Packed Nuxt ${{ matrix.nuxt }} on Node ${{ matrix.node }} (future ${{ matrix.future }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {nuxt: 4.6.0, node: 22.22.3, future: false, panel: false, base: /}
+          - {nuxt: 4.6.0, node: 22.22.3, future: true, panel: false, base: /}
+          - {nuxt: 4.6.0, node: 24.15.0, future: false, panel: false, base: /, edge: true}
+          - {nuxt: 4.6.0, node: 24.15.0, future: true, panel: true, base: /sub/}
+          - {nuxt: 5.0.0-2610060838-ddb1dab, node: 24.15.0, future: false, panel: true, base: /}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version: ${{ matrix.node }}
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm i
-
-      - name: Install Nuxt 5
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dev:prepare
+      - run: pnpm build
+      - name: Verify isolated packed consumer
+        run: node test/packed/verify.ts --nuxt ${{ matrix.nuxt }} --base ${{ matrix.base }} ${{ matrix.future && '--future' || '' }} ${{ matrix.panel && '--devtools' || '' }} ${{ matrix.edge && '--edge' || '' }}
+      - name: Verify optional panel boundaries
+        if: matrix.edge
         run: |
-          pnpm add --workspace-root --save-dev "nuxt@npm:nuxt-nightly@5.0.0-29745766.482f3357" "@nuxt/kit@npm:@nuxt/kit-nightly@5.0.0-29745766.482f3357"
-          pnpm --filter @nuxt/scripts add --save-dev "@nuxt/kit@npm:@nuxt/kit-nightly@5.0.0-29745766.482f3357"
-
-      - name: Dev prepare
-        run: pnpm --filter @nuxt/scripts dev:prepare
-
-      - name: Nuxt prepare
-        run: |
-          pnpm exec nuxt prepare
-          pnpm exec nuxt prepare test/fixtures/proxy-alias
-
-      - name: Typecheck Nitro 3 compatibility
-        run: pnpm exec vue-tsc --noEmit -p test/fixtures/proxy-alias/.nuxt/tsconfig.server.json
-
-      - name: Run Nitro 3 compatibility tests
-        run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts
+          node test/packed/verify.ts --devtools --devtools-disabled
+          node test/packed/verify.ts --mismatched-devtools
+      - name: Upload consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: packed-${{ matrix.nuxt }}-${{ matrix.node }}-${{ matrix.future }}
+          path: |
+            ${{ runner.temp }}/nuxt-scripts-packed-*/verification.log
+            ${{ runner.temp }}/nuxt-scripts-packed-*/dependencies.json
+            ${{ runner.temp }}/nuxt-scripts-packed-*/devtools-tab.json

@@ -1,6 +1,7 @@
+import type { RequestEvent } from 'nuxt/server'
 import type { ProxyPrivacyInput, ResolvedProxyPrivacy } from './utils/privacy'
-import { createError, defineEventHandler, getHeaders, getQuery, getRequestIP, getRequestWebStream, sendStream, setResponseHeader, setResponseStatus } from '#nuxt-scripts/h3'
-import { useNitroApp, useRuntimeConfig } from '#nuxt-scripts/nitro'
+import { createError, defineEventHandler, getQuery, getRequestHeaders, getRequestIP, setResponseStatus, useRuntimeConfig } from 'nuxt/server'
+import { useNitroApp } from '#nuxt-scripts/nitro'
 import { matchDomain } from './utils/match-domain'
 import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
 import {
@@ -75,13 +76,13 @@ export const SKIP_REQUEST_HEADERS = new Set([
  * Read the raw request body bytes, bounded by MAX_TRANSFORM_BODY_SIZE.
  * Buffering lets privacy transforms and redirect hops replay the same bytes.
  */
-async function readBodyBytes(event: Parameters<typeof getRequestWebStream>[0]): Promise<Uint8Array<ArrayBuffer> | undefined> {
-  const contentLength = Number(getHeaders(event)['content-length'] || 0)
+async function readBodyBytes(event: RequestEvent): Promise<Uint8Array<ArrayBuffer> | undefined> {
+  const contentLength = Number(getRequestHeaders(event)['content-length'] || 0)
   if (Number.isFinite(contentLength) && contentLength > MAX_TRANSFORM_BODY_SIZE) {
-    throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
+    throw createError({ status: 413, statusText: 'Proxy request body too large' })
   }
 
-  const stream = getRequestWebStream(event)
+  const stream = event.req.body
   if (!stream)
     return undefined
   const reader = stream.getReader()
@@ -102,7 +103,7 @@ async function readBodyBytes(event: Parameters<typeof getRequestWebStream>[0]): 
         catch {
           // The size-limit response takes precedence over cancellation errors.
         }
-        throw createError({ statusCode: 413, statusMessage: 'Proxy request body too large' })
+        throw createError({ status: 413, statusText: 'Proxy request body too large' })
       }
       chunks.push(value)
     }
@@ -141,8 +142,8 @@ export function withResponseBodyIdleTimeout(
       timeoutId = setTimeout(() => {
         stopped = true
         const error = createError({
-          statusCode: 504,
-          statusMessage: 'Gateway Timeout',
+          status: 504,
+          statusText: 'Gateway Timeout',
           message: 'Upstream response body timed out',
         })
         onTimeout()
@@ -209,8 +210,8 @@ function isUpstreamRedirect(status: number): boolean {
 function upstreamFetchError(err: unknown, timedOut: boolean) {
   const blockedPrivateNetwork = isPrivateNetworkResolutionError(err)
   return createError({
-    statusCode: blockedPrivateNetwork ? 403 : timedOut ? 504 : 502,
-    statusMessage: blockedPrivateNetwork ? 'Local network targets are not allowed' : timedOut ? 'Gateway Timeout' : 'Bad Gateway',
+    status: blockedPrivateNetwork ? 403 : timedOut ? 504 : 502,
+    statusText: blockedPrivateNetwork ? 'Local network targets are not allowed' : timedOut ? 'Gateway Timeout' : 'Bad Gateway',
     message: 'Proxy upstream request failed',
     cause: err,
     data: {
@@ -242,15 +243,15 @@ function resolveProxyRedirect(
   const location = response.headers.get('location')
   if (!location) {
     throw createError({
-      statusCode: 502,
-      statusMessage: 'Invalid upstream redirect',
+      status: 502,
+      statusText: 'Invalid upstream redirect',
       message: 'Upstream redirect has no Location header',
     })
   }
   if (redirectCount >= MAX_UPSTREAM_REDIRECTS) {
     throw createError({
-      statusCode: 502,
-      statusMessage: 'Too many upstream redirects',
+      status: 502,
+      statusText: 'Too many upstream redirects',
       message: 'Upstream redirect limit exceeded',
     })
   }
@@ -261,16 +262,16 @@ function resolveProxyRedirect(
   }
   catch (cause) {
     throw createError({
-      statusCode: 502,
-      statusMessage: 'Invalid upstream redirect',
+      status: 502,
+      statusText: 'Invalid upstream redirect',
       message: 'Upstream redirect URL is invalid',
       cause,
     })
   }
   if (!urlAllowed(nextUrl)) {
     throw createError({
-      statusCode: 502,
-      statusMessage: 'Unsafe upstream redirect',
+      status: 502,
+      statusText: 'Unsafe upstream redirect',
       message: `Upstream redirect target is not allowed: ${nextUrl.origin}`,
     })
   }
@@ -292,13 +293,13 @@ export default defineEventHandler(async (event) => {
 
   if (!proxyConfig) {
     throw createError({
-      statusCode: 500,
-      statusMessage: 'First-party proxy not configured',
+      status: 500,
+      statusText: 'First-party proxy not configured',
     })
   }
 
   const { proxyPrefix, domainPrivacy, aliasToDomain, privacy: globalPrivacy, debug = import.meta.dev } = proxyConfig
-  const path = event.path
+  const path = event.url.pathname + event.url.search
   const log = debug
     ? (message: string, ...args: any[]) => {
         // eslint-disable-next-line no-console
@@ -321,8 +322,8 @@ export default defineEventHandler(async (event) => {
   if (!domain) {
     log('[proxy] No domain in path:', path)
     throw createError({
-      statusCode: 404,
-      statusMessage: 'No proxy domain found',
+      status: 404,
+      statusText: 'No proxy domain found',
       message: `No domain in proxy path: ${path}`,
     })
   }
@@ -330,8 +331,8 @@ export default defineEventHandler(async (event) => {
   if (!isPublicNetworkHostname(domain)) {
     log('[proxy] Rejected local or non-public target:', domain)
     throw createError({
-      statusCode: 403,
-      statusMessage: 'Local network targets are not allowed',
+      status: 403,
+      statusText: 'Local network targets are not allowed',
     })
   }
 
@@ -347,8 +348,8 @@ export default defineEventHandler(async (event) => {
   if (perScriptInput === undefined) {
     log('[proxy] Rejected: domain not in allowlist:', domain)
     throw createError({
-      statusCode: 403,
-      statusMessage: 'Domain not allowed',
+      status: 403,
+      statusText: 'Domain not allowed',
       message: `Proxy domain not in allowlist: ${domain}`,
     })
   }
@@ -363,11 +364,11 @@ export default defineEventHandler(async (event) => {
   const privacy = globalPrivacy !== undefined ? mergePrivacy(perScriptResolved, globalPrivacy) : perScriptResolved
   const anyPrivacy = privacy.ip || privacy.userAgent || privacy.language || privacy.screen || privacy.timezone || privacy.hardware
 
-  const originalHeaders = getHeaders(event)
+  const originalHeaders = getRequestHeaders(event)
   const originalQuery = getQuery(event)
   const contentType = originalHeaders['content-type']?.toLowerCase() || ''
   const compressionParam = (originalQuery.compression as string) || ''
-  const method = event.method?.toUpperCase()
+  const method = event.req.method.toUpperCase()
   const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
   const transformableBodyType = contentType.includes('application/x-www-form-urlencoded')
     ? 'form'
@@ -576,8 +577,8 @@ export default defineEventHandler(async (event) => {
         }
         catch (error) {
           throw createError({
-            statusCode: 400,
-            statusMessage: 'Invalid JSON proxy request body',
+            status: 400,
+            statusText: 'Invalid JSON proxy request body',
             cause: error,
           })
         }
@@ -606,7 +607,7 @@ export default defineEventHandler(async (event) => {
   const nitro = useNitroApp()
   await (nitro.hooks?.callHook as ((name: string, ctx: any) => Promise<void>) | undefined)?.('nuxt-scripts:proxy', {
     timestamp: Date.now(),
-    path: event.path,
+    path,
     targetUrl,
     method: method || 'GET',
     privacy,
@@ -723,14 +724,14 @@ export default defineEventHandler(async (event) => {
   response.headers.forEach((value, key) => {
     const lowerKey = key.toLowerCase()
     if (!SKIP_RESPONSE_HEADERS.has(lowerKey) && !responseConnectionHeaders.has(lowerKey)) {
-      setResponseHeader(event, key, value)
+      event.res.headers.set(key, value)
     }
   })
 
   // This route can expose broad vendor hosts under the application's origin.
   // Sandbox direct document navigations while preserving subresource responses.
-  setResponseHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'; base-uri \'none\'; form-action \'none\'')
-  setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
+  event.res.headers.set('Content-Security-Policy', 'sandbox; default-src \'none\'; base-uri \'none\'; form-action \'none\'')
+  event.res.headers.set('X-Content-Type-Options', 'nosniff')
 
   setResponseStatus(event, response.status, response.statusText)
 
@@ -742,15 +743,41 @@ export default defineEventHandler(async (event) => {
   // Stream rather than buffering potentially large upstream responses. This lowers
   // memory pressure and lets the browser receive headers and chunks immediately.
   const guardedBody = withResponseBodyIdleTimeout(response.body, UPSTREAM_TIMEOUT_MS, () => controller.abort())
-  let streamError: unknown
-  try {
-    return await sendStream(event, guardedBody)
+  const reader = guardedBody.getReader()
+  const ownedNetwork = network
+  let closed = false
+  const close = async (error?: unknown) => {
+    if (closed)
+      return
+    closed = true
+    await closePublicNetworkDispatcher(ownedNetwork, error)
   }
-  catch (error) {
-    streamError = error
-    throw error
-  }
-  finally {
-    await closePublicNetworkDispatcher(network, streamError)
-  }
+  const bodyStream = new ReadableStream<Uint8Array>({
+    async pull(stream) {
+      const chunk = await reader.read().catch(async (error) => {
+        await close(error)
+        throw error
+      })
+      if (chunk.done) {
+        await close()
+        stream.close()
+      }
+      else {
+        stream.enqueue(chunk.value)
+      }
+    },
+    async cancel(reason) {
+      try {
+        await reader.cancel(reason)
+      }
+      finally {
+        await close(reason)
+      }
+    },
+  })
+  return new Response(bodyStream, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: event.res.headers,
+  })
 })

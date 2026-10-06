@@ -1,5 +1,11 @@
+import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 import { defineConfig, defineProject } from 'vitest/config'
+
+const nuxtRequire = createRequire(import.meta.resolve('nuxt/package.json'))
+const nitroServerDir = dirname(nuxtRequire.resolve('@nuxt/nitro-server/package.json'))
 
 export default defineConfig({
   test: {
@@ -24,10 +30,14 @@ export default defineConfig({
       defineProject({
         resolve: {
           alias: {
+            'nuxt/app': fileURLToPath(import.meta.resolve('nuxt/app')),
+            'nuxt/server': new URL('./test/unit/__mocks__/portable-server.ts', import.meta.url).pathname,
+            'nuxt/internal/server-runtime-config': new URL('./test/unit/__mocks__/runtime-config.ts', import.meta.url).pathname,
+            'nuxt/internal/server-app-config': new URL('./test/unit/__mocks__/app-config.ts', import.meta.url).pathname,
+            '#test/portable-event': join(nitroServerDir, 'dist/runtime/utils/event.mjs'),
             '@unhead/vue/scripts': new URL('./packages/script/node_modules/@unhead/vue/dist/scripts.mjs', import.meta.url).pathname,
             'unhead/scripts/triggers': new URL('./packages/script/node_modules/unhead/dist/scripts/triggers.mjs', import.meta.url).pathname,
             'unhead/scripts': new URL('./packages/script/node_modules/unhead/dist/scripts.mjs', import.meta.url).pathname,
-            '#nuxt-scripts/h3': 'h3',
             '#nuxt-scripts/nitro': new URL('./test/unit/__mocks__/empty.ts', import.meta.url).pathname,
             '#nuxt-scripts/network-dispatcher': new URL('./packages/script/src/runtime/server/utils/network-dispatcher.node.ts', import.meta.url).pathname,
             // Virtual emitted by the Nuxt module at build time; unit tests

@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { createError, defineEventHandler, getQuery } from 'nuxt/server'
 import { createCachedJsonFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 import { rewriteTweetImages } from './utils/embed-rewriters'
 
@@ -72,8 +72,8 @@ export default defineEventHandler(async (event) => {
 
   if (!tweetId || !TWEET_ID_RE.test(tweetId)) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Valid Tweet ID is required',
+      status: 400,
+      statusText: 'Valid Tweet ID is required',
     })
   }
 
@@ -92,8 +92,8 @@ export default defineEventHandler(async (event) => {
     },
   ).catch((error: any) => {
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to fetch tweet',
+      status: error.statusCode || 500,
+      statusText: error.statusMessage || 'Failed to fetch tweet',
     })
   })
 
@@ -101,14 +101,14 @@ export default defineEventHandler(async (event) => {
   // is a shared reference under the memory driver and mutation would corrupt
   // subsequent cache hits.
   const tweetData = structuredClone(tweetRaw) as TweetData
-  const handlerPath = event.path?.split('?')[0] || ''
+  const handlerPath = event.url.pathname
   const prefix = handlerPath.replace(EMBED_X_SUFFIX_RE, '') || '/_scripts'
   const imagePath = `${prefix}/embed/x-image`
   rewriteTweetImages(tweetData, imagePath)
 
   // Cache for 10 minutes
-  setHeader(event, 'Content-Type', 'application/json')
-  setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
+  event.res.headers.set('Content-Type', 'application/json')
+  event.res.headers.set('Cache-Control', 'public, max-age=600, s-maxage=600')
 
   return tweetData
 })

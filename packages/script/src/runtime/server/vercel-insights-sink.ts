@@ -1,4 +1,4 @@
-import { defineEventHandler, setResponseStatus } from '#nuxt-scripts/h3'
+import { defineEventHandler, setResponseStatus } from 'nuxt/server'
 
 export default defineEventHandler((event) => {
   setResponseStatus(event, 204)

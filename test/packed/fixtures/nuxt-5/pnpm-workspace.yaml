@@ -1,0 +1,29 @@
+packages: []
+trustPolicy: no-downgrade
+trustPolicyIgnoreAfter: 262800
+trustPolicyExclude:
+  - tinyexec@1.2.2
+overrides:
+  cssnano@^9.2.2: 8.0.10
+  '@unhead/vue@>=3': 3.4.2
+  '@unhead/bundler@>=3': 3.4.2
+  unhead@>=3: 3.4.2
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': true
+minimumReleaseAgeExclude:
+  - '@nuxt/kit-nightly@5.0.0-2610060838-ddb1dab'
+  - '@nuxt/kit@4.6.0'
+  - '@nuxt/nitro-server-nightly@5.0.0-2610060838-ddb1dab'
+  - '@nuxt/schema-nightly@5.0.0-2610060838-ddb1dab'
+  - '@nuxt/vite-builder-nightly@5.0.0-2610060838-ddb1dab'
+  - '@nuxt/vite-server-nightly@5.0.0-2610060838-ddb1dab'
+  - nuxt-nightly@5.0.0-2610060838-ddb1dab
+catalog:
+  '@types/node': 26.5.1
+  '@unhead/vue': 3.4.2
+  nuxt: npm:nuxt-nightly@5.0.0-2610060838-ddb1dab
+  typescript: npm:@typescript/typescript6@6.0.2
+  unhead: 3.4.2
+  vue: 3.5.43
+  vue-tsc: 3.3.11

@@ -13,10 +13,10 @@ interface NitroOptionsWithStorage {
   storage?: Record<string, unknown>
 }
 
-export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage): void {
+export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage, driver: string): void {
   nitroOptions.storage ||= {}
   nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] ||= {
-    driver: 'lru-cache',
+    driver,
     max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
     maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
     maxEntrySize: NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
