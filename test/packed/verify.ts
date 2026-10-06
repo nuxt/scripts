@@ -16,6 +16,8 @@ async function main() {
     'future': { type: 'boolean', default: false },
     'devtools': { type: 'boolean', default: false },
     'edge': { type: 'boolean', default: false },
+    'devtools-disabled': { type: 'boolean', default: false },
+    'mismatched-devtools': { type: 'boolean', default: false },
     'base': { type: 'string', default: '/' },
     'tarball': { type: 'string' },
     'assets-tarball': { type: 'string' },
@@ -46,6 +48,16 @@ async function main() {
   const assetsTarball = values['assets-tarball'] || join(consumer, 'devtools.tgz')
   if (values.devtools && !values['assets-tarball'])
     await run(['--filter', '@nuxt/scripts-devtools', 'pack', '--config.ignore-scripts=true', '--out', assetsTarball], repo)
+  if (values['mismatched-devtools']) {
+    const mismatched = join(consumer, 'mismatched-panel')
+    await mkdir(mismatched)
+    await writeFile(join(mismatched, 'package.json'), JSON.stringify({
+      name: '@nuxt/scripts-devtools',
+      version: '0.0.0',
+      exports: { './package.json': './package.json' },
+    }))
+    await run(['pack', '--config.ignore-scripts=true', '--out', assetsTarball], mismatched)
+  }
 
   const nightly = nuxtVersion.startsWith('5.')
   const hostFixture = join(repo, 'test/packed/fixtures/nuxt-5')
@@ -63,7 +75,7 @@ async function main() {
     packageManager: JSON.parse(await readFile(join(repo, 'package.json'), 'utf8')).packageManager,
     dependencies: {
       '@nuxt/scripts': `file:${tarball}`,
-      ...(values.devtools ? { '@nuxt/scripts-devtools': `file:${assetsTarball}` } : {}),
+      ...(values.devtools || values['mismatched-devtools'] ? { '@nuxt/scripts-devtools': `file:${assetsTarball}` } : {}),
       'nuxt': nightly ? `npm:nuxt-nightly@${nuxtVersion}` : nuxtVersion,
       'vue': '3.5.43',
       '@unhead/vue': '3.4.2',
@@ -93,7 +105,7 @@ async function main() {
     app: { baseURL: ${JSON.stringify(baseURL)} },
     future: { compatibilityVersion: ${nightly || values.future ? 5 : 4} },
     compatibilityDate: '2026-03-13',
-    devtools: { enabled: true },
+    devtools: { enabled: ${!values['devtools-disabled']} },
     scripts: { registry: { gravatar: {} } },
   })
   `)
@@ -103,7 +115,7 @@ async function main() {
     if (nuxt.options.dev) nuxt.hook('ready', async () => {
       const tabs: Parameters<NuxtHooks['devtools:customTabs']>[0] = []
       await nuxt.callHook('devtools:customTabs', tabs)
-      writeFileSync(${JSON.stringify(join(consumer, 'devtools-tab.json'))}, JSON.stringify(tabs.find(tab => tab.name === 'nuxt-scripts')))
+      writeFileSync(${JSON.stringify(join(consumer, 'devtools-tab.json'))}, JSON.stringify(tabs.find(tab => tab.name === 'nuxt-scripts') || null))
     })
   }
   `)
@@ -205,6 +217,7 @@ async function main() {
     const worker = new Miniflare({
       modules: true,
       scriptPath: join(consumer, '.output/server/index.mjs'),
+      modulesRoot: join(consumer, '.output/server'),
       compatibilityDate: '2026-03-13',
       compatibilityFlags: ['nodejs_compat'],
     })
@@ -225,6 +238,11 @@ async function main() {
     const response = await fetch(`${origin}${baseURL}api/portable?tag=dev`, { headers: { 'x-probe': 'development' } })
     assert.deepEqual(await response.json(), { cache: 'cached', app: true, config: true, query: { tag: 'dev' }, header: 'development' })
     const tab = JSON.parse(await readFile(join(consumer, 'devtools-tab.json'), 'utf8'))
+    if (values['devtools-disabled']) {
+      assert.equal(tab, null)
+      assert.equal((await fetch(`${origin}/__nuxt-scripts/`)).status, 404)
+      return
+    }
     assert.equal(tab.view.type, values.devtools ? 'iframe' : 'launch')
     if (values.devtools) {
       const panel = await fetch(origin + tab.view.src)
@@ -237,6 +255,8 @@ async function main() {
     }
     else {
       assert.match(tab.view.description, /@nuxt\/scripts-devtools@2\.0\.0-beta\.12/)
+      if (values['mismatched-devtools'])
+        assert.match(tab.view.description, /does not match/)
     }
   })
   console.info(`Verified Node ${process.version}, Nuxt ${nuxtVersion}, future ${values.future}, DevTools ${values.devtools}, base ${baseURL}.`)

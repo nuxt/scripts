@@ -15,6 +15,8 @@ export interface DevtoolsOptions {
 }
 
 export async function setupDevtools(nuxt: Nuxt, version: string, options: DevtoolsOptions = {}) {
+  if (!options.standalone && (nuxt.options.devtools === false || nuxt.options.devtools?.enabled === false))
+    return
   const { resolve } = createResolver(import.meta.url)
   const localClientPath = resolve('../../devtools-app/client')
   const installedManifestPath = await resolvePath('@nuxt/scripts-devtools/package.json', {
