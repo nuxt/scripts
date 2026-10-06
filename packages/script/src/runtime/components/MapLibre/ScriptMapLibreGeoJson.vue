@@ -49,6 +49,8 @@ let clusterUpdateId = 0
 let pendingClusterUpdateIds: number[] = []
 /** True while a `setData` call of this component waits for a worker round. */
 let pendingDataRound = false
+/** A data update must settle before a later cluster change reaches the worker. */
+let dataUpdate: Promise<void> | undefined
 /** What the worker round MapLibre is currently running was asked to do. */
 let runningRound: { kind: 'cluster', updateId: number } | { kind: 'data' } | { kind: 'foreign' } = { kind: 'foreign' }
 let layerSubscriptions: MapLibreGl.Subscription[] = []
@@ -139,8 +141,8 @@ function onMapError(event: MapErrorEvent): void {
  * MapLibre runs one worker round at a time and fires a source `dataloading`
  * event when the next one starts. Tile loads of this source fire the same
  * event with the tile attached, and a tile load never starts a worker round,
- * so those events are ignored. Queued data wins over queued cluster options,
- * mirroring MapLibre's own `_pendingWorkerUpdate` order. One round runs every
+ * so those events are ignored. Data loads settle before deferred cluster calls.
+ * One round runs every
  * queued cluster call with the last call's options, so the round takes the
  * last id and clears the queue. The next `error` event for this source
  * belongs to the round that is running, so it can never be blamed on an
@@ -355,6 +357,7 @@ function removeOwnedResources(map: MapLibreGl.Map): void {
   clusterUpdateId++
   pendingClusterUpdateIds = []
   pendingDataRound = false
+  dataUpdate = undefined
   runningRound = { kind: 'foreign' }
 }
 
@@ -434,12 +437,21 @@ function updateClusterOptions(source: MapLibreGl.GeoJSONSource, options: MapLibr
   const updateId = ++clusterUpdateId
   appliedStructure = structureSignature()
   appliedSourceOptions = detachSourceOptions()
-  pendingClusterUpdateIds.push(updateId)
-  // The failure arrives as the map `error` event attributed above.
-  void source.setClusterOptions(options).catch(() => {
-    // Unreachable: MapLibre catches a worker failure, fires a map `error`
-    // event and resolves the promise, so the failure is already reported.
-  })
+  const apply = () => {
+    if (updateId !== clusterUpdateId || source !== geoJson.value?.map.getSource(props.sourceId))
+      return
+    pendingClusterUpdateIds.push(updateId)
+    // The failure arrives as the map `error` event attributed above.
+    void source.setClusterOptions(options).catch(() => {
+      // MapLibre reports worker failures through the map error event.
+    })
+  }
+  // MapLibre 6.12 skips a cluster request while data waits in its queue.
+  // Apply the latest options after that data load settles, including failures.
+  if (dataUpdate)
+    void dataUpdate.then(apply)
+  else
+    apply()
 }
 
 /** Applies every changed entry of one paint or layout block to a live layer. */
@@ -575,7 +587,14 @@ watch(() => props.data, (data) => {
     // Set before the call, so a round that MapLibre starts synchronously
     // already carries it.
     pendingDataRound = true
-    ;(source as MapLibreGl.GeoJSONSource).setData(toRaw(data))
+    const update = (source as MapLibreGl.GeoJSONSource).setData(toRaw(data)).catch((error) => {
+      reportMapLibreResourceError(error, failure => emit('error', failure))
+    })
+    dataUpdate = update
+    void update.then(() => {
+      if (dataUpdate === update)
+        dataUpdate = undefined
+    })
   }
 }, { deep: 2 })
 

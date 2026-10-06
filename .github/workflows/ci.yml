@@ -163,7 +163,7 @@ jobs:
           - {nuxt: 4.6.0, node: 22.22.3, future: true, panel: false, base: /}
           - {nuxt: 4.6.0, node: 24.15.0, future: false, panel: false, base: /, edge: true}
           - {nuxt: 4.6.0, node: 24.15.0, future: true, panel: true, base: /sub/}
-          - {nuxt: 5.0.0-2610060838-ddb1dab, node: 24.15.0, future: false, panel: true, base: /}
+          - {nuxt: 5.0.0-2610061032-c7ad8cd, node: 24.15.0, future: false, panel: true, base: /}
     steps:
       - uses: actions/checkout@v7
         with:

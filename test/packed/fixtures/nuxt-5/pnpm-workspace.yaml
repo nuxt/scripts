@@ -12,18 +12,18 @@ allowBuilds:
   esbuild: true
   '@parcel/watcher': true
 minimumReleaseAgeExclude:
-  - '@nuxt/kit-nightly@5.0.0-2610060838-ddb1dab'
+  - '@nuxt/kit-nightly@5.0.0-2610061032-c7ad8cd'
   - '@nuxt/kit@4.6.0'
-  - '@nuxt/nitro-server-nightly@5.0.0-2610060838-ddb1dab'
-  - '@nuxt/schema-nightly@5.0.0-2610060838-ddb1dab'
-  - '@nuxt/vite-builder-nightly@5.0.0-2610060838-ddb1dab'
-  - '@nuxt/vite-server-nightly@5.0.0-2610060838-ddb1dab'
-  - nuxt-nightly@5.0.0-2610060838-ddb1dab
+  - '@nuxt/nitro-server-nightly@5.0.0-2610061032-c7ad8cd'
+  - '@nuxt/schema-nightly@5.0.0-2610061032-c7ad8cd'
+  - '@nuxt/vite-builder-nightly@5.0.0-2610061032-c7ad8cd'
+  - '@nuxt/vite-server-nightly@5.0.0-2610061032-c7ad8cd'
+  - nuxt-nightly@5.0.0-2610061032-c7ad8cd
 catalog:
-  '@types/node': 26.5.1
+  '@types/node': 26.6.4
   '@unhead/vue': 3.4.2
-  nuxt: npm:nuxt-nightly@5.0.0-2610060838-ddb1dab
+  nuxt: npm:nuxt-nightly@5.0.0-2610061032-c7ad8cd
   typescript: npm:@typescript/typescript6@6.0.2
   unhead: 3.4.2
   vue: 3.5.43
-  vue-tsc: 3.3.11
+  vue-tsc: 3.3.12

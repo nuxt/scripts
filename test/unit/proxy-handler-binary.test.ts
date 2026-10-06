@@ -1,7 +1,7 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
-import { createApp, defineEventHandler, getHeaders, readBody, readRawBody, toNodeListener } from 'h3'
+import { createApp, defineEventHandler, getHeaders, readBody, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 /**
@@ -22,8 +22,8 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
   beforeAll(async () => {
     // Mock upstream: captures raw request bytes exactly as received
     const upstreamApp = createApp()
-    upstreamApp.use('/', defineEventHandler(async (event) => {
-      const raw = await readRawBody(event, false)
+    upstreamApp.use(defineEventHandler(async (event) => {
+      const raw = Buffer.from(await event.req.arrayBuffer())
       capturedUpstreamBody = raw ? Buffer.from(raw) : Buffer.alloc(0)
       return { status: 1 }
     }))
@@ -34,7 +34,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
 
     // Proxy: mirrors proxy-handler.ts body processing logic (the fixed version)
     const proxyApp = createApp()
-    proxyApp.use('/', defineEventHandler(async (event) => {
+    proxyApp.use(defineEventHandler(async (event) => {
       const method = event.method?.toUpperCase()
       const originalHeaders = getHeaders(event)
       const contentType = originalHeaders['content-type'] || ''
@@ -50,7 +50,7 @@ describe('proxy handler - compressed binary payloads (#618)', () => {
       if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
         if (isBinaryBody || !anyPrivacy) {
           // Binary/compressed or no privacy — pass raw bytes through
-          const raw = await readRawBody(event, false)
+          const raw = Buffer.from(await event.req.arrayBuffer())
           body = raw ?? undefined
         }
         else {

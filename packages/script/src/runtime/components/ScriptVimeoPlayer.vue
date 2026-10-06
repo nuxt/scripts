@@ -2,18 +2,18 @@
 // eslint-disable-next-line ts/ban-ts-comment
 // @ts-nocheck
 
+import type Vimeo from '@vimeo/player'
+import type { PlayerEventMap, VideoQualityId } from '@vimeo/player'
 import type { HTMLAttributes, ImgHTMLAttributes } from 'vue'
 import type { ElementScriptTrigger } from '../types'
 import { defu } from 'defu'
 import { useAsyncData, useHead } from 'nuxt/app'
-/// <reference types="vimeo__player" />
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useScriptTriggerElement } from '../composables/useScriptTriggerElement'
 import { useScriptVimeoPlayer } from '../registry/vimeo-player'
 import ScriptAriaLoadingIndicator from './ScriptAriaLoadingIndicator.vue'
 
 interface VimeoOptions {
-  // copied from @types/vimeo__player
   id?: number | undefined
   url?: string | undefined
   autopause?: boolean | undefined
@@ -36,7 +36,7 @@ interface VimeoOptions {
   portrait?: boolean | undefined
   responsive?: boolean | undefined
   speed?: boolean | undefined
-  quality?: Vimeo.VimeoVideoQuality | undefined
+  quality?: VideoQualityId | undefined
   texttrack?: string | undefined
   title?: boolean | undefined
   transparent?: boolean | undefined
@@ -75,7 +75,7 @@ defineSlots<{
   error?: () => any
 }>()
 
-type EventMap<E extends keyof Vimeo.EventMap> = [event: Vimeo.EventMap[E], player: Vimeo]
+type EventMap<E extends keyof PlayerEventMap> = [event: PlayerEventMap[E], player: Vimeo]
 
 interface TEmits {
   play: EventMap<'play'>

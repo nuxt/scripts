@@ -81,7 +81,7 @@ async function main() {
       '@unhead/vue': '3.4.2',
       'unhead': '3.4.2',
     },
-    devDependencies: { 'vue-tsc': '3.3.11', 'typescript': 'npm:@typescript/typescript6@6.0.2', '@types/node': '26.5.1' },
+    devDependencies: { 'vue-tsc': '3.3.12', 'typescript': 'npm:@typescript/typescript6@6.0.2', '@types/node': '26.6.4' },
   }, null, 2))
   // Keep the committed supply-chain policy and exact nightly approvals.
   await copyFile(join(hostFixture, 'pnpm-workspace.yaml'), join(consumer, 'pnpm-workspace.yaml'))

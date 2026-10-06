@@ -1,5 +1,4 @@
 import { addDevServerHandler, extendRouteRules, tryUseNuxt, useNuxt } from '@nuxt/kit'
-import { createError, eventHandler, lazyEventHandler, setHeader } from 'h3'
 import { fetch } from 'ofetch'
 import { join, resolve } from 'pathe'
 import { joinURL } from 'ufo'
@@ -42,32 +41,30 @@ export function setupPublicAssetStrategy(assetsBaseURL: string) {
   // Register font proxy URL for development
   addDevServerHandler({
     route: assetsBaseURL,
-    handler: lazyEventHandler(async () => {
-      return eventHandler(async (event) => {
-        const cleanPath = (event.path || '').split('?')[0]?.slice(1) || ''
-        const filename = cleanPath
-        const scriptDescriptor = renderedScript.get(join(assetsBaseURL, cleanPath))
+    handler: async (event) => {
+      const cleanPath = (event.path || '').split('?')[0]?.slice(1) || ''
+      const filename = cleanPath
+      const scriptDescriptor = renderedScript.get(join(assetsBaseURL, cleanPath))
 
-        if (!scriptDescriptor || scriptDescriptor instanceof Error)
-          throw createError({ statusCode: 404 })
+      if (!scriptDescriptor || scriptDescriptor instanceof Error)
+        return new Response(null, { status: 404 })
 
-        setHeader(event, 'content-type', 'application/javascript; charset=utf-8')
+      const headers = { 'content-type': 'application/javascript; charset=utf-8' }
 
-        // Use pre-rendered content which includes proxy rewrites for first-party mode
-        if (scriptDescriptor.content) {
-          return scriptDescriptor.content
-        }
+      // Use pre-rendered content which includes proxy rewrites for first-party mode
+      if (scriptDescriptor.content) {
+        return new Response(new Uint8Array(scriptDescriptor.content), { headers })
+      }
 
-        // Fallback to storage cache
-        const key = `bundle:${filename}`
-        let res = await storage.getItemRaw(key)
-        if (!res) {
-          res = await fetch(scriptDescriptor.src).then(r => r.arrayBuffer()).then(r => Buffer.from(r))
-          await storage.setItemRaw(key, res)
-        }
-        return res
-      })
-    }),
+      // Fallback to storage cache
+      const key = `bundle:${filename}`
+      let res = await storage.getItemRaw(key)
+      if (!res) {
+        res = await fetch(scriptDescriptor.src).then(r => r.arrayBuffer()).then(r => Buffer.from(r))
+        await storage.setItemRaw(key, res)
+      }
+      return new Response(new Uint8Array(res), { headers })
+    },
   })
 
   if (nuxt.options.dev) {
