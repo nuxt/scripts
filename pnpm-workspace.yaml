@@ -70,7 +70,7 @@ catalog:
   defu: ^6.1.7
   eslint: ^10.10.0
   eslint-plugin-harlanzw: ^0.21.1
-  h3: ^1.15.11
+  h3: ^2.0.1
   happy-dom: ^20.14.5
   jest-image-snapshot: ^6.5.2
   lru-cache: ^11.5.2
