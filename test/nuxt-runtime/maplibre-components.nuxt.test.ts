@@ -68,7 +68,7 @@ function createMapLibreMock() {
     listener: (event: any) => void
     subscription: { unsubscribe: ReturnType<typeof vi.fn> }
   }> = []
-  const source = { type: 'geojson', setData: vi.fn() }
+  const source = { type: 'geojson', setData: vi.fn().mockResolvedValue(undefined) }
   const layers = new Set<string>()
   const sources = new Set<string>()
   const map: Record<string, any> = {
