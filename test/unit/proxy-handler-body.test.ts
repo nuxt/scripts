@@ -1,7 +1,7 @@
 import type { Server } from 'node:http'
 import { createServer } from 'node:http'
 import { gzipSync } from 'node:zlib'
-import { createApp, defineEventHandler, getRequestURL, readRawBody, sendRedirect, setHeader, setResponseStatus, toNodeListener } from 'h3'
+import { createApp, defineEventHandler, getRequestURL, sendRedirect, setHeader, setResponseStatus, toNodeListener } from 'h3'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import proxyHandler, { withResponseBodyIdleTimeout } from '../../packages/script/src/runtime/server/proxy-handler'
 
@@ -53,7 +53,7 @@ describe('proxy handler request bodies (#836)', () => {
 
   beforeAll(async () => {
     const upstreamApp = createApp()
-    upstreamApp.use('/', defineEventHandler(async (event) => {
+    upstreamApp.use(defineEventHandler(async (event) => {
       capturedUrl = getRequestURL(event).pathname + getRequestURL(event).search
       capturedRequests.push({ method: event.method, url: capturedUrl, headers: Object.fromEntries(event.headers) })
       if (getRequestURL(event).pathname === '/redirect')
@@ -87,15 +87,18 @@ describe('proxy handler request bodies (#836)', () => {
         setHeader(event, 'X-End-To-End', 'forward-me')
       }
       if (getRequestURL(event).pathname === '/stream') {
-        event.node.res.writeHead(200, { 'content-type': 'text/plain' })
-        event.node.res.write('first')
-        await new Promise<void>((resolve) => {
-          releaseStream = resolve
-        })
-        event.node.res.end('second')
-        return
+        return new Response(new ReadableStream({
+          async start(controller) {
+            controller.enqueue(new TextEncoder().encode('first'))
+            await new Promise<void>((resolve) => {
+              releaseStream = resolve
+            })
+            controller.enqueue(new TextEncoder().encode('second'))
+            controller.close()
+          },
+        }), { headers: { 'content-type': 'text/plain' } })
       }
-      const rawBody = event.method === 'GET' ? undefined : await readRawBody(event, false)
+      const rawBody = event.method === 'GET' ? undefined : Buffer.from(await event.req.arrayBuffer())
       capturedBody = rawBody ? Buffer.from(rawBody) : Buffer.alloc(0)
       capturedContentLength = event.headers.get('content-length') ?? undefined
       capturedContentType = event.headers.get('content-type') ?? undefined
