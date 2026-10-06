@@ -132,6 +132,7 @@
     "consola": "catalog:",
     "defu": "catalog:",
     "h3": "catalog:",
+    "lru-cache": "catalog:",
     "magic-string": "catalog:",
     "ofetch": "catalog:",
     "ohash": "catalog:",

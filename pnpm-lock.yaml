@@ -266,6 +266,9 @@ catalogs:
     jest-image-snapshot:
       specifier: ^6.5.2
       version: 6.5.2
+    lru-cache:
+      specifier: ^11.5.2
+      version: 11.5.2
     magic-string:
       specifier: ^1.4.1
       version: 1.4.1
@@ -597,6 +600,9 @@ importers:
       h3:
         specifier: 'catalog:'
         version: 1.15.11
+      lru-cache:
+        specifier: 'catalog:'
+        version: 11.5.2
       magic-string:
         specifier: 'catalog:'
         version: 1.4.1

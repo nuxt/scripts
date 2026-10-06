@@ -65,6 +65,7 @@ catalog:
   h3: ^1.15.11
   happy-dom: ^20.14.5
   jest-image-snapshot: ^6.5.2
+  lru-cache: ^11.5.2
   magic-string: ^1.4.1
   magicast: ^0.5.5
   maplibre-gl: ^6.9.1

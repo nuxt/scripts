@@ -46,6 +46,7 @@ import {
   addTemplate,
   createResolver,
   defineNuxtModule,
+  getNuxtVersion,
   hasNuxtModule,
 } from '@nuxt/kit'
 import { defu } from 'defu'
@@ -61,7 +62,7 @@ import { generateInterceptPluginContents } from './plugins/intercept'
 import { NuxtScriptBundleTransformer } from './plugins/transform'
 import { aliasProxyValue, buildDomainAliasMap, invertAliasMap, isSafeAliasSegment } from './proxy-alias'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, getPartytownForwards, registry, resolveCapabilities } from './registry'
-import { ensureNuxtScriptsCacheStorage } from './runtime/server/utils/cache-config'
+import { ensureNuxtScriptsCacheStorage, NUXT_SCRIPTS_CACHE_BASE } from './runtime/server/utils/cache-config'
 import { isPublicNetworkHostname } from './runtime/server/utils/network-hostname'
 import { registerTypeTemplates, templatePlugin, templateTriggerResolver } from './templates'
 import { validateScriptsEnvVars } from './validate-env'
@@ -999,6 +1000,13 @@ export default defineNuxtModule<ModuleOptions>({
     // embed cache shares this bounded mount, including proxy-only registries
     // without dedicated server handlers. Preserve application-supplied mounts.
     ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any)
+    // Nitro 3's unstorage no longer installs `lru-cache`, so the driver import in
+    // `#nitro/virtual/storage` can't resolve from the app. Point it at our copy.
+    const nitroOptions = nuxt.options.nitro as { alias?: Record<string, string>, storage?: Record<string, { driver?: string }> }
+    if (Number.parseInt(getNuxtVersion(nuxt), 10) >= 5 && nitroOptions.storage?.[NUXT_SCRIPTS_CACHE_BASE]?.driver === 'lru-cache') {
+      nitroOptions.alias ||= {}
+      nitroOptions.alias['lru-cache'] ||= await resolvePath('lru-cache')
+    }
 
     // Publish enabled endpoints to client for component opt-in checks
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
