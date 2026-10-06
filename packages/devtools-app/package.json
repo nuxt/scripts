@@ -1,7 +1,14 @@
 {
-  "name": "@nuxt/scripts-devtools-app",
+  "name": "@nuxt/scripts-devtools",
   "type": "module",
-  "private": true,
+  "version": "2.0.0-beta.12",
+  "description": "Optional DevTools panel for Nuxt Scripts.",
+  "license": "MIT",
+  "exports": {
+    "./client": "./client",
+    "./package.json": "./package.json"
+  },
+  "files": ["client"],
   "scripts": {
     "dev": "nuxi dev",
     "dev:prepare": "nuxi prepare",

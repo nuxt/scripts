@@ -1,6 +1,5 @@
+import { createError, defineEventHandler, getQuery, useRuntimeConfig } from 'nuxt/server'
 import { withQuery } from 'ufo'
-import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
-import { useRuntimeConfig } from '#nuxt-scripts/nitro'
 import { createCachedBinaryFetch, isSafeHttpsUrl } from './utils/cached-upstream'
 
 // Gravatar avatars keyed on `hash + sizing/default/rating` are essentially
@@ -30,8 +29,8 @@ export default defineEventHandler(async (event) => {
 
   if (hash && !GRAVATAR_HASH_RE.test(hash)) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Hash must be a 64-character SHA-256 hex digest',
+      status: 400,
+      statusText: 'Hash must be a 64-character SHA-256 hex digest',
     })
   }
 
@@ -46,8 +45,8 @@ export default defineEventHandler(async (event) => {
 
   if (!hash) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Either hash or email parameter is required',
+      status: 400,
+      statusText: 'Either hash or email parameter is required',
     })
   }
 
@@ -59,14 +58,14 @@ export default defineEventHandler(async (event) => {
 
   if (!Number.isInteger(size) || size < 1 || size > 2048) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Gravatar size must be an integer from 1 to 2048',
+      status: 400,
+      statusText: 'Gravatar size must be an integer from 1 to 2048',
     })
   }
   if (!GRAVATAR_RATINGS.has(rating)) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid Gravatar rating',
+      status: 400,
+      statusText: 'Invalid Gravatar rating',
     })
   }
 
@@ -80,8 +79,8 @@ export default defineEventHandler(async (event) => {
     headers: { 'User-Agent': 'Nuxt Scripts Gravatar Proxy' },
   }).catch((error: any) => {
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to fetch Gravatar avatar',
+      status: error.statusCode || 500,
+      statusText: error.statusMessage || 'Failed to fetch Gravatar avatar',
     })
   })
 
@@ -90,16 +89,16 @@ export default defineEventHandler(async (event) => {
   const upstreamContentType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase()
   if (!responseContentType || !upstreamContentType?.startsWith('image/') || upstreamContentType === 'image/svg+xml') {
     throw createError({
-      statusCode: 415,
-      statusMessage: 'Unsupported upstream content type',
+      status: 415,
+      statusText: 'Unsupported upstream content type',
     })
   }
 
-  setHeader(event, 'Content-Type', responseContentType)
-  setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
-  setHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'')
-  setHeader(event, 'Vary', 'Accept-Encoding')
-  setHeader(event, 'X-Content-Type-Options', 'nosniff')
+  event.res.headers.set('Content-Type', responseContentType)
+  event.res.headers.set('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
+  event.res.headers.set('Content-Security-Policy', 'sandbox; default-src \'none\'')
+  event.res.headers.set('Vary', 'Accept-Encoding')
+  event.res.headers.set('X-Content-Type-Options', 'nosniff')
 
   return result.body
 })

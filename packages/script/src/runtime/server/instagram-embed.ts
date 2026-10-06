@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { createError, defineEventHandler, getQuery } from 'nuxt/server'
 import { createCachedJsonFetch } from './utils/cached-upstream'
 import { isEmbedShell, isSafeInstagramCssUrl, isSafeInstagramEmbedUrl, isSafeInstagramPostUrl, sanitizeInstagramEmbedCss, sanitizeInstagramEmbedHtml } from './utils/instagram-embed'
 
@@ -25,8 +25,8 @@ const cachedEmbedFetch = createCachedJsonFetch<string>(
     validateResponse: (html) => {
       if (isEmbedShell(html)) {
         throw createError({
-          statusCode: 502,
-          statusMessage: 'Instagram returned an empty embed shell (post unavailable or upstream rate-limiting)',
+          status: 502,
+          statusText: 'Instagram returned an empty embed shell (post unavailable or upstream rate-limiting)',
         })
       }
     },
@@ -49,7 +49,7 @@ const cachedCssFetch = createCachedJsonFetch<string>(
 export default defineEventHandler(async (event) => {
   // Derive the scripts prefix from the handler's own route path.
   // The route is registered as `<prefix>/embed/instagram`, so strip `/embed/instagram`.
-  const handlerPath = event.path?.split('?')[0] || ''
+  const handlerPath = event.url.pathname
   const prefix = handlerPath.replace(EMBED_INSTAGRAM_SUFFIX_RE, '') || '/_scripts'
 
   const query = getQuery(event)
@@ -58,8 +58,8 @@ export default defineEventHandler(async (event) => {
 
   if (!postUrl) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Post URL is required',
+      status: 400,
+      statusText: 'Post URL is required',
     })
   }
 
@@ -69,15 +69,15 @@ export default defineEventHandler(async (event) => {
   }
   catch {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid postUrl',
+      status: 400,
+      statusText: 'Invalid postUrl',
     })
   }
 
   if (!isSafeInstagramPostUrl(parsedUrl)) {
     throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid Instagram URL',
+      status: 400,
+      statusText: 'Invalid Instagram URL',
     })
   }
 
@@ -96,8 +96,8 @@ export default defineEventHandler(async (event) => {
     },
   }).catch((error: any) => {
     throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Failed to fetch Instagram embed',
+      status: error.statusCode || 500,
+      statusText: error.statusMessage || 'Failed to fetch Instagram embed',
     })
   })
 
@@ -125,10 +125,10 @@ export default defineEventHandler(async (event) => {
 
   const result = `<div class="instagram-embed-root"><style>${baseStyles}\n${combinedCss}</style>${bodyHtml}</div>`
 
-  setHeader(event, 'Content-Type', 'text/html')
-  setHeader(event, 'Cache-Control', 'public, max-age=600, s-maxage=600')
-  setHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'')
-  setHeader(event, 'X-Content-Type-Options', 'nosniff')
+  event.res.headers.set('Content-Type', 'text/html')
+  event.res.headers.set('Cache-Control', 'public, max-age=600, s-maxage=600')
+  event.res.headers.set('Content-Security-Policy', 'sandbox; default-src \'none\'')
+  event.res.headers.set('X-Content-Type-Options', 'nosniff')
 
   return result
 })

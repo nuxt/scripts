@@ -38,7 +38,7 @@ export default defineNuxtConfig({
       ],
     },
     output: {
-      publicDir: resolve(import.meta.dirname, '../script/dist/devtools-client'),
+      publicDir: resolve(import.meta.dirname, './client'),
     },
   },
 

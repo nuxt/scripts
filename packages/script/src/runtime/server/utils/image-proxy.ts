@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getQuery, setHeader } from '#nuxt-scripts/h3'
+import { createError, defineEventHandler, getQuery } from 'nuxt/server'
 import { createCachedBinaryFetch } from './cached-upstream'
 import { isPublicNetworkHostname } from './network-host'
 
@@ -58,8 +58,8 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
 
     if (!url) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Image URL is required',
+        status: 400,
+        statusText: 'Image URL is required',
       })
     }
 
@@ -69,15 +69,15 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     }
     catch {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Invalid image URL',
+        status: 400,
+        statusText: 'Invalid image URL',
       })
     }
 
     if (!urlAllowed(parsedUrl)) {
       throw createError({
-        statusCode: domainAllowed(parsedUrl.hostname) ? 400 : 403,
-        statusMessage: domainAllowed(parsedUrl.hostname) ? 'Invalid image URL' : 'Domain not allowed',
+        status: domainAllowed(parsedUrl.hostname) ? 400 : 403,
+        statusText: domainAllowed(parsedUrl.hostname) ? 'Invalid image URL' : 'Domain not allowed',
       })
     }
 
@@ -91,15 +91,15 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
       headers,
     }).catch((error: any) => {
       throw createError({
-        statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || 'Failed to fetch image',
+        status: error.statusCode || 500,
+        statusText: error.statusMessage || 'Failed to fetch image',
       })
     })
 
     if (result.status >= 300 && result.status < 400 && result.status !== 304) {
       throw createError({
-        statusCode: 403,
-        statusMessage: 'Redirects not allowed',
+        status: 403,
+        statusText: 'Redirects not allowed',
       })
     }
 
@@ -107,15 +107,15 @@ export function createImageProxyHandler(config: ImageProxyConfig) {
     const upstreamContentType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase()
     if (!responseContentType || !upstreamContentType || !contentTypeAllowed(upstreamContentType)) {
       throw createError({
-        statusCode: 415,
-        statusMessage: 'Unsupported upstream content type',
+        status: 415,
+        statusText: 'Unsupported upstream content type',
       })
     }
 
-    setHeader(event, 'Content-Type', responseContentType)
-    setHeader(event, 'Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
-    setHeader(event, 'Content-Security-Policy', 'sandbox; default-src \'none\'')
-    setHeader(event, 'X-Content-Type-Options', 'nosniff')
+    event.res.headers.set('Content-Type', responseContentType)
+    event.res.headers.set('Cache-Control', `public, max-age=${cacheMaxAge}, s-maxage=${cacheMaxAge}`)
+    event.res.headers.set('Content-Security-Policy', 'sandbox; default-src \'none\'')
+    event.res.headers.set('X-Content-Type-Options', 'nosniff')
 
     return result.body
   })

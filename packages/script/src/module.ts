@@ -37,6 +37,7 @@ import type {
 } from './runtime/types'
 import { existsSync, readFileSync } from 'node:fs'
 import { findPackageJSON } from 'node:module'
+import { relative, resolve } from 'node:path'
 import {
   addBuildPlugin,
   addComponentsDir,
@@ -92,7 +93,7 @@ export type {
 
 const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
-const UNHEAD_VERSION_RANGE = '>=3.3.1 <4'
+const UNHEAD_VERSION_RANGE = '^3.4.2'
 
 function readInstalledPackageVersion(name: string): string | undefined {
   let packagePath: string | undefined
@@ -373,7 +374,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '>=4.5.1',
+      nuxt: '^4.6.0 || ^5.0.0',
     },
   },
   defaults: {
@@ -394,6 +395,17 @@ export default defineNuxtModule<ModuleOptions>({
     const { resolve: resolveModule, resolvePath } = createResolver(import.meta.url)
     const { version, name } = JSON.parse(readFileSync(await resolvePath('../package.json'), 'utf8')) as { version: string, name: string }
     nuxt.options.alias['#nuxt-scripts'] = await resolvePath('./runtime')
+    const appRuntimeDir = await resolvePath('./runtime/app', { type: 'dir' })
+    nuxt.options.alias = { '#nuxt-scripts/app': appRuntimeDir, ...nuxt.options.alias }
+    nuxt.options.build.transpile.push(appRuntimeDir)
+    nuxt.hook('prepare:types', ({ tsConfig }) => {
+      tsConfig.compilerOptions ||= {}
+      tsConfig.compilerOptions.paths ||= {}
+      const base = resolve(nuxt.options.buildDir, tsConfig.compilerOptions.baseUrl || '.')
+      const path = relative(base, appRuntimeDir).replaceAll('\\', '/')
+      tsConfig.compilerOptions.paths['#nuxt-scripts/app'] = [path]
+      tsConfig.compilerOptions.paths['#nuxt-scripts/app/*'] = [`${path}/*`]
+    })
     logger.level = (config.debug || nuxt.options.debug) ? 4 : 3
     if (!config.enabled) {
       // TODO fallback to useHead?
@@ -409,9 +421,9 @@ export default defineNuxtModule<ModuleOptions>({
         ? nodeNetworkDispatcherPath
         : platformNetworkDispatcherPath
     })
-    await setupNitroRuntimeCompatibility(nuxt)
+    setupNitroRuntimeCompatibility(nuxt)
     if (nuxt.options.dev) {
-      setupDevtools(nuxt, { standalone: config._standaloneDevtools })
+      await setupDevtools(nuxt, version, { standalone: config._standaloneDevtools })
       if (config._standaloneDevtools) {
         const bridgePath = resolveModule('./runtime/devtools-standalone-bridge.client')
         addPluginTemplate({

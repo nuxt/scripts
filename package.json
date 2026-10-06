@@ -11,7 +11,7 @@
     "url": "git+https://github.com/nuxt/scripts.git"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
     "build": "pnpm generate:types && pnpm --filter @nuxt/scripts build && pnpm --filter @nuxt/scripts-cli build && pnpm devtools:build",

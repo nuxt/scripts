@@ -1,0 +1,16 @@
+{
+  "name": "nuxt-scripts-nuxt-5-host",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@unhead/vue": "3.4.2",
+    "nuxt": "npm:nuxt-nightly@5.0.0-2610060838-ddb1dab",
+    "unhead": "3.4.2",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "@types/node": "26.5.1",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "vue-tsc": "3.3.11"
+  }
+}

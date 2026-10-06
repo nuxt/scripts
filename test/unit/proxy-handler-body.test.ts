@@ -5,6 +5,8 @@ import { createApp, defineEventHandler, getRequestURL, readRawBody, sendRedirect
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import proxyHandler, { withResponseBodyIdleTimeout } from '../../packages/script/src/runtime/server/proxy-handler'
 
+const { closeNetwork } = vi.hoisted(() => ({ closeNetwork: vi.fn(async () => {}) }))
+
 vi.mock('#nuxt-scripts/nitro', () => ({
   useRuntimeConfig: () => ({
     'nuxt-scripts-proxy': {
@@ -28,7 +30,7 @@ vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (im
     ...actual,
     createPublicNetworkDispatcher: async () => ({
       fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
-      close: async () => {},
+      close: closeNetwork,
     }),
   }
 })
@@ -125,6 +127,7 @@ describe('proxy handler request bodies (#836)', () => {
   })
 
   beforeEach(() => {
+    closeNetwork.mockClear()
     capturedBody = Buffer.alloc(0)
     capturedContentLength = undefined
     capturedContentType = undefined
@@ -153,7 +156,7 @@ describe('proxy handler request bodies (#836)', () => {
       body: compressed,
     })
 
-    expect(response.status).toBe(200)
+    expect(response.status, await response.text()).toBe(200)
     expect(capturedFetchBody).toBeInstanceOf(Uint8Array)
     expect(capturedFetchDuplex).toBeUndefined()
     expect(Buffer.from(capturedFetchBody as Uint8Array).equals(compressed)).toBe(true)
@@ -362,11 +365,13 @@ describe('proxy handler request bodies (#836)', () => {
       new Promise<false>(resolve => setTimeout(resolve, 100, false)),
     ])
 
+    expect(closeNetwork).not.toHaveBeenCalled()
     releaseStream?.()
     const response = await responsePromise
 
     expect(receivedHeadersBeforeCompletion).toBe(true)
     expect(await response.text()).toBe('firstsecond')
+    expect(closeNetwork).toHaveBeenCalledOnce()
   })
 
   it('does not apply the connection timeout after upstream headers arrive', async () => {

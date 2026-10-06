@@ -1,8 +1,9 @@
 import type { Nuxt } from '@nuxt/schema'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ProxyConfig, RegistryScript } from './runtime/types'
-import { existsSync } from 'node:fs'
-import { createResolver, extendViteConfig } from '@nuxt/kit'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { createResolver, extendViteConfig, getAddDependencyCommand, resolvePath } from '@nuxt/kit'
 
 const DEVTOOLS_UI_ROUTE = '/__nuxt-scripts'
 const DEVTOOLS_UI_LOCAL_PORT = 3030
@@ -13,11 +14,19 @@ export interface DevtoolsOptions {
   standalone?: boolean
 }
 
-export async function setupDevtools(nuxt: Nuxt, options: DevtoolsOptions = {}) {
-  const { addCustomTab } = await import('@nuxt/devtools-kit')
-
+export async function setupDevtools(nuxt: Nuxt, version: string, options: DevtoolsOptions = {}) {
   const { resolve } = createResolver(import.meta.url)
-  const clientPath = resolve('../dist/devtools-client')
+  const localClientPath = resolve('../../devtools-app/client')
+  const installedManifestPath = await resolvePath('@nuxt/scripts-devtools/package.json', {
+    cwd: nuxt.options.rootDir,
+  })
+  const installedVersion = existsSync(installedManifestPath)
+    ? (JSON.parse(readFileSync(installedManifestPath, 'utf8')) as { version: string }).version
+    : undefined
+  const installedClientPath = installedVersion === version
+    ? join(dirname(installedManifestPath), 'client')
+    : ''
+  const clientPath = existsSync(localClientPath) ? localClientPath : installedClientPath
   const isProductionBuild = existsSync(clientPath)
 
   if (isProductionBuild) {
@@ -26,7 +35,7 @@ export async function setupDevtools(nuxt: Nuxt, options: DevtoolsOptions = {}) {
       server.middlewares.use(DEVTOOLS_UI_ROUTE, sirv(clientPath, { dev: true, single: true }))
     })
   }
-  else {
+  else if (existsSync(resolve('../../devtools-app/nuxt.config.ts'))) {
     extendViteConfig((config) => {
       config.server = config.server || {}
       config.server.proxy = config.server.proxy || {}
@@ -44,15 +53,24 @@ export async function setupDevtools(nuxt: Nuxt, options: DevtoolsOptions = {}) {
     setupStandaloneApi(nuxt)
   }
 
-  addCustomTab({
+  const installCommand = await getAddDependencyCommand(`@nuxt/scripts-devtools@${version}`, nuxt.options.rootDir, { dev: true })
+  nuxt.hook('devtools:customTabs', tabs => tabs.push({
     name: 'nuxt-scripts',
     title: 'Scripts',
     icon: 'carbon:script',
-    view: {
-      type: 'iframe',
-      src: DEVTOOLS_UI_ROUTE,
-    },
-  })
+    view: isProductionBuild || existsSync(resolve('../../devtools-app/nuxt.config.ts'))
+      ? {
+          type: 'iframe',
+          src: DEVTOOLS_UI_ROUTE,
+        }
+      : {
+          type: 'launch',
+          description: installedVersion && installedVersion !== version
+            ? `DevTools version ${installedVersion} does not match Nuxt Scripts ${version}. Run ${installCommand}, then restart Nuxt.`
+            : `Install the optional DevTools package, then restart Nuxt: ${installCommand}`,
+          actions: [],
+        },
+  }))
 }
 
 export function setupStandaloneApi(nuxt: Nuxt) {

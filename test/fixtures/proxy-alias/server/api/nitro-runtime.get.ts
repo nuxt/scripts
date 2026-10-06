@@ -1,5 +1,5 @@
-import { defineEventHandler } from '#nuxt-scripts/h3'
-import { defineCachedFunction, useNitroApp, useRuntimeConfig } from '#nuxt-scripts/nitro'
+import { defineCachedFunction, useNitroApp } from '#nuxt-scripts/nitro'
+import { defineEventHandler, useRuntimeConfig } from 'nuxt/server'
 
 const getCachedValue = defineCachedFunction(() => 'ok')
 
