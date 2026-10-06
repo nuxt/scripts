@@ -374,7 +374,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '^4.6.0 || ^5.0.0',
+      nuxt: '^4.6.0 || ^5.0.0-0',
     },
   },
   defaults: {
