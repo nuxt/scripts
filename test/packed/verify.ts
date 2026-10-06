@@ -85,7 +85,8 @@ async function main() {
   }, null, 2))
   // Keep the committed supply-chain policy and exact nightly approvals.
   await copyFile(join(hostFixture, 'pnpm-workspace.yaml'), join(consumer, 'pnpm-workspace.yaml'))
-  await run(['install'])
+  // Extend the verified host lock with this run's unique local tarballs.
+  await run(['install', '--no-frozen-lockfile'])
   await writeFile(join(consumer, 'dependencies.json'), await run(['list', '--prod', '--depth', 'Infinity', '--json']))
   await mkdir(join(consumer, 'app'), { recursive: true })
   await mkdir(join(consumer, 'app/pages'), { recursive: true })
