@@ -21,11 +21,10 @@ function createNuxt(): Nuxt {
   } as Nuxt
 }
 
-function createDependencies(version: string, resolveNitroImport?: (id: string) => Promise<string>) {
+function createDependencies(version: string) {
   return {
     addTypeTemplate: addTypeTemplateMock,
     getNuxtVersion: () => version,
-    resolveNitroImport,
   }
 }
 
@@ -38,7 +37,7 @@ describe('setupNitroRuntimeCompatibility', () => {
   it('registers explicit Nitro 2 runtime modules', async () => {
     const nuxt = createNuxt()
 
-    await setupNitroRuntimeCompatibility(nuxt, createDependencies('4.5.0'))
+    setupNitroRuntimeCompatibility(nuxt, createDependencies('4.5.0'))
 
     expect(nuxt.options.alias['#nuxt-scripts/h3']).toBe('h3')
     expect(Object.keys(nuxt.options.alias)[0]).toBe('#nuxt-scripts/h3')
@@ -51,18 +50,16 @@ describe('setupNitroRuntimeCompatibility', () => {
     await expect(template.getContents()).resolves.toContain('export * from \'h3\'')
   })
 
-  it('normalizes resolved Nitro 3 runtime modules without package dependencies', async () => {
+  it('registers bare Nitro 3 runtime modules', async () => {
     const nuxt = createNuxt()
-    const resolveNitroImport = vi.fn(async (id: string) => `file:///nuxt-nitro/${id.replace('/', '-')}.mjs`)
 
-    await setupNitroRuntimeCompatibility(nuxt, createDependencies('5.0.0', resolveNitroImport))
+    setupNitroRuntimeCompatibility(nuxt, createDependencies('5.0.0'))
 
-    expect(resolveNitroImport).toHaveBeenCalledTimes(4)
-    expect(nuxt.options.alias['#nuxt-scripts/h3']).toBe('file:///nuxt-nitro/nitro-h3.mjs')
-    expect(nuxt.options.nitro.alias?.['#nuxt-scripts/h3']).toBe('file:///nuxt-nitro/nitro-h3.mjs')
-    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('file:///nuxt-nitro/nitro-app.mjs')
-    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('file:///nuxt-nitro/nitro-cache.mjs')
-    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).not.toContain('from \'nitro/')
+    expect(nuxt.options.alias['#nuxt-scripts/h3']).toBe('nitro/h3')
+    expect(nuxt.options.nitro.alias?.['#nuxt-scripts/h3']).toBe('nitro/h3')
+    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('from \'nitro/app\'')
+    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('from \'nitro/cache\'')
+    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('from \'nitro/runtime-config\'')
     expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('useRuntimeConfig(_event)')
 
     const template = addTypeTemplateMock.mock.calls[0]![0]
@@ -70,14 +67,13 @@ describe('setupNitroRuntimeCompatibility', () => {
     await expect(template.getContents()).resolves.toContain('useRuntimeConfig(event?:')
   })
 
-  it('reasserts compatibility after other modules finish setup', async () => {
+  it('reasserts compatibility after other modules finish setup', () => {
     const nuxt = createNuxt()
-    const resolveNitroImport = async (id: string) => `file:///nuxt-nitro/${id.replace('/', '-')}.mjs`
 
-    await setupNitroRuntimeCompatibility(nuxt, createDependencies('5.0.0', resolveNitroImport))
+    setupNitroRuntimeCompatibility(nuxt, createDependencies('5.0.0'))
     nuxt.options.nitro.virtual!['#nuxt-scripts/nitro'] = 'stale'
     hookOnceMock.mock.calls[0]![1]()
 
-    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('file:///nuxt-nitro/nitro-app.mjs')
+    expect(nuxt.options.nitro.virtual?.['#nuxt-scripts/nitro']).toContain('from \'nitro/app\'')
   })
 })

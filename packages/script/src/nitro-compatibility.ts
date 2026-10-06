@@ -1,20 +1,9 @@
 import type { Nuxt } from '@nuxt/schema'
-import { existsSync } from 'node:fs'
-import { pathToFileURL } from 'node:url'
-import { addTypeTemplate, getNuxtVersion, resolvePath as resolveNuxtPath } from '@nuxt/kit'
-import { dirname } from 'pathe'
+import { addTypeTemplate, getNuxtVersion } from '@nuxt/kit'
 
 type NitroRuntimeCompatibility
   = | { _tag: 'nitro-v2' }
-    | {
-      _tag: 'nitro-v3'
-      app: string
-      cache: string
-      h3: string
-      runtimeConfig: string
-    }
-
-type ResolveNitroImport = (id: string) => Promise<string>
+    | { _tag: 'nitro-v3' }
 
 interface NitroCompatibilityOptions {
   alias?: Record<string, string>
@@ -24,7 +13,6 @@ interface NitroCompatibilityOptions {
 interface NitroCompatibilityDependencies {
   addTypeTemplate: typeof addTypeTemplate
   getNuxtVersion: typeof getNuxtVersion
-  resolveNitroImport?: ResolveNitroImport
 }
 
 const NITRO_RUNTIME_MODULE = '#nuxt-scripts/nitro'
@@ -68,18 +56,17 @@ ${indent(h3Runtime.trim(), 2)}
 `
 }
 
-function renderNitroV3Runtime(compatibility: Extract<NitroRuntimeCompatibility, { _tag: 'nitro-v3' }>): string {
-  return `export { useNitroApp } from ${JSON.stringify(compatibility.app)}
-export { defineCachedFunction } from ${JSON.stringify(compatibility.cache)}
-import { useRuntimeConfig as _useRuntimeConfig } from ${JSON.stringify(compatibility.runtimeConfig)}
+// Nuxt resolves bare `nitro/*` specifiers for module code through `@nuxt/nitro-server`
+const nitroV3Runtime = `export { useNitroApp } from 'nitro/app'
+export { defineCachedFunction } from 'nitro/cache'
+import { useRuntimeConfig as _useRuntimeConfig } from 'nitro/runtime-config'
 export function useRuntimeConfig(_event) { return _useRuntimeConfig() }
 `
-}
 
 function applyNitroRuntimeCompatibility(nuxt: Nuxt, compatibility: NitroRuntimeCompatibility): void {
   const nuxtOptions = nuxt.options as Nuxt['options'] & { nitro?: NitroCompatibilityOptions }
   const nitroOptions = nuxtOptions.nitro ||= {}
-  const h3Runtime = compatibility._tag === 'nitro-v3' ? compatibility.h3 : 'h3'
+  const h3Runtime = compatibility._tag === 'nitro-v3' ? 'nitro/h3' : 'h3'
   nitroOptions.alias ||= {}
   nitroOptions.virtual ||= {}
   const nuxtAliases = nuxtOptions.alias ||= {}
@@ -87,39 +74,16 @@ function applyNitroRuntimeCompatibility(nuxt: Nuxt, compatibility: NitroRuntimeC
   nuxtOptions.alias = { [H3_RUNTIME_MODULE]: h3Runtime, ...nuxtAliases }
   nitroOptions.alias[H3_RUNTIME_MODULE] = h3Runtime
   nitroOptions.virtual[NITRO_RUNTIME_MODULE] = compatibility._tag === 'nitro-v3'
-    ? renderNitroV3Runtime(compatibility)
+    ? nitroV3Runtime
     : nitroV2Runtime
 }
 
-async function createNuxtNitroImportResolver(): Promise<ResolveNitroImport> {
-  const nuxtDir = dirname(await resolveNuxtPath('nuxt/package.json'))
-  const nitroDir = dirname(await resolveNuxtPath('@nuxt/nitro-server/package.json', { cwd: nuxtDir }))
-
-  return async (id: string) => {
-    const resolved = await resolveNuxtPath(id, { cwd: nitroDir })
-    if (!existsSync(resolved))
-      throw new Error(`[nuxt-scripts] Could not resolve Nitro runtime helper "${id}" from "${nitroDir}".`)
-    return pathToFileURL(resolved).href
-  }
-}
-
-async function resolveNitroV3Compatibility(resolveNitroImport: ResolveNitroImport): Promise<NitroRuntimeCompatibility> {
-  const [app, cache, h3, runtimeConfig] = await Promise.all([
-    resolveNitroImport('nitro/app'),
-    resolveNitroImport('nitro/cache'),
-    resolveNitroImport('nitro/h3'),
-    resolveNitroImport('nitro/runtime-config'),
-  ])
-
-  return { _tag: 'nitro-v3', app, cache, h3, runtimeConfig }
-}
-
-export async function setupNitroRuntimeCompatibility(
+export function setupNitroRuntimeCompatibility(
   nuxt: Nuxt,
   dependencies: NitroCompatibilityDependencies = defaultDependencies,
-): Promise<void> {
+): void {
   const compatibility: NitroRuntimeCompatibility = Number.parseInt(dependencies.getNuxtVersion(nuxt), 10) >= 5
-    ? await resolveNitroV3Compatibility(dependencies.resolveNitroImport || await createNuxtNitroImportResolver())
+    ? { _tag: 'nitro-v3' }
     : { _tag: 'nitro-v2' }
 
   applyNitroRuntimeCompatibility(nuxt, compatibility)

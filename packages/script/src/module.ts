@@ -409,7 +409,7 @@ export default defineNuxtModule<ModuleOptions>({
         ? nodeNetworkDispatcherPath
         : platformNetworkDispatcherPath
     })
-    await setupNitroRuntimeCompatibility(nuxt)
+    setupNitroRuntimeCompatibility(nuxt)
     if (nuxt.options.dev) {
       setupDevtools(nuxt, { standalone: config._standaloneDevtools })
       if (config._standaloneDevtools) {
