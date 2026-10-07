@@ -1,6 +1,6 @@
 ---
 name: nuxt-scripts
-description: Loads and controls third-party scripts in Nuxt with @nuxt/scripts v2. Covers the `scripts.registry` config key, registry composables such as useScriptGoogleAnalytics, useScriptMetaPixel, and useScriptPlausibleAnalytics, useScript with use, resolve, dispose, and remove, scripts.globals, useScriptTriggerConsent for cookie banners, build-time bundling, and the /_scripts/p first-party proxy. Use when a task adds analytics, pixels, chat, video, or map scripts to a Nuxt app, upgrades @nuxt/scripts from v1, mentions NUXT_PUBLIC_SCRIPTS_* variables, or reports a script that never loads, loads before consent, a build that fails downloading a script, or "invalid entry" and "requires scriptId" errors.
+description: Loads and controls third-party scripts in Nuxt with @nuxt/scripts v2, covering the scripts.registry config key, useScript, registry composables such as useScriptGoogleAnalytics and useScriptMetaPixel, consent triggers, bundling, and the first-party proxy. Use when adding analytics, pixels, or chat scripts to Nuxt, upgrading @nuxt/scripts from v1 to v2, or when a script never loads, loads before consent, or fails the build while downloading.
 ---
 
 # @nuxt/scripts
