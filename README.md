@@ -5,6 +5,13 @@
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 [![Volta][volta-src]][volta-href]
+<a href="https://skilld.dev/gh/nuxt/scripts/nuxt-scripts">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://skilld.dev/b/nuxt/scripts/nuxt-scripts?theme=dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://skilld.dev/b/nuxt/scripts/nuxt-scripts?theme=light">
+    <img alt="Skill repository on skilld.dev" src="https://skilld.dev/b/nuxt/scripts/nuxt-scripts?theme=light">
+  </picture>
+</a>
 
 # Nuxt Scripts
 
@@ -38,10 +45,7 @@ npx nuxi@latest module add scripts
 ```
 
 > [!TIP]
-> Generate an Agent Skill for this package using [skilld](https://github.com/harlan-zw/skilld):
-> ```bash
-> npx skilld add @nuxt/scripts
-> ```
+> Using an AI agent? Get the @nuxt/scripts Skill on [skilld.dev/gh/nuxt/scripts/nuxt-scripts](https://skilld.dev/gh/nuxt/scripts/nuxt-scripts).
 
 That's it. The Nuxt Scripts module should be downloaded and added to your Nuxt Config `modules`.
 
