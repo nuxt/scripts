@@ -20,10 +20,10 @@ describe('upstream cache storage ownership', () => {
   it('installs a bounded cache mount without registry server endpoints', () => {
     const nitroOptions: { storage?: Record<string, unknown> } = {}
 
-    ensureNuxtScriptsCacheStorage(nitroOptions)
+    ensureNuxtScriptsCacheStorage(nitroOptions, '/nuxt-scripts/lru-cache-driver')
 
     expect(nitroOptions.storage?.[NUXT_SCRIPTS_CACHE_BASE]).toEqual(expect.objectContaining({
-      driver: 'lru-cache',
+      driver: '/nuxt-scripts/lru-cache-driver',
       max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
     }))
   })
