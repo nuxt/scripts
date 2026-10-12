@@ -12,10 +12,10 @@ import type {
 } from '#nuxt-scripts/types'
 import type { GcmConsentContract } from './registry/_gcm-consent'
 import { defu } from 'defu'
-import { createError, useRuntimeConfig } from 'nuxt/app'
+import { createError, useNuxtApp, useRuntimeConfig } from 'nuxt/app'
 import { parseQuery, parseURL, withQuery } from 'ufo'
 import { parse } from 'valibot'
-import { useScript } from './composables/useScript'
+import { resolveScriptKey, useScript } from './composables/useScript'
 import { createNpmScriptApiState } from './npm-script-api-state'
 import { createNpmScriptProxy } from './npm-script-proxy'
 import { attachGcmConsent } from './registry/_gcm-consent'
@@ -94,6 +94,14 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   const userOptions = defu(_userOptions || {}, typeof scriptConfig === 'object' ? scriptConfig : {})
   const options = optionsFn(userOptions as InferIfSchema<O>, { scriptInput: userOptions.scriptInput as UseScriptInput & { src?: string } })
 
+  function registerScript(input: UseScriptInput, scriptOptions: NuxtUseScriptOptions<T>) {
+    const key = resolveScriptKey(typeof input === 'string' ? { src: input } : input)
+    // Registry defaults also stay passive when a caller reuses an existing resource.
+    if (_userOptions?.scriptOptions?.trigger === undefined && useNuxtApp().$scripts?.[key])
+      scriptOptions = { ...scriptOptions, trigger: 'manual' }
+    return useScript<T>(input, scriptOptions)
+  }
+
   if (options.scriptMode === 'npm') {
     const scriptOptions = { ...userOptions.scriptOptions, ...options.scriptOptions } as NuxtUseScriptOptions<T>
     const resolveApi = scriptOptions.use
@@ -103,7 +111,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       scriptOptions.trigger = 'client'
 
     const apiState = createNpmScriptApiState(clientUse as (() => T | undefined) | undefined)
-    const instance = useScript<T>({
+    const instance = registerScript({
       key: String(registryKey),
       async loader({ signal }: { signal: AbortSignal }) {
         const initialized = await options.clientInit?.({ signal })
@@ -222,7 +230,7 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
       options.clientInit?.()
     }
   }
-  const instance = useScript<T>(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
+  const instance = registerScript(scriptInput, scriptOptions as NuxtUseScriptOptions<T>)
 
   if (import.meta.client && options.gcmConsent)
     attachGcmConsent(instance as any, options.gcmConsent, String(registryKey))

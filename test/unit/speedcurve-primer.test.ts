@@ -15,7 +15,8 @@ vi.mock('nuxt/app', () => ({
   onNuxtReady: vi.fn(),
 }))
 
-vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
+vi.mock('../../packages/script/src/runtime/composables/useScript', async importOriginal => ({
+  ...await importOriginal<Record<string, unknown>>(),
   useScript: vi.fn(() => ({ proxy: {}, status: 'awaitingLoad' })),
 }))
 

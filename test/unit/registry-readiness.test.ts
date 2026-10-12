@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@unhead/vue', () => ({ useHead: vi.fn() }))
 
 vi.mock('nuxt/app', () => ({
+  useNuxtApp: () => ({}),
   createError: mocks.createError,
   useRuntimeConfig: mocks.useRuntimeConfig,
 }))
