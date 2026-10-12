@@ -26,6 +26,7 @@ function getPlaygroundPath(script: any): string | null {
     'rybbit-analytics': '/third-parties/rybbit-analytics',
     'pulse-analytics': '/third-parties/pulse-analytics',
     'statable-analytics': '/third-parties/statable-analytics',
+    'measuremysite-analytics': '/third-parties/measuremysite-analytics',
     'databuddy-analytics': '/third-parties/databuddy-analytics',
     'umami-analytics': '/third-parties/umami-analytics',
     'segment': '/third-parties/segment',
