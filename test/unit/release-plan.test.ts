@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { planRelease } from '../../scripts/release-plan'
+import { planPromotion, planRelease } from '../../scripts/release-plan'
 
 const versions = ['2.0.0-beta.16', '2.0.0-beta.16', '2.0.0-beta.16', '2.0.0-beta.16']
 
@@ -47,5 +47,35 @@ describe('release planning', () => {
       tag: `v${version}`,
       distTag,
     })
+  })
+})
+
+describe('release channel promotion', () => {
+  it.each(['2.0.0-beta.17', '2.0.0-beta.100', '2.1.0-beta.1', '3.0.0-beta.1', '2.0.0'])('skips a delayed release behind %s', (currentVersion) => {
+    expect(planPromotion('2.0.0-beta.16', [currentVersion])).toEqual({ _tag: 'Skip' })
+  })
+
+  it.each(['2.0.0-beta.15', '2.0.0-beta.16', '1.9.9', '2.0.0-alpha.20', '2.0.0-beta.9'])('allows a release ahead of or equal to %s', (currentVersion) => {
+    expect(planPromotion('2.0.0-beta.16', [currentVersion])).toEqual({ _tag: 'Promote' })
+  })
+
+  it('skips if any workspace channel is newer', () => {
+    expect(planPromotion('2.0.0-beta.16', ['2.0.0-beta.15', '2.0.0-beta.17', '2.0.0-beta.15'])).toEqual({ _tag: 'Skip' })
+  })
+
+  it('rejects an unrecognised registry version', () => {
+    expect(planPromotion('2.0.0-beta.16', ['bad'])).toEqual({ _tag: 'Err', message: 'The channel version must use a supported release version.' })
+  })
+
+  it('allows the first version in a new channel', () => {
+    expect(planPromotion('2.0.0-rc.1', [])).toEqual({ _tag: 'Promote' })
+  })
+
+  it('promotes a stable release ahead of its release candidate', () => {
+    expect(planPromotion('2.0.0', ['2.0.0-rc.10'])).toEqual({ _tag: 'Promote' })
+  })
+
+  it('rejects an invalid candidate', () => {
+    expect(planPromotion('bad', [])).toEqual({ _tag: 'Err', message: 'The release version must use a supported release version.' })
   })
 })

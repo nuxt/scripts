@@ -25,16 +25,7 @@ async function createPage(path: string, options?: any, starveIdleCallbacks = fal
   const browser = await getBrowser()
   const page = await browser.newPage(options)
   pages.push(page)
-  if (starveIdleCallbacks) {
-    // Model a busy Chromium renderer: only callbacks with deadlines can run.
-    await page.addInitScript(() => {
-      const requestIdleCallback = window.requestIdleCallback.bind(window)
-      window.requestIdleCallback = (callback, options) => options?.timeout === undefined
-        ? 0
-        : requestIdleCallback(callback, options)
-    })
-  }
-  await page.addInitScript(installFixtureIdleDeadline)
+  await page.addInitScript(installFixtureIdleDeadline, { starveIdleCallbacks })
   page.addListener('console', (msg) => {
     const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
     if (!location.startsWith('/_nuxt')) {

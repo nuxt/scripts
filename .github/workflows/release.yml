@@ -50,7 +50,7 @@ jobs:
     if: needs.prepare.outputs.release == 'true'
     runs-on: ubuntu-24.04-arm
     concurrency:
-      group: release-${{ needs.prepare.outputs.tag }}
+      group: release-${{ needs.prepare.outputs.dist-tag }}
       cancel-in-progress: false
     env:
       RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
@@ -105,5 +105,10 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check release channel
+        id: channel
+        run: node scripts/check-release-channel.ts
+
       - name: Publish
+        if: steps.channel.outputs.promote == 'true'
         run: pnpm publish -r --access public --no-git-checks --provenance --tag "$RELEASE_DIST_TAG"
