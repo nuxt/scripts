@@ -70,6 +70,11 @@ jobs:
               && pullRequest.base.repo.full_name === expectedBaseRepository,
             )
 
+            if (matches.length === 0) {
+              core.info('The pull request closed or its head changed. Skipping the size comment.')
+              return
+            }
+
             if (matches.length !== 1) {
               core.setFailed(`Expected one open pull request for ${run.head_sha}, found ${matches.length}`)
               return
@@ -78,6 +83,7 @@ jobs:
             core.setOutput('number', matches[0].number)
 
       - name: Download package size report
+        if: steps.pull-request.outputs.number != ''
         uses: actions/download-artifact@v8
         with:
           name: package-size-report
@@ -88,6 +94,7 @@ jobs:
       # The artifact comes from a workflow run that may be a fork pull request.
       # Treat it as untrusted input and check it before it becomes a comment.
       - name: Validate package size report
+        if: steps.pull-request.outputs.number != ''
         env:
           COMMENT_PATH: ${{ runner.temp }}/package-size-comment.md
           EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
@@ -140,6 +147,7 @@ jobs:
           sed 's/@/@<!-- -->/g' "$report" > "$COMMENT_PATH"
 
       - name: Post comment on pull request
+        if: steps.pull-request.outputs.number != ''
         uses: actions/github-script@v9
         env:
           COMMENT_PATH: ${{ runner.temp }}/package-size-comment.md
