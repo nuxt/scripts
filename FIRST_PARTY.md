@@ -136,9 +136,9 @@ Four presets in `proxy-configs.ts` cover all proxy-enabled scripts:
 | `PRIVACY_NONE` | all false | (not currently assigned to any script) |
 | `PRIVACY_FULL` | all true | Meta, X, Snap, Reddit, LinkedIn |
 | `PRIVACY_HEATMAP` | ip, language, hardware | GA, Clarity, Hotjar |
-| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, CF Web Analytics, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo, Calendly |
+| `PRIVACY_IP_ONLY` | ip only | PostHog, Plausible, Umami, Rybbit, Databuddy, Ahrefs, Fathom, Vercel, Matomo, Carbon Ads, Lemon Squeezy, Intercom, Gravatar, YouTube, Vimeo, Calendly |
 
-Note: TikTok, GTM, Segment, Crisp, Mixpanel, Bing UET, SpeedCurve, Pulse, and Statable have no proxy capability, so no privacy transforms are applied.
+Note: Cloudflare Web Analytics, TikTok, GTM, Segment, Crisp, Mixpanel, Bing UET, SpeedCurve, Pulse, and Statable have no proxy capability, so no privacy transforms are applied.
 
 ## Script Support
 
@@ -161,7 +161,7 @@ Note: TikTok, GTM, Segment, Crisp, Mixpanel, Bing UET, SpeedCurve, Pulse, and St
 | `rybbitAnalytics` | rybbitAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject + postProcess |
 | `databuddyAnalytics` | databuddyAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
 | `fathomAnalytics` | fathomAnalytics | `PRIVACY_IP_ONLY` | Path A + postProcess |
-| `cloudflareWebAnalytics` | cloudflareWebAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `cloudflareWebAnalytics` | cloudflareWebAnalytics | n/a | Bundled script, direct collection |
 | `vercelAnalytics` | vercelAnalytics | `PRIVACY_IP_ONLY` | Path A |
 | `matomoAnalytics` | matomoAnalytics | `PRIVACY_IP_ONLY` | Path A |
 | `carbonAds` | carbonAds | `PRIVACY_IP_ONLY` | Path A |

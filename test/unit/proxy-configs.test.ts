@@ -347,13 +347,6 @@ describe('proxy configs', () => {
       expect(configs.databuddyAnalytics?.configDomainFields).toEqual(['scriptUrl'])
     })
 
-    it('returns proxy config for cloudflareWebAnalytics', async () => {
-      const config = (await getProxyConfigs()).cloudflareWebAnalytics
-      expect(config).toBeDefined()
-      expect(config?.domains).toContain('static.cloudflareinsights.com')
-      expect(config?.domains).toContain('cloudflareinsights.com')
-    })
-
     it('returns proxy config for rybbitAnalytics', async () => {
       const config = (await getProxyConfigs()).rybbitAnalytics
       expect(config).toBeDefined()
@@ -465,7 +458,6 @@ describe('proxy configs', () => {
       expect(configs).toHaveProperty('linkedinInsight')
       expect(configs).toHaveProperty('posthog')
       expect(configs).toHaveProperty('plausibleAnalytics')
-      expect(configs).toHaveProperty('cloudflareWebAnalytics')
       expect(configs).toHaveProperty('rybbitAnalytics')
       expect(configs).toHaveProperty('umamiAnalytics')
       expect(configs).toHaveProperty('databuddyAnalytics')
@@ -485,7 +477,7 @@ describe('proxy configs', () => {
     it('all configs have valid structure', async () => {
       const configs = await getProxyConfigs()
       const fullAnonymize = ['metaPixel', 'tiktokPixel', 'xPixel', 'snapchatPixel', 'redditPixel', 'linkedinInsight']
-      const ipOnly = ['posthog', 'plausibleAnalytics', 'cloudflareWebAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'ahrefsAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar', 'calendly']
+      const ipOnly = ['posthog', 'plausibleAnalytics', 'rybbitAnalytics', 'umamiAnalytics', 'databuddyAnalytics', 'ahrefsAnalytics', 'fathomAnalytics', 'vercelAnalytics', 'matomoAnalytics', 'carbonAds', 'intercom', 'lemonSqueezy', 'vimeoPlayer', 'youtubePlayer', 'gravatar', 'calendly']
       for (const [key, config] of Object.entries(configs)) {
         expect(config, `${key} should have domains`).toHaveProperty('domains')
         expect(Array.isArray(config.domains), `${key}.domains should be an array`).toBe(true)

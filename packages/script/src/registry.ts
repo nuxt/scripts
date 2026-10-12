@@ -126,7 +126,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   // analytics
   m('googleAnalytics', 'Google Analytics', 'analytics', 'useScriptGoogleAnalytics', { proxy: true, partytown: true }, PRIVACY_HEATMAP),
   m('plausibleAnalytics', 'Plausible Analytics', 'analytics', 'useScriptPlausibleAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
-  m('cloudflareWebAnalytics', 'Cloudflare Web Analytics', 'analytics', 'useScriptCloudflareWebAnalytics', { bundle: true, proxy: true, partytown: true }, PRIVACY_IP_ONLY),
+  m('cloudflareWebAnalytics', 'Cloudflare Web Analytics', 'analytics', 'useScriptCloudflareWebAnalytics', { bundle: true, partytown: true }),
   m('posthog', 'PostHog', 'analytics', 'useScriptPostHog', { proxy: true }, PRIVACY_IP_ONLY),
   // proxy intentionally off: proxied beacons reach Fathom from the server's IP
   // (datacenter) and Fathom's bot detection ignores X-Forwarded-For, flagging
@@ -345,10 +345,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'analytics',
       envDefaults: { token: '' },
       bundle: true,
-      proxy: {
-        domains: ['static.cloudflareinsights.com', 'cloudflareinsights.com'],
-        privacy: PRIVACY_IP_ONLY,
-      },
+      // Cloudflare RUM cannot collect Worker subrequests. Keep collection in the browser.
+      // https://developers.cloudflare.com/web-analytics/faq/#can-i-use-real-user-monitoring-rum-with-cloudflare-workers
       partytown: { forwards: ['__cfBeacon'] },
     }),
     def('vercelAnalytics', {

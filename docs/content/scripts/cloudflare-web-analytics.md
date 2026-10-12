@@ -20,6 +20,10 @@ Default:
 
 - **Trigger: Client** The script loads during Nuxt hydration to keep Web Vitals metrics accurate.
 
+The beacon script is bundled. Events go directly from the browser to `https://cloudflareinsights.com/cdn-cgi/rum`.
+Proxying is unsupported because [Cloudflare RUM cannot collect Worker subrequests](https://developers.cloudflare.com/web-analytics/faq/#can-i-use-real-user-monitoring-rum-with-cloudflare-workers).
+An HTTP 204 response from a Worker proxy does not prove that Cloudflare recorded the event.
+
 This registry fixes the trigger to `client`. A `scriptOptions.trigger` value passed by the caller is overwritten, so this integration cannot currently be deferred with a consent or element trigger.
 
 ::callout{type="warning"}
