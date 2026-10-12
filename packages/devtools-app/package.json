@@ -4,6 +4,11 @@
   "version": "2.0.0-beta.14",
   "description": "Optional DevTools panel for Nuxt Scripts.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuxt/scripts.git",
+    "directory": "packages/devtools-app"
+  },
   "exports": {
     "./client": "./client",
     "./package.json": "./package.json"
