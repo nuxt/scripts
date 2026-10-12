@@ -74,6 +74,43 @@ async function waitForLogCount(
 }
 
 describe('basic', () => {
+  it.each(['generic', 'registry'])('keeps later %s consumers behind the first consent trigger', async (mode) => {
+    const { page, logs } = await createPage(`/consent-trigger?mode=${mode}`)
+    await page.waitForTimeout(1500)
+    expect(await page.locator('#consented').textContent()).toBe('false')
+    expect(await page.locator('#status').textContent()).toBe('awaitingLoad')
+    expect(await page.locator('#later-status').textContent()).toBe('awaitingLoad')
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(0)
+    await page.click('#accept')
+    await waitForLogCount(logs, 'Script -- Loaded', 1)
+    await expect.poll(() => page.locator('#status').textContent()).toBe('loaded')
+    expect(await page.locator('#later-status').textContent()).toBe('loaded')
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(1)
+  })
+
+  it('loads a composable from an infrastructure-only registry entry', async () => {
+    const { page, logs } = await createPage('/consent-trigger?mode=infrastructure')
+    await expect.poll(() => page.locator('#status').textContent(), { timeout: 5000 }).toBe('loaded')
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(1)
+  })
+
+  it('preserves an explicit manual composable trigger', async () => {
+    const { page, logs } = await createPage('/consent-trigger?mode=manual')
+    await page.waitForTimeout(1500)
+    expect(await page.locator('#status').textContent()).toBe('awaitingLoad')
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(0)
+    await page.click('#load')
+    await expect.poll(() => page.locator('#status').textContent()).toBe('loaded')
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(1)
+  })
+
+  it('allows a later consumer to provide an explicit trigger', async () => {
+    const { page, logs } = await createPage('/consent-trigger?mode=explicit')
+    await expect.poll(() => page.locator('#status').textContent()).toBe('loaded')
+    expect(await page.locator('#consented').textContent()).toBe('false')
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(1)
+  })
+
   it('loads onNuxtReady scripts when the renderer has no idle time', { timeout: 30000 }, async () => {
     const { page, logs } = await createPage('/reload-trigger', undefined, true)
     await waitForLogCount(logs, 'Script -- Loaded', 1, 3000)

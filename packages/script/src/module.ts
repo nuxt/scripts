@@ -482,9 +482,12 @@ export default defineNuxtModule<ModuleOptions>({
           }
           Object.assign(base, defu(input, envResolved))
         }
-        // Include scriptOptions so composable instances inherit registry-level settings (e.g. bundle)
+        // Inherit loading settings, but keep infrastructure-only triggers at module level.
         if (scriptOptions && Object.keys(scriptOptions).length > 0) {
-          base.scriptOptions = scriptOptions
+          const inheritedScriptOptions = { ...scriptOptions }
+          if (inheritedScriptOptions.trigger === false)
+            delete inheritedScriptOptions.trigger
+          base.scriptOptions = inheritedScriptOptions
         }
         registryWithDefaults[key] = base
       }
