@@ -47,7 +47,8 @@
   },
   "files": [
     "THIRD_PARTY_LICENSES.md",
-    "dist"
+    "dist",
+    "skills"
   ],
   "engines": {
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
