@@ -1,6 +1,11 @@
 import { getBrowser, url } from '@nuxt/test-utils/e2e'
 import { expect, it } from 'vitest'
 
+// The v3 loader tag renders after Nuxt resolves suspense and the idle callback
+// runs. A cold fixture start on CI can push that well past domcontentloaded,
+// so this wait needs the same cold-start budget as the other suites.
+const COLD_START_TIMEOUT_MS = 30000
+
 // The real Usercentrics CMP v3 loader validates `data-ruleset-id` against
 // registered domains and silently no-ops on unknown origins. Tests stub the
 // loader request and inject a minimal `__ucCmp` shim plus synthesised
@@ -45,7 +50,7 @@ export function defineUsercentricsSuite() {
     const page = await newPage()
     try {
       await page.goto(url('/'), { waitUntil: 'domcontentloaded', timeout: 30000 })
-      await page.waitForSelector('script#usercentrics-cmp', { state: 'attached', timeout: 15000 })
+      await page.waitForSelector('script#usercentrics-cmp', { state: 'attached', timeout: COLD_START_TIMEOUT_MS })
       const attrs = await page.evaluate(() => {
         const el = document.getElementById('usercentrics-cmp') as HTMLScriptElement | null
         if (!el)
@@ -62,7 +67,7 @@ export function defineUsercentricsSuite() {
     finally {
       await page.close()
     }
-  }, 60000)
+  }, 90000)
 
   it('fires UC_UI_CMP_EVENT events that the composable surfaces via onConsentChange', async () => {
     const page = await newPage()
