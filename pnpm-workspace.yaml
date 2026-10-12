@@ -65,6 +65,7 @@ catalog:
   '@types/jest-image-snapshot': ^6.4.1
   '@types/node': ^26.1.1
   '@types/youtube': ^0.3.0
+  '@unhead/vue': ^3.3.1
   '@vue/test-utils': ^2.4.11
   '@vueuse/core': ^14.3.0
   '@vueuse/shared': ^14.3.0

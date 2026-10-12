@@ -41,6 +41,7 @@
     "@types/jest-image-snapshot": "catalog:",
     "@types/node": "catalog:",
     "@types/youtube": "catalog:",
+    "@unhead/vue": "catalog:",
     "@vue/test-utils": "catalog:",
     "bumpp": "catalog:",
     "defu": "catalog:",
