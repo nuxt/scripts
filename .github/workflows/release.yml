@@ -4,18 +4,62 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
   id-token: write
 
 jobs:
-  release:
+  prepare:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      tag: ${{ steps.plan.outputs.tag }}
+      dist-tag: ${{ steps.plan.outputs.dist-tag }}
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+
+      - name: Plan release
+        id: plan
+        run: node scripts/prepare-release.ts
+
+  release:
+    needs: prepare
+    if: needs.prepare.outputs.release == 'true'
+    runs-on: ubuntu-24.04-arm
+    concurrency:
+      group: release-${{ needs.prepare.outputs.tag }}
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+      RELEASE_DIST_TAG: ${{ needs.prepare.outputs.dist-tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -29,8 +73,26 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
+      - name: Create release tag
+        run: |
+          RELEASE_SHA=$(git rev-parse HEAD)
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            if [ "$(git rev-parse "$RELEASE_TAG^{commit}")" != "$RELEASE_SHA" ]; then
+              echo '::error::The release tag points to another commit.'
+              exit 1
+            fi
+          else
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$RELEASE_SHA"
+          fi
+          git fetch origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # GITHUB_TOKEN tag creation does not trigger another workflow.
+      # Publish in this run so release PRs need no extra token or manual push.
       - name: Generate changelog
-        run: npx changelogithub
+        run: pnpm dlx changelogithub --to "$RELEASE_TAG"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,16 +105,5 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Detect prerelease tag
-        id: prerelease
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          if [[ "$TAG" =~ -(beta|rc|alpha) ]]; then
-            DIST_TAG=$(echo "$TAG" | sed 's/.*-\(beta\|rc\|alpha\).*/\1/')
-            echo "tag=--tag $DIST_TAG" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Publish
-        run: pnpm publish -r --access public --no-git-checks --provenance ${{ steps.prerelease.outputs.tag }}
+        run: pnpm publish -r --access public --no-git-checks --provenance --tag "$RELEASE_DIST_TAG"
