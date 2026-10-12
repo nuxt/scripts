@@ -161,7 +161,7 @@ Note: TikTok, GTM, Segment, Crisp, Mixpanel, Bing UET, SpeedCurve, Pulse, and St
 | `rybbitAnalytics` | rybbitAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject + postProcess |
 | `databuddyAnalytics` | databuddyAnalytics | `PRIVACY_IP_ONLY` | Path A + autoInject |
 | `fathomAnalytics` | fathomAnalytics | `PRIVACY_IP_ONLY` | Path A + postProcess |
-| `cloudflareWebAnalytics` | cloudflareWebAnalytics | `PRIVACY_IP_ONLY` | Path A |
+| `cloudflareWebAnalytics` | cloudflareWebAnalytics | n/a | Bundled script, direct collection |
 | `vercelAnalytics` | vercelAnalytics | `PRIVACY_IP_ONLY` | Path A |
 | `matomoAnalytics` | matomoAnalytics | `PRIVACY_IP_ONLY` | Path A |
 | `carbonAds` | carbonAds | `PRIVACY_IP_ONLY` | Path A |
