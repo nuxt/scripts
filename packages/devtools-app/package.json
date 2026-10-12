@@ -1,7 +1,7 @@
 {
   "name": "@nuxt/scripts-devtools",
   "type": "module",
-  "version": "2.0.0-beta.14",
+  "version": "2.0.0-beta.15",
   "description": "Optional DevTools panel for Nuxt Scripts.",
   "license": "MIT",
   "repository": {
@@ -13,7 +13,9 @@
     "./client": "./client",
     "./package.json": "./package.json"
   },
-  "files": ["client"],
+  "files": [
+    "client"
+  ],
   "scripts": {
     "dev": "nuxi dev",
     "dev:prepare": "nuxi prepare",
