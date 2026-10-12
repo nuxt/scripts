@@ -10,7 +10,7 @@ if (!distTag || !output)
 const names = ['@nuxt/scripts', '@nuxt/scripts-cli', '@nuxt/scripts-devtools']
 const currentVersions = await Promise.all(names.map(async (name) => {
   const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`, {
-    headers: { accept: 'application/vnd.npm.install-v1+json', 'cache-control': 'no-cache' },
+    headers: { 'accept': 'application/vnd.npm.install-v1+json', 'cache-control': 'no-cache' },
     signal: AbortSignal.timeout(30000),
   })
   if (!response.ok)
