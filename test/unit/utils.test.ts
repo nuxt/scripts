@@ -11,10 +11,12 @@ const useScriptMock = vi.hoisted(() => vi.fn((input, options) => ({ input, optio
 
 // Mock dependencies
 vi.mock('nuxt/app', () => ({
+  useNuxtApp: () => ({}),
   useRuntimeConfig: () => runtimeConfig,
 }))
 
-vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
+vi.mock('../../packages/script/src/runtime/composables/useScript', async importOriginal => ({
+  ...await importOriginal<Record<string, unknown>>(),
   useScript: useScriptMock,
 }))
 

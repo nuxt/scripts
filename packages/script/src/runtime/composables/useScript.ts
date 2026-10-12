@@ -184,6 +184,7 @@ export function resolveScriptKey(input: any): string {
 }
 
 export function useScript<T extends Record<symbol | string, any> = Record<symbol | string, any>>(input: UseScriptInput, options?: NuxtUseScriptOptions<T>): UseScriptContext<UseFunctionType<NuxtUseScriptOptions<T>, T>> {
+  const explicitTrigger = options?.trigger
   input = typeof input === 'string' ? { src: input } : input
   options = defu(options, useNuxtScriptRuntimeConfig()?.defaultScriptOptions) as NuxtUseScriptOptions<T>
   if (!import.meta.client && options.use) {
@@ -305,6 +306,9 @@ export function useScript<T extends Record<symbol | string, any> = Record<symbol
   const headHooks = options.head.hooks!
   ensureScripts(nuxtApp)
   const exists = !!(nuxtApp.$scripts as Record<string, any>)?.[id]
+  // Implicit consumers observe the existing resource without adding a loading condition.
+  if (exists && explicitTrigger === undefined)
+    options.trigger = 'manual'
 
   const err = options._validate?.()
   if (import.meta.dev && import.meta.client && err) {

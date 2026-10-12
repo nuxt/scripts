@@ -10,6 +10,7 @@ export default defineNuxtConfig({
       instagramEmbed: {},
       blueskyEmbed: {},
       gravatar: {},
+      metaPixel: { id: '123456', trigger: false, bundle: false, scriptInput: { src: '/myScript.js' } },
     },
   },
   devtools: {

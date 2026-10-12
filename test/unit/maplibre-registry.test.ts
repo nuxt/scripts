@@ -6,11 +6,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const setWorkerUrl = vi.fn()
 
 vi.mock('nuxt/app', () => ({
+  useNuxtApp: () => ({}),
   createError: (input: { message: string }) => new Error(input.message),
   useRuntimeConfig: () => ({ public: { scripts: {} } }),
 }))
 
-vi.mock('../../packages/script/src/runtime/composables/useScript', () => ({
+vi.mock('../../packages/script/src/runtime/composables/useScript', async importOriginal => ({
+  ...await importOriginal<Record<string, unknown>>(),
   useScript: vi.fn((input, options) => ({ input, options })),
 }))
 
