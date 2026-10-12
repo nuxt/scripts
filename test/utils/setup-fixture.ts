@@ -2,6 +2,22 @@ import type { TestOptions } from '@nuxt/test-utils/e2e'
 import { setup } from '@nuxt/test-utils/e2e'
 import { defu } from 'defu'
 
+/** Keep native idle scheduling, with a deadline for busy CI renderers. */
+export function installFixtureIdleDeadline(options: { starveIdleCallbacks?: boolean } = {}) {
+  const target = window
+  if (typeof target.requestIdleCallback !== 'function')
+    return
+  const nativeRequestIdleCallback = target.requestIdleCallback.bind(target)
+  // Install the busy-renderer model and deadline together. Init script order is undefined.
+  const requestIdleCallback: Window['requestIdleCallback'] = options.starveIdleCallbacks
+    ? (callback, options) => options?.timeout === undefined ? 0 : nativeRequestIdleCallback(callback, options)
+    : nativeRequestIdleCallback
+  target.requestIdleCallback = (callback, options) => requestIdleCallback(callback, {
+    timeout: 1000,
+    ...options,
+  })
+}
+
 /**
  * Compile settings that a production build applies and a fixture build does not.
  *

@@ -4,7 +4,7 @@ import { createResolver } from '@nuxt/kit'
 import { getBrowser, url, waitForHydration } from '@nuxt/test-utils/e2e'
 import { parseURL } from 'ufo'
 import { afterEach, describe, expect, it } from 'vitest'
-import { setupFixture } from '../utils/setup-fixture'
+import { installFixtureIdleDeadline, setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -20,11 +20,12 @@ afterEach(async () => {
   await Promise.all(pages.splice(0).map(page => page.close()))
 })
 
-async function createPage(path: string, options?: any) {
+async function createPage(path: string, options?: any, starveIdleCallbacks = false) {
   const logs: { text: string, location: string }[] = []
   const browser = await getBrowser()
   const page = await browser.newPage(options)
   pages.push(page)
+  await page.addInitScript(installFixtureIdleDeadline, { starveIdleCallbacks })
   page.addListener('console', (msg) => {
     const location = `${parseURL(msg.location().url).pathname}:${msg.location().lineNumber}`
     if (!location.startsWith('/_nuxt')) {
@@ -73,6 +74,14 @@ async function waitForLogCount(
 }
 
 describe('basic', () => {
+  it('loads onNuxtReady scripts when the renderer has no idle time', { timeout: 30000 }, async () => {
+    const { page, logs } = await createPage('/reload-trigger', undefined, true)
+    await waitForLogCount(logs, 'Script -- Loaded', 1, 3000)
+    expect(await page.$eval('#status', el => el.textContent?.trim())).toBe('loaded')
+    await page.click('#reload-script')
+    await waitForLogCount(logs, 'Script -- Loaded', 2, 3000)
+    expect(logs().filter(log => log.text === 'Script -- Loaded')).toHaveLength(2)
+  })
   it('relative onNuxtReady', async () => {
     const { page, logs } = await createPage('/')
     // visit and collect all logs, we need to do a snapshot on them

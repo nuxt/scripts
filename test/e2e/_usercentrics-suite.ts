@@ -1,5 +1,6 @@
 import { getBrowser, url } from '@nuxt/test-utils/e2e'
 import { expect, it } from 'vitest'
+import { installFixtureIdleDeadline } from '../utils/setup-fixture'
 
 // The v3 loader tag renders after Nuxt resolves suspense and the idle callback
 // runs. A cold fixture start on CI can push that well past domcontentloaded,
@@ -14,6 +15,7 @@ const COLD_START_TIMEOUT_MS = 30000
 async function newPage() {
   const browser = await getBrowser()
   const page = await browser.newPage()
+  await page.addInitScript(installFixtureIdleDeadline)
   await page.route('**/web.cmp.usercentrics.eu/**', route => route.fulfill({
     status: 200,
     contentType: 'application/javascript',
