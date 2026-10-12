@@ -43,7 +43,14 @@ jobs:
 
       - name: Plan release
         id: plan
-        run: node scripts/prepare-release.ts
+        run: |
+          # CI started before this workflow existed can finish after its merge.
+          if [ "$GITHUB_EVENT_NAME" = 'workflow_run' ] && [ ! -f scripts/prepare-release.ts ]; then
+            echo 'Skip CI for a commit that predates release automation.'
+            echo 'release=false' >> "$GITHUB_OUTPUT"
+          else
+            node scripts/prepare-release.ts
+          fi
 
   release:
     needs: prepare
