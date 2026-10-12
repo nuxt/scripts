@@ -52,6 +52,11 @@ function buildStubAnalyticsJs(endpoint: string): string {
 `
 }
 
+// The loader tag renders after Nuxt resolves suspense and the idle callback
+// runs. A cold fixture start on CI can push that well past domcontentloaded,
+// so the wait needs a cold-start budget the 60s test timeout cannot cover.
+const COLD_START_TIMEOUT_MS = 30000
+
 const CDN_STUB = buildStubAnalyticsJs('https://analytics.ahrefs.com/api/event')
 const BUNDLED_PROXY_PATH = '/_scripts/p/analytics.ahrefs.com/api/event'
 
@@ -153,7 +158,7 @@ export function defineAhrefsAnalyticsSuite(opts: SuiteOptions) {
       const scriptSelector = opts.bundled
         ? 'script[src*="/_scripts/assets/"]'
         : 'script[src*="analytics.ahrefs.com/analytics.js"]'
-      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: 30000 })
+      await page.waitForSelector(scriptSelector, { state: 'attached', timeout: COLD_START_TIMEOUT_MS })
       const tag = await page.evaluate((sel: string) => {
         const el = document.querySelector<HTMLScriptElement>(sel)
         return el ? { src: el.src, key: el.getAttribute('data-key') } : null
