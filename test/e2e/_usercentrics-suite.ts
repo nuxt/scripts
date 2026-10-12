@@ -1,5 +1,6 @@
 import { getBrowser, url } from '@nuxt/test-utils/e2e'
 import { expect, it } from 'vitest'
+import { installFixtureIdleDeadline } from '../utils/setup-fixture'
 
 // The real Usercentrics CMP v3 loader validates `data-ruleset-id` against
 // registered domains and silently no-ops on unknown origins. Tests stub the
@@ -9,6 +10,7 @@ import { expect, it } from 'vitest'
 async function newPage() {
   const browser = await getBrowser()
   const page = await browser.newPage()
+  await page.addInitScript(installFixtureIdleDeadline)
   await page.route('**/web.cmp.usercentrics.eu/**', route => route.fulfill({
     status: 200,
     contentType: 'application/javascript',
