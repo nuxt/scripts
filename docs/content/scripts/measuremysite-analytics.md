@@ -57,12 +57,38 @@ The tracker counts client-side navigation without extra setup.
 
 ## Example
 
-The default trigger waits until Nuxt is ready:
+Set the key in `nuxt.config.ts` and call the composable without options. The default trigger waits until Nuxt is ready:
+
+::code-group
+
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  scripts: {
+    registry: {
+      measuremysiteAnalytics: { key: 'pk_...' },
+    },
+  },
+})
+```
 
 ```vue [app.vue]
 <script setup lang="ts">
-useScriptMeasuremysiteAnalytics({
-  key: 'pk_...',
-})
+useScriptMeasuremysiteAnalytics()
 </script>
 ```
+
+::
+
+You can also set the key with an environment variable:
+
+```text [.env]
+NUXT_PUBLIC_SCRIPTS_MEASUREMYSITE_ANALYTICS_KEY=pk_...
+```
+
+## Verifying the site
+
+measuremy.site records nothing for a domain until it is verified. It verifies a domain by fetching its homepage and looking for the site key in the HTML.
+
+The tracker loads on the client, so its script tag isn't in the server-rendered HTML. A key set in `nuxt.config.ts` or `.env` is still in that HTML, because Nuxt serializes public runtime config into the page. That is enough to verify. A key passed only to `useScriptMeasuremysiteAnalytics({ key })` ends up in a JavaScript chunk instead, so the homepage check can't find it.
+
+If the key isn't in the homepage HTML, add the DNS TXT record from the measuremy.site Setup tab instead.
