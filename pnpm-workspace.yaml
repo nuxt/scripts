@@ -65,6 +65,7 @@ catalog:
   '@types/jest-image-snapshot': ^6.4.1
   '@types/node': ^26.1.1
   '@types/youtube': ^0.3.0
+  '@unhead/vue': ^3.3.1
   '@vue/test-utils': ^2.4.11
   '@vueuse/core': ^14.3.0
   '@vueuse/shared': ^14.3.0
@@ -76,6 +77,7 @@ catalog:
   h3: ^1.15.11
   happy-dom: ^20.11.0
   jest-image-snapshot: ^6.5.2
+  lru-cache: ^11.2.7
   magic-string: ^1.0.0
   nuxt: ^4.5.0
   ofetch: ^1.5.1

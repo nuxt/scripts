@@ -81,6 +81,7 @@
     "@types/vimeo__player": "^2.18.3",
     "@types/youtube": "^0.1.0",
     "@unhead/vue": "^2.0.3 || ^3.0.0",
+    "nuxt": "^3.16.0 || ^4.0.0 || ^5.0.0-0",
     "posthog-js": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -114,11 +115,13 @@
   },
   "dependencies": {
     "@nuxt/devtools-kit": "catalog:",
+    "@nuxt/kit": "catalog:",
     "@vueuse/core": "catalog:",
     "@vueuse/shared": "catalog:",
     "consola": "catalog:",
     "defu": "catalog:",
     "h3": "catalog:",
+    "lru-cache": "catalog:",
     "magic-string": "catalog:",
     "ofetch": "catalog:",
     "ohash": "catalog:",
@@ -136,7 +139,6 @@
     "valibot": "catalog:"
   },
   "devDependencies": {
-    "@nuxt/kit": "catalog:",
     "@nuxt/module-builder": "catalog:",
     "@speedcurve/lux": "catalog:",
     "rollup": "catalog:",
