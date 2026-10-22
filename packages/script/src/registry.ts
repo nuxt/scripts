@@ -803,7 +803,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
     }),
     // Deacon's loader takes the origin of its own `src` as the host for its chat frame
     // and API, so a copy served from /_scripts/assets would point every request at the
-    // consuming site. Bundle and proxy are therefore intentionally absent.
+    // consuming site, and proxying would put that site's server between visitors and
+    // the live chat. Bundle and proxy are therefore intentionally absent.
     def('deacon', {
       schema: DeaconOptions,
       label: 'Deacon',

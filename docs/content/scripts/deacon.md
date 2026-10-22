@@ -8,7 +8,7 @@ links:
     size: xs
 ---
 
-[Deacon](https://heydeacon.com) is an AI support agent for websites and apps. It answers questions from your own content and says when it doesn't know. The same script also counts page views, goals and JavaScript errors for Deacon's website analytics.
+[Deacon](https://heydeacon.com) is an AI support agent for websites and apps that answers questions from your own content. The same script also counts page views, goals and JavaScript errors for its website analytics.
 
 [`useScriptDeacon()`{lang="ts"}](/scripts/deacon) loads the widget and types the `window.Deacon` API it sets up.
 

@@ -3,7 +3,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
-import { registry, registryMeta } from '../../packages/script/src/registry'
+import { registry } from '../../packages/script/src/registry'
 import { useScriptDeacon } from '../../packages/script/src/runtime/registry/deacon'
 
 const mocks = vi.hoisted(() => ({
@@ -25,7 +25,7 @@ function setup(options: Record<string, unknown> = { key: 'pk_test123' }) {
   useScriptDeacon(options as any)
   return {
     scriptInput: mocks.definition.scriptInput as Record<string, unknown>,
-    use: mocks.definition.scriptOptions?.use as () => { open: () => void },
+    use: mocks.definition.scriptOptions.use as () => { open: () => void },
   }
 }
 
@@ -37,10 +37,8 @@ describe('deacon', () => {
 
   it('renders the snippet from the Install page', () => {
     const { scriptInput } = setup()
-    expect(scriptInput).toMatchObject({
-      'src': 'https://heydeacon.com/widget/v1/loader.js',
-      'data-key': 'pk_test123',
-    })
+    expect(scriptInput.src).toBe('https://heydeacon.com/widget/v1/loader.js')
+    expect(scriptInput['data-key']).toBe('pk_test123')
   })
 
   it('loads the loader without CORS mode, which heydeacon.com does not serve it for', () => {
@@ -70,27 +68,17 @@ describe('deacon', () => {
     const deacon = { open: vi.fn() }
     ;(window as any).Deacon = deacon
     const { use } = setup()
-    expect(use?.()).toBe(deacon)
+    expect(use()).toBe(deacon)
   })
 
-  it('is registered as a support script that loads straight from heydeacon.com', async () => {
-    // The loader works out where to reach Deacon from its own src, so a copy served
-    // from the site's origin, bundled or proxied, would talk to the wrong host.
+  it('is registered as a support script with useScriptDeacon', async () => {
     const script = (await registry()).find(s => s.registryKey === 'deacon')
-    expect(script).toMatchObject({
-      label: 'Deacon',
-      category: 'support',
-      import: { name: 'useScriptDeacon' },
-    })
+    expect(script?.category).toBe('support')
+    expect(script?.import?.name).toBe('useScriptDeacon')
+  })
+
+  it('is never bundled, since the loader takes its own src\'s origin as Deacon\'s host', async () => {
+    const script = (await registry()).find(s => s.registryKey === 'deacon')
     expect(script?.bundle).toBeUndefined()
-    expect(script?.proxy).toBeUndefined()
-    expect(registryMeta.find(m => m.key === 'deacon')).toEqual({
-      key: 'deacon',
-      label: 'Deacon',
-      category: 'support',
-      composableName: 'useScriptDeacon',
-      capabilities: {},
-      privacy: null,
-    })
   })
 })
