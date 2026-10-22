@@ -1,5 +1,6 @@
 import type { ModuleOptions } from '../../packages/script/src/module'
 import type { CrispApi } from '../../packages/script/src/runtime/registry/crisp'
+import type { DeaconApi } from '../../packages/script/src/runtime/registry/deacon'
 import type { DeskCrewApi, DeskCrewEmbedOptions } from '../../packages/script/src/runtime/registry/deskcrew'
 import type { DefaultEventName } from '../../packages/script/src/runtime/registry/google-analytics'
 import type { TawkToApi, TawkToProxyApi, TawkToVisitor, TawkToWindowType } from '../../packages/script/src/runtime/registry/tawk-to'
@@ -20,6 +21,7 @@ describe('module options registry', () => {
     expectTypeOf<Registry['calendly']>().not.toBeAny()
     expectTypeOf<Registry['carbonAds']>().not.toBeAny()
     expectTypeOf<Registry['crisp']>().not.toBeAny()
+    expectTypeOf<Registry['deacon']>().not.toBeAny()
     expectTypeOf<Registry['deskcrew']>().not.toBeAny()
     expectTypeOf<Registry['clarity']>().not.toBeAny()
     expectTypeOf<Registry['cloudflareWebAnalytics']>().not.toBeAny()
@@ -101,6 +103,18 @@ describe('module options registry', () => {
 })
 
 describe('registry api types', () => {
+  it('DeaconApi matches the loader\'s window.Deacon', () => {
+    expectTypeOf<DeaconApi['open']>().toEqualTypeOf<() => void>()
+    expectTypeOf<DeaconApi['close']>().toEqualTypeOf<() => void>()
+    expectTypeOf<DeaconApi['toggle']>().toEqualTypeOf<() => void>()
+    expectTypeOf<DeaconApi['preload']>().toEqualTypeOf<() => void>()
+    // null clears the context, and a null value removes that one key.
+    expectTypeOf<DeaconApi['setContext']>().parameter(0).toEqualTypeOf<Record<string, string | number | boolean | null> | null>()
+    // null says nobody is logged in.
+    expectTypeOf<DeaconApi['identify']>().parameter(0).toEqualTypeOf<{ id?: string | number, email?: string, name?: string } | null>()
+    expectTypeOf<DeaconApi['track']>().toEqualTypeOf<(name: string, props?: Record<string, string | number | boolean>) => void>()
+  })
+
   it('DeskCrewApi exposes the documented surface with usable signatures', () => {
     // The registry hands this object straight to callers, so a regression to `any`
     // here would compile fine and silently remove every bit of autocomplete.

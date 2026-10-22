@@ -21,6 +21,7 @@ import {
   CloudflareWebAnalyticsOptions,
   CrispOptions,
   DatabuddyAnalyticsOptions,
+  DeaconOptions,
   DeskCrewOptions,
   FathomAnalyticsOptions,
   GoogleAdsenseOptions,
@@ -182,6 +183,7 @@ export const registryMeta: RegistryScriptMeta[] = [
   m('crisp', 'Crisp', 'support', 'useScriptCrisp', { bundle: true }, null),
   m('deskcrew', 'DeskCrew', 'support', 'useScriptDeskCrew', {}, null),
   m('tawkTo', 'Tawk.to', 'support', 'useScriptTawkTo', {}, null),
+  m('deacon', 'Deacon', 'support', 'useScriptDeacon', {}, null),
   // cdn
   m('npm', 'NPM', 'cdn', 'useScriptNpm', { bundle: true }, null),
   // utility
@@ -798,6 +800,15 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       label: 'Tawk.to',
       category: 'support',
       envDefaults: { propertyId: '', widgetId: '' },
+    }),
+    // Deacon's loader takes the origin of its own `src` as the host for its chat frame
+    // and API, so a copy served from /_scripts/assets would point every request at the
+    // consuming site. Bundle and proxy are therefore intentionally absent.
+    def('deacon', {
+      schema: DeaconOptions,
+      label: 'Deacon',
+      category: 'support',
+      envDefaults: { key: '' },
     }),
     // cdn
     def('npm', {
