@@ -290,6 +290,28 @@ export const DatabuddyAnalyticsOptions = object({
   enableErrorTracking: optional(boolean()),
 })
 
+export const DeaconOptions = object({
+  /**
+   * Your Deacon key, the `data-key` value in the snippet on the Install page of the
+   * Deacon dashboard. It starts with `pk_`.
+   * @see https://heydeacon.com/resources/how-to-use-deacon
+   */
+  key: pipe(string(), minLength(1)),
+  /**
+   * Details about the visitor that Deacon takes into account when it answers, such as
+   * their plan. Rendered as the `data-context` attribute. Up to 12 keys. Every value can be
+   * read in the page, so never put a secret here. Use `proxy.setContext()` for details the
+   * page learns after it loads.
+   */
+  context: optional(record(string(), union([string(), number(), boolean()]))),
+  /**
+   * Set to `false` to send Deacon no page views or JavaScript errors from the page. Chat
+   * and goals still work. Rendered as the `data-no-page-views` attribute.
+   * @default true
+   */
+  pageViews: optional(boolean()),
+})
+
 export const DeskCrewOptions = object({
   /**
    * The DeskCrew public widget key, for example `pub_xxxxxxxx`.
