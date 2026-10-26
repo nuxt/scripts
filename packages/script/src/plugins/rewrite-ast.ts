@@ -1,7 +1,7 @@
 import type { ProxyRewrite, SdkPatch } from '../runtime/types'
 import MagicString from 'magic-string'
 import { parseAndWalk, ScopeTracker, ScopeTrackerFunction, ScopeTrackerFunctionParam, ScopeTrackerIdentifier, ScopeTrackerVariable, walk } from 'oxc-walker'
-import { joinURL, parseURL } from 'ufo'
+import { hasProtocol, joinURL, parseURL } from 'ufo'
 
 const WORD_OR_DOLLAR_RE = /[\w$]/
 const PROTOCOL_PREFIX_RE = /^https?:$/
@@ -208,6 +208,12 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
     return prev && WORD_OR_DOLLAR_RE.test(prev) ? ' ' : ''
   }
 
+  // Rewrite targets are absolute when `proxy.origin` is set; only relative
+  // targets resolve against the page origin at runtime.
+  function originPrefix(target: string): string {
+    return hasProtocol(target) ? '' : 'self.location.origin+'
+  }
+
   function sourceOf(node: any): string {
     return content.slice(node.start, node.end)
   }
@@ -404,14 +410,14 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
           // which creates a malformed "https:http://localhost:3001/..." URL
           const sibling = ctx.key === 'right' ? parent.left : parent.right
           if (sibling?.type === 'Literal' && typeof sibling.value === 'string' && PROTOCOL_PREFIX_RE.test(sibling.value)) {
-            s.overwrite(parent.start, parent.end, `${needsLeadingSpace(parent.start)}self.location.origin+${quote}${rewritten}${quote}`)
+            s.overwrite(parent.start, parent.end, `${needsLeadingSpace(parent.start)}${originPrefix(rewritten)}${quote}${rewritten}${quote}`)
           }
           else {
-            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+${quote}${rewritten}${quote}`)
+            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${originPrefix(rewritten)}${quote}${rewritten}${quote}`)
           }
         }
         else {
-          s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+${quote}${rewritten}${quote}`)
+          s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${originPrefix(rewritten)}${quote}${rewritten}${quote}`)
         }
       }
 
@@ -433,7 +439,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
             s.overwrite(node.start, node.end, `\`${rewritten}\``)
           }
           else {
-            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+\`${rewritten}\``)
+            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${originPrefix(rewritten)}\`${rewritten}\``)
           }
         }
         else if (expressions?.length > 0 && quasis?.length > 0) {
@@ -450,7 +456,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
           // Overwrite just the first quasi and prepend self.location.origin+
           // Template: `{quasi0}${expr0}{quasi1}...`
           // We rewrite quasi0 content and add prefix before the opening backtick
-          s.overwrite(node.start, firstQuasi.end, `${needsLeadingSpace(node.start)}self.location.origin+\`${rewritten}`)
+          s.overwrite(node.start, firstQuasi.end, `${needsLeadingSpace(node.start)}${originPrefix(rewritten)}\`${rewritten}`)
         }
       }
 
@@ -574,7 +580,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
                 if (!rewrite)
                   continue
                 const proxyPath = patch.appendPath ? `${rewrite.to}/${patch.appendPath}` : rewrite.to
-                s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}self.location.origin+"${proxyPath}"`)
+                s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${originPrefix(proxyPath)}"${proxyPath}"`)
               }
             }
           }
@@ -598,7 +604,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
             const rewrite = rewrites.find(r => r.from === patch.fromDomain)
             if (!rewrite)
               continue
-            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}(self.location.origin+"${rewrite.to}")`)
+            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}(${originPrefix(rewrite.to)}"${rewrite.to}")`)
             break
           }
         }
@@ -640,7 +646,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
             const pathNode = findScriptLoaderPathExpression(urlArg, patch.pathPrefix)
             if (!pathNode)
               continue
-            s.overwrite(urlArg.start, urlArg.end, `${needsLeadingSpace(urlArg.start)}self.location.origin+"${rewrite.to}"+${sourceOf(pathNode)}`)
+            s.overwrite(urlArg.start, urlArg.end, `${needsLeadingSpace(urlArg.start)}${originPrefix(rewrite.to)}"${rewrite.to}"+${sourceOf(pathNode)}`)
             // The replaced range may contain literals the domain-rewrite pass
             // would also edit — descending would produce conflicting overwrites.
             this.skip()

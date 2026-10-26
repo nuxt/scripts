@@ -3,6 +3,8 @@ import { defineNuxtConfig } from 'nuxt/config'
 // Minimal fixture for the proxy path alias feature (#814). Plausible is a clean
 // single-domain (plausible.io) proxied script with an `autoInject` endpoint, so we
 // can assert the alias is wired into both the injected config and the proxy handler.
+// `proxy.origin` moves client-facing proxy URLs to another host while the server
+// route stays on the relative prefix.
 export default defineNuxtConfig({
   modules: [
     '@nuxt/scripts',
@@ -20,10 +22,12 @@ export default defineNuxtConfig({
 
   scripts: {
     registry: {
+      googleAnalytics: { id: 'G-TEST' },
       instagramEmbed: {},
       plausibleAnalytics: { scriptId: 'test-script-id' },
     },
     proxy: {
+      origin: 'https://t.example.test',
       alias: {
         'plausible.io': 'pl',
       },

@@ -6,7 +6,6 @@
 // direct unit tests of rewriteScriptUrlsAST still passed.
 import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
 import { hash } from 'ohash'
-import { hasProtocol } from 'ufo'
 import { describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
 import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/src/registry'
@@ -14,10 +13,6 @@ import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/s
 vi.mock('ohash', async (og) => {
   const mod = await og<typeof import('ohash')>()
   return { ...mod, hash: vi.fn(mod.hash) }
-})
-vi.mock('ufo', async (og) => {
-  const mod = await og<typeof import('ufo')>()
-  return { ...mod, hasProtocol: vi.fn(mod.hasProtocol) }
 })
 
 const mockBundleStorage: any = {
@@ -34,7 +29,6 @@ vi.mock('../../packages/script/src/assets', () => ({
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-vi.mocked(hasProtocol).mockImplementation(() => true)
 vi.mocked(hash).mockImplementation(() => 'fathom-script')
 
 const mockNuxt = {
