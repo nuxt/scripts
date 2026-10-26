@@ -31,7 +31,7 @@ overrides:
   '@nuxt/scripts': 'workspace:*'
   '@unhead/bundler@>=3': 3.4.2
   '@unhead/vue@>=3': 3.4.2
-  cssnano@^9.2.2: 8.0.10
+  cssnano@^9.2.2: 9.9.0
   unhead@>=3: 3.4.2
   vitest-environment-nuxt: 2.0.0
 
