@@ -43,6 +43,7 @@ export default defineNuxtConfig({
         crisp: { id: 'b1021910-7ace-425a-9ef5-07f49e5ce417' },
         deskcrew: { widgetKey: 'pub_deskcrewdemo', board: 'demo' },
         tawkTo: { propertyId: '68496650ddf9cd19094b4530', widgetId: '1itfbfagd' },
+        deacon: { key: 'pk_your_widget_key' },
       },
     },
   },
@@ -115,6 +116,7 @@ export default defineNuxtConfig({
       crisp: { id: 'b1021910-7ace-425a-9ef5-07f49e5ce417', trigger: 'manual' },
       deskcrew: { widgetKey: 'pub_deskcrewdemo', board: 'demo', trigger: 'manual' },
       tawkTo: { propertyId: '68496650ddf9cd19094b4530', widgetId: '1itfbfagd', trigger: 'manual' },
+      deacon: { key: 'pk_your_widget_key', trigger: 'manual' },
 
       // Media
       youtubePlayer: { trigger: 'manual' },
