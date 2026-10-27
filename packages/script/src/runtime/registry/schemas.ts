@@ -1407,3 +1407,11 @@ export const StatableAnalyticsOptions = object({
    */
   props: optional(record(string(), string())),
 })
+
+export const MeasuremysiteAnalyticsOptions = object({
+  /**
+   * The site's public key (`pk_...`) from the Setup tab of the measuremy.site dashboard. Safe to commit.
+   * @see https://measuremy.site/docs/install
+   */
+  key: pipe(string(), regex(/^pk_[\w-]+$/)),
+})
