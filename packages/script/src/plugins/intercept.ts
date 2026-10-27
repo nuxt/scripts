@@ -29,9 +29,11 @@ export default defineNuxtPlugin({
     function proxyUrl(url) {
       try {
         const parsed = new URL(url, location.origin);
+        const proxyBase = new URL(proxyPrefix + '/', location.origin);
+        if (parsed.origin === proxyBase.origin && parsed.pathname.startsWith(proxyBase.pathname)) return url;
         if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.origin !== location.origin) {
           const seg = domainAliases[parsed.host] || parsed.host;
-          return location.origin + proxyPrefix + '/' + seg + parsed.pathname + parsed.search;
+          return new URL(proxyPrefix + '/' + seg + parsed.pathname + parsed.search, location.origin).href;
         }
       } catch { /* Invalid URL inputs retain native behavior. */ }
       return url;

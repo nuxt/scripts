@@ -282,6 +282,13 @@ export interface ModuleOptions {
    */
   proxy?: {
     /**
+     * Origin for client-facing proxy URLs (intercept plugin, bundle rewrites, registry endpoints).
+     * Server routes and bundled assets keep their relative paths.
+     *
+     * @example 'https://t.example.com'
+     */
+    origin?: string
+    /**
      * Replace third-party hostnames in proxy paths with aliases, so the real domain
      * (e.g. a self-hosted analytics host) never appears in client-facing URLs.
      *
@@ -535,6 +542,7 @@ export default defineNuxtModule<ModuleOptions>({
     // domains at runtime, so it's safe to register even when no scripts use proxy.
     const scriptsBase = config.prefix || '/_scripts'
     const proxyPrefix = `${scriptsBase}/p`
+    const clientProxyPrefix = config.proxy?.origin ? new URL(proxyPrefix, config.proxy.origin).href : proxyPrefix
     const assetsPrefix = `${scriptsBase}/assets`
     const proxyConfigs: Partial<Record<RegistryScriptKey, ProxyConfig>> = {}
 
@@ -852,7 +860,7 @@ export default defineNuxtModule<ModuleOptions>({
           }
 
           if (proxyConfig.autoInject && config.registry)
-            applyAutoInject(config.registry, nuxt.options.runtimeConfig, proxyPrefix, key, proxyConfig.autoInject, proxyAlias)
+            applyAutoInject(config.registry, nuxt.options.runtimeConfig, clientProxyPrefix, key, proxyConfig.autoInject, proxyAlias)
 
           if (nuxt.options.dev)
             devtoolsScripts.push(buildDevtoolsEntry(key, script, configKey, proxyConfig))
@@ -892,7 +900,7 @@ export default defineNuxtModule<ModuleOptions>({
         const aliasToDomain = invertAliasMap(domainAliases)
         if (proxyConfiguredKeys.includes('googleAnalytics') && !isProxyDisabled('googleAnalytics', config.registry, nuxt.options.runtimeConfig)) {
           nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
-            { proxyEndpoints: { googleAnalytics: aliasProxyValue(`${proxyPrefix}/www.google-analytics.com`, proxyPrefix, proxyAlias) } },
+            { proxyEndpoints: { googleAnalytics: aliasProxyValue(`${clientProxyPrefix}/www.google-analytics.com`, clientProxyPrefix, proxyAlias) } },
             nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
           ) as any
         }
@@ -900,7 +908,7 @@ export default defineNuxtModule<ModuleOptions>({
         // Register intercept plugin
         addPluginTemplate({
           filename: 'nuxt-scripts-intercept.client.mjs',
-          getContents() { return generateInterceptPluginContents(proxyPrefix, { testMode: !!nuxt.options.test, domainAliases }) },
+          getContents() { return generateInterceptPluginContents(clientProxyPrefix, { testMode: !!nuxt.options.test, domainAliases }) },
         })
 
         // Server-side proxy config
@@ -926,7 +934,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (partytownScripts.size && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
-            partytownConfig.resolveUrl = generatePartytownResolveUrl(proxyPrefix, domainAliases, Object.keys(domainPrivacy))
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(clientProxyPrefix, domainAliases, Object.keys(domainPrivacy))
             ;(nuxt.options as any).partytown = partytownConfig
             logger.info('[partytown] Auto-configured resolveUrl for proxy')
           }
@@ -955,7 +963,7 @@ export default defineNuxtModule<ModuleOptions>({
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         proxyConfigs,
-        proxyPrefix,
+        proxyPrefix: clientProxyPrefix,
         domainAliases,
         partytownScripts,
         moduleDetected(module) {

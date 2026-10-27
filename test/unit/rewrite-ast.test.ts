@@ -1,4 +1,4 @@
-import type { ProxyRewrite } from '../../packages/script/src/runtime/types'
+import type { ProxyRewrite, SdkPatch } from '../../packages/script/src/runtime/types'
 import { describe, expect, it } from 'vitest'
 import { rewriteScriptUrlsAST } from '../../packages/script/src/plugins/rewrite-ast'
 import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, registry } from '../../packages/script/src/registry'
@@ -479,6 +479,47 @@ describe('rewriteScriptUrlsAST', () => {
       expect(result).toContain('self.location.origin+"/_proxy/ex/api"')
       // prefix variable should still be there (not collapsed)
       expect(result).toContain('prefix')
+    })
+  })
+
+  describe('absolute rewrite targets (proxy.origin)', () => {
+    const absoluteRewrites = [{ from: 'example.com', to: 'https://t.example.test/_scripts/p/example.com' }]
+
+    function rewriteAbsolute(code: string, sdkPatches?: SdkPatch[]): string {
+      return rewriteScriptUrlsAST(code, 'test.js', absoluteRewrites, sdkPatches)
+    }
+
+    it.each([
+      ['string literal', 'var u="https://example.com/api"', 'var u="https://t.example.test/_scripts/p/example.com/api"'],
+      ['split protocol', 'var u="https:"+"//example.com/api"', 'var u="https://t.example.test/_scripts/p/example.com/api"'],
+      ['protocol-relative literal', 'var u=p+"//example.com/api"', 'var u=p+"https://t.example.test/_scripts/p/example.com/api"'],
+      ['static template literal', 'var u=`https://example.com/api`', 'var u=`https://t.example.test/_scripts/p/example.com/api`'],
+      // eslint-disable-next-line no-template-curly-in-string
+      ['template literal with expressions', 'var u=`https://example.com/api?id=${id}`', 'var u=`https://t.example.test/_scripts/p/example.com/api?id=${id}`'],
+    ])('emits the absolute target without the page origin: %s', (_, code, expected) => {
+      expect(rewriteAbsolute(code)).toBe(expected)
+    })
+
+    it('emits absolute targets from SDK patches', () => {
+      expect(rewriteAbsolute('let t=e.split("/script.js")[0];', [
+        { type: 'replace-src-split', separator: '/script.js', fromDomain: 'example.com', appendPath: 'api' },
+      ])).toBe('let t="https://t.example.test/_scripts/p/example.com/api";')
+      expect(rewriteAbsolute('var a=new URL(s).origin+"/api";', [
+        { type: 'replace-new-url-origin', fromDomain: 'example.com' },
+      ])).toBe('var a=("https://t.example.test/_scripts/p/example.com")+"/api";')
+      expect(rewriteAbsolute([
+        'function load(u){var s=document.createElement("script");s.src=u;}',
+        'var base="/settings",path=base+"/"+id+".js";',
+        'load(host!==cdn?proto+host+path:make(path));',
+      ].join(''), [
+        { type: 'replace-script-loader-url', fromDomain: 'example.com', pathPrefix: '/settings' },
+      ])).toContain('load("https://t.example.test/_scripts/p/example.com"+path);')
+    })
+
+    it('keeps prepending the page origin for relative targets', () => {
+      expect(rewrite('var u="https://example.com/api"')).toBe('var u=self.location.origin+"/_proxy/ex/api"')
+      // eslint-disable-next-line no-template-curly-in-string
+      expect(rewrite('var u=`https://example.com/api?id=${id}`')).toBe('var u=self.location.origin+`/_proxy/ex/api?id=${id}`')
     })
   })
 

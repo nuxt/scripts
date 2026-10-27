@@ -17,9 +17,14 @@ describe('proxy path aliases', () => {
   it('auto-injects the aliased endpoint instead of the real hostname', async () => {
     // app.vue renders the resolved Plausible endpoint from public runtime config.
     const html = await $fetch('/')
-    expect(html).toContain('/_scripts/p/pl/api/event')
+    expect(html).toContain('https://t.example.test/_scripts/p/pl/api/event')
     // the real hostname must never appear in the proxy path
     expect(html).not.toContain('/_scripts/p/plausible.io')
+  })
+
+  it('puts the Google Analytics proxy endpoint on proxy.origin', async () => {
+    const html = await $fetch<string>('/')
+    expect(html).toContain('<div id="ga-endpoint">https://t.example.test/_scripts/p/www.google-analytics.com</div>')
   })
 
   it('rejects an unknown alias segment (reverse map is consulted)', async () => {
