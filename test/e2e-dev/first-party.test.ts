@@ -666,6 +666,7 @@ describe('first-party privacy stripping', () => {
       // fathomAnalytics — bundle/proxy disabled (Fathom bot-detection flags self-hosted/proxied traffic, see #720)
       // pulseAnalytics — bundle only, no proxy (server-side visitor identity needs the real client IP)
       // statableAnalytics — bundle only, no proxy (server-side visitor identity needs the real client IP)
+      // privatusAnalytics — bundle only, no proxy (server-side visitor identity needs the real client IP)
     ])
 
     /**
@@ -940,6 +941,7 @@ describe('first-party privacy stripping', () => {
     // fathomAnalytics — bundle/proxy disabled in registry (see #720), script loads directly from CDN
     // pulseAnalytics — bundle only, no proxy in registry; beacons go direct to pulse-api.ciphera.net
     // statableAnalytics — bundle only, no proxy in registry; beacons go direct to statable.com/api/event
+    // privatusAnalytics — bundle only, no proxy in registry; beacons go direct to privatusstats.com/api/event
 
     it('intercom', async () => {
       const { captures, rawCaptures, proxyRequests, externalRequests, preClickProxyCount, postClickProxyCount } = await testProvider('intercom', '/intercom-test')
@@ -1005,6 +1007,7 @@ describe('first-party privacy stripping', () => {
       { name: 'fathomAnalytics', path: '/fathom' },
       { name: 'pulseAnalytics', path: '/pulse' },
       { name: 'statableAnalytics', path: '/statable' },
+      { name: 'privatusAnalytics', path: '/privatus' },
       { name: 'intercom', path: '/intercom-test' },
       { name: 'crisp', path: '/crisp-test' },
       { name: 'posthog', path: '/posthog' },
@@ -1192,6 +1195,7 @@ describe('first-party privacy stripping', () => {
       { name: 'fathomAnalytics', path: '/fathom' },
       { name: 'pulseAnalytics', path: '/pulse' },
       { name: 'statableAnalytics', path: '/statable' },
+      { name: 'privatusAnalytics', path: '/privatus' },
       { name: 'intercom', path: '/intercom-test' },
       { name: 'crisp', path: '/crisp-test' },
       { name: 'posthog', path: '/posthog' },
@@ -1240,6 +1244,12 @@ describe('first-party privacy stripping', () => {
 
       if (name === 'statableAnalytics') {
         const script = page.locator('script[data-id="123456"][data-tracking-api="https://statable.com/api/event"]')
+        expect(await script.count()).toBe(1)
+        expect(await script.getAttribute('src')).toContain('/_scripts/assets/')
+      }
+
+      if (name === 'privatusAnalytics') {
+        const script = page.locator('script[data-site="pa_test123"][data-api="https://privatusstats.com"]')
         expect(await script.count()).toBe(1)
         expect(await script.getAttribute('src')).toContain('/_scripts/assets/')
       }
