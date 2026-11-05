@@ -1,6 +1,8 @@
 ---
 title: Instagram Embed
 description: Server-rendered Instagram embeds without direct browser requests to Instagram.
+seoTitle: Instagram Embed Component for Nuxt
+seoDescription: Embed Instagram posts in Nuxt with server-rendered HTML. Your server fetches the embed and proxies its media, so browsers make no direct requests to Instagram.
 links:
   - label: ScriptInstagramEmbed
     icon: i-simple-icons-github

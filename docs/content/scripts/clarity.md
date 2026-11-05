@@ -1,6 +1,8 @@
 ---
 title: Clarity
 description: Load Microsoft Clarity and manage its session-recording consent state.
+seoTitle: Microsoft Clarity Script for Nuxt
+seoDescription: Load the Microsoft Clarity tag and its scripts.clarity.ms runtime in a Nuxt app. Record sessions and heatmaps, and set the Clarity cookie consent state.
 links:
   - label: Source
     icon: i-simple-icons-github
