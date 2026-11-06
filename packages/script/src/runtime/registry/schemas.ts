@@ -1407,3 +1407,45 @@ export const StatableAnalyticsOptions = object({
    */
   props: optional(record(string(), string())),
 })
+
+export const PrivatusAnalyticsOptions = object({
+  /**
+   * The site ID from your Privatus Analytics dashboard, for example `pa_AbC123`.
+   * @see https://privatusanalytics.com/docs
+   */
+  site: pipe(string(), regex(/^pa_[A-Z0-9]+$/i)),
+  /**
+   * Origin that serves the tracker and its modules and receives events.
+   * Bundling still serves the main script from your Nuxt origin.
+   * @default 'https://privatusstats.com'
+   */
+  api: optional(string()),
+  /**
+   * Extra tracker modules, rendered as `data-modules`. Leave unset to get the
+   * default (`engage`: time on page and scroll depth).
+   * Modules are loaded at runtime from `api`, not bundled.
+   * @example ['engage', 'auto', 'vitals']
+   */
+  modules: optional(array(string())),
+  /**
+   * How client-side navigation is counted.
+   * @default 'auto'
+   */
+  spa: optional(union([literal('auto'), literal('history'), literal('hash'), literal('off')])),
+  /**
+   * Skip the automatic page view. Send it yourself with `pageview()`.
+   */
+  manual: optional(boolean()),
+  /**
+   * Only track on these hostnames.
+   */
+  domains: optional(array(string())),
+  /**
+   * Path patterns that are never tracked, for example `['/admin/*']`.
+   */
+  exclude: optional(array(string())),
+  /**
+   * Keep the `#fragment` in page URLs (for hash-routed apps).
+   */
+  hash: optional(boolean()),
+})

@@ -5,6 +5,7 @@ import type { IntercomInput } from './runtime/registry/intercom'
 import type { MixpanelAnalyticsInput } from './runtime/registry/mixpanel-analytics'
 import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
+import type { PrivatusAnalyticsInput } from './runtime/registry/privatus-analytics'
 import type { RybbitAnalyticsInput } from './runtime/registry/rybbit-analytics'
 import type { SegmentInput } from './runtime/registry/segment'
 import type { StatableAnalyticsInput } from './runtime/registry/statable-analytics'
@@ -41,6 +42,7 @@ import {
   MixpanelAnalyticsOptions,
   NpmOptions,
   PostHogOptions,
+  PrivatusAnalyticsOptions,
   PulseAnalyticsOptions,
   RedditPixelOptions,
   RybbitAnalyticsOptions,
@@ -151,6 +153,10 @@ export const registryMeta: RegistryScriptMeta[] = [
   // visitor identity, so proxied beacons would collapse every visitor into
   // one. Same family as Fathom (#720) and Pulse.
   m('statableAnalytics', 'Statable Analytics', 'analytics', 'useScriptStatableAnalytics', { bundle: true }, null),
+  // No proxy: Privatus Analytics counts visitors from a daily salted hash of
+  // the connecting IP and user agent, so proxied beacons would collapse every
+  // visitor into one. Same family as Fathom (#720), Pulse and Statable.
+  m('privatusAnalytics', 'Privatus Analytics', 'analytics', 'useScriptPrivatusAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -496,6 +502,23 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
             return false
           const host = (options.host || 'https://statable.com').replace(/\/+$/, '')
           return `${host}/js/${options.siteId}/s.js`
+        },
+      },
+    }),
+    def('privatusAnalytics', {
+      schema: PrivatusAnalyticsOptions,
+      label: 'Privatus Analytics',
+      category: 'analytics',
+      envDefaults: { site: '' },
+      // Bundling needs no SDK patch: the tracker reads data-* from its own
+      // script element, and the composable pins `data-api` so the bundled copy
+      // keeps posting to the Privatus Analytics API.
+      bundle: {
+        resolve: (options?: PrivatusAnalyticsInput) => {
+          if (!options?.site || !/^pa_[A-Z0-9]+$/i.test(options.site))
+            return false
+          const api = (options.api || 'https://privatusstats.com').replace(/\/+$/, '')
+          return `${api}/js/pa.js`
         },
       },
     }),

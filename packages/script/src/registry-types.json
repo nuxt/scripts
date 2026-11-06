@@ -1099,6 +1099,23 @@
         "code": "export interface PostHogConsent {\n  /** Call `posthog.opt_in_capturing()`. */\n  optIn: () => void\n  /** Call `posthog.opt_out_capturing()`. For boot-time opt-out, use `defaultConsent: 'opt-out'` instead. */\n  optOut: () => void\n}"
       }
     ],
+    "privatus-analytics": [
+      {
+        "name": "PrivatusAnalyticsOptions",
+        "kind": "const",
+        "code": "export const PrivatusAnalyticsOptions = object({\n  /**\n   * The site ID from your Privatus Analytics dashboard, for example `pa_AbC123`.\n   * @see https://privatusanalytics.com/docs\n   */\n  site: pipe(string(), regex(/^pa_[A-Z0-9]+$/i)),\n  /**\n   * Origin that serves the tracker and its modules and receives events.\n   * Bundling still serves the main script from your Nuxt origin.\n   * @default 'https://privatusstats.com'\n   */\n  api: optional(string()),\n  /**\n   * Extra tracker modules, rendered as `data-modules`. Leave unset to get the\n   * default (`engage`: time on page and scroll depth).\n   * Modules are loaded at runtime from `api`, not bundled.\n   * @example ['engage', 'auto', 'vitals']\n   */\n  modules: optional(array(string())),\n  /**\n   * How client-side navigation is counted.\n   * @default 'auto'\n   */\n  spa: optional(union([literal('auto'), literal('history'), literal('hash'), literal('off')])),\n  /**\n   * Skip the automatic page view. Send it yourself with `pageview()`.\n   */\n  manual: optional(boolean()),\n  /**\n   * Only track on these hostnames.\n   */\n  domains: optional(array(string())),\n  /**\n   * Path patterns that are never tracked, for example `['/admin/*']`.\n   */\n  exclude: optional(array(string())),\n  /**\n   * Keep the `#fragment` in page URLs (for hash-routed apps).\n   */\n  hash: optional(boolean()),\n})"
+      },
+      {
+        "name": "PrivatusAnalyticsProps",
+        "kind": "type",
+        "code": "export type PrivatusAnalyticsProps = Record<string, string | number | boolean | string[] | null | undefined>"
+      },
+      {
+        "name": "PrivatusAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface PrivatusAnalyticsApi {\n  /**\n   * Records a custom event.\n   * @param name Event name, for example `Signup`.\n   * @param props Optional properties. `revenue` and `currency` record revenue.\n   * @param callback Called once the event is sent, or skipped.\n   * @see https://privatusanalytics.com/docs\n   */\n  track: (name: string, props?: PrivatusAnalyticsProps, callback?: () => void) => void\n  /** Sends a page view for the current URL. Useful with `manual: true`. */\n  pageview: (options?: { props?: PrivatusAnalyticsProps }) => void\n  /** Sets properties sent with every following hit on this page load. */\n  props: (props: PrivatusAnalyticsProps) => void\n  /** Stops tracking in this browser. The visitor's choice is kept by the tracker. */\n  optOut: () => void\n  /** Undoes `optOut()`. */\n  optIn: () => void\n  isOptedOut: () => boolean\n}"
+      }
+    ],
     "pulse-analytics": [
       {
         "name": "PulseAnalyticsOptions",
@@ -3129,6 +3146,58 @@
         "type": "Record<string, string>",
         "required": false,
         "description": "Custom properties attached to every event from the page load, rendered as `data-statable-*` attributes on the script tag."
+      }
+    ],
+    "PrivatusAnalyticsOptions": [
+      {
+        "name": "site",
+        "type": "string",
+        "required": true,
+        "description": "The site ID from your Privatus Analytics dashboard, for example `pa_AbC123`."
+      },
+      {
+        "name": "api",
+        "type": "string",
+        "required": false,
+        "description": "Origin that serves the tracker and its modules and receives events. Bundling still serves the main script from your Nuxt origin.",
+        "defaultValue": "'https://privatusstats.com'"
+      },
+      {
+        "name": "modules",
+        "type": "string[]",
+        "required": false,
+        "description": "Extra tracker modules, rendered as `data-modules`. Leave unset to get the default (`engage`: time on page and scroll depth). Modules are loaded at runtime from `api`, not bundled."
+      },
+      {
+        "name": "spa",
+        "type": "'auto' | 'history' | 'hash' | 'off'",
+        "required": false,
+        "description": "How client-side navigation is counted.",
+        "defaultValue": "'auto'"
+      },
+      {
+        "name": "manual",
+        "type": "boolean",
+        "required": false,
+        "description": "Skip the automatic page view. Send it yourself with `pageview()`."
+      },
+      {
+        "name": "domains",
+        "type": "string[]",
+        "required": false,
+        "description": "Only track on these hostnames."
+      },
+      {
+        "name": "exclude",
+        "type": "string[]",
+        "required": false,
+        "description": "Path patterns that are never tracked, for example `['/admin/*']`."
+      },
+      {
+        "name": "hash",
+        "type": "boolean",
+        "required": false,
+        "description": "Keep the `#fragment` in page URLs (for hash-routed apps)."
       }
     ],
     "ScriptGoogleMapsProps": [
