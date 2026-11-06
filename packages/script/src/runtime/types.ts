@@ -13,6 +13,7 @@ import type { ClarityInput } from './registry/clarity'
 import type { CloudflareWebAnalyticsInput } from './registry/cloudflare-web-analytics'
 import type { CrispInput } from './registry/crisp'
 import type { DatabuddyAnalyticsInput } from './registry/databuddy-analytics'
+import type { DeaconInput } from './registry/deacon'
 import type { DeskCrewInput } from './registry/deskcrew'
 import type { FathomAnalyticsInput } from './registry/fathom-analytics'
 import type { GoogleAdsenseInput } from './registry/google-adsense'
@@ -281,6 +282,7 @@ export interface ScriptRegistry {
   carbonAds?: true
   calendly?: CalendlyInput
   crisp?: CrispInput
+  deacon?: DeaconInput
   deskcrew?: DeskCrewInput
   clarity?: ClarityInput
   cloudflareWebAnalytics?: CloudflareWebAnalyticsInput
@@ -333,7 +335,7 @@ export interface ScriptRegistry {
  */
 export type BuiltInRegistryScriptKey
   = | 'ahrefsAnalytics' | 'bingUet' | 'blueskyEmbed' | 'calendly' | 'carbonAds' | 'crisp' | 'clarity' | 'cloudflareWebAnalytics'
-    | 'databuddyAnalytics' | 'deskcrew' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
+    | 'databuddyAnalytics' | 'deacon' | 'deskcrew' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps' | 'leaflet' | 'maplibre'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
     | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'pulseAnalytics' | 'matomoAnalytics'

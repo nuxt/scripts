@@ -160,6 +160,10 @@ export const scriptMeta = {
     trackedData: ['user-identity', 'events'],
     testId: '68496650ddf9cd19094b4530',
   },
+  deacon: {
+    urls: ['https://heydeacon.com/widget/v1/loader.js'],
+    trackedData: ['page-views', 'events', 'conversions', 'user-identity', 'errors'],
+  },
 
   crisp: {
     urls: ['https://client.crisp.chat/l.js'],

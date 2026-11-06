@@ -248,6 +248,23 @@
         "code": "export interface DatabuddyAnalyticsApi {\n  /**\n   * Track a custom event.\n   * @param eventName Name of the event (use snake_case)\n   * @param properties Optional event properties\n   */\n  track: (eventName: string, properties?: Record<string, any>) => Promise<any> | any | void\n\n  /**\n   * Manually record a page / screen view. Useful for SPA route changes.\n   * @param path Optional path to record (defaults to current location)\n   * @param properties Optional additional properties for the screen view\n   */\n  screenView: (path?: string, properties?: Record<string, any>) => void\n\n  /**\n   * Set properties that will be attached to all future events (e.g. user_id).\n   * @param properties Key/value map of properties to attach globally\n   */\n  setGlobalProperties: (properties: Record<string, any>) => void\n\n  /**\n   * Track a custom event alias (compatibility helper present on the global)\n   * @param eventName Name of the event\n   * @param properties Optional event properties\n   */\n  trackCustomEvent: (eventName: string, properties?: Record<string, any>) => void\n\n  /**\n   * Clears session and anonymous identifiers (useful on logout).\n   */\n  clear: () => void\n\n  /**\n   * Force immediate sending of any queued/batched events.\n   */\n  flush: () => void\n}"
       }
     ],
+    "deacon": [
+      {
+        "name": "DeaconOptions",
+        "kind": "const",
+        "code": "export const DeaconOptions = object({\n  /**\n   * Your Deacon key, the `data-key` value in the snippet on the Install page of the\n   * Deacon dashboard. It starts with `pk_`.\n   * @see https://heydeacon.com/resources/how-to-use-deacon\n   */\n  key: pipe(string(), minLength(1)),\n  /**\n   * Details about the visitor that Deacon takes into account when it answers, such as\n   * their plan. Rendered as the `data-context` attribute. Up to 12 keys. Every value can be\n   * read in the page, so never put a secret here. Use `proxy.setContext()` for details the\n   * page learns after it loads.\n   */\n  context: optional(record(string(), union([string(), number(), boolean()]))),\n  /**\n   * Set to `false` to send Deacon no page views or JavaScript errors from the page. Chat\n   * and goals still work. Rendered as the `data-no-page-views` attribute.\n   * @default true\n   */\n  pageViews: optional(boolean()),\n})"
+      },
+      {
+        "name": "DeaconUser",
+        "kind": "interface",
+        "code": "export interface DeaconUser {\n  /** Your app's id for them. */\n  id?: string | number\n  email?: string\n  name?: string\n}"
+      },
+      {
+        "name": "DeaconApi",
+        "kind": "interface",
+        "code": "export interface DeaconApi {\n  /** Open the chat. */\n  open: () => void\n  /** Close the chat. */\n  close: () => void\n  /** Open the chat if it is closed, and close it if it is open. */\n  toggle: () => void\n  /** Load the chat window in the background, so it opens without a wait. */\n  preload: () => void\n  /**\n   * Tell Deacon what the page has learned about the visitor since it loaded, such as their\n   * plan. Merges over `context`. A null value removes that key, and `null` clears it all.\n   */\n  setContext: (values: Record<string, string | number | boolean | null> | null) => void\n  /**\n   * Tell Deacon who is logged in, so the team sees their name on the conversation and they\n   * don't have to type their email to get a reply. Replaces the whole identity, and `null`\n   * says nobody is logged in. Deacon does not verify it.\n   */\n  identify: (user: DeaconUser | null) => void\n  /** Send a goal, one of the moments named on Analytics › Website, with optional details. */\n  track: (name: string, props?: Record<string, string | number | boolean>) => void\n}"
+      }
+    ],
     "deskcrew": [
       {
         "name": "DeskCrewOptions",
@@ -1928,6 +1945,27 @@
         "type": "boolean",
         "required": false,
         "description": "Enable error tracking via observability."
+      }
+    ],
+    "DeaconOptions": [
+      {
+        "name": "key",
+        "type": "string",
+        "required": true,
+        "description": "Your Deacon key, the `data-key` value in the snippet on the Install page of the Deacon dashboard. It starts with `pk_`."
+      },
+      {
+        "name": "context",
+        "type": "Record<string, string | number | boolean>",
+        "required": false,
+        "description": "Details about the visitor that Deacon takes into account when it answers, such as their plan. Rendered as the `data-context` attribute. Up to 12 keys. Every value can be read in the page, so never put a secret here. Use `proxy.setContext()` for details the page learns after it loads."
+      },
+      {
+        "name": "pageViews",
+        "type": "boolean",
+        "required": false,
+        "description": "Set to `false` to send Deacon no page views or JavaScript errors from the page. Chat and goals still work. Rendered as the `data-no-page-views` attribute.",
+        "defaultValue": "true"
       }
     ],
     "DeskCrewOptions": [
