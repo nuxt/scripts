@@ -1,6 +1,8 @@
 ---
 title: Carbon Ads
 description: Show carbon ads in your Nuxt app using a Vue component.
+seoTitle: Carbon Ads Component for Nuxt
+seoDescription: Place Carbon Ads in a Nuxt page with the headless ScriptCarbonAds component. It loads the Carbon Ads embed script for you.
 links:
   - label: "<ScriptCarbonAds>"
     icon: i-simple-icons-github

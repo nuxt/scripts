@@ -1,6 +1,8 @@
 ---
 title: Vimeo Player
 description: Show performance-optimized Vimeo videos in your Nuxt app.
+seoTitle: Lazy Vimeo Player Embed for Nuxt
+seoDescription: Embed Vimeo videos in Nuxt with a lazy placeholder. The Vimeo player loads only when its trigger fires, and a typed composable controls playback.
 links:
   - label: useScriptVimeoPlayer
     icon: i-simple-icons-github

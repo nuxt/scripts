@@ -1,6 +1,8 @@
 ---
 title: YouTube Player
 description: Show performance-optimized YouTube videos in your Nuxt app.
+seoTitle: Lazy YouTube Player Embed for Nuxt
+seoDescription: Embed YouTube videos in Nuxt with a lazy thumbnail. The iframe player loads only when the visitor interacts, and a typed composable controls playback.
 links:
   - label: useScriptYouTubePlayer
     icon: i-simple-icons-github

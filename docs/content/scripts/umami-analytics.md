@@ -1,6 +1,8 @@
 ---
 title: Umami Analytics
 description: Load Umami, identify sessions, and inspect or filter event payloads before they are sent.
+seoTitle: Umami Analytics Setup for Nuxt
+seoDescription: Add Umami Analytics to a Nuxt app with one composable. Works with Umami Cloud or a self-hosted server, and lets you identify sessions and filter events.
 links:
   - label: Source
     icon: i-simple-icons-github
