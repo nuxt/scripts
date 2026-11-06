@@ -46,7 +46,7 @@ allowBuilds:
 catalog:
   '@antfu/eslint-config': ^9.5.1
   '@googlemaps/markerclusterer': ^2.6.2
-  '@nuxt/devtools-kit': ^3.4.2
+  '@nuxt/devtools-kit': ^4.1.0
   '@nuxt/fonts': ^0.14.0
   '@nuxt/kit': ^4.6.0
   '@nuxt/module-builder': ^1.0.3
