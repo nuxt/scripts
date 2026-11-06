@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   lint:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -52,7 +52,7 @@ jobs:
         run: pnpm lint
 
   typecheck:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -81,7 +81,7 @@ jobs:
         run: pnpm run --if-present test:attw
 
   build:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -107,7 +107,7 @@ jobs:
         run: pnpm build
 
   test:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
 
     steps:
       - name: Checkout
@@ -153,7 +153,7 @@ jobs:
           done
 
   nitro-3:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     name: Nitro 3 compatibility
     steps:
       - name: Checkout
