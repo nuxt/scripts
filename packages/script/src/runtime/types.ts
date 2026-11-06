@@ -30,6 +30,7 @@ import type { LemonSqueezyInput } from './registry/lemon-squeezy'
 import type { LinkedInInsightInput } from './registry/linkedin-insight'
 import type { MapLibreInput } from './registry/maplibre'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
+import type { MeasuremysiteAnalyticsInput } from './registry/measuremysite-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
 import type { MixpanelAnalyticsInput } from './registry/mixpanel-analytics'
 import type { NpmInput } from './registry/npm'
@@ -308,6 +309,7 @@ export interface ScriptRegistry {
   mixpanelAnalytics?: MixpanelAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
   redditPixel?: RedditPixelInput
+  measuremysiteAnalytics?: MeasuremysiteAnalyticsInput
   segment?: SegmentInput
   statableAnalytics?: StatableAnalyticsInput
   speedcurve?: SpeedCurveInput
@@ -336,7 +338,7 @@ export type BuiltInRegistryScriptKey
     | 'databuddyAnalytics' | 'deskcrew' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps' | 'leaflet' | 'maplibre'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
-    | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'pulseAnalytics' | 'matomoAnalytics'
+    | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'pulseAnalytics' | 'matomoAnalytics' | 'measuremysiteAnalytics'
     | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'statableAnalytics' | 'stripe' | 'tawkTo' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'speedcurve' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'usercentrics' | 'gravatar' | 'npm'
