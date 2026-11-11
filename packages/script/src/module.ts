@@ -47,6 +47,7 @@ import {
   addTemplate,
   createResolver,
   defineNuxtModule,
+  getNitroVersion,
   hasNuxtModule,
 } from '@nuxt/kit'
 import { defu } from 'defu'
@@ -1021,7 +1022,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Nitro's default memory storage has no eviction policy. Every proxy and
     // embed cache shares this bounded mount, including proxy-only registries
     // without dedicated server handlers. Preserve application-supplied mounts.
-    ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any, await resolvePath('./runtime/server/utils/lru-cache-driver'))
+    ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any, await resolvePath('./runtime/server/utils/lru-cache-driver'), getNitroVersion(nuxt))
 
     // Publish enabled endpoints to client for component opt-in checks
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
