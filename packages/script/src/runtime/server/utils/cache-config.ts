@@ -11,11 +11,21 @@ export const NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE = 8 * 1024 * 1024
 
 interface NitroOptionsWithStorage {
   storage?: Record<string, unknown>
+  kv?: Record<string, unknown>
 }
 
-export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage, driver: string): void {
-  nitroOptions.storage ||= {}
-  nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] ||= {
+/**
+ * Nitro v3 renamed the `storage` option to `kv` (`storage` still works but logs a
+ * deprecation warning), so the mount goes to `kv` there. A mount the application
+ * configured under either key is preserved.
+ */
+export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage, driver: string, nitroVersion: number = 2): void {
+  if (nitroVersion >= 3 && nitroOptions.storage?.[NUXT_SCRIPTS_CACHE_BASE])
+    return
+  const mounts = nitroVersion >= 3
+    ? (nitroOptions.kv ||= {})
+    : (nitroOptions.storage ||= {})
+  mounts[NUXT_SCRIPTS_CACHE_BASE] ||= {
     driver,
     max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
     maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
