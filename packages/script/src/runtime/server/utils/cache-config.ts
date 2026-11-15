@@ -14,11 +14,21 @@ export const NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE = 8 * 1024 * 1024
 interface NitroOptionsWithStorage {
   storage?: Record<string, unknown>
   alias?: Record<string, string>
+  kv?: Record<string, unknown>
 }
 
-export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage, driver: string): void {
-  nitroOptions.storage ||= {}
-  if (nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE])
+/**
+ * Nitro v3 renamed the `storage` option to `kv` (`storage` still works but logs a
+ * deprecation warning), so the mount goes to `kv` there. A mount the application
+ * configured under either key is preserved.
+ */
+export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStorage, driver: string, nitroVersion: number = 2): void {
+  if (nitroVersion >= 3 && nitroOptions.storage?.[NUXT_SCRIPTS_CACHE_BASE])
+    return
+  const mounts = nitroVersion >= 3
+    ? (nitroOptions.kv ||= {})
+    : (nitroOptions.storage ||= {})
+  if (mounts[NUXT_SCRIPTS_CACHE_BASE])
     return
 
   // Nitro imports custom drivers with the native ESM loader during setup.
@@ -26,7 +36,7 @@ export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStor
   // Rollup needs a local path to bundle the driver into the server output.
   nitroOptions.alias ||= {}
   nitroOptions.alias[driverURL] = driver
-  nitroOptions.storage[NUXT_SCRIPTS_CACHE_BASE] = {
+  mounts[NUXT_SCRIPTS_CACHE_BASE] = {
     driver: driverURL,
     max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
     maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,

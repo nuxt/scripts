@@ -1,6 +1,8 @@
 ---
 title: Hotjar
 description: Load Hotjar and queue events, user attributes, and virtual page views.
+seoTitle: Hotjar Script for Nuxt
+seoDescription: Add the Hotjar tracking script to a Nuxt app. Queue events, user attributes, and virtual page views before the script finishes loading.
 links:
 - label: Source
   icon: i-simple-icons-github

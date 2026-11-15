@@ -1,6 +1,8 @@
 ---
 title: PostHog
 description: Load posthog-js with first-party proxy support, feature flags, and opt-in or opt-out controls.
+seoTitle: PostHog Setup for Nuxt
+seoDescription: Add PostHog to a Nuxt app with the official posthog-js SDK. Use feature flags, EU hosting, a first-party proxy, and opt-in or opt-out controls.
 links:
 - label: Source
   icon: i-simple-icons-github

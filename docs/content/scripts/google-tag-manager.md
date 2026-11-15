@@ -1,6 +1,8 @@
 ---
 title: Google Tag Manager
 description: Load a GTM web container and push page or consent events from Nuxt.
+seoTitle: Google Tag Manager Script for Nuxt
+seoDescription: Load a Google Tag Manager container in Nuxt. Push dataLayer events, track page views, and send consent updates from your app.
 links:
   - label: Source
     icon: i-simple-icons-github

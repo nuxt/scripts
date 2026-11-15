@@ -1,6 +1,8 @@
 ---
 title: Rybbit Analytics
 description: Load hosted or self-hosted Rybbit Analytics and call its tracking API.
+seoTitle: Rybbit Analytics Setup for Nuxt
+seoDescription: Add the Rybbit Analytics tracking script to a Nuxt app. Use hosted Rybbit or your own instance, and call the Rybbit tracking API from a typed composable.
 links:
   - label: Source
     icon: i-simple-icons-github

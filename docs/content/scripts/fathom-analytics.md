@@ -1,6 +1,8 @@
 ---
 title: Fathom Analytics
 description: Load Fathom Analytics and track page views, goals, and custom events.
+seoTitle: Fathom Analytics Script for Nuxt
+seoDescription: Add the Fathom Analytics script to a Nuxt app. Track page views, goals, and custom events with a typed composable.
 links:
   - label: Source
     icon: i-simple-icons-github

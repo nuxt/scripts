@@ -6,6 +6,37 @@ import { buildProxyConfigsFromRegistry, generatePartytownResolveUrl, registry } 
 
 const ALIASES = { 'us.i.posthog.com': 'ph' }
 
+/** Runs the generated intercept plugin on `https://my-site.test` and returns the URLs it hands to native fetch. */
+async function fetchThroughIntercept(proxyPrefix: string, urls: string[]): Promise<unknown[]> {
+  const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
+  const generated = generateInterceptPluginContents(proxyPrefix)
+    .replace('import { defineNuxtPlugin } from \'nuxt/app\'\n\n', '')
+    .replace('export default ', '')
+  const sandbox = {
+    defineNuxtPlugin: (plugin: { setup: () => void }) => plugin,
+    navigator: { sendBeacon: vi.fn() },
+    location: { origin: 'https://my-site.test' },
+    XMLHttpRequest: class { open() {} },
+    Image: class {},
+    HTMLImageElement: class {},
+    Request: globalThis.Request,
+    URL,
+    fetch: globalThis.fetch,
+    __nuxtScripts: undefined as { fetch: (url: string) => Promise<Response> } | undefined,
+  }
+
+  try {
+    const plugin = runInNewContext(generated, sandbox) as { setup: () => void }
+    plugin.setup()
+    for (const url of urls)
+      await sandbox.__nuxtScripts!.fetch(url)
+    return fetchSpy.mock.calls.map(([url]) => url)
+  }
+  finally {
+    fetchSpy.mockRestore()
+  }
+}
+
 function evaluateResolveUrl(source: string) {
   return runInNewContext(`(${source})`, { URL }) as (
     url: URL,
@@ -107,50 +138,39 @@ describe('proxy alias - generated runtime code (#814)', () => {
     })
 
     it('leaves non-HTTP and same-origin URLs unchanged at runtime', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
-      const defineNuxtPlugin = (plugin: { setup: () => void }) => plugin
-      const navigator = { sendBeacon: vi.fn() }
-      const location = { origin: 'https://my-site.test' }
-      const XMLHttpRequest = class { open() {} }
-      const Image = class {}
-      const HTMLImageElement = class {}
-      const Request = globalThis.Request
-      const generated = generateInterceptPluginContents('/_scripts/p')
-        .replace('import { defineNuxtPlugin } from \'nuxt/app\'\n\n', '')
-        .replace('export default ', '')
-      const sandbox = {
-        defineNuxtPlugin,
-        navigator,
-        location,
-        XMLHttpRequest,
-        Image,
-        HTMLImageElement,
-        Request,
-        URL,
-        fetch: globalThis.fetch,
-        __nuxtScripts: undefined as { fetch: (url: string) => Promise<Response> } | undefined,
-      }
+      expect(await fetchThroughIntercept('/_scripts/p', [
+        'data:text/plain,hello',
+        'javascript:void(0)',
+        'https://my-site.test/collect',
+        'https://constructor/collect',
+      ])).toEqual([
+        'data:text/plain,hello',
+        'javascript:void(0)',
+        'https://my-site.test/collect',
+        'https://my-site.test/_scripts/p/constructor/collect',
+      ])
+    })
 
-      try {
-        const plugin = runInNewContext(generated, sandbox) as { setup: () => void }
-        plugin.setup()
-        const runtime = sandbox.__nuxtScripts!
+    it('routes vendor URLs to an absolute proxy origin', async () => {
+      expect(await fetchThroughIntercept('https://t.example.test/_scripts/p', [
+        'https://www.google-analytics.com/g/collect?v=2',
+        'https://t.example.test/_scripts/p/www.google-analytics.com/g/collect?v=2',
+        'https://my-site.test/collect',
+      ])).toEqual([
+        'https://t.example.test/_scripts/p/www.google-analytics.com/g/collect?v=2',
+        'https://t.example.test/_scripts/p/www.google-analytics.com/g/collect?v=2',
+        'https://my-site.test/collect',
+      ])
+    })
 
-        await runtime.fetch('data:text/plain,hello')
-        await runtime.fetch('javascript:void(0)')
-        await runtime.fetch('https://my-site.test/collect')
-        await runtime.fetch('https://constructor/collect')
-
-        expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual([
-          'data:text/plain,hello',
-          'javascript:void(0)',
-          'https://my-site.test/collect',
-          'https://my-site.test/_scripts/p/constructor/collect',
-        ])
-      }
-      finally {
-        fetchSpy.mockRestore()
-      }
+    it('keeps relative proxy URLs on the page origin', async () => {
+      expect(await fetchThroughIntercept('/_scripts/p', [
+        'https://www.google-analytics.com/g/collect?v=2',
+        '/_scripts/p/www.google-analytics.com/g/collect',
+      ])).toEqual([
+        'https://my-site.test/_scripts/p/www.google-analytics.com/g/collect?v=2',
+        '/_scripts/p/www.google-analytics.com/g/collect',
+      ])
     })
   })
 })

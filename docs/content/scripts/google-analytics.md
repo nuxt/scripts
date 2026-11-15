@@ -1,6 +1,8 @@
 ---
 title: Google Analytics
 description: Send Google Analytics page views and events with typed consent controls.
+seoTitle: Google Analytics Script (gtag.js) for Nuxt
+seoDescription: Load the Google Analytics gtag.js script in Nuxt. Send page views and events, and set Consent Mode v2 defaults before the script initializes.
 links:
   - label: Source
     icon: i-simple-icons-github
