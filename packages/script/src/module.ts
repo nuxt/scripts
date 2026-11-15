@@ -47,6 +47,7 @@ import {
   addTemplate,
   createResolver,
   defineNuxtModule,
+  getNitroVersion,
   hasNuxtModule,
 } from '@nuxt/kit'
 import { defu } from 'defu'
@@ -1021,7 +1022,18 @@ export default defineNuxtModule<ModuleOptions>({
     // Nitro's default memory storage has no eviction policy. Every proxy and
     // embed cache shares this bounded mount, including proxy-only registries
     // without dedicated server handlers. Preserve application-supplied mounts.
-    ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any, await resolvePath('./runtime/server/utils/lru-cache-driver'))
+    const cacheDriver = await resolvePath('./runtime/server/utils/lru-cache-driver')
+    if (getNitroVersion(nuxt) === 3) {
+      // Nitro v3 merges `kv` from `nitro.config.ts` under the inline Nuxt config, so a
+      // default set here would replace an application mount declared there. Add it
+      // once the options are resolved instead; mounts are read again at build time.
+      nuxt.hook('nitro:init', (nitro) => {
+        ensureNuxtScriptsCacheStorage(nitro.options as any, cacheDriver, 3)
+      })
+    }
+    else {
+      ensureNuxtScriptsCacheStorage(nuxt.options.nitro as any, cacheDriver)
+    }
 
     // Publish enabled endpoints to client for component opt-in checks
     nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
