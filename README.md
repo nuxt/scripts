@@ -38,7 +38,10 @@ have better privacy and be better DX overall.
 
 ## 🚀 Quick Start
 
-To get started, simply run:
+Nuxt Scripts 2 requires Nuxt `^4.6.0 || ^5.0.0`.
+See the [installation guide](https://scripts.nuxt.com/docs/getting-started/installation) for all requirements and upgrade steps.
+
+In your Nuxt project, run:
 
 ```bash
 npx nuxt@latest module add @nuxt/scripts@beta
