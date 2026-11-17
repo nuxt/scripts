@@ -1,6 +1,12 @@
+import { copyFile } from 'node:fs/promises'
 import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({
+  hooks: {
+    'build:before': async () => {
+      await copyFile(new URL('../../README.md', import.meta.url), new URL('./README.md', import.meta.url))
+    },
+  },
   declaration: true,
   entries: [
     './src/registry',

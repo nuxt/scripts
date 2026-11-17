@@ -41,7 +41,7 @@ have better privacy and be better DX overall.
 To get started, simply run:
 
 ```bash
-npx nuxi@latest module add scripts
+npx nuxt@latest module add @nuxt/scripts@beta
 ```
 
 > [!TIP]
