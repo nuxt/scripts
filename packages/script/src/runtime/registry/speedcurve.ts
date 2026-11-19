@@ -1,4 +1,5 @@
 import type { LuxGlobal, UserConfig } from '@speedcurve/lux'
+import type { InferInput } from 'valibot'
 import type { RouteLocationNormalized } from 'vue-router'
 import type { RegistryScriptInput, UseScriptContext } from '#nuxt-scripts/types'
 import { useHead, useNuxtApp, useRouter } from 'nuxt/app'
@@ -25,10 +26,28 @@ export type SpeedCurveInput = Omit<RegistryScriptInput<typeof SpeedCurveOptions>
   label?: string | ((to: RouteLocationNormalized) => string | false) | false
 }
 
-// Derived from the schema: all schema keys except the composable-only ones.
-const LUX_USER_CONFIG_KEYS = Object.keys(SpeedCurveOptions.entries).filter(
-  k => k !== 'id' && k !== 'autoTrackSpaNavigations' && k !== 'spaMode',
-) as (keyof UserConfig)[]
+/** Schema keys consumed by `useScriptSpeedCurve` itself, never forwarded to LUX. */
+type ComposableOnlyKey = 'id' | 'spaMode' | 'autoTrackSpaNavigations'
+type ForwardedKey = Exclude<keyof InferInput<typeof SpeedCurveOptions>, ComposableOnlyKey>
+
+// Listed rather than derived from `SpeedCurveOptions.entries`, so a production build
+// drops the schema and valibot with it. The type guards below fail to compile if this
+// list and the schema drift apart.
+const LUX_USER_CONFIG_KEYS = [
+  'label',
+  'samplerate',
+  'sendBeaconOnPageHidden',
+  'trackErrors',
+  'maxErrors',
+  'minMeasureTime',
+  'maxMeasureTime',
+  'newBeaconOnPageShow',
+  'trackHiddenPages',
+  'cookieDomain',
+] as const satisfies readonly (ForwardedKey & keyof UserConfig)[]
+
+type AssertNever<T extends never> = T
+type _AllForwardedKeysListed = AssertNever<Exclude<ForwardedKey, typeof LUX_USER_CONFIG_KEYS[number]>>
 
 let luxWired = false
 let teardownAutoTracker = () => {}
