@@ -36,6 +36,7 @@ import type { NpmInput } from './registry/npm'
 import type { PayPalInput } from './registry/paypal'
 import type { PlausibleAnalyticsInput } from './registry/plausible-analytics'
 import type { PostHogInput } from './registry/posthog'
+import type { PrivatusAnalyticsInput } from './registry/privatus-analytics'
 import type { PulseAnalyticsInput } from './registry/pulse-analytics'
 import type { RedditPixelInput } from './registry/reddit-pixel'
 import type { RybbitAnalyticsInput } from './registry/rybbit-analytics'
@@ -304,6 +305,7 @@ export interface ScriptRegistry {
   paypal?: PayPalInput
   posthog?: PostHogInput
   pulseAnalytics?: PulseAnalyticsInput
+  privatusAnalytics?: PrivatusAnalyticsInput
   matomoAnalytics?: MatomoAnalyticsInput
   mixpanelAnalytics?: MixpanelAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
@@ -336,7 +338,7 @@ export type BuiltInRegistryScriptKey
     | 'databuddyAnalytics' | 'deskcrew' | 'metaPixel' | 'fathomAnalytics' | 'instagramEmbed'
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps' | 'leaflet' | 'maplibre'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
-    | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'pulseAnalytics' | 'matomoAnalytics'
+    | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'privatusAnalytics' | 'pulseAnalytics' | 'matomoAnalytics'
     | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'statableAnalytics' | 'stripe' | 'tawkTo' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'speedcurve' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'usercentrics' | 'gravatar' | 'npm'
