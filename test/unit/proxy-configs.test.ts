@@ -414,6 +414,13 @@ describe('proxy configs', () => {
       expect(config).toBeUndefined()
     })
 
+    it('does not return proxy config for deacon (script derives its API origin from its own src)', async () => {
+      // The loader takes its own src's origin as the host for its chat frame and API,
+      // and proxying would put the consuming site's server between visitors and the chat.
+      const config = (await getProxyConfigs()).deacon
+      expect(config).toBeUndefined()
+    })
+
     it('returns proxy config for calendly', async () => {
       const config = (await getProxyConfigs()).calendly
       expect(config).toBeDefined()
@@ -469,6 +476,7 @@ describe('proxy configs', () => {
       expect(configs).not.toHaveProperty('crisp')
       expect(configs).not.toHaveProperty('deskcrew')
       expect(configs).not.toHaveProperty('tawkTo')
+      expect(configs).not.toHaveProperty('deacon')
       expect(configs).toHaveProperty('vercelAnalytics')
       expect(configs).toHaveProperty('gravatar')
       expect(configs).toHaveProperty('calendly')
