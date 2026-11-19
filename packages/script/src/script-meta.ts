@@ -52,6 +52,10 @@ export const scriptMeta = {
     urls: ['https://js.ciphera.net/script.js'],
     trackedData: ['page-views', 'events', 'conversions', 'scrolls'],
   },
+  measuremysiteAnalytics: {
+    urls: ['https://a.measuremy.site/t.js'],
+    trackedData: ['page-views', 'events'],
+  },
   statableAnalytics: {
     urls: ['https://statable.com/js/3078194/s.js'],
     trackedData: ['page-views', 'events', 'conversions', 'scrolls'],

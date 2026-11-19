@@ -37,6 +37,7 @@ import {
   LinkedInInsightOptions,
   MapLibreOptions,
   MatomoAnalyticsOptions,
+  MeasuremysiteAnalyticsOptions,
   MetaPixelOptions,
   MixpanelAnalyticsOptions,
   NpmOptions,
@@ -151,6 +152,10 @@ export const registryMeta: RegistryScriptMeta[] = [
   // visitor identity, so proxied beacons would collapse every visitor into
   // one. Same family as Fathom (#720) and Pulse.
   m('statableAnalytics', 'Statable Analytics', 'analytics', 'useScriptStatableAnalytics', { bundle: true }, null),
+  // No proxy: measuremy.site counts unique visitors from a daily salted hash of
+  // the connecting IP and user agent, so proxied beacons would collapse every
+  // visitor into one. Same family as Fathom (#720), Pulse and Statable.
+  m('measuremysiteAnalytics', 'measuremy.site', 'analytics', 'useScriptMeasuremysiteAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -498,6 +503,17 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
           return `${host}/js/${options.siteId}/s.js`
         },
       },
+    }),
+    def('measuremysiteAnalytics', {
+      schema: MeasuremysiteAnalyticsOptions,
+      label: 'measuremy.site',
+      src: 'https://a.measuremy.site/t.js',
+      category: 'analytics',
+      envDefaults: { key: '' },
+      // Bundling needs no SDK patch: the tracker reads its key from its own
+      // script element, and the composable pins `data-api` so beacons still
+      // go to measuremy.site.
+      bundle: true,
     }),
     // ad
     def('bingUet', {

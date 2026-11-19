@@ -947,6 +947,18 @@
         "code": "export interface MatomoConsent {\n  /** Push `setConsentGiven`. Requires `defaultConsent: 'required' | 'given'` at registration to have an effect. */\n  give: () => void\n  /** Push `forgetConsentGiven`. Requires `defaultConsent: 'required' | 'given'` at registration to have an effect. */\n  forget: () => void\n}"
       }
     ],
+    "measuremysite-analytics": [
+      {
+        "name": "MeasuremysiteAnalyticsOptions",
+        "kind": "const",
+        "code": "export const MeasuremysiteAnalyticsOptions = object({\n  /**\n   * The site's public key (`pk_...`) from the Setup tab of the measuremy.site dashboard. Safe to commit.\n   * @see https://measuremy.site/docs/install\n   */\n  key: pipe(string(), regex(/^pk_[\\w-]+$/)),\n})"
+      },
+      {
+        "name": "MeasuremysiteAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface MeasuremysiteAnalyticsApi {\n  /**\n   * Records a custom event.\n   * @param name Event name, e.g. `signup`.\n   * @param props Optional properties. Strings, numbers and booleans, up to 2 KB as JSON.\n   * @see https://measuremy.site/docs/install\n   */\n  track: (name: string, props?: Record<string, string | number | boolean>) => void\n}"
+      }
+    ],
     "meta-pixel": [
       {
         "name": "StandardEvents",
@@ -3129,6 +3141,14 @@
         "type": "Record<string, string>",
         "required": false,
         "description": "Custom properties attached to every event from the page load, rendered as `data-statable-*` attributes on the script tag."
+      }
+    ],
+    "MeasuremysiteAnalyticsOptions": [
+      {
+        "name": "key",
+        "type": "string",
+        "required": true,
+        "description": "The site's public key (`pk_...`) from the Setup tab of the measuremy.site dashboard. Safe to commit."
       }
     ],
     "ScriptGoogleMapsProps": [
