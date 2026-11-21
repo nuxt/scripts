@@ -32,6 +32,7 @@ describe('metricravenAnalytics bundle.resolve', () => {
     const resolve = await getMetricRavenResolve()
     expect(resolve({ siteId: 'ana_pub_x', scriptUrl: 'https://cdn.example.com/mr.js' })).toBe('https://cdn.example.com/mr.js')
     expect(resolve({ siteId: 'ana_pub_x', scriptUrl: '/a/script' })).toBe(false)
+    expect(resolve({ siteId: 'ana_pub_x', scriptInput: { src: 'https://a.example.com/js/script.js' } })).toBe('https://a.example.com/js/script.js')
   })
 })
 
