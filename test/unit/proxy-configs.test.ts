@@ -386,6 +386,13 @@ describe('proxy configs', () => {
       expect(config).toBeUndefined()
     })
 
+    it('does not return proxy config for metricravenAnalytics (cookieless visitor identity needs the real client IP)', async () => {
+      // Without storage consent MetricRaven derives the visitor ID from the client IP,
+      // which a proxy must pass in x-visitor-ip; the generic proxy would merge every visitor into one.
+      const config = (await getProxyConfigs()).metricravenAnalytics
+      expect(config).toBeUndefined()
+    })
+
     it('returns proxy config for intercom', async () => {
       const config = (await getProxyConfigs()).intercom
       expect(config).toBeDefined()
@@ -465,6 +472,7 @@ describe('proxy configs', () => {
       expect(configs).not.toHaveProperty('fathomAnalytics')
       expect(configs).not.toHaveProperty('pulseAnalytics')
       expect(configs).not.toHaveProperty('statableAnalytics')
+      expect(configs).not.toHaveProperty('metricravenAnalytics')
       expect(configs).toHaveProperty('intercom')
       expect(configs).not.toHaveProperty('crisp')
       expect(configs).not.toHaveProperty('deskcrew')

@@ -31,6 +31,7 @@ import type { LinkedInInsightInput } from './registry/linkedin-insight'
 import type { MapLibreInput } from './registry/maplibre'
 import type { MatomoAnalyticsInput } from './registry/matomo-analytics'
 import type { MetaPixelInput } from './registry/meta-pixel'
+import type { MetricRavenAnalyticsInput } from './registry/metricraven-analytics'
 import type { MixpanelAnalyticsInput } from './registry/mixpanel-analytics'
 import type { NpmInput } from './registry/npm'
 import type { PayPalInput } from './registry/paypal'
@@ -305,6 +306,7 @@ export interface ScriptRegistry {
   posthog?: PostHogInput
   pulseAnalytics?: PulseAnalyticsInput
   matomoAnalytics?: MatomoAnalyticsInput
+  metricravenAnalytics?: MetricRavenAnalyticsInput
   mixpanelAnalytics?: MixpanelAnalyticsInput
   rybbitAnalytics?: RybbitAnalyticsInput
   redditPixel?: RedditPixelInput
@@ -337,7 +339,7 @@ export type BuiltInRegistryScriptKey
     | 'plausibleAnalytics' | 'googleAdsense' | 'googleAnalytics' | 'googleMaps' | 'leaflet' | 'maplibre'
     | 'googleRecaptcha' | 'googleSignIn' | 'lemonSqueezy' | 'googleTagManager'
     | 'hotjar' | 'intercom' | 'linkedinInsight' | 'paypal' | 'posthog' | 'pulseAnalytics' | 'matomoAnalytics'
-    | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'statableAnalytics' | 'stripe' | 'tawkTo' | 'tiktokPixel'
+    | 'metricravenAnalytics' | 'mixpanelAnalytics' | 'rybbitAnalytics' | 'redditPixel' | 'segment' | 'statableAnalytics' | 'stripe' | 'tawkTo' | 'tiktokPixel'
     | 'xEmbed' | 'xPixel' | 'snapchatPixel' | 'speedcurve' | 'youtubePlayer' | 'vercelAnalytics'
     | 'vimeoPlayer' | 'umamiAnalytics' | 'usercentrics' | 'gravatar' | 'npm'
 

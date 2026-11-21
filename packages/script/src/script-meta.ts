@@ -56,6 +56,10 @@ export const scriptMeta = {
     urls: ['https://statable.com/js/3078194/s.js'],
     trackedData: ['page-views', 'events', 'conversions', 'scrolls'],
   },
+  metricravenAnalytics: {
+    urls: ['https://metricraven.com/js/script.js'],
+    trackedData: ['page-views', 'events', 'conversions', 'user-identity', 'transactions', 'scrolls', 'errors', 'performance-timings'],
+  },
   databuddyAnalytics: {
     urls: ['https://cdn.databuddy.cc/databuddy.js'],
     trackedData: ['page-views', 'events'],
