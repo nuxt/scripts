@@ -21,7 +21,7 @@ jobs:
     permissions:
       actions: read
       pull-requests: write
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     steps:
       - name: Resolve pull request
         id: pull-request
