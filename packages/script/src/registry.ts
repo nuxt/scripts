@@ -518,9 +518,8 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         resolve: (options?: MetricRavenAnalyticsInput) => {
           if (!options?.siteId)
             return false
-          const custom = (options as any).scriptInput?.src || options.scriptUrl
-          if (custom)
-            return /^https?:\/\//i.test(custom) ? custom : false
+          if (options.scriptUrl)
+            return /^https?:\/\//i.test(options.scriptUrl) ? options.scriptUrl : false
           return `${(options.apiHost || 'https://metricraven.com').replace(/\/+$/, '')}/js/script.js`
         },
       },

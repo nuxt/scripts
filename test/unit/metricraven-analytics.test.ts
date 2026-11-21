@@ -19,8 +19,8 @@ vi.mock('../../packages/script/src/runtime/utils', () => ({
 const SITE_ID = 'ana_pub_AbC123-xyz_9'
 
 function setup(options: Record<string, unknown> = { siteId: SITE_ID }) {
-  mocks.useRegistryScript.mockImplementation((_key: string, factory: (o: any, ctx: any) => any) => {
-    mocks.definition = factory(options, { scriptInput: options.scriptInput })
+  mocks.useRegistryScript.mockImplementation((_key: string, factory: (o: any) => any) => {
+    mocks.definition = factory(options)
     return { status: ref('awaitingLoad'), signal: new AbortController().signal, load: vi.fn() }
   })
   useScriptMetricRavenAnalytics(options as any)
@@ -74,12 +74,6 @@ describe('metricraven analytics', () => {
     const { scriptInput } = setup({ siteId: SITE_ID, scriptUrl: 'https://example.com/stats/mr.js' })
     expect(scriptInput['data-api']).toBe('https://example.com/api/v1/collect')
     expect(scriptInput['data-addons']).toBe('https://metricraven.com/js/addons/')
-  })
-
-  it('derives the defaults from an absolute scriptInput.src override', () => {
-    const { scriptInput } = setup({ siteId: SITE_ID, scriptInput: { src: 'https://a.example.com/js/script.js' } })
-    expect(scriptInput['data-api']).toBe('https://a.example.com/api/v1/collect')
-    expect(scriptInput['data-addons']).toBe('https://a.example.com/js/addons/')
   })
 
   it('renders only the defaults without options', () => {

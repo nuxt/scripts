@@ -95,10 +95,11 @@ function trackerDefaults(src: string): { endpoint?: string, addons?: string } {
 }
 
 export function useScriptMetricRavenAnalytics<T extends MetricRavenAnalyticsApi>(_options?: MetricRavenAnalyticsInput) {
-  return useRegistryScript<T, typeof MetricRavenAnalyticsOptions>('metricravenAnalytics', (options, ctx) => {
+  return useRegistryScript<T, typeof MetricRavenAnalyticsOptions>('metricravenAnalytics', (options) => {
     const src = metricRavenScriptUrl(options)
-    // A `scriptInput.src` override replaces `src`, so derive the defaults from it.
-    const defaults = trackerDefaults(ctx.scriptInput?.src || src)
+    // Not derived from `scriptInput.src`: bundling rewrites it to the local
+    // asset path. A custom tracker URL goes through `scriptUrl` or `apiHost`.
+    const defaults = trackerDefaults(src)
     const hosts = (options.allowedHostnames || []).map(h => h.trim()).filter(Boolean)
     return {
       scriptInput: {
