@@ -38,8 +38,8 @@ export function useScriptCloudflareWebAnalytics<T extends CloudflareWebAnalytics
     },
     schema: import.meta.dev ? CloudflareWebAnalyticsOptions : undefined,
     scriptOptions: {
-      // we want to load earlier so that the web vitals reports are correct
-      trigger: 'client',
+      // Load early for Web Vitals unless the user chose another trigger.
+      trigger: (options as CloudflareWebAnalyticsInput).scriptOptions?.trigger ?? 'client',
       use() {
         return { __cfBeacon: window.__cfBeacon }
       },

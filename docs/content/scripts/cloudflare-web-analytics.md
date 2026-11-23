@@ -24,7 +24,7 @@ The beacon script is bundled. Events go directly from the browser to `https://cl
 Proxying is unsupported because [Cloudflare RUM cannot collect Worker subrequests](https://developers.cloudflare.com/web-analytics/faq/#can-i-use-real-user-monitoring-rum-with-cloudflare-workers).
 An HTTP 204 response from a Worker proxy does not prove that Cloudflare recorded the event.
 
-This registry fixes the trigger to `client`. A `scriptOptions.trigger` value passed by the caller is overwritten, so this integration cannot currently be deferred with a consent or element trigger.
+Set `scriptOptions.trigger` to load the beacon at a different time. For example, use `server` to include the beacon in the initial HTML.
 
 ::callout{type="warning"}
 The current runtime always enables SPA tracking, even though [Cloudflare documents `spa: false`](https://developers.cloudflare.com/web-analytics/get-started/web-analytics-spa/#disable-spa-analytics) as the switch for disabling it. Passing `spa: false` to this registry currently has no effect.
