@@ -76,4 +76,31 @@ describe('script status hydration', { timeout: 120000 }, async () => {
     expect(await page.textContent('#status')).toBe(final)
     await page.close()
   })
+
+  it.each([
+    { trigger: '', inServerHtml: false },
+    { trigger: 'client', inServerHtml: false },
+    { trigger: 'server', inServerHtml: true },
+    { trigger: 'manual', inServerHtml: false },
+  ])('loads one beacon with trigger "$trigger"', async ({ trigger, inServerHtml }) => {
+    const path = `/cloudflare-analytics?trigger=${trigger}`
+    const html = await $fetch<string>(path)
+    expect(html.match(/ data-cf-beacon=/g) ?? []).toHaveLength(inServerHtml ? 1 : 0)
+
+    const page = await createPage()
+    try {
+      await page.goto(url(path), { waitUntil: 'hydration' })
+      if (trigger === 'manual') {
+        expect(await page.textContent('#status')).toBe('awaitingLoad')
+        expect(await page.locator('script[data-cf-beacon]').count()).toBe(0)
+        await page.getByRole('button', { name: 'Load beacon' }).click()
+      }
+      await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'loaded')
+      expect(await page.locator('script[data-cf-beacon]').count()).toBe(1)
+      expect(await page.evaluate(() => (window as Window & { __probeLoaded?: number }).__probeLoaded)).toBe(1)
+    }
+    finally {
+      await page.close()
+    }
+  })
 })
