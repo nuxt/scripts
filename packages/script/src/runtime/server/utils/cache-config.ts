@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'node:url'
+
 /** Dedicated Nitro storage mount used by Nuxt Scripts' upstream caches. */
 export const NUXT_SCRIPTS_CACHE_BASE = 'nuxt-scripts-cache'
 
@@ -11,6 +13,7 @@ export const NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE = 8 * 1024 * 1024
 
 interface NitroOptionsWithStorage {
   storage?: Record<string, unknown>
+  alias?: Record<string, string>
   kv?: Record<string, unknown>
 }
 
@@ -25,8 +28,16 @@ export function ensureNuxtScriptsCacheStorage(nitroOptions: NitroOptionsWithStor
   const mounts = nitroVersion >= 3
     ? (nitroOptions.kv ||= {})
     : (nitroOptions.storage ||= {})
-  mounts[NUXT_SCRIPTS_CACHE_BASE] ||= {
-    driver,
+  if (mounts[NUXT_SCRIPTS_CACHE_BASE])
+    return
+
+  // Nitro imports custom drivers with the native ESM loader during setup.
+  const driverURL = pathToFileURL(driver).href
+  // Rollup needs a local path to bundle the driver into the server output.
+  nitroOptions.alias ||= {}
+  nitroOptions.alias[driverURL] = driver
+  mounts[NUXT_SCRIPTS_CACHE_BASE] = {
+    driver: driverURL,
     max: NUXT_SCRIPTS_CACHE_MAX_ENTRIES,
     maxSize: NUXT_SCRIPTS_CACHE_MAX_SIZE,
     maxEntrySize: NUXT_SCRIPTS_CACHE_MAX_ENTRY_SIZE,
