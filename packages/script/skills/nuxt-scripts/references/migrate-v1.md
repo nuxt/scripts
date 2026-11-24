@@ -37,4 +37,4 @@ It rewrites static registry config and the renamed APIs it can match in `.vue` a
 | `proxy.ttq('track', ...)`, `proxy.rybbit.pageview()` | `proxy.ttq.track(...)`, `proxy.pageview()` |
 | Matomo `trackPageView` | `watch` (default `true`) |
 
-v2 also needs Nuxt `^4.7.0 || ^5.0.0` and `unhead` and `@unhead/vue` `^3.5.0`. If either Unhead package is missing or out of range, module setup stops with an error that names it and suggests `npx nuxi@latest upgrade --force`.
+v2 also needs Nuxt `^4.6.0 || ^5.0.0` and `unhead` and `@unhead/vue` `^3.4.2`. If either Unhead package is missing or out of range, module setup stops with an error that names it and suggests `npx nuxi@latest upgrade --force`.
