@@ -2,6 +2,7 @@ import type { ClarityInput } from './runtime/registry/clarity'
 import type { GoogleAdsenseInput } from './runtime/registry/google-adsense'
 import type { HotjarInput } from './runtime/registry/hotjar'
 import type { IntercomInput } from './runtime/registry/intercom'
+import type { MetricRavenAnalyticsInput } from './runtime/registry/metricraven-analytics'
 import type { MixpanelAnalyticsInput } from './runtime/registry/mixpanel-analytics'
 import type { NpmInput } from './runtime/registry/npm'
 import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analytics'
@@ -38,6 +39,7 @@ import {
   MapLibreOptions,
   MatomoAnalyticsOptions,
   MetaPixelOptions,
+  MetricRavenAnalyticsOptions,
   MixpanelAnalyticsOptions,
   NpmOptions,
   PostHogOptions,
@@ -151,6 +153,10 @@ export const registryMeta: RegistryScriptMeta[] = [
   // visitor identity, so proxied beacons would collapse every visitor into
   // one. Same family as Fathom (#720) and Pulse.
   m('statableAnalytics', 'Statable Analytics', 'analytics', 'useScriptStatableAnalytics', { bundle: true }, null),
+  // No proxy: without storage consent MetricRaven derives a daily visitor ID
+  // from the client IP, which a proxy must forward in `x-visitor-ip`. Proxied
+  // beacons would collapse every visitor into one, as with Fathom (#720).
+  m('metricravenAnalytics', 'MetricRaven', 'analytics', 'useScriptMetricRavenAnalytics', { bundle: true }, null),
   // ad
   m('bingUet', 'Bing UET', 'ad', 'useScriptBingUet', { bundle: true, partytown: true }, null),
   m('metaPixel', 'Meta Pixel', 'ad', 'useScriptMetaPixel', { bundle: true, proxy: true, partytown: true }, PRIVACY_FULL),
@@ -500,6 +506,25 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
             return false
           const host = (options.host || 'https://statable.com').replace(/\/+$/, '')
           return `${host}/js/${options.siteId}/s.js`
+        },
+      },
+    }),
+    def('metricravenAnalytics', {
+      composableName: 'useScriptMetricRavenAnalytics',
+      schema: MetricRavenAnalyticsOptions,
+      label: 'MetricRaven',
+      category: 'analytics',
+      envDefaults: { siteId: '' },
+      // Bundling needs no SDK patch: the composable pins `data-api` and
+      // `data-addons` on the script element, so the bundled copy keeps
+      // reporting to the tracker's origin instead of the Nuxt origin.
+      bundle: {
+        resolve: (options?: MetricRavenAnalyticsInput) => {
+          if (!options?.siteId)
+            return false
+          if (options.scriptUrl)
+            return /^https?:\/\//i.test(options.scriptUrl) ? options.scriptUrl : false
+          return `${(options.apiHost || 'https://metricraven.com').replace(/\/+$/, '')}/js/script.js`
         },
       },
     }),

@@ -597,6 +597,75 @@
       }
     ]
   },
+  "metricravenAnalytics": {
+    "totalTransferKb": 8.9,
+    "totalDecodedKb": 19.3,
+    "loadTimeMs": 142,
+    "collectsWebVitals": false,
+    "apis": {
+      "cookies": true,
+      "localStorage": true,
+      "sessionStorage": true,
+      "indexedDB": false,
+      "canvas": false,
+      "webgl": false,
+      "audioContext": false,
+      "userAgent": true,
+      "doNotTrack": false,
+      "hardwareConcurrency": false,
+      "deviceMemory": false,
+      "plugins": false,
+      "languages": true,
+      "screen": true,
+      "timezone": false,
+      "platform": false,
+      "vendor": false,
+      "connection": false,
+      "maxTouchPoints": false,
+      "devicePixelRatio": false,
+      "mediaDevices": false,
+      "getBattery": false,
+      "referrer": true,
+      "windowName": false,
+      "rtcPeerConnection": false,
+      "geolocation": false,
+      "serviceWorker": false,
+      "cacheApi": false,
+      "sendBeacon": true,
+      "fetch": true,
+      "xhr": false,
+      "websocket": false,
+      "mutationObserver": true,
+      "performanceObserver": false,
+      "intersectionObserver": true
+    },
+    "cookies": [],
+    "network": {
+      "requestCount": 1,
+      "domains": [
+        "metricraven.com"
+      ],
+      "outboundBytes": 0,
+      "inboundBytes": 9131,
+      "injectedElements": []
+    },
+    "performance": {
+      "taskDurationMs": 33,
+      "scriptDurationMs": 0,
+      "heapDeltaKb": 746
+    },
+    "scripts": [
+      {
+        "url": "https://metricraven.com/js/script.js",
+        "transferKb": 8.9,
+        "decodedKb": 19.3,
+        "encoding": "gzip",
+        "durationMs": 142,
+        "initiatorType": "script",
+        "protocol": "unknown"
+      }
+    ]
+  },
   "databuddyAnalytics": {
     "totalTransferKb": 10.8,
     "totalDecodedKb": 29.4,

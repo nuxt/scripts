@@ -1,4 +1,4 @@
-import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, pipe, record, regex, string, union } from 'valibot'
+import { any, array, boolean, custom, function_, literal, maxValue, minLength, minValue, number, object, optional, picklist, pipe, record, regex, string, union } from 'valibot'
 
 // Shared GCMv2 consent category value.
 const consentCategoryValue = union([literal('granted'), literal('denied')])
@@ -1406,4 +1406,95 @@ export const StatableAnalyticsOptions = object({
    * @see https://statable.com/docs/developers/tracking-script/#data-statable-optional
    */
   props: optional(record(string(), string())),
+})
+
+export const MetricRavenAnalyticsOptions = object({
+  /**
+   * Your site's public ID (`ana_pub_…`), from Settings in MetricRaven.
+   * @see https://metricraven.com/docs/install
+   */
+  siteId: pipe(string(), regex(/^ana_pub_[\w-]+$/)),
+  /**
+   * Origin that serves the tracker and receives events, such as a managed
+   * proxy subdomain. The tracker loads from `<apiHost>/js/script.js`.
+   * @default 'https://metricraven.com'
+   * @see https://metricraven.com/docs/managed-proxy
+   */
+  apiHost: optional(string()),
+  /**
+   * Full tracker URL, such as a same-origin proxy path (`/a/script`). Overrides `apiHost`.
+   * @see https://metricraven.com/docs/proxy
+   */
+  scriptUrl: optional(string()),
+  /**
+   * URL the tracker sends events to, for a proxy on your own server (`data-api`).
+   * Defaults to `/api/v1/collect` on the tracker's origin.
+   * @see https://metricraven.com/docs/proxy
+   */
+  endpoint: optional(string()),
+  /**
+   * Where the tracker loads its optional add-ons from (`data-addons`).
+   * Defaults to `/js/addons/` next to the tracker, or metricraven.com.
+   */
+  addonsUrl: optional(string()),
+  /**
+   * Record pageviews on load and on client-side navigation. Set to `false` to
+   * call `pageview()` yourself.
+   * @default true
+   * @see https://metricraven.com/docs/spa-virtual-pages
+   */
+  autoPageviews: optional(boolean()),
+  /**
+   * Count `#/` and `#!/` routes as pages (`true`), or also plain anchors such as `#pricing` (`'all'`).
+   * @default false
+   */
+  hashRouting: optional(union([boolean(), literal('all')])),
+  /**
+   * Drop query strings from recorded URLs.
+   * @default false
+   */
+  stripQuery: optional(boolean()),
+  /**
+   * Storage consent already granted. Without it, nothing is stored in the browser
+   * and the server derives a daily visitor ID. Call `setConsent(true)` to grant it later.
+   * @default false
+   * @see https://metricraven.com/docs/consent
+   */
+  consent: optional(boolean()),
+  /**
+   * Advertising consent already granted, so ad clicks can be sent back to ad networks
+   * with conversions (`data-ad-consent="granted"`).
+   * @default false
+   */
+  adConsent: optional(boolean()),
+  /**
+   * Share the visitor cookie (after consent) across this domain and its subdomains.
+   */
+  domain: optional(string()),
+  /**
+   * Also track `localhost` and `*.test` pages, which are skipped by default.
+   * @default false
+   */
+  allowLocalhost: optional(boolean()),
+  /**
+   * Extra hosts for cross-domain linking. The site's own domains are linked automatically.
+   * @see https://metricraven.com/docs/cross-domain
+   */
+  allowedHostnames: optional(array(string())),
+  /**
+   * A signed identity token from your server: identifies the signed-in visitor as the tracker loads.
+   * @see https://metricraven.com/docs/identify-users
+   */
+  identityToken: optional(string()),
+  /**
+   * Narrow the automatic events switched on in Settings: `false` turns them off on
+   * this page, a list keeps only those kinds.
+   * @see https://metricraven.com/docs/automatic-events
+   */
+  autocapture: optional(union([literal(false), array(picklist(['clicks', 'forms', 'downloads', 'scroll']))])),
+  /**
+   * Log to the console what is sent and why anything is skipped.
+   * @default false
+   */
+  debug: optional(boolean()),
 })

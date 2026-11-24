@@ -989,6 +989,33 @@
         "code": "export interface MetaPixelConsent {\n  /** Call `fbq('consent','grant')`. */\n  grant: () => void\n  /** Call `fbq('consent','revoke')`. */\n  revoke: () => void\n}"
       }
     ],
+    "metricraven-analytics": [
+      {
+        "name": "MetricRavenAnalyticsOptions",
+        "kind": "const",
+        "code": "export const MetricRavenAnalyticsOptions = object({\n  /**\n   * Your site's public ID (`ana_pub_…`), from Settings in MetricRaven.\n   * @see https://metricraven.com/docs/install\n   */\n  siteId: pipe(string(), regex(/^ana_pub_[\\w-]+$/)),\n  /**\n   * Origin that serves the tracker and receives events, such as a managed\n   * proxy subdomain. The tracker loads from `<apiHost>/js/script.js`.\n   * @default 'https://metricraven.com'\n   * @see https://metricraven.com/docs/managed-proxy\n   */\n  apiHost: optional(string()),\n  /**\n   * Full tracker URL, such as a same-origin proxy path (`/a/script`). Overrides `apiHost`.\n   * @see https://metricraven.com/docs/proxy\n   */\n  scriptUrl: optional(string()),\n  /**\n   * URL the tracker sends events to, for a proxy on your own server (`data-api`).\n   * Defaults to `/api/v1/collect` on the tracker's origin.\n   * @see https://metricraven.com/docs/proxy\n   */\n  endpoint: optional(string()),\n  /**\n   * Where the tracker loads its optional add-ons from (`data-addons`).\n   * Defaults to `/js/addons/` next to the tracker, or metricraven.com.\n   */\n  addonsUrl: optional(string()),\n  /**\n   * Record pageviews on load and on client-side navigation. Set to `false` to\n   * call `pageview()` yourself.\n   * @default true\n   * @see https://metricraven.com/docs/spa-virtual-pages\n   */\n  autoPageviews: optional(boolean()),\n  /**\n   * Count `#/` and `#!/` routes as pages (`true`), or also plain anchors such as `#pricing` (`'all'`).\n   * @default false\n   */\n  hashRouting: optional(union([boolean(), literal('all')])),\n  /**\n   * Drop query strings from recorded URLs.\n   * @default false\n   */\n  stripQuery: optional(boolean()),\n  /**\n   * Storage consent already granted. Without it, nothing is stored in the browser\n   * and the server derives a daily visitor ID. Call `setConsent(true)` to grant it later.\n   * @default false\n   * @see https://metricraven.com/docs/consent\n   */\n  consent: optional(boolean()),\n  /**\n   * Advertising consent already granted, so ad clicks can be sent back to ad networks\n   * with conversions (`data-ad-consent=\"granted\"`).\n   * @default false\n   */\n  adConsent: optional(boolean()),\n  /**\n   * Share the visitor cookie (after consent) across this domain and its subdomains.\n   */\n  domain: optional(string()),\n  /**\n   * Also track `localhost` and `*.test` pages, which are skipped by default.\n   * @default false\n   */\n  allowLocalhost: optional(boolean()),\n  /**\n   * Extra hosts for cross-domain linking. The site's own domains are linked automatically.\n   * @see https://metricraven.com/docs/cross-domain\n   */\n  allowedHostnames: optional(array(string())),\n  /**\n   * A signed identity token from your server: identifies the signed-in visitor as the tracker loads.\n   * @see https://metricraven.com/docs/identify-users\n   */\n  identityToken: optional(string()),\n  /**\n   * Narrow the automatic events switched on in Settings: `false` turns them off on\n   * this page, a list keeps only those kinds.\n   * @see https://metricraven.com/docs/automatic-events\n   */\n  autocapture: optional(union([literal(false), array(picklist(['clicks', 'forms', 'downloads', 'scroll']))])),\n  /**\n   * Log to the console what is sent and why anything is skipped.\n   * @default false\n   */\n  debug: optional(boolean()),\n})"
+      },
+      {
+        "name": "MetricRavenPropValue",
+        "kind": "type",
+        "code": "export type MetricRavenPropValue = string | number | boolean"
+      },
+      {
+        "name": "MetricRavenTraits",
+        "kind": "interface",
+        "code": "export interface MetricRavenTraits {\n  name?: string\n  email?: string\n  /** An https:// profile picture URL. */\n  image?: string\n  [trait: string]: MetricRavenPropValue | null | undefined\n}"
+      },
+      {
+        "name": "MetricRavenAnalyticsApi",
+        "kind": "interface",
+        "code": "export interface MetricRavenAnalyticsApi {\n  /**\n   * Records a custom event (a goal).\n   * @param name Event name.\n   * @param props Up to 10 properties: strings, numbers or booleans.\n   * @see https://metricraven.com/docs/goals-funnels\n   */\n  track: (name: string, props?: Record<string, MetricRavenPropValue>) => void\n  /**\n   * Links this visitor to your user ID, with optional traits. Pass `{ token }` for a\n   * signed identify made with a site secret key on your server.\n   * @see https://metricraven.com/docs/identify-users\n   */\n  identify: ((userId: string | number, traits?: MetricRavenTraits, options?: { token?: string }) => boolean)\n    & ((signed: { token: string }) => boolean)\n  /**\n   * Records a pageview. Needed only with `autoPageviews: false` or for virtual pages.\n   * @param path A path on this origin. Defaults to the current URL.\n   */\n  pageview: (path?: string) => boolean\n  /**\n   * Credits a payment made with this email within the hour to this visitor, for\n   * checkouts that can't carry the visitor ID.\n   * @see https://metricraven.com/docs/attribute-by-email\n   */\n  payment: (claim: { email: string }) => boolean\n  /** Grants or withdraws storage consent. */\n  setConsent: (granted: boolean) => void\n  /** Grants or withdraws advertising consent (ad clicks sent back with conversions). */\n  setAdConsent: (granted: boolean) => void\n  /** Starts a new visitor ID on logout (only when consent was granted). */\n  reset: () => void\n  /**\n   * The current visitor ID. Pass it to your checkout to attribute revenue to the visit.\n   * @see https://metricraven.com/docs/payments-api\n   */\n  getVisitorId: () => string | null\n  /** The URL with cross-domain linking added, for links built in code. */\n  linkUrl: (url: string) => string\n  /** The cross-domain linking parameter (`{ mr_link }`), or `{}`. */\n  linkParams: () => Record<string, string>\n}"
+      },
+      {
+        "name": "METRICRAVEN_DEFAULT_HOST",
+        "kind": "const",
+        "code": "export const METRICRAVEN_DEFAULT_HOST = 'https://metricraven.com'"
+      }
+    ],
     "mixpanel-analytics": [
       {
         "name": "MixpanelAnalyticsOptions",
@@ -3129,6 +3156,112 @@
         "type": "Record<string, string>",
         "required": false,
         "description": "Custom properties attached to every event from the page load, rendered as `data-statable-*` attributes on the script tag."
+      }
+    ],
+    "MetricRavenAnalyticsOptions": [
+      {
+        "name": "siteId",
+        "type": "string",
+        "required": true,
+        "description": "Your site's public ID (`ana_pub_…`), from Settings in MetricRaven."
+      },
+      {
+        "name": "apiHost",
+        "type": "string",
+        "required": false,
+        "description": "Origin that serves the tracker and receives events, such as a managed proxy subdomain. The tracker loads from `<apiHost>/js/script.js`.",
+        "defaultValue": "'https://metricraven.com'"
+      },
+      {
+        "name": "scriptUrl",
+        "type": "string",
+        "required": false,
+        "description": "Full tracker URL, such as a same-origin proxy path (`/a/script`). Overrides `apiHost`."
+      },
+      {
+        "name": "endpoint",
+        "type": "string",
+        "required": false,
+        "description": "URL the tracker sends events to, for a proxy on your own server (`data-api`). Defaults to `/api/v1/collect` on the tracker's origin."
+      },
+      {
+        "name": "addonsUrl",
+        "type": "string",
+        "required": false,
+        "description": "Where the tracker loads its optional add-ons from (`data-addons`). Defaults to `/js/addons/` next to the tracker, or metricraven.com."
+      },
+      {
+        "name": "autoPageviews",
+        "type": "boolean",
+        "required": false,
+        "description": "Record pageviews on load and on client-side navigation. Set to `false` to call `pageview()` yourself.",
+        "defaultValue": "true"
+      },
+      {
+        "name": "hashRouting",
+        "type": "boolean | 'all'",
+        "required": false,
+        "description": "Count `#/` and `#!/` routes as pages (`true`), or also plain anchors such as `#pricing` (`'all'`).",
+        "defaultValue": "false"
+      },
+      {
+        "name": "stripQuery",
+        "type": "boolean",
+        "required": false,
+        "description": "Drop query strings from recorded URLs.",
+        "defaultValue": "false"
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "description": "Storage consent already granted. Without it, nothing is stored in the browser and the server derives a daily visitor ID. Call `setConsent(true)` to grant it later.",
+        "defaultValue": "false"
+      },
+      {
+        "name": "adConsent",
+        "type": "boolean",
+        "required": false,
+        "description": "Advertising consent already granted, so ad clicks can be sent back to ad networks with conversions (`data-ad-consent=\"granted\"`).",
+        "defaultValue": "false"
+      },
+      {
+        "name": "domain",
+        "type": "string",
+        "required": false,
+        "description": "Share the visitor cookie (after consent) across this domain and its subdomains."
+      },
+      {
+        "name": "allowLocalhost",
+        "type": "boolean",
+        "required": false,
+        "description": "Also track `localhost` and `*.test` pages, which are skipped by default.",
+        "defaultValue": "false"
+      },
+      {
+        "name": "allowedHostnames",
+        "type": "string[]",
+        "required": false,
+        "description": "Extra hosts for cross-domain linking. The site's own domains are linked automatically."
+      },
+      {
+        "name": "identityToken",
+        "type": "string",
+        "required": false,
+        "description": "A signed identity token from your server: identifies the signed-in visitor as the tracker loads."
+      },
+      {
+        "name": "autocapture",
+        "type": "false | unknown[]",
+        "required": false,
+        "description": "Narrow the automatic events switched on in Settings: `false` turns them off on this page, a list keeps only those kinds."
+      },
+      {
+        "name": "debug",
+        "type": "boolean",
+        "required": false,
+        "description": "Log to the console what is sent and why anything is skipped.",
+        "defaultValue": "false"
       }
     ],
     "ScriptGoogleMapsProps": [
