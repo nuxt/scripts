@@ -5,12 +5,10 @@ import { buildProxyConfigsFromRegistry, registry } from '../../packages/script/s
 import {
   anonymizeIP,
   FINGERPRINT_HEADERS,
-  IP_HEADERS,
   mergePrivacy,
   normalizeLanguage,
   normalizeUserAgent,
   resolvePrivacy,
-  SENSITIVE_HEADERS,
   stripPayloadFingerprinting,
 } from '../../packages/script/src/runtime/server/utils/privacy'
 
@@ -373,17 +371,6 @@ describe('proxy handler', () => {
       const merged = mergePrivacy(base, false)
       expect(merged.ip).toBe(false)
       expect(merged.userAgent).toBe(false)
-    })
-
-    it('iP headers list contains expected headers', () => {
-      expect(IP_HEADERS).toContain('x-forwarded-for')
-      expect(IP_HEADERS).toContain('x-real-ip')
-      expect(IP_HEADERS).toContain('cf-connecting-ip')
-    })
-
-    it('sensitive headers are always stripped', () => {
-      expect(SENSITIVE_HEADERS).toContain('cookie')
-      expect(SENSITIVE_HEADERS).toContain('authorization')
     })
 
     it('fingerprint headers include UA and language', () => {

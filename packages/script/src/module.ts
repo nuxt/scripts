@@ -112,23 +112,18 @@ function readInstalledPackageVersion(name: string): string | undefined {
   return typeof parsed.version === 'string' ? parsed.version : undefined
 }
 
-export function isProxyDisabled(
+export function isProxyEnabled(
   registryKey: string,
   registry?: NuxtConfigScriptRegistry,
   runtimeConfig?: Record<string, any>,
 ): boolean {
   const entry = registry?.[registryKey] as NormalizedRegistryEntry | undefined
   if (!entry)
-    return true
+    return false
   const [input, scriptOptions] = entry
-  if (input?.proxy === false || scriptOptions?.proxy === false)
-    return true
-  if (runtimeConfig) {
-    const rtEntry = (runtimeConfig.public?.scripts as Record<string, any> | undefined)?.[registryKey]
-    if (rtEntry?.proxy === false || rtEntry?.scriptOptions?.proxy === false)
-      return true
-  }
-  return false
+  const rtEntry = (runtimeConfig?.public?.scripts as Record<string, any> | undefined)?.[registryKey]
+  const choices = [input?.proxy, scriptOptions?.proxy, rtEntry?.proxy, rtEntry?.scriptOptions?.proxy]
+  return !choices.includes(false) && choices.includes(true)
 }
 
 /**
@@ -175,7 +170,7 @@ export function applyAutoInject(
   autoInject: ResolvedProxyAutoInject,
   alias?: ProxyAliasConfig,
 ): void {
-  if (isProxyDisabled(registryKey, registry, runtimeConfig))
+  if (!isProxyEnabled(registryKey, registry, runtimeConfig))
     return
 
   const entry = registry[registryKey] as NormalizedRegistryEntry
@@ -303,7 +298,8 @@ export interface ModuleOptions {
     alias?: ProxyAliasConfig
   }
   /**
-   * The registry of supported third-party scripts. Presence enables infrastructure (proxy routes, types, bundling, composable auto-imports).
+   * The registry of supported third-party scripts. Presence enables types, bundling, and composable auto-imports.
+   * Collection proxying requires `proxy: true` on each integration.
    * Scripts only auto-load globally when `trigger` is explicitly set in the config object.
    */
   registry?: NuxtConfigScriptRegistry
@@ -539,17 +535,14 @@ export default defineNuxtModule<ModuleOptions>({
       __NUXT_SCRIPTS_DEBUG__: debugConst,
     }
 
-    // Register the proxy handler for server targets. The handler rejects unknown
-    // domains at runtime, so it's safe to register even when no scripts use proxy.
     const scriptsBase = config.prefix || '/_scripts'
     const proxyPrefix = `${scriptsBase}/p`
     const clientProxyPrefix = config.proxy?.origin ? new URL(proxyPrefix, config.proxy.origin).href : proxyPrefix
     const assetsPrefix = `${scriptsBase}/assets`
     const proxyConfigs: Partial<Record<RegistryScriptKey, ProxyConfig>> = {}
 
-    const proxyHandlerPath = await resolvePath('./runtime/server/proxy-handler')
     // Static targets (nuxi generate, static presets) have no server runtime to
-    // serve the proxy: skip the route so the proxy is fully opt-in for them.
+    // serve the proxy.
     const staticProxyTarget = isStaticProxyTarget({
       // `_generate` arrives untyped through the nuxi generate CLI override. Nitro's
       // preset option already merges CLI args, env, and nuxt.config by module setup.
@@ -557,10 +550,6 @@ export default defineNuxtModule<ModuleOptions>({
       nitroStatic: (nuxt.options.nitro as any)?.static,
       preset: (nuxt.options.nitro as any)?.preset || process.env.NITRO_PRESET || process.env.SERVER_PRESET,
     })
-    if (!staticProxyTarget) {
-      addServerHandler({ route: `${proxyPrefix}/**`, handler: proxyHandlerPath })
-    }
-
     // In dev, sink Vercel Analytics insight POSTs to `/_vercel/insights/*` so
     // they don't 404. Vercel's edge serves this path in production; locally
     // there's no upstream, so we return 204 to keep the script happy.
@@ -764,8 +753,7 @@ export default defineNuxtModule<ModuleOptions>({
       // Resolve capabilities for each configured script and auto-detect partytown scripts
       const partytownScripts = new Set<string>()
 
-      let anyNeedsProxy = false
-      const proxyConfiguredKeys: string[] = []
+      const proxyConfiguredKeys = new Set<string>()
       const registryKeys = Object.keys(config.registry || {})
       for (const key of registryKeys) {
         const script = scriptByKey.get(key)
@@ -779,12 +767,13 @@ export default defineNuxtModule<ModuleOptions>({
         // Merge: scriptOptions takes priority over input-level overrides
         const mergedOverrides = { ...inputOptions, ...scriptOptions }
 
-        const resolved = resolveCapabilities(script, mergedOverrides)
+        const resolved = resolveCapabilities(script, {
+          ...mergedOverrides,
+          proxy: isProxyEnabled(key, config.registry, nuxt.options.runtimeConfig),
+        })
 
-        if (resolved.proxy) {
-          anyNeedsProxy = true
-          proxyConfiguredKeys.push(key)
-        }
+        if (resolved.proxy)
+          proxyConfiguredKeys.add(key)
 
         if (resolved.partytown) {
           partytownScripts.add(key)
@@ -812,11 +801,12 @@ export default defineNuxtModule<ModuleOptions>({
       // serve `/_scripts/p/**`: skip every proxy integration (AST rewrites, intercept
       // plugin, auto-injected endpoints) so collection requests keep their original
       // third-party URLs and work on static hosting.
-      if (anyNeedsProxy && !staticProxyTarget) {
+      if (proxyConfiguredKeys.size && !staticProxyTarget) {
         const builtConfigs = buildProxyConfigsFromRegistry(registryScripts, scriptByKey)
         Object.assign(proxyConfigs, builtConfigs)
 
         const domainPrivacy: Record<string, ProxyPrivacyInput> = {}
+        const plausibleDomains = new Set<string>()
         const unsupportedScripts: string[] = []
         const unmatchedScripts: string[] = []
         let totalDomains = 0
@@ -829,14 +819,13 @@ export default defineNuxtModule<ModuleOptions>({
             unmatchedScripts.push(key)
             continue
           }
-          if (!script.proxy)
-            continue
-          if (isProxyDisabled(key, config.registry, nuxt.options.runtimeConfig))
+          if (!proxyConfiguredKeys.has(key))
             continue
 
           const configKey = (typeof script.proxy === 'string' ? script.proxy : key) as RegistryScriptKey
           const proxyConfig = proxyConfigs[configKey]
           if (!proxyConfig) {
+            proxyConfiguredKeys.delete(key)
             unsupportedScripts.push(key)
             continue
           }
@@ -848,16 +837,15 @@ export default defineNuxtModule<ModuleOptions>({
             ? publicScripts[key]
             : undefined
 
-          for (const domain of proxyConfig.domains) {
+          const domains = [
+            ...proxyConfig.domains,
+            ...[entry?.[0], runtimeEntry].flatMap(source => resolveConfiguredProxyDomains(source, proxyConfig)),
+          ]
+          for (const domain of domains) {
             domainPrivacy[domain] = inputPrivacy ?? proxyConfig.privacy
             totalDomains++
-          }
-
-          for (const source of [entry?.[0], runtimeEntry]) {
-            for (const domain of resolveConfiguredProxyDomains(source, proxyConfig)) {
-              domainPrivacy[domain] = inputPrivacy ?? proxyConfig.privacy
-              totalDomains++
-            }
+            if (configKey === 'plausibleAnalytics')
+              plausibleDomains.add(domain)
           }
 
           if (proxyConfig.autoInject && config.registry)
@@ -899,23 +887,34 @@ export default defineNuxtModule<ModuleOptions>({
           aliasOwner.set(alias, domain)
         }
         const aliasToDomain = invertAliasMap(domainAliases)
-        if (proxyConfiguredKeys.includes('googleAnalytics') && !isProxyDisabled('googleAnalytics', config.registry, nuxt.options.runtimeConfig)) {
+        const proxyDomains = Object.keys(domainPrivacy)
+        if (proxyDomains.length > 0) {
+          addServerHandler({
+            route: `${proxyPrefix}/**`,
+            handler: await resolvePath('./runtime/server/proxy-handler'),
+          })
+        }
+        if (proxyConfiguredKeys.has('googleAnalytics')) {
           nuxt.options.runtimeConfig.public['nuxt-scripts'] = defu(
             { proxyEndpoints: { googleAnalytics: aliasProxyValue(`${clientProxyPrefix}/www.google-analytics.com`, clientProxyPrefix, proxyAlias) } },
             nuxt.options.runtimeConfig.public['nuxt-scripts'] as any,
           ) as any
         }
 
-        // Register intercept plugin
-        addPluginTemplate({
-          filename: 'nuxt-scripts-intercept.client.mjs',
-          getContents() { return generateInterceptPluginContents(clientProxyPrefix, { testMode: !!nuxt.options.test, domainAliases }) },
-        })
+        if (proxyDomains.length > 0) {
+          addPluginTemplate({
+            filename: 'nuxt-scripts-intercept.client.mjs',
+            getContents() {
+              return generateInterceptPluginContents(clientProxyPrefix, { testMode: !!nuxt.options.test, domainAliases, domains: proxyDomains })
+            },
+          })
+        }
 
         // Server-side proxy config
         nuxt.options.runtimeConfig['nuxt-scripts-proxy'] = {
           proxyPrefix,
           domainPrivacy,
+          plausibleDomains: [...plausibleDomains],
           aliasToDomain,
           privacy: config.privacy,
         } as any
@@ -935,7 +934,7 @@ export default defineNuxtModule<ModuleOptions>({
         if (partytownScripts.size && hasNuxtModule('@nuxtjs/partytown')) {
           const partytownConfig = (nuxt.options as any).partytown || {}
           if (!partytownConfig.resolveUrl) {
-            partytownConfig.resolveUrl = generatePartytownResolveUrl(clientProxyPrefix, domainAliases, Object.keys(domainPrivacy))
+            partytownConfig.resolveUrl = generatePartytownResolveUrl(clientProxyPrefix, domainAliases, proxyDomains)
             ;(nuxt.options as any).partytown = partytownConfig
             logger.info('[partytown] Auto-configured resolveUrl for proxy')
           }
@@ -944,10 +943,10 @@ export default defineNuxtModule<ModuleOptions>({
           }
         }
       }
-      else if (anyNeedsProxy) {
+      else if (proxyConfiguredKeys.size) {
         logger.warn(
           `[nuxt-scripts] Static output detected (nuxi generate or a static Nitro preset); the scripts proxy requires a server runtime.\n`
-          + `Proxying and its privacy anonymization are disabled for: ${proxyConfiguredKeys.join(', ')}. Scripts still bundle, and their requests go directly to their third-party origins.\n`
+          + `Proxying and its privacy anonymization are disabled for: ${Array.from(proxyConfiguredKeys).join(', ')}. Scripts still bundle, and their requests go directly to their third-party origins.\n`
           + `Deploy the Nuxt server output (nuxt build) to enable proxying.`,
         )
       }
@@ -964,6 +963,7 @@ export default defineNuxtModule<ModuleOptions>({
         scripts: registryScriptsWithImport,
         registryConfig: nuxt.options.runtimeConfig.public.scripts as Record<string, any> | undefined,
         proxyConfigs,
+        proxyConfiguredKeys,
         proxyPrefix: clientProxyPrefix,
         domainAliases,
         partytownScripts,

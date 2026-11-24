@@ -74,6 +74,8 @@ export interface AssetBundlerTransformerOptions {
    * Pre-built proxy configs from setupFirstParty. Empty object if first-party is disabled.
    */
   proxyConfigs?: Record<string, ProxyConfig>
+  /** Registry keys with a build-time proxy opt-in. */
+  proxyConfiguredKeys?: ReadonlySet<string>
   /**
    * Proxy prefix for first-party mode. Used to derive rewrite targets from domains.
    */
@@ -186,7 +188,7 @@ async function downloadScript(opts: {
     // Fathom's neutralize-domain-check).
     if (hasRewrites && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites ?? [], sdkPatches, { skipApiRewrites, neutralizeCanvas })
+      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites ?? [], sdkPatches, { skipApiRewrites, neutralizeCanvas, sourceUrl: src })
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites?.length ?? 0} URL patterns + ${sdkPatches?.length ?? 0} sdk patches in ${filename}`)
     }
@@ -483,7 +485,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     const script = options.scripts?.find(s => s.import.name === fnName)
                     const hasReverseProxy = !!script?.proxy
                     const proxyConfigKey = hasReverseProxy ? (typeof script?.proxy === 'string' ? script.proxy : registryKey) : undefined
-                    const proxyConfig = !firstPartyOptOut && proxyConfigKey
+                    const proxyConfig = !firstPartyOptOut && registryKey && options.proxyConfiguredKeys?.has(registryKey) && proxyConfigKey
                       ? options.proxyConfigs?.[proxyConfigKey]
                       : undefined
                     // Derive rewrites from domains: { from: domain, to: proxyPrefix/domain }

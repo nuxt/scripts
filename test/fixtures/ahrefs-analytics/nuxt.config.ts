@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   scripts: {
     defaultScriptOptions: { trigger: 'onNuxtReady' },
     registry: {
-      ahrefsAnalytics: { key: 'test-ahrefs-key' },
+      ahrefsAnalytics: { key: 'test-ahrefs-key', proxy: true },
     },
   },
   compatibilityDate: '2024-07-05',

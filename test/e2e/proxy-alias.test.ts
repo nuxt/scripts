@@ -32,6 +32,11 @@ describe('proxy path aliases', () => {
     expect(res.status).toBe(403)
   })
 
+  it('rejects collection destinations for integrations without opt-in', async () => {
+    const res = await fetch(url('/_scripts/p/us.i.posthog.com/e/'))
+    expect(res.status).toBe(403)
+  })
+
   it('runs Nitro runtime helpers locally', async () => {
     const result = await $fetch('/api/nitro-runtime')
     expect(result).toEqual({ app: true, cached: 'ok', config: true })

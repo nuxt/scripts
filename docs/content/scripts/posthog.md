@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 
 ## First-Party Proxy
 
-When [first-party mode](/docs/guides/first-party) is active (auto-enabled for scripts that support it), your server automatically proxies PostHog requests. PostHog [recommends a reverse proxy](https://posthog.com/docs/advanced/proxy) for more reliable event capture because ad blockers can reject requests to known analytics domains. Nuxt anonymizes the client IP address to subnet level; other data passes through so features such as session replay and feature flags continue to work.
+Set `proxy: true` to send PostHog requests through your server. The [first-party proxy](/docs/guides/first-party) anonymizes the client IP to subnet level. Session replay and feature flags still receive the data they need. PostHog [recommends a reverse proxy](https://posthog.com/docs/advanced/proxy) to make event capture more reliable when visitors use ad blockers.
 
 The module sets `apiHost` to your server's proxy endpoint:
 
@@ -57,7 +57,7 @@ export default defineNuxtConfig({
     registry: {
       posthog: {
         apiKey: 'YOUR_API_KEY',
-        // apiHost is auto-set to '/_scripts/p/ph' (or '/_scripts/p/ph-eu' for EU region)
+        proxy: true,
       }
     }
   }

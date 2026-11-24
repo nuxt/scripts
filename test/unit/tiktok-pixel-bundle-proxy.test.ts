@@ -112,6 +112,7 @@ describe('bundle transformer preserves visitor-specific loaders', () => {
         renderedScript,
         scripts: [linkedin],
         proxyConfigs,
+        proxyConfiguredKeys: new Set(['linkedinInsight']),
         proxyPrefix: '/_scripts/p',
       },
     )

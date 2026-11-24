@@ -28,13 +28,13 @@ useScriptVercelAnalytics({
 
 ### First-Party Mode
 
-This registry entry enables first-party mode. Nuxt bundles the script locally and proxies intake requests through your server. The proxy anonymizes the client IP to a subnet, but it does not redact event bodies or URLs.
+Nuxt bundles the script locally. Set `proxy: true` to send collection requests through your server. The proxy anonymizes the client IP to subnet level and passes through event bodies and URLs.
 
 ```ts
 export default defineNuxtConfig({
   scripts: {
     registry: {
-      vercelAnalytics: { trigger: 'client' },
+      vercelAnalytics: { trigger: 'client', proxy: true },
     }
   }
 })
