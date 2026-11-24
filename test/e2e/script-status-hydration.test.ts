@@ -74,6 +74,8 @@ describe('script status hydration', { timeout: 120000 }, async () => {
     for (let i = 1; i < sequence.length; i++)
       expect(statuses.indexOf(sequence[i])).toBeGreaterThan(statuses.indexOf(sequence[i - 1]))
     expect(await page.textContent('#status')).toBe(final)
+    if (path === '/server')
+      expect(await page.evaluate(() => (window as Window & { __probeLoaded?: number }).__probeLoaded)).toBe(1)
     await page.close()
   })
 
@@ -98,6 +100,44 @@ describe('script status hydration', { timeout: 120000 }, async () => {
       await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'loaded')
       expect(await page.locator('script[data-cf-beacon]').count()).toBe(1)
       expect(await page.evaluate(() => (window as Window & { __probeLoaded?: number }).__probeLoaded)).toBe(1)
+    }
+    finally {
+      await page.close()
+    }
+  })
+
+  it.each([
+    { trigger: 'client', status: 'loaded' },
+    { trigger: 'server', status: 'loading' },
+  ])('tracks $trigger scripts with inline handlers blocked', async ({ trigger, status }) => {
+    const target = url(`/${trigger}`)
+    const page = await createPage()
+    try {
+      await page.route(target, async (route) => {
+        const response = await route.fetch()
+        await route.fulfill({
+          response,
+          headers: { ...response.headers(), 'content-security-policy': 'script-src-attr \'none\'' },
+        })
+      })
+      // Keep Nuxt's entry pending until the server script has executed.
+      if (trigger === 'server') {
+        await page.route('**/_nuxt/*.js', async (route) => {
+          try {
+            await page.waitForFunction(() => (window as Window & { __probeLoaded?: number }).__probeLoaded, undefined, { timeout: 10000 })
+          }
+          finally {
+            await route.continue()
+          }
+        })
+      }
+      await page.goto(target, { waitUntil: 'hydration' })
+
+      // Unhead 3.5.0 cannot recover the load event when CSP blocks its inline handler.
+      // https://github.com/unjs/unhead/pull/1091
+      await expect.poll(() => page.textContent('#status')).toBe(status)
+      const executions = await page.evaluate(() => (window as Window & { __probeLoaded?: number }).__probeLoaded)
+      expect(executions).toBe(1)
     }
     finally {
       await page.close()
