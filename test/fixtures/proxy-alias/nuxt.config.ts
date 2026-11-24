@@ -21,7 +21,8 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       instagramEmbed: {},
-      plausibleAnalytics: { domain: 'example.com' },
+      plausibleAnalytics: { domain: 'example.com', proxy: true },
+      posthog: {},
     },
     proxy: {
       alias: {

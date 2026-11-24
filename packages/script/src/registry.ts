@@ -8,7 +8,7 @@ import type { PlausibleAnalyticsInput } from './runtime/registry/plausible-analy
 import type { RybbitAnalyticsInput } from './runtime/registry/rybbit-analytics'
 import type { SegmentInput } from './runtime/registry/segment'
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
-import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
+import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities, SdkPatch } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
 import { LOGOS } from './registry-logos'
 import {
@@ -281,6 +281,8 @@ async function defineScript(
 export async function registry(resolve?: (path: string) => Promise<string>): Promise<RegistryScript[]> {
   resolve = resolve || ((s: string) => Promise.resolve(s))
   const def = (key: string, script: RegistryScriptDef) => defineScript(resolve, key, script)
+  const ahrefsPatches = [{ type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' }] satisfies SdkPatch[]
+  const rybbitPatches = [{ type: 'replace-src-split', separator: '/script.js', fromDomain: 'app.rybbit.io', appendPath: 'api' }] satisfies SdkPatch[]
 
   return Promise.all([
     // analytics
@@ -290,11 +292,11 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: 'https://analytics.ahrefs.com/analytics.js',
       category: 'analytics',
       envDefaults: { key: '' },
-      bundle: true,
+      bundle: { sdkPatches: ahrefsPatches },
       proxy: {
         domains: ['analytics.ahrefs.com'],
         privacy: PRIVACY_IP_ONLY,
-        sdkPatches: [{ type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' }],
+        sdkPatches: ahrefsPatches,
       },
     }),
     def('plausibleAnalytics', {
@@ -402,6 +404,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'analytics',
       envDefaults: { siteId: '' },
       bundle: {
+        sdkPatches: rybbitPatches,
         resolve: (options?: RybbitAnalyticsInput) => {
           const host = options?.analyticsHost
           if (host && !host.startsWith('/'))
@@ -413,7 +416,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         domains: ['app.rybbit.io'],
         privacy: PRIVACY_IP_ONLY,
         autoInject: { field: 'analyticsHost', target: 'app.rybbit.io/api' },
-        sdkPatches: [{ type: 'replace-src-split', separator: '/script.js', fromDomain: 'app.rybbit.io', appendPath: 'api' }],
+        sdkPatches: rybbitPatches,
       },
     }),
     def('databuddyAnalytics', {
@@ -872,7 +875,7 @@ export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: 
 /**
  * Resolve the effective capabilities for a script by merging:
  * 1. Derive ceiling from script's bundle/proxy/partytown keys
- * 2. Default = ceiling minus partytown (user must opt-in)
+ * 2. Default to bundling. Proxy and Partytown require opt-in.
  * 3. Apply user overrides from scriptOptions
  * 4. Clamp to ceiling (user can't enable unsupported capabilities)
  * 5. Warn in dev if user tries to exceed ceiling
@@ -882,8 +885,7 @@ export function resolveCapabilities(
   scriptOptions?: Record<string, any>,
 ): ScriptCapabilities {
   const ceiling = getCapabilities(script)
-  // Default: all capabilities enabled except partytown (requires opt-in)
-  const defaults: ScriptCapabilities = { ...ceiling, partytown: false }
+  const defaults: ScriptCapabilities = { ...ceiling, proxy: false, partytown: false }
 
   const resolved: ScriptCapabilities = { ...defaults }
 

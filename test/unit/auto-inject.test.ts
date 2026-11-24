@@ -31,7 +31,7 @@ async function autoInjectAll(registry: any, rt: any, proxyPrefix: string) {
 describe('autoInject via proxy configs', () => {
   describe('object entries', () => {
     it('injects apiHost for posthog config object', async () => {
-      const registry: any = { posthog: { apiKey: 'phc_test' } }
+      const registry: any = { posthog: { apiKey: 'phc_test', proxy: true } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -42,7 +42,7 @@ describe('autoInject via proxy configs', () => {
     })
 
     it('injects endpoint for plausible config object', async () => {
-      const registry: any = { plausibleAnalytics: { domain: 'example.com' } }
+      const registry: any = { plausibleAnalytics: { domain: 'example.com', proxy: true } }
       const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: 'example.com' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -52,7 +52,7 @@ describe('autoInject via proxy configs', () => {
     })
 
     it('does not override existing config field', async () => {
-      const registry: any = { posthog: { apiKey: 'phc_test', apiHost: 'https://custom.host' } }
+      const registry: any = { posthog: { apiKey: 'phc_test', apiHost: 'https://custom.host', proxy: true } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test', apiHost: 'https://custom.host' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -62,7 +62,7 @@ describe('autoInject via proxy configs', () => {
     })
 
     it('uses EU prefix when posthog region is eu', async () => {
-      const registry: any = { posthog: { apiKey: 'phc_test', region: 'eu' } }
+      const registry: any = { posthog: { apiKey: 'phc_test', region: 'eu', proxy: true } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test', region: 'eu' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -73,7 +73,7 @@ describe('autoInject via proxy configs', () => {
 
   describe('array entries', () => {
     it('injects into first element of array entry', async () => {
-      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { partytown: true }] }
+      const registry: any = { posthog: [{ apiKey: 'phc_test' }, { partytown: true, proxy: true }] }
       const rt = makeRuntimeConfig({ posthog: { apiKey: 'phc_test' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
@@ -93,9 +93,19 @@ describe('autoInject via proxy configs', () => {
   })
 
   describe('empty object entries (env var driven)', () => {
-    it('injects into runtimeConfig for posthog: {}', async () => {
+    it('leaves registry and runtime config untouched without an opt-in', async () => {
       const registry: any = { posthog: {} }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
+
+      await autoInjectAll(registry, rt, '/_proxy')
+
+      expect(registry.posthog[0].apiHost).toBeUndefined()
+      expect(rt.public.scripts.posthog.apiHost).toBeUndefined()
+    })
+
+    it('injects into runtimeConfig for a runtime-config opt-in', async () => {
+      const registry: any = { posthog: {} }
+      const rt = makeRuntimeConfig({ posthog: { apiKey: '', proxy: true } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -106,7 +116,7 @@ describe('autoInject via proxy configs', () => {
 
     it('uses EU prefix for posthog: {} when runtime region is eu', async () => {
       const registry: any = { posthog: {} }
-      const rt = makeRuntimeConfig({ posthog: { apiKey: '', region: 'eu' } })
+      const rt = makeRuntimeConfig({ posthog: { apiKey: '', region: 'eu', scriptOptions: { proxy: true } } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -115,7 +125,7 @@ describe('autoInject via proxy configs', () => {
 
     it('injects into runtimeConfig for plausibleAnalytics: {}', async () => {
       const registry: any = { plausibleAnalytics: {} }
-      const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: '' } })
+      const rt = makeRuntimeConfig({ plausibleAnalytics: { domain: '', proxy: true } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -124,7 +134,7 @@ describe('autoInject via proxy configs', () => {
 
     it('injects into runtimeConfig for umamiAnalytics: {}', async () => {
       const registry: any = { umamiAnalytics: {} }
-      const rt = makeRuntimeConfig({ umamiAnalytics: { websiteId: '' } })
+      const rt = makeRuntimeConfig({ umamiAnalytics: { websiteId: '', proxy: true } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -133,7 +143,7 @@ describe('autoInject via proxy configs', () => {
 
     it('injects into runtimeConfig for rybbitAnalytics: {}', async () => {
       const registry: any = { rybbitAnalytics: {} }
-      const rt = makeRuntimeConfig({ rybbitAnalytics: { siteId: '' } })
+      const rt = makeRuntimeConfig({ rybbitAnalytics: { siteId: '', proxy: true } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -142,7 +152,7 @@ describe('autoInject via proxy configs', () => {
 
     it('injects into runtimeConfig for databuddyAnalytics: {}', async () => {
       const registry: any = { databuddyAnalytics: {} }
-      const rt = makeRuntimeConfig({ databuddyAnalytics: { clientId: '' } })
+      const rt = makeRuntimeConfig({ databuddyAnalytics: { clientId: '', proxy: true } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
@@ -151,13 +161,13 @@ describe('autoInject via proxy configs', () => {
   })
 
   describe('mock entries', () => {
-    it('injects into runtimeConfig for posthog: mock', async () => {
+    it('leaves posthog: mock without an injected endpoint', async () => {
       const registry: any = { posthog: 'mock' }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
       await autoInjectAll(registry, rt, '/_proxy')
 
-      expect(rt.public.scripts.posthog.apiHost).toBe('/_proxy/us.i.posthog.com')
+      expect(rt.public.scripts.posthog.apiHost).toBeUndefined()
     })
   })
 
@@ -214,7 +224,7 @@ describe('autoInject via proxy configs', () => {
 
   describe('custom proxyPrefix', () => {
     it('uses custom prefix in computed values', async () => {
-      const registry: any = { posthog: {} }
+      const registry: any = { posthog: { proxy: true } }
       const rt = makeRuntimeConfig({ posthog: { apiKey: '' } })
 
       await autoInjectAll(registry, rt, '/_analytics')
@@ -229,7 +239,7 @@ describe('runtime proxy opt-outs', () => {
     { proxy: false },
     { scriptOptions: { proxy: false } },
   ])('disables collection routing for runtime input %j', (input) => {
-    const registry: any = { googleAnalytics: [{ id: 'G-TEST' }] }
+    const registry: any = { googleAnalytics: [{ id: 'G-TEST' }, { proxy: true }] }
     const runtime = makeRuntimeConfig({ googleAnalytics: input })
     expect(isProxyDisabled('googleAnalytics', registry, runtime)).toBe(true)
   })

@@ -26,6 +26,11 @@ describe('proxy path aliases', () => {
     expect(res.status).toBe(403)
   })
 
+  it('keeps PostHog direct when Plausible opts in', async () => {
+    const html = await $fetch('/')
+    expect(html).toContain('<div id="posthog-host">DIRECT_POSTHOG</div>')
+  })
+
   it('runs Nitro runtime helpers locally', async () => {
     const result = await $fetch('/api/nitro-runtime')
     expect(result).toEqual({ app: true, cached: 'ok', config: true })

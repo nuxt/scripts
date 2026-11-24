@@ -67,7 +67,7 @@ export interface AssetBundlerTransformerOptions {
    */
   registryConfig?: Record<string, any>
   /**
-   * Pre-built proxy configs from setupFirstParty. Empty object if first-party is disabled.
+   * Proxy configs for registry scripts that explicitly enabled proxying.
    */
   proxyConfigs?: Record<string, ProxyConfig>
   /**
@@ -174,7 +174,8 @@ async function downloadScript(opts: {
     // Fathom's neutralize-domain-check).
     if (hasRewrites && res) {
       const content = res.toString('utf-8')
-      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites ?? [], sdkPatches, { skipApiRewrites, neutralizeCanvas })
+      const sourceUrl = src.replace(PROTOCOL_RELATIVE_RE, 'https://')
+      const rewritten = rewriteScriptUrlsAST(content, filename, proxyRewrites ?? [], sdkPatches, { skipApiRewrites, neutralizeCanvas, sourceUrl })
       res = Buffer.from(rewritten, 'utf-8')
       logger.debug(`Rewrote ${proxyRewrites?.length ?? 0} URL patterns + ${sdkPatches?.length ?? 0} sdk patches in ${filename}`)
     }
@@ -465,13 +466,8 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                   }
                   if (canBundle) {
                     const { url: _url, filename } = normalizeScriptData(src, options.assetsBaseURL)
-                    // Get proxy rewrites if first-party is enabled, not opted out, and script supports it
-                    // Use script's proxy alias if defined, otherwise fall back to registry key
-                    const script = options.scripts?.find(s => s.import.name === fnName)
-                    const hasReverseProxy = !!script?.proxy
-                    const proxyConfigKey = hasReverseProxy ? (typeof script?.proxy === 'string' ? script.proxy : registryKey) : undefined
-                    const proxyConfig = !firstPartyOptOut && proxyConfigKey
-                      ? options.proxyConfigs?.[proxyConfigKey]
+                    const proxyConfig = !firstPartyOptOut && registryKey
+                      ? options.proxyConfigs?.[registryKey]
                       : undefined
                     // Derive rewrites from domains: { from: domain, to: proxyPrefix/domain }
                     // Skip wildcard patterns — those exist only for runtime allowlist matching of
@@ -486,7 +482,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                     // sending requests directly to its origin (e.g. Fathom).
                     // When both are defined, proxyConfig.sdkPatches wins — proxy patches
                     // are typically tuned for the rewritten URL set and should take precedence.
-                    const bundleConfig = typeof script?.bundle === 'object' ? script.bundle : undefined
+                    const bundleConfig = typeof registryScript?.bundle === 'object' ? registryScript.bundle : undefined
                     const sdkPatches = proxyConfig?.sdkPatches ?? bundleConfig?.sdkPatches
                     // Skip API rewrites (sendBeacon/fetch/XHR/Image → __nuxtScripts.*) when:
                     // 1. Partytown is active (uses resolveUrl instead), OR

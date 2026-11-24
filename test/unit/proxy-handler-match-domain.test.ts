@@ -22,6 +22,8 @@ describe('matchDomain', () => {
     expect(matchDomain('www.google.com.tw', 'www.google.*')).toBe(true)
     expect(matchDomain('www.google.co.jp', 'www.google.*')).toBe(true)
     expect(matchDomain('www.google.com.hk', 'www.google.*')).toBe(true)
+    expect(matchDomain('www.google.cat', 'www.google.*')).toBe(true)
+    expect(matchDomain('www.google.zz', 'www.google.*')).toBe(false)
   })
 
   it('wildcard does not match a different host root', () => {

@@ -152,6 +152,36 @@ describe('bundle-only sdkPatches integration', () => {
     expect(content).not.toMatch(/new URL\(s\.src\)\.origin/)
   })
 
+  it.each([
+    {
+      key: 'ahrefsAnalytics',
+      name: 'useScriptAhrefsAnalytics',
+      code: 'useScriptAhrefsAnalytics({ key: "k" })',
+      source: ahrefsLike,
+      target: '"https://analytics.ahrefs.com"+"/api/event"',
+    },
+    {
+      key: 'rybbitAnalytics',
+      name: 'useScriptRybbitAnalytics',
+      code: 'useScriptRybbitAnalytics({ siteId: "1", analyticsHost: "https://collector.example.test/analytics" })',
+      source: Buffer.from('var endpoint=document.currentScript.src.split("/script.js")[0]+"/track";'),
+      target: '"https://collector.example.test/analytics"+"/track"',
+    },
+  ])('preserves direct collection in bundled $key without a proxy', async ({ key, name, code, source, target }) => {
+    mockUpstream(source)
+    const renderedScript = new Map()
+    const script = (await registry()).find(script => script.registryKey === key)!
+
+    await runTransform(code, {
+      renderedScript,
+      scripts: [{ ...script, import: { name, from: '' } }] as any,
+      proxyConfigs: {},
+    })
+
+    const content = [...renderedScript.values()][0]?.content.toString('utf-8')
+    expect(content).toContain(target)
+  })
+
   it('applies snapchat config host patches to bundled proxy scripts', async () => {
     mockUpstream(snapchatLike)
     vi.mocked(hash).mockImplementationOnce(() => 'snapchat-script')

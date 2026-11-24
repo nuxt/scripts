@@ -106,7 +106,7 @@ describe('proxy alias - generated runtime code (#814)', () => {
       expect(code).toContain('const domainAliases = Object.assign(Object.create(null), {})')
     })
 
-    it('leaves non-HTTP and same-origin URLs unchanged at runtime', async () => {
+    it('routes only enabled destinations through the client wrapper', async () => {
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
       const defineNuxtPlugin = (plugin: { setup: () => void }) => plugin
       const navigator = { sendBeacon: vi.fn() }
@@ -115,7 +115,10 @@ describe('proxy alias - generated runtime code (#814)', () => {
       const Image = class {}
       const HTMLImageElement = class {}
       const Request = globalThis.Request
-      const generated = generateInterceptPluginContents('/_scripts/p')
+      const generated = generateInterceptPluginContents('/_scripts/p', {
+        domainAliases: ALIASES,
+        proxiedDomains: ['us.i.posthog.com', 'www.google.*'],
+      })
         .replace('import { defineNuxtPlugin } from \'nuxt/app\'\n\n', '')
         .replace('export default ', '')
       const sandbox = {
@@ -140,12 +143,16 @@ describe('proxy alias - generated runtime code (#814)', () => {
         await runtime.fetch('javascript:void(0)')
         await runtime.fetch('https://my-site.test/collect')
         await runtime.fetch('https://constructor/collect')
+        await runtime.fetch('https://us.i.posthog.com/e/')
+        await runtime.fetch('https://www.google.cat/collect')
 
         expect(fetchSpy.mock.calls.map(([url]) => url)).toEqual([
           'data:text/plain,hello',
           'javascript:void(0)',
           'https://my-site.test/collect',
-          'https://my-site.test/_scripts/p/constructor/collect',
+          'https://constructor/collect',
+          'https://my-site.test/_scripts/p/ph/e/',
+          'https://my-site.test/_scripts/p/www.google.cat/collect',
         ])
       }
       finally {

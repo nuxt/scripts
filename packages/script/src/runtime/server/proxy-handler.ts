@@ -5,11 +5,11 @@ import { matchDomain } from './utils/match-domain'
 import { closePublicNetworkDispatcher, createPublicNetworkDispatcher, isPrivateNetworkResolutionError, isPublicNetworkHostname } from './utils/network-host'
 import {
   anonymizeIP,
+  FINGERPRINT_HEADERS,
   mergePrivacy,
   normalizeLanguage,
   normalizeUserAgent,
   resolvePrivacy,
-  SENSITIVE_HEADERS,
   stripPayloadFingerprinting,
 } from './utils/privacy'
 
@@ -18,6 +18,8 @@ interface ProxyConfig {
   proxyPrefix: string
   /** Allowed domains with their privacy config */
   domainPrivacy: Record<string, ProxyPrivacyInput>
+  /** Configured Plausible origins that use Cloudflare's visitor IP header. */
+  plausibleDomains?: string[]
   /** Reverse map of path alias → real third-party domain (when alias paths are enabled) */
   aliasToDomain?: Record<string, string>
   /** Global user override — undefined means use per-script defaults */
@@ -37,7 +39,9 @@ const MAX_UPSTREAM_REDIRECTS = 5
 /** Redirect statuses a fetch follows. Other 3xx responses reach the client unchanged. */
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 /** Fetch request-body-header names, removed when a redirect drops the body. */
-const REQUEST_BODY_HEADERS = ['content-encoding', 'content-language', 'content-length', 'content-location', 'content-type']
+const REQUEST_BODY_HEADERS = ['content-encoding', 'content-type']
+const CACHE_AND_RANGE_REQUEST_HEADERS = new Set(['if-modified-since', 'if-none-match', 'if-range', 'range'])
+const PREFLIGHT_REQUEST_HEADERS = new Set(['access-control-request-headers', 'access-control-request-method'])
 const SKIP_RESPONSE_HEADERS = new Set([
   'alt-svc',
   'clear-site-data',
@@ -59,17 +63,32 @@ const SKIP_RESPONSE_HEADERS = new Set([
   'upgrade',
   'www-authenticate',
 ])
-// Hop-by-hop request headers per RFC 7230 §6.1 — must not be forwarded by a proxy
-export const SKIP_REQUEST_HEADERS = new Set([
-  'connection',
-  'keep-alive',
-  'proxy-authenticate',
-  'proxy-authorization',
-  'te',
-  'trailer',
-  'transfer-encoding',
-  'upgrade',
+// Allow only headers used for assets, collection requests, and privacy settings.
+const FORWARDED_REQUEST_HEADERS = new Set([
+  ...REQUEST_BODY_HEADERS,
+  ...FINGERPRINT_HEADERS,
+  'accept',
+  'cache-control',
+  'dnt',
+  'origin',
+  'pragma',
+  'referer',
+  'sec-ch-ua-arch',
+  'sec-ch-ua-bitness',
+  'sec-ch-ua-model',
+  'sec-ch-ua-platform-version',
+  'sec-fetch-dest',
+  'sec-fetch-mode',
+  'sec-fetch-site',
+  'sec-fetch-user',
+  'sec-gpc',
 ])
+
+/** Load balancers can include a client port in their forwarded address. */
+function stripClientAddressPort(address: string): string {
+  const bracketed = address.match(/^\[([^\]]+)\](?::\d+)?$/)
+  return bracketed?.[1] ?? address.replace(/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/, '$1')
+}
 
 /**
  * Read the raw request body bytes, bounded by MAX_TRANSFORM_BODY_SIZE.
@@ -281,7 +300,7 @@ function resolveProxyRedirect(
     return { ...state, url: nextUrl }
 
   const headers = { ...state.headers }
-  for (const header of REQUEST_BODY_HEADERS)
+  for (const header of [...REQUEST_BODY_HEADERS, ...PREFLIGHT_REQUEST_HEADERS])
     delete headers[header]
   return { url: nextUrl, method: 'GET', body: undefined, headers }
 }
@@ -306,8 +325,8 @@ export default defineEventHandler(async (event) => {
       }
     : () => {}
 
-  // Extract domain and remaining path from: /_scripts/p/<host-or-alias>/<path>
-  const afterPrefix = path.slice(proxyPrefix.length + 1) // +1 for the slash after prefix
+  const queryIndex = path.indexOf('?')
+  const afterPrefix = path.slice(proxyPrefix.length + 1, queryIndex === -1 ? undefined : queryIndex)
   const slashIdx = afterPrefix.indexOf('/')
   const segment = slashIdx > 0 ? afterPrefix.slice(0, slashIdx) : afterPrefix
   const remainingPath = slashIdx > 0 ? afterPrefix.slice(slashIdx) : '/'
@@ -316,9 +335,9 @@ export default defineEventHandler(async (event) => {
   // segment itself so verbatim-hostname paths keep working when aliasing is off.
   // `Object.hasOwn` guard: a crafted segment like `toString`/`constructor` must not
   // resolve to an inherited prototype member (which would break allowlist matching).
-  const domain = aliasToDomain && Object.hasOwn(aliasToDomain, segment) ? aliasToDomain[segment] : segment
+  const requestedDomain = aliasToDomain && Object.hasOwn(aliasToDomain, segment) ? aliasToDomain[segment] : segment
 
-  if (!domain) {
+  if (!requestedDomain) {
     log('[proxy] No domain in path:', path)
     throw createError({
       statusCode: 404,
@@ -327,7 +346,20 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (!isPublicNetworkHostname(domain)) {
+  let targetUrl: URL
+  try {
+    targetUrl = new URL(`https://${requestedDomain}`)
+  }
+  catch (cause) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Domain not allowed',
+      cause,
+    })
+  }
+
+  const domain = targetUrl.hostname
+  if (domain !== requestedDomain.toLowerCase() || !isPublicNetworkHostname(domain)) {
     log('[proxy] Rejected local or non-public target:', domain)
     throw createError({
       statusCode: 403,
@@ -353,8 +385,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const targetBase = `https://${domain}`
-  log('[proxy] Matched:', domain, '->', targetBase)
+  // Set the path and query without changing the approved origin.
+  targetUrl.pathname = remainingPath
+  if (queryIndex !== -1)
+    targetUrl.search = path.slice(queryIndex)
+  log('[proxy] Matched:', domain, '->', targetUrl.origin)
 
   // Resolve effective privacy: per-script is the base, global user override on top
   // Fail-closed: missing domain → full anonymization (most restrictive)
@@ -368,7 +403,7 @@ export default defineEventHandler(async (event) => {
   const contentType = originalHeaders['content-type']?.toLowerCase() || ''
   const compressionParam = (originalQuery.compression as string) || ''
   const method = event.method?.toUpperCase()
-  const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH'
+  const isWriteMethod = method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE'
   const transformableBodyType = contentType.includes('application/x-www-form-urlencoded')
     ? 'form'
     : contentType.includes('json')
@@ -387,22 +422,20 @@ export default defineEventHandler(async (event) => {
     && !hasOpaqueBodyEncoding
     && transformableBodyType !== undefined
 
-  // Build target URL with stripped query params
-  let targetUrl = targetBase + remainingPath
-
   // Strip fingerprinting from query string when any privacy flag is active
   let strippedQueryRecord: Record<string, unknown> | undefined
   if (anyPrivacy) {
     if (Object.keys(originalQuery).length > 0) {
       const { queryString, stripped } = stripQueryFingerprinting(originalQuery, privacy)
       strippedQueryRecord = stripped
-      // Replace query string in URL
-      const basePath = targetUrl.split('?')[0] || targetUrl
-      targetUrl = queryString ? `${basePath}?${queryString}` : basePath
+      targetUrl.search = queryString
     }
   }
 
   const headers: Record<string, string> = {}
+  const methodHeaders = method === 'GET' || method === 'HEAD'
+    ? CACHE_AND_RANGE_REQUEST_HEADERS
+    : method === 'OPTIONS' ? PREFLIGHT_REQUEST_HEADERS : undefined
 
   // Collect additional hop-by-hop headers named in the Connection header value (RFC 7230 §6.1).
   // e.g. `Connection: keep-alive, X-Custom` → also strip `X-Custom`.
@@ -417,40 +450,12 @@ export default defineEventHandler(async (event) => {
       continue
     const lowerKey = key.toLowerCase()
 
-    // host header — fetch derives it from URL, don't forward the first-party host
-    if (lowerKey === 'host')
-      continue
-
-    // Hop-by-hop headers (RFC 7230 §6.1) — never forward
-    if (SKIP_REQUEST_HEADERS.has(lowerKey))
+    if (!FORWARDED_REQUEST_HEADERS.has(lowerKey) && !methodHeaders?.has(lowerKey))
       continue
 
     // Headers listed in the Connection header are also hop-by-hop
     if (connectionNamedHeaders?.has(lowerKey))
       continue
-
-    // SENSITIVE_HEADERS always stripped regardless of privacy flags
-    if (SENSITIVE_HEADERS.includes(lowerKey))
-      continue
-
-    // Skip content-length when body will be modified by privacy transforms.
-    if (lowerKey === 'content-length') {
-      if (shouldTransformBody)
-        continue
-      headers[lowerKey] = value
-      continue
-    }
-
-    // IP-revealing headers — controlled by ip flag
-    if (lowerKey === 'x-forwarded-for' || lowerKey === 'x-real-ip' || lowerKey === 'forwarded'
-      || lowerKey === 'cf-connecting-ip' || lowerKey === 'true-client-ip'
-      || lowerKey === 'x-client-ip' || lowerKey === 'x-cluster-client-ip') {
-      if (privacy.ip)
-        continue // skip — we add anonymized version below
-      // Use lowercase key to avoid duplicate headers with mixed casing
-      headers[lowerKey] = value
-      continue
-    }
 
     // User-Agent — controlled by userAgent flag
     if (lowerKey === 'user-agent') {
@@ -485,38 +490,41 @@ export default defineEventHandler(async (event) => {
     headers[key] = value
   }
 
-  // IP handling: only set x-forwarded-for if not already copied from the header loop
-  if (!headers['x-forwarded-for']) {
-    const clientIP = getRequestIP(event, { xForwardedFor: true })
-    if (clientIP) {
-      if (privacy.ip) {
-        headers['x-forwarded-for'] = anonymizeIP(clientIP)
-      }
-      else {
-        headers['x-forwarded-for'] = clientIP
-      }
-    }
-  }
-  else if (privacy.ip) {
-    // Anonymize each IP in the existing chain
-    headers['x-forwarded-for'] = headers['x-forwarded-for']
-      .split(',')
-      .map(ip => anonymizeIP(ip.trim()))
-      .join(', ')
-  }
+  const platform = event.context._platform
+  const runtime = 'runtime' in event.req ? event.req.runtime : undefined
+  const isCloudflare = (runtime !== null && typeof runtime === 'object' && 'name' in runtime && runtime.name === 'cloudflare')
+    || globalThis.navigator?.userAgent === 'Cloudflare-Workers'
+    || Boolean(event.context.cloudflare)
+    || (platform !== null && typeof platform === 'object' && Object.hasOwn(platform, 'cloudflare'))
+  const cloudflareIP = isCloudflare && !connectionNamedHeaders?.has('cf-connecting-ip')
+    ? originalHeaders['cf-connecting-ip']
+    : undefined
+  const clientIP = cloudflareIP || getRequestIP(event, { xForwardedFor: !connectionNamedHeaders?.has('x-forwarded-for') })
+  const clientAddress = clientIP && stripClientAddressPort(clientIP)
+  const forwardedIP = clientAddress && (privacy.ip ? anonymizeIP(clientAddress) : clientAddress)
+  if (forwardedIP)
+    headers['x-forwarded-for'] = forwardedIP
+
+  // Plausible prefers the Cloudflare visitor IP. Keep the same privacy treatment
+  // on both headers and only send it to the original Plausible collection host.
+  const plausibleCloudflareIP = cloudflareIP && forwardedIP && proxyConfig.plausibleDomains?.includes(domain)
+    ? forwardedIP
+    : undefined
+  const getUpstreamHeaders = (upstream: URL, method: string, headers: Record<string, string>) =>
+    plausibleCloudflareIP && method === 'POST' && upstream.hostname === domain
+      ? { ...headers, 'cf-connecting-ip': plausibleCloudflareIP }
+      : headers
 
   // GA4 geolocates by the connecting IP (this server) and ignores X-Forwarded-For.
   // `_uip` carries the same, possibly anonymized, client IP as the header instead.
   // With IP privacy on, a client-supplied `_uip` is replaced so it cannot bypass anonymization.
-  const isGaCollect = GA_COLLECT_HOST_RE.test(domain) && GA_COLLECT_PATH_RE.test(remainingPath.split('?')[0] || '')
+  const isGaCollect = GA_COLLECT_HOST_RE.test(domain) && GA_COLLECT_PATH_RE.test(remainingPath)
   if (isGaCollect && (privacy.ip || originalQuery._uip === undefined)) {
     const userIP = headers['x-forwarded-for']?.split(',')[0]?.trim()
-    const queryIdx = targetUrl.indexOf('?')
-    const base = queryIdx === -1 ? targetUrl : targetUrl.slice(0, queryIdx)
-    const params = queryIdx === -1 ? [] : targetUrl.slice(queryIdx + 1).split('&').filter(p => p && p !== '_uip' && !p.startsWith('_uip='))
+    const params = targetUrl.search.slice(1).split('&').filter(p => p && p !== '_uip' && !p.startsWith('_uip='))
     if (userIP)
       params.push(`_uip=${encodeURIComponent(userIP)}`)
-    targetUrl = params.length ? `${base}?${params.join('&')}` : base
+    targetUrl.search = params.join('&')
   }
 
   // Process request body: buffer the raw bytes once so privacy transforms can
@@ -607,7 +615,7 @@ export default defineEventHandler(async (event) => {
   await (nitro.hooks?.callHook as ((name: string, ctx: any) => Promise<void>) | undefined)?.('nuxt-scripts:proxy', {
     timestamp: Date.now(),
     path: event.path,
-    targetUrl,
+    targetUrl: targetUrl.href,
     method: method || 'GET',
     privacy,
     passthroughBody,
@@ -617,14 +625,14 @@ export default defineEventHandler(async (event) => {
       body: passthroughBody ? '<passthrough>' : (rawBody ?? null),
     },
     stripped: {
-      headers,
+      headers: getUpstreamHeaders(targetUrl, method || 'GET', headers),
       query: strippedQueryRecord ?? originalQuery,
       body: passthroughBody ? '<passthrough>' : (body ?? null),
     },
   })
 
   // Make the proxied request
-  log('[proxy] Fetching:', targetUrl)
+  log('[proxy] Fetching:', targetUrl.href)
 
   const controller = new AbortController()
   let timedOut = false
@@ -660,7 +668,7 @@ export default defineEventHandler(async (event) => {
   try {
     network = await createPublicNetworkDispatcher()
     let state: ProxyRedirectState = {
-      url: new URL(targetUrl),
+      url: targetUrl,
       method: method || 'GET',
       body: fetchBody,
       headers,
@@ -670,7 +678,7 @@ export default defineEventHandler(async (event) => {
       try {
         hop = await network.fetch(state.url.toString(), {
           method: state.method,
-          headers: state.headers,
+          headers: getUpstreamHeaders(state.url, state.method, state.headers),
           body: state.body,
           credentials: 'omit', // Don't send cookies to third parties
           signal: controller.signal,

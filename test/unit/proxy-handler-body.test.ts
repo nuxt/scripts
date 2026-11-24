@@ -224,6 +224,18 @@ describe('proxy handler request bodies (#836)', () => {
     }
   })
 
+  it('preserves the sanitized payload of a DELETE request', async () => {
+    const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/items`, {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ item: 'example', sr: '2560x1440' }),
+    })
+
+    expect(response.status).toBe(200)
+    expect(capturedMethod).toBe('DELETE')
+    expect(capturedBody.toString()).toBe(JSON.stringify({ item: 'example', sr: '1920x1080' }))
+  })
+
   it.each([
     ['string', '"value"'],
     ['number', '42'],
