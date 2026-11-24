@@ -94,7 +94,7 @@ export type {
 
 const UPPER_RE = /([A-Z])/g
 const toScreamingSnake = (s: string) => s.replace(UPPER_RE, '_$1').toUpperCase()
-const UNHEAD_VERSION_RANGE = '^3.4.2'
+const UNHEAD_VERSION_RANGE = '^3.5.0'
 
 function readInstalledPackageVersion(name: string): string | undefined {
   let packagePath: string | undefined
@@ -382,7 +382,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: '@nuxt/scripts',
     configKey: 'scripts',
     compatibility: {
-      nuxt: '^4.6.0 || ^5.0.0-0',
+      nuxt: '^4.7.0 || ^5.0.0-0',
     },
   },
   defaults: {

@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest'
 import { setupFixture } from '../utils/setup-fixture'
 
 const { resolve } = createResolver(import.meta.url)
-const unhead35 = process.env.NUXT_SCRIPTS_TEST_UNHEAD === '3.5.0'
 
 /**
  * A page that renders `{{ status }}` must hydrate without a mismatch for every
@@ -75,7 +74,7 @@ describe('script status hydration', { timeout: 120000 }, async () => {
     for (let i = 1; i < sequence.length; i++)
       expect(statuses.indexOf(sequence[i])).toBeGreaterThan(statuses.indexOf(sequence[i - 1]))
     expect(await page.textContent('#status')).toBe(final)
-    if (path === '/server' && unhead35)
+    if (path === '/server')
       expect(await page.evaluate(() => (window as Window & { __probeLoaded?: number }).__probeLoaded)).toBe(1)
     await page.close()
   })
@@ -109,7 +108,7 @@ describe('script status hydration', { timeout: 120000 }, async () => {
 
   it.each([
     { trigger: 'client', status: 'loaded' },
-    { trigger: 'server', status: unhead35 ? 'loading' : 'loaded' },
+    { trigger: 'server', status: 'loading' },
   ])('tracks $trigger scripts with inline handlers blocked', async ({ trigger, status }) => {
     const target = url(`/${trigger}`)
     const page = await createPage()
@@ -138,10 +137,7 @@ describe('script status hydration', { timeout: 120000 }, async () => {
       // https://github.com/unjs/unhead/pull/1091
       await expect.poll(() => page.textContent('#status')).toBe(status)
       const executions = await page.evaluate(() => (window as Window & { __probeLoaded?: number }).__probeLoaded)
-      if (trigger === 'client' || unhead35)
-        expect(executions).toBe(1)
-      else
-        expect(executions).toBeGreaterThan(0)
+      expect(executions).toBe(1)
     }
     finally {
       await page.close()

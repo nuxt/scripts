@@ -5,8 +5,7 @@ description: Loads and controls third-party scripts in Nuxt with @nuxt/scripts v
 
 # @nuxt/scripts
 
-Tested against `@nuxt/scripts` 2.0.0-beta.14 (npm `beta`) with Nuxt 4.6.0.
-v2 needs Nuxt `^4.6.0 || ^5.0.0`, `@unhead/vue` and `unhead` `^3.4.2`, and Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`.
+v2 needs Nuxt `^4.7.0 || ^5.0.0`, `@unhead/vue` and `unhead` `^3.5.0`, and Node.js `^22.22.3 || ^24.15.0 || >=26.0.0`.
 Composables and components are auto-imported. The examples import from `#imports` only to stay complete modules. Paths assume the Nuxt 4 `app/` source directory.
 
 ## Setup
