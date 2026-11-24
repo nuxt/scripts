@@ -565,6 +565,7 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                       else {
                       // Handle case where we need to add scriptInput (registry scripts)
                         const integrityProps = integrityHash ? `, integrity: '${integrityHash}', crossorigin: 'anonymous'` : ''
+                        const bundledSrcProperty = nuxt.options.dev ? `_bundledSrc: '${url}', ` : ''
                         if (node.arguments[0]) {
                         // There's at least one argument
                           const optionsNode = node.arguments[0]
@@ -585,17 +586,20 @@ export function NuxtScriptBundleTransformer(options: AssetBundlerTransformerOpti
                                   s.appendLeft(scriptInput.end - 1, integrityProps)
                               }
                               else {
-                                s.appendRight(scriptInput.end - 1, `, src: '${url}'${integrityProps}`)
+                                const lastProperty = scriptInput.properties.at(-1)
+                                s.appendRight(lastProperty?.end ?? scriptInput.start + 1, `${lastProperty ? ', ' : ''}src: '${url}'${integrityProps}`)
+                                if (bundledSrcProperty)
+                                  s.appendRight(optionsNode.start + 1, bundledSrcProperty)
                               }
                             }
                           }
                           else {
-                            s.appendRight(node.arguments[0].start + 1, ` scriptInput: { src: '${url}'${integrityProps} }, `)
+                            s.appendRight(optionsNode.start + 1, ` ${bundledSrcProperty}scriptInput: { src: '${url}'${integrityProps} }, `)
                           }
                         }
                         else {
                         // No arguments at all, replace empty () with new argument
-                          s.overwrite(node.callee.end, node.end, `({ scriptInput: { src: '${url}'${integrityProps} } })`)
+                          s.overwrite(node.callee.end, node.end, `({ ${bundledSrcProperty}scriptInput: { src: '${url}'${integrityProps} } })`)
                         }
                       }
                     })
