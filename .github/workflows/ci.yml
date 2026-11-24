@@ -191,3 +191,39 @@ jobs:
 
       - name: Run Nitro 3 compatibility tests
         run: pnpm vitest run --project e2e test/e2e/proxy-alias.test.ts
+
+  unhead-3-5:
+    name: Unhead 3.5.0 compatibility
+    runs-on: ubuntu-24.04-arm
+    env:
+      NUXT_SCRIPTS_TEST_UNHEAD: 3.5.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install Unhead
+        run: |
+          node scripts/set-unhead-test-version.ts "$NUXT_SCRIPTS_TEST_UNHEAD"
+          pnpm install --no-frozen-lockfile
+
+      - name: Dev prepare
+        run: pnpm dev:prepare
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright-core install chromium
+
+      - name: Run compatibility tests
+        run: |
+          pnpm vitest run --project typecheck --project unit --project nuxt-runtime
+          pnpm vitest run --project e2e test/e2e/script-status-hydration.test.ts
