@@ -1,18 +1,18 @@
 minimumReleaseAgeExcludePrune: true
 minimumReleaseAgeExclude:
   - '@types/jest-image-snapshot@6.4.2'
-  - '@nuxt/cli@4.0.0'
-  - '@nuxt/kit@4.6.0'
-  - '@nuxt/nitro-server@4.6.0'
-  - '@nuxt/schema@4.6.0'
-  - '@nuxt/vite-builder@4.6.0'
-  - '@nuxt/vite-server@4.6.0'
-  - nuxt@4.6.0
+  - '@nuxt/kit@4.6.0 || 4.7.0'
+  - '@nuxt/nitro-server@4.7.0'
+  - '@nuxt/schema@4.6.0 || 4.7.0'
+  - '@nuxt/vite-builder@4.7.0'
+  - '@nuxt/vite-server@4.7.0'
+  - nuxt@4.7.0
   - '@paypal/paypal-js@11.2.1'
   - '@posthog/core@1.56.1'
   - '@posthog/types@1.414.0'
   - posthog-js@1.437.0
-  - vite@8.3.3
+  - '@nuxt/nitro-v3-server@4.7.0'
+  - nitropack@2.14.0
 
 trustPolicy: no-downgrade
 trustPolicyIgnoreAfter: 262800
@@ -29,10 +29,10 @@ packages:
 
 overrides:
   '@nuxt/scripts': 'workspace:*'
-  '@unhead/bundler@>=3': 3.4.2
-  '@unhead/vue@>=3': 3.4.2
+  '@unhead/bundler@>=3': 3.5.0
+  '@unhead/vue@>=3': 3.5.0
   cssnano@^9.2.2: 8.0.10
-  unhead@>=3: 3.4.2
+  unhead@>=3: 3.5.0
   vitest-environment-nuxt: 2.0.0
 
 allowBuilds:
@@ -48,7 +48,7 @@ catalog:
   '@googlemaps/markerclusterer': ^2.6.2
   '@nuxt/devtools-kit': ^3.4.2
   '@nuxt/fonts': ^0.14.0
-  '@nuxt/kit': ^4.6.0
+  '@nuxt/kit': ^4.7.0
   '@nuxt/module-builder': ^1.0.3
   '@nuxt/test-utils': ^4.3.3
   '@nuxt/ui': ^4.11.3
@@ -66,7 +66,7 @@ catalog:
   '@types/semver': ^7.8.0
   '@types/youtube': ^0.3.0
   '@typescript/native': npm:typescript@7.0.2
-  '@unhead/vue': ^3.4.2
+  '@unhead/vue': ^3.5.0
   '@vimeo/player': ^2.30.4
   '@vue/test-utils': ^2.5.1
   '@vueuse/core': ^15.0.0
@@ -85,7 +85,7 @@ catalog:
   magicast: ^0.5.5
   maplibre-gl: ^6.12.0
   miniflare: ^4.20260730.0
-  nuxt: ^4.6.0
+  nuxt: ^4.7.0
   ofetch: ^1.5.1
   ohash: ^2.0.12
   oxc-walker: ^1.1.1
@@ -101,12 +101,12 @@ catalog:
   ufo: ^1.6.4
   ultrahtml: ^1.7.0
   unbuild: ^3.6.1
-  unhead: ^3.4.2
+  unhead: ^3.5.0
   unimport: ^7.0.2
   unplugin: ^3.4.0
   unstorage: ^1.17.5
   valibot: ^1.5.0
-  vite: ^8.3.3
+  vite: ^8.3.8
   vitest: ^5.0.3
-  vue: ^3.5.43
+  vue: ^3.5.46
   vue-tsc: ^3.3.12

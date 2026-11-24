@@ -15,9 +15,11 @@ vi.mock('#nuxt-scripts/nitro', () => ({
       proxyPrefix: '/_scripts/p',
       domainPrivacy: {
         'analytics.internal.example.com': false,
+        'invalid host.example.com': false,
       },
       aliasToDomain: {
         a1b2c3d4: 'analytics.internal.example.com',
+        invalid: 'invalid host.example.com',
       },
       privacy: false,
       debug: false,
@@ -96,6 +98,12 @@ describe('proxy handler - path aliases (#814)', () => {
     expect(lastTargetUrl).toBe('https://analytics.internal.example.com/api/send?x=1')
   })
 
+  it('preserves the query on an aliased request to the upstream root', async () => {
+    const res = await get('/_scripts/p/a1b2c3d4?folder=a%2Fb&tag=one&tag=two')
+    expect(res.status).toBe(200)
+    expect(lastTargetUrl).toBe('https://analytics.internal.example.com/?folder=a%2Fb&tag=one&tag=two')
+  })
+
   it('still accepts verbatim-hostname paths (alias is opt-in per request)', async () => {
     const res = await get('/_scripts/p/analytics.internal.example.com/api/send')
     expect(res.status).toBe(200)
@@ -105,6 +113,12 @@ describe('proxy handler - path aliases (#814)', () => {
   it('rejects an unknown alias segment that is not in the allowlist', async () => {
     const res = await get('/_scripts/p/deadbeef/api/send')
     expect(res.status).toBe(403)
+  })
+
+  it('rejects an alias with an invalid upstream hostname before fetching', async () => {
+    const res = await get('/_scripts/p/invalid/api/send')
+    expect(res.status).toBe(403)
+    expect(lastTargetUrl).toBe('')
   })
 
   it('rejects a crafted segment matching a prototype member (no 500)', async () => {

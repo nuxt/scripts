@@ -23,8 +23,29 @@ describe('applyAutoInject', () => {
     return config
   }
 
-  it('sets configField on the input object', () => {
+  it('leaves collection direct until the integration opts in', () => {
     const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }])
+    const runtimeConfig = makeRuntimeConfig()
+    applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
+    expect((registry as any).posthog[0].apiHost).toBeUndefined()
+  })
+
+  it('uses an explicit integration opt-in in public runtime config', () => {
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }])
+    const runtimeConfig = makeRuntimeConfig('posthog', { apiKey: 'pk_123', scriptOptions: { proxy: true } })
+    applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
+    expect((registry as any).posthog[0].apiHost).toBe('/_proxy/us.i.posthog.com')
+  })
+
+  it('respects a runtime opt-out when the registry opts in', () => {
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { proxy: true }])
+    const runtimeConfig = makeRuntimeConfig('posthog', { proxy: false })
+    applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
+    expect((registry as any).posthog[0].apiHost).toBeUndefined()
+  })
+
+  it('sets configField on the input object', () => {
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { proxy: true }])
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     const entry = (registry as any).posthog
@@ -32,7 +53,7 @@ describe('applyAutoInject', () => {
   })
 
   it('uses EU region from config', () => {
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123', region: 'eu' }])
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123', region: 'eu' }, { proxy: true }])
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBe('/_proxy/eu.i.posthog.com')
@@ -46,7 +67,7 @@ describe('applyAutoInject', () => {
   })
 
   it('skips when configField already has a value', () => {
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123', apiHost: 'https://custom.host' }])
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123', apiHost: 'https://custom.host' }, { proxy: true }])
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBe('https://custom.host')
@@ -68,7 +89,7 @@ describe('applyAutoInject', () => {
 
   it('propagates to runtimeConfig when it is a separate object', () => {
     const rtEntry = { apiKey: 'pk_123' }
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }])
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { proxy: true }])
     const runtimeConfig = makeRuntimeConfig('posthog', rtEntry)
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     expect(rtEntry.apiHost).toBe('/_proxy/us.i.posthog.com')
@@ -76,14 +97,14 @@ describe('applyAutoInject', () => {
 
   it('reads region from runtimeConfig entry (env var resolved values)', () => {
     const rtEntry = { apiKey: 'pk_123', region: 'eu' }
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }])
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { proxy: true }])
     const runtimeConfig = makeRuntimeConfig('posthog', rtEntry)
     applyAutoInject(registry, runtimeConfig, '/_proxy', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBe('/_proxy/eu.i.posthog.com')
   })
 
   it('uses custom proxyPrefix', () => {
-    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }])
+    const registry = makeRegistry('posthog', [{ apiKey: 'pk_123' }, { proxy: true }])
     const runtimeConfig = makeRuntimeConfig()
     applyAutoInject(registry, runtimeConfig, '/_analytics', 'posthog', posthogAutoInject)
     expect((registry as any).posthog[0].apiHost).toBe('/_analytics/us.i.posthog.com')

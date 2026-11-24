@@ -5,6 +5,7 @@
 // on proxyRewrites.length, so bundle-only patches were silently dropped while
 // direct unit tests of rewriteScriptUrlsAST still passed.
 import type { AssetBundlerTransformerOptions } from '../../packages/script/src/plugins/transform'
+import { runInNewContext } from 'node:vm'
 import { hash } from 'ohash'
 import { describe, expect, it, vi } from 'vitest'
 import { NuxtScriptBundleTransformer } from '../../packages/script/src/plugins/transform'
@@ -131,6 +132,7 @@ describe('bundle-only sdkPatches integration', () => {
           } as any,
         },
         proxyPrefix: '/_scripts/p',
+        proxyConfiguredKeys: new Set(['ahrefsAnalytics']),
       },
     )
 
@@ -171,6 +173,7 @@ describe('bundle-only sdkPatches integration', () => {
           snapchatPixel: proxyConfigs.snapchatPixel,
         },
         proxyPrefix: '/_scripts/p',
+        proxyConfiguredKeys: new Set(['snapchatPixel']),
       },
     )
 
@@ -181,6 +184,40 @@ describe('bundle-only sdkPatches integration', () => {
     expect(content).toContain('qr(self.location.origin+"/_scripts/p/tr.snapchat.com"+i)')
     expect(content).not.toContain('new URL(S).host')
     expect(content).not.toContain('v+xe+i:De(i)')
+  })
+
+  it.each([
+    {
+      composable: 'useScriptAhrefsAnalytics({ key: "test" })',
+      sdk: 'globalThis.endpoint = new URL(document.currentScript.src).origin + "/api/event"',
+      endpoint: 'https://analytics.ahrefs.com/api/event',
+    },
+    {
+      composable: 'useScriptRybbitAnalytics({ siteId: "test", analyticsHost: "https://stats.example.test/custom" })',
+      sdk: 'globalThis.endpoint = document.currentScript.src.split("/script.js")[0] + "/track"',
+      endpoint: 'https://stats.example.test/custom/track',
+    },
+  ])('keeps the direct collection endpoint for $composable', async ({ composable, sdk, endpoint }) => {
+    mockUpstream(Buffer.from(sdk))
+    const renderedScript = new Map()
+    const scripts = await registry()
+
+    await runTransform(composable, {
+      renderedScript,
+      scripts,
+      proxyConfigs: buildProxyConfigsFromRegistry(scripts),
+      proxyPrefix: '/_scripts/p',
+    })
+
+    const stored = [...renderedScript.values()][0]
+    expect(stored, 'bundle was not stored').toBeDefined()
+    const globals = {
+      URL,
+      document: { currentScript: { src: 'https://site.example.test/_scripts/assets/vendor.js' } },
+      endpoint: '',
+    }
+    runInNewContext((stored.content as Buffer).toString('utf-8'), globals)
+    expect(globals.endpoint).toBe(endpoint)
   })
 
   it('leaves bundles untouched when no patches are configured', async () => {

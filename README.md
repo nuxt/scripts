@@ -38,7 +38,7 @@ have better privacy and be better DX overall.
 
 ## 🚀 Quick Start
 
-Nuxt Scripts 2 requires Nuxt `^4.6.0 || ^5.0.0`.
+Nuxt Scripts 2 requires Nuxt `^4.7.0 || ^5.0.0` and Unhead `^3.5.0`.
 See the [installation guide](https://scripts.nuxt.com/docs/getting-started/installation) for all requirements and upgrade steps.
 
 In your Nuxt project, run:

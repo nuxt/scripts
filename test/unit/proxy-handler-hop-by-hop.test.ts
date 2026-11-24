@@ -19,8 +19,10 @@ vi.mock('#nuxt-scripts/nitro', () => ({
       proxyPrefix: '/_scripts/p',
       domainPrivacy: {
         'upstream.test': false,
+        'plausible.test': false,
+        'private-plausible.test': true,
       },
-      privacy: false,
+      plausibleDomains: ['plausible.test', 'private-plausible.test'],
       debug: false,
     },
   }),
@@ -43,7 +45,6 @@ vi.mock('../../packages/script/src/runtime/server/utils/network-host', async (im
 describe('proxy handler - hop-by-hop request headers (#791)', () => {
   let proxyServer: Server
   let proxyPort: number
-  let SKIP_REQUEST_HEADERS: Set<string>
 
   // Intercept the fetch call inside the handler so we can inspect the headers
   // that would actually be forwarded upstream (before the Node http client
@@ -52,6 +53,7 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
   let upstreamServer: Server
   let upstreamPort: number
   let realFetch: typeof globalThis.fetch
+  let cloudflare: 'nitro' | 'srvx' | false = false
 
   beforeAll(async () => {
     upstreamServer = createServer((_req, res) => {
@@ -65,10 +67,12 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
     globalThis.fetch = async (input: any, init?: any) => {
       const reqUrl = typeof input === 'string' ? input : input.url
       const url = new URL(reqUrl)
-      if (url.hostname === 'upstream.test') {
+      if (['upstream.test', 'plausible.test', 'private-plausible.test'].includes(url.hostname)) {
         // Capture the headers the proxy intended to forward
         const hdrs = (init?.headers ?? {}) as Record<string, string>
         lastForwardedHeaders = { ...hdrs }
+        if (url.pathname === '/redirect')
+          return new Response(null, { status: 307, headers: { location: 'https://upstream.test/collect' } })
         const redirected = `http://127.0.0.1:${upstreamPort}${url.pathname}${url.search}`
         return realFetch(redirected, { ...init, headers: {} })
       }
@@ -76,9 +80,14 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
     }
 
     const mod = await import('../../packages/script/src/runtime/server/proxy-handler')
-    SKIP_REQUEST_HEADERS = mod.SKIP_REQUEST_HEADERS
 
     const app = createApp()
+    app.use((event) => {
+      if (cloudflare === 'nitro')
+        Object.assign(event.context, { _platform: { cloudflare: {} } })
+      if (cloudflare === 'srvx')
+        Object.defineProperty(event.req, 'runtime', { value: { name: 'cloudflare' } })
+    })
     app.use(mod.default)
     proxyServer = createServer(toNodeListener(app))
     await new Promise<void>(resolve => proxyServer.listen(0, resolve))
@@ -87,6 +96,7 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
 
   beforeEach(() => {
     lastForwardedHeaders = {}
+    cloudflare = false
   })
 
   afterAll(() => {
@@ -96,30 +106,14 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
     proxyServer?.close()
   })
 
-  it('exports SKIP_REQUEST_HEADERS containing all RFC 7230 §6.1 hop-by-hop headers', () => {
-    expect(SKIP_REQUEST_HEADERS).toBeInstanceOf(Set)
-    for (const h of [
-      'connection',
-      'keep-alive',
-      'proxy-authenticate',
-      'proxy-authorization',
-      'te',
-      'trailer',
-      'transfer-encoding',
-      'upgrade',
-    ]) {
-      expect(SKIP_REQUEST_HEADERS.has(h)).toBe(true)
-    }
-  })
-
   // Use raw http.request because undici (global fetch) rejects forbidden hop-by-hop request headers.
-  function rawGet(headers: Record<string, string>) {
+  function proxyRequest(headers: Record<string, string>, method = 'GET', upstream = 'upstream.test/collect') {
     return new Promise<void>((resolve, reject) => {
       const req = httpRequest({
         host: '127.0.0.1',
         port: proxyPort,
-        path: '/_scripts/p/upstream.test/collect',
-        method: 'GET',
+        path: `/_scripts/p/${upstream}`,
+        method,
         headers,
       }, (res) => {
         res.resume()
@@ -130,13 +124,88 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
     })
   }
 
+  it('forwards only supported request headers', async () => {
+    await proxyRequest({
+      'x-vercel-oidc-token': 'test-token',
+      'x-platform-internal': 'platform metadata',
+      'authorization': 'Bearer app-credential',
+      'cookie': 'session=local',
+      'accept': 'application/json',
+      'origin': 'https://website.test',
+      'sec-fetch-mode': 'cors',
+    })
+
+    expect(lastForwardedHeaders['x-vercel-oidc-token']).toBeUndefined()
+    expect(lastForwardedHeaders['x-platform-internal']).toBeUndefined()
+    expect(lastForwardedHeaders.authorization).toBeUndefined()
+    expect(lastForwardedHeaders.cookie).toBeUndefined()
+    expect(lastForwardedHeaders.accept).toBe('application/json')
+    expect(lastForwardedHeaders.origin).toBe('https://website.test')
+    expect(lastForwardedHeaders['sec-fetch-mode']).toBe('cors')
+  })
+
+  it.each([
+    { method: 'GET', range: 'bytes=0-20', preflight: undefined },
+    { method: 'HEAD', range: 'bytes=0-20', preflight: undefined },
+    { method: 'POST', range: undefined, preflight: undefined },
+    { method: 'OPTIONS', range: undefined, preflight: 'POST' },
+  ])('forwards headers for the $method request', async ({ method, range, preflight }) => {
+    await proxyRequest({
+      'access-control-request-method': 'POST',
+      'content-language': 'en',
+      'content-location': 'https://website.test/event',
+      'cache-control': 'no-cache',
+      'if-none-match': '"version"',
+      'range': 'bytes=0-20',
+    }, method)
+
+    expect(lastForwardedHeaders.range).toBe(range)
+    expect(lastForwardedHeaders['if-none-match']).toBe(range ? '"version"' : undefined)
+    expect(lastForwardedHeaders['access-control-request-method']).toBe(preflight)
+    expect(lastForwardedHeaders['content-length']).toBeUndefined()
+    expect(lastForwardedHeaders['content-language']).toBeUndefined()
+    expect(lastForwardedHeaders['content-location']).toBeUndefined()
+    expect(lastForwardedHeaders['cache-control']).toBe('no-cache')
+  })
+
+  it('forwards one visitor address instead of copying IP headers', async () => {
+    await proxyRequest({
+      'forwarded': 'for=198.51.100.23;host=website.test',
+      'x-forwarded-for': '198.51.100.23, 198.51.100.24',
+      'x-real-ip': '198.51.100.23',
+      'cf-connecting-ip': '198.51.100.23',
+      'true-client-ip': '198.51.100.23',
+    })
+
+    expect(lastForwardedHeaders['x-forwarded-for']).toBe('198.51.100.23')
+    expect(lastForwardedHeaders.forwarded).toBeUndefined()
+    expect(lastForwardedHeaders['x-real-ip']).toBeUndefined()
+    expect(lastForwardedHeaders['cf-connecting-ip']).toBeUndefined()
+    expect(lastForwardedHeaders['true-client-ip']).toBeUndefined()
+  })
+
+  it.each([
+    { upstream: 'plausible.test/collect', cloudflareRequest: 'nitro', expected: '198.51.100.23' },
+    { upstream: 'plausible.test/collect', cloudflareRequest: 'srvx', expected: '198.51.100.23' },
+    { upstream: 'private-plausible.test/collect', cloudflareRequest: 'nitro', expected: '198.51.100.0' },
+    { upstream: 'plausible.test/collect', cloudflareRequest: false, expected: undefined },
+    { upstream: 'upstream.test/collect', cloudflareRequest: 'nitro', expected: undefined },
+    { upstream: 'plausible.test/redirect', cloudflareRequest: 'nitro', expected: undefined },
+  ] as const)('scopes the Cloudflare visitor address for $upstream (Cloudflare $cloudflareRequest)', async ({ upstream, cloudflareRequest, expected }) => {
+    cloudflare = cloudflareRequest
+    await proxyRequest({ 'cf-connecting-ip': '198.51.100.23' }, 'POST', upstream)
+
+    expect(lastForwardedHeaders['cf-connecting-ip']).toBe(expected)
+  })
+
   it('strips hop-by-hop request headers before forwarding upstream', async () => {
-    await rawGet({
-      'connection': 'keep-alive, X-Custom-Hop',
+    await proxyRequest({
+      'connection': 'keep-alive, Accept-Language, X-Forwarded-For',
       'keep-alive': 'timeout=5',
       'proxy-authorization': 'Bearer secret',
       'te': 'trailers',
-      'x-custom-hop': 'should-not-forward',
+      'accept-language': 'en-US',
+      'x-forwarded-for': '198.51.100.17',
       'accept': 'application/json',
       'user-agent': 'test-agent',
     })
@@ -145,7 +214,8 @@ describe('proxy handler - hop-by-hop request headers (#791)', () => {
       expect(lastForwardedHeaders[h], `hop-by-hop "${h}" should not be forwarded`).toBeUndefined()
     }
     // Header named in Connection header is stripped too
-    expect(lastForwardedHeaders['x-custom-hop']).toBeUndefined()
+    expect(lastForwardedHeaders['accept-language']).toBeUndefined()
+    expect(lastForwardedHeaders['x-forwarded-for']).not.toBe('198.51.100.17')
     // Non-hop-by-hop headers pass through
     expect(lastForwardedHeaders.accept).toBe('application/json')
     expect(lastForwardedHeaders['user-agent']).toBe('test-agent')

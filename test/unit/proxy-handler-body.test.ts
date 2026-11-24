@@ -150,11 +150,11 @@ describe('proxy handler request bodies (#836)', () => {
     ])
   })
 
-  it('preserves an opaque gzip body without a compression query parameter', async () => {
+  it.each(['POST', 'DELETE'])('preserves an opaque gzip %s body without a compression query parameter', async (method) => {
     const compressed = gzipSync(JSON.stringify({ event: '$pageview' }))
 
     const response = await realFetch(`http://127.0.0.1:${proxyPort}/_scripts/p/upstream.test/i/v0/e/`, {
-      method: 'POST',
+      method,
       headers: { 'content-type': 'text/plain' },
       body: compressed,
     })

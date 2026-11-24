@@ -24,6 +24,14 @@ describe('matchDomain', () => {
     expect(matchDomain('www.google.com.hk', 'www.google.*')).toBe(true)
   })
 
+  it('matches the published Google Catalan domain', () => {
+    expect(matchDomain('www.google.cat', 'www.google.*')).toBe(true)
+  })
+
+  it('rejects an unlisted Google suffix', () => {
+    expect(matchDomain('www.google.zz', 'www.google.*')).toBe(false)
+  })
+
   it('wildcard does not match a different host root', () => {
     expect(matchDomain('evil.google.com', 'www.google.*')).toBe(false)
     expect(matchDomain('www.googleX.com', 'www.google.*')).toBe(false)

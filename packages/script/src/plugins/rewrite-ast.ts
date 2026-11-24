@@ -196,8 +196,10 @@ function resolveCalleeTarget(callee: any, scopeTracker: ScopeTracker): string | 
  * Uses oxc-walker with ScopeTracker to precisely identify string literals,
  * resolve aliased globals, and rewrite API calls through the proxy.
  */
-export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], sdkPatches?: SdkPatch[], options?: { skipApiRewrites?: boolean, neutralizeCanvas?: boolean }): string {
+export function rewriteScriptUrlsAST(content: string, filename: string, rewrites: ProxyRewrite[], sdkPatches?: SdkPatch[], options?: { skipApiRewrites?: boolean, neutralizeCanvas?: boolean, sourceUrl?: string }): string {
   const s = new MagicString(content)
+  const source = options?.sourceUrl ? parseURL(options.sourceUrl) : undefined
+  const sourceOrigin = source?.protocol && source.host ? `${source.protocol}//${source.host}` : undefined
 
   // In minified JS, keywords like `return` can directly precede string literals
   // (e.g. `return"url"`). When we replace the string with an expression like
@@ -558,7 +560,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       }
 
       // SDK patch: replace-src-split
-      // Matches `<expr>.split("<separator>")[0]` and replaces with proxy path
+      // Preserve the collection endpoint when the SDK derives it from its script URL.
       if (sdkPatches?.some(p => p.type === 'replace-src-split')
         && node.type === 'MemberExpression'
         && (node as any).computed) {
@@ -577,10 +579,12 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
                 if (patch.type !== 'replace-src-split' || patch.separator !== arg.value)
                   continue
                 const rewrite = rewrites.find(r => r.from === patch.fromDomain)
-                if (!rewrite)
+                const target = rewrite
+                  ? (patch.appendPath ? `${rewrite.to}/${patch.appendPath}` : rewrite.to)
+                  : options?.sourceUrl?.split(patch.separator)[0]
+                if (!target)
                   continue
-                const proxyPath = patch.appendPath ? `${rewrite.to}/${patch.appendPath}` : rewrite.to
-                s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${originPrefix(proxyPath)}"${proxyPath}"`)
+                s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}${originPrefix(target)}${JSON.stringify(target)}`)
               }
             }
           }
@@ -588,7 +592,7 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
       }
 
       // SDK patch: replace-new-url-origin
-      // Matches `new URL(<expr>).origin` and replaces with `self.location.origin + "<proxyPath>"`
+      // Preserve the collection origin when the SDK derives it from its script URL.
       if (sdkPatches?.some(p => p.type === 'replace-new-url-origin')
         && node.type === 'MemberExpression'
         && !(node as any).computed) {
@@ -601,10 +605,10 @@ export function rewriteScriptUrlsAST(content: string, filename: string, rewrites
           for (const patch of sdkPatches) {
             if (patch.type !== 'replace-new-url-origin')
               continue
-            const rewrite = rewrites.find(r => r.from === patch.fromDomain)
-            if (!rewrite)
+            const target = rewrites.find(r => r.from === patch.fromDomain)?.to ?? sourceOrigin
+            if (!target)
               continue
-            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}(${originPrefix(rewrite.to)}"${rewrite.to}")`)
+            s.overwrite(node.start, node.end, `${needsLeadingSpace(node.start)}(${originPrefix(target)}${JSON.stringify(target)})`)
             break
           }
         }

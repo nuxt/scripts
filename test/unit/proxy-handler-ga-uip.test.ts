@@ -98,6 +98,14 @@ describe('proxy handler - GA4 client IP (#939)', () => {
       .toBe('https://www.google-analytics.com/g/collect?v=2&tid=G-TEST&_uip=2001%3Adb8%3Aabcd%3A%3A')
   })
 
+  it.each([
+    ['203.0.113.7:5000', '203.0.113.0'],
+    ['[2001:db8:abcd:12::1]:5000', '2001:db8:abcd::'],
+  ])('anonymizes the port-bearing visitor address %s', async (address, expected) => {
+    const target = new URL(await post('www.google-analytics.com/g/collect?v=2', address))
+    expect(target.searchParams.get('_uip')).toBe(expected)
+  })
+
   it('uses the first X-Forwarded-For entry for region1.analytics.google.com', async () => {
     expect(await post('region1.analytics.google.com/g/collect?v=2', '198.51.100.23, 10.0.0.1'))
       .toBe('https://region1.analytics.google.com/g/collect?v=2&_uip=198.51.100.0')
@@ -116,6 +124,11 @@ describe('proxy handler - GA4 client IP (#939)', () => {
   it('uses the raw client IP when IP privacy is off', async () => {
     expect(await post('region1.google-analytics.com/g/collect?v=2'))
       .toBe('https://region1.google-analytics.com/g/collect?v=2&_uip=203.0.113.7')
+  })
+
+  it('omits a client port when IP privacy is off', async () => {
+    const target = new URL(await post('region1.google-analytics.com/g/collect?v=2', '198.51.100.23:5000'))
+    expect(target.searchParams.get('_uip')).toBe('198.51.100.23')
   })
 
   it('replaces a client-supplied _uip with the anonymized client IP when IP privacy is on', async () => {

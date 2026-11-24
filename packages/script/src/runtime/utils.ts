@@ -213,10 +213,12 @@ export function useRegistryScript<T extends Record<string | symbol, any>, O = Em
   const init = scriptOptions.beforeInit
 
   if (import.meta.dev) {
+    // A URL injected by the bundler still needs validation.
+    const bundledSrc = '_bundledSrc' in userOptions ? userOptions._bundledSrc : undefined
+    const configuredSrc = typeof scriptConfig === 'object' && scriptConfig?.scriptInput?.src
+    const hasCustomSrc = userSrc && (userSrc !== bundledSrc || configuredSrc)
     scriptOptions._validate = () => {
-      // a manual trigger also means it was disabled by nuxt.config
-      // overriding the src will skip validation
-      if (!userOptions.scriptInput?.src && !scriptOptions.skipValidation && options.schema) {
+      if (!hasCustomSrc && !scriptOptions.skipValidation && options.schema) {
         return validateScriptInputSchema(options.schema, userOptions)
       }
     }

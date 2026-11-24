@@ -1,17 +1,18 @@
+import { matchDomain } from '../runtime/server/utils/match-domain'
+
 /**
  * Generate the client-side intercept plugin contents.
  * This plugin provides __nuxtScripts runtime helpers (sendBeacon, fetch, XMLHttpRequest, Image)
  * that route matching URLs through the proxy. AST rewriting transforms
  * native API calls to use these wrappers at build time.
  *
- * Any non-same-origin URL is proxied through `proxyPrefix/<host-or-alias><path>`.
- * No domain allowlist needed: only AST-rewritten third-party scripts call __nuxtScripts.
+ * Only registered domains use `proxyPrefix/<host-or-alias><path>`.
  *
  * `domainAliases` (real domain → path alias) is embedded so runtime-constructed URLs
  * (e.g. self-hosted analytics endpoints) use the same opaque path segment as build-time
  * rewrites, keeping hostnames out of client URLs.
  */
-export function generateInterceptPluginContents(proxyPrefix: string, options?: { testMode?: boolean, domainAliases?: Record<string, string> }): string {
+export function generateInterceptPluginContents(proxyPrefix: string, options?: { testMode?: boolean, domainAliases?: Record<string, string>, domains?: string[] }): string {
   const testMode = options?.testMode ?? false
   return `import { defineNuxtPlugin } from 'nuxt/app'
 
@@ -21,6 +22,8 @@ export default defineNuxtPlugin({
   setup() {
     const proxyPrefix = ${JSON.stringify(proxyPrefix)};
     const domainAliases = Object.assign(Object.create(null), ${JSON.stringify(options?.domainAliases ?? {})});
+    const domains = ${JSON.stringify(options?.domains ?? [])};
+    const matchDomain = ${matchDomain.toString()};
     const origBeacon = typeof navigator !== 'undefined' && navigator.sendBeacon
       ? navigator.sendBeacon.bind(navigator)
       : () => false;
@@ -31,7 +34,8 @@ export default defineNuxtPlugin({
         const parsed = new URL(url, location.origin);
         const proxyBase = new URL(proxyPrefix + '/', location.origin);
         if (parsed.origin === proxyBase.origin && parsed.pathname.startsWith(proxyBase.pathname)) return url;
-        if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.origin !== location.origin) {
+        if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.origin !== location.origin
+          && domains.some(domain => matchDomain(parsed.hostname, domain))) {
           const seg = domainAliases[parsed.host] || parsed.host;
           return new URL(proxyPrefix + '/' + seg + parsed.pathname + parsed.search, location.origin).href;
         }

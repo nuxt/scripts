@@ -22,9 +22,10 @@ export default defineNuxtConfig({
 
   scripts: {
     registry: {
-      googleAnalytics: { id: 'G-TEST' },
+      googleAnalytics: { id: 'G-TEST', proxy: true },
       instagramEmbed: {},
-      plausibleAnalytics: { scriptId: 'test-script-id' },
+      plausibleAnalytics: { scriptId: 'test-script-id', proxy: true },
+      posthog: { apiKey: 'phc_test' },
     },
     proxy: {
       origin: 'https://t.example.test',

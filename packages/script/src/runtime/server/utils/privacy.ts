@@ -86,20 +86,6 @@ export function mergePrivacy(base: ResolvedProxyPrivacy, override?: ProxyPrivacy
 }
 
 /**
- * Headers that reveal user IP address - stripped in proxy mode,
- * anonymized in anonymize mode.
- */
-export const IP_HEADERS = [
-  'x-forwarded-for',
-  'x-real-ip',
-  'forwarded',
-  'cf-connecting-ip',
-  'true-client-ip',
-  'x-client-ip',
-  'x-cluster-client-ip',
-]
-
-/**
  * Headers that enable fingerprinting - normalized in anonymize mode.
  */
 export const FINGERPRINT_HEADERS = [
@@ -110,17 +96,6 @@ export const FINGERPRINT_HEADERS = [
   'sec-ch-ua-platform',
   'sec-ch-ua-mobile',
   'sec-ch-ua-full-version-list',
-]
-
-/**
- * Sensitive headers that should never be forwarded to third parties.
- */
-export const SENSITIVE_HEADERS = [
-  'cookie',
-  'authorization',
-  'proxy-authorization',
-  'x-csrf-token',
-  'www-authenticate',
 ]
 
 /**

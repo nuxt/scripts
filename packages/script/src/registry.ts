@@ -302,6 +302,9 @@ async function defineScript(
 
 // -- Registry --
 
+const ahrefsEndpointPatch = { type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' } as const
+const rybbitEndpointPatch = { type: 'replace-src-split', separator: '/script.js', fromDomain: 'app.rybbit.io', appendPath: 'api' } as const
+
 export async function registry(resolve?: (path: string) => Promise<string>): Promise<RegistryScript[]> {
   resolve = resolve || ((s: string) => Promise.resolve(s))
   const def = (key: string, script: RegistryScriptDef) => defineScript(resolve, key, script)
@@ -314,11 +317,11 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       src: 'https://analytics.ahrefs.com/analytics.js',
       category: 'analytics',
       envDefaults: { key: '' },
-      bundle: true,
+      bundle: { sdkPatches: [ahrefsEndpointPatch] },
       proxy: {
         domains: ['analytics.ahrefs.com'],
         privacy: PRIVACY_IP_ONLY,
-        sdkPatches: [{ type: 'replace-new-url-origin', fromDomain: 'analytics.ahrefs.com' }],
+        sdkPatches: [ahrefsEndpointPatch],
       },
     }),
     def('plausibleAnalytics', {
@@ -423,6 +426,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
       category: 'analytics',
       envDefaults: { siteId: '' },
       bundle: {
+        sdkPatches: [rybbitEndpointPatch],
         resolve: (options?: RybbitAnalyticsInput) => {
           const host = options?.analyticsHost
           if (host && !host.startsWith('/'))
@@ -434,7 +438,7 @@ export async function registry(resolve?: (path: string) => Promise<string>): Pro
         domains: ['app.rybbit.io'],
         privacy: PRIVACY_IP_ONLY,
         autoInject: { field: 'analyticsHost', target: 'app.rybbit.io/api' },
-        sdkPatches: [{ type: 'replace-src-split', separator: '/script.js', fromDomain: 'app.rybbit.io', appendPath: 'api' }],
+        sdkPatches: [rybbitEndpointPatch],
       },
     }),
     def('databuddyAnalytics', {
@@ -971,7 +975,7 @@ export function generatePartytownResolveUrl(proxyPrefix: string, domainAliases: 
 /**
  * Resolve the effective capabilities for a script by merging:
  * 1. Derive ceiling from script's bundle/proxy/partytown keys
- * 2. Default = ceiling minus partytown (user must opt-in)
+ * 2. Default = ceiling minus proxy and partytown (user must opt in)
  * 3. Apply user overrides from scriptOptions
  * 4. Clamp to ceiling (user can't enable unsupported capabilities)
  * 5. Warn in dev if user tries to exceed ceiling
@@ -981,8 +985,7 @@ export function resolveCapabilities(
   scriptOptions?: Record<string, any>,
 ): ScriptCapabilities {
   const ceiling = getCapabilities(script)
-  // Default: all capabilities enabled except partytown (requires opt-in)
-  const defaults: ScriptCapabilities = { ...ceiling, partytown: false }
+  const defaults: ScriptCapabilities = { ...ceiling, proxy: false, partytown: false }
 
   const resolved: ScriptCapabilities = { ...defaults }
 

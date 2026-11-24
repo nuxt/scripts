@@ -158,9 +158,9 @@ export type NuxtUseScriptOptions<T extends Record<symbol | string, any> = {}> = 
   bundle?: boolean | 'force'
   /**
    * Control proxying for this script.
-   * When `false`, collection requests go directly to the third-party server.
-   * When `true`, collection requests are proxied through `/_scripts/p/`.
-   * Defaults based on whether the script has a `proxy` capability in the registry.
+   * Collection requests go directly to the third-party server by default.
+   * Set `proxy: true` in `scripts.registry` to register collection routes.
+   * Set `proxy: false` on a composable call to skip its proxy rewrites.
    */
   proxy?: boolean
   /**

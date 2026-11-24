@@ -9,7 +9,7 @@ const ALIASES = { 'us.i.posthog.com': 'ph' }
 /** Runs the generated intercept plugin on `https://my-site.test` and returns the URLs it hands to native fetch. */
 async function fetchThroughIntercept(proxyPrefix: string, urls: string[]): Promise<unknown[]> {
   const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response())
-  const generated = generateInterceptPluginContents(proxyPrefix)
+  const generated = generateInterceptPluginContents(proxyPrefix, { domains: ['www.google-analytics.com'] })
     .replace('import { defineNuxtPlugin } from \'nuxt/app\'\n\n', '')
     .replace('export default ', '')
   const sandbox = {
@@ -142,12 +142,12 @@ describe('proxy alias - generated runtime code (#814)', () => {
         'data:text/plain,hello',
         'javascript:void(0)',
         'https://my-site.test/collect',
-        'https://constructor/collect',
+        'https://vendor.test/collect',
       ])).toEqual([
         'data:text/plain,hello',
         'javascript:void(0)',
         'https://my-site.test/collect',
-        'https://my-site.test/_scripts/p/constructor/collect',
+        'https://vendor.test/collect',
       ])
     })
 
