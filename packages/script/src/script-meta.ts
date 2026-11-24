@@ -52,6 +52,10 @@ export const scriptMeta = {
     urls: ['https://js.ciphera.net/script.js'],
     trackedData: ['page-views', 'events', 'conversions', 'scrolls'],
   },
+  privatusAnalytics: {
+    urls: ['https://privatusstats.com/js/pa.js'],
+    trackedData: ['page-views', 'events', 'conversions', 'scrolls'],
+  },
   statableAnalytics: {
     urls: ['https://statable.com/js/3078194/s.js'],
     trackedData: ['page-views', 'events', 'conversions', 'scrolls'],
