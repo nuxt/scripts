@@ -103,8 +103,8 @@ jobs:
           cache: pnpm
       - run: pnpm i
       - run: pnpm --filter @nuxt/scripts dev:prepare
-      - run: pnpm --filter @nuxt/scripts build
       - run: pnpm exec nuxt prepare
+      - run: pnpm --filter @nuxt/scripts build
       - run: pnpm exec vitest run --project unit test/unit/cached-upstream-lifecycle.test.ts
       - name: Check dev startup
         run: pnpm exec vitest run --project e2e test/e2e/cache-driver-dev.test.ts
