@@ -11,7 +11,7 @@ import type { StatableAnalyticsInput } from './runtime/registry/statable-analyti
 import type { ProxyPrivacyInput } from './runtime/server/utils/privacy'
 import type { ProxyAutoInject, ProxyCapability, ProxyConfig, RegistryScript, RegistryScriptKey, RegistryScriptServerHandler, ResolvedProxyAutoInject, ScriptCapabilities } from './runtime/types'
 import { joinURL, withBase, withQuery } from 'ufo'
-import { LOGOS } from './registry-logos'
+import { LOGOS } from './registry-logos.ts'
 import {
   AhrefsAnalyticsOptions,
   BingUetOptions,
@@ -56,8 +56,8 @@ import {
   VercelAnalyticsOptions,
   XEmbedOptions,
   XPixelOptions,
-} from './runtime/registry/schemas'
-import { matchDomain } from './runtime/server/utils/match-domain'
+} from './runtime/registry/schemas.ts'
+import { matchDomain } from './runtime/server/utils/match-domain.ts'
 
 export type { ScriptCapabilities } from './runtime/types'
 

@@ -49,7 +49,7 @@ catalog:
   '@nuxt/devtools-kit': ^3.4.2
   '@nuxt/fonts': ^0.14.0
   '@nuxt/kit': ^4.7.0
-  '@nuxt/module-builder': ^1.0.3
+  '@nuxt/module-builder': 2.0.0-alpha.1
   '@nuxt/test-utils': ^4.3.3
   '@nuxt/ui': ^4.11.3
   '@nuxtjs/partytown': ^2.0.0
@@ -97,6 +97,7 @@ catalog:
   shiki: ^4.5.0
   sirv: ^3.0.2
   std-env: ^4.3.0
+  tsdown: ^0.23.7
   typescript: npm:@typescript/typescript6@6.0.2
   ufo: ^1.6.4
   ultrahtml: ^1.7.0

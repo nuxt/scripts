@@ -1,7 +1,7 @@
 import type { Node } from '@oxc-project/types'
 import { parseAndWalk } from 'oxc-walker'
 import { createUnplugin } from 'unplugin'
-import { isVue } from './util'
+import { isVue } from './util.ts'
 
 const VUE_RE = /\.vue(?:\?|$)/
 // `$script` is only reachable through a `useScript` call, so the bundler can skip

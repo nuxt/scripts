@@ -14,11 +14,11 @@ import { parseAndWalk } from 'oxc-walker'
 import { join } from 'pathe'
 import { hasProtocol, joinURL, parseURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
-import { bundleStorage } from '../assets'
-import { logger } from '../logger'
-import { getBundleResolve } from '../registry'
-import { rewriteScriptUrlsAST } from './rewrite-ast'
-import { isVue } from './util'
+import { bundleStorage } from '../assets.ts'
+import { logger } from '../logger.ts'
+import { getBundleResolve } from '../registry.ts'
+import { rewriteScriptUrlsAST } from './rewrite-ast.ts'
+import { isVue } from './util.ts'
 
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000
 
