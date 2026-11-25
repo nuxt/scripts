@@ -55,7 +55,7 @@
   },
   "scripts": {
     "build": "nuxt-module-build prepare && tsdown",
-    "dev:prepare": "nuxt-module-build prepare && tsdown"
+    "dev:prepare": "pnpm run build"
   },
   "peerDependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
