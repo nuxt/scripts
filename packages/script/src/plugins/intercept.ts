@@ -1,4 +1,4 @@
-import { matchDomain } from '../runtime/server/utils/match-domain'
+import { matchDomain } from '../runtime/server/utils/match-domain.ts'
 
 /**
  * Generate the client-side intercept plugin contents.

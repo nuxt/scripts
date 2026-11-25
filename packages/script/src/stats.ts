@@ -1,7 +1,7 @@
 import type { RegistryScriptKey } from './runtime/types'
 import type { TrackedDataType } from './script-meta'
-import { buildProxyConfigsFromRegistry } from './registry'
-import { scriptMeta } from './script-meta'
+import { buildProxyConfigsFromRegistry } from './registry.ts'
+import { scriptMeta } from './script-meta.ts'
 import scriptSizes from './script-sizes.json'
 
 export type { TrackedDataType }
@@ -542,7 +542,7 @@ function deriveMetaKey(importName?: string, label?: string): string {
 }
 
 export async function getScriptStats(): Promise<ScriptStats[]> {
-  const { registry } = await import('./registry')
+  const { registry } = await import('./registry.ts')
   const entries = await registry()
   const proxyConfigs = buildProxyConfigsFromRegistry(entries)
   const sizes = scriptSizes as Record<string, { totalTransferKb: number, totalDecodedKb: number, loadTimeMs: number, collectsWebVitals: boolean, apis: ScriptApis, cookies: ScriptCookie[], network: NetworkSummary, performance: PerformanceSummary, scripts: ScriptSizeDetail[] }>

@@ -54,27 +54,8 @@
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
-    "build": "nuxt-module-build build",
-    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare"
-  },
-  "build": {
-    "externals": [
-      "@unhead/vue",
-      "unhead",
-      "@unhead/schema",
-      "knitwork",
-      "#build/modules/nuxt-scripts-gtm",
-      "#build/modules/nuxt-scripts-ga",
-      "@vimeo/player",
-      "esbuild",
-      "unimport",
-      "#nuxt-scripts/types",
-      "posthog-js",
-      "maplibre-gl",
-      "@nuxt/devtools-kit",
-      "sirv",
-      "nuxt/server"
-    ]
+    "build": "nuxt-module-build prepare && tsdown",
+    "dev:prepare": "pnpm run build"
   },
   "peerDependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
@@ -154,7 +135,7 @@
     "@speedcurve/lux": "catalog:",
     "@unhead/vue": "catalog:",
     "rollup": "catalog:",
-    "unbuild": "catalog:",
+    "tsdown": "catalog:",
     "unhead": "catalog:",
     "unimport": "catalog:"
   }
